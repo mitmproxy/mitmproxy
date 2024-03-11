@@ -1,9 +1,9 @@
 import time
-import pytest
 from unittest import mock
 
-from mitmproxy.net.http import cookies
+import pytest
 
+from mitmproxy.net.http import cookies
 
 cookie_pairs = [
     ["=uno", [["", "uno"]]],
@@ -93,23 +93,23 @@ def test_cookie_roundtrips():
 
 def test_parse_set_cookie_pairs():
     pairs = [
-        ["=", [[["", ""]]]],
-        ["=;foo=bar", [[["", ""], ["foo", "bar"]]]],
-        ["=;=;foo=bar", [[["", ""], ["", ""], ["foo", "bar"]]]],
-        ["=uno", [[["", "uno"]]]],
-        ["one=uno", [[["one", "uno"]]]],
-        ["one=un\x20", [[["one", "un\x20"]]]],
-        ["one=uno; foo", [[["one", "uno"], ["foo", ""]]]],
+        ["=", [[("", "")]]],
+        ["=;foo=bar", [[("", ""), ("foo", "bar")]]],
+        ["=;=;foo=bar", [[("", ""), ("", ""), ("foo", "bar")]]],
+        ["=uno", [[("", "uno")]]],
+        ["one=uno", [[("one", "uno")]]],
+        ["one=un\x20", [[("one", "un\x20")]]],
+        ["one=uno; foo", [[("one", "uno"), ("foo", None)]]],
         [
             "mun=1.390.f60; "
             "expires=sun, 11-oct-2015 12:38:31 gmt; path=/; "
             "domain=b.aol.com",
             [
                 [
-                    ["mun", "1.390.f60"],
-                    ["expires", "sun, 11-oct-2015 12:38:31 gmt"],
-                    ["path", "/"],
-                    ["domain", "b.aol.com"],
+                    ("mun", "1.390.f60"),
+                    ("expires", "sun, 11-oct-2015 12:38:31 gmt"),
+                    ("path", "/"),
+                    ("domain", "b.aol.com"),
                 ]
             ],
         ],
@@ -120,10 +120,10 @@ def test_parse_set_cookie_pairs():
             "path=/",
             [
                 [
-                    ["rpb", r"190%3d1%2616726%3d1%2634832%3d1%2634874%3d1"],
-                    ["domain", ".rubiconproject.com"],
-                    ["expires", "mon, 11-may-2015 21:54:57 gmt"],
-                    ["path", "/"],
+                    ("rpb", r"190%3d1%2616726%3d1%2634832%3d1%2634874%3d1"),
+                    ("domain", ".rubiconproject.com"),
+                    ("expires", "mon, 11-may-2015 21:54:57 gmt"),
+                    ("path", "/"),
                 ]
             ],
         ],
@@ -169,15 +169,15 @@ def test_parse_set_cookie_header():
             ],
         ],
         [
-            "foo=bar; expires=Mon, 24 Aug 2037",
+            "foo=bar; expires=Mon, 24 Aug 2133",
             [
-                ("foo", "bar", (("expires", "Mon, 24 Aug 2037"),)),
+                ("foo", "bar", (("expires", "Mon, 24 Aug 2133"),)),
             ],
         ],
         [
-            "foo=bar; expires=Mon, 24 Aug 2037 00:00:00 GMT, doo=dar",
+            "foo=bar; expires=Mon, 24 Aug 2133 00:00:00 GMT, doo=dar",
             [
-                ("foo", "bar", (("expires", "Mon, 24 Aug 2037 00:00:00 GMT"),)),
+                ("foo", "bar", (("expires", "Mon, 24 Aug 2133 00:00:00 GMT"),)),
                 ("doo", "dar", ()),
             ],
         ],
@@ -197,15 +197,14 @@ def test_parse_set_cookie_header():
 
 
 def test_refresh_cookie():
-
     # Invalid expires format, sent to us by Reddit.
-    c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/"
+    c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2133 23:59:59 GMT; Path=/"
     assert cookies.refresh_set_cookie_header(c, 60)
 
     c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
     assert "00:21:38" in cookies.refresh_set_cookie_header(c, 60)
 
-    c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037; Path=/"
+    c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2133; Path=/"
     assert "expires" not in cookies.refresh_set_cookie_header(c, 60)
 
     c = "foo,bar"
@@ -237,7 +236,7 @@ def test_get_expiration_ts(*args):
     F = cookies.get_expiration_ts
 
     assert F(CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT")])) == 0
-    assert F(CA([("Expires", "Mon, 24-Aug-2037 00:00:00 GMT")])) == 2134684800
+    assert F(CA([("Expires", "Mon, 24-Aug-2133 00:00:00 GMT")])) == 5164128000
 
     assert F(CA([("Max-Age", "0")])) == now_ts
     assert F(CA([("Max-Age", "31")])) == now_ts + 31
@@ -258,10 +257,10 @@ def test_is_expired():
         CA([("Expires", "Thu, 01-Jan-1970 00:00:00 GMT"), ("Max-Age", "0")])
     )
 
-    assert not cookies.is_expired(CA([("Expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))
+    assert not cookies.is_expired(CA([("Expires", "Mon, 24-Aug-2133 00:00:00 GMT")]))
     assert not cookies.is_expired(CA([("Max-Age", "1")]))
     assert not cookies.is_expired(
-        CA([("Expires", "Wed, 15-Jul-2037 00:00:00 GMT"), ("Max-Age", "1")])
+        CA([("Expires", "Wed, 15-Jul-2133 00:00:00 GMT"), ("Max-Age", "1")])
     )
 
     assert not cookies.is_expired(CA([("Max-Age", "nan")]))

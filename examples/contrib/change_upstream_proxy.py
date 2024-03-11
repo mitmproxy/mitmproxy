@@ -1,8 +1,6 @@
-
 from mitmproxy import http
 from mitmproxy.connection import Server
 from mitmproxy.net.server_spec import ServerSpec
-
 
 # This scripts demonstrates how mitmproxy can switch to a second/different upstream proxy
 # in upstream proxy mode.
@@ -32,5 +30,5 @@ def request(flow: http.HTTPFlow) -> None:
     if is_proxy_change and server_connection_already_open:
         # server_conn already refers to an existing connection (which cannot be modified),
         # so we need to replace it with a new server connection object.
-        flow.server_conn = Server(flow.server_conn.address)
+        flow.server_conn = Server(address=flow.server_conn.address)
     flow.server_conn.via = ServerSpec("http", address)

@@ -6,35 +6,56 @@ The very high level overview is as follows:
     - Process any commands from layer (such as opening a server connection)
     - Wait for any IO and send it as events to top layer.
 """
+
 import abc
 import asyncio
 import collections
+import logging
 import time
-import traceback
-from collections.abc import Awaitable, Callable, MutableMapping
+from collections.abc import Awaitable
+from collections.abc import Callable
+from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional, Union
+from types import TracebackType
+from typing import Literal
 
+import mitmproxy_rs
 from OpenSSL import SSL
-from mitmproxy import http, options as moptions, tls
+
+from mitmproxy import http
+from mitmproxy import options as moptions
+from mitmproxy import tls
+from mitmproxy.connection import Address
+from mitmproxy.connection import Client
+from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import commands, events, layer, layers, server_hooks
-from mitmproxy.connection import Address, Client, Connection, ConnectionState
-from mitmproxy.net import udp
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
 
+logger = logging.getLogger(__name__)
+
+TCP_TIMEOUT = 60 * 10
+UDP_TIMEOUT = 20
+
 
 class TimeoutWatchdog:
     last_activity: float
-    CONNECTION_TIMEOUT = 10 * 60
+    timeout: int
     can_timeout: asyncio.Event
     blocker: int
 
-    def __init__(self, callback: Callable[[], Awaitable]):
+    def __init__(self, timeout: int, callback: Callable[[], Awaitable]):
+        self.timeout = timeout
         self.callback = callback
         self.last_activity = time.time()
         self.can_timeout = asyncio.Event()
@@ -48,10 +69,8 @@ class TimeoutWatchdog:
         try:
             while True:
                 await self.can_timeout.wait()
-                await asyncio.sleep(
-                    self.CONNECTION_TIMEOUT - (time.time() - self.last_activity)
-                )
-                if self.last_activity + self.CONNECTION_TIMEOUT < time.time():
+                await asyncio.sleep(self.timeout - (time.time() - self.last_activity))
+                if self.last_activity + self.timeout < time.time():
                     await self.callback()
                     return
         except asyncio.CancelledError:
@@ -72,9 +91,9 @@ class TimeoutWatchdog:
 
 @dataclass
 class ConnectionIO:
-    handler: Optional[asyncio.Task] = None
-    reader: Optional[Union[asyncio.StreamReader, udp.DatagramReader]] = None
-    writer: Optional[Union[asyncio.StreamWriter, udp.DatagramWriter]] = None
+    handler: asyncio.Task | None = None
+    reader: asyncio.StreamReader | mitmproxy_rs.Stream | None = None
+    writer: asyncio.StreamWriter | mitmproxy_rs.Stream | None = None
 
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
@@ -82,25 +101,35 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     timeout_watchdog: TimeoutWatchdog
     client: Client
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
-    layer: layer.Layer
+    layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
+    hook_tasks: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
+        self.hook_tasks = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
         # on protocols that start with a server greeting.
         self.layer = layer.NextLayer(context, ask_on_start=True)
-        self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
+        if self.client.transport_protocol == "tcp":
+            timeout = TCP_TIMEOUT
+        else:
+            timeout = UDP_TIMEOUT
+        self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
 
         # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
         self._drain_lock = asyncio.Lock()
 
     async def handle_client(self) -> None:
+        asyncio_utils.set_current_task_debug_info(
+            name=f"client handler",
+            client=self.client.peername,
+        )
         watch = asyncio_utils.create_task(
             self.timeout_watchdog.watch(),
             name="timeout watchdog",
@@ -123,6 +152,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
+            if not handler.cancelled() and (e := handler.exception()):
+                self.log(
+                    f"connection handler has crashed: {e}",
+                    logging.ERROR,
+                    exc_info=(type(e), e, e.__traceback__),
+                )
 
         watch.cancel()
         while self.wakeup_timer:
@@ -134,14 +169,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         await self.handle_hook(server_hooks.ClientDisconnectedHook(self.client))
 
         if self.transports:
-            self.log("closing transports...", "debug")
+            self.log("closing transports...", logging.DEBUG)
             for io in self.transports.values():
                 if io.handler:
                     io.handler.cancel("client disconnected")
             await asyncio.wait(
                 [x.handler for x in self.transports.values() if x.handler]
             )
-            self.log("transports closed!", "debug")
+            self.log("transports closed!", logging.DEBUG)
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
@@ -167,8 +202,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         async with self.max_conns[command.connection.address]:
-            reader: Union[asyncio.StreamReader, udp.DatagramReader]
-            writer: Union[asyncio.StreamWriter, udp.DatagramWriter]
+            reader: asyncio.StreamReader | mitmproxy_rs.Stream
+            writer: asyncio.StreamWriter | mitmproxy_rs.Stream
             try:
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
@@ -177,7 +212,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
-                    reader, writer = await udp.open_connection(
+                    reader = writer = await mitmproxy_rs.open_udp_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
                     )
@@ -264,18 +299,22 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-        if cancelled is None:
+        if cancelled is None and connection.transport_protocol == "tcp":
+            # TCP connections can be half-closed.
             connection.state &= ~ConnectionState.CAN_READ
         else:
             connection.state = ConnectionState.CLOSED
 
         self.server_event(events.ConnectionClosed(connection))
 
-        if cancelled is None and connection.state is ConnectionState.CAN_WRITE:
+        if connection.state is ConnectionState.CAN_WRITE:
             # we may still use this connection to *send* stuff,
             # even though the remote has closed their side of the connection.
             # to make this work we keep this task running and wait for cancellation.
-            await asyncio.Event().wait()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError as e:
+                cancelled = e
 
         try:
             writer = self.transports[connection].writer
@@ -294,7 +333,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
         """
         async with self._drain_lock:
-            for transport in self.transports.values():
+            for transport in list(self.transports.values()):
                 if transport.writer is not None:
                     try:
                         await transport.writer.drain()
@@ -303,10 +342,16 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                             transport.handler.cancel(f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
-        self.log(f"Closing connection due to inactivity: {self.client}")
-        handler = self.transports[self.client].handler
-        assert handler
-        handler.cancel("timeout")
+        try:
+            handler = self.transports[self.client].handler
+        except KeyError:  # pragma: no cover
+            # there is a super short window between connection close and watchdog cancellation
+            pass
+        else:
+            if self.client.transport_protocol == "tcp":
+                self.log(f"Closing connection due to inactivity: {self.client}")
+            assert handler
+            handler.cancel("timeout")
 
     async def hook_task(self, hook: commands.StartHook) -> None:
         await self.handle_hook(hook)
@@ -317,15 +362,23 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def handle_hook(self, hook: commands.StartHook) -> None:
         pass
 
-    def log(self, message: str, level: str = "info") -> None:
-        print(message)
+    def log(
+        self,
+        message: str,
+        level: int = logging.INFO,
+        exc_info: Literal[True]
+        | tuple[type[BaseException], BaseException, TracebackType | None]
+        | None = None,
+    ) -> None:
+        logger.log(
+            level, message, extra={"client": self.client.peername}, exc_info=exc_info
+        )
 
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()
         try:
             layer_commands = self.layer.handle_event(event)
             for command in layer_commands:
-
                 if isinstance(command, commands.OpenConnection):
                     assert command.connection not in self.transports
                     handler = asyncio_utils.create_task(
@@ -350,26 +403,27 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
                     assert writer
-                    writer.write(command.data)
-                elif isinstance(command, commands.CloseConnection):
+                    if not writer.is_closing():
+                        writer.write(command.data)
+                elif isinstance(command, commands.CloseTcpConnection):
                     self.close_connection(command.connection, command.half_close)
-                elif isinstance(command, commands.GetSocket):
-                    writer = self.transports[command.connection].writer
-                    assert writer
-                    socket = writer.get_extra_info("socket")
-                    self.server_event(events.GetSocketCompleted(command, socket))
+                elif isinstance(command, commands.CloseConnection):
+                    self.close_connection(command.connection, False)
                 elif isinstance(command, commands.StartHook):
-                    asyncio_utils.create_task(
+                    t = asyncio_utils.create_task(
                         self.hook_task(command),
                         name=f"handle_hook({command.name})",
                         client=self.client.peername,
                     )
+                    # Python 3.11 Use TaskGroup instead.
+                    self.hook_tasks.add(t)
+                    t.add_done_callback(self.hook_tasks.remove)
                 elif isinstance(command, commands.Log):
                     self.log(command.message, command.level)
                 else:
                     raise RuntimeError(f"Unexpected command: {command}")
         except Exception:
-            self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
+            self.log(f"mitmproxy has crashed!", logging.ERROR, exc_info=True)
 
     def close_connection(
         self, connection: Connection, half_close: bool = False
@@ -377,11 +431,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if half_close:
             if not connection.state & ConnectionState.CAN_WRITE:
                 return
-            self.log(f"half-closing {connection}", "debug")
+            self.log(f"half-closing {connection}", logging.DEBUG)
             try:
                 writer = self.transports[connection].writer
                 assert writer
-                writer.write_eof()
+                if not writer.is_closing():
+                    writer.write_eof()
             except OSError:
                 # if we can't write to the socket anymore we presume it completely dead.
                 connection.state = ConnectionState.CLOSED
@@ -399,14 +454,18 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
     def __init__(
         self,
-        reader: asyncio.StreamReader,
-        writer: asyncio.StreamWriter,
+        reader: asyncio.StreamReader | mitmproxy_rs.Stream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream,
         options: moptions.Options,
+        mode: mode_specs.ProxyMode,
     ) -> None:
         client = Client(
-            writer.get_extra_info("peername"),
-            writer.get_extra_info("sockname"),
-            time.time(),
+            transport_protocol=writer.get_extra_info("transport_protocol", "tcp"),
+            peername=writer.get_extra_info("peername"),
+            sockname=writer.get_extra_info("sockname"),
+            timestamp_start=time.time(),
+            proxy_mode=mode,
+            state=ConnectionState.OPEN,
         )
         context = Context(client, options)
         super().__init__(context)
@@ -420,17 +479,13 @@ class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
 
     hook_handlers: dict[str, Callable]
 
-    def __init__(self, reader, writer, options, hooks):
-        super().__init__(reader, writer, options)
+    def __init__(self, reader, writer, options, mode, hooks):
+        super().__init__(reader, writer, options, mode)
         self.hook_handlers = hooks
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](*hook.args())
-
-    def log(self, message: str, level: str = "info"):
-        if "Hook" not in message:
-            pass  # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -455,7 +510,6 @@ if __name__ == "__main__":  # pragma: no cover
         to the reverse proxy target.
         """,
     )
-    opts.mode = "reverse:http://127.0.0.1:3000/"
 
     async def handle(reader, writer):
         layer_stack = [
@@ -468,9 +522,9 @@ if __name__ == "__main__":  # pragma: no cover
         ]
 
         def next_layer(nl: layer.NextLayer):
-            l = layer_stack.pop(0)(nl.context)
-            l.debug = "  " * len(nl.context.layers)
-            nl.layer = l
+            layr = layer_stack.pop(0)(nl.context)
+            layr.debug = "  " * len(nl.context.layers)
+            nl.layer = layr
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:
@@ -513,6 +567,7 @@ if __name__ == "__main__":  # pragma: no cover
             reader,
             writer,
             opts,
+            mode_specs.ProxyMode.parse("reverse:http://127.0.0.1:3000/"),
             {
                 "next_layer": next_layer,
                 "request": request,

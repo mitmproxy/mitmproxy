@@ -1,13 +1,18 @@
+import dataclasses
+import time
 import uuid
 import warnings
 from abc import ABCMeta
 from collections.abc import Sequence
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Flag
-from typing import Literal, Optional
+from typing import Literal
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import server_spec
+from mitmproxy.proxy import mode_specs
 from mitmproxy.utils import human
 
 
@@ -28,8 +33,12 @@ TransportProtocol = Literal["tcp", "udp"]
 # this version at least provides useful type checking messages.
 Address = tuple[str, int]
 
+kw_only = {"kw_only": True}
 
-class Connection(serializable.Serializable, metaclass=ABCMeta):
+
+# noinspection PyDataclass
+@dataclass(**kw_only)
+class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """
     Base class for client and server connections.
 
@@ -37,20 +46,24 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     This is intentional, all I/O should be handled by `mitmproxy.proxy.server` exclusively.
     """
 
+    peername: Address | None
+    """The remote's `(ip, port)` tuple for this connection."""
+    sockname: Address | None
+    """Our local `(ip, port)` tuple for this connection."""
+
+    state: ConnectionState = field(
+        default=ConnectionState.CLOSED, metadata={"serialize": False}
+    )
+    """The current connection state."""
+
     # all connections have a unique id. While
     # f.client_conn == f2.client_conn already holds true for live flows (where we have object identity),
     # we also want these semantics for recorded flows.
-    id: str
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     """A unique UUID to identify the connection."""
-    state: ConnectionState
-    """The current connection state."""
-    transport_protocol: TransportProtocol
+    transport_protocol: TransportProtocol = field(default="tcp")
     """The connection protocol in use."""
-    peername: Optional[Address]
-    """The remote's `(ip, port)` tuple for this connection."""
-    sockname: Optional[Address]
-    """Our local `(ip, port)` tuple for this connection."""
-    error: Optional[str] = None
+    error: str | None = None
     """
     A string describing a general error with connections to this address.
 
@@ -81,27 +94,27 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     > TLS version, with the exception of the end-entity certificate which
     > MUST be first.
     """
-    alpn: Optional[bytes] = None
+    alpn: bytes | None = None
     """The application-layer protocol as negotiated using
     [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation)."""
     alpn_offers: Sequence[bytes] = ()
     """The ALPN offers as sent in the ClientHello."""
     # we may want to add SSL_CIPHER_description here, but that's currently not exposed by cryptography
-    cipher: Optional[str] = None
+    cipher: str | None = None
     """The active cipher name as returned by OpenSSL's `SSL_CIPHER_get_name`."""
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
-    tls_version: Optional[str] = None
+    tls_version: str | None = None
     """The active TLS version."""
-    sni: Optional[str] = None
+    sni: str | None = None
     """
     The [Server Name Indication (SNI)](https://en.wikipedia.org/wiki/Server_Name_Indication) sent in the ClientHello.
     """
 
-    timestamp_start: Optional[float]
-    timestamp_end: Optional[float] = None
+    timestamp_start: float | None = None
+    timestamp_end: float | None = None
     """*Timestamp:* Connection has been closed."""
-    timestamp_tls_setup: Optional[float] = None
+    timestamp_tls_setup: float | None = None
     """*Timestamp:* TLS handshake has been completed successfully."""
 
     @property
@@ -123,19 +136,23 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
         return hash(self.id)
 
     def __repr__(self):
-        attrs = repr(
-            {
-                k: {
-                    "cipher_list": lambda: f"<{len(v)} ciphers>",
-                    "id": lambda: f"…{v[-6:]}",
-                }.get(k, lambda: v)()
-                for k, v in self.__dict__.items()
-            }
-        )
-        return f"{type(self).__name__}({attrs})"
+        attrs = {
+            # ensure these come first.
+            "id": None,
+            "address": None,
+        }
+        for f in dataclasses.fields(self):
+            val = getattr(self, f.name)
+            if val != f.default:
+                if f.name == "cipher_list":
+                    val = f"<{len(val)} ciphers>"
+                elif f.name == "id":
+                    val = f"…{val[-6:]}"
+                attrs[f.name] = val
+        return f"{type(self).__name__}({attrs!r})"
 
     @property
-    def alpn_proto_negotiated(self) -> Optional[bytes]:  # pragma: no cover
+    def alpn_proto_negotiated(self) -> bytes | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for Connection.alpn."""
         warnings.warn(
             "Connection.alpn_proto_negotiated is deprecated, use Connection.alpn instead.",
@@ -145,6 +162,8 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
         return self.alpn
 
 
+# noinspection PyDataclass
+@dataclass(eq=False, repr=False, **kw_only)
 class Client(Connection):
     """A connection between a client and mitmproxy."""
 
@@ -153,28 +172,18 @@ class Client(Connection):
     sockname: Address
     """The local address we received this connection on."""
 
-    mitmcert: Optional[certs.Cert] = None
+    mitmcert: certs.Cert | None = None
     """
     The certificate used by mitmproxy to establish TLS with the client.
     """
 
-    timestamp_start: float
-    """*Timestamp:* TCP SYN received"""
+    proxy_mode: mode_specs.ProxyMode = field(
+        default=mode_specs.ProxyMode.parse("regular")
+    )
+    """The proxy server type this client has been connecting to."""
 
-    def __init__(
-        self,
-        peername: Address,
-        sockname: Address,
-        timestamp_start: float,
-        *,
-        transport_protocol: TransportProtocol = "tcp",
-    ):
-        self.id = str(uuid.uuid4())
-        self.peername = peername
-        self.sockname = sockname
-        self.timestamp_start = timestamp_start
-        self.state = ConnectionState.OPEN
-        self.transport_protocol = transport_protocol
+    timestamp_start: float = field(default_factory=time.time)
+    """*Timestamp:* TCP SYN received"""
 
     def __str__(self):
         if self.alpn:
@@ -183,67 +192,9 @@ class Client(Connection):
             tls_state = ", tls"
         else:
             tls_state = ""
-        return f"Client({human.format_address(self.peername)}, state={self.state.name.lower()}{tls_state})"
-
-    def get_state(self):
-        # Important: Retain full compatibility with old proxy core for now!
-        # This means we need to add all new fields to the old implementation.
-        return {
-            "address": self.peername,
-            "alpn": self.alpn,
-            "cipher_name": self.cipher,
-            "id": self.id,
-            "mitmcert": self.mitmcert.get_state()
-            if self.mitmcert is not None
-            else None,
-            "sni": self.sni,
-            "timestamp_end": self.timestamp_end,
-            "timestamp_start": self.timestamp_start,
-            "timestamp_tls_setup": self.timestamp_tls_setup,
-            "tls_established": self.tls_established,
-            "tls_extensions": [],
-            "tls_version": self.tls_version,
-            # only used in sans-io
-            "state": self.state.value,
-            "sockname": self.sockname,
-            "error": self.error,
-            "tls": self.tls,
-            "certificate_list": [x.get_state() for x in self.certificate_list],
-            "alpn_offers": self.alpn_offers,
-            "cipher_list": self.cipher_list,
-        }
-
-    @classmethod
-    def from_state(cls, state) -> "Client":
-        client = Client(state["address"], ("mitmproxy", 8080), state["timestamp_start"])
-        client.set_state(state)
-        return client
-
-    def set_state(self, state):
-        self.peername = tuple(state["address"]) if state["address"] else None
-        self.alpn = state["alpn"]
-        self.cipher = state["cipher_name"]
-        self.id = state["id"]
-        self.sni = state["sni"]
-        self.timestamp_end = state["timestamp_end"]
-        self.timestamp_start = state["timestamp_start"]
-        self.timestamp_tls_setup = state["timestamp_tls_setup"]
-        self.tls_version = state["tls_version"]
-        # only used in sans-io
-        self.state = ConnectionState(state["state"])
-        self.sockname = tuple(state["sockname"]) if state["sockname"] else None
-        self.error = state["error"]
-        self.tls = state["tls"]
-        self.certificate_list = [
-            certs.Cert.from_state(x) for x in state["certificate_list"]
-        ]
-        self.mitmcert = (
-            certs.Cert.from_state(state["mitmcert"])
-            if state["mitmcert"] is not None
-            else None
-        )
-        self.alpn_offers = state["alpn_offers"]
-        self.cipher_list = state["cipher_list"]
+        state = self.state.name
+        assert state
+        return f"Client({human.format_address(self.peername)}, state={state.lower()}{tls_state})"
 
     @property
     def address(self):  # pragma: no cover
@@ -265,7 +216,7 @@ class Client(Connection):
         self.peername = x
 
     @property
-    def cipher_name(self) -> Optional[str]:  # pragma: no cover
+    def cipher_name(self) -> str | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for Connection.cipher."""
         warnings.warn(
             "Client.cipher_name is deprecated, use Client.cipher instead.",
@@ -275,7 +226,7 @@ class Client(Connection):
         return self.cipher
 
     @property
-    def clientcert(self) -> Optional[certs.Cert]:  # pragma: no cover
+    def clientcert(self) -> certs.Cert | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for Connection.certificate_list[0]."""
         warnings.warn(
             "Client.clientcert is deprecated, use Client.certificate_list instead.",
@@ -300,33 +251,40 @@ class Client(Connection):
             self.certificate_list = []
 
 
+# noinspection PyDataclass
+@dataclass(eq=False, repr=False, **kw_only)
 class Server(Connection):
     """A connection between mitmproxy and an upstream server."""
 
-    peername: Optional[Address] = None
-    """The server's resolved `(ip, port)` tuple. Will be set during connection establishment."""
-    sockname: Optional[Address] = None
-    address: Optional[Address]
-    """The server's `(host, port)` address tuple. The host can either be a domain or a plain IP address."""
+    address: Address | None  # type: ignore
+    """
+    The server's `(host, port)` address tuple.
 
-    timestamp_start: Optional[float] = None
-    """*Timestamp:* TCP SYN sent."""
-    timestamp_tcp_setup: Optional[float] = None
+    The host can either be a domain or a plain IP address.
+    Which of those two will be present depends on the proxy mode and the client.
+    For explicit proxies, this value will reflect what the client instructs mitmproxy to connect to.
+    For example, if the client starts off a connection with `CONNECT example.com HTTP/1.1`, it will be `example.com`.
+    For transparent proxies such as WireGuard mode, this value will be an IP address.
+    """
+
+    peername: Address | None = None
+    """
+    The server's resolved `(ip, port)` tuple. Will be set during connection establishment.
+    May be `None` in upstream proxy mode when the address is resolved by the upstream proxy only.
+    """
+    sockname: Address | None = None
+
+    timestamp_start: float | None = None
+    """
+    *Timestamp:* Connection establishment started.
+
+    For IP addresses, this corresponds to sending a TCP SYN; for domains, this corresponds to starting a DNS lookup.
+    """
+    timestamp_tcp_setup: float | None = None
     """*Timestamp:* TCP ACK received."""
 
-    via: Optional[server_spec.ServerSpec] = None
+    via: server_spec.ServerSpec | None = None
     """An optional proxy server specification via which the connection should be established."""
-
-    def __init__(
-        self,
-        address: Optional[Address],
-        *,
-        transport_protocol: TransportProtocol = "tcp",
-    ):
-        self.id = str(uuid.uuid4())
-        self.address = address
-        self.state = ConnectionState.CLOSED
-        self.transport_protocol = transport_protocol
 
     def __str__(self):
         if self.alpn:
@@ -339,7 +297,9 @@ class Server(Connection):
             local_port = f", src_port={self.sockname[1]}"
         else:
             local_port = ""
-        return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
+        state = self.state.name
+        assert state
+        return f"Server({human.format_address(self.address)}, state={state.lower()}{tls_state}{local_port})"
 
     def __setattr__(self, name, value):
         if name in ("address", "via"):
@@ -353,65 +313,8 @@ class Server(Connection):
                 raise RuntimeError(f"Cannot change server.{name} on open connection.")
         return super().__setattr__(name, value)
 
-    def get_state(self):
-        return {
-            "address": self.address,
-            "alpn": self.alpn,
-            "id": self.id,
-            "ip_address": self.peername,
-            "sni": self.sni,
-            "source_address": self.sockname,
-            "timestamp_end": self.timestamp_end,
-            "timestamp_start": self.timestamp_start,
-            "timestamp_tcp_setup": self.timestamp_tcp_setup,
-            "timestamp_tls_setup": self.timestamp_tls_setup,
-            "tls_established": self.tls_established,
-            "tls_version": self.tls_version,
-            "via": None,
-            # only used in sans-io
-            "state": self.state.value,
-            "error": self.error,
-            "tls": self.tls,
-            "certificate_list": [x.get_state() for x in self.certificate_list],
-            "alpn_offers": self.alpn_offers,
-            "cipher_name": self.cipher,
-            "cipher_list": self.cipher_list,
-            "via2": self.via,
-        }
-
-    @classmethod
-    def from_state(cls, state) -> "Server":
-        server = Server(None)
-        server.set_state(state)
-        return server
-
-    def set_state(self, state):
-        self.address = tuple(state["address"]) if state["address"] else None
-        self.alpn = state["alpn"]
-        self.id = state["id"]
-        self.peername = tuple(state["ip_address"]) if state["ip_address"] else None
-        self.sni = state["sni"]
-        self.sockname = (
-            tuple(state["source_address"]) if state["source_address"] else None
-        )
-        self.timestamp_end = state["timestamp_end"]
-        self.timestamp_start = state["timestamp_start"]
-        self.timestamp_tcp_setup = state["timestamp_tcp_setup"]
-        self.timestamp_tls_setup = state["timestamp_tls_setup"]
-        self.tls_version = state["tls_version"]
-        self.state = ConnectionState(state["state"])
-        self.error = state["error"]
-        self.tls = state["tls"]
-        self.certificate_list = [
-            certs.Cert.from_state(x) for x in state["certificate_list"]
-        ]
-        self.alpn_offers = state["alpn_offers"]
-        self.cipher = state["cipher_name"]
-        self.cipher_list = state["cipher_list"]
-        self.via = state["via2"]
-
     @property
-    def ip_address(self) -> Optional[Address]:  # pragma: no cover
+    def ip_address(self) -> Address | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for `Server.peername`."""
         warnings.warn(
             "Server.ip_address is deprecated, use Server.peername instead.",
@@ -421,7 +324,7 @@ class Server(Connection):
         return self.peername
 
     @property
-    def cert(self) -> Optional[certs.Cert]:  # pragma: no cover
+    def cert(self) -> certs.Cert | None:  # pragma: no cover
         """*Deprecated:* An outdated alias for `Connection.certificate_list[0]`."""
         warnings.warn(
             "Server.cert is deprecated, use Server.certificate_list instead.",

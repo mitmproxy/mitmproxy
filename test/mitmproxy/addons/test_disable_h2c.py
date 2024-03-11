@@ -1,7 +1,8 @@
 from mitmproxy import flow
 from mitmproxy.addons import disable_h2c
-from mitmproxy.test import taddons, tutils
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
 class TestDisableH2CleartextUpgrade:

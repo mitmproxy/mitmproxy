@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-
-import io
+import configparser
 import contextlib
+import glob
+import io
+import itertools
+import multiprocessing
 import os
 import sys
-import glob
-import multiprocessing
-import configparser
-import itertools
+
 import pytest
 
 
@@ -48,9 +48,9 @@ def run_tests(src, test, fail):
             e = 0
         else:
             cov = [
-                l
-                for l in stdout.getvalue().split("\n")
-                if (src in l) or ("was never imported" in l)
+                line
+                for line in stdout.getvalue().split("\n")
+                if (src in line) or ("was never imported" in line)
             ]
             if len(cov) == 1:
                 print("FAIL:", cov[0])
@@ -87,6 +87,8 @@ def main():
     src_files = [
         f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)
     ]
+    if len(sys.argv) > 1:
+        src_files = [f for f in src_files if sys.argv[1] in str(f)]
 
     ps = []
     for src in sorted(src_files):

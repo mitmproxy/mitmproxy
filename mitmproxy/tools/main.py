@@ -1,16 +1,23 @@
+from __future__ import annotations
+
 import argparse
 import asyncio
+import logging
 import os
 import signal
 import sys
-from collections.abc import Callable, Sequence
-from typing import Any, Optional, TypeVar
+from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Any
+from typing import TypeVar
 
-from mitmproxy import exceptions, master
+from mitmproxy import exceptions
+from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
-from mitmproxy.utils import debug, arg_check
+from mitmproxy.utils import arg_check
+from mitmproxy.utils import debug
 
 
 def process_options(parser, opts, args):
@@ -26,11 +33,10 @@ def process_options(parser, opts, args):
         args.termlog_verbosity = "debug"
         args.flow_detail = 2
 
-    adict = {}
-    for n in dir(args):
-        if n in opts:
-            adict[n] = getattr(args, n)
-    opts.merge(adict)
+    adict = {
+        key: val for key, val in vars(args).items() if key in opts and val is not None
+    }
+    opts.update(**adict)
 
 
 T = TypeVar("T", bound=master.Master)
@@ -40,7 +46,7 @@ def run(
     master_cls: type[T],
     make_parser: Callable[[options.Options], argparse.ArgumentParser],
     arguments: Sequence[str],
-    extra: Callable[[Any], dict] = None,
+    extra: Callable[[Any], dict] | None = None,
 ) -> T:  # pragma: no cover
     """
     extra: Extra argument processing callable which returns a dict of
@@ -48,6 +54,13 @@ def run(
     """
 
     async def main() -> T:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger("tornado").setLevel(logging.WARNING)
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
+        logging.getLogger("hpack").setLevel(logging.WARNING)
+        logging.getLogger("quic").setLevel(
+            logging.WARNING
+        )  # aioquic uses a different prefix...
         debug.register_info_dumpers()
 
         opts = options.Options()
@@ -84,7 +97,7 @@ def run(
                 sys.exit(0)
             if extra:
                 if args.filter_args:
-                    master.log.info(
+                    logging.info(
                         f"Only processing flows that match \"{' & '.join(args.filter_args)}\""
                     )
                 opts.update(**extra(args))
@@ -114,14 +127,14 @@ def run(
     return asyncio.run(main())
 
 
-def mitmproxy(args=None) -> Optional[int]:  # pragma: no cover
+def mitmproxy(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import console
 
     run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
     return None
 
 
-def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
+def mitmdump(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import dump
 
     def extra(args):
@@ -138,7 +151,7 @@ def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
     return None
 
 
-def mitmweb(args=None) -> Optional[int]:  # pragma: no cover
+def mitmweb(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import web
 
     run(web.master.WebMaster, cmdline.mitmweb, args)

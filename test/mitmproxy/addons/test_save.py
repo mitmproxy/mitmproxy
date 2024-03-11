@@ -47,6 +47,24 @@ def test_tcp(tmp_path):
         assert len(rd(p)) == 2
 
 
+def test_udp(tmp_path):
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "foo")
+        tctx.configure(sa, save_stream_file=p)
+
+        tt = tflow.tudpflow()
+        sa.udp_start(tt)
+        sa.udp_end(tt)
+
+        tt = tflow.tudpflow()
+        sa.udp_start(tt)
+        sa.udp_error(tt)
+
+        tctx.configure(sa, save_stream_file=None)
+        assert len(rd(p)) == 2
+
+
 def test_dns(tmp_path):
     sa = save.Save()
     with taddons.context(sa) as tctx:

@@ -193,6 +193,15 @@ exports[`Modal Component 2`] = `
                         value="8080"
                       />
                     </div>
+                    <div
+                      class="small"
+                    >
+                      Default: 
+                      <strong>
+                         8080 
+                      </strong>
+                       
+                    </div>
                   </div>
                 </div>
               </div>

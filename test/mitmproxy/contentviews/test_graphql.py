@@ -1,8 +1,8 @@
 from hypothesis import given
 from hypothesis.strategies import binary
 
-from mitmproxy.contentviews import graphql
 from . import full_eval
+from mitmproxy.contentviews import graphql
 
 
 def test_render_priority():
@@ -19,6 +19,7 @@ def test_render_priority():
     assert 0 == v.render_priority(
         b"""[{"xquery": "query P { \\n }"}]""", content_type="application/json"
     )
+    assert 0 == v.render_priority(b"""[]""", content_type="application/json")
     assert 0 == v.render_priority(b"}", content_type="application/json")
 
 

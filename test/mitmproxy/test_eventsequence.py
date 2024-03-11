@@ -62,6 +62,22 @@ def test_tcp_flow(err):
         assert isinstance(next(i), layers.tcp.TcpEndHook)
 
 
+@pytest.mark.parametrize("err", [False, True])
+def test_udp_flow(err):
+    f = tflow.tudpflow(err=err)
+    i = eventsequence.iterate(f)
+    assert isinstance(next(i), layers.udp.UdpStartHook)
+    assert len(f.messages) == 0
+    assert isinstance(next(i), layers.udp.UdpMessageHook)
+    assert len(f.messages) == 1
+    assert isinstance(next(i), layers.udp.UdpMessageHook)
+    assert len(f.messages) == 2
+    if err:
+        assert isinstance(next(i), layers.udp.UdpErrorHook)
+    else:
+        assert isinstance(next(i), layers.udp.UdpEndHook)
+
+
 @pytest.mark.parametrize(
     "resp, err",
     [

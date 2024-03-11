@@ -1,13 +1,12 @@
-import urwid
-import blinker
 import textwrap
+
+import urwid
+
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
+from mitmproxy.utils import signals as utils_signals
 
 HELP_HEIGHT = 5
-
-
-keybinding_focus_change = blinker.Signal()
 
 
 class KeyItem(urwid.WidgetWrap):
@@ -37,7 +36,8 @@ class KeyItem(urwid.WidgetWrap):
 
 
 class KeyListWalker(urwid.ListWalker):
-    def __init__(self, master):
+    def __init__(self, master, keybinding_focus_change):
+        self.keybinding_focus_change = keybinding_focus_change
         self.master = master
 
         self.index = 0
@@ -46,7 +46,7 @@ class KeyListWalker(urwid.ListWalker):
         self.set_focus(0)
         signals.keybindings_change.connect(self.sig_modified)
 
-    def sig_modified(self, sender):
+    def sig_modified(self):
         self.bindings = list(self.master.keymap.list("all"))
         self.set_focus(min(self.index, len(self.bindings) - 1))
         self._modified()
@@ -65,7 +65,7 @@ class KeyListWalker(urwid.ListWalker):
         binding = self.bindings[index]
         self.index = index
         self.focus_obj = self._get(self.index)
-        keybinding_focus_change.send(binding.help or "")
+        self.keybinding_focus_change.send(binding.help or "")
         self._modified()
 
     def get_next(self, pos):
@@ -88,9 +88,9 @@ class KeyListWalker(urwid.ListWalker):
 
 
 class KeyList(urwid.ListBox):
-    def __init__(self, master):
+    def __init__(self, master, keybinding_focus_change):
         self.master = master
-        self.walker = KeyListWalker(master)
+        self.walker = KeyListWalker(master, keybinding_focus_change)
         super().__init__(self.walker)
 
     def keypress(self, size, key):
@@ -107,7 +107,7 @@ class KeyList(urwid.ListBox):
 
 
 class KeyHelp(urwid.Frame):
-    def __init__(self, master):
+    def __init__(self, master, keybinding_focus_change):
         self.master = master
         super().__init__(self.widget(""))
         self.set_active(False)
@@ -129,12 +129,15 @@ class KeyHelp(urwid.Frame):
 class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Key Bindings"
     keyctx = "keybindings"
+    focus_position: int
 
     def __init__(self, master):
-        oh = KeyHelp(master)
+        keybinding_focus_change = utils_signals.SyncSignal(lambda text: None)
+
+        oh = KeyHelp(master, keybinding_focus_change)
         super().__init__(
             [
-                KeyList(master),
+                KeyList(master, keybinding_focus_change),
                 (HELP_HEIGHT, oh),
             ]
         )

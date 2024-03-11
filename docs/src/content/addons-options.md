@@ -95,4 +95,4 @@ The following types are supported for options.
 
 - Primitive types - `str`, `int`, `float`, `bool`.
 - Optional values, annotated using `typing.Optional`.
-- Sequences of values, annotated using `typing.Sequence`.
+- Sequences of values, annotated using `collections.abc.Sequence`.

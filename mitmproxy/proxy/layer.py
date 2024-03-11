@@ -1,15 +1,24 @@
 """
 Base class for protocol layers.
 """
+
 import collections
 import textwrap
 from abc import abstractmethod
+from collections.abc import Callable
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, ClassVar, Generator, NamedTuple, Optional, TypeVar
+from logging import DEBUG
+from typing import Any
+from typing import ClassVar
+from typing import NamedTuple
+from typing import TypeVar
 
 from mitmproxy.connection import Connection
-from mitmproxy.proxy import commands, events
-from mitmproxy.proxy.commands import Command, StartHook
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy.commands import Command
+from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 
 T = TypeVar("T")
@@ -17,6 +26,10 @@ CommandGenerator = Generator[Command, Any, T]
 """
 A function annotated with CommandGenerator[bool] may yield commands and ultimately return a boolean value.
 """
+
+
+MAX_LOG_STATEMENT_SIZE = 512
+"""Maximum size of individual log statements before they will be truncated."""
 
 
 class Paused(NamedTuple):
@@ -51,7 +64,7 @@ class Layer:
 
     __last_debug_message: ClassVar[str] = ""
     context: Context
-    _paused: Optional[Paused]
+    _paused: Paused | None
     """
     If execution is currently paused, this attribute stores the paused coroutine
     and the command for which we are expecting a reply.
@@ -61,7 +74,7 @@ class Layer:
     All events that have occurred since execution was paused.
     These will be replayed to ._child_layer once we resume.
     """
-    debug: Optional[str] = None
+    debug: str | None = None
     """
     Enable debug logging by assigning a prefix string for log messages.
     Different amounts of whitespace for different layers work well.
@@ -89,15 +102,16 @@ class Layer:
 
     def __debug(self, message):
         """yield a Log command indicating what message is passing through this layer."""
-        if len(message) > 512:
-            message = message[:512] + "…"
+        if len(message) > MAX_LOG_STATEMENT_SIZE:
+            message = message[:MAX_LOG_STATEMENT_SIZE] + "…"
         if Layer.__last_debug_message == message:
             message = message.split("\n", 1)[0].strip()
             if len(message) > 256:
                 message = message[:256] + "…"
         else:
             Layer.__last_debug_message = message
-        return commands.Log(textwrap.indent(message, self.debug), "debug")
+        assert self.debug is not None
+        return commands.Log(textwrap.indent(message, self.debug), DEBUG)
 
     @property
     def stack_pos(self) -> str:
@@ -232,7 +246,7 @@ mevents = (
 
 
 class NextLayer(Layer):
-    layer: Optional[Layer]
+    layer: Layer | None
     """The next layer. To be set by an addon."""
 
     events: list[mevents.Event]
@@ -246,7 +260,7 @@ class NextLayer(Layer):
         self.layer = None
         self.events = []
         self._ask_on_start = ask_on_start
-        self._handle = None
+        self._handle: Callable[[mevents.Event], CommandGenerator[None]] | None = None
 
     def __repr__(self):
         return f"NextLayer:{repr(self.layer)}"
@@ -284,7 +298,7 @@ class NextLayer(Layer):
         # Has an addon decided on the next layer yet?
         if self.layer:
             if self.debug:
-                yield commands.Log(f"{self.debug}[nextlayer] {self.layer!r}", "debug")
+                yield commands.Log(f"{self.debug}[nextlayer] {self.layer!r}", DEBUG)
             for e in self.events:
                 yield from self.layer.handle_event(e)
             self.events.clear()
@@ -295,8 +309,8 @@ class NextLayer(Layer):
             #  2. This layer is not needed anymore, so we directly reassign .handle_event.
             #  3. Some layers may however still have a reference to the old .handle_event.
             #     ._handle is just an optimization to reduce the callstack in these cases.
-            self.handle_event = self.layer.handle_event
-            self._handle_event = self.layer.handle_event
+            self.handle_event = self.layer.handle_event  # type: ignore
+            self._handle_event = self.layer.handle_event  # type: ignore
             self._handle = self.layer.handle_event
 
     # Utility methods for whoever decides what the next layer is going to be.

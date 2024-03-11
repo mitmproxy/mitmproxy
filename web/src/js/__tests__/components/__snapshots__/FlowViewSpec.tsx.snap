@@ -1006,7 +1006,7 @@ exports[`FlowView 7`] = `
         class="active"
         href="#"
       >
-        TCP Messages
+        Stream Data
       </a>
       <a
         class=""
@@ -1030,9 +1030,6 @@ exports[`FlowView 7`] = `
     <section
       class="tcp"
     >
-      <h4>
-        TCP Data
-      </h4>
       <div
         class="contentview"
       >
@@ -1079,7 +1076,7 @@ exports[`FlowView 8`] = `
         class=""
         href="#"
       >
-        TCP Messages
+        Stream Data
       </a>
       <a
         class="active"
@@ -1393,6 +1390,127 @@ exports[`FlowView 11`] = `
         href="#"
       >
         Response
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="error"
+    >
+      <div
+        class="alert alert-warning"
+      >
+        error
+        <div>
+          <small>
+            1999-12-31 23:00:07.000
+          </small>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 12`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class="active"
+        href="#"
+      >
+        Datagrams
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Error
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Connection
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Timing
+      </a>
+    </nav>
+    <section
+      class="udp"
+    >
+      <div
+        class="contentview"
+      >
+        <div
+          class="controls"
+        >
+          <h5>
+            2 Messages
+          </h5>
+          <a
+            class="btn btn-default btn-xs"
+            href="#"
+          >
+            <span>
+              <i
+                class="fa fa-fw fa-files-o"
+              />
+               
+              <b>
+                View:
+              </b>
+               auto 
+              <span
+                class="caret"
+              />
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowView 13`] = `
+<DocumentFragment>
+  <div
+    class="flow-detail"
+  >
+    <nav
+      class="nav-tabs nav-tabs-sm"
+    >
+      <a
+        class=""
+        href="#"
+      >
+        Datagrams
       </a>
       <a
         class="active"

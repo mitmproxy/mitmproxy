@@ -1,15 +1,15 @@
-from typing import TextIO, Callable
+from collections.abc import Callable
+from typing import TextIO
 from unittest import mock
 from unittest.mock import MagicMock
 
+from examples.contrib.webscanner_helper.mapping import MappingAddon
+from examples.contrib.webscanner_helper.mapping import MappingAddonConfig
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from examples.contrib.webscanner_helper.mapping import MappingAddon, MappingAddonConfig
-
 
 class TestConfig:
-
     def test_config(self):
         assert MappingAddonConfig.HTML_PARSER == "html.parser"
 
@@ -20,7 +20,6 @@ mapping_content = f'{{"{url}": {{"body": "{new_content}"}}}}'
 
 
 class TestMappingAddon:
-
     def test_init(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
         with open(tmpfile, "w") as tfile:
@@ -36,8 +35,8 @@ class TestMappingAddon:
         loader = MagicMock()
 
         mapping.load(loader)
-        assert 'mapping_file' in str(loader.add_option.call_args_list)
-        assert 'map_persistent' in str(loader.add_option.call_args_list)
+        assert "mapping_file" in str(loader.add_option.call_args_list)
+        assert "map_persistent" in str(loader.add_option.call_args_list)
 
     def test_configure(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
@@ -45,7 +44,10 @@ class TestMappingAddon:
             tfile.write(mapping_content)
         mapping = MappingAddon(tmpfile)
         new_filename = "My new filename"
-        updated = {str(mapping.OPT_MAPPING_FILE): new_filename, str(mapping.OPT_MAP_PERSISTENT): True}
+        updated = {
+            str(mapping.OPT_MAPPING_FILE): new_filename,
+            str(mapping.OPT_MAP_PERSISTENT): True,
+        }
 
         open_mock = mock.mock_open(read_data="{}")
         with mock.patch("builtins.open", open_mock):
@@ -161,5 +163,8 @@ class TestMappingAddon:
         with open(tmpfile, "w") as tfile:
             tfile.write("{}")
         mapping = MappingAddon(tmpfile, persistent=True)
-        with mock.patch('examples.complex.webscanner_helper.urldict.URLDict.dump', selfself.mock_dump):
+        with mock.patch(
+            "examples.complex.webscanner_helper.urldict.URLDict.dump",
+            selfself.mock_dump,
+        ):
             mapping.done()

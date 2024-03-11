@@ -1,19 +1,19 @@
+import logging
 import pathlib
 import time
-import logging
 from datetime import datetime
-from typing import Union
 
 import mitmproxy.connections
 import mitmproxy.http
-from mitmproxy.addons.export import curl_command, raw
+from mitmproxy.addons.export import curl_command
+from mitmproxy.addons.export import raw
 from mitmproxy.exceptions import HttpSyntaxException
 
 logger = logging.getLogger(__name__)
 
 
-class WatchdogAddon():
-    """ The Watchdog Add-on can be used in combination with web application scanners in oder to check if the device
+class WatchdogAddon:
+    """The Watchdog Add-on can be used in combination with web application scanners in oder to check if the device
         under test responds correctls to the scanner's responses.
 
     The Watchdog Add-on checks if the device under test responds correctly to the scanner's responses.
@@ -35,8 +35,8 @@ class WatchdogAddon():
             raise RuntimeError("Watchtdog output path must be a directory.")
         elif not self.flow_dir.exists():
             self.flow_dir.mkdir(parents=True)
-        self.last_trigger: Union[None, float] = None
-        self.timeout: Union[None, float] = timeout
+        self.last_trigger: None | float = None
+        self.timeout: None | float = timeout
 
     def serverconnect(self, conn: mitmproxy.connections.ServerConnection):
         if self.timeout is not None:
@@ -45,10 +45,14 @@ class WatchdogAddon():
     @classmethod
     def not_in_timeout(cls, last_triggered, timeout):
         """Checks if current error lies not in timeout after last trigger (potential reset of connection)."""
-        return last_triggered is None or timeout is None or (time.time() - last_triggered > timeout)
+        return (
+            last_triggered is None
+            or timeout is None
+            or (time.time() - last_triggered > timeout)
+        )
 
     def error(self, flow):
-        """ Checks if the watchdog will be triggered.
+        """Checks if the watchdog will be triggered.
 
         Only triggers watchdog for timeouts after last reset and if flow.error is set (shows that error is a server
         error). Ignores HttpSyntaxException Errors since this can be triggered on purpose by web application scanner.
@@ -56,16 +60,22 @@ class WatchdogAddon():
         Args:
             flow: mitmproxy.http.flow
         """
-        if (self.not_in_timeout(self.last_trigger, self.timeout)
-                and flow.error is not None and not isinstance(flow.error, HttpSyntaxException)):
-
+        if (
+            self.not_in_timeout(self.last_trigger, self.timeout)
+            and flow.error is not None
+            and not isinstance(flow.error, HttpSyntaxException)
+        ):
             self.last_trigger = time.time()
             logger.error(f"Watchdog triggered! Cause: {flow}")
             self.error_event.set()
 
             # save the request which might have caused the problem
             if flow.request:
-                with (self.flow_dir / f"{datetime.utcnow().isoformat()}.curl").open("w") as f:
+                with (self.flow_dir / f"{datetime.utcnow().isoformat()}.curl").open(
+                    "w"
+                ) as f:
                     f.write(curl_command(flow))
-                with (self.flow_dir / f"{datetime.utcnow().isoformat()}.raw").open("wb") as f:
+                with (self.flow_dir / f"{datetime.utcnow().isoformat()}.raw").open(
+                    "wb"
+                ) as f:
                     f.write(raw(flow))

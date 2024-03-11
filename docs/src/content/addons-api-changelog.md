@@ -10,6 +10,31 @@ menu:
 
 We try to avoid them, but this page lists breaking changes in the mitmproxy addon API.
 
+## mitmproxy >= 9.1
+
+`mitmproxy.connection.Client` and `mitmproxy.connection.Server` now accept keyword arguments only.
+
+## mitmproxy 9.0
+
+#### Logging
+
+We've deprecated mitmproxy's homegrown logging system in favor of Python's builtin `logging` module.
+This means that addons should now use standard logging functionality instead of `mitmproxy.ctx.log`:
+
+```python
+# Deprecated:
+from mitmproxy import ctx
+ctx.log.info("hello world")
+
+# New:
+import logging
+logging.info("hello world")
+```
+
+
+Accordingly, the `add_log` event has been deprecated. Developers who rely on log entries should register their own 
+`logging.Handler` instead. An example for this can be found in the `EventStore` addon.
+
 ## mitmproxy 7.0
 
 #### Connection Events

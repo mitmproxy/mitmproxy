@@ -1,27 +1,30 @@
-import {TFlow} from "../../ducks/tutils";
-import * as React from 'react';
-import HttpMessage, {ViewImage} from '../../../components/contentviews/HttpMessage'
-import {fireEvent, render, screen, waitFor} from "../../test-utils"
-import fetchMock, {enableFetchMocks} from "jest-fetch-mock";
-import {SHOW_MAX_LINES} from "../../../components/contentviews/useContent";
+import { TFlow } from "../../ducks/tutils";
+import * as React from "react";
+import HttpMessage, {
+    ViewImage,
+} from "../../../components/contentviews/HttpMessage";
+import { fireEvent, render, screen, waitFor } from "../../test-utils";
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
-jest.mock("../../../contrib/CodeMirror")
+jest.mock("../../../contrib/CodeMirror");
 
 enableFetchMocks();
 
 test("HttpMessage", async () => {
-    const lines = Array(SHOW_MAX_LINES).fill([["text", "data"]]).concat(
-        Array(SHOW_MAX_LINES).fill([["text", "additional"]])
-    );
+    const lines = Array(512)
+        .fill([["text", "data"]])
+        .concat(Array(512).fill([["text", "additional"]]));
 
     fetchMock.mockResponses(
         JSON.stringify({
-            lines: lines.slice(0, SHOW_MAX_LINES + 1),
-            description: "Auto"
-        }), JSON.stringify({
+            lines: lines.slice(0, 512 + 1),
+            description: "Auto",
+        }),
+        JSON.stringify({
             lines,
-            description: "Auto"
-        }), JSON.stringify({
+            description: "Auto",
+        }),
+        JSON.stringify({
             lines: Array(5).fill([["text", "rawdata"]]),
             description: "Raw",
         }),
@@ -33,9 +36,11 @@ test("HttpMessage", async () => {
     );
 
     const tflow = TFlow();
-    const {asFragment} = render(<HttpMessage flow={tflow} message={tflow.request}/>);
+    const { asFragment } = render(
+        <HttpMessage flow={tflow} message={tflow.request} />
+    );
     await waitFor(() => screen.getAllByText("data"));
-    expect(screen.queryByText('additional')).toBeNull();
+    expect(screen.queryByText("additional")).toBeNull();
 
     fireEvent.click(screen.getByText("Show more"));
     await waitFor(() => screen.getAllByText("additional"));
@@ -55,6 +60,8 @@ test("HttpMessage", async () => {
 
 test("ViewImage", async () => {
     const flow = TFlow();
-    const {asFragment} = render(<ViewImage flow={flow} message={flow.request}/>)
+    const { asFragment } = render(
+        <ViewImage flow={flow} message={flow.request} />
+    );
     expect(asFragment()).toMatchSnapshot();
 });

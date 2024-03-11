@@ -1,7 +1,5 @@
-from typing import Optional
-
-from mitmproxy.net.http import url
 from . import base
+from mitmproxy.net.http import url
 
 
 class ViewURLEncoded(base.View):
@@ -16,6 +14,6 @@ class ViewURLEncoded(base.View):
         return "URLEncoded form", base.format_pairs(d)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(bool(data) and content_type == "application/x-www-form-urlencoded")

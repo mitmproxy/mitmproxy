@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-
+import glob
 import os
 import re
-import glob
 import sys
 
 
@@ -16,6 +15,7 @@ def check_src_files_have_test():
         "mitmproxy/test/",
         "mitmproxy/tools/",
         "mitmproxy/platform/",
+        "mitmproxy/utils/pyinstaller/",
     ]
     src_files = glob.glob("mitmproxy/**/*.py", recursive=True)
     src_files = [f for f in src_files if os.path.basename(f) != "__init__.py"]

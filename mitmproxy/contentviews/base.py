@@ -1,7 +1,11 @@
 # Default view cutoff *in lines*
-from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator, Mapping
-from typing import ClassVar, Optional, Union
+from abc import ABC
+from abc import abstractmethod
+from collections.abc import Iterable
+from collections.abc import Iterator
+from collections.abc import Mapping
+from typing import ClassVar
+from typing import Union
 
 from mitmproxy import flow
 from mitmproxy import http
@@ -21,9 +25,9 @@ class View(ABC):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> TViewResult:
         """
@@ -47,9 +51,9 @@ class View(ABC):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> float:
         """
@@ -81,7 +85,6 @@ def format_pairs(items: Iterable[tuple[TTextType, TTextType]]) -> Iterator[TView
 
     for key, value in items:
         if isinstance(key, bytes):
-
             key += b":"
         else:
             key += ":"

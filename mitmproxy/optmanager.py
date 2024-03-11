@@ -1,18 +1,23 @@
+from __future__ import annotations
+
 import contextlib
 import copy
-from collections.abc import Sequence
-from dataclasses import dataclass
-import functools
-import os
 import pprint
 import textwrap
-from typing import Any, Optional, TextIO, Union
+import weakref
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+from typing import Optional
+from typing import TextIO
 
-import blinker
-import blinker._saferef
 import ruamel.yaml
 
 from mitmproxy import exceptions
+from mitmproxy.utils import signals
 from mitmproxy.utils import typecheck
 
 """
@@ -28,10 +33,10 @@ class _Option:
     def __init__(
         self,
         name: str,
-        typespec: Union[type, object],  # object for Optional[x], which is not a type.
+        typespec: type | object,  # object for Optional[x], which is not a type.
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]],
+        choices: Sequence[str] | None,
     ) -> None:
         typecheck.check_option_type(name, default, typespec)
         self.name = name
@@ -83,11 +88,19 @@ class _UnconvertedStrings:
     val: list[str]
 
 
+def _sig_changed_spec(updated: set[str]) -> None:  # pragma: no cover
+    ...  # expected function signature for OptManager.changed receivers.
+
+
+def _sig_errored_spec(exc: Exception) -> None:  # pragma: no cover
+    ...  # expected function signature for OptManager.errored receivers.
+
+
 class OptManager:
     """
     OptManager is the base class from which Options objects are derived.
 
-    .changed is a blinker Signal that triggers whenever options are
+    .changed is a Signal that triggers whenever options are
     updated. If any handler in the chain raises an exceptions.OptionsError
     exception, all changes are rolled back, the exception is suppressed,
     and the .errored signal is notified.
@@ -96,10 +109,12 @@ class OptManager:
     mutation doesn't change the option state inadvertently.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.deferred: dict[str, Any] = {}
-        self.changed = blinker.Signal()
-        self.errored = blinker.Signal()
+        self.changed = signals.SyncSignal(_sig_changed_spec)
+        self.changed.connect(self._notify_subscribers)
+        self.errored = signals.SyncSignal(_sig_errored_spec)
+        self._subscriptions: list[tuple[weakref.ref[Callable], set[str]]] = []
         # Options must be the last attribute here - after that, we raise an
         # error for attribute assignment to unknown options.
         self._options: dict[str, Any] = {}
@@ -107,13 +122,13 @@ class OptManager:
     def add_option(
         self,
         name: str,
-        typespec: Union[type, object],
+        typespec: type | object,
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]] = None,
+        choices: Sequence[str] | None = None,
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
-        self.changed.send(self, updated={name})
+        self.changed.send(updated={name})
 
     @contextlib.contextmanager
     def rollback(self, updated, reraise=False):
@@ -122,10 +137,10 @@ class OptManager:
             yield
         except exceptions.OptionsError as e:
             # Notify error handlers
-            self.errored.send(self, exc=e)
+            self.errored.send(exc=e)
             # Rollback
             self.__dict__["_options"] = old
-            self.changed.send(self, updated=updated)
+            self.changed.send(updated=updated)
             if reraise:
                 raise e
 
@@ -141,23 +156,22 @@ class OptManager:
             if i not in self._options:
                 raise exceptions.OptionsError("No such option: %s" % i)
 
-        # We reuse blinker's safe reference functionality to cope with weakrefs
-        # to bound methods.
-        func = blinker._saferef.safe_ref(func)
+        self._subscriptions.append((signals.make_weak_ref(func), set(opts)))
 
-        @functools.wraps(func)
-        def _call(options, updated):
-            if updated.intersection(set(opts)):
-                f = func()
-                if f:
-                    f(options, updated)
-                else:
-                    self.changed.disconnect(_call)
+    def _notify_subscribers(self, updated) -> None:
+        cleanup = False
+        for ref, opts in self._subscriptions:
+            callback = ref()
+            if callback is not None:
+                if opts & updated:
+                    callback(self, updated)
+            else:
+                cleanup = True
 
-        # Our wrapper function goes out of scope immediately, so we have to set
-        # weakrefs to false. This means we need to keep our own weakref, and
-        # clean up the hook when it's gone.
-        self.changed.connect(_call, weak=False)
+        if cleanup:
+            self.__dict__["_subscriptions"] = [
+                (ref, opts) for (ref, opts) in self._subscriptions if ref() is not None
+            ]
 
     def __eq__(self, other):
         if isinstance(other, OptManager):
@@ -202,7 +216,7 @@ class OptManager:
         """
         for o in self._options.values():
             o.reset()
-        self.changed.send(self, updated=set(self._options.keys()))
+        self.changed.send(updated=set(self._options.keys()))
 
     def update_known(self, **kwargs):
         """
@@ -220,7 +234,7 @@ class OptManager:
             with self.rollback(updated, reraise=True):
                 for k, v in known.items():
                     self._options[k].set(v)
-                self.changed.send(self, updated=updated)
+                self.changed.send(updated=updated)
         return unknown
 
     def update_defer(self, **kwargs):
@@ -358,7 +372,7 @@ class OptManager:
                 f"Received multiple values for {o.name}: {values}"
             )
 
-        optstr: Optional[str]
+        optstr: str | None
         if values:
             optstr = values[0]
         else:
@@ -401,9 +415,9 @@ class OptManager:
 
         o = self._options[optname]
 
-        def mkf(l, s):
-            l = l.replace("_", "-")
-            f = ["--%s" % l]
+        def mkf(x, s):
+            x = x.replace("_", "-")
+            f = ["--%s" % x]
             if s:
                 f.append("-" + s)
             return f
@@ -482,14 +496,15 @@ def dump_defaults(opts, out: TextIO):
     return ruamel.yaml.YAML().dump(s, out)
 
 
-def dump_dicts(opts, keys: list[str] = None):
+def dump_dicts(opts, keys: Iterable[str] | None = None) -> dict:
     """
     Dumps the options into a list of dict object.
 
     Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
     """
     options_dict = {}
-    keys = keys if keys else opts.keys()
+    if keys is None:
+        keys = opts.keys()
     for k in sorted(keys):
         o = opts._options[k]
         t = typecheck.typespec_to_str(o.typespec)
@@ -508,14 +523,14 @@ def parse(text):
     if not text:
         return {}
     try:
-        yaml = ruamel.yaml.YAML(typ="unsafe", pure=True)
+        yaml = ruamel.yaml.YAML(typ="safe", pure=True)
         data = yaml.load(text)
     except ruamel.yaml.error.YAMLError as v:
         if hasattr(v, "problem_mark"):
             snip = v.problem_mark.get_snippet()
             raise exceptions.OptionsError(
                 "Config error at line %s:\n%s\n%s"
-                % (v.problem_mark.line + 1, snip, v.problem)
+                % (v.problem_mark.line + 1, snip, getattr(v, "problem", ""))
             )
         else:
             raise exceptions.OptionsError("Could not parse options.")
@@ -526,31 +541,38 @@ def parse(text):
     return data
 
 
-def load(opts: OptManager, text: str) -> None:
+def load(opts: OptManager, text: str, cwd: Path | str | None = None) -> None:
     """
     Load configuration from text, over-writing options already set in
     this object. May raise OptionsError if the config file is invalid.
     """
     data = parse(text)
+
+    scripts = data.get("scripts")
+    if scripts is not None and cwd is not None:
+        data["scripts"] = [
+            str(relative_path(Path(path), relative_to=Path(cwd))) for path in scripts
+        ]
+
     opts.update_defer(**data)
 
 
-def load_paths(opts: OptManager, *paths: str) -> None:
+def load_paths(opts: OptManager, *paths: Path | str) -> None:
     """
     Load paths in order. Each path takes precedence over the previous
     path. Paths that don't exist are ignored, errors raise an
     OptionsError.
     """
     for p in paths:
-        p = os.path.expanduser(p)
-        if os.path.exists(p) and os.path.isfile(p):
-            with open(p, encoding="utf8") as f:
+        p = Path(p).expanduser()
+        if p.exists() and p.is_file():
+            with p.open(encoding="utf8") as f:
                 try:
                     txt = f.read()
                 except UnicodeDecodeError as e:
                     raise exceptions.OptionsError(f"Error reading {p}: {e}")
             try:
-                load(opts, txt)
+                load(opts, txt, cwd=p.absolute().parent)
             except exceptions.OptionsError as e:
                 raise exceptions.OptionsError(f"Error reading {p}: {e}")
 
@@ -579,15 +601,15 @@ def serialize(
     ruamel.yaml.YAML().dump(data, file)
 
 
-def save(opts: OptManager, path: str, defaults: bool = False) -> None:
+def save(opts: OptManager, path: Path | str, defaults: bool = False) -> None:
     """
     Save to path. If the destination file exists, modify it in-place.
 
     Raises OptionsError if the existing data is corrupt.
     """
-    path = os.path.expanduser(path)
-    if os.path.exists(path) and os.path.isfile(path):
-        with open(path, encoding="utf8") as f:
+    path = Path(path).expanduser()
+    if path.exists() and path.is_file():
+        with path.open(encoding="utf8") as f:
             try:
                 data = f.read()
             except UnicodeDecodeError as e:
@@ -595,5 +617,17 @@ def save(opts: OptManager, path: str, defaults: bool = False) -> None:
     else:
         data = ""
 
-    with open(path, "wt", encoding="utf8") as f:
+    with path.open("w", encoding="utf8") as f:
         serialize(opts, f, data, defaults)
+
+
+def relative_path(script_path: Path | str, *, relative_to: Path | str) -> Path:
+    """
+    Make relative paths found in config files relative to said config file,
+    instead of relative to where the command is ran.
+    """
+    script_path = Path(script_path)
+    # Edge case when $HOME is not an absolute path
+    if script_path.expanduser() != script_path and not script_path.is_absolute():
+        script_path = script_path.expanduser().absolute()
+    return (relative_to / script_path.expanduser()).absolute()

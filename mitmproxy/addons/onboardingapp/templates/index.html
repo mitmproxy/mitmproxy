@@ -50,6 +50,11 @@
         <li><code>mv mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt</code></li>
         <li><code>sudo update-ca-certificates</code></li>
     </ol>
+    <h5>Fedora</h5>
+    <ol>
+        <li><code>mv mitmproxy-ca-cert.pem /etc/pki/ca-trust/source/anchors/</code></li>
+        <li><code>sudo update-ca-trust</code></li>
+    </ol>
     {% endcall %}
     {% call entry('macOS', 'apple') %}
     <h5>Manual Installation</h5>
@@ -92,6 +97,9 @@
             User-added CAs are not accepted unless the application manually opts in. Except for browsers, you need to
             patch most apps manually
             (<a href="https://developer.android.com/training/articles/security-config">Android network security config</a>).
+        </p>
+        <p>
+          Alternatively, if you have rooted the device and have Magisk installed, you can install <a href="/cert/magisk">this Magisk module</a> via the Magisk Manager app.
         </p>
     </div>
     {% endcall %}

@@ -1,7 +1,7 @@
 import io
-from typing import Optional
 
 from kaitaistruct import KaitaiStream
+
 from . import base
 from mitmproxy.contrib.kaitaistruct import google_protobuf
 
@@ -22,15 +22,26 @@ def write_buf(out, field_tag, body, indent_level):
         out.write(" " * indent_level + "}\n")
 
 
+def _parse_proto(raw: bytes) -> list[google_protobuf.GoogleProtobuf.Pair]:
+    """Parse a bytestring into protobuf pairs and make sure that all pairs have a valid wire type."""
+    buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(raw)))
+    for pair in buf.pairs:
+        if not isinstance(
+            pair.wire_type, google_protobuf.GoogleProtobuf.Pair.WireTypes
+        ):
+            raise ValueError("Not a protobuf.")
+    return buf.pairs
+
+
 def format_pbuf(raw):
     out = io.StringIO()
     stack = []
 
     try:
-        buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(raw)))
-    except:
+        pairs = _parse_proto(raw)
+    except Exception:
         return False
-    stack.extend([(pair, 0) for pair in buf.pairs[::-1]])
+    stack.extend([(pair, 0) for pair in pairs[::-1]])
 
     while len(stack):
         pair, indent_level = stack.pop()
@@ -48,10 +59,10 @@ def format_pbuf(raw):
             body = pair.value
 
         try:
-            next_buf = google_protobuf.GoogleProtobuf(KaitaiStream(io.BytesIO(body)))
-            stack.extend([(pair, indent_level + 2) for pair in next_buf.pairs[::-1]])
+            pairs = _parse_proto(body)  # type: ignore
+            stack.extend([(pair, indent_level + 2) for pair in pairs[::-1]])
             write_buf(out, pair.field_tag, None, indent_level)
-        except:
+        except Exception:
             write_buf(out, pair.field_tag, body, indent_level)
 
         if stack:
@@ -86,6 +97,6 @@ class ViewProtobuf(base.View):
         return "Protobuf", base.format_text(decoded)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(bool(data) and content_type in self.__content_types)

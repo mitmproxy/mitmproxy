@@ -652,7 +652,7 @@ class TCmds(TAttr):
         pass
 
 
-async def test_collect_commands():
+async def test_collect_commands(caplog):
     """
     This tests for errors thrown by getattr() or __getattr__ implementations
     that return an object for .command_name.
@@ -665,7 +665,7 @@ async def test_collect_commands():
 
         a = TypeErrAddon()
         c.collect_commands(a)
-        await tctx.master.await_log("Could not load")
+        assert "Could not load" in caplog.text
 
 
 def test_decorator():

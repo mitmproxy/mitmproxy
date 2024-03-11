@@ -1,18 +1,35 @@
+from __future__ import annotations
+
 import socket
 import struct
+import sys
 from abc import ABCMeta
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional
 
-from mitmproxy import connection, platform
-from mitmproxy.net import server_spec
-from mitmproxy.proxy import commands, events, layer
+from mitmproxy import connection
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.proxy.utils import expect
+
+if sys.version_info < (3, 11):
+    from typing_extensions import assert_never
+else:
+    from typing import assert_never
 
 
 class HttpProxy(layer.Layer):
+    @expect(events.Start)
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        child_layer = layer.NextLayer(self.context)
+        self._handle_event = child_layer.handle_event
+        yield from child_layer.handle_event(event)
+
+
+class HttpUpstreamProxy(layer.Layer):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         child_layer = layer.NextLayer(self.context)
@@ -25,10 +42,11 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 
     child_layer: layer.Layer
 
-    def finish_start(self) -> layer.CommandGenerator[Optional[str]]:
+    def finish_start(self) -> layer.CommandGenerator[str | None]:
         if (
             self.context.options.connection_strategy == "eager"
             and self.context.server.address
+            and self.context.server.transport_protocol == "tcp"
         ):
             err = yield commands.OpenConnection(self.context.server)
             if err:
@@ -47,15 +65,21 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
 class ReverseProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        spec = server_spec.parse_with_mode(self.context.options.mode)[1]
+        spec = self.context.client.proxy_mode
+        assert isinstance(spec, ReverseMode)
         self.context.server.address = spec.address
 
-        if spec.scheme not in ("http", "tcp"):
-            if not self.context.options.keep_host_header:
-                self.context.server.sni = spec.address[0]
-            self.child_layer = tls.ServerTLSLayer(self.context)
-        else:
-            self.child_layer = layer.NextLayer(self.context)
+        self.child_layer = layer.NextLayer(self.context)
+
+        # For secure protocols, set SNI if keep_host_header is false
+        match spec.scheme:
+            case "http3" | "quic" | "https" | "tls" | "dtls":
+                if not self.context.options.keep_host_header:
+                    self.context.server.sni = spec.address[0]
+            case "tcp" | "http" | "udp" | "dns":
+                pass
+            case _:  # pragma: no cover
+                assert_never(spec.scheme)
 
         err = yield from self.finish_start()
         if err:
@@ -65,15 +89,8 @@ class ReverseProxy(DestinationKnown):
 class TransparentProxy(DestinationKnown):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        assert platform.original_addr is not None
-        socket = yield commands.GetSocket(self.context.client)
-        try:
-            self.context.server.address = platform.original_addr(socket)
-        except Exception as e:
-            yield commands.Log(f"Transparent mode failure: {e!r}")
-
+        assert self.context.server.address, "No server address set."
         self.child_layer = layer.NextLayer(self.context)
-
         err = yield from self.finish_start()
         if err:
             yield commands.CloseConnection(self.context.client)
@@ -119,7 +136,7 @@ class Socks5Proxy(DestinationKnown):
     def socks_err(
         self,
         message: str,
-        reply_code: Optional[int] = None,
+        reply_code: int | None = None,
     ) -> layer.CommandGenerator[None]:
         if reply_code is not None:
             yield commands.SendData(
@@ -147,7 +164,7 @@ class Socks5Proxy(DestinationKnown):
         else:
             raise AssertionError(f"Unknown event: {event}")
 
-    def state_greet(self):
+    def state_greet(self) -> layer.CommandGenerator[None]:
         if len(self.buf) < 2:
             return
 
@@ -187,9 +204,9 @@ class Socks5Proxy(DestinationKnown):
         self.buf = self.buf[2 + n_methods :]
         yield from self.state()
 
-    state = state_greet
+    state: Callable[..., layer.CommandGenerator[None]] = state_greet
 
-    def state_auth(self):
+    def state_auth(self) -> layer.CommandGenerator[None]:
         if len(self.buf) < 3:
             return
 
@@ -218,7 +235,7 @@ class Socks5Proxy(DestinationKnown):
         self.state = self.state_connect
         yield from self.state()
 
-    def state_connect(self):
+    def state_connect(self) -> layer.CommandGenerator[None]:
         # Parse Connect Request
         if len(self.buf) < 5:
             return

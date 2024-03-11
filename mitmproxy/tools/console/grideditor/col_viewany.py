@@ -1,9 +1,11 @@
 """
 A display-only column that displays any data type.
 """
+
 from typing import Any
 
 import urwid
+
 from mitmproxy.tools.console.grideditor import base
 from mitmproxy.utils import strutils
 

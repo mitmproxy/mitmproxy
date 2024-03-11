@@ -1,11 +1,18 @@
 import time
 
-from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layers import dns
+from ..tutils import Placeholder
+from ..tutils import Playbook
+from ..tutils import reply
 from mitmproxy.dns import DNSFlow
-from mitmproxy.test.tutils import tdnsreq, tdnsresp
-from ..tutils import Placeholder, Playbook, reply
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers import dns
+from mitmproxy.test.tutils import tdnsreq
+from mitmproxy.test.tutils import tdnsresp
 
 
 def test_invalid_and_dummy_end(tctx):
@@ -15,11 +22,8 @@ def test_invalid_and_dummy_end(tctx):
         << Log(
             "Client(client:1234, state=open) sent an invalid message: question #0: unpack encountered a label of length 99"
         )
+        << CloseConnection(tctx.client)
         >> ConnectionClosed(tctx.client)
-        >> DataReceived(tctx.client, b"You still there?")
-        >> DataReceived(tctx.client, tdnsreq().packed)
-        >> DataReceived(tctx.client, b"Hello?")
-        << None
     )
 
 

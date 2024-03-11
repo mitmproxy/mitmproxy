@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (major.minor.patch)'
+        required: true
+        type: string
+      skip-branch-status-check:
+        description: 'Skip CI status check.'
+        default: false
+        required: false
+        type: boolean
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  release:
+    environment: deploy-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PUSH_TOKEN }}  # this token works to push to the protected main branch.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/node-version.txt
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .github/python-version.txt
+      - run: ./release/release.py ${{ inputs.version }} ${{ inputs.skip-branch-status-check }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # this token works with the GraphQL API

@@ -1,8 +1,18 @@
 """Post messages to mitmproxy's event log."""
-from mitmproxy import ctx
+
+import logging
+
+from mitmproxy.addonmanager import Loader
+from mitmproxy.log import ALERT
+
+logger = logging.getLogger(__name__)
 
 
-def load(l):
-    ctx.log.info("This is some informative text.")
-    ctx.log.warn("This is a warning.")
-    ctx.log.error("This is an error.")
+def load(loader: Loader):
+    logger.info("This is some informative text.")
+    logger.warning("This is a warning.")
+    logger.error("This is an error.")
+    logger.log(
+        ALERT,
+        "This is an alert. It has the same urgency as info, but will also pop up in the status bar.",
+    )

@@ -1,9 +1,7 @@
-import imghdr
-from typing import Optional
-
-from mitmproxy.contentviews import base
-from mitmproxy.coretypes import multidict
 from . import image_parser
+from mitmproxy.contentviews import base
+from mitmproxy.contrib import imghdr
+from mitmproxy.coretypes import multidict
 
 
 def test_ico(h, f):
@@ -36,7 +34,7 @@ class ViewImage(base.View):
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(
             bool(

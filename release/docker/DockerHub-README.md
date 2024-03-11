@@ -4,14 +4,16 @@ Containerized version of [mitmproxy](https://mitmproxy.org/): an interactive, SS
 
 ## Usage
 
+To launch the terminal user interface of mitmproxy:
+
 ```sh
-$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 mitmproxy/mitmproxy
-[terminal user interface of mitmproxy is launched...]
+$ docker run --rm -it -v ~/.mitmproxy:/home/mitmproxy/.mitmproxy -p 8080:8080 mitmproxy/mitmproxy
 ```
 
-The *volume mount* is optional: It's to store the generated CA certificates.
+Note: The `-v` for *volume mount* is optional. It allows to persist and reuse the generated CA certificates between runs, and for you to access them.
+Without it, a new root CA would be generated on each container restart.
 
-Once started, mitmproxy listens as a HTTP proxy on `localhost:8080`:
+Once started, mitmproxy listens as an HTTP proxy on `localhost:8080`:
 
 ```sh
 $ http_proxy=http://localhost:8080/ curl http://example.com/
@@ -45,7 +47,8 @@ Proxy server listening at http://*:8080
 [...]
 ```
 
-For further details, please consult the mitmproxy [documentation](http://docs.mitmproxy.org/en/stable/).
+If `~/.mitmproxy/mitmproxy-ca.pem` is present in the container, mitmproxy will assume uid and gid from the file owner.
+For further details, please consult the mitmproxy [documentation](https://docs.mitmproxy.org/en/stable/).
 
 ## Tags
 

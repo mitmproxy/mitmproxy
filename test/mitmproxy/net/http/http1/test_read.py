@@ -1,18 +1,17 @@
 import pytest
 
 from mitmproxy.http import Headers
-from mitmproxy.net.http.http1.read import (
-    read_request_head,
-    read_response_head,
-    connection_close,
-    expected_http_body_size,
-    _read_request_line,
-    _read_response_line,
-    _read_headers,
-    get_header_tokens,
-    validate_headers,
-)
-from mitmproxy.test.tutils import treq, tresp
+from mitmproxy.net.http.http1.read import _read_headers
+from mitmproxy.net.http.http1.read import _read_request_line
+from mitmproxy.net.http.http1.read import _read_response_line
+from mitmproxy.net.http.http1.read import connection_close
+from mitmproxy.net.http.http1.read import expected_http_body_size
+from mitmproxy.net.http.http1.read import get_header_tokens
+from mitmproxy.net.http.http1.read import read_request_head
+from mitmproxy.net.http.http1.read import read_response_head
+from mitmproxy.net.http.http1.read import validate_headers
+from mitmproxy.test.tutils import treq
+from mitmproxy.test.tutils import tresp
 
 
 def test_get_header_tokens():
@@ -124,7 +123,7 @@ def test_expected_http_body_size():
     with pytest.raises(ValueError, match="Invalid transfer encoding"):
         expected_http_body_size(
             treq(
-                headers=Headers(transfer_encoding="chun\u212Aed")
+                headers=Headers(transfer_encoding="chun\u212aed")
             ),  # "chunKed".lower() == "chunked"
         )
     with pytest.raises(ValueError, match="Unknown transfer encoding"):

@@ -8,8 +8,10 @@ from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.io import tnetstring
-from mitmproxy.proxy import server_hooks, layers
-from mitmproxy.test import taddons, tflow
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import server_hooks
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class State:
@@ -42,10 +44,10 @@ class TestSerialize:
 
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        l = list(r.stream())
-        assert len(l) == 1
+        lst = list(r.stream())
+        assert len(lst) == 1
 
-        f2 = l[0]
+        f2 = lst[0]
         assert f2.get_state() == f.get_state()
         assert f2.request.data == f.request.data
         assert f2.marked
@@ -114,7 +116,7 @@ class TestSerialize:
 
 class TestFlowMaster:
     async def test_load_http_flow_reverse(self):
-        opts = options.Options(mode="reverse:https://use-this-domain")
+        opts = options.Options(mode=["reverse:https://use-this-domain"])
         s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(resp=True)
@@ -122,7 +124,7 @@ class TestFlowMaster:
             assert s.flows[0].request.host == "use-this-domain"
 
     async def test_all(self):
-        opts = options.Options(mode="reverse:https://use-this-domain")
+        opts = options.Options(mode=["reverse:https://use-this-domain"])
         s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(req=None)

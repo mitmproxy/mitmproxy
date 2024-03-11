@@ -74,7 +74,6 @@ def common_options(parser, opts):
     opts.make_parser(group, "certs", metavar="SPEC")
     opts.make_parser(group, "cert_passphrase", metavar="PASS")
     opts.make_parser(group, "ssl_insecure", short="k")
-    opts.make_parser(group, "key_size", metavar="KEY_SIZE")
 
     # Client replay
     group = parser.add_argument_group("Client Replay")
@@ -84,7 +83,8 @@ def common_options(parser, opts):
     group = parser.add_argument_group("Server Replay")
     opts.make_parser(group, "server_replay", metavar="PATH", short="S")
     opts.make_parser(group, "server_replay_kill_extra")
-    opts.make_parser(group, "server_replay_nopop")
+    opts.make_parser(group, "server_replay_extra")
+    opts.make_parser(group, "server_replay_reuse")
     opts.make_parser(group, "server_replay_refresh")
 
     # Map Remote
@@ -141,7 +141,6 @@ def mitmweb(opts):
     opts.make_parser(group, "web_open_browser")
     opts.make_parser(group, "web_port", metavar="PORT")
     opts.make_parser(group, "web_host", metavar="HOST")
-    opts.make_parser(group, "web_columns")
 
     common_options(parser, opts)
     group = parser.add_argument_group(

@@ -1,17 +1,20 @@
-import io
 import csv
+import io
+import logging
 import os.path
 from collections.abc import Sequence
-from typing import Any, Union
+from typing import Any
 
+import pyperclip
+
+import mitmproxy.types
+from mitmproxy import certs
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import ctx
-from mitmproxy import certs
-import mitmproxy.types
+from mitmproxy.log import ALERT
 
-import pyperclip
+logger = logging.getLogger(__name__)
 
 
 def headername(spec: str):
@@ -24,7 +27,7 @@ def is_addr(v):
     return isinstance(v, tuple) and len(v) > 1
 
 
-def extract(cut: str, f: flow.Flow) -> Union[str, bytes]:
+def extract(cut: str, f: flow.Flow) -> str | bytes:
     path = cut.split(".")
     current: Any = f
     for i, spec in enumerate(path):
@@ -82,7 +85,7 @@ class Cut:
         or "false", "bytes" are preserved, and all other values are
         converted to strings.
         """
-        ret: list[list[Union[str, bytes]]] = []
+        ret: list[list[str | bytes]] = []
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
         return ret  # type: ignore
@@ -117,7 +120,7 @@ class Cut:
                         fp.write(v)
                     else:
                         fp.write(v.encode("utf8"))
-                ctx.log.alert("Saved single cut.")
+                logger.log(ALERT, "Saved single cut.")
             else:
                 with open(
                     path, "a" if append else "w", newline="", encoding="utf8"
@@ -126,11 +129,12 @@ class Cut:
                     for f in flows:
                         vals = [extract_str(c, f) for c in cuts]
                         writer.writerow(vals)
-                ctx.log.alert(
-                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows))
+                logger.log(
+                    ALERT,
+                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)),
                 )
         except OSError as e:
-            ctx.log.error(str(e))
+            logger.error(str(e))
 
     @command.command("cut.clip")
     def clip(
@@ -143,19 +147,19 @@ class Cut:
         format is UTF-8 encoded CSV. If there is exactly one row and one
         column, the data is written to file as-is, with raw bytes preserved.
         """
-        v: Union[str, bytes]
+        v: str | bytes
         fp = io.StringIO(newline="")
         if len(cuts) == 1 and len(flows) == 1:
             v = extract_str(cuts[0], flows[0])
             fp.write(v)
-            ctx.log.alert("Clipped single cut.")
+            logger.log(ALERT, "Clipped single cut.")
         else:
             writer = csv.writer(fp)
             for f in flows:
                 vals = [extract_str(c, f) for c in cuts]
                 writer.writerow(vals)
-            ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
+            logger.log(ALERT, "Clipped %s cuts as CSV." % len(cuts))
         try:
             pyperclip.copy(fp.getvalue())
         except pyperclip.PyperclipException as e:
-            ctx.log.error(str(e))
+            logger.error(str(e))

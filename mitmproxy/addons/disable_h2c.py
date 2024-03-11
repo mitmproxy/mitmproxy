@@ -1,8 +1,7 @@
-import mitmproxy
+import logging
 
 
 class DisableH2C:
-
     """
     We currently only support HTTP/2 over a TLS connection.
 
@@ -16,7 +15,7 @@ class DisableH2C:
 
     def process_flow(self, f):
         if f.request.headers.get("upgrade", "") == "h2c":
-            mitmproxy.ctx.log.warn(
+            logging.warning(
                 "HTTP/2 cleartext connections (h2c upgrade requests) are currently not supported."
             )
             del f.request.headers["upgrade"]
@@ -32,7 +31,7 @@ class DisableH2C:
         )
         if is_connection_preface:
             f.kill()
-            mitmproxy.ctx.log.warn(
+            logging.warning(
                 "Initiating HTTP/2 connections with prior knowledge are currently not supported."
             )
 

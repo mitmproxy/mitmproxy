@@ -1,9 +1,13 @@
+import logging
 import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import NamedTuple
 
-from mitmproxy import ctx, exceptions, flowfilter, http
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.http import Headers
 from mitmproxy.utils import strutils
 from mitmproxy.utils.spec import parse_spec
@@ -50,7 +54,7 @@ def parse_modify_spec(option: str, subject_is_regex: bool) -> ModifySpec:
 
 
 class ModifyHeaders:
-    def __init__(self):
+    def __init__(self) -> None:
         self.replacements: list[ModifySpec] = []
 
     def load(self, loader):
@@ -106,7 +110,7 @@ class ModifyHeaders:
                 try:
                     replacement = spec.read_replacement()
                 except OSError as e:
-                    ctx.log.warn(f"Could not read replacement file: {e}")
+                    logging.warning(f"Could not read replacement file: {e}")
                     continue
                 else:
                     if replacement:

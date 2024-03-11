@@ -6,15 +6,17 @@
 #   - dumper_folder: content dump destination folder (default: ./httpdump)
 #   - open_browser: open integrated browser with proxy configured at start (default: true)
 #
-# remember to add your own mitmproxy authorative certs in your browser/os!
+# remember to add your own mitmproxy authoritative certs in your browser/os!
 # certs docs: https://docs.mitmproxy.org/stable/concepts-certificates/
 # filter expressions docs: https://docs.mitmproxy.org/stable/concepts-filters/
-import os
+import logging
 import mimetypes
+import os
 from pathlib import Path
 
+from mitmproxy import ctx
 from mitmproxy import flowfilter
-from mitmproxy import ctx, http
+from mitmproxy import http
 
 
 class HTTPDump:
@@ -22,16 +24,16 @@ class HTTPDump:
         self.filter = ctx.options.dumper_filter
 
         loader.add_option(
-            name = "dumper_folder",
-            typespec = str,
-            default = "httpdump",
-            help = "content dump destination folder",
+            name="dumper_folder",
+            typespec=str,
+            default="httpdump",
+            help="content dump destination folder",
         )
         loader.add_option(
-            name = "open_browser",
-            typespec = bool,
-            default = True,
-            help = "open integrated browser at start"
+            name="open_browser",
+            typespec=bool,
+            default=True,
+            help="open integrated browser at start",
         )
 
     def running(self):
@@ -66,7 +68,7 @@ class HTTPDump:
         if flow.response.content:
             with open(filepath, "wb") as f:
                 f.write(flow.response.content)
-            ctx.log.info(f"Saved! {filepath}")
+            logging.info(f"Saved! {filepath}")
 
 
 addons = [HTTPDump()]

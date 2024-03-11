@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 
 from mitmproxy import addonmanager
@@ -9,7 +7,9 @@ from mitmproxy import exceptions
 from mitmproxy import hooks
 from mitmproxy import master
 from mitmproxy import options
-from mitmproxy.proxy.layers.http import HttpRequestHook, HttpResponseHook
+from mitmproxy.addonmanager import Loader
+from mitmproxy.proxy.layers.http import HttpRequestHook
+from mitmproxy.proxy.layers.http import HttpResponseHook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -55,8 +55,8 @@ class AsyncTHalt:
 
 
 class AOption:
-    def load(self, l):
-        l.add_option("custom_option", bool, False, "help")
+    def load(self, loader: Loader):
+        loader.add_option("custom_option", bool, False, "help")
 
 
 class AOldAPI:
@@ -112,6 +112,8 @@ async def test_lifecycle():
     a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
 
+    assert str(a)
+
     with pytest.raises(exceptions.AddonManagerError):
         a.add(TAddon("one"))
     with pytest.raises(exceptions.AddonManagerError):
@@ -120,14 +122,14 @@ async def test_lifecycle():
     f = tflow.tflow()
     await a.handle_lifecycle(HttpRequestHook(f))
 
-    a._configure_all(o, o.keys())
+    a._configure_all(o.keys())
 
 
 def test_defaults():
     assert addons.default_addons()
 
 
-async def test_mixed_async_sync():
+async def test_mixed_async_sync(caplog):
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
@@ -149,31 +151,30 @@ async def test_mixed_async_sync():
         a2.running_called = False
         a.trigger(hooks.RunningHook())
         assert a1.running_called
-        await tctx.master.await_log("called from sync context")
+        assert "called from sync context" in caplog.text
 
 
-async def test_loader():
+async def test_loader(caplog):
     with taddons.context() as tctx:
-        with mock.patch("mitmproxy.ctx.log.warn") as warn:
-            l = addonmanager.Loader(tctx.master)
-            l.add_option("custom_option", bool, False, "help")
-            assert "custom_option" in l.master.options
+        loader = addonmanager.Loader(tctx.master)
+        loader.add_option("custom_option", bool, False, "help")
+        assert "custom_option" in loader.master.options
 
-            # calling this again with the same signature is a no-op.
-            l.add_option("custom_option", bool, False, "help")
-            assert not warn.called
+        # calling this again with the same signature is a no-op.
+        loader.add_option("custom_option", bool, False, "help")
+        assert not caplog.text
 
-            # a different signature should emit a warning though.
-            l.add_option("custom_option", bool, True, "help")
-            assert warn.called
+        # a different signature should emit a warning though.
+        loader.add_option("custom_option", bool, True, "help")
+        assert "Over-riding existing option" in caplog.text
 
-            def cmd(a: str) -> str:
-                return "foo"
+        def cmd(a: str) -> str:
+            return "foo"
 
-            l.add_command("test.command", cmd)
+        loader.add_command("test.command", cmd)
 
 
-async def test_simple():
+async def test_simple(caplog):
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
@@ -186,21 +187,22 @@ async def test_simple():
         assert len(a) == 0
         assert not a.chain
 
+    with taddons.context(loadcore=False) as tctx:
         a.add(TAddon("one"))
 
         a.trigger("nonexistent")
-        await tctx.master.await_log("AssertionError")
+        assert "AssertionError" in caplog.text
 
         f = tflow.tflow()
         a.trigger(hooks.RunningHook())
         a.trigger(HttpResponseHook(f))
-        await tctx.master.await_log("not callable")
+        assert "not callable" in caplog.text
+        caplog.clear()
 
-        tctx.master.clear()
+        caplog.clear()
         a.get("one").response = addons
         a.trigger(HttpResponseHook(f))
-        with pytest.raises(AssertionError):
-            await tctx.master.await_log("not callable", timeout=0.01)
+        assert "not callable" not in caplog.text
 
         a.remove(a.get("one"))
         assert not a.get("one")
@@ -246,7 +248,7 @@ async def test_nesting():
     assert not a.get("four")
 
 
-async def test_old_api():
+async def test_old_api(caplog):
     with taddons.context(loadcore=False) as tctx:
         tctx.master.addons.add(AOldAPI())
-        await tctx.master.await_log("clientconnect event has been removed")
+        assert "clientconnect event has been removed" in caplog.text

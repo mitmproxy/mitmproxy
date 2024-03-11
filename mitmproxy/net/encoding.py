@@ -7,7 +7,7 @@ import collections
 import gzip
 import zlib
 from io import BytesIO
-from typing import Union, overload
+from typing import overload
 
 import brotli
 import zstandard as zstd
@@ -21,23 +21,20 @@ _cache = CachedDecode(None, None, None, None)
 
 
 @overload
-def decode(encoded: None, encoding: str, errors: str = "strict") -> None:
-    ...
+def decode(encoded: None, encoding: str, errors: str = "strict") -> None: ...
 
 
 @overload
-def decode(encoded: str, encoding: str, errors: str = "strict") -> str:
-    ...
+def decode(encoded: str, encoding: str, errors: str = "strict") -> str: ...
 
 
 @overload
-def decode(encoded: bytes, encoding: str, errors: str = "strict") -> Union[str, bytes]:
-    ...
+def decode(encoded: bytes, encoding: str, errors: str = "strict") -> str | bytes: ...
 
 
 def decode(
-    encoded: Union[None, str, bytes], encoding: str, errors: str = "strict"
-) -> Union[None, str, bytes]:
+    encoded: None | str | bytes, encoding: str, errors: str = "strict"
+) -> None | str | bytes:
     """
     Decode the given input object
 
@@ -82,23 +79,20 @@ def decode(
 
 
 @overload
-def encode(decoded: None, encoding: str, errors: str = "strict") -> None:
-    ...
+def encode(decoded: None, encoding: str, errors: str = "strict") -> None: ...
 
 
 @overload
-def encode(decoded: str, encoding: str, errors: str = "strict") -> Union[str, bytes]:
-    ...
+def encode(decoded: str, encoding: str, errors: str = "strict") -> str | bytes: ...
 
 
 @overload
-def encode(decoded: bytes, encoding: str, errors: str = "strict") -> bytes:
-    ...
+def encode(decoded: bytes, encoding: str, errors: str = "strict") -> bytes: ...
 
 
 def encode(
-    decoded: Union[None, str, bytes], encoding, errors="strict"
-) -> Union[None, str, bytes]:
+    decoded: None | str | bytes, encoding, errors="strict"
+) -> None | str | bytes:
     """
     Encode the given input object
 
@@ -159,7 +153,8 @@ def decode_gzip(content: bytes) -> bytes:
 
 def encode_gzip(content: bytes) -> bytes:
     s = BytesIO()
-    gf = gzip.GzipFile(fileobj=s, mode="wb")
+    # set mtime to 0 so that gzip encoding is deterministic.
+    gf = gzip.GzipFile(fileobj=s, mode="wb", mtime=0)
     gf.write(content)
     gf.close()
     return s.getvalue()
@@ -184,7 +179,7 @@ def decode_zstd(content: bytes) -> bytes:
     except zstd.ZstdError:
         # If the zstd stream is streamed without a size header,
         # try decoding with a 10MiB output buffer
-        return zstd_ctx.decompress(content, max_output_size=10 * 2 ** 20)
+        return zstd_ctx.decompress(content, max_output_size=10 * 2**20)
 
 
 def encode_zstd(content: bytes) -> bytes:

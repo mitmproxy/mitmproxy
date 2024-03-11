@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import asyncio
+import logging
 import time
-import traceback
 from collections.abc import Sequence
-from typing import Optional, cast
+from types import TracebackType
+from typing import cast
+from typing import Literal
 
 import mitmproxy.types
 from mitmproxy import command
@@ -11,15 +15,22 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
 from mitmproxy.hooks import UpdateHook
-from mitmproxy.net import server_spec
+from mitmproxy.log import ALERT
 from mitmproxy.options import Options
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import commands, events, layers, server
-from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.proxy.layer import CommandGenerator
+from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.mode_specs import UpstreamMode
 from mitmproxy.utils import asyncio_utils
+
+logger = logging.getLogger(__name__)
 
 
 class MockServer(layers.http.HttpConnection):
@@ -37,9 +48,9 @@ class MockServer(layers.http.HttpConnection):
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
             content = self.flow.request.raw_content
-            self.flow.request.timestamp_start = (
-                self.flow.request.timestamp_end
-            ) = time.time()
+            self.flow.request.timestamp_start = self.flow.request.timestamp_end = (
+                time.time()
+            )
             yield layers.http.ReceiveHttp(
                 layers.http.RequestHeaders(
                     1,
@@ -68,7 +79,7 @@ class MockServer(layers.http.HttpConnection):
         ):
             pass
         else:  # pragma: no cover
-            ctx.log(f"Unexpected event during replay: {event}")
+            logger.warning(f"Unexpected event during replay: {event}")
 
 
 class ReplayHandler(server.ConnectionHandler):
@@ -79,16 +90,18 @@ class ReplayHandler(server.ConnectionHandler):
         client.state = ConnectionState.OPEN
 
         context = Context(client, options)
-        context.server = Server((flow.request.host, flow.request.port))
-        context.server.tls = flow.request.scheme == "https"
-        if options.mode.startswith("upstream:"):
-            context.server.via = flow.server_conn.via = server_spec.parse_with_mode(
-                options.mode
-            )[1]
+        context.server = Server(address=(flow.request.host, flow.request.port))
+        if flow.request.scheme == "https":
+            context.server.tls = True
+            context.server.sni = flow.request.pretty_host
+        if options.mode and options.mode[0].startswith("upstream:"):
+            mode = UpstreamMode.parse(options.mode[0])
+            assert isinstance(mode, UpstreamMode)  # remove once mypy supports Self.
+            context.server.via = flow.server_conn.via = (mode.scheme, mode.address)
 
         super().__init__(context)
 
-        if options.mode.startswith("upstream:"):
+        if options.mode and options.mode[0].startswith("upstream:"):
             self.layer = layers.HttpLayer(context, HTTPMode.upstream)
         else:
             self.layer = layers.HttpLayer(context, HTTPMode.transparent)
@@ -100,8 +113,16 @@ class ReplayHandler(server.ConnectionHandler):
         self.server_event(events.Start())
         await self.done.wait()
 
-    def log(self, message: str, level: str = "info") -> None:
-        ctx.log(f"[replay] {message}", level)
+    def log(
+        self,
+        message: str,
+        level: int = logging.INFO,
+        exc_info: Literal[True]
+        | tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
+        | None = None,
+    ) -> None:
+        assert isinstance(level, int)
+        logger.log(level=level, msg=f"[replay] {message}")
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         (data,) = hook.args()
@@ -122,45 +143,53 @@ class ReplayHandler(server.ConnectionHandler):
 
 
 class ClientPlayback:
-    playback_task: Optional[asyncio.Task] = None
-    inflight: Optional[http.HTTPFlow]
+    playback_task: asyncio.Task | None = None
+    inflight: http.HTTPFlow | None
     queue: asyncio.Queue
     options: Options
+    replay_tasks: set[asyncio.Task]
 
     def __init__(self):
         self.queue = asyncio.Queue()
         self.inflight = None
         self.task = None
+        self.replay_tasks = set()
 
     def running(self):
+        self.options = ctx.options
         self.playback_task = asyncio_utils.create_task(
             self.playback(), name="client playback"
         )
-        self.options = ctx.options
 
-    def done(self):
+    async def done(self):
         if self.playback_task:
             self.playback_task.cancel()
+            try:
+                await self.playback_task
+            except asyncio.CancelledError:
+                pass
 
     async def playback(self):
         while True:
             self.inflight = await self.queue.get()
             try:
+                assert self.inflight
                 h = ReplayHandler(self.inflight, self.options)
                 if ctx.options.client_replay_concurrency == -1:
-                    asyncio_utils.create_task(
+                    t = asyncio_utils.create_task(
                         h.replay(), name="client playback awaiting response"
                     )
+                    # keep a reference so this is not garbage collected
+                    self.replay_tasks.add(t)
+                    t.add_done_callback(self.replay_tasks.remove)
                 else:
                     await h.replay()
             except Exception:
-                ctx.log(
-                    f"Client replay has crashed!\n{traceback.format_exc()}", "error"
-                )
+                logger.exception(f"Client replay has crashed!")
             self.queue.task_done()
             self.inflight = None
 
-    def check(self, f: flow.Flow) -> Optional[str]:
+    def check(self, f: flow.Flow) -> str | None:
         if f.live or f == self.inflight:
             return "Can't replay live flow."
         if f.intercepted:
@@ -228,7 +257,7 @@ class ClientPlayback:
                 updated.append(f)
 
         ctx.master.addons.trigger(UpdateHook(updated))
-        ctx.log.alert("Client replay queue cleared.")
+        logger.log(ALERT, "Client replay queue cleared.")
 
     @command.command("replay.client")
     def start_replay(self, flows: Sequence[flow.Flow]) -> None:
@@ -239,7 +268,7 @@ class ClientPlayback:
         for f in flows:
             err = self.check(f)
             if err:
-                ctx.log.warn(err)
+                logger.warning(err)
                 continue
 
             http_flow = cast(http.HTTPFlow, f)

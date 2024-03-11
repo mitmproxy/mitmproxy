@@ -1,8 +1,8 @@
 import collections
-from typing import Optional
+import re
 
 
-def parse_content_type(c: str) -> Optional[tuple[str, str, dict[str, str]]]:
+def parse_content_type(c: str) -> tuple[str, str, dict[str, str]] | None:
     """
     A simple parser for content-type values. Returns a (type, subtype,
     parameters) tuple, where type and subtype are strings, and parameters
@@ -33,4 +33,40 @@ def assemble_content_type(type, subtype, parameters):
     if not parameters:
         return f"{type}/{subtype}"
     params = "; ".join(f"{k}={v}" for k, v in parameters.items())
-    return "{}/{}; {}".format(type, subtype, params)
+    return f"{type}/{subtype}; {params}"
+
+
+def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
+    """
+    Infer the encoding of content from the content-type header.
+    """
+    # Use the charset from the header if possible
+    parsed_content_type = parse_content_type(content_type)
+    enc = parsed_content_type[2].get("charset") if parsed_content_type else None
+
+    # Otherwise, infer the encoding
+    if not enc and "json" in content_type:
+        enc = "utf8"
+
+    if not enc and "html" in content_type:
+        meta_charset = re.search(
+            rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE
+        )
+        if meta_charset:
+            enc = meta_charset.group(1).decode("ascii", "ignore")
+
+    if not enc and "text/css" in content_type:
+        # @charset rule must be the very first thing.
+        css_charset = re.match(rb"""@charset "([^"]+)";""", content, re.IGNORECASE)
+        if css_charset:
+            enc = css_charset.group(1).decode("ascii", "ignore")
+
+    # Fallback to latin-1
+    if not enc:
+        enc = "latin-1"
+
+    # Use GB 18030 as the superset of GB2312 and GBK to fix common encoding problems on Chinese websites.
+    if enc.lower() in ("gb2312", "gbk"):
+        enc = "gb18030"
+
+    return enc

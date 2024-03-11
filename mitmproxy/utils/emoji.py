@@ -2,7 +2,6 @@
 """
 All of the emoji and characters that can be used as flow markers.
 """
-
 # auto-generated. run this file to refresh.
 
 emoji = {
@@ -1853,11 +1852,13 @@ emoji = {
 
 
 if __name__ == "__main__":  # pragma: no cover
-    import requests
     import io
     import re
     import string
     from pathlib import Path
+
+    import requests
+
     from mitmproxy.tools.console.common import SYMBOL_MARK
 
     CHAR_MARKERS = list(string.ascii_letters) + list(string.digits)

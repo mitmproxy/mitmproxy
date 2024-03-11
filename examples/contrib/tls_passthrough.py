@@ -14,12 +14,18 @@ Example:
     3. curl --proxy http://localhost:8080 https://example.com
     // works again, but mitmproxy does not intercept and we do *not* see the contents
 """
+
 import collections
+import logging
 import random
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from enum import Enum
 
-from mitmproxy import connection, ctx, tls
+from mitmproxy import connection
+from mitmproxy import ctx
+from mitmproxy import tls
+from mitmproxy.addonmanager import Loader
 from mitmproxy.utils import human
 
 
@@ -53,6 +59,7 @@ class ConservativeStrategy(TlsStrategy):
     Conservative Interception Strategy - only intercept if there haven't been any failed attempts
     in the history.
     """
+
     def should_intercept(self, server_address: connection.Address) -> bool:
         return InterceptionResult.FAILURE not in self.history[server_address]
 
@@ -61,6 +68,7 @@ class ProbabilisticStrategy(TlsStrategy):
     """
     Fixed probability that we intercept a given connection.
     """
+
     def __init__(self, p: float):
         self.p = p
         super().__init__()
@@ -72,9 +80,11 @@ class ProbabilisticStrategy(TlsStrategy):
 class MaybeTls:
     strategy: TlsStrategy
 
-    def load(self, l):
-        l.add_option(
-            "tls_strategy", int, 0,
+    def load(self, loader: Loader):
+        loader.add_option(
+            "tls_strategy",
+            int,
+            0,
             "TLS passthrough strategy. If set to 0, connections will be passed through after the first unsuccessful "
             "handshake. If set to 0 < p <= 100, connections with be passed through with probability p.",
         )
@@ -87,21 +97,28 @@ class MaybeTls:
         else:
             self.strategy = ConservativeStrategy()
 
+    @staticmethod
+    def get_addr(server: connection.Server):
+        # .peername may be unset in upstream proxy mode, so we need a fallback.
+        return server.peername or server.address
+
     def tls_clienthello(self, data: tls.ClientHelloData):
-        server_address = data.context.server.peername
+        server_address = self.get_addr(data.context.server)
         if not self.strategy.should_intercept(server_address):
-            ctx.log(f"TLS passthrough: {human.format_address(server_address)}.")
+            logging.info(f"TLS passthrough: {human.format_address(server_address)}.")
             data.ignore_connection = True
             self.strategy.record_skipped(server_address)
 
     def tls_established_client(self, data: tls.TlsData):
-        server_address = data.context.server.peername
-        ctx.log(f"TLS handshake successful: {human.format_address(server_address)}")
+        server_address = self.get_addr(data.context.server)
+        logging.info(
+            f"TLS handshake successful: {human.format_address(server_address)}"
+        )
         self.strategy.record_success(server_address)
 
     def tls_failed_client(self, data: tls.TlsData):
-        server_address = data.context.server.peername
-        ctx.log(f"TLS handshake failed: {human.format_address(server_address)}")
+        server_address = self.get_addr(data.context.server)
+        logging.info(f"TLS handshake failed: {human.format_address(server_address)}")
         self.strategy.record_failure(server_address)
 
 

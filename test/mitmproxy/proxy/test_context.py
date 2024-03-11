@@ -1,5 +1,6 @@
 from mitmproxy.proxy import context
-from mitmproxy.test import tflow, taddons
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def test_context():

@@ -32,9 +32,11 @@ modules = [
     "mitmproxy.http",
     "mitmproxy.net.server_spec",
     "mitmproxy.proxy.context",
+    "mitmproxy.proxy.mode_specs",
     "mitmproxy.proxy.server_hooks",
     "mitmproxy.tcp",
     "mitmproxy.tls",
+    "mitmproxy.udp",
     "mitmproxy.websocket",
     here / ".." / "src" / "generated" / "events.py",
 ]
@@ -51,7 +53,7 @@ for module in modules:
     if isinstance(module, Path):
         continue
     filename = f"api/{module.replace('.', '/')}.html"
-    (api_content / f"{module}.md").write_text(
+    (api_content / f"{module}.md").write_bytes(
         textwrap.dedent(
             f"""
         ---
@@ -65,7 +67,7 @@ for module in modules:
 
         {{{{< readfile file="/generated/{filename}" >}}}}
         """
-        )
+        ).encode()
     )
 
 (here / ".." / "src" / "content" / "addons-api.md").touch()

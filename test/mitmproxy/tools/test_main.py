@@ -2,7 +2,6 @@ import asyncio
 
 from mitmproxy.tools import main
 
-
 shutdown_script = "mitmproxy/data/addonscripts/shutdown.py"
 
 

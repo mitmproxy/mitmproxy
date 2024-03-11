@@ -1,5 +1,7 @@
 import asyncio
 import cProfile
+import logging
+
 from mitmproxy import ctx
 
 
@@ -22,7 +24,7 @@ class Benchmark:
         self.resps += 1
 
     async def procs(self):
-        ctx.log.error("starting benchmark")
+        logging.error("starting benchmark")
         backend = await asyncio.create_subprocess_exec("devd", "-q", "-p", "10001", ".")
         traf = await asyncio.create_subprocess_exec(
             "wrk",
@@ -34,8 +36,8 @@ class Benchmark:
         stdout, _ = await traf.communicate()
         with open(ctx.options.benchmark_save_path + ".bench", mode="wb") as f:
             f.write(stdout)
-        ctx.log.error(f"Proxy saw {self.reqs} requests, {self.resps} responses")
-        ctx.log.error(stdout.decode("ascii"))
+        logging.error(f"Proxy saw {self.reqs} requests, {self.resps} responses")
+        logging.error(stdout.decode("ascii"))
         backend.kill()
         ctx.master.shutdown()
 
@@ -44,7 +46,7 @@ class Benchmark:
             "benchmark_save_path",
             str,
             "/tmp/profile",
-            "Destination for the .prof and and .bench result files",
+            "Destination for the .prof and .bench result files",
         )
         ctx.options.update(
             mode="reverse:http://devd.io:10001",
@@ -54,7 +56,7 @@ class Benchmark:
     def running(self):
         if not self.started:
             self.started = True
-            asyncio.get_running_loop().create_task(self.procs())
+            self._task = asyncio.create_task(self.procs())
 
     def done(self):
         self.pr.dump_stats(ctx.options.benchmark_save_path + ".prof")

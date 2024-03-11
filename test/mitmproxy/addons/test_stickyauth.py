@@ -1,10 +1,9 @@
 import pytest
 
-from mitmproxy.test import tflow
-from mitmproxy.test import taddons
-
-from mitmproxy.addons import stickyauth
 from mitmproxy import exceptions
+from mitmproxy.addons import stickyauth
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def test_configure():

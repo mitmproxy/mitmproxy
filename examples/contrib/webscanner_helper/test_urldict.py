@@ -1,5 +1,6 @@
-from mitmproxy.test import tflow, tutils
 from examples.contrib.webscanner_helper.urldict import URLDict
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 url = "http://10.10.10.10"
 new_content_body = "New Body"
@@ -11,11 +12,10 @@ input_file_content_error = f'{{"{url_error}": {content}}}'
 
 
 class TestUrlDict:
-
     def test_urldict_empty(self):
         urldict = URLDict()
         dump = urldict.dumps()
-        assert dump == '{}'
+        assert dump == "{}"
 
     def test_urldict_loads(self):
         urldict = URLDict.loads(input_file_content)

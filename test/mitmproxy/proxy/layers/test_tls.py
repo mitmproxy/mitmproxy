@@ -1,31 +1,27 @@
 import ssl
 import time
-from typing import Optional
+from logging import DEBUG
+from logging import WARNING
 
 import pytest
-
 from OpenSSL import SSL
+
 from mitmproxy import connection
-from mitmproxy.connection import ConnectionState, Server
-from mitmproxy.proxy import commands, context, events, layer
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.layers import tls
-from mitmproxy.tls import ClientHelloData, TlsData
+from mitmproxy.tls import ClientHelloData
+from mitmproxy.tls import TlsData
 from mitmproxy.utils import data
 from test.mitmproxy.proxy import tutils
-from test.mitmproxy.proxy.tutils import BytesMatching, StrMatching
+from test.mitmproxy.proxy.tutils import BytesMatching
+from test.mitmproxy.proxy.tutils import StrMatching
 
 tlsdata = data.Data(__name__)
-
-
-def test_is_tls_handshake_record():
-    assert tls.is_tls_handshake_record(bytes.fromhex("160300"))
-    assert tls.is_tls_handshake_record(bytes.fromhex("160301"))
-    assert tls.is_tls_handshake_record(bytes.fromhex("160302"))
-    assert tls.is_tls_handshake_record(bytes.fromhex("160303"))
-    assert not tls.is_tls_handshake_record(bytes.fromhex("ffffff"))
-    assert not tls.is_tls_handshake_record(bytes.fromhex(""))
-    assert not tls.is_tls_handshake_record(bytes.fromhex("160304"))
-    assert not tls.is_tls_handshake_record(bytes.fromhex("150301"))
 
 
 def test_record_contents():
@@ -91,9 +87,9 @@ class SSLTest:
     def __init__(
         self,
         server_side: bool = False,
-        alpn: Optional[list[str]] = None,
-        sni: Optional[bytes] = b"example.mitmproxy.org",
-        max_ver: Optional[ssl.TLSVersion] = None,
+        alpn: list[str] | None = None,
+        sni: bytes | None = b"example.mitmproxy.org",
+        max_ver: ssl.TLSVersion | None = None,
     ):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
@@ -134,7 +130,7 @@ class SSLTest:
     def bio_write(self, buf: bytes) -> int:
         return self.inc.write(buf)
 
-    def bio_read(self, bufsize: int = 2 ** 16) -> bytes:
+    def bio_read(self, bufsize: int = 2**16) -> bytes:
         return self.out.read(bufsize)
 
     def do_handshake(self) -> None:
@@ -156,7 +152,7 @@ def _test_echo(
 
 
 class TlsEchoLayer(tutils.EchoLayer):
-    err: Optional[str] = None
+    err: str | None = None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"open-connection":
@@ -189,9 +185,7 @@ def finish_handshake(
     tssl.bio_write(data())
 
 
-def reply_tls_start_client(
-    alpn: Optional[bytes] = None, *args, **kwargs
-) -> tutils.reply:
+def reply_tls_start_client(alpn: bytes | None = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_client hooks.
     """
@@ -218,9 +212,7 @@ def reply_tls_start_client(
     return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
 
-def reply_tls_start_server(
-    alpn: Optional[bytes] = None, *args, **kwargs
-) -> tutils.reply:
+def reply_tls_start_server(alpn: bytes | None = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_server hooks.
     """
@@ -363,8 +355,10 @@ class TestServerTLS:
             >> events.DataReceived(tctx.server, tssl.bio_read())
             << commands.Log(
                 # different casing in OpenSSL < 3.0
-                StrMatching("Server TLS handshake failed. Certificate verify failed: [Hh]ostname mismatch"),
-                "warn",
+                StrMatching(
+                    "Server TLS handshake failed. Certificate verify failed: [Hh]ostname mismatch"
+                ),
+                WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
@@ -372,11 +366,14 @@ class TestServerTLS:
             << commands.SendData(
                 tctx.client,
                 # different casing in OpenSSL < 3.0
-                BytesMatching(b"open-connection failed: Certificate verify failed: [Hh]ostname mismatch"),
+                BytesMatching(
+                    b"open-connection failed: Certificate verify failed: [Hh]ostname mismatch"
+                ),
             )
         )
         assert (
-            tls_hook_data().conn.error.lower() == "Certificate verify failed: Hostname mismatch".lower()
+            tls_hook_data().conn.error.lower()
+            == "Certificate verify failed: Hostname mismatch".lower()
         )
         assert not tctx.server.tls_established
 
@@ -396,7 +393,7 @@ class TestServerTLS:
             >> events.DataReceived(tctx.server, b"HTTP/1.1 404 Not Found\r\n")
             << commands.Log(
                 "Server TLS handshake failed. The remote server does not speak TLS.",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
@@ -436,7 +433,7 @@ class TestServerTLS:
             << commands.Log(
                 "Server TLS handshake failed. The remote server and mitmproxy cannot agree on a TLS version"
                 " to use. You may need to adjust mitmproxy's tls_version_server_min option.",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedServerHook(tls_hook_data)
             >> tutils.reply()
@@ -499,7 +496,7 @@ class TestClientTLS:
 
         # Echo
         _test_echo(playbook, tssl_client, tctx.client)
-        other_server = Server(None)
+        other_server = Server(address=None)
         assert (
             playbook
             >> events.DataReceived(other_server, b"Plaintext")
@@ -621,7 +618,7 @@ class TestClientTLS:
             >> events.DataReceived(tctx.client, invalid)
             << commands.Log(
                 f"Client TLS handshake failed. Cannot parse ClientHello: {invalid.hex()}",
-                level="warn",
+                level=WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
@@ -634,11 +631,11 @@ class TestClientTLS:
         client_layer.debug = ""
         assert (
             playbook
-            >> events.DataReceived(Server(None), b"data on other stream")
-            << commands.Log(">> DataReceived(server, b'data on other stream')", "debug")
+            >> events.DataReceived(Server(address=None), b"data on other stream")
+            << commands.Log(">> DataReceived(server, b'data on other stream')", DEBUG)
             << commands.Log(
-                "Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
-                "debug",
+                "[tls] Swallowing DataReceived(server, b'data on other stream') as handshake failed.",
+                DEBUG,
             )
         )
 
@@ -668,9 +665,11 @@ class TestClientTLS:
             playbook
             >> events.DataReceived(tctx.client, tssl_client.bio_read())
             << commands.Log(
-                "Client TLS handshake failed. The client does not trust the proxy's certificate "
-                "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)",
-                "warn",
+                tutils.StrMatching(
+                    "Client TLS handshake failed. The client does not trust the proxy's certificate "
+                    "for wrong.host.mitmproxy.org"
+                ),
+                WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
@@ -733,8 +732,7 @@ class TestClientTLS:
             << commands.Log(
                 "Client TLS handshake failed. The client disconnected during the handshake. "
                 "If this happens consistently for wrong.host.mitmproxy.org, this may indicate that the "
-                "client does not trust the proxy's certificate.",
-                "info",
+                "client does not trust the proxy's certificate."
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
@@ -760,10 +758,76 @@ class TestClientTLS:
             << commands.Log(
                 "Client TLS handshake failed. Client and mitmproxy cannot agree on a TLS version to "
                 "use. You may need to adjust mitmproxy's tls_version_client_min option.",
-                "warn",
+                WARNING,
             )
             << tls.TlsFailedClientHook(tls_hook_data)
             >> tutils.reply()
             << commands.CloseConnection(tctx.client)
         )
         assert tls_hook_data().conn.error
+
+
+def test_dtls_record_contents():
+    data = bytes.fromhex(
+        "16fefd00000000000000000002beef" "16fefd00000000000000000001ff"
+    )
+    assert list(tls.dtls_handshake_record_contents(data)) == [b"\xbe\xef", b"\xff"]
+    for i in range(12):
+        assert list(tls.dtls_handshake_record_contents(data[:i])) == []
+
+
+def test__dtls_record_contents_err():
+    with pytest.raises(ValueError, match="Expected DTLS record"):
+        next(tls.dtls_handshake_record_contents(b"GET /this-will-cause-error"))
+
+    empty_record = bytes.fromhex("16fefd00000000000000000000")
+    with pytest.raises(ValueError, match="Record must not be empty"):
+        next(tls.dtls_handshake_record_contents(empty_record))
+
+
+dtls_client_hello_no_extensions = bytes.fromhex(
+    "010000360000000000000036fefd62be32f048777da890ddd213b0cb8dc3e2903f88dda1cd5f67808e1169110e840000000"
+    "cc02bc02fc00ac014c02cc03001000000"
+)
+dtls_client_hello_with_extensions = bytes.fromhex(
+    "16fefd00000000000000000085"  # record layer
+    "010000790000000000000079"  # hanshake layer
+    "fefd62bf0e0bf809df43e7669197be831919878b1a72c07a584d3c0a8ca6665878010000000cc02bc02fc00ac014c02cc0"
+    "3001000043000d0010000e0403050306030401050106010807ff01000100000a00080006001d00170018000b00020100001"
+    "7000000000010000e00000b6578616d706c652e636f6d"
+)
+
+
+def test_dtls_get_client_hello():
+    single_record = (
+        bytes.fromhex("16fefd00000000000000000042") + dtls_client_hello_no_extensions
+    )
+    assert tls.get_dtls_client_hello(single_record) == dtls_client_hello_no_extensions
+
+    split_over_two_records = (
+        bytes.fromhex("16fefd00000000000000000020")
+        + dtls_client_hello_no_extensions[:32]
+        + bytes.fromhex("16fefd00000000000000000022")
+        + dtls_client_hello_no_extensions[32:]
+    )
+    assert (
+        tls.get_dtls_client_hello(split_over_two_records)
+        == dtls_client_hello_no_extensions
+    )
+
+    incomplete = split_over_two_records[:42]
+    assert tls.get_dtls_client_hello(incomplete) is None
+
+
+def test_dtls_parse_client_hello():
+    assert (
+        tls.dtls_parse_client_hello(dtls_client_hello_with_extensions).sni
+        == "example.com"
+    )
+    assert tls.dtls_parse_client_hello(dtls_client_hello_with_extensions[:50]) is None
+    with pytest.raises(ValueError):
+        tls.dtls_parse_client_hello(
+            # Server Name Length longer than actual Server Name
+            dtls_client_hello_with_extensions[:-16]
+            + b"\x00\x0e\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        )

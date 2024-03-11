@@ -1,8 +1,10 @@
 import re
 import time
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
-from mitmproxy.http import Request, Headers, Response
+from mitmproxy.http import Headers
+from mitmproxy.http import Request
+from mitmproxy.http import Response
 from mitmproxy.net.http import url
 
 
@@ -53,7 +55,7 @@ def validate_headers(headers: Headers) -> None:
     te_found = False
     cl_found = False
 
-    for (name, value) in headers.fields:
+    for name, value in headers.fields:
         if not _valid_header_name.match(name):
             raise ValueError(
                 f"Received an invalid header name: {name!r}. Invalid header names may introduce "
@@ -75,8 +77,8 @@ def validate_headers(headers: Headers) -> None:
 
 
 def expected_http_body_size(
-    request: Request, response: Optional[Response] = None
-) -> Optional[int]:
+    request: Request, response: Response | None = None
+) -> int | None:
     """
     Returns:
         The expected body length:
@@ -214,7 +216,7 @@ def expected_http_body_size(
 
 
 def raise_if_http_version_unknown(http_version: bytes) -> None:
-    if not re.match(br"^HTTP/\d\.\d$", http_version):
+    if not re.match(rb"^HTTP/\d\.\d$", http_version):
         raise ValueError(f"Unknown HTTP version: {http_version!r}")
 
 
@@ -223,7 +225,7 @@ def _read_request_line(
 ) -> tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
         method, target, http_version = line.split()
-        port: Optional[int]
+        port: int | None
 
         if target == b"*" or target.startswith(b"/"):
             scheme, authority, path = b"", b"", target

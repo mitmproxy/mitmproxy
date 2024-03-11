@@ -9,7 +9,7 @@ exports[`FlowTable Component should render correctly 1`] = `
     <thead
       style={
         Object {
-          "transform": "translateY(undefinedpx)",
+          "transform": "translateY(0px)",
         }
       }
     >
@@ -72,6 +72,63 @@ exports[`FlowTable Component should render correctly 1`] = `
           }
         }
       />
+      <tr
+        className="has-request has-response"
+        onClick={[Function]}
+      >
+        <td
+          className="col-tls col-tls-https"
+        />
+        <td
+          className="col-icon"
+        >
+          <div
+            className="resource-icon resource-icon-websocket"
+          />
+        </td>
+        <td
+          className="col-path"
+        >
+          <i
+            className="fa fa-fw fa-exclamation pull-right"
+          />
+          <span
+            className="marker pull-right"
+          >
+            
+          </span>
+          http://address:22/path
+        </td>
+        <td
+          className="col-method"
+        >
+          WSS
+        </td>
+        <td
+          className="col-status"
+          style={
+            Object {
+              "color": "darkgreen",
+            }
+          }
+        >
+          200
+        </td>
+        <td
+          className="col-size"
+        >
+          43b
+        </td>
+        <td
+          className="col-time"
+        >
+          5s
+        </td>
+        <td
+          className="col-quickactions"
+          onClick={[Function]}
+        />
+      </tr>
       <tr
         style={
           Object {

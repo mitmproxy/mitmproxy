@@ -1,7 +1,9 @@
-from mitmproxy.tools.console import keymap
-from mitmproxy.test import taddons
 from unittest import mock
+
 import pytest
+
+from mitmproxy.test import taddons
+from mitmproxy.tools.console import keymap
 
 
 def test_binding():
@@ -75,8 +77,8 @@ def test_remove():
 def test_load_path(tmpdir):
     dst = str(tmpdir.join("conf"))
 
-    kmc = keymap.KeymapConfig()
-    with taddons.context(kmc) as tctx:
+    with taddons.context() as tctx:
+        kmc = keymap.KeymapConfig(tctx.master)
         km = keymap.Keymap(tctx.master)
         tctx.master.keymap = km
 
@@ -148,8 +150,8 @@ def test_load_path(tmpdir):
 
 
 def test_parse():
-    kmc = keymap.KeymapConfig()
-    with taddons.context(kmc):
+    with taddons.context() as tctx:
+        kmc = keymap.KeymapConfig(tctx.master)
         assert kmc.parse("") == []
         assert kmc.parse("\n\n\n   \n") == []
         with pytest.raises(keymap.KeyBindingError, match="expected a list of keys"):
@@ -186,9 +188,8 @@ def test_parse():
                         cmd: cmd
                 """
             )
-        assert (
-            kmc.parse(
-                """
+        assert kmc.parse(
+            """
                 -   key: key1
                     ctx: [one, two]
                     help: one
@@ -196,13 +197,11 @@ def test_parse():
                         foo bar
                         foo bar
             """
-            )
-            == [
-                {
-                    "key": "key1",
-                    "ctx": ["one", "two"],
-                    "help": "one",
-                    "cmd": "foo bar foo bar\n",
-                }
-            ]
-        )
+        ) == [
+            {
+                "key": "key1",
+                "ctx": ["one", "two"],
+                "help": "one",
+                "cmd": "foo bar foo bar\n",
+            }
+        ]

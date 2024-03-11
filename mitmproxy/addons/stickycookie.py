@@ -2,7 +2,10 @@ import collections
 from http import cookiejar
 from typing import Optional
 
-from mitmproxy import http, flowfilter, ctx, exceptions
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.net.http import cookies
 
 TOrigin = tuple[str, int, str]
@@ -30,9 +33,11 @@ def domain_match(a: str, b: str) -> bool:
 
 
 class StickyCookie:
-    def __init__(self):
-        self.jar: dict[TOrigin, dict[str, str]] = collections.defaultdict(dict)
-        self.flt: Optional[flowfilter.TFilter] = None
+    def __init__(self) -> None:
+        self.jar: collections.defaultdict[TOrigin, dict[str, str]] = (
+            collections.defaultdict(dict)
+        )
+        self.flt: flowfilter.TFilter | None = None
 
     def load(self, loader):
         loader.add_option(

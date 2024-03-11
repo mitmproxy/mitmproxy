@@ -41,7 +41,8 @@ all other strings are returned as plain bytes.
 """
 
 import collections
-from typing import BinaryIO, Union
+from typing import BinaryIO
+from typing import Union
 
 TSerializable = Union[None, str, bool, int, float, bytes, list, tuple, dict]
 
@@ -138,7 +139,7 @@ def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
     elif isinstance(value, dict):
         write(b"}")
         init_size = size = size + 1
-        for (k, v) in value.items():
+        for k, v in value.items():
             size = _rdumpq(q, size, v)
             size = _rdumpq(q, size, k)
         span = str(size - init_size).encode()
@@ -210,11 +211,11 @@ def parse(data_type: int, data: bytes) -> TSerializable:
             raise ValueError(f"not a tnetstring: invalid null literal: {data!r}")
         return None
     if data_type == ord(b"]"):
-        l = []
+        lst = []
         while data:
             item, data = pop(data)
-            l.append(item)  # type: ignore
-        return l
+            lst.append(item)  # type: ignore
+        return lst
     if data_type == ord(b"}"):
         d = {}
         while data:

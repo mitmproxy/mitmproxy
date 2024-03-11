@@ -1,10 +1,12 @@
 import base64
+
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.addons import upstream_auth
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.addons import upstream_auth
 
 
 def test_configure():
@@ -41,10 +43,10 @@ def test_simple():
         assert "proxy-authorization" not in f.request.headers
         assert "authorization" not in f.request.headers
 
-        tctx.configure(up, mode="upstream:127.0.0.1")
+        f.client_conn.proxy_mode = ProxyMode.parse("upstream:127.0.0.1")
         up.requestheaders(f)
         assert "proxy-authorization" in f.request.headers
 
-        tctx.configure(up, mode="reverse:127.0.0.1")
+        f.client_conn.proxy_mode = ProxyMode.parse("reverse:127.0.0.1")
         up.requestheaders(f)
         assert "authorization" in f.request.headers

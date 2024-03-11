@@ -21,6 +21,8 @@ brew install mitmproxy
 
 Alternatively, you can download standalone binaries on [mitmproxy.org](https://mitmproxy.org/).
 
+NOTE: For Apple Silicon, Rosetta is required.
+
 ## Linux
 
 The recommended way to install mitmproxy on Linux is to download the
@@ -34,8 +36,10 @@ the repository maintainers directly for issues with native packages.
 
 ## Windows
 
-To install mitmproxy on Windows, download the installer from [mitmproxy.org](https://mitmproxy.org/). After
-installation, mitmproxy, mitmdump and mitmweb are also added to your PATH and can be invoked from the command line.
+To install mitmproxy on Windows, download the installer from [mitmproxy.org](https://mitmproxy.org/). 
+We also provide standalone binaries, they take significantly longer to start
+as some files need to be extracted to temporary directories first.
+After installation, mitmproxy, mitmdump and mitmweb are also added to your PATH and can be invoked from the command line.
 
 We highly recommend to [install Windows Terminal](https://aka.ms/terminal) to improve the rendering of the console interface.
 
@@ -64,7 +68,7 @@ While there are plenty of options around[^1], we recommend the installation usin
     packages. Most of them (pip, virtualenv, pipenv, etc.) should just work, but we don't have the capacity to
     provide support for it.
 
-1. Install a recent version of Python (we require at least 3.9).
+1. Install a recent version of Python (we require at least 3.10).
 2. Install [pipx](https://pipxproject.github.io/pipx/).
 3. `pipx install mitmproxy`
 

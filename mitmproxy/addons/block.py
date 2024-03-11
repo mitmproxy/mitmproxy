@@ -1,4 +1,6 @@
 import ipaddress
+import logging
+
 from mitmproxy import ctx
 
 
@@ -33,13 +35,13 @@ class Block:
             return
 
         if ctx.options.block_private and address.is_private:
-            ctx.log.warn(
+            logging.warning(
                 f"Client connection from {client.peername[0]} killed by block_private option."
             )
             client.error = "Connection killed by block_private."
 
         if ctx.options.block_global and address.is_global:
-            ctx.log.warn(
+            logging.warning(
                 f"Client connection from {client.peername[0]} killed by block_global option."
             )
             client.error = "Connection killed by block_global."

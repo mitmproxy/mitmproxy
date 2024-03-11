@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import asyncio
+
 import click
 
 from mitmproxy.addons import dumper
-from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def run_async(coro):
@@ -36,6 +37,13 @@ def cli():
 @click.option("--level", default=1, help="Detail level")
 def tcp(level):
     f1 = tflow.ttcpflow()
+    show(level, [f1])
+
+
+@cli.command()
+@click.option("--level", default=1, help="Detail level")
+def udp(level):
+    f1 = tflow.tudpflow()
     show(level, [f1])
 
 

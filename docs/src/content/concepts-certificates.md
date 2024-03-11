@@ -62,6 +62,7 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [macOS (automated)](https://www.dssw.co.uk/reference/security.html):
   `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
+- [Fedora](https://docs.fedoraproject.org/en-US/quick-docs/using-shared-system-certificates/#proc_adding-new-certificates)
 - [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
 - [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
 - [iOS](http://jasdev.me/intercepting-ios-traffic)  
@@ -108,6 +109,7 @@ exist to accomplish this:
    which supports certificate pinning bypasses on iOS and Android.
  - [ssl-kill-switch2](https://github.com/nabla-c0d3/ssl-kill-switch2) is a blackbox tool to disable certificate pinning
    within iOS and macOS applications.
+ - [android-unpinner](https://github.com/mitmproxy/android-unpinner) modifies Android APKs to inject Frida and HTTP Toolkit's unpinning scripts.
 
 *Please propose other useful tools using the "Edit on GitHub" button on the top right of this page.*
 

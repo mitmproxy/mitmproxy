@@ -1,10 +1,9 @@
-from typing import Optional, Union
 import json
 from dataclasses import dataclass
+
 from mitmproxy import ctx
 from mitmproxy.addonmanager import Loader
 from mitmproxy.http import HTTPFlow
-
 
 """
 This extension implements support for domain fronting.
@@ -53,12 +52,11 @@ In the following example, we override the HTTP host header:
 
 @dataclass
 class Mapping:
-    server: Union[str, None]
-    host: Union[str, None]
+    server: str | None
+    host: str | None
 
 
 class HttpsDomainFronting:
-
     # configurations for regular ("foo.example.com") mappings:
     star_mappings: dict[str, Mapping]
 
@@ -69,7 +67,7 @@ class HttpsDomainFronting:
         self.strict_mappings = {}
         self.star_mappings = {}
 
-    def _resolve_addresses(self, host: str) -> Optional[Mapping]:
+    def _resolve_addresses(self, host: str) -> Mapping | None:
         mapping = self.strict_mappings.get(host)
         if mapping is not None:
             return mapping
@@ -79,7 +77,7 @@ class HttpsDomainFronting:
             index = host.find(".", index)
             if index == -1:
                 break
-            super_domain = host[(index + 1):]
+            super_domain = host[(index + 1) :]
             mapping = self.star_mappings.get(super_domain)
             if mapping is not None:
                 return mapping

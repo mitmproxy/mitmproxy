@@ -1,0 +1,18 @@
+.pdoc h1 {
+    margin-bottom: 1em;
+}
+
+{% if module and module.name == "events" %}
+
+.pdoc .class {
+    padding-left:  0;
+    --name: var(--text);
+    background: none;
+    font-size: 1.2em;
+}
+
+.pdoc .classattr {
+    margin-left: 0;
+}
+
+{% endif %}

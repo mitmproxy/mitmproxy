@@ -2,46 +2,65 @@ import collections
 import enum
 import time
 from dataclasses import dataclass
-from typing import Optional, Union
+from functools import cached_property
+from logging import DEBUG
+from logging import WARNING
 
 import wsproto.handshake
-from mitmproxy import flow, http
-from mitmproxy.connection import Connection, Server
+
+from ...context import Context
+from ...mode_specs import ReverseMode
+from ...mode_specs import UpstreamMode
+from ..quic import QuicStreamEvent
+from ._base import HttpCommand
+from ._base import HttpConnection
+from ._base import ReceiveHttp
+from ._base import StreamId
+from ._events import HttpEvent
+from ._events import RequestData
+from ._events import RequestEndOfMessage
+from ._events import RequestHeaders
+from ._events import RequestProtocolError
+from ._events import RequestTrailers
+from ._events import ResponseData
+from ._events import ResponseEndOfMessage
+from ._events import ResponseHeaders
+from ._events import ResponseProtocolError
+from ._events import ResponseTrailers
+from ._hooks import HttpConnectHook
+from ._hooks import HttpErrorHook
+from ._hooks import HttpRequestHeadersHook
+from ._hooks import HttpRequestHook
+from ._hooks import HttpResponseHeadersHook
+from ._hooks import HttpResponseHook
+from ._http1 import Http1Client
+from ._http1 import Http1Connection
+from ._http1 import Http1Server
+from ._http2 import Http2Client
+from ._http2 import Http2Server
+from ._http3 import Http3Client
+from ._http3 import Http3Server
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy.connection import Connection
+from mitmproxy.connection import Server
+from mitmproxy.connection import TransportProtocol
 from mitmproxy.net import server_spec
-from mitmproxy.net.http import status_codes, url
+from mitmproxy.net.http import status_codes
+from mitmproxy.net.http import url
 from mitmproxy.net.http.http1 import expected_http_body_size
-from mitmproxy.proxy import commands, events, layer, tunnel
-from mitmproxy.proxy.layers import tcp, tls, websocket
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import websocket
 from mitmproxy.proxy.layers.http import _upstream_proxy
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 from mitmproxy.websocket import WebSocketData
-from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
-from ._events import (
-    HttpEvent,
-    RequestData,
-    RequestEndOfMessage,
-    RequestHeaders,
-    RequestProtocolError,
-    RequestTrailers,
-    ResponseData,
-    ResponseEndOfMessage,
-    ResponseHeaders,
-    ResponseProtocolError,
-    ResponseTrailers,
-)
-from ._hooks import (  # noqa
-    HttpConnectHook,
-    HttpConnectUpstreamHook,
-    HttpErrorHook,
-    HttpRequestHeadersHook,
-    HttpRequestHook,
-    HttpResponseHeadersHook,
-    HttpResponseHook,
-)
-from ._http1 import Http1Client, Http1Connection, Http1Server
-from ._http2 import Http2Client, Http2Server
-from ...context import Context
 
 
 class HTTPMode(enum.Enum):
@@ -50,7 +69,7 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-def validate_request(mode: HTTPMode, request: http.Request) -> Optional[str]:
+def validate_request(mode: HTTPMode, request: http.Request) -> str | None:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent and request.method == "CONNECT":
@@ -59,6 +78,10 @@ def validate_request(mode: HTTPMode, request: http.Request) -> Optional[str]:
             f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
         )
     return None
+
+
+def is_h3_alpn(alpn: bytes | None) -> bool:
+    return alpn == b"h3" or (alpn is not None and alpn.startswith(b"h3-"))
 
 
 @dataclass
@@ -70,7 +93,8 @@ class GetHttpConnection(HttpCommand):
     blocking = True
     address: tuple[str, int]
     tls: bool
-    via: Optional[server_spec.ServerSpec]
+    via: server_spec.ServerSpec | None
+    transport_protocol: TransportProtocol = "tcp"
 
     def __hash__(self):
         return id(self)
@@ -81,13 +105,14 @@ class GetHttpConnection(HttpCommand):
             and self.address == connection.address
             and self.tls == connection.tls
             and self.via == connection.via
+            and self.transport_protocol == connection.transport_protocol
         )
 
 
 @dataclass
 class GetHttpConnectionCompleted(events.CommandCompleted):
     command: GetHttpConnection
-    reply: Union[tuple[None, str], tuple[Connection, None]]
+    reply: tuple[None, str] | tuple[Connection, None]
     """connection object, error message"""
 
 
@@ -98,7 +123,7 @@ class RegisterHttpConnection(HttpCommand):
     """
 
     connection: Connection
-    err: Optional[str]
+    err: str | None
 
 
 @dataclass
@@ -122,15 +147,16 @@ class HttpStream(layer.Layer):
     response_body_buf: bytes
     flow: http.HTTPFlow
     stream_id: StreamId
-    child_layer: Optional[layer.Layer] = None
+    child_layer: layer.Layer | None = None
 
-    @property
-    def mode(self):
+    @cached_property
+    def mode(self) -> HTTPMode:
         i = self.context.layers.index(self)
-        parent: HttpLayer = self.context.layers[i - 1]
+        parent = self.context.layers[i - 1]
+        assert isinstance(parent, HttpLayer)
         return parent.mode
 
-    def __init__(self, context: Context, stream_id: int):
+    def __init__(self, context: Context, stream_id: int) -> None:
         super().__init__(context)
         self.request_body_buf = b""
         self.response_body_buf = b""
@@ -215,14 +241,16 @@ class HttpStream(layer.Layer):
                     "https" if self.context.client.tls else "http"
                 )
 
-        if self.mode is HTTPMode.regular and not self.flow.request.is_http2:
+        if self.mode is HTTPMode.regular and not (
+            self.flow.request.is_http2 or self.flow.request.is_http3
+        ):
             # Set the request target to origin-form for HTTP/1, some servers don't support absolute-form requests.
             # see https://github.com/mitmproxy/mitmproxy/issues/1759
             self.flow.request.authority = ""
 
         # update host header in reverse proxy mode
         if (
-            self.context.options.mode.startswith("reverse:")
+            isinstance(self.context.client.proxy_mode, ReverseMode)
             and not self.context.options.keep_host_header
         ):
             assert self.context.server.address
@@ -260,6 +288,7 @@ class HttpStream(layer.Layer):
             )
         ok = yield from self.make_server_connection()
         if not ok:
+            self.client_state = self.state_errored
             return
         yield SendHttp(
             RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
@@ -270,7 +299,7 @@ class HttpStream(layer.Layer):
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
     def state_stream_request_body(
-        self, event: Union[RequestData, RequestEndOfMessage]
+        self, event: RequestData | RequestEndOfMessage
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
@@ -477,10 +506,11 @@ class HttpStream(layer.Layer):
         if self.client_state == self.state_done:
             yield from self.flow_done()
 
-    def flow_done(self):
+    def flow_done(self) -> layer.CommandGenerator[None]:
         if not self.flow.websocket:
             self.flow.live = False
 
+        assert self.flow.response
         if self.flow.response.status_code == 101:
             if self.flow.websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
@@ -489,17 +519,17 @@ class HttpStream(layer.Layer):
             else:
                 yield commands.Log(
                     f"Sent HTTP 101 response, but no protocol is enabled to upgrade to.",
-                    "warn",
+                    WARNING,
                 )
                 yield commands.CloseConnection(self.context.client)
                 self.client_state = self.server_state = self.state_errored
                 return
             if self.debug:
                 yield commands.Log(
-                    f"{self.debug}[http] upgrading to {self.child_layer}", "debug"
+                    f"{self.debug}[http] upgrading to {self.child_layer}", DEBUG
                 )
-            yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
+            yield from self.child_layer.handle_event(events.Start())
         else:
             yield DropStream(self.stream_id)
 
@@ -522,7 +552,7 @@ class HttpStream(layer.Layer):
         # Step 1: Determine the expected body size. This can either come from a known content-length header,
         # or from the amount of currently buffered bytes (e.g. for chunked encoding).
         response = not request
-        expected_size: Optional[int]
+        expected_size: int | None
         # the 'late' case: we already started consuming the body
         if request and self.request_body_buf:
             expected_size = len(self.request_body_buf)
@@ -620,7 +650,7 @@ class HttpStream(layer.Layer):
         return False
 
     def handle_protocol_error(
-        self, event: Union[RequestProtocolError, ResponseProtocolError]
+        self, event: RequestProtocolError | ResponseProtocolError
     ) -> layer.CommandGenerator[None]:
         is_client_error_but_we_already_talk_upstream = (
             isinstance(event, RequestProtocolError)
@@ -628,8 +658,7 @@ class HttpStream(layer.Layer):
             and self.server_state not in (self.state_done, self.state_errored)
         )
         need_error_hook = not (
-            self.client_state
-            in (self.state_wait_for_request_headers, self.state_errored)
+            self.client_state == self.state_errored
             or self.server_state in (self.state_done, self.state_errored)
         )
 
@@ -659,6 +688,7 @@ class HttpStream(layer.Layer):
             (self.flow.request.host, self.flow.request.port),
             self.flow.request.scheme == "https",
             self.flow.server_conn.via,
+            self.flow.server_conn.transport_protocol,
         )
         if err:
             yield from self.handle_protocol_error(
@@ -670,6 +700,7 @@ class HttpStream(layer.Layer):
             return True
 
     def handle_connect(self) -> layer.CommandGenerator[None]:
+        self.client_state = self.state_done
         yield HttpConnectHook(self.flow)
         if (yield from self.check_killed(False)):
             return
@@ -690,7 +721,9 @@ class HttpStream(layer.Layer):
             if err:
                 self.flow.response = http.Response.make(
                     502,
-                    f"Cannot connect to {human.format_address(self.context.server.address)}: {err}",
+                    f"Cannot connect to {human.format_address(self.context.server.address)}: {err} "
+                    f"If you plan to redirect requests away from this server, "
+                    f"consider setting `connection_strategy` to `lazy` to suppress early connections.",
                 )
         self.child_layer = layer.NextLayer(self.context)
         yield from self.handle_connect_finish()
@@ -716,8 +749,8 @@ class HttpStream(layer.Layer):
 
         if 200 <= self.flow.response.status_code < 300:
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
-            yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
+            yield from self.child_layer.handle_event(events.Start())
             yield SendHttp(
                 ResponseHeaders(self.stream_id, self.flow.response, True),
                 self.context.client,
@@ -776,7 +809,8 @@ class HttpStream(layer.Layer):
                     # The easiest approach for this is to just always full close for now.
                     # Alternatively, we could signal that we want a half close only through ResponseProtocolError,
                     # but that is more complex to implement.
-                    command.half_close = False
+                    if isinstance(command, commands.CloseTcpConnection):
+                        command = commands.CloseConnection(command.connection)
                     yield command
             else:
                 yield command
@@ -819,28 +853,28 @@ class HttpLayer(layer.Layer):
         self.waiting_for_establishment = collections.defaultdict(list)
         self.streams = {}
         self.command_sources = {}
-
-        http_conn: HttpConnection
-        if self.context.client.alpn == b"h2":
-            http_conn = Http2Server(context.fork())
-        else:
-            http_conn = Http1Server(context.fork())
-
-        self.connections = {context.client: http_conn}
+        self.connections = {}
 
     def __repr__(self):
         return f"HttpLayer({self.mode.name}, conns: {len(self.connections)})"
 
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.Start):
+            http_conn: HttpConnection
+            if is_h3_alpn(self.context.client.alpn):
+                http_conn = Http3Server(self.context.fork())
+            elif self.context.client.alpn == b"h2":
+                http_conn = Http2Server(self.context.fork())
+            else:
+                http_conn = Http1Server(self.context.fork())
+
+            # may have been set by client playback.
+            self.connections.setdefault(self.context.client, http_conn)
             yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
-                self.context.server.via = server_spec.parse_with_mode(
-                    self.context.options.mode
-                )[1]
-        elif isinstance(event, events.Wakeup):
-            stream = self.command_sources.pop(event.command)
-            yield from self.event_to_child(stream, event)
+                proxy_mode = self.context.client.proxy_mode
+                assert isinstance(proxy_mode, UpstreamMode)
+                self.context.server.via = (proxy_mode.scheme, proxy_mode.address)
         elif isinstance(event, events.CommandCompleted):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
@@ -873,10 +907,13 @@ class HttpLayer(layer.Layer):
                 if isinstance(event, events.ConnectionClosed):
                     # The peer has closed it - let's close it too!
                     yield commands.CloseConnection(event.connection)
-                elif isinstance(event, events.DataReceived):
-                    # The peer has sent data. This can happen with HTTP/2 servers that already send a settings frame.
+                elif isinstance(event, (events.DataReceived, QuicStreamEvent)):
+                    # The peer has sent data or another connection activity occurred.
+                    # This can happen with HTTP/2 servers that already send a settings frame.
                     child_layer: HttpConnection
-                    if self.context.server.alpn == b"h2":
+                    if is_h3_alpn(self.context.server.alpn):
+                        child_layer = Http3Client(self.context.fork())
+                    elif self.context.server.alpn == b"h2":
                         child_layer = Http2Client(self.context.fork())
                     else:
                         child_layer = Http1Client(self.context.fork())
@@ -893,7 +930,7 @@ class HttpLayer(layer.Layer):
 
     def event_to_child(
         self,
-        child: Union[layer.Layer, HttpStream],
+        child: layer.Layer | HttpStream,
         event: events.Event,
     ) -> layer.CommandGenerator[None]:
         for command in child.handle_event(event):
@@ -991,12 +1028,12 @@ class HttpLayer(layer.Layer):
         stack = tunnel.LayerStack()
 
         if not can_use_context_connection:
-
-            context.server = Server(event.address)
+            context.server = Server(
+                address=event.address, transport_protocol=event.transport_protocol
+            )
 
             if event.via:
                 context.server.via = event.via
-                assert event.via.scheme in ("http", "https")
                 # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in upstream mode.
                 send_connect = event.tls or self.mode != HTTPMode.upstream
                 stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
@@ -1007,10 +1044,22 @@ class HttpLayer(layer.Layer):
                     self.mode == HTTPMode.transparent
                     and event.address == self.context.server.address
                 ):
-                    context.server.sni = self.context.client.sni or event.address[0]
+                    # reverse proxy mode may set self.context.server.sni, which takes precedence.
+                    context.server.sni = (
+                        self.context.server.sni
+                        or self.context.client.sni
+                        or event.address[0]
+                    )
                 else:
                     context.server.sni = event.address[0]
-                stack /= tls.ServerTLSLayer(context)
+                if context.server.transport_protocol == "tcp":
+                    stack /= tls.ServerTLSLayer(context)
+                elif context.server.transport_protocol == "udp":
+                    stack /= quic.ServerQuicLayer(context)
+                else:
+                    raise AssertionError(
+                        context.server.transport_protocol
+                    )  # pragma: no cover
 
         stack /= HttpClient(context)
 
@@ -1024,7 +1073,7 @@ class HttpLayer(layer.Layer):
     ) -> layer.CommandGenerator[None]:
         waiting = self.waiting_for_establishment.pop(command.connection)
 
-        reply: Union[tuple[None, str], tuple[Connection, None]]
+        reply: tuple[None, str] | tuple[Connection, None]
         if command.err:
             reply = (None, command.err)
         else:
@@ -1054,13 +1103,15 @@ class HttpClient(layer.Layer):
 
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        err: Optional[str]
+        err: str | None
         if self.context.server.connected:
             err = None
         else:
             err = yield commands.OpenConnection(self.context.server)
         if not err:
-            if self.context.server.alpn == b"h2":
+            if is_h3_alpn(self.context.server.alpn):
+                self.child_layer = Http3Client(self.context)
+            elif self.context.server.alpn == b"h2":
                 self.child_layer = Http2Client(self.context)
             else:
                 self.child_layer = Http1Client(self.context)

@@ -1,29 +1,43 @@
-import asyncio
+import logging
 
 import pytest
 
-from mitmproxy import log
 from mitmproxy.addons.errorcheck import ErrorCheck
+from mitmproxy.tools import main
 
 
-@pytest.mark.parametrize("do_log", [True, False])
-def test_errorcheck(capsys, do_log):
-    async def run():
-        # suppress error that task exception was not retrieved.
-        asyncio.get_running_loop().set_exception_handler(lambda *_: 0)
-        e = ErrorCheck(do_log)
-        e.add_log(log.LogEntry("fatal", "error"))
-        await e.running()
-        await asyncio.sleep(0)
-
+@pytest.mark.parametrize("run_main", [main.mitmdump, main.mitmproxy])
+def test_errorcheck(tdata, capsys, run_main):
+    """Integration test: Make sure that we catch errors on startup an exit."""
     with pytest.raises(SystemExit):
-        asyncio.run(run())
-
-    if do_log:
-        assert capsys.readouterr().err == "Error on startup: fatal\n"
+        run_main(
+            [
+                "-n",
+                "-s",
+                tdata.path("mitmproxy/data/addonscripts/load_error.py"),
+            ]
+        )
+    assert "Error logged during startup" in capsys.readouterr().err
 
 
 async def test_no_error():
     e = ErrorCheck()
-    await e.running()
-    await asyncio.sleep(0)
+    await e.shutdown_if_errored()
+    e.finish()
+
+
+async def test_error_message(capsys):
+    e = ErrorCheck()
+    logging.error("wat")
+    logging.error("wat")
+    with pytest.raises(SystemExit):
+        await e.shutdown_if_errored()
+    assert "Errors logged during startup, exiting..." in capsys.readouterr().err
+
+
+async def test_repeat_error_on_stderr(capsys):
+    e = ErrorCheck(repeat_errors_on_stderr=True)
+    logging.error("wat")
+    with pytest.raises(SystemExit):
+        await e.shutdown_if_errored()
+    assert "Error logged during startup:\nwat" in capsys.readouterr().err

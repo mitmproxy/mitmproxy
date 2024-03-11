@@ -1,0 +1,30 @@
+name: autofix.ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: install-pinned/ruff@38b373a3a8635c2be31d92314e816a491fda910a
+      - run: ruff --fix-only .
+      - run: ruff format .
+
+      - name: Run prettier
+        run: |
+          npm ci
+          npm run prettier
+        working-directory: web
+
+      - uses: mhils/add-pr-ref-in-changelog@main
+
+      - uses: autofix-ci/action@d3e591514b99d0fca6779455ff8338516663f7cc

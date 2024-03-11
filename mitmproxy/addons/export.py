@@ -1,14 +1,17 @@
+import logging
 import shlex
-from collections.abc import Callable, Sequence
-from typing import Any, Union
+from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Any
 
 import pyperclip
 
 import mitmproxy.types
 from mitmproxy import command
-from mitmproxy import ctx, http
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy.net.http.http1 import assemble
 from mitmproxy.utils import strutils
 
@@ -138,7 +141,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         raise exceptions.CommandError("Can't export flow with no request or response.")
 
 
-formats: dict[str, Callable[[flow.Flow], Union[str, bytes]]] = dict(
+formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,
@@ -185,7 +188,7 @@ class Export:
                 else:
                     fp.write(v.encode("utf-8"))
         except OSError as e:
-            ctx.log.error(str(e))
+            logging.error(str(e))
 
     @command.command("export.clip")
     def clip(self, format: str, f: flow.Flow) -> None:
@@ -195,7 +198,7 @@ class Export:
         try:
             pyperclip.copy(self.export_str(format, f))
         except pyperclip.PyperclipException as e:
-            ctx.log.error(str(e))
+            logging.error(str(e))
 
     @command.command("export")
     def export_str(self, format: str, f: flow.Flow) -> str:

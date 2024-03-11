@@ -1,15 +1,23 @@
 import collections.abc
 import difflib
 import itertools
+import logging
 import re
 import textwrap
 import traceback
-from collections.abc import Callable, Iterable
-from typing import Any, AnyStr, Generic, Optional, TypeVar, Union
+from collections.abc import Callable
+from collections.abc import Iterable
+from typing import Any
+from typing import AnyStr
+from typing import Generic
+from typing import TypeVar
+from typing import Union
 
-from mitmproxy.proxy import commands, context, layer
-from mitmproxy.proxy import events
 from mitmproxy.connection import ConnectionState
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 from mitmproxy.proxy.events import command_reply_subclasses
 from mitmproxy.proxy.layer import Layer
 
@@ -48,8 +56,8 @@ def _eq(a: PlaybookEntry, b: PlaybookEntry) -> bool:
 
 
 def eq(
-    a: Union[PlaybookEntry, Iterable[PlaybookEntry]],
-    b: Union[PlaybookEntry, Iterable[PlaybookEntry]],
+    a: PlaybookEntry | Iterable[PlaybookEntry],
+    b: PlaybookEntry | Iterable[PlaybookEntry],
 ):
     """
     Compare an indiviual event/command or a list of events/commands.
@@ -137,7 +145,7 @@ class Playbook:
         layer: Layer,
         hooks: bool = True,
         logs: bool = False,
-        expected: Optional[PlaybookEntryList] = None,
+        expected: PlaybookEntryList | None = None,
     ):
         if expected is None:
             expected = [events.Start()]
@@ -222,15 +230,14 @@ class Playbook:
                 for cmd in cmds:
                     pos += 1
                     assert self.actual[pos] == cmd
-                    if isinstance(cmd, commands.CloseConnection):
-                        if cmd.half_close:
-                            cmd.connection.state &= ~ConnectionState.CAN_WRITE
-                        else:
-                            cmd.connection.state = ConnectionState.CLOSED
+                    if isinstance(cmd, commands.CloseTcpConnection) and cmd.half_close:
+                        cmd.connection.state &= ~ConnectionState.CAN_WRITE
+                    elif isinstance(cmd, commands.CloseConnection):
+                        cmd.connection.state = ConnectionState.CLOSED
                     elif isinstance(cmd, commands.Log):
                         need_to_emulate_log = (
                             not self.logs
-                            and cmd.level in ("debug", "info")
+                            and cmd.level in (logging.DEBUG, logging.INFO)
                             and (
                                 pos >= len(self.expected)
                                 or not isinstance(self.expected[pos], commands.Log)
@@ -291,13 +298,13 @@ class Playbook:
 
 class reply(events.Event):
     args: tuple[Any, ...]
-    to: Union[commands.Command, int]
+    to: commands.Command | type[commands.Command] | int
     side_effect: Callable[[Any], Any]
 
     def __init__(
         self,
         *args,
-        to: Union[commands.Command, int] = -1,
+        to: commands.Command | type[commands.Command] | int = -1,
         side_effect: Callable[[Any], None] = lambda x: None,
     ):
         """Utility method to reply to the latest hook in playbooks."""
@@ -315,6 +322,14 @@ class reply(events.Event):
                 raise AssertionError(f"There is no command at offset {self.to}: {to}")
             else:
                 self.to = to
+        elif isinstance(self.to, type):
+            for cmd in reversed(playbook.actual):
+                if isinstance(cmd, self.to):
+                    assert isinstance(cmd, commands.Command)
+                    self.to = cmd
+                    break
+            else:
+                raise AssertionError(f"There is no command of type {self.to}.")
         for cmd in reversed(playbook.actual):
             if eq(self.to, cmd):
                 self.to = cmd
@@ -379,7 +394,7 @@ class _Placeholder(Generic[T]):
 
 
 # noinspection PyPep8Naming
-def Placeholder(cls: type[T] = Any) -> Union[T, _Placeholder[T]]:
+def Placeholder(cls: type[T] = Any) -> T | _Placeholder[T]:
     return _Placeholder(cls)
 
 
@@ -397,12 +412,12 @@ class _AnyStrPlaceholder(_Placeholder[AnyStr]):
 
 
 # noinspection PyPep8Naming
-def BytesMatching(match: bytes) -> Union[bytes, _AnyStrPlaceholder[bytes]]:
+def BytesMatching(match: bytes) -> bytes | _AnyStrPlaceholder[bytes]:
     return _AnyStrPlaceholder(match)
 
 
 # noinspection PyPep8Naming
-def StrMatching(match: str) -> Union[str, _AnyStrPlaceholder[str]]:
+def StrMatching(match: str) -> str | _AnyStrPlaceholder[str]:
     return _AnyStrPlaceholder(match)
 
 
@@ -431,7 +446,7 @@ class RecordLayer(Layer):
 
 
 def reply_next_layer(
-    child_layer: Union[type[Layer], Callable[[context.Context], Layer]], *args, **kwargs
+    child_layer: type[Layer] | Callable[[context.Context], Layer], *args, **kwargs
 ) -> reply:
     """Helper function to simplify the syntax for next_layer events to this:
     << NextLayerHook(nl)

@@ -1,5 +1,5 @@
-from mitmproxy.contentviews import wbxml
 from . import full_eval
+from mitmproxy.contentviews import wbxml
 
 datadir = "mitmproxy/contentviews/test_wbxml_data/"
 
@@ -7,7 +7,7 @@ datadir = "mitmproxy/contentviews/test_wbxml_data/"
 def test_wbxml(tdata):
     v = full_eval(wbxml.ViewWBXML())
 
-    assert v(b"\x03\x01\x6A\x00") == ("WBXML", [[("text", '<?xml version="1.0" ?>')]])
+    assert v(b"\x03\x01\x6a\x00") == ("WBXML", [[("text", '<?xml version="1.0" ?>')]])
     assert v(b"foo") is None
 
     path = tdata.path(
