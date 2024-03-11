@@ -109,4 +109,13 @@ describe("Flowcolumns Components", () => {
         tree = timeColumn.toJSON();
         expect(tree).toMatchSnapshot();
     });
+
+    it("should render CommentColumn", () => {
+        let tflow = TFlow(),
+            commentColumn = renderer.create(
+                <FlowColumns.comment flow={tflow} />
+            ),
+            tree = commentColumn.toJSON();
+        expect(tree).toMatchSnapshot();
+    });
 });

@@ -25,6 +25,9 @@ test("FlowView", async () => {
     fireEvent.click(screen.getByText("Timing"));
     expect(asFragment()).toMatchSnapshot();
 
+    fireEvent.click(screen.getByText("Comment"));
+    expect(asFragment()).toMatchSnapshot();
+
     fireEvent.click(screen.getByText("Error"));
     expect(asFragment()).toMatchSnapshot();
 

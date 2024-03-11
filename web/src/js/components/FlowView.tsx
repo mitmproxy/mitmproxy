@@ -9,7 +9,7 @@ import Connection from "./FlowView/Connection";
 import Error from "./FlowView/Error";
 import Timing from "./FlowView/Timing";
 import WebSocket from "./FlowView/WebSocket";
-
+import Comment from "./FlowView/Comment";
 import { selectTab } from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
 import { Flow } from "../flow";
@@ -34,6 +34,7 @@ export const allTabs: {
     udpmessages: UdpMessages,
     dnsrequest: DnsRequest,
     dnsresponse: DnsResponse,
+    comment: Comment,
 };
 
 export function tabsForFlow(flow: Flow): string[] {
@@ -58,6 +59,7 @@ export function tabsForFlow(flow: Flow): string[] {
     if (flow.error) tabs.push("error");
     tabs.push("connection");
     tabs.push("timing");
+    tabs.push("comment");
     return tabs;
 }
 

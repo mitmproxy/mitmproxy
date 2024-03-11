@@ -291,6 +291,13 @@ export const quickactions: FlowColumn = ({ flow }) => {
     );
 };
 
+export const comment: FlowColumn = ({ flow }) => {
+    const text = flow.comment;
+    return <td className="col-comment">{text}</td>;
+};
+comment.headerName = "Comment";
+comment.sortKey = (flow) => flow.comment;
+
 quickactions.headerName = "";
 quickactions.sortKey = (flow) => 0;
 
@@ -305,4 +312,5 @@ export default {
     time,
     timestamp,
     tls,
+    comment,
 };

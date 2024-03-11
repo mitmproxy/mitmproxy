@@ -105,7 +105,7 @@ describe("onKeyDown", () => {
     it("should handle switch to left tab", () => {
         store.dispatch(createKeyEvent("ArrowLeft"));
         expect(store.getActions()).toEqual([
-            { tab: "timing", type: UIActions.SET_TAB },
+            { tab: "comment", type: UIActions.SET_TAB },
         ]);
     });
 

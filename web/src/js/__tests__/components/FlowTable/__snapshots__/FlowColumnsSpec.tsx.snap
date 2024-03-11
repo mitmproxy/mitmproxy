@@ -1,5 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Flowcolumns Components should render CommentColumn 1`] = `
+<td
+  className="col-comment"
+>
+  I'm a comment!
+</td>
+`;
+
 exports[`Flowcolumns Components should render IconColumn 1`] = `
 <td
   className="col-icon"
@@ -149,6 +157,22 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
   </span>
   http://address:22/path
 </td>
+`;
+
+exports[`should render columns: comment 1`] = `
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-comment"
+        >
+          I'm a comment!
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`should render columns: icon 1`] = `
