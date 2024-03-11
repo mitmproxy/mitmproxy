@@ -43,6 +43,7 @@ class WebMaster(master.Master):
             webaddons.WebAddon(),
             intercept.Intercept(),
             readfile.ReadFile(),
+            readfile.ReadFileStdin(),
             static_viewer.StaticViewer(),
             self.view,
             self.events,
