@@ -15,6 +15,8 @@
   ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)  
 * Make it possible to read flows from stdin with mitmweb.
   ([#6732](https://github.com/mitmproxy/mitmproxy/pull/6732), @jaywor1)
+* Add button to close flow details panel
+  ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
 
 ## 07 March 2024: mitmproxy 10.2.4
 
