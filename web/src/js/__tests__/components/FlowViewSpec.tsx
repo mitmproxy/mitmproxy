@@ -1,10 +1,9 @@
 import * as React from "react";
 import { render, screen } from "../test-utils";
 import FlowView from "../../components/FlowView";
-import reduceFlows, * as flowActions from "../../ducks/flows";
+import * as flowActions from "../../ducks/flows";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { fireEvent } from "@testing-library/react";
-import * as modalActions from "../../ducks/ui/modal";
 import { TStore } from "../ducks/tutils";
 import { Provider } from "react-redux";
 
