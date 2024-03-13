@@ -16,6 +16,7 @@ import { Flow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
+import * as flowsActions from "../ducks/flows";
 
 type TabProps = {
     flow: Flow;
@@ -98,6 +99,12 @@ export default function FlowView() {
                         {allTabs[tabId].displayName}
                     </a>
                 ))}
+                <span
+                    className="close-button"
+                    onClick={() => dispatch(flowsActions.select(undefined))}
+                >
+                    Close
+                </span>
             </nav>
             <Tab flow={flow} />
         </div>
