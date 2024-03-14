@@ -99,12 +99,12 @@ export default function FlowView() {
                         {allTabs[tabId].displayName}
                     </a>
                 ))}
-                <span
+                <button
                     className="close-button"
                     onClick={() => dispatch(flowsActions.select(undefined))}
                 >
                     Close
-                </span>
+                </button>
             </nav>
             <Tab flow={flow} />
         </div>
