@@ -27,6 +27,7 @@ from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected, WebsocketEndHook, WebsocketStartHook
 from mitmproxy.proxy.mode_specs import UpstreamMode
 from mitmproxy.utils import asyncio_utils
 
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 class MockServer(layers.http.HttpConnection):
     """
     A mock HTTP "server" that just pretends it received a full HTTP request,
+
     which is then processed by the proxy core.
     """
 
@@ -48,9 +50,9 @@ class MockServer(layers.http.HttpConnection):
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
             content = self.flow.request.raw_content
-            self.flow.request.timestamp_start = self.flow.request.timestamp_end = (
-                time.time()
-            )
+            self.flow.request.timestamp_start = (
+                self.flow.request.timestamp_end
+            ) = time.time()
             yield layers.http.ReceiveHttp(
                 layers.http.RequestHeaders(
                     1,
@@ -67,6 +69,13 @@ class MockServer(layers.http.HttpConnection):
                     layers.http.RequestTrailers(1, self.flow.request.trailers)
                 )
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
+            if self.flow.websocket:
+                for message in self.flow.websocket.messages:
+                    message.timestamp = time.time()
+                    logger.info(f"Websocket MSG: {message}")
+                    yield commands.SendData(
+                        self.context.server, message.content
+                    )
         elif isinstance(
             event,
             (
@@ -140,6 +149,8 @@ class ReplayHandler(server.ConnectionHandler):
                 )
             # signal completion
             self.done.set()
+        elif isinstance(hook, WebsocketEndHook):
+            self.done.set()
 
 
 class ClientPlayback:
@@ -199,10 +210,6 @@ class ClientPlayback:
                 return "Can't replay flow with missing request."
             if f.request.raw_content is None:
                 return "Can't replay flow with missing content."
-            if f.websocket is not None:
-                return "Can't replay WebSocket flows."
-        else:
-            return "Can only replay HTTP flows."
         return None
 
     def load(self, loader):
@@ -232,7 +239,7 @@ class ClientPlayback:
                 raise exceptions.OptionsError(
                     "Currently the only valid client_replay_concurrency values are -1 and 1."
                 )
-
+    
     @command.command("replay.client.count")
     def count(self) -> int:
         """
