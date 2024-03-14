@@ -50,11 +50,11 @@ exports[`FlowView 1`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="request"
@@ -239,11 +239,11 @@ exports[`FlowView 2`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="response"
@@ -426,11 +426,11 @@ exports[`FlowView 3`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="websocket"
@@ -533,11 +533,11 @@ exports[`FlowView 4`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="detail"
@@ -825,11 +825,11 @@ exports[`FlowView 5`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="timing"
@@ -1036,11 +1036,11 @@ exports[`FlowView 6`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="timing"
@@ -1110,11 +1110,11 @@ exports[`FlowView 7`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="error"
@@ -1172,11 +1172,11 @@ exports[`FlowView 8`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="tcp"
@@ -1253,11 +1253,11 @@ exports[`FlowView 9`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="error"
@@ -1321,11 +1321,11 @@ exports[`FlowView 10`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="dns-request"
@@ -1432,11 +1432,11 @@ exports[`FlowView 11`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="dns-response"
@@ -1599,11 +1599,11 @@ exports[`FlowView 12`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="error"
@@ -1661,11 +1661,11 @@ exports[`FlowView 13`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="udp"
@@ -1742,11 +1742,11 @@ exports[`FlowView 14`] = `
       >
         Comment
       </a>
-      <span
+      <button
         class="close-button"
       >
         Close
-      </span>
+      </button>
     </nav>
     <section
       class="error"
