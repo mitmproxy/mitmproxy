@@ -90,7 +90,7 @@ export default function FlowView() {
                     className="close-button"
                     onClick={() => dispatch(flowsActions.select(undefined))}
                 >
-                    X
+                    <i className="fa fa-times-circle"></i>
                 </button>
                 {tabs.map((tabId) => (
                     <a
