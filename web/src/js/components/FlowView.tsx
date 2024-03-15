@@ -87,6 +87,7 @@ export default function FlowView() {
         <div className="flow-detail">
             <nav className="nav-tabs nav-tabs-sm">
                 <button
+                    data-testid="close-button-id"
                     className="close-button"
                     onClick={() => dispatch(flowsActions.select(undefined))}
                 >

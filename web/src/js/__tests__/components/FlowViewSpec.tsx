@@ -64,12 +64,12 @@ test("FlowView", async () => {
 test("FlowView close button", async () => {
     const store = TStore();
 
-    const { getByText } = render(
+    const { getByTestId } = render(
         <Provider store={store}>
             <FlowView />
         </Provider>
     );
-    fireEvent.click(getByText("X"));
+    fireEvent.click(getByTestId("close-button-id"));
     expect(store.getActions()).toEqual([
         { flowIds: [], type: flowActions.SELECT },
     ]);

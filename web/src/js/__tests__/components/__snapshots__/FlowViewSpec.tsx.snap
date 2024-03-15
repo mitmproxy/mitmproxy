@@ -10,8 +10,11 @@ exports[`FlowView 1`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class="active"
@@ -199,8 +202,11 @@ exports[`FlowView 2`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -386,8 +392,11 @@ exports[`FlowView 3`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -493,8 +502,11 @@ exports[`FlowView 4`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -785,8 +797,11 @@ exports[`FlowView 5`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -996,8 +1011,11 @@ exports[`FlowView 6`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -1070,8 +1088,11 @@ exports[`FlowView 7`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -1144,8 +1165,11 @@ exports[`FlowView 8`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class="active"
@@ -1225,8 +1249,11 @@ exports[`FlowView 9`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -1287,8 +1314,11 @@ exports[`FlowView 10`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class="active"
@@ -1398,8 +1428,11 @@ exports[`FlowView 11`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -1565,8 +1598,11 @@ exports[`FlowView 12`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
@@ -1633,8 +1669,11 @@ exports[`FlowView 13`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class="active"
@@ -1714,8 +1753,11 @@ exports[`FlowView 14`] = `
     >
       <button
         class="close-button"
+        data-testid="close-button-id"
       >
-        X
+        <i
+          class="fa fa-times-circle"
+        />
       </button>
       <a
         class=""
