@@ -8,6 +8,11 @@ exports[`FlowView 1`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class="active"
         href="#"
@@ -50,11 +55,6 @@ exports[`FlowView 1`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="request"
@@ -197,6 +197,11 @@ exports[`FlowView 2`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -239,11 +244,6 @@ exports[`FlowView 2`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="response"
@@ -384,6 +384,11 @@ exports[`FlowView 3`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -426,11 +431,6 @@ exports[`FlowView 3`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="websocket"
@@ -491,6 +491,11 @@ exports[`FlowView 4`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -533,11 +538,6 @@ exports[`FlowView 4`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="detail"
@@ -783,6 +783,11 @@ exports[`FlowView 5`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -825,11 +830,6 @@ exports[`FlowView 5`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="timing"
@@ -994,6 +994,11 @@ exports[`FlowView 6`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -1036,11 +1041,6 @@ exports[`FlowView 6`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="timing"
@@ -1068,6 +1068,11 @@ exports[`FlowView 7`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -1110,11 +1115,6 @@ exports[`FlowView 7`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="error"
@@ -1142,6 +1142,11 @@ exports[`FlowView 8`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class="active"
         href="#"
@@ -1172,11 +1177,6 @@ exports[`FlowView 8`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="tcp"
@@ -1223,6 +1223,11 @@ exports[`FlowView 9`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -1253,11 +1258,6 @@ exports[`FlowView 9`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="error"
@@ -1285,6 +1285,11 @@ exports[`FlowView 10`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class="active"
         href="#"
@@ -1321,11 +1326,6 @@ exports[`FlowView 10`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="dns-request"
@@ -1396,6 +1396,11 @@ exports[`FlowView 11`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -1432,11 +1437,6 @@ exports[`FlowView 11`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="dns-response"
@@ -1563,6 +1563,11 @@ exports[`FlowView 12`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -1599,11 +1604,6 @@ exports[`FlowView 12`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="error"
@@ -1631,6 +1631,11 @@ exports[`FlowView 13`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class="active"
         href="#"
@@ -1661,11 +1666,6 @@ exports[`FlowView 13`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="udp"
@@ -1712,6 +1712,11 @@ exports[`FlowView 14`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+      >
+        X
+      </button>
       <a
         class=""
         href="#"
@@ -1742,11 +1747,6 @@ exports[`FlowView 14`] = `
       >
         Comment
       </a>
-      <button
-        class="close-button"
-      >
-        Close
-      </button>
     </nav>
     <section
       class="error"

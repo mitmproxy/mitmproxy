@@ -69,7 +69,7 @@ test("FlowView close button", async () => {
             <FlowView />
         </Provider>
     );
-    fireEvent.click(getByText("Close"));
+    fireEvent.click(getByText("X"));
     expect(store.getActions()).toEqual([
         { flowIds: [], type: flowActions.SELECT },
     ]);

@@ -86,6 +86,12 @@ export default function FlowView() {
     return (
         <div className="flow-detail">
             <nav className="nav-tabs nav-tabs-sm">
+                <button
+                    className="close-button"
+                    onClick={() => dispatch(flowsActions.select(undefined))}
+                >
+                    X
+                </button>
                 {tabs.map((tabId) => (
                     <a
                         key={tabId}
@@ -99,12 +105,6 @@ export default function FlowView() {
                         {allTabs[tabId].displayName}
                     </a>
                 ))}
-                <button
-                    className="close-button"
-                    onClick={() => dispatch(flowsActions.select(undefined))}
-                >
-                    Close
-                </button>
             </nav>
             <Tab flow={flow} />
         </div>
