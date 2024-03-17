@@ -27,7 +27,7 @@ from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected, WebsocketEndHook, WebsocketStartHook
+from mitmproxy.proxy.layers.websocket import WebsocketEndHook
 from mitmproxy.proxy.mode_specs import UpstreamMode
 from mitmproxy.utils import asyncio_utils
 
@@ -42,7 +42,9 @@ class MockServer(layers.http.HttpConnection):
 
     flow: http.HTTPFlow
 
-    def __init__(self, flow: http.HTTPFlow, context: Context, replay_handler: ReplayHandler):
+    def __init__(
+        self, flow: http.HTTPFlow, context: Context, replay_handler: ReplayHandler
+    ):
         super().__init__(context, context.client)
         self.flow = flow
         self.replay_handler = replay_handler
@@ -50,9 +52,9 @@ class MockServer(layers.http.HttpConnection):
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
             content = self.flow.request.raw_content
-            self.flow.request.timestamp_start = (
-                self.flow.request.timestamp_end
-            ) = time.time()
+            self.flow.request.timestamp_start = self.flow.request.timestamp_end = (
+                time.time()
+            )
             yield layers.http.ReceiveHttp(
                 layers.http.RequestHeaders(
                     1,
@@ -73,9 +75,7 @@ class MockServer(layers.http.HttpConnection):
                 for message in self.flow.websocket.messages:
                     message.timestamp = time.time()
                     self.replay_handler.log(f"WebSocket message: {message.content}")
-                    yield commands.SendData(
-                        self.context.server, message.content
-                    )
+                    yield commands.SendData(self.context.server, message.content)
         elif isinstance(
             event,
             (
@@ -241,7 +241,7 @@ class ClientPlayback:
                 raise exceptions.OptionsError(
                     "Currently the only valid client_replay_concurrency values are -1 and 1."
                 )
-    
+
     @command.command("replay.client.count")
     def count(self) -> int:
         """
