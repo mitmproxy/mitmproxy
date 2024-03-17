@@ -2,6 +2,7 @@ import asyncio
 import ssl
 from contextlib import asynccontextmanager
 
+from mitmproxy import websocket
 import pytest
 
 from mitmproxy.addons.clientplayback import ClientPlayback
@@ -99,25 +100,33 @@ async def test_playback(tdata, mode, concurrency):
                 ),
             )
 
-        async with tcp_server(handler, **server_args) as addr:
-            cp.running()
-            flow = tflow.tflow(live=False)
-            flow.request.content = b"data"
-            if mode == "upstream":
-                tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
-                flow.request.authority = f"{addr[0]}:{addr[1]}"
-                flow.request.host, flow.request.port = "address", 22
-            else:
-                flow.request.host, flow.request.port = addr
-            if mode == "https":
-                flow.request.scheme = "https"
-            # Used for SNI
-            flow.request.host_header = "example.mitmproxy.org"
-            cp.start_replay([flow])
-            assert cp.count() == 1
-            await asyncio.wait_for(cp.queue.join(), 5)
-            while cp.replay_tasks:
-                await asyncio.sleep(0.001)
+    async with tcp_server(handler, **server_args) as addr:
+        cp.running()
+        flow = tflow.tflow(live=False)
+        flow.request.content = b"data"
+        if mode == "upstream":
+            tctx.options.mode = [f"upstream:http://{addr[0]}:{addr[1]}"]
+            flow.request.authority = f"{addr[0]}:{addr[1]}"
+            flow.request.host, flow.request.port = "address", 22
+        else:
+            flow.request.host, flow.request.port = addr
+        if mode == "https":
+            flow.request.scheme = "https"
+        # Used for SNI
+        flow.request.host_header = "example.mitmproxy.org"
+        
+        # Add WebSocket messages to the flow
+        flow.websocket = websocket.WebSocketData()
+        flow.websocket.messages = [
+            websocket.WebSocketMessage(websocket.Opcode.TEXT, True, b"Hello"),
+            websocket.WebSocketMessage(websocket.Opcode.TEXT, True, b"World"),
+        ]
+        
+        cp.start_replay([flow])
+        assert cp.count() == 1
+        await asyncio.wait_for(cp.queue.join(), 5)
+        while cp.replay_tasks:
+            await asyncio.sleep(0.001)
         if mode != "err":
             assert flow.response.status_code == 204
         await cp.done()
@@ -168,27 +177,27 @@ async def test_playback_crash(monkeypatch, caplog_async):
         await cp.done()
 
 
-def test_check():
+def test_check() -> str | None:   
     cp = ClientPlayback()
     f = tflow.tflow(resp=True)
     f.live = True
-    assert "live flow" in cp.check(f)
+    assert "Can't replay live flow." in cp.check(f)
 
     f = tflow.tflow(resp=True, live=False)
     f.intercepted = True
-    assert "intercepted flow" in cp.check(f)
+    assert "Can't replay intercepted flow." in cp.check(f)
 
     f = tflow.tflow(resp=True, live=False)
     f.request = None
-    assert "missing request" in cp.check(f)
+    assert "Can't replay flow with missing request." in cp.check(f)
 
     f = tflow.tflow(resp=True, live=False)
     f.request.raw_content = None
-    assert "missing content" in cp.check(f)
+    assert "Can't replay flow with missing content." in cp.check(f)
 
     for f in (tflow.ttcpflow(), tflow.tudpflow()):
         f.live = False
-        assert "Can only replay HTTP" in cp.check(f)
+        assert "Can only replay HTTP and WebSocket flows." in cp.check(f)
 
 
 async def test_start_stop(tdata, caplog_async):
@@ -197,15 +206,8 @@ async def test_start_stop(tdata, caplog_async):
         cp.start_replay([tflow.tflow(live=False)])
         assert cp.count() == 1
 
-        ws_flow = tflow.twebsocketflow()
-        ws_flow.live = False
-        cp.start_replay([ws_flow])
-        await caplog_async.await_log("Can't replay WebSocket flows.")
-        assert cp.count() == 1
-
         cp.stop_replay()
         assert cp.count() == 0
-
 
 def test_load(tdata):
     cp = ClientPlayback()

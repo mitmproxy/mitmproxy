@@ -37,15 +37,15 @@ logger = logging.getLogger(__name__)
 class MockServer(layers.http.HttpConnection):
     """
     A mock HTTP "server" that just pretends it received a full HTTP request,
-
     which is then processed by the proxy core.
     """
 
     flow: http.HTTPFlow
 
-    def __init__(self, flow: http.HTTPFlow, context: Context):
+    def __init__(self, flow: http.HTTPFlow, context: Context, replay_handler: ReplayHandler):
         super().__init__(context, context.client)
         self.flow = flow
+        self.replay_handler = replay_handler
 
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
@@ -72,7 +72,7 @@ class MockServer(layers.http.HttpConnection):
             if self.flow.websocket:
                 for message in self.flow.websocket.messages:
                     message.timestamp = time.time()
-                    logger.info(f"Websocket MSG: {message}")
+                    self.replay_handler.log(f"WebSocket message: {message.content}")
                     yield commands.SendData(
                         self.context.server, message.content
                     )
@@ -201,6 +201,8 @@ class ClientPlayback:
             self.inflight = None
 
     def check(self, f: flow.Flow) -> str | None:
+        if not isinstance(f, http.HTTPFlow):
+            return "Can only replay HTTP and WebSocket flows."
         if f.live or f == self.inflight:
             return "Can't replay live flow."
         if f.intercepted:
