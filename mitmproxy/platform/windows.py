@@ -4,6 +4,7 @@ import collections.abc
 import contextlib
 import ctypes.wintypes
 import json
+import logging
 import os
 import re
 import socket
@@ -23,6 +24,9 @@ from mitmproxy.net.local_ip import get_local_ip6
 
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
+
+
+logger = logging.getLogger(__name__)
 
 
 ##########################
@@ -460,6 +464,7 @@ class TransparentProxy:
     def setup(cls):
         # TODO: Make sure that server can be killed cleanly. That's a bit difficult as we don't have access to
         # controller.should_exit when this is called.
+        logger.warning("Transparent mode on Windows is unsupported and flaky. Consider using local redirect mode or WireGuard mode instead.")
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_unavailable = s.connect_ex((REDIRECT_API_HOST, REDIRECT_API_PORT))
         if server_unavailable:
