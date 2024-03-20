@@ -254,7 +254,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 finally:
                     self.log(f"server disconnect {addr}")
                     command.connection.timestamp_end = time.time()
-                    await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
+                    await self.handle_hook(
+                        server_hooks.ServerDisconnectedHook(hook_data)
+                    )
 
     async def wakeup(self, request: commands.RequestWakeup) -> None:
         await asyncio.sleep(request.delay)

@@ -18,6 +18,7 @@
 * Update aioquic dependency to >= 1.0.0, < 2.0.0.
   ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
 * Fix a bug where async `client_connected` handlers would crash mitmproxy.
+  ([#6749](https://github.com/mitmproxy/mitmproxy/pull/6749), @mhils)
 
 ## 07 March 2024: mitmproxy 10.2.4
 
