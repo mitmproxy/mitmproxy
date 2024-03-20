@@ -464,7 +464,9 @@ class TransparentProxy:
     def setup(cls):
         # TODO: Make sure that server can be killed cleanly. That's a bit difficult as we don't have access to
         # controller.should_exit when this is called.
-        logger.warning("Transparent mode on Windows is unsupported and flaky. Consider using local redirect mode or WireGuard mode instead.")
+        logger.warning(
+            "Transparent mode on Windows is unsupported and flaky. Consider using local redirect mode or WireGuard mode instead."
+        )
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_unavailable = s.connect_ex((REDIRECT_API_HOST, REDIRECT_API_PORT))
         if server_unavailable:
