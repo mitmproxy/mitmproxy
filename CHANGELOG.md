@@ -6,9 +6,9 @@
 -->
 
 ## Unreleased: mitmproxy next
+
 * Add section in mitmweb for rendering, adding and removing a comment
   ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
-
 * Fix multipart form content view being unusable.
   ([#6653](https://github.com/mitmproxy/mitmproxy/pull/6653), @DaniElectra)
 * Documentation Improvements on CA Certificate Generation
