@@ -144,13 +144,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             assert writer
             writer.close()
         else:
+            self.server_event(events.Start())
             handler = asyncio_utils.create_task(
                 self.handle_connection(self.client),
                 name=f"client connection handler",
                 client=self.client.peername,
             )
             self.transports[self.client].handler = handler
-            self.server_event(events.Start())
             await asyncio.wait([handler])
             if not handler.cancelled() and (e := handler.exception()):
                 self.log(
