@@ -15,6 +15,8 @@
   ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)  
 * Make it possible to read flows from stdin with mitmweb.
   ([#6732](https://github.com/mitmproxy/mitmproxy/pull/6732), @jaywor1)
+* Update aioquic dependency to >= 1.0.0, < 2.0.0.
+  ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
 
 ## 07 March 2024: mitmproxy 10.2.4
 
