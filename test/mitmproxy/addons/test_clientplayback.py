@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 import pytest
 
+from mitmproxy import websocket
 from mitmproxy.addons.clientplayback import ClientPlayback
 from mitmproxy.addons.clientplayback import ReplayHandler
 from mitmproxy.addons.proxyserver import Proxyserver
@@ -13,6 +14,7 @@ from mitmproxy.exceptions import CommandError
 from mitmproxy.exceptions import OptionsError
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.websocket import Opcode
 
 
 @asynccontextmanager
@@ -114,15 +116,33 @@ async def test_playback(tdata, mode, concurrency):
         # Used for SNI
         flow.request.host_header = "example.mitmproxy.org"
         
-        cp.start_replay([flow])
-        assert cp.count() == 1
+        # Create WebSocket flow
+        ws_flow = tflow.twebsocketflow()
+        ws_flow.live = False
+        ws_flow.request.host, ws_flow.request.port = addr
+        ws_flow.request.scheme = "http"
+        ws_flow.websocket.messages = [
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"Hello"),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"World"),
+        ]
+
+        ws_end_flow = tflow.twebsocketflow(close_code=1000, close_reason="Normal Closure")
+        ws_end_flow.live = False
+        ws_end_flow.request.host, ws_end_flow.request.port = addr
+        ws_end_flow.request.scheme = "http"
+
+        cp.start_replay([flow, ws_flow, ws_end_flow])
+        assert cp.count() == 2
         await asyncio.wait_for(cp.queue.join(), 5)
         while cp.replay_tasks:
             await asyncio.sleep(0.001)
         if mode != "err":
             assert flow.response.status_code == 204
+            assert ws_flow.websocket.messages[0].content == b"Hello"
+            assert ws_flow.websocket.messages[1].content == b"World"
+            assert ws_end_flow.websocket.close_code == 1000
+            assert ws_end_flow.websocket.close_reason == "Normal Closure"
         await cp.done()
-
 
 async def test_playback_https_upstream():
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -186,6 +206,10 @@ def test_check() -> str | None:
     f = tflow.tflow(resp=True, live=False)
     f.request.raw_content = None
     assert "Can't replay flow with missing content." in cp.check(f)
+
+    ws_flow = tflow.twebsocketflow()
+    ws_flow.live = False
+    assert cp.check(ws_flow) is None
 
     for f in (tflow.ttcpflow(), tflow.tudpflow()):
         f.live = False
