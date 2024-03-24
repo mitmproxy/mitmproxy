@@ -189,7 +189,7 @@ async def test_playback_crash(monkeypatch, caplog_async):
         await cp.done()
 
 
-def test_check() -> str | None:   
+def test_check() -> str | None:
     cp = ClientPlayback()
     f = tflow.tflow(resp=True)
     f.live = True
@@ -224,6 +224,7 @@ async def test_start_stop(tdata, caplog_async):
 
         cp.stop_replay()
         assert cp.count() == 0
+
 
 def test_load(tdata):
     cp = ClientPlayback()
