@@ -28,6 +28,7 @@ from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.websocket import WebsocketEndHook
+from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.proxy.mode_specs import UpstreamMode
 from mitmproxy.utils import asyncio_utils
 
@@ -72,10 +73,12 @@ class MockServer(layers.http.HttpConnection):
                 )
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
             if self.flow.websocket:
+                yield WebsocketStartHook(self.flow)
                 for message in self.flow.websocket.messages:
                     message.timestamp = time.time()
-                    self.replay_handler.log(f"WebSocket message: {message.content}")
-                    yield commands.SendData(self.context.server, message.content)
+                    self.replay_handler.log(f"WebSocket message: {message!r}")
+                yield WebsocketEndHook(self.flow)
+
         elif isinstance(
             event,
             (

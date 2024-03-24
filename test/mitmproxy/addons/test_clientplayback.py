@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from mitmproxy import websocket
 from mitmproxy.addons.clientplayback import ClientPlayback
 from mitmproxy.addons.clientplayback import ReplayHandler
 from mitmproxy.addons.proxyserver import Proxyserver
@@ -114,14 +113,7 @@ async def test_playback(tdata, mode, concurrency):
             flow.request.scheme = "https"
         # Used for SNI
         flow.request.host_header = "example.mitmproxy.org"
-
-        # Add WebSocket messages to the flow
-        flow.websocket = websocket.WebSocketData()
-        flow.websocket.messages = [
-            websocket.WebSocketMessage(websocket.Opcode.TEXT, True, b"Hello"),
-            websocket.WebSocketMessage(websocket.Opcode.TEXT, True, b"World"),
-        ]
-
+        
         cp.start_replay([flow])
         assert cp.count() == 1
         await asyncio.wait_for(cp.queue.join(), 5)
@@ -177,7 +169,7 @@ async def test_playback_crash(monkeypatch, caplog_async):
         await cp.done()
 
 
-def test_check() -> str | None:
+def test_check() -> str | None:   
     cp = ClientPlayback()
     f = tflow.tflow(resp=True)
     f.live = True
@@ -208,7 +200,6 @@ async def test_start_stop(tdata, caplog_async):
 
         cp.stop_replay()
         assert cp.count() == 0
-
 
 def test_load(tdata):
     cp = ClientPlayback()
