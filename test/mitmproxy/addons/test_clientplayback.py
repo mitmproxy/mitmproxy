@@ -115,7 +115,7 @@ async def test_playback(tdata, mode, concurrency):
             flow.request.scheme = "https"
         # Used for SNI
         flow.request.host_header = "example.mitmproxy.org"
-        
+
         # Create WebSocket flow
         ws_flow = tflow.twebsocketflow()
         ws_flow.live = False
@@ -126,7 +126,9 @@ async def test_playback(tdata, mode, concurrency):
             websocket.WebSocketMessage(Opcode.TEXT, True, b"World"),
         ]
 
-        ws_end_flow = tflow.twebsocketflow(close_code=1000, close_reason="Normal Closure")
+        ws_end_flow = tflow.twebsocketflow(
+            close_code=1000, close_reason="Normal Closure"
+        )
         ws_end_flow.live = False
         ws_end_flow.request.host, ws_end_flow.request.port = addr
         ws_end_flow.request.scheme = "http"
@@ -143,6 +145,7 @@ async def test_playback(tdata, mode, concurrency):
             assert ws_end_flow.websocket.close_code == 1000
             assert ws_end_flow.websocket.close_reason == "Normal Closure"
         await cp.done()
+
 
 async def test_playback_https_upstream():
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
