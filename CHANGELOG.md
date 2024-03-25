@@ -6,16 +6,20 @@
 -->
 
 ## Unreleased: mitmproxy next
+
 * Add section in mitmweb for rendering, adding and removing a comment
   ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
-
 * Fix multipart form content view being unusable.
   ([#6653](https://github.com/mitmproxy/mitmproxy/pull/6653), @DaniElectra)
 * Documentation Improvements on CA Certificate Generation
   ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)  
 * Make it possible to read flows from stdin with mitmweb.
   ([#6732](https://github.com/mitmproxy/mitmproxy/pull/6732), @jaywor1)
-* Add button to close flow details panel
+* Update aioquic dependency to >= 1.0.0, < 2.0.0.
+  ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
+* Fix a bug where async `client_connected` handlers would crash mitmproxy.
+  ([#6749](https://github.com/mitmproxy/mitmproxy/pull/6749), @mhils)
+  * Add button to close flow details panel
   ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
 
 ## 07 March 2024: mitmproxy 10.2.4
