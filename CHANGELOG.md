@@ -19,6 +19,8 @@
   ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
 * Fix a bug where async `client_connected` handlers would crash mitmproxy.
   ([#6749](https://github.com/mitmproxy/mitmproxy/pull/6749), @mhils)
+  * Add button to close flow details panel
+  ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
 
 ## 07 March 2024: mitmproxy 10.2.4
 

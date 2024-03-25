@@ -16,6 +16,7 @@ import { Flow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
+import * as flowsActions from "../ducks/flows";
 
 type TabProps = {
     flow: Flow;
@@ -85,6 +86,13 @@ export default function FlowView() {
     return (
         <div className="flow-detail">
             <nav className="nav-tabs nav-tabs-sm">
+                <button
+                    data-testid="close-button-id"
+                    className="close-button"
+                    onClick={() => dispatch(flowsActions.select(undefined))}
+                >
+                    <i className="fa fa-times-circle"></i>
+                </button>
                 {tabs.map((tabId) => (
                     <a
                         key={tabId}

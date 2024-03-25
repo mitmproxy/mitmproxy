@@ -8,6 +8,14 @@ exports[`FlowView 1`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class="active"
         href="#"
@@ -192,6 +200,14 @@ exports[`FlowView 2`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -374,6 +390,14 @@ exports[`FlowView 3`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -476,6 +500,14 @@ exports[`FlowView 4`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -763,6 +795,14 @@ exports[`FlowView 5`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -969,6 +1009,14 @@ exports[`FlowView 6`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -1038,6 +1086,14 @@ exports[`FlowView 7`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -1107,6 +1163,14 @@ exports[`FlowView 8`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class="active"
         href="#"
@@ -1183,6 +1247,14 @@ exports[`FlowView 9`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -1240,6 +1312,14 @@ exports[`FlowView 10`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class="active"
         href="#"
@@ -1346,6 +1426,14 @@ exports[`FlowView 11`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -1508,6 +1596,14 @@ exports[`FlowView 12`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"
@@ -1571,6 +1667,14 @@ exports[`FlowView 13`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class="active"
         href="#"
@@ -1647,6 +1751,14 @@ exports[`FlowView 14`] = `
     <nav
       class="nav-tabs nav-tabs-sm"
     >
+      <button
+        class="close-button"
+        data-testid="close-button-id"
+      >
+        <i
+          class="fa fa-times-circle"
+        />
+      </button>
       <a
         class=""
         href="#"

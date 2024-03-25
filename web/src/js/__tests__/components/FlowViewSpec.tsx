@@ -4,6 +4,8 @@ import FlowView from "../../components/FlowView";
 import * as flowActions from "../../ducks/flows";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { fireEvent } from "@testing-library/react";
+import { TStore } from "../ducks/tutils";
+import { Provider } from "react-redux";
 
 enableFetchMocks();
 
@@ -57,4 +59,18 @@ test("FlowView", async () => {
 
     fireEvent.click(screen.getByText("Error"));
     expect(asFragment()).toMatchSnapshot();
+});
+
+test("FlowView close button", async () => {
+    const store = TStore();
+
+    const { getByTestId } = render(
+        <Provider store={store}>
+            <FlowView />
+        </Provider>
+    );
+    fireEvent.click(getByTestId("close-button-id"));
+    expect(store.getActions()).toEqual([
+        { flowIds: [], type: flowActions.SELECT },
+    ]);
 });
