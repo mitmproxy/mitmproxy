@@ -22,6 +22,7 @@
   * Add button to close flow details panel
   ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
 * Add primitive websocket interception and modification
+  ([#6766](https://github.com/mitmproxy/mitmproxy/pull/6766), @errorxyz)
 
 ## 07 March 2024: mitmproxy 10.2.4
 

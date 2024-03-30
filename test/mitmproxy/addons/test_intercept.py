@@ -90,10 +90,11 @@ async def test_udp():
         await tctx.cycle(r, f)
         assert not f.intercepted
 
+
 async def test_websocket_message():
     r = intercept.Intercept()
     with taddons.context(r) as tctx:
-        tctx.configure(r, intercept="~b \"hello binary\"")
+        tctx.configure(r, intercept='~b "hello binary"')
         f = tflow.twebsocketflow()
         await tctx.cycle(r, f)
         assert f.intercepted
