@@ -117,7 +117,9 @@ class FlowDetails(tabs.Tabs):
     def tab_http_response(self):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
-        if self.flow.intercepted and flow.response:
+
+        # prevent renaming when websocket messages are intercepted
+        if self.flow.intercepted and flow.response and not flow.websocket:
             return "Response intercepted"
         else:
             return "Response"
