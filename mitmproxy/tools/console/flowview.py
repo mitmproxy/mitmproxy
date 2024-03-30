@@ -119,7 +119,7 @@ class FlowDetails(tabs.Tabs):
         assert isinstance(flow, http.HTTPFlow)
 
         # prevent renaming when websocket messages are intercepted
-        if self.flow.intercepted and flow.response and not flow.websocket:
+        if self.flow.intercepted and flow.response and (not flow.websocket or len(flow.websocket.messages) == 0):
             return "Response intercepted"
         else:
             return "Response"
@@ -147,7 +147,14 @@ class FlowDetails(tabs.Tabs):
         return "UDP Stream"
 
     def tab_websocket_messages(self):
-        return "WebSocket Messages"
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        assert flow.websocket
+
+        if self.flow.intercepted and len(flow.websocket.messages) != 0:
+            return "WebSocket Messages intercepted"
+        else:
+            return "WebSocket Messages"
 
     def tab_details(self):
         return "Detail"
