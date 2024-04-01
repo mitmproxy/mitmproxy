@@ -28,14 +28,18 @@ def is_addr(v):
 
 
 def extract(cut: str, f: flow.Flow) -> str | bytes:
-    if hasattr(f, "websocket") and f.websocket is not None and (cut == "response.content" or cut == "request.content"):
+    if (
+        hasattr(f, "websocket")
+        and f.websocket is not None
+        and (cut == "response.content" or cut == "request.content")
+    ):
         formatted_messages = b""
         for i, message in enumerate(f.websocket.messages):
             formatted_messages += message.format_ws_message()
             if i < len(f.websocket.messages) - 1:
                 formatted_messages += b"\n"
         return formatted_messages
-    
+
     path = cut.split(".")
     current: Any = f
     for i, spec in enumerate(path):
