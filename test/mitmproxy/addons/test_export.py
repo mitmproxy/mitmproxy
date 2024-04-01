@@ -57,6 +57,9 @@ def tcp_flow():
 def udp_flow():
     return tflow.tudpflow()
 
+@pytest.fixture
+def websocket_flow():
+    return tflow.twebsocketflow()
 
 @pytest.fixture(scope="module")
 def export_curl():
@@ -216,6 +219,11 @@ class TestRaw:
             match="Can't export flow with no request or response",
         ):
             export.raw(udp_flow)
+
+    def test_websocket(self, websocket_flow):
+        assert b"hello binary" in export.raw(websocket_flow)
+        assert b"hello text" in export.raw(websocket_flow)
+        assert b"it's me" in export.raw(websocket_flow)
 
 
 class TestRawRequest:

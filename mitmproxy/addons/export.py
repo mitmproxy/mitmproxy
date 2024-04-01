@@ -135,15 +135,25 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         and f.response
         and f.response.raw_content is not None
     )
-
+    is_websocket_flow = (
+        hasattr(f, "websocket")
+        and f.websocket is not None
+    )
+    
+    serialized_flow = b""
     if request_present and response_present:
-        return b"".join([raw_request(f), separator, raw_response(f)])
+        serialized_flow = serialized_flow.join([raw_request(f), separator, raw_response(f)])
     elif request_present:
-        return raw_request(f)
+        serialized_flow = raw_request(f)
     elif response_present:
-        return raw_response(f)
+        serialized_flow = raw_response(f)
     else:
         raise exceptions.CommandError("Can't export flow with no request or response.")
+    if is_websocket_flow:
+        logging.info("Saving websocket messages")
+        serialized_flow = serialized_flow.join([separator, websocket_command(f)])
+    return serialized_flow
+
 
 
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
