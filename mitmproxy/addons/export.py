@@ -105,6 +105,11 @@ def httpie_command(f: flow.Flow) -> str:
         cmd += " <<< " + shlex.quote(request_content_for_console(request))
     return cmd
 
+def websocket_command(f: flow.Flow) -> bytes:
+    if hasattr(f, "websocket") and f.websocket is not None:
+        return f.websocket.get_formatted_messages()
+    else:
+        raise exceptions.CommandError("Not a valid websocket flow.")
 
 def raw_request(f: flow.Flow) -> bytes:
     request = cleanup_request(f)
@@ -144,6 +149,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     curl=curl_command,
     httpie=httpie_command,
+    websocket=websocket_command,
     raw=raw,
     raw_request=raw_request,
     raw_response=raw_response,
