@@ -31,7 +31,7 @@ def extract(cut: str, f: flow.Flow) -> str | bytes:
     if hasattr(f, "websocket") and f.websocket is not None and (cut == "response.content" or cut == "request.content"):
         formatted_messages = f.websocket.get_formatted_messages()
         return formatted_messages
-    
+
     path = cut.split(".")
     current: Any = f
     for i, spec in enumerate(path):
