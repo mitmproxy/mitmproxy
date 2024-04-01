@@ -92,6 +92,16 @@ class WebSocketMessage(serializable.Serializable):
         ) = state
         self.type = Opcode(typ)
 
+    def format_ws_message(self):
+        message = self.content
+        prefix = b""
+        if self.from_client:
+            prefix = b"[OUTGOING]"
+        else:
+            prefix = b"[INCOMING]"
+        formatted_message = prefix + b" " + message
+        return formatted_message
+
     def __repr__(self):
         if self.type == Opcode.TEXT:
             return repr(self.content.decode(errors="replace"))
