@@ -274,7 +274,14 @@ def test_export(tmp_path) -> None:
     with taddons.context() as tctx:
         tctx.configure(e)
 
-        assert e.formats() == ["curl", "httpie", "raw", "raw_request", "raw_response", "websocket"]
+        assert e.formats() == [
+            "curl",
+            "httpie",
+            "raw",
+            "raw_request",
+            "raw_response",
+            "websocket",
+        ]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
 

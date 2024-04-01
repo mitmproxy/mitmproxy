@@ -105,11 +105,13 @@ def httpie_command(f: flow.Flow) -> str:
         cmd += " <<< " + shlex.quote(request_content_for_console(request))
     return cmd
 
+
 def websocket_command(f: flow.Flow) -> bytes:
     if hasattr(f, "websocket") and f.websocket is not None:
         return f.websocket.get_formatted_messages()
     else:
         raise exceptions.CommandError("Not a valid websocket flow.")
+
 
 def raw_request(f: flow.Flow) -> bytes:
     request = cleanup_request(f)
