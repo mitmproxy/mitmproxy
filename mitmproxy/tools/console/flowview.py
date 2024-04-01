@@ -117,7 +117,14 @@ class FlowDetails(tabs.Tabs):
     def tab_http_response(self):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
-        if self.flow.intercepted and flow.response:
+
+        # there is no good way to detect what part of the flow is intercepted,
+        # so we apply some heuristics to see if it's the HTTP response.
+        websocket_started = flow.websocket and len(flow.websocket.messages) != 0
+        response_is_intercepted = (
+            self.flow.intercepted and flow.response and not websocket_started
+        )
+        if response_is_intercepted:
             return "Response intercepted"
         else:
             return "Response"
@@ -145,7 +152,14 @@ class FlowDetails(tabs.Tabs):
         return "UDP Stream"
 
     def tab_websocket_messages(self):
-        return "WebSocket Messages"
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        assert flow.websocket
+
+        if self.flow.intercepted and len(flow.websocket.messages) != 0:
+            return "WebSocket Messages intercepted"
+        else:
+            return "WebSocket Messages"
 
     def tab_details(self):
         return "Detail"
