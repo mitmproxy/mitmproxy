@@ -118,7 +118,7 @@ class FlowDetails(tabs.Tabs):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
 
-        # currently we cant check whether HTTP response is intercepted or websocket message
+        # there is no good way to detect what part of the flow is intercepted,
         # so we apply some heuristics to see if it's the HTTP response.
         websocket_started = flow.websocket and len(flow.websocket.messages) != 0
         response_is_intercepted = (
