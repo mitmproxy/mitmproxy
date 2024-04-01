@@ -1,4 +1,5 @@
-from unittest.mock import  Mock
+from unittest.mock import Mock
+
 
 def test_spawn_editor(monkeypatch, console):
     text_data = "text"
