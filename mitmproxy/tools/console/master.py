@@ -131,7 +131,7 @@ class ConsoleMaster(master.Master):
     def spawn_editor(self, data: T) -> T:
         text = isinstance(data, str)
         fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
-        with_hexeditor = not text and strutils.is_mostly_bin(data)
+        with_hexeditor = isinstance(data, bytes) and strutils.is_mostly_bin(data)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
         if with_hexeditor:
