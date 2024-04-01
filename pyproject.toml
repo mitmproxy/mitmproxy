@@ -32,7 +32,7 @@ classifiers = [
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
     "aioquic>=1.0.0,<2.0.0",
-    "asgiref>=3.2.10,<3.8",
+    "asgiref>=3.2.10,<3.9",
     "Brotli>=1.0,<1.2",
     "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
     "cryptography>=42.0,<42.1",
