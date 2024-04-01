@@ -121,7 +121,9 @@ class FlowDetails(tabs.Tabs):
         # currently we cant check whether HTTP response is intercepted or websocket message
         # so we apply some heuristics to see if it's the HTTP response.
         websocket_started = flow.websocket and len(flow.websocket.messages) != 0
-        response_is_intercepted = self.flow.intercepted and flow.response and not websocket_started
+        response_is_intercepted = (
+            self.flow.intercepted and flow.response and not websocket_started
+        )
         if response_is_intercepted:
             return "Response intercepted"
         else:
