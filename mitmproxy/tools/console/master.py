@@ -122,7 +122,17 @@ class ConsoleMaster(master.Master):
             return "vi"
 
     def get_hex_editor(self) -> str:
-        editors = ["ghex", "bless", "xxd", "imhex", "hexedit", "hexed", "hxd", "hexdump", "emacs"]
+        editors = [
+            "ghex",
+            "bless",
+            "xxd",
+            "imhex",
+            "hexedit",
+            "hexed",
+            "hxd",
+            "hexdump",
+            "emacs",
+        ]
         for editor in editors:
             if shutil.which(editor):
                 return editor
