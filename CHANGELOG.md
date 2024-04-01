@@ -24,6 +24,7 @@
 * Ignore SIGPIPE signals when there is lots of traffic.
   Socket errors are handled directly and do not require extra signals
   that generate noise.
+  ([#6764](https://github.com/mitmproxy/mitmproxy/pull/6764), @changsin)
 
 ## 07 March 2024: mitmproxy 10.2.4
 
