@@ -120,7 +120,7 @@ class ConsoleMaster(master.Master):
             return "notepad"
         else:
             return "vi"
-        
+
     def get_hex_editor(self) -> str:
         editors = ["ghex", "bless", "xxd", "imhex", "hexedit", "hexed", "hxd", "emacs"]
         for editor in editors:
@@ -135,7 +135,7 @@ class ConsoleMaster(master.Master):
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
         if with_hexeditor:
-            c = self.get_hex_editor()            
+            c = self.get_hex_editor()
         else:
             c = self.get_editor()
         cmd = shlex.split(c)
