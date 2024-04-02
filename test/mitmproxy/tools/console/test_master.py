@@ -17,9 +17,9 @@ def test_spawn_editor(monkeypatch, console):
     console.loop.draw_screen = Mock()
 
     console.spawn_editor(text_data)
-    console.spawn_editor(binary_data)
-
     console.get_editor.assert_called_once()
+
+    console.spawn_editor(binary_data)
     console.get_hex_editor.assert_called_once()
 
 
