@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Add support for editing non text files in a hex editor
+  ([#6768](https://github.com/mitmproxy/mitmproxy/pull/6768), @wnyyyy)
 * Add section in mitmweb for rendering, adding and removing a comment
   ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
 * Fix multipart form content view being unusable.
