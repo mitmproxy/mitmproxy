@@ -122,21 +122,11 @@ class ConsoleMaster(master.Master):
             return "vi"
 
     def get_hex_editor(self) -> str:
-        editors = [
-            "ghex",
-            "bless",
-            "xxd",
-            "imhex",
-            "hexedit",
-            "hexed",
-            "hxd",
-            "hexdump",
-            "emacs",
-        ]
+        editors = ["ghex", "bless", "hexedit", "hxd", "hexer", "hexcurse"]
         for editor in editors:
             if shutil.which(editor):
                 return editor
-        return "vi"
+        return self.get_editor()
 
     def spawn_editor(self, data: T) -> T:
         text = isinstance(data, str)
