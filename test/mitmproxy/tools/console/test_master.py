@@ -24,7 +24,7 @@ def test_spawn_editor(monkeypatch, console):
 
 
 def test_get_hex_editor(monkeypatch, console):
-    test_editor = "emacs"
+    test_editor = "hexedit"
     monkeypatch.setattr("shutil.which", lambda x: x == test_editor)
     editor = console.get_hex_editor()
     assert editor == test_editor
