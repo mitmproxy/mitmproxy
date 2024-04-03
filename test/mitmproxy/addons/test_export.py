@@ -264,6 +264,11 @@ class TestRawResponse:
         with pytest.raises(exceptions.CommandError):
             export.raw_response(udp_flow)
 
+class TestRawMessages:
+    def test_websocket(self, websocket_flow):
+        assert b"hello binary" in export.raw(websocket_flow)
+        assert b"hello text" in export.raw(websocket_flow)
+        assert b"it's me" in export.raw(websocket_flow)
 
 def qr(f):
     with open(f, "rb") as fp:
