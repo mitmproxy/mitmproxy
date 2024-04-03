@@ -14,6 +14,13 @@ class TestWebSocketData:
         f = tflow.twebsocketflow()
         f2 = http.HTTPFlow.from_state(f.get_state())
         f2.set_state(f.get_state())
+    
+    def test_formatting(self):
+        tf = tflow.twebsocketflow().websocket
+        formatted_messages = tf._get_formatted_messages()
+        assert b"[OUTGOING] hello binary" in formatted_messages
+        assert b"[OUTGOING] hello text" in formatted_messages
+        assert b"[INCOMING] it's me" in formatted_messages
 
 
 class TestWebSocketMessage:
