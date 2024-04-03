@@ -21,8 +21,12 @@
   ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
 * Fix a bug where async `client_connected` handlers would crash mitmproxy.
   ([#6749](https://github.com/mitmproxy/mitmproxy/pull/6749), @mhils)
-  * Add button to close flow details panel
+* Add button to close flow details panel
   ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
+* Ignore SIGPIPE signals when there is lots of traffic.
+  Socket errors are handled directly and do not require extra signals
+  that generate noise.
+  ([#6764](https://github.com/mitmproxy/mitmproxy/pull/6764), @changsin)
 * Add primitive websocket interception and modification
   ([#6766](https://github.com/mitmproxy/mitmproxy/pull/6766), @errorxyz)
 
