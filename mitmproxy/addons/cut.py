@@ -28,10 +28,12 @@ def is_addr(v):
 
 
 def extract(cut: str, f: flow.Flow) -> str | bytes:
+    # Hack for https://github.com/mitmproxy/mitmproxy/issues/6721:
+    # Make "save body" keybind work for WebSocket flows.
+    # Ideally the keybind would be smarter and this here can get removed.
     if (
-        hasattr(f, "websocket")
-        and f.websocket is not None
-        and (cut == "response.content" or cut == "request.content")
+        getattr(f, "websocket", None)
+        and cut == "response.content"
     ):
         formatted_messages = f.websocket.get_formatted_messages()
         return formatted_messages

@@ -182,10 +182,8 @@ class WebSocketData(serializable.SerializableDataclass):
     def __repr__(self):
         return f"<WebSocketData ({len(self.messages)} messages)>"
 
-    def get_formatted_messages(self):
-        formatted_messages = b""
-        for i, message in enumerate(self.messages):
-            formatted_messages += message.format_ws_message()
-            if i < len(self.messages) - 1:
-                formatted_messages += b"\n"
-        return formatted_messages
+    def get_formatted_messages(self) -> bytes:
+        return b"\n".join(
+            m.format_ws_message()
+            for m in self.messages
+        )
