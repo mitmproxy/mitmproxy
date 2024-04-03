@@ -183,7 +183,4 @@ class WebSocketData(serializable.SerializableDataclass):
         return f"<WebSocketData ({len(self.messages)} messages)>"
 
     def get_formatted_messages(self) -> bytes:
-        return b"\n".join(
-            m.format_ws_message()
-            for m in self.messages
-        )
+        return b"\n".join(m.format_ws_message() for m in self.messages)
