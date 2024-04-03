@@ -14,7 +14,7 @@ class TestWebSocketData:
         f = tflow.twebsocketflow()
         f2 = http.HTTPFlow.from_state(f.get_state())
         f2.set_state(f.get_state())
-    
+
     def test_formatting(self):
         tf = tflow.twebsocketflow().websocket
         formatted_messages = tf._get_formatted_messages()
