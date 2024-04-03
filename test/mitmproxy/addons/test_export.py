@@ -270,7 +270,7 @@ class TestRawMessages:
         assert b"hello binary" in export.raw_messages(websocket_flow)
         assert b"hello text" in export.raw_messages(websocket_flow)
         assert b"it's me" in export.raw_messages(websocket_flow)
-    
+
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
             export.raw_messages(tcp_flow)
