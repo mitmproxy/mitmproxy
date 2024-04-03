@@ -267,9 +267,9 @@ class TestRawResponse:
 
 class TestRawMessages:
     def test_websocket(self, websocket_flow):
-        assert b"hello binary" in export.raw(websocket_flow)
-        assert b"hello text" in export.raw(websocket_flow)
-        assert b"it's me" in export.raw(websocket_flow)
+        assert b"hello binary" in export.raw_messages(websocket_flow)
+        assert b"hello text" in export.raw_messages(websocket_flow)
+        assert b"it's me" in export.raw_messages(websocket_flow)
 
 
 def qr(f):
