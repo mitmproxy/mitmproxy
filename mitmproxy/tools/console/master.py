@@ -29,6 +29,7 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
+from mitmproxy.utils import strutils
 
 T = TypeVar("T", str, bytes)
 
@@ -120,12 +121,23 @@ class ConsoleMaster(master.Master):
         else:
             return "vi"
 
+    def get_hex_editor(self) -> str:
+        editors = ["ghex", "bless", "hexedit", "hxd", "hexer", "hexcurse"]
+        for editor in editors:
+            if shutil.which(editor):
+                return editor
+        return self.get_editor()
+
     def spawn_editor(self, data: T) -> T:
-        text = not isinstance(data, bytes)
+        text = isinstance(data, str)
         fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
+        with_hexeditor = isinstance(data, bytes) and strutils.is_mostly_bin(data)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
-        c = self.get_editor()
+        if with_hexeditor:
+            c = self.get_hex_editor()
+        else:
+            c = self.get_editor()
         cmd = shlex.split(c)
         cmd.append(name)
         with self.uistopped():

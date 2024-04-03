@@ -120,6 +120,10 @@ def run(
         # but signal.signal just works fine for our purposes.
         signal.signal(signal.SIGINT, _sigint)
         signal.signal(signal.SIGTERM, _sigterm)
+        # to fix the issue mentioned https://github.com/mitmproxy/mitmproxy/issues/6744
+        # by setting SIGPIPE to SIG_IGN, the process will not terminate and continue to run
+        if hasattr(signal, "SIGPIPE"):
+            signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
         await master.run()
         return master
