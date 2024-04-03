@@ -7,8 +7,6 @@
 
 ## Unreleased: mitmproxy next
 
-* Add support for editing non text files in a hex editor
-  ([#6768](https://github.com/mitmproxy/mitmproxy/pull/6768), @wnyyyy)
 * Add section in mitmweb for rendering, adding and removing a comment
   ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
 * Fix multipart form content view being unusable.
@@ -21,18 +19,8 @@
   ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
 * Fix a bug where async `client_connected` handlers would crash mitmproxy.
   ([#6749](https://github.com/mitmproxy/mitmproxy/pull/6749), @mhils)
-* Add button to close flow details panel
+  * Add button to close flow details panel
   ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
-* Ignore SIGPIPE signals when there is lots of traffic.
-  Socket errors are handled directly and do not require extra signals
-  that generate noise.
-  ([#6764](https://github.com/mitmproxy/mitmproxy/pull/6764), @changsin)
-* Add primitive websocket interception and modification
-  ([#6766](https://github.com/mitmproxy/mitmproxy/pull/6766), @errorxyz)
-* Added support for exporting websocket flows as either "raw or "raw_messages"
-  ([#6767])(https://github.com/mitmproxy/mitmproxy/pull/6767), @txrp0x9)
-* Added fix for saving websocket messages in save body keybind (b)
-  ([#6767])(https://github.com/mitmproxy/mitmproxy/pull/6767), @txrp0x9)  
 
 ## 07 March 2024: mitmproxy 10.2.4
 
