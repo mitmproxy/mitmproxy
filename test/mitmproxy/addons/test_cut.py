@@ -57,6 +57,7 @@ def test_extract(tdata):
     tf.server_conn.certificate_list = [c1]
     assert "CERTIFICATE" in cut.extract("server_conn.certificate_list", tf)
 
+
 def test_extract_websocket():
     tf = tflow.twebsocketflow(messages=True)
     extracted_request_content = cut.extract("request.content", tf)
