@@ -29,6 +29,10 @@
   ([#6764](https://github.com/mitmproxy/mitmproxy/pull/6764), @changsin)
 * Add primitive websocket interception and modification
   ([#6766](https://github.com/mitmproxy/mitmproxy/pull/6766), @errorxyz)
+* Add new format "raw_messages" in export command.
+  Add support for websockets in extract command with formats "raw" and "raw_messages".
+  Add fix for saving websocket messages with save body (b) keybinding.
+  ([#6767](https://github.com/mitmproxy/mitmproxy/pull/6767), @txrp0x9)
 
 ## 07 March 2024: mitmproxy 10.2.4
 
