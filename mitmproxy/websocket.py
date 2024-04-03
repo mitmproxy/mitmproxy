@@ -92,7 +92,7 @@ class WebSocketMessage(serializable.Serializable):
         ) = state
         self.type = Opcode(typ)
 
-    def format_ws_message(self):
+    def _format_ws_message(self):
         message = self.content
         prefix = b""
         if self.from_client:
@@ -182,8 +182,8 @@ class WebSocketData(serializable.SerializableDataclass):
     def __repr__(self):
         return f"<WebSocketData ({len(self.messages)} messages)>"
 
-    def get_formatted_messages(self) -> bytes:
+    def _get_formatted_messages(self) -> bytes:
         return b"\n".join(
-            m.format_ws_message()
+            m._format_ws_message()
             for m in self.messages
         )

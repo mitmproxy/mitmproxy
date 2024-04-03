@@ -280,9 +280,9 @@ def test_export(tmp_path) -> None:
             "curl",
             "httpie",
             "raw",
+            "raw_messages",
             "raw_request",
             "raw_response",
-            "websocket",
         ]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
@@ -303,7 +303,7 @@ def test_export(tmp_path) -> None:
         assert qr(f)
         os.unlink(f)
 
-        e.file("websocket", tflow.twebsocketflow(), f)
+        e.file("raw_messages", tflow.twebsocketflow(), f)
         assert qr(f)
         os.unlink(f)
 
