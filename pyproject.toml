@@ -32,7 +32,7 @@ classifiers = [
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
     "aioquic>=1.0.0,<2.0.0",
-    "asgiref>=3.2.10,<3.8",
+    "asgiref>=3.2.10,<3.9",
     "Brotli>=1.0,<1.2",
     "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
     "cryptography>=42.0,<42.1",
@@ -45,9 +45,9 @@ dependencies = [
     "mitmproxy_rs>=0.5.1,<0.6",
     "msgpack>=1.0.0, <1.1.0",
     "passlib>=1.6.5, <1.8",
-    "protobuf>=3.14,<5",
+    "protobuf>=3.14,<6",
     "pydivert>=2.0.3,<2.2; sys_platform == 'win32'",
-    "pyOpenSSL>=22.1,<24.1",
+    "pyOpenSSL>=22.1,<24.2",
     "pyparsing>=2.4.2,<3.2",
     "pyperclip>=1.6.0,<1.9",
     "ruamel.yaml>=0.16,<0.19",
@@ -65,15 +65,15 @@ dev = [
     "click>=7.0,<8.2",
     "hypothesis>=5.8,<7",
     "pdoc>=4.0.0",
-    "pyinstaller==6.4.0",
+    "pyinstaller==6.5.0",
     "pytest-asyncio>=0.23,<0.24",
-    "pytest-cov>=2.7.1,<4.2",
-    "pytest-timeout>=1.3.3,<2.3",
+    "pytest-cov>=2.7.1,<5.1",
+    "pytest-timeout>=1.3.3,<2.4",
     "pytest-xdist>=2.1.0,<3.6",
     "pytest>=6.1.0,<9",
     "requests>=2.9.1,<3",
     "tox>=3.5,<5",
-    "wheel>=0.36.2,<0.43",
+    "wheel>=0.36.2,<0.44",
     "build>=0.10.0",
 ]
 
