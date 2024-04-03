@@ -122,7 +122,8 @@ def run(
         signal.signal(signal.SIGTERM, _sigterm)
         # to fix the issue mentioned https://github.com/mitmproxy/mitmproxy/issues/6744
         # by setting SIGPIPE to SIG_IGN, the process will not terminate and continue to run
-        signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+        if sys.platform != 'win32':
+            signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
         await master.run()
         return master
