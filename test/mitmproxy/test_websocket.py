@@ -43,3 +43,10 @@ class TestWebSocketMessage:
             _ = bin.text
         with pytest.raises(AttributeError, match="do not have a 'text' attribute."):
             bin.text = "bar"
+
+    def test_message_formatting(self):
+        incoming_message = websocket.WebSocketMessage(Opcode.BINARY, False, b"Test Incoming")
+        outgoing_message = websocket.WebSocketMessage(Opcode.BINARY, True, b"Test OutGoing")
+
+        assert incoming_message._format_ws_message() == b"[INCOMING] Test Incoming"
+        assert outgoing_message._format_ws_message() == b"[OUTGOING] Test OutGoing"
