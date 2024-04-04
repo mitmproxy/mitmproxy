@@ -31,10 +31,7 @@ def extract(cut: str, f: flow.Flow) -> str | bytes:
     # Hack for https://github.com/mitmproxy/mitmproxy/issues/6721:
     # Make "save body" keybind work for WebSocket flows.
     # Ideally the keybind would be smarter and this here can get removed.
-    if (
-        getattr(f, "websocket", None)
-        and cut in ("request.content", "response.content")
-    ):
+    if getattr(f, "websocket", None) and cut in ("request.content", "response.content"):
         return f.websocket._get_formatted_messages()
 
     path = cut.split(".")

@@ -132,10 +132,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
     )
 
     if request_present and response_present:
-        parts = [
-            raw_request(f),
-            raw_response(f)
-        ]
+        parts = [raw_request(f), raw_response(f)]
         if getattr(f, "websocket", None):
             parts.append(f.websocket._get_formatted_messages())
         return separator.join(parts)
