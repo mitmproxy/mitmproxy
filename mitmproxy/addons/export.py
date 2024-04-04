@@ -106,13 +106,6 @@ def httpie_command(f: flow.Flow) -> str:
     return cmd
 
 
-def raw_messages(f: flow.Flow) -> bytes:
-    if hasattr(f, "websocket") and f.websocket is not None:
-        return f.websocket._get_formatted_messages()
-    else:
-        raise exceptions.CommandError("Flow not supported!")
-
-
 def raw_request(f: flow.Flow) -> bytes:
     request = cleanup_request(f)
     if request.raw_content is None:
@@ -137,23 +130,21 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         and f.response
         and f.response.raw_content is not None
     )
-    is_websocket_flow = hasattr(f, "websocket") and f.websocket is not None
 
-    serialized_flow = b""
     if request_present and response_present:
-        serialized_flow = serialized_flow.join(
-            [raw_request(f), separator, raw_response(f)]
-        )
+        parts = [
+            raw_request(f),
+            raw_response(f)
+        ]
+        if getattr(f, "websocket", None):
+            parts.append(f.websocket._get_formatted_messages())
+        return separator.join(parts)
     elif request_present:
-        serialized_flow = raw_request(f)
+        return raw_request(f)
     elif response_present:
-        serialized_flow = raw_response(f)
+        return raw_response(f)
     else:
         raise exceptions.CommandError("Can't export flow with no request or response.")
-    if is_websocket_flow:
-        logging.info("Saving websocket messages")
-        serialized_flow = serialized_flow + separator + raw_messages(f)
-    return serialized_flow
 
 
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
@@ -162,7 +153,6 @@ formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     raw=raw,
     raw_request=raw_request,
     raw_response=raw_response,
-    raw_messages=raw_messages,
 )
 
 

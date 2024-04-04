@@ -265,21 +265,6 @@ class TestRawResponse:
             export.raw_response(udp_flow)
 
 
-class TestRawMessages:
-    def test_websocket(self, websocket_flow):
-        assert b"hello binary" in export.raw_messages(websocket_flow)
-        assert b"hello text" in export.raw_messages(websocket_flow)
-        assert b"it's me" in export.raw_messages(websocket_flow)
-
-    def test_tcp(self, tcp_flow):
-        with pytest.raises(exceptions.CommandError):
-            export.raw_messages(tcp_flow)
-
-    def test_udp(self, udp_flow):
-        with pytest.raises(exceptions.CommandError):
-            export.raw_messages(udp_flow)
-
-
 def qr(f):
     with open(f, "rb") as fp:
         return fp.read()
@@ -291,14 +276,7 @@ def test_export(tmp_path) -> None:
     with taddons.context() as tctx:
         tctx.configure(e)
 
-        assert e.formats() == [
-            "curl",
-            "httpie",
-            "raw",
-            "raw_messages",
-            "raw_request",
-            "raw_response",
-        ]
+        assert e.formats() == ["curl", "httpie", "raw", "raw_request", "raw_response"]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
 
@@ -318,7 +296,7 @@ def test_export(tmp_path) -> None:
         assert qr(f)
         os.unlink(f)
 
-        e.file("raw_messages", tflow.twebsocketflow(), f)
+        e.file("raw", tflow.twebsocketflow(), f)
         assert qr(f)
         os.unlink(f)
 

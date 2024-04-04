@@ -32,12 +32,10 @@ def extract(cut: str, f: flow.Flow) -> str | bytes:
     # Make "save body" keybind work for WebSocket flows.
     # Ideally the keybind would be smarter and this here can get removed.
     if (
-        hasattr(f, "websocket")
-        and f.websocket is not None
-        and (cut == "response.content" or cut == "request.content")
+        getattr(f, "websocket", None)
+        and cut in ("request.content", "response.content")
     ):
-        formatted_messages = f.websocket._get_formatted_messages()
-        return formatted_messages
+        return f.websocket._get_formatted_messages()
 
     path = cut.split(".")
     current: Any = f
