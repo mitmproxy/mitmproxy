@@ -33,7 +33,7 @@ def extract(cut: str, f: flow.Flow) -> str | bytes:
     # Make "save body" keybind work for WebSocket flows.
     # Ideally the keybind would be smarter and this here can get removed.
     if (
-        isinstance(flow, http.HTTPFlow)
+        isinstance(f, http.HTTPFlow)
         and f.websocket
         and cut in ("request.content", "response.content")
     ):
