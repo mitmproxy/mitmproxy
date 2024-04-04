@@ -12,6 +12,7 @@ from mitmproxy import certs
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy.log import ALERT
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,16 @@ def is_addr(v):
 
 
 def extract(cut: str, f: flow.Flow) -> str | bytes:
+    # Hack for https://github.com/mitmproxy/mitmproxy/issues/6721:
+    # Make "save body" keybind work for WebSocket flows.
+    # Ideally the keybind would be smarter and this here can get removed.
+    if (
+        isinstance(f, http.HTTPFlow)
+        and f.websocket
+        and cut in ("request.content", "response.content")
+    ):
+        return f.websocket._get_formatted_messages()
+
     path = cut.split(".")
     current: Any = f
     for i, spec in enumerate(path):

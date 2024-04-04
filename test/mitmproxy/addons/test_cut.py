@@ -58,6 +58,18 @@ def test_extract(tdata):
     assert "CERTIFICATE" in cut.extract("server_conn.certificate_list", tf)
 
 
+def test_extract_websocket():
+    tf = tflow.twebsocketflow(messages=True)
+    extracted_request_content = cut.extract("request.content", tf)
+    extracted_response_content = cut.extract("response.content", tf)
+    assert b"hello binary" in extracted_request_content
+    assert b"hello text" in extracted_request_content
+    assert b"it's me" in extracted_request_content
+    assert b"hello binary" in extracted_response_content
+    assert b"hello text" in extracted_response_content
+    assert b"it's me" in extracted_response_content
+
+
 def test_extract_str():
     tf = tflow.tflow()
     tf.request.raw_content = b"\xff"
