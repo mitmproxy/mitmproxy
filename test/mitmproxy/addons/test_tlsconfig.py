@@ -138,12 +138,12 @@ class TestTlsConfig:
             )
 
             # And now we also incorporate SNI.
-            ctx.client.sni = "sni.example"
+            ctx.client.sni = "🌈.sni.example"
             entry = ta.get_cert(ctx)
             assert entry.cert.altnames == x509.GeneralNames(
                 [
                     x509.DNSName("example.mitmproxy.org"),
-                    x509.DNSName("sni.example"),
+                    x509.DNSName("xn--og8h.sni.example"),
                     x509.DNSName("server-address.example"),
                 ]
             )
