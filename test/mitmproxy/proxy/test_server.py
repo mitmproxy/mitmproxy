@@ -7,6 +7,7 @@ from mitmproxy.proxy import commands
 from mitmproxy.proxy import server
 from mitmproxy.proxy import server_hooks
 
+
 def initialize_command() -> commands.OpenConnection:
     c = commands.OpenConnection(
         connection=Server(
