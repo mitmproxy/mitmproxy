@@ -308,7 +308,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             "utf8", "surrogateescape"
         )
 
-        for conn in cls.connections:
+        for conn in cls.connections.copy():
             cls.send(conn, message)
 
 
