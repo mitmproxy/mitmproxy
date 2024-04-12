@@ -75,6 +75,8 @@ jobs:
       - uses: mhils/better-codecov-action@main
         with:
           arguments: '--file ./coverage.xml --name ${{ matrix.os }}'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     strategy:
@@ -167,6 +169,8 @@ jobs:
       - uses: mhils/better-codecov-action@main
         with:
           arguments: '--file ./web/coverage/coverage-final.json'
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   docs:
     runs-on: ubuntu-latest
