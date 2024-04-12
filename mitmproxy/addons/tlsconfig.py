@@ -525,6 +525,6 @@ def _ip_or_dns_name(val: str) -> x509.GeneralName:
     try:
         ip = ipaddress.ip_address(val)
     except ValueError:
-        return x509.DNSName(val)
+        return x509.DNSName(val.encode("idna").decode())
     else:
         return x509.IPAddress(ip)

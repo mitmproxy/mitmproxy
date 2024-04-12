@@ -35,6 +35,7 @@
   ([#6767](https://github.com/mitmproxy/mitmproxy/pull/6767), @txrp0x9)
 * Fix compatibility with older cryptography versions and silence a DeprecationWarning on Python <3.11.
   ([#6790](https://github.com/mitmproxy/mitmproxy/pull/6790), @mhils)
+* Fix a bug when proxying unicode domains.
 
 
 ## 07 March 2024: mitmproxy 10.2.4
