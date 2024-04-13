@@ -43,7 +43,7 @@ def highlight_key(text, key, textattr="text", keyattr="key"):
 
 
 KEY_MAX = 30
-
+COL_GAP = 2
 
 def format_keyvals(
     entries: Iterable[tuple[str, None | str | urwid.Widget]],
@@ -80,7 +80,7 @@ def format_keyvals(
                     ("fixed", max_key_len, urwid.Text([(key_format, k)])),
                     v,
                 ],
-                dividechars=2,
+                dividechars=COL_GAP,
             )
         )
     return ret
