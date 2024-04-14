@@ -38,6 +38,7 @@
 * Fix a bug when proxying unicode domains.
   ([#6796](https://github.com/mitmproxy/mitmproxy/pull/6796), @mhils)
 * Update header name line-wrapping according to unused console columns.
+  ([#6799](https://github.com/mitmproxy/mitmproxy/pull/6799), @gellge)
 
 
 ## 07 March 2024: mitmproxy 10.2.4
