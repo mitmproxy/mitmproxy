@@ -240,7 +240,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.peername = writer.get_extra_info("peername")
                 command.connection.sockname = writer.get_extra_info("sockname")
                 self.transports[command.connection] = ConnectionIO(
-                    handler=asyncio.current_task(),
+                    handler = asyncio.current_task(),
                     reader=reader,
                     writer=writer,
                 )
