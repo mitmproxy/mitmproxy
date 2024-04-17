@@ -196,6 +196,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.log(
                 f"server connection to {human.format_address(command.connection.address)} killed before connect: {err}"
             )
+            await self.handle_hook(server_hooks.ServerConnectErrorHook(hook_data))
             self.server_event(
                 events.OpenConnectionCompleted(command, f"Connection killed: {err}")
             )
@@ -224,6 +225,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     err = "connection cancelled"
                 self.log(f"error establishing server connection: {err}")
                 command.connection.error = err
+                await self.handle_hook(server_hooks.ServerConnectErrorHook(hook_data))
                 self.server_event(events.OpenConnectionCompleted(command, err))
                 if isinstance(e, asyncio.CancelledError):
                     # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
@@ -237,8 +239,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.state = ConnectionState.OPEN
                 command.connection.peername = writer.get_extra_info("peername")
                 command.connection.sockname = writer.get_extra_info("sockname")
-                self.transports[command.connection].reader = reader
-                self.transports[command.connection].writer = writer
+                self.transports[command.connection] = ConnectionIO(
+                    handler=asyncio.current_task(),
+                    reader=reader,
+                    writer=writer,
+                )
 
                 assert command.connection.peername
                 if command.connection.address[0] != command.connection.peername[0]:

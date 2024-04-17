@@ -97,6 +97,7 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             server_hooks.ServerConnectHook,
             server_hooks.ServerConnectedHook,
             server_hooks.ServerDisconnectedHook,
+            server_hooks.ServerConnectErrorHook,
         ],
     )
 
