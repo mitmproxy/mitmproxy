@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+
+
+## 17 April 2024: mitmproxy 10.3.0
+
 * Add support for editing non text files in a hex editor
   ([#6768](https://github.com/mitmproxy/mitmproxy/pull/6768), @wnyyyy)
 * Add `server_connect_error` hook that is triggered when connection establishment fails.
