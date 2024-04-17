@@ -31,6 +31,7 @@ async def test_open_connection(result, monkeypatch):
     server_connect = handler.hook_handlers["server_connect"]
     server_connected = handler.hook_handlers["server_connected"]
     server_connect_error = handler.hook_handlers["server_connect_error"]
+    server_disconnected = handler.hook_handlers["server_disconnected"]
 
     match result:
         case "success":
@@ -38,6 +39,11 @@ async def test_open_connection(result, monkeypatch):
                 asyncio,
                 "open_connection",
                 mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock())),
+            )
+            monkeypatch.setattr(
+                MockConnectionHandler, 
+                "handle_connection", 
+                mock.AsyncMock()
             )
         case "failed":
             monkeypatch.setattr(
@@ -58,3 +64,5 @@ async def test_open_connection(result, monkeypatch):
 
     assert server_connected.called == (result == "success")
     assert server_connect_error.called == (result != "success")
+
+    assert server_disconnected.called == (result == "success")
