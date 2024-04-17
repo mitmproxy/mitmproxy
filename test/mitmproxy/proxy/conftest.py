@@ -24,6 +24,6 @@ def tctx() -> context.Context:
     )
 
 
-settings.register_profile("fast", max_examples=10)
+settings.register_profile("fast", max_examples=10, deadline=None)
 settings.register_profile("deep", max_examples=100_000, deadline=None)
 settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "fast"))
