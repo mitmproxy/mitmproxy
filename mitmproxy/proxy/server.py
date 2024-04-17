@@ -6,6 +6,7 @@ The very high level overview is as follows:
     - Process any commands from layer (such as opening a server connection)
     - Wait for any IO and send it as events to top layer.
 """
+
 import abc
 import asyncio
 import collections
@@ -143,13 +144,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             assert writer
             writer.close()
         else:
+            self.server_event(events.Start())
             handler = asyncio_utils.create_task(
                 self.handle_connection(self.client),
                 name=f"client connection handler",
                 client=self.client.peername,
             )
             self.transports[self.client].handler = handler
-            self.server_event(events.Start())
             await asyncio.wait([handler])
             if not handler.cancelled() and (e := handler.exception()):
                 self.log(
@@ -239,7 +240,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.peername = writer.get_extra_info("peername")
                 command.connection.sockname = writer.get_extra_info("sockname")
                 self.transports[command.connection] = ConnectionIO(
-                    handler = asyncio.current_task(),
+                    handler=asyncio.current_task(),
                     reader=reader,
                     writer=writer,
                 )
@@ -253,20 +254,14 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
                 self.server_event(events.OpenConnectionCompleted(command, None))
 
-                # during connection opening, this function is the designated handler that can be cancelled.
-                # once we have a connection, we do want the teardown here to happen in any case, so we
-                # reassign the handler to .handle_connection and then clean up here once that is done.
-                new_handler = asyncio_utils.create_task(
-                    self.handle_connection(command.connection),
-                    name=f"server connection handler for {addr}",
-                    client=self.client.peername,
-                )
-                self.transports[command.connection].handler = new_handler
-                await asyncio.wait([new_handler])
-
-                self.log(f"server disconnect {addr}")
-                command.connection.timestamp_end = time.time()
-                await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
+                try:
+                    await self.handle_connection(command.connection)
+                finally:
+                    self.log(f"server disconnect {addr}")
+                    command.connection.timestamp_end = time.time()
+                    await self.handle_hook(
+                        server_hooks.ServerDisconnectedHook(hook_data)
+                    )
 
     async def wakeup(self, request: commands.RequestWakeup) -> None:
         await asyncio.sleep(request.delay)
@@ -387,7 +382,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     assert command.connection not in self.transports
                     handler = asyncio_utils.create_task(
                         self.open_connection(command),
-                        name=f"server connection manager {command.connection.address}",
+                        name=f"server connection handler {command.connection.address}",
                         client=self.client.peername,
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)

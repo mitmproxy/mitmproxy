@@ -14,19 +14,19 @@ from mitmproxy.proxy.mode_specs import ProxyMode
 
 class MockConnectionHandler(server.SimpleConnectionHandler):
     hook_handlers: dict[str, mock.Mock]
+
     def __init__(self):
         super().__init__(
             reader=mock.Mock(),
             writer=mock.Mock(),
             options=options.Options(),
             mode=ProxyMode.parse("regular"),
-            hooks=collections.defaultdict(lambda: mock.Mock())
+            hooks=collections.defaultdict(lambda: mock.Mock()),
         )
 
 
 @pytest.mark.parametrize("result", ("success", "killed", "failed"))
 async def test_open_connection(result, monkeypatch):
-
     handler = MockConnectionHandler()
     server_connect = handler.hook_handlers["server_connect"]
     server_connected = handler.hook_handlers["server_connected"]
@@ -34,18 +34,24 @@ async def test_open_connection(result, monkeypatch):
 
     match result:
         case "success":
-            monkeypatch.setattr(asyncio, "open_connection", mock.AsyncMock(return_value=(mock.MagicMock(),mock.MagicMock())))
+            monkeypatch.setattr(
+                asyncio,
+                "open_connection",
+                mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock())),
+            )
         case "failed":
-            monkeypatch.setattr(asyncio, "open_connection", mock.AsyncMock(side_effect=OSError))
+            monkeypatch.setattr(
+                asyncio, "open_connection", mock.AsyncMock(side_effect=OSError)
+            )
         case "killed":
+
             def _kill(d: server_hooks.ServerConnectionHookData) -> None:
                 d.server.error = "do not connect"
+
             server_connect.side_effect = _kill
 
     await handler.open_connection(
-        commands.OpenConnection(connection=Server(
-            address=("server", 1234)
-        ))
+        commands.OpenConnection(connection=Server(address=("server", 1234)))
     )
 
     assert server_connect.call_args[0][0].server.address == ("server", 1234)
