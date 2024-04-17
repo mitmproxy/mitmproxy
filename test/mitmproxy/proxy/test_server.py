@@ -41,9 +41,7 @@ async def test_open_connection(result, monkeypatch):
                 mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock())),
             )
             monkeypatch.setattr(
-                MockConnectionHandler, 
-                "handle_connection", 
-                mock.AsyncMock()
+                MockConnectionHandler, "handle_connection", mock.AsyncMock()
             )
         case "failed":
             monkeypatch.setattr(
