@@ -239,8 +239,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.state = ConnectionState.OPEN
                 command.connection.peername = writer.get_extra_info("peername")
                 command.connection.sockname = writer.get_extra_info("sockname")
-                self.transports[command.connection].reader = reader
-                self.transports[command.connection].writer = writer
+                self.transports[command.connection] = ConnectionIO(
+                    handler = asyncio.current_task(),
+                    reader=reader,
+                    writer=writer,
+                )
 
                 assert command.connection.peername
                 if command.connection.address[0] != command.connection.peername[0]:

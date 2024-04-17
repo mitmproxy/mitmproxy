@@ -68,7 +68,9 @@ class ServerDisconnectedHook(commands.StartHook):
 @dataclass
 class ServerConnectErrorHook(commands.StartHook):
     """
-    A server connection error has happened.
+    Mitmproxy failed to connect to a server.
+
+    Every server connection will receive either a server_connected or a server_connect_error event, but not both.
     """
 
     data: ServerConnectionHookData
