@@ -87,11 +87,10 @@ def version() -> str:
         if ref.startswith("refs/tags/") and not ref.startswith("refs/tags/v"):
             raise AssertionError(f"Unexpected tag: {ref}")
         return (
-            ref
-                .removeprefix("refs/heads/")
-                .removeprefix("refs/pull/")
-                .removeprefix("refs/tags/v")
-                .replace("/", "-")
+            ref.removeprefix("refs/heads/")
+            .removeprefix("refs/pull/")
+            .removeprefix("refs/tags/v")
+            .replace("/", "-")
         )
     else:
         return os.environ.get("BUILD_VERSION", "dev")
