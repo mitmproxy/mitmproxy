@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+* Release tags are now prefixed with `v` again to follow SemVer convention.
 
 
 ## 17 April 2024: mitmproxy 10.3.0
