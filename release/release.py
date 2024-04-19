@@ -99,7 +99,8 @@ if __name__ == "__main__":
     subprocess.run(
         ["git", "commit", "-a", "-m", f"mitmproxy {version}"], cwd=root, check=True
     )
-    subprocess.run(["git", "tag", version], cwd=root, check=True)
+    tag_name = f"v{version}"
+    subprocess.run(["git", "tag", tag_name], cwd=root, check=True)
     release_sha = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=root,
@@ -124,7 +125,7 @@ if __name__ == "__main__":
 
     print("➡️ Pushing...")
     subprocess.run(
-        ["git", "push", "--atomic", "origin", branch, version], cwd=root, check=True
+        ["git", "push", "--atomic", "origin", branch, tag_name], cwd=root, check=True
     )
 
     print("➡️ Creating release on GitHub...")
@@ -133,7 +134,7 @@ if __name__ == "__main__":
             "gh",
             "release",
             "create",
-            version,
+            tag_name,
             "--title",
             f"mitmproxy {version}",
             "--notes-file",
@@ -145,7 +146,7 @@ if __name__ == "__main__":
 
     print("➡️ Dispatching release workflow...")
     subprocess.run(
-        ["gh", "workflow", "run", "main.yml", "--ref", version], cwd=root, check=True
+        ["gh", "workflow", "run", "main.yml", "--ref", tag_name], cwd=root, check=True
     )
 
     print("")

@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Release tags are now prefixed with `v` again to follow SemVer convention.
+  ([#6810](https://github.com/mitmproxy/mitmproxy/pull/6810), @mhils)
 
 
 ## 17 April 2024: mitmproxy 10.3.0

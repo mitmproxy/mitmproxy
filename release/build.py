@@ -83,9 +83,17 @@ def archive(path: Path) -> tarfile.TarFile | ZipFile2:
 
 
 def version() -> str:
-    return os.environ.get("GITHUB_REF_NAME", "").replace("/", "-") or os.environ.get(
-        "BUILD_VERSION", "dev"
-    )
+    if ref := os.environ.get("GITHUB_REF", ""):
+        if ref.startswith("refs/tags/") and not ref.startswith("refs/tags/v"):
+            raise AssertionError(f"Unexpected tag: {ref}")
+        return (
+            ref.removeprefix("refs/heads/")
+            .removeprefix("refs/pull/")
+            .removeprefix("refs/tags/v")
+            .replace("/", "-")
+        )
+    else:
+        return os.environ.get("BUILD_VERSION", "dev")
 
 
 def operating_system() -> str:
