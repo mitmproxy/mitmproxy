@@ -72,11 +72,10 @@ jobs:
           # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
           sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
         if: matrix.os == 'ubuntu-latest'
-      - uses: mhils/better-codecov-action@main
+      - uses: codecov/codecov-action@v4
         with:
-          arguments: '--file ./coverage.xml --name ${{ matrix.os }}'
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
 
   build:
     strategy:
@@ -166,11 +165,10 @@ jobs:
         run: npm ci
       - working-directory: ./web
         run: npm test
-      - uses: mhils/better-codecov-action@main
+      - uses: codecov/codecov-action@v4
         with:
-          arguments: '--file ./web/coverage/coverage-final.json'
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./web/coverage/coverage-final.json
 
   docs:
     runs-on: ubuntu-latest
