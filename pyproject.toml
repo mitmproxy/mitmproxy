@@ -159,7 +159,6 @@ exclude = [
   "mitmproxy/net/http/cookies.py",
   "mitmproxy/net/http/http1/__init__.py",
   "mitmproxy/net/http/multipart.py",
-  "mitmproxy/net/local_ip.py",
   "mitmproxy/net/tls.py",
   "mitmproxy/platform/__init__.py",
   "mitmproxy/platform/linux.py",
@@ -180,7 +179,6 @@ exclude = [
   "mitmproxy/proxy/layers/http/_http_h3.py",
   "mitmproxy/proxy/layers/http/_upstream_proxy.py",
   "mitmproxy/proxy/layers/tls.py",
-  "mitmproxy/proxy/mode_servers.py",
   "mitmproxy/proxy/server.py",
   "mitmproxy/script/__init__.py",
   "mitmproxy/test/taddons.py",
@@ -283,7 +281,6 @@ setenv = HOME = {envtmpdir}
 commands =
   mitmdump --version
   pytest --timeout 60 -vv \
-    --numprocesses auto \
     --cov-report xml \
     --continue-on-collection-errors \
     --cov=mitmproxy --cov=release \
