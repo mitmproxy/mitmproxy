@@ -9,8 +9,6 @@ import pytest
 
 from mitmproxy.utils import data
 
-pytest_plugins = ("test.full_coverage_plugin",)
-
 skip_windows = pytest.mark.skipif(os.name == "nt", reason="Skipping due to Windows")
 
 skip_not_windows = pytest.mark.skipif(
