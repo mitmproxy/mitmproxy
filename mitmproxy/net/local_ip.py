@@ -13,9 +13,9 @@ def get_local_ip(reachable: str = "8.8.8.8") -> str | None:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect((reachable, 80))
-        return s.getsockname()[0]
+        return s.getsockname()[0]  # pragma: no cover
     except OSError:
-        return None
+        return None  # pragma: no cover
     finally:
         s.close()
 
@@ -29,8 +29,8 @@ def get_local_ip6(reachable: str = "2001:4860:4860::8888") -> str | None:
     s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     try:
         s.connect((reachable, 80))
-        return s.getsockname()[0]
+        return s.getsockname()[0]  # pragma: no cover
     except OSError:
-        return None
+        return None  # pragma: no cover
     finally:
         s.close()

@@ -77,6 +77,19 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
 
+  test-old-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .github/python-version.txt
+      - run: pip install tox-uv
+      - run: tox -e old-dependencies
+
   build:
     strategy:
       fail-fast: false
@@ -208,8 +221,9 @@ jobs:
     - mypy
     - individual-coverage
     - test
-    - build
+    - test-old-dependencies
     - test-web-ui
+    - build
     - docs
     uses: mhils/workflows/.github/workflows/alls-green.yml@main
     with:

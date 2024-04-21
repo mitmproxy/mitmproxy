@@ -204,7 +204,9 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
             else:
                 handler.layer.context.client.sockname = original_dst
                 handler.layer.context.server.address = original_dst
-        elif isinstance(self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)):
+        elif isinstance(
+            self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)
+        ):  # pragma: no cover on platforms without wg-test-client
             handler.layer.context.server.address = writer.get_extra_info(
                 "remote_endpoint", handler.layer.context.client.sockname
             )
@@ -325,7 +327,9 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     server_key: str
     client_key: str
 
-    def make_top_layer(self, context: Context) -> Layer:
+    def make_top_layer(
+        self, context: Context
+    ) -> Layer:  # pragma: no cover on platforms without wg-test-client
         return layers.modes.TransparentProxy(context)
 
     @property
@@ -418,7 +422,9 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         finally:
             self._server = None
 
-    async def wg_handle_stream(self, stream: mitmproxy_rs.Stream) -> None:
+    async def wg_handle_stream(
+        self, stream: mitmproxy_rs.Stream
+    ) -> None:  # pragma: no cover on platforms without wg-test-client
         await self.handle_stream(stream, stream)
 
 
