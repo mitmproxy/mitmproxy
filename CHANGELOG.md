@@ -9,7 +9,8 @@
 
 * Release tags are now prefixed with `v` again to follow SemVer convention.
   ([#6810](https://github.com/mitmproxy/mitmproxy/pull/6810), @mhils)
-
+* Adds DNS client for hostname resolution
+  ([#6739](https://github.com/mitmproxy/mitmproxy/issues/6739), @smenon02)
 
 ## 17 April 2024: mitmproxy 10.3.0
 
