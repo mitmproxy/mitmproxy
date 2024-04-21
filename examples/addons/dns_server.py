@@ -1,6 +1,7 @@
 import asyncio
 import socket
 
+
 class DNSProtocol:
     def __init__(self):
         self.response_received = asyncio.Event()
@@ -10,10 +11,11 @@ class DNSProtocol:
         self.response_data = data
         self.response_received.set()
 
+
 class DNSServer:
     async def async_getaddrinfo(self, hostname):
         try:
-            udp_server_address = 'local'
+            udp_server_address = "local"
             udp_server_port = 12234
 
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -35,7 +37,6 @@ class DNSServer:
             print("Error communicating with UDP server:", e)
             return None
 
-
     async def receive_from_socket(self, sock):
         try:
             data, _ = await asyncio.wait_for(sock.recvfrom(1024), timeout=5)
@@ -49,4 +50,5 @@ class DNSServer:
         finally:
             sock.close()
 
-addons=[DNSServer()]
+
+addons = [DNSServer()]
