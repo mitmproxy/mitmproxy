@@ -71,8 +71,6 @@ class ReadFile:
             await self.load_flows_from_path(rfile)
         except exceptions.FlowReadException as e:
             logger.exception(f"Failed to read {ctx.options.rfile}: {e}")
-        finally:
-            self._read_task = None
 
     def running(self):
         if ctx.options.rfile:
@@ -80,7 +78,7 @@ class ReadFile:
 
     @command.command("readfile.reading")
     def reading(self) -> bool:
-        return bool(self._read_task)
+        return bool(self._read_task and not self._read_task.done())
 
 
 class ReadFileStdin(ReadFile):
