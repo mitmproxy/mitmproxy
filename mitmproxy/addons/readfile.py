@@ -78,10 +78,7 @@ class ReadFile:
 
     @command.command("readfile.reading")
     def reading(self) -> bool:
-        return bool(
-            self._read_task
-            and not self._read_task.done()
-        )
+        return bool(self._read_task and not self._read_task.done())
 
 
 class ReadFileStdin(ReadFile):

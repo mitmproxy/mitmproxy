@@ -10,6 +10,7 @@
 * Release tags are now prefixed with `v` again to follow SemVer convention.
   ([#6810](https://github.com/mitmproxy/mitmproxy/pull/6810), @mhils)
 * Fix a bug where mitmproxy would not exit when `-n` is passed.
+  ([#6819](https://github.com/mitmproxy/mitmproxy/pull/6819), @mhils)
 
 
 ## 17 April 2024: mitmproxy 10.3.0
