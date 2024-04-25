@@ -19,8 +19,8 @@ for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
         a.binaries,
         a.zipfiles,
         a.datas,
-        [],
+        [("u", None, "OPTION")],
         name=tool,
         console=True,
-        icon='icon.ico',
+        icon="icon.ico",
     )
