@@ -11,6 +11,8 @@
   ([#6810](https://github.com/mitmproxy/mitmproxy/pull/6810), @mhils)
 * Fix a bug where mitmproxy would not exit when `-n` is passed.
   ([#6819](https://github.com/mitmproxy/mitmproxy/pull/6819), @mhils)
+* Set the `unbuffered` (stdout/stderr) flag for the `mitmdump` PyInstaller build.
+  ([#6821](https://github.com/mitmproxy/mitmproxy/pull/6821), @Prinzhorn)
 
 
 ## 17 April 2024: mitmproxy 10.3.0
