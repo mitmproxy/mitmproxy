@@ -205,7 +205,11 @@ def test_intseq():
         b = mitmproxy.types._IntSeqType()
         assert b.completion(tctx.master.commands, Sequence[int], "") == []
         assert b.parse(tctx.master.commands, Sequence[int], "42") == [42]
-        assert b.parse(tctx.master.commands, Sequence[int], "42, 100, -5") == [42, 100, -5]
+        assert b.parse(tctx.master.commands, Sequence[int], "42, 100, -5") == [
+            42,
+            100,
+            -5,
+        ]
         assert b.is_valid(tctx.master.commands, Sequence[int], [42]) is True
         assert b.is_valid(tctx.master.commands, Sequence[int], [1, 2, "3"]) is False
         assert b.is_valid(tctx.master.commands, Sequence[int], 1) is False
