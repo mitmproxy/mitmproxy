@@ -585,6 +585,7 @@ def test_typename():
 
     assert command.typename(flow.Flow) == "flow"
     assert command.typename(Sequence[str]) == "str[]"
+    assert command.typename(Sequence[int]) == "int[]"
 
     assert command.typename(mitmproxy.types.Choice("foo")) == "choice"
     assert command.typename(mitmproxy.types.Path) == "path"
