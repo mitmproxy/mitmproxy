@@ -13,3 +13,15 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 10
+    groups:
+      pytest:
+        patterns:
+        - "pytest*"
+        - "hypothesis"
+      pyinstaller:
+        patterns:
+        - "pyinstaller"
+      mypy:
+        patterns:
+        - "types-*"
+        - "mypy"
