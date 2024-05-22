@@ -76,6 +76,8 @@ class ProxyAuth:
             # Is this connection authenticated by a previous HTTP CONNECT?
             if f.client_conn in self.authenticated:
                 f.metadata["proxyauth"] = self.authenticated[f.client_conn]
+            elif f.is_replay:
+                pass
             else:
                 self.authenticate_http(f)
 

@@ -13,6 +13,8 @@
   ([#6819](https://github.com/mitmproxy/mitmproxy/pull/6819), @mhils)
 * Set the `unbuffered` (stdout/stderr) flag for the `mitmdump` PyInstaller build.
   ([#6821](https://github.com/mitmproxy/mitmproxy/pull/6821), @Prinzhorn)
+* Fix a bug where client replay would not work with proxyauth.
+  ([#6866](https://github.com/mitmproxy/mitmproxy/pull/6866), @mhils)
 
 
 ## 17 April 2024: mitmproxy 10.3.0
