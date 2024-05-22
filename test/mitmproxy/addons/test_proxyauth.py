@@ -239,6 +239,11 @@ class TestProxyAuth:
             assert not f2.response
             assert f2.metadata["proxyauth"] == ("test", "test")
 
+            f3 = tflow.tflow()
+            f3.is_replay = True
+            up.requestheaders(f3)
+            assert not f2.response
+
 
 @pytest.mark.parametrize(
     "spec",
