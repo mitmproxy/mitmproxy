@@ -7,6 +7,7 @@ import FlowMenu from "./Header/FlowMenu";
 import ConnectionIndicator from "./Header/ConnectionIndicator";
 import HideInStatic from "./common/HideInStatic";
 import { useAppSelector } from "../ducks";
+import CaptureMenu from "./Header/CaptureMenu";
 
 interface Menu {
     (): JSX.Element;
@@ -21,7 +22,7 @@ export default function Header() {
         [ActiveMenu, setActiveMenu] = useState<Menu>(() => StartMenu),
         [wasFlowSelected, setWasFlowSelected] = useState(false);
 
-    let entries: Menu[] = [StartMenu, OptionMenu];
+    let entries: Menu[] = [CaptureMenu, StartMenu, OptionMenu];
     if (selectedFlows.length > 0) {
         if (!wasFlowSelected) {
             setActiveMenu(() => FlowMenu);
