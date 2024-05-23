@@ -152,9 +152,9 @@ def python_requests_command(f: flow.Flow) -> str:
                 is_json = True
             except json.JSONDecodeError:
                 # Fall back to plain string representation
-                body_str = f"\"{escape_quotes(decoded_content)}\""
+                body_str = f'"{escape_quotes(decoded_content)}"'
 
-        code += f'body = {body_str}\n'
+        code += f"body = {body_str}\n"
     else:
         code += "body = None\n"
 
