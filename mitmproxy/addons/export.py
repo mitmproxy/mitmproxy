@@ -136,23 +136,31 @@ def python_requests_command(f: flow.Flow) -> str:
     else:
         code += "cookies = {}\n\n"
 
+    is_json = False
     if request.content:
-        # Try to decode request content as JSON if possible
         try:
-            body = json.loads(request.content.decode("utf-8"))
-            body_str = json.dumps(body, indent=4)
-            code += f'body = """{escape_quotes(body_str)}"""\n'
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            # Fall back to plain string representation
-            code += (
-                f'body = "{escape_quotes(request.content.decode("utf-8", "ignore"))}"\n'
-            )
+            decoded_content = request.content.decode("utf-8")
+        except UnicodeDecodeError:
+            # binary data will be represented as hex string
+            # format for multipart form data
+            body_str = f'"""{repr(request.content)[2:-1].replace("\\r\\n", "\n")}"""'
+        else:
+            try:
+                # json data
+                body = json.loads(decoded_content)
+                body_str = json.dumps(body, ensure_ascii=False, indent=4)
+                is_json = True
+            except json.JSONDecodeError:
+                # Fall back to plain string representation
+                body_str = f"\"{escape_quotes(decoded_content)}\""
+
+        code += f'body = {body_str}\n'
     else:
         code += "body = None\n"
 
     code += (
         f'res = requests.request(method="{escape_quotes(request.method)}", '
-        f"url=url, headers=headers, cookies=cookies, data=body)\n"
+        f"url=url, headers=headers, cookies=cookies, {"json=body" if is_json else "data=body"})\n"
     )
     code += "print(res.text)\n"
 
