@@ -160,9 +160,10 @@ def python_requests_command(f: flow.Flow) -> str:
     else:
         code += "body = None\n"
 
+    param = "json=body" if is_json else "data=body"
     code += (
         f'res = requests.request(method="{escape_quotes(request.method)}", '
-        f"url=url, headers=headers, cookies=cookies, {"json=body" if is_json else "data=body"})\n"
+        f"url=url, headers=headers, cookies=cookies, {param})\n"
     )
     code += "print(res.text)\n"
 
