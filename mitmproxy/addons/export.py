@@ -115,42 +115,46 @@ def python_requests_command(f: flow.Flow) -> str:
     def escape_quotes(s: str) -> str:
         return s.replace('"', '\\"')
 
-    code = 'import requests\n\n'
+    code = "import requests\n\n"
 
     code += f'url = "{request.pretty_url}"\n'
-    code += 'headers = {\n'
-    cookies = ''
+    code += "headers = {\n"
+    cookies = ""
     for k, v in request.headers.items(multi=True):
-        if k.lower() == 'cookie':
-            cookies += f'{v};'
+        if k.lower() == "cookie":
+            cookies += f"{v};"
         else:
             code += f'    "{k}": "{escape_quotes(v)}",\n'
-    code += '}\n'
+    code += "}\n"
 
     if cookies:
-        code += 'cookies = {\n'
-        for cookie in cookies.strip().split('; '):
-            key, value = cookie.split('=', 1)
+        code += "cookies = {\n"
+        for cookie in cookies.strip().split("; "):
+            key, value = cookie.split("=", 1)
             code += f'    "{key}": "{escape_quotes(value)}",\n'
-        code += '}\n'
+        code += "}\n"
     else:
-        code += 'cookies = {}\n\n'
+        code += "cookies = {}\n\n"
 
     if request.content:
         # Try to decode request content as JSON if possible
         try:
-            body = json.loads(request.content.decode('utf-8'))
+            body = json.loads(request.content.decode("utf-8"))
             body_str = json.dumps(body, indent=4)
             code += f'body = """{escape_quotes(body_str)}"""\n'
         except (json.JSONDecodeError, UnicodeDecodeError):
             # Fall back to plain string representation
-            code += f'body = "{escape_quotes(request.content.decode("utf-8", "ignore"))}"\n'
+            code += (
+                f'body = "{escape_quotes(request.content.decode("utf-8", "ignore"))}"\n'
+            )
     else:
-        code += 'body = None\n'
+        code += "body = None\n"
 
-    code += (f'res = requests.request(method="{escape_quotes(request.method)}", '
-             f'url=url, headers=headers, cookies=cookies, data=body)\n')
-    code += 'print(res.text)\n'
+    code += (
+        f'res = requests.request(method="{escape_quotes(request.method)}", '
+        f"url=url, headers=headers, cookies=cookies, data=body)\n"
+    )
+    code += "print(res.text)\n"
 
     return code
 
