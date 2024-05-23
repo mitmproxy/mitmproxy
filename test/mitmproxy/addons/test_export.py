@@ -222,8 +222,8 @@ class TestExportPythonRequestsCommand:
         )
         assert export.python_requests_command(get_request) == result
 
-    def test_post(self, export_curl, post_request):
-        post_request.request.content = b"nobinarysupport?"
+    def test_post(self, post_request):
+        post_request.request.content = b"id=1&name=nate"
         result = (
             "import requests\n"
             "\n"
@@ -232,14 +232,47 @@ class TestExportPythonRequestsCommand:
             "}\n"
             "cookies = {}\n"
             "\n"
-            'body = "nobinarysupport?"\n'
+            'body = "id=1&name=nate"\n'
             'res = requests.request(method="POST", url=url, headers=headers, '
             "cookies=cookies, data=body)\n"
             "print(res.text)\n"
         )
         assert export.python_requests_command(post_request) == result
 
-    def test_success_with_binary_data(self, export_curl, post_request):
+    def test_post_json(self, post_request):
+        post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
+        # test different json data types
+        post_request.request.content = b'''{
+                "string": "Hello, world!",
+                "number": 42,
+                "float": 3.14,
+                "boolean": true,
+                "nullValue": null,
+                "object": {
+                    "name": "John",
+                    "age": 30
+                },
+                "array": [1, 2, 3, 4]
+            }'''
+        result = (
+            'import requests\n'
+            '\n'
+            'url = "http://address:22/path"\n'
+            'headers = {\n'
+            '    "Content-Type": "application/json; charset=utf-8",\n'
+            '}\n'
+            'cookies = {}\n'
+            '\n'
+            "body = {'string': 'Hello, world!', 'number': 42, 'float': 3.14, 'boolean': "
+            "True, 'nullValue': None, 'object': {'name': 'John', 'age': 30}, 'array': [1, "
+            '2, 3, 4]}\n'
+            'res = requests.request(method="POST", url=url, headers=headers, '
+            'cookies=cookies, json=body)\n'
+            'print(res.text)\n'
+        )
+        assert export.python_requests_command(post_request) == result
+
+    def test_success_with_binary_data(self, post_request):
         # yeah, we support binary data in python
         post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
         result = (

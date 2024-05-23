@@ -148,7 +148,7 @@ def python_requests_command(f: flow.Flow) -> str:
             try:
                 # json data
                 body = json.loads(decoded_content)
-                body_str = json.dumps(body, ensure_ascii=False, indent=4)
+                body_str = repr(body)
                 is_json = True
             except json.JSONDecodeError:
                 # Fall back to plain string representation
