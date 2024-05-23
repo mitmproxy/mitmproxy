@@ -196,7 +196,13 @@ class TestExportHttpieCommand:
 
 
 class TestExportPythonRequestsCommand:
-    def test_get(self, export_curl, get_request):
+    def test_get(self, get_request):
+        # test cookie
+        get_request.request.cookies = [
+            ("cookie", "chocolate_chip"),
+            ("session_id", "abc123"),
+            ("user_id", "987654321")
+        ]
         result = (
             "import requests\n"
             "\n"
@@ -204,8 +210,11 @@ class TestExportPythonRequestsCommand:
             "headers = {\n"
             '    "header": "qvalue",\n'
             "}\n"
-            "cookies = {}\n"
-            "\n"
+            'cookies = {\n'
+            '    "cookie": "chocolate_chip",\n'
+            '    "session_id": "abc123",\n'
+            '    "user_id": "987654321;",\n'
+            '}\n'
             "body = None\n"
             'res = requests.request(method="GET", url=url, headers=headers, '
             "cookies=cookies, data=body)\n"
