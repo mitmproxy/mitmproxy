@@ -201,7 +201,7 @@ class TestExportPythonRequestsCommand:
         get_request.request.cookies = [
             ("cookie", "chocolate_chip"),
             ("session_id", "abc123"),
-            ("user_id", "987654321")
+            ("user_id", "987654321"),
         ]
         result = (
             "import requests\n"
@@ -210,11 +210,11 @@ class TestExportPythonRequestsCommand:
             "headers = {\n"
             '    "header": "qvalue",\n'
             "}\n"
-            'cookies = {\n'
+            "cookies = {\n"
             '    "cookie": "chocolate_chip",\n'
             '    "session_id": "abc123",\n'
             '    "user_id": "987654321;",\n'
-            '}\n'
+            "}\n"
             "body = None\n"
             'res = requests.request(method="GET", url=url, headers=headers, '
             "cookies=cookies, data=body)\n"
@@ -242,7 +242,7 @@ class TestExportPythonRequestsCommand:
     def test_post_json(self, post_request):
         post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
         # test different json data types
-        post_request.request.content = b'''{
+        post_request.request.content = b"""{
                 "string": "Hello, world!",
                 "number": 42,
                 "float": 3.14,
@@ -253,22 +253,22 @@ class TestExportPythonRequestsCommand:
                     "age": 30
                 },
                 "array": [1, 2, 3, 4]
-            }'''
+            }"""
         result = (
-            'import requests\n'
-            '\n'
+            "import requests\n"
+            "\n"
             'url = "http://address:22/path"\n'
-            'headers = {\n'
+            "headers = {\n"
             '    "Content-Type": "application/json; charset=utf-8",\n'
-            '}\n'
-            'cookies = {}\n'
-            '\n'
+            "}\n"
+            "cookies = {}\n"
+            "\n"
             "body = {'string': 'Hello, world!', 'number': 42, 'float': 3.14, 'boolean': "
             "True, 'nullValue': None, 'object': {'name': 'John', 'age': 30}, 'array': [1, "
-            '2, 3, 4]}\n'
+            "2, 3, 4]}\n"
             'res = requests.request(method="POST", url=url, headers=headers, '
-            'cookies=cookies, json=body)\n'
-            'print(res.text)\n'
+            "cookies=cookies, json=body)\n"
+            "print(res.text)\n"
         )
         assert export.python_requests_command(post_request) == result
 
