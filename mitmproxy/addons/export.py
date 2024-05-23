@@ -143,7 +143,7 @@ def python_requests_command(f: flow.Flow) -> str:
         except UnicodeDecodeError:
             # binary data will be represented as hex string
             # format for multipart form data
-            body_str = f'"""{repr(request.content)[2:-1].replace("\\r\\n", "\n")}"""'
+            body_str = '"""' + repr(request.content)[2:-1].replace("\\r\\n", "\n") + '"""'
         else:
             try:
                 # json data
