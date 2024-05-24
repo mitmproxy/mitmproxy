@@ -118,28 +118,24 @@ def python_requests_command(f: flow.Flow) -> str:
     code = "import requests\n\n"
 
     code += f'url = "{request.pretty_url}"\n'
-    code += "headers = {\n"
-    cookies = ""
-    for k, v in request.headers.items(multi=True):
-        if k.lower() == "cookie":
-            cookies += f"{v};"
-        else:
-            code += f'    "{k}": "{escape_quotes(v)}",\n'
+
+    # parse cookie
+    code += "cookies = {\n"
+    for k, v in request.cookies.items():
+        code += f'    "{k}": "{escape_quotes(v)}",\n'
     code += "}\n"
 
-    if cookies:
-        code += "cookies = {\n"
-        for cookie in cookies.strip().split("; "):
-            key, value = cookie.split("=", 1)
-            code += f'    "{key}": "{escape_quotes(value)}",\n'
-        code += "}\n"
-    else:
-        code += "cookies = {}\n\n"
+    # parse header
+    request.headers.pop("cookie", None)
+    code += "headers = {\n"
+    for k, v in request.headers.items():
+        code += f'    "{k}": "{escape_quotes(v)}",\n'
+    code += "}\n"
 
     is_json = False
     if request.content:
         try:
-            decoded_content = request.content.decode("utf-8")
+            request.content.decode("utf-8")
         except UnicodeDecodeError:
             # binary data will be represented as hex string
             # format for multipart form data
@@ -149,12 +145,12 @@ def python_requests_command(f: flow.Flow) -> str:
         else:
             try:
                 # json data
-                body = json.loads(decoded_content)
+                body = json.loads(request.content)
                 body_str = repr(body)
                 is_json = True
             except json.JSONDecodeError:
                 # Fall back to plain string representation
-                body_str = f'"{escape_quotes(decoded_content)}"'
+                body_str = f'"{escape_quotes(repr(request.content)[2:-1])}"'
 
         code += f"body = {body_str}\n"
     else:
