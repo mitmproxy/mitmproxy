@@ -68,12 +68,12 @@ class BufferedH2Connection(h2.connection.H2Connection):
         frame_size = len(data)
         assert pad_length is None
 
-        while frame_size > self.max_outbound_frame_size:
-            chunk_data = data[: self.max_outbound_frame_size]
-            self.send_data(stream_id, chunk_data, end_stream=False)
+        if frame_size > self.max_outbound_frame_size:
+            for start in range(0, frame_size, self.max_outbound_frame_size):
+                chunk = data[start : start + self.max_outbound_frame_size]
+                self.send_data(stream_id, chunk, end_stream=False)
 
-            data = data[self.max_outbound_frame_size :]
-            frame_size -= len(chunk_data)
+            return
 
         if self.stream_buffers.get(stream_id, None):
             # We already have some data buffered, let's append.
