@@ -19,4 +19,3 @@ class BlockECH:
             for answer in flow.response.answers:
                 if answer.type == types.HTTPS:
                     flow.response.answers.remove(answer)
-

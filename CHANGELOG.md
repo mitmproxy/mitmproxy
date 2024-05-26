@@ -18,6 +18,7 @@
 * Fix slowdown when sending large data over HTTP/2
   ([#6875](https://github.com/mitmproxy/mitmproxy/pull/6875), @aib)
 * Add blockech addon to prevent encrypted SNI
+  ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
 
 
 ## 17 April 2024: mitmproxy 10.3.0
