@@ -15,7 +15,7 @@ class BlockECH:
     def dns_response(self, flow: dns.DNSFlow):
         # TODO: parse HTTPS records and remove ech value alone. For now,
         # if HTTPS record is part of response, remove that record.
-        if ctx.options.blockech:
+        if ctx.options.blockech and flow.response is not None:
             for answer in flow.response.answers:
                 if answer.type == types.HTTPS:
                     flow.response.answers.remove(answer)
