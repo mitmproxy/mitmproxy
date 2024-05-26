@@ -12,7 +12,11 @@ class TestBlockECH:
         with taddons.context(be) as tctx:
             answers = [
                 dns.ResourceRecord(
-                    "dns.google", dns.types.HTTPS, dns.classes.IN, 32, b"\x08\x08\x08\x08"
+                    "dns.google",
+                    dns.types.HTTPS,
+                    dns.classes.IN,
+                    32,
+                    b"\x08\x08\x08\x08",
                 ),
                 dns.ResourceRecord(
                     "dns.google", dns.types.A, dns.classes.IN, 32, b"\x08\x08\x04\x04"
@@ -28,4 +32,3 @@ class TestBlockECH:
             tctx.configure(be, blockech=True)
             be.dns_response(f)
             assert not any(answer.type == types.HTTPS for answer in f.response.answers)
-
