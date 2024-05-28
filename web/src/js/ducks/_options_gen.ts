@@ -4,10 +4,10 @@ export interface OptionsState {
     allow_hosts: string[];
     anticache: boolean;
     anticomp: boolean;
+    block_ech: boolean;
     block_global: boolean;
     block_list: string[];
     block_private: boolean;
-    blockech: boolean;
     body_size_limit: string | undefined;
     cert_passphrase: string | undefined;
     certs: string[];
@@ -101,10 +101,10 @@ export const defaultState: OptionsState = {
     allow_hosts: [],
     anticache: false,
     anticomp: false,
+    block_ech: true,
     block_global: true,
     block_list: [],
     block_private: false,
-    blockech: true,
     body_size_limit: undefined,
     cert_passphrase: undefined,
     certs: [],

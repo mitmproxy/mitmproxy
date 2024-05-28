@@ -1,5 +1,5 @@
 from mitmproxy import dns
-from mitmproxy.addons import blockech
+from mitmproxy.addons import block_ech
 from mitmproxy.net.dns import types
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -8,7 +8,7 @@ from mitmproxy.test import tutils
 
 class TestBlockECH:
     def test_simple(self):
-        be = blockech.BlockECH()
+        be = block_ech.BlockECH()
         with taddons.context(be) as tctx:
             answers = [
                 dns.ResourceRecord(
@@ -25,10 +25,10 @@ class TestBlockECH:
             resp = tutils.tdnsresp(answers=answers)
             f = tflow.tdnsflow(resp=resp)
 
-            tctx.configure(be, blockech=False)
+            tctx.configure(be, block_ech=False)
             be.dns_response(f)
             assert len(f.response.answers) == 2
 
-            tctx.configure(be, blockech=True)
+            tctx.configure(be, block_ech=True)
             be.dns_response(f)
             assert not any(answer.type == types.HTTPS for answer in f.response.answers)

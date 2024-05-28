@@ -1,7 +1,7 @@
 from mitmproxy.addons import anticache
 from mitmproxy.addons import anticomp
 from mitmproxy.addons import block
-from mitmproxy.addons import blockech
+from mitmproxy.addons import block_ech
 from mitmproxy.addons import blocklist
 from mitmproxy.addons import browser
 from mitmproxy.addons import clientplayback
@@ -35,7 +35,7 @@ def default_addons():
         core.Core(),
         browser.Browser(),
         block.Block(),
-        blockech.BlockECH(),
+        block_ech.BlockECH(),
         blocklist.BlockList(),
         anticache.AntiCache(),
         anticomp.AntiComp(),
