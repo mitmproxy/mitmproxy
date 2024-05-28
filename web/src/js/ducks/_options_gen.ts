@@ -4,6 +4,7 @@ export interface OptionsState {
     allow_hosts: string[];
     anticache: boolean;
     anticomp: boolean;
+    block_ech: boolean;
     block_global: boolean;
     block_list: string[];
     block_private: boolean;
@@ -100,6 +101,7 @@ export const defaultState: OptionsState = {
     allow_hosts: [],
     anticache: false,
     anticomp: false,
+    block_ech: true,
     block_global: true,
     block_list: [],
     block_private: false,
