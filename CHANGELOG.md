@@ -17,7 +17,7 @@
   ([#6866](https://github.com/mitmproxy/mitmproxy/pull/6866), @mhils)
 * Fix slowdown when sending large data over HTTP/2
   ([#6875](https://github.com/mitmproxy/mitmproxy/pull/6875), @aib)
-* Add blockech addon to prevent encrypted SNI
+* Add an option to strip HTTPS records from DNS responses to block encrypted ClientHellos.
   ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
 
 
