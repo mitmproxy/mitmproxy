@@ -17,4 +17,6 @@ class BlockECH:
         # if HTTPS record is part of response, remove that record.
         assert flow.response
         if ctx.options.block_ech:
-            flow.response.answers = [answer for answer in flow.response.answers if answer.type != types.HTTPS]
+            flow.response.answers = [
+                answer for answer in flow.response.answers if answer.type != types.HTTPS
+            ]
