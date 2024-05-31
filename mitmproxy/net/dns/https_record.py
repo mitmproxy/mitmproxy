@@ -3,37 +3,6 @@ import ipaddress
 import struct
 
 
-def unpack(data: bytes) -> dict:
-    """Unpacks HTTPS RDATA from byte data."""
-    offset = 0
-
-    # Priority (2 bytes)
-    priority = struct.unpack("!H", data[offset : offset + 2])[0]
-    offset += 2
-
-    # TargetName (variable length)
-    target_name, offset = unpack_dns_name(data, offset)
-
-    # Service Parameters (remaining bytes)
-    params = unpack_params(data, offset)
-
-    return {"priority": priority, "target_name": target_name, "params": params}
-
-
-def unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
-    """Unpacks the DNS-encoded domain name from data starting at the given offset."""
-    labels = []
-    while True:
-        length = data[offset]
-        if length == 0:
-            offset += 1
-            break
-        offset += 1
-        labels.append(data[offset : offset + length].decode("utf-8"))
-        offset += length
-    return ".".join(labels), offset
-
-
 def unpack_params(data: bytes, offset: int) -> dict:
     """Unpacks the service parameters from the given offset."""
     params = {}
@@ -85,6 +54,34 @@ def unpack_params(data: bytes, offset: int) -> dict:
             params[param_type] = param_value
     return params
 
+def unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
+    """Unpacks the DNS-encoded domain name from data starting at the given offset."""
+    labels = []
+    while True:
+        length = data[offset]
+        if length == 0:
+            offset += 1
+            break
+        offset += 1
+        labels.append(data[offset : offset + length].decode("utf-8"))
+        offset += length
+    return ".".join(labels), offset
+
+def unpack(data: bytes) -> dict:
+    """Unpacks HTTPS RDATA from byte data."""
+    offset = 0
+
+    # Priority (2 bytes)
+    priority = struct.unpack("!H", data[offset : offset + 2])[0]
+    offset += 2
+
+    # TargetName (variable length)
+    target_name, offset = unpack_dns_name(data, offset)
+
+    # Service Parameters (remaining bytes)
+    params = unpack_params(data, offset)
+
+    return {"priority": priority, "target_name": target_name, "params": params}
 
 # def pack(record: dict) -> bytes:
 #     """Packs the HTTPS record into its bytes form."""
