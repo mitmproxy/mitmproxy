@@ -157,6 +157,7 @@ class ResourceRecord(serializable.SerializableDataclass):
     # def HTTPS(cls) -> ResourceRecord:
     #     raise NotImplementedError
 
+
 # comments are taken from rfc1035
 @dataclass
 class Message(serializable.SerializableDataclass):
