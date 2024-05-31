@@ -13,6 +13,7 @@ from mitmproxy import flow
 from mitmproxy.coretypes import serializable
 from mitmproxy.net.dns import classes
 from mitmproxy.net.dns import domain_names
+from mitmproxy.net.dns import https_record
 from mitmproxy.net.dns import op_codes
 from mitmproxy.net.dns import response_codes
 from mitmproxy.net.dns import types
@@ -64,6 +65,8 @@ class ResourceRecord(serializable.SerializableDataclass):
                 return self.domain_name
             if self.type == types.TXT:
                 return self.text
+            if self.type == types.HTTPS:
+                return str(self.https_record)
         except Exception:
             return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
@@ -99,6 +102,14 @@ class ResourceRecord(serializable.SerializableDataclass):
     @domain_name.setter
     def domain_name(self, name: str) -> None:
         self.data = domain_names.pack(name)
+
+    @property
+    def https_record(self) -> dict:
+        return https_record.unpack(self.data)
+
+    # @https_record.setter
+    # def https_record(self, record: dict) -> None:
+    #     self.data = https_record.pack(record)
 
     def to_json(self) -> dict:
         """
@@ -142,6 +153,9 @@ class ResourceRecord(serializable.SerializableDataclass):
         """Create a textual resource record."""
         return cls(name, types.TXT, classes.IN, ttl, text.encode("utf-8"))
 
+    # @classmethod
+    # def HTTPS(cls) -> ResourceRecord:
+    #     raise NotImplementedError
 
 # comments are taken from rfc1035
 @dataclass
