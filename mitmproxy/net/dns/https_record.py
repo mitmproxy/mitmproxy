@@ -3,7 +3,7 @@ import ipaddress
 import struct
 
 
-def unpack_params(data: bytes, offset: int) -> dict:
+def _unpack_params(data: bytes, offset: int) -> dict:
     """Unpacks the service parameters from the given offset."""
     params = {}
     while offset < len(data):
@@ -55,7 +55,7 @@ def unpack_params(data: bytes, offset: int) -> dict:
     return params
 
 
-def unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
+def _unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
     """Unpacks the DNS-encoded domain name from data starting at the given offset."""
     labels = []
     while True:
@@ -78,10 +78,10 @@ def unpack(data: bytes) -> dict:
     offset += 2
 
     # TargetName (variable length)
-    target_name, offset = unpack_dns_name(data, offset)
+    target_name, offset = _unpack_dns_name(data, offset)
 
     # Service Parameters (remaining bytes)
-    params = unpack_params(data, offset)
+    params = _unpack_params(data, offset)
 
     return {"priority": priority, "target_name": target_name, "params": params}
 
