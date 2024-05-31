@@ -1,6 +1,6 @@
-import struct
-import ipaddress
 import base64
+import ipaddress
+import struct
 
 
 def unpack(data: bytes) -> dict:
