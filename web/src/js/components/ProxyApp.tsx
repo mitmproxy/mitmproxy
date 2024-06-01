@@ -9,6 +9,7 @@ import Footer from "./Footer";
 import Modal from "./Modal/Modal";
 import { RootState } from "../ducks";
 import { connect } from "react-redux";
+import { TabMenuProvider } from "../context/useTabMenuContext";
 
 type ProxyAppMainProps = {
     showEventLog: boolean;
@@ -53,8 +54,10 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
 
         return (
             <div id="container" tabIndex={0}>
-                <Header />
-                <MainView />
+                <TabMenuProvider>
+                    <Header />
+                    <MainView />
+                </TabMenuProvider>
                 {showCommandBar && <CommandBar key="commandbar" />}
                 {showEventLog && <EventLog key="eventlog" />}
                 <Footer />
