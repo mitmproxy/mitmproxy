@@ -1,18 +1,25 @@
 import base64
-import enum
 import ipaddress
 import struct
 
 
-class SVCParamKey(enum.Enum):
-    MANDATORY = 0
-    ALPN = 1
-    NO_DEFAULT_ALPN = 2
-    PORT = 3
-    IPv4HINT = 4
-    ECHCONFIG = 5
-    IPv6HINT = 6
+MANDATORY = 0
+ALPN = 1
+NO_DEFAULT_ALPN = 2
+PORT = 3
+IPV4HINT = 4
+ECH = 5
+IPV6HINT = 6
 
+_SVCPARAMKEYS = {
+    MANDATORY: "mandatory",
+    ALPN: "alpn",
+    NO_DEFAULT_ALPN: "no-default-alpn",
+    PORT: "port",
+    IPV4HINT: "ipv4hint",
+    ECH: "ech",
+    IPV6HINT: "ipv6hint"
+}
 
 def _unpack_params(data: bytes, offset: int) -> dict:
     """Unpacks the service parameters from the given offset."""
@@ -26,13 +33,13 @@ def _unpack_params(data: bytes, offset: int) -> dict:
         offset += param_length
 
         # Interpret parameters based on its type
-        if param_type == SVCParamKey.MANDATORY.value:
+        if param_type == MANDATORY:
             mandatory_types = [
                 struct.unpack("!H", param_value[i : i + 2])[0]
                 for i in range(0, param_length, 2)
             ]
-            params["mandatory"] = mandatory_types
-        elif param_type == SVCParamKey.ALPN.value:
+            params["mandatory"] = [_SVCPARAMKEYS.get(i) for i in mandatory_types]
+        elif param_type == ALPN:
             alpn_protocols = []
             i = 0
             while i < param_length:
@@ -41,21 +48,21 @@ def _unpack_params(data: bytes, offset: int) -> dict:
                 alpn_protocols.append(param_value[i : i + alpn_length].decode("utf-8"))
                 i += alpn_length
             params["alpn"] = alpn_protocols
-        elif param_type == SVCParamKey.NO_DEFAULT_ALPN.value:
+        elif param_type == NO_DEFAULT_ALPN:
             params["no_default_alpn"] = True
-        elif param_type == SVCParamKey.PORT.value:
+        elif param_type == PORT:
             port = struct.unpack("!H", param_value)[0]
             params["port"] = port
-        elif param_type == SVCParamKey.IPv4HINT.value:
+        elif param_type == IPV4HINT:
             ipv4_addresses = [
                 str(ipaddress.IPv4Address(param_value[i : i + 4]))
                 for i in range(0, param_length, 4)
             ]
             params["ipv4hint"] = ipv4_addresses
-        elif param_type == SVCParamKey.ECHCONFIG.value:
-            ech_config = base64.b64encode(param_value).decode("utf-8")
-            params["echconfig"] = ech_config
-        elif param_type == SVCParamKey.IPv6HINT.value:
+        elif param_type == ECH:
+            ech = base64.b64encode(param_value).decode("utf-8")
+            params["ech"] = ech
+        elif param_type == IPV6HINT:
             ipv6_addresses = [
                 str(ipaddress.IPv6Address(param_value[i : i + 16]))
                 for i in range(0, param_length, 16)
