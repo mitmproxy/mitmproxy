@@ -16,6 +16,12 @@ exports[`Header 1`] = `
         class=""
         href="#"
       >
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
         Start
       </a>
       <a
@@ -36,7 +42,9 @@ exports[`Header 1`] = `
         connected
       </span>
     </nav>
-    <div>
+    <div
+      class=""
+    >
       <div
         class="flow-menu"
       >
@@ -200,6 +208,12 @@ exports[`Header 2`] = `
         class=""
         href="#"
       >
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
         Start
       </a>
       <a
@@ -220,7 +234,9 @@ exports[`Header 2`] = `
         connected
       </span>
     </nav>
-    <div>
+    <div
+      class=""
+    >
       <div>
         <div
           class="menu-group"
@@ -418,6 +434,12 @@ exports[`Header 3`] = `
         class=""
         href="#"
       >
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
         Start
       </a>
       <a
@@ -438,7 +460,9 @@ exports[`Header 3`] = `
         connected
       </span>
     </nav>
-    <div>
+    <div
+      class=""
+    >
       <div>
         <div
           class="menu-group"

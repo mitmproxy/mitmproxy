@@ -1,10 +1,16 @@
 import * as React from "react";
-import { render, screen } from "../test-utils";
+import { render, screen, fireEvent } from "../test-utils";
 import Header from "../../components/Header";
-import { fireEvent } from "@testing-library/react";
+import { TabMenuProvider } from "../../context/useTabMenuContext";
 
 test("Header", async () => {
-    const { asFragment } = render(<Header />);
+    // Wrap Header with TabMenuProvider
+    const { asFragment } = render(
+        <TabMenuProvider>
+            <Header />
+        </TabMenuProvider>
+    );
+
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Options"));
