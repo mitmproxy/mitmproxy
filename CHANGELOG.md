@@ -20,6 +20,7 @@
 * Add an option to strip HTTPS records from DNS responses to block encrypted ClientHellos.
   ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
 * Update InstallBuilder for Windows to delete old ARP entries on upgrade.
+  ([#6889](https://github.com/mitmproxy/mitmproxy/pull/6889), @a-mnich)
 
 
 ## 17 April 2024: mitmproxy 10.3.0
