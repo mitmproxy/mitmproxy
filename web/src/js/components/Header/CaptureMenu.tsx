@@ -3,5 +3,6 @@ import * as React from "react";
 CaptureMenu.title = "Capture";
 
 export default function CaptureMenu() {
-    return <div>Some content here...</div>;
+    //empty component since we don't have an header menu for capture, but we just display the title
+    return <></>;
 }

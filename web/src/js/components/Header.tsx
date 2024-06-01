@@ -61,7 +61,12 @@ export default function Header() {
                     <ConnectionIndicator />
                 </HideInStatic>
             </nav>
-            <div>
+            <div
+                // if the active menu is CaptureMenu, we remove the header menu
+                className={classnames({
+                    "empty-header": ActiveMenu === CaptureMenu,
+                })}
+            >
                 <ActiveMenu />
             </div>
         </header>
