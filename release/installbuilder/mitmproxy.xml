@@ -118,8 +118,17 @@
             <width>40</width>
             <postShowPageActionList>
                 <!-- This will skip the readytoinstall page -->
-
-                <setInstallerVariable name="next_page" value="installation"/>
+                <setInstallerVariable name="next_page" value="installation" />
+                <actionGroup>
+                    <actionList>
+                        <!-- This is custom flag to set we are performing an upgrade
+                    but do not modify the 'installationType' of the project -->
+                        <setInstallerVariable name="isUpgradeMode" value="1" />
+                    </actionList>
+                    <ruleList>
+                        <fileTest condition="exists" path="${installdir}" />
+                    </ruleList>
+                </actionGroup>
             </postShowPageActionList>
             <preShowPageActionList>
                 <setInstallerVariable>
@@ -129,4 +138,32 @@
             </preShowPageActionList>
         </directoryParameter>
     </parameterList>
+    <readyToInstallActionList>
+        <actionGroup>
+            <actionList>
+                <registryFind>
+                    <rootKey>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\</rootKey>
+                    <keyPattern>${project.fullName} \d+.\d+.\d+</keyPattern>
+                    <namePattern>DisplayVersion</namePattern>
+                    <searchDepth>1</searchDepth>
+                    <findAll>1</findAll>
+                    <variable>previouslyInstalledVersions</variable>
+                </registryFind>
+                <foreach>
+                    <values>${previouslyInstalledVersions}</values>
+                    <variables>key name value</variables>
+                    <actionList>
+                        <!-- Delete the old ARP registry keys -->
+                        <registryDelete>
+                            <key>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${project.fullName} ${value}</key>
+                        </registryDelete>
+                    </actionList>
+                </foreach>
+            </actionList>
+            <ruleList>
+                <platformTest type="windows" />
+                <isTrue value="${isUpgradeMode}" />
+            </ruleList>
+        </actionGroup>
+    </readyToInstallActionList>
 </project>
