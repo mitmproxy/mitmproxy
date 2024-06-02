@@ -1,7 +1,10 @@
 import * as React from "react";
 import { render, screen, fireEvent } from "../test-utils";
 import Header from "../../components/Header";
-import { TabMenuProvider } from "../../context/useTabMenuContext";
+import {
+    TabMenuProvider,
+    useTabMenuContext,
+} from "../../context/useTabMenuContext";
 
 test("Header", async () => {
     const { asFragment } = render(
@@ -22,4 +25,33 @@ test("Header", async () => {
 
     fireEvent.click(screen.getByText("File"));
     expect(screen.queryByText("Open...")).toBeNull();
+
+    fireEvent.click(screen.getByText("Capture"));
+    expect(asFragment()).toMatchSnapshot();
+});
+
+// Error component to test useTabMenuContext outside of TabMenuProvider
+const ErrorComponent = () => {
+    try {
+        useTabMenuContext();
+    } catch (error) {
+        return <div>{error.message}</div>;
+    }
+    return null;
+};
+
+test("useTabMenuContext throws error when used outside TabMenuProvider", () => {
+    const consoleError = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+    render(<ErrorComponent />);
+
+    expect(
+        screen.getByText(
+            "useTabMenuContext must be used within a TabMenuProvider"
+        )
+    ).toBeInTheDocument();
+
+    consoleError.mockRestore();
 });

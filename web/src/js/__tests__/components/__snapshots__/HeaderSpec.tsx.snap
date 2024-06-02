@@ -579,3 +579,52 @@ exports[`Header 3`] = `
   </header>
 </DocumentFragment>
 `;
+
+exports[`Header 4`] = `
+<DocumentFragment>
+  <header>
+    <nav
+      class="nav-tabs nav-tabs-lg"
+    >
+      <a
+        class="pull-left special"
+        href="#"
+      >
+        File
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Start
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Options
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Flow
+      </a>
+      <span
+        class="connection-indicator established"
+      >
+        connected
+      </span>
+    </nav>
+    <div
+      class="empty-header"
+    />
+  </header>
+</DocumentFragment>
+`;
