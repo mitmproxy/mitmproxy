@@ -4,7 +4,6 @@ import Header from "../../components/Header";
 import { TabMenuProvider } from "../../context/useTabMenuContext";
 
 test("Header", async () => {
-    // Wrap Header with TabMenuProvider
     const { asFragment } = render(
         <TabMenuProvider>
             <Header />

@@ -22,7 +22,6 @@ export default function Header() {
         entries.push(FlowMenu);
     }
 
-    // useEffect to handle setting the active menu based on the selected flows
     useEffect(() => {
         if (selectedFlows.length > 0 && !wasFlowSelected) {
             setActiveMenu(() => FlowMenu);
