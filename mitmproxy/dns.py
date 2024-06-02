@@ -104,7 +104,7 @@ class ResourceRecord(serializable.SerializableDataclass):
         self.data = domain_names.pack(name)
 
     @property
-    def https_record(self) -> dict:
+    def https_record(self) -> https_record.HTTPSRecord:
         return https_record.unpack(self.data)
 
     # @https_record.setter

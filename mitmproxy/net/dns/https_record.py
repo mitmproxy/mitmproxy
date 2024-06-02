@@ -25,7 +25,7 @@ _SVCPARAMKEYS = {
 
 @dataclass
 class SVCParams:
-    mandatory: list[str] | None = None
+    mandatory: list[str | None] | None = None
     alpn: list[str] | None = None
     no_default_alpn: bool | None = None
     port: int | None = None
@@ -41,9 +41,9 @@ class SVCParams:
             if self.no_default_alpn is not None
             else "",
             f"port={self.port}" if self.port is not None else "",
-            f"ipv4hint={self.ipv4hint}" if self.ipv4hint is not None else "",
+            f"ipv4hint={[str(ip) for ip in self.ipv4hint]}" if self.ipv4hint is not None else "",
             f"ech={self.ech}" if self.ech is not None else "",
-            f"ipv6hint={self.ipv6hint}" if self.ipv6hint is not None else "",
+            f"ipv6hint={[str(ip) for ip in self.ipv6hint]}" if self.ipv6hint is not None else "",
         ]
         return " ".join(param for param in params if param)
 
@@ -106,7 +106,7 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
         elif param_type == IPV4HINT:
             try:
                 ipv4_addresses = [
-                    str(IPv4Address(param_value[i : i + 4]))
+                    IPv4Address(param_value[i : i + 4])
                     for i in range(0, param_length, 4)
                 ]
             except ValueError:
@@ -118,7 +118,7 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
         elif param_type == IPV6HINT:
             try:
                 ipv6_addresses = [
-                    str(IPv6Address(param_value[i : i + 16]))
+                    IPv6Address(param_value[i : i + 16])
                     for i in range(0, param_length, 16)
                 ]
             except ValueError:
