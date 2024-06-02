@@ -19,8 +19,9 @@ _SVCPARAMKEYS = {
     PORT: "port",
     IPV4HINT: "ipv4hint",
     ECH: "ech",
-    IPV6HINT: "ipv6hint"
+    IPV6HINT: "ipv6hint",
 }
+
 
 @dataclass
 class SVCParams:
@@ -36,13 +37,16 @@ class SVCParams:
         params = [
             f"mandatory={self.mandatory}" if self.mandatory is not None else "",
             f"alpn={self.alpn}" if self.alpn is not None else "",
-            f"no-default-alpn={self.no_default_alpn}" if self.no_default_alpn is not None else "",
+            f"no-default-alpn={self.no_default_alpn}"
+            if self.no_default_alpn is not None
+            else "",
             f"port={self.port}" if self.port is not None else "",
             f"ipv4hint={self.ipv4hint}" if self.ipv4hint is not None else "",
             f"ech={self.ech}" if self.ech is not None else "",
-            f"ipv6hint={self.ipv6hint}" if self.ipv6hint is not None else ""
+            f"ipv6hint={self.ipv6hint}" if self.ipv6hint is not None else "",
         ]
         return " ".join(param for param in params if param)
+
 
 @dataclass
 class HTTPSRecord:
@@ -51,7 +55,10 @@ class HTTPSRecord:
     params: SVCParams
 
     def __str__(self):
-        return f"priority={self.priority} target_name=\"{self.target_name}\" {self.params}"
+        return (
+            f'priority={self.priority} target_name="{self.target_name}" {self.params}'
+        )
+
 
 def _unpack_params(data: bytes, offset: int) -> SVCParams:
     """Unpacks the service parameters from the given offset."""
@@ -62,7 +69,9 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
         param_length = struct.unpack("!H", data[offset : offset + 2])[0]
         offset += 2
         if offset + param_length > len(data):
-            raise struct.error("Unpack requires a buffer of %i bytes" % (offset + param_length))
+            raise struct.error(
+                "Unpack requires a buffer of %i bytes" % (offset + param_length)
+            )
         param_value = data[offset : offset + param_length]
         offset += param_length
 
@@ -80,7 +89,9 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
                 alpn_length = param_value[i]
                 i += 1
                 try:
-                    alpn_protocols.append(param_value[i : i + alpn_length].decode("utf-8"))
+                    alpn_protocols.append(
+                        param_value[i : i + alpn_length].decode("utf-8")
+                    )
                 except UnicodeDecodeError:
                     raise struct.error(
                         "Unpack encountered illegal characters at offset %i" % (offset)
@@ -128,7 +139,9 @@ def _unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
             break
         offset += 1
         if offset + length > len(data):
-            raise struct.error("Unpack requires a buffer of %i bytes" % (offset + length))
+            raise struct.error(
+                "Unpack requires a buffer of %i bytes" % (offset + length)
+            )
         try:
             labels.append(data[offset : offset + length].decode("utf-8"))
         except UnicodeDecodeError:
