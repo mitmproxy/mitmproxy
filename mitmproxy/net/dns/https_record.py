@@ -1,7 +1,7 @@
 import base64
-import ipaddress
 import struct
-
+from ipaddress import IPv4Address
+from ipaddress import IPv6Address
 
 MANDATORY = 0
 ALPN = 1
@@ -29,6 +29,8 @@ def _unpack_params(data: bytes, offset: int) -> dict:
         offset += 2
         param_length = struct.unpack("!H", data[offset : offset + 2])[0]
         offset += 2
+        if offset + param_length > len(data):
+            raise struct.error("unpack requires a buffer of %i bytes" % (offset + param_length))
         param_value = data[offset : offset + param_length]
         offset += param_length
 
@@ -45,7 +47,12 @@ def _unpack_params(data: bytes, offset: int) -> dict:
             while i < param_length:
                 alpn_length = param_value[i]
                 i += 1
-                alpn_protocols.append(param_value[i : i + alpn_length].decode("utf-8"))
+                try:
+                    alpn_protocols.append(param_value[i : i + alpn_length].decode("utf-8"))
+                except UnicodeDecodeError:
+                    raise struct.error(
+                        "unpack encountered illegal characters at offset %i" % (offset)
+                    )
                 i += alpn_length
             params["alpn"] = alpn_protocols
         elif param_type == NO_DEFAULT_ALPN:
@@ -54,19 +61,25 @@ def _unpack_params(data: bytes, offset: int) -> dict:
             port = struct.unpack("!H", param_value)[0]
             params["port"] = port
         elif param_type == IPV4HINT:
-            ipv4_addresses = [
-                str(ipaddress.IPv4Address(param_value[i : i + 4]))
-                for i in range(0, param_length, 4)
-            ]
+            try:
+                ipv4_addresses = [
+                    str(IPv4Address(param_value[i : i + 4]))
+                    for i in range(0, param_length, 4)
+                ]
+            except ValueError:
+                raise struct.error("Malformed IP address found in HTTPS record")
             params["ipv4hint"] = ipv4_addresses
         elif param_type == ECH:
             ech = base64.b64encode(param_value).decode("utf-8")
             params["ech"] = ech
         elif param_type == IPV6HINT:
-            ipv6_addresses = [
-                str(ipaddress.IPv6Address(param_value[i : i + 16]))
-                for i in range(0, param_length, 16)
-            ]
+            try:
+                ipv6_addresses = [
+                    str(IPv6Address(param_value[i : i + 16]))
+                    for i in range(0, param_length, 16)
+                ]
+            except ValueError:
+                raise struct.error("Malformed IP address found in HTTPS record")
             params["ipv6hint"] = ipv6_addresses
         else:
             params[param_type] = param_value
@@ -82,13 +95,25 @@ def _unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
             offset += 1
             break
         offset += 1
-        labels.append(data[offset : offset + length].decode("utf-8"))
+        if offset + length > len(data):
+            raise struct.error("unpack requires a buffer of %i bytes" % (offset + length))
+        try:
+            labels.append(data[offset : offset + length].decode("utf-8"))
+        except UnicodeDecodeError:
+            raise struct.error(
+                "unpack encountered illegal characters at offset %i" % (offset)
+            )
         offset += length
     return ".".join(labels), offset
 
 
 def unpack(data: bytes) -> dict:
-    """Unpacks HTTPS RDATA from byte data."""
+    """
+    Unpacks HTTPS RDATA from byte data.
+
+    Raises:
+        struct.error if the record is malformed.
+    """
     offset = 0
 
     # Priority (2 bytes)
