@@ -41,9 +41,13 @@ class SVCParams:
             if self.no_default_alpn is not None
             else "",
             f"port={self.port}" if self.port is not None else "",
-            f"ipv4hint={[str(ip) for ip in self.ipv4hint]}" if self.ipv4hint is not None else "",
+            f"ipv4hint={[str(ip) for ip in self.ipv4hint]}"
+            if self.ipv4hint is not None
+            else "",
             f"ech={self.ech}" if self.ech is not None else "",
-            f"ipv6hint={[str(ip) for ip in self.ipv6hint]}" if self.ipv6hint is not None else "",
+            f"ipv6hint={[str(ip) for ip in self.ipv6hint]}"
+            if self.ipv6hint is not None
+            else "",
         ]
         return " ".join(param for param in params if param)
 
