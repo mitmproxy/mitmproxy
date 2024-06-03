@@ -25,7 +25,7 @@ _SVCPARAMKEYS = {
 
 @dataclass
 class SVCParams:
-    mandatory: list[str | None] | None = None
+    mandatory: list[int] | None = None
     alpn: list[str] | None = None
     no_default_alpn: bool | None = None
     port: int | None = None
@@ -35,7 +35,7 @@ class SVCParams:
 
     def __str__(self):
         params = [
-            f"mandatory={self.mandatory}" if self.mandatory is not None else "",
+            f"mandatory={[_SVCPARAMKEYS.get(i, f'SVCPARAMKEY({i})') for i in self.mandatory]}" if self.mandatory is not None else "",
             f"alpn={self.alpn}" if self.alpn is not None else "",
             f"no-default-alpn={self.no_default_alpn}"
             if self.no_default_alpn is not None
@@ -44,7 +44,7 @@ class SVCParams:
             f"ipv4hint={[str(ip) for ip in self.ipv4hint]}"
             if self.ipv4hint is not None
             else "",
-            f"ech={self.ech}" if self.ech is not None else "",
+            f"ech=\"{self.ech}\"" if self.ech is not None else "",
             f"ipv6hint={[str(ip) for ip in self.ipv6hint]}"
             if self.ipv6hint is not None
             else "",
@@ -81,11 +81,10 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
 
         # Interpret parameters based on its type
         if param_type == MANDATORY:
-            mandatory_types = [
+            params.mandatory = [
                 struct.unpack("!H", param_value[i : i + 2])[0]
                 for i in range(0, param_length, 2)
             ]
-            params.mandatory = [_SVCPARAMKEYS.get(i) for i in mandatory_types]
         elif param_type == ALPN:
             alpn_protocols = []
             i = 0
@@ -129,19 +128,20 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
                 raise struct.error("Malformed IP address found in HTTPS record")
             params.ipv6hint = ipv6_addresses
         else:
-            raise struct.error("Unknown SVCParamKey found in HTTPS record")
+            raise struct.error(f"Unknown SVCParamKey {param_type} found in HTTPS record")
     return params
 
 
-def _unpack_dns_name(data: bytes, offset: int) -> tuple[str, int]:
+def _unpack_target_name(data: bytes, offset: int) -> tuple[str, int]:
     """Unpacks the DNS-encoded domain name from data starting at the given offset."""
     labels = []
     while True:
+        if offset >= len(data):
+            raise struct.error("Unpack requires a buffer of %i bytes" % offset)
         length = data[offset]
-        if length == 0:
-            offset += 1
-            break
         offset += 1
+        if length == 0:
+            break
         if offset + length > len(data):
             raise struct.error(
                 "Unpack requires a buffer of %i bytes" % (offset + length)
@@ -170,14 +170,75 @@ def unpack(data: bytes) -> HTTPSRecord:
     offset += 2
 
     # TargetName (variable length)
-    target_name, offset = _unpack_dns_name(data, offset)
+    target_name, offset = _unpack_target_name(data, offset)
 
     # Service Parameters (remaining bytes)
     params = _unpack_params(data, offset)
 
     return HTTPSRecord(priority=priority, target_name=target_name, params=params)
 
+def _pack_params(params: SVCParams) -> bytes:
+    """Converts the service parameters into the raw byte format"""
+    buffer = bytearray()
 
-# def pack(record: dict) -> bytes:
-#     """Packs the HTTPS record into its bytes form."""
-#     raise NotImplementedError
+    if params.mandatory is not None:
+        buffer.extend(struct.pack("!H", MANDATORY))
+        buffer.extend(struct.pack("!H", len(params.mandatory) * 2))
+        for m in params.mandatory:
+            buffer.extend(struct.pack('!H', m))
+
+    if params.alpn is not None:
+        buffer.extend(struct.pack("!H", ALPN))
+        total_len = sum(len(param) + 1 for param in params.alpn)
+        buffer.extend(struct.pack("!H", total_len))
+        for param in params.alpn:
+            buffer.extend(struct.pack('!B', len(param)))
+            buffer.extend(param.encode('utf-8'))
+
+    if params.no_default_alpn is not None:
+        buffer.extend(struct.pack("!H", NO_DEFAULT_ALPN))
+        buffer.extend(struct.pack("!H", 0))
+
+    if params.port is not None:
+        buffer.extend(struct.pack("!H", PORT))
+        buffer.extend(struct.pack("!H", 2))
+        buffer.extend(struct.pack('!H', params.port))
+
+    if params.ipv4hint is not None:
+        buffer.extend(struct.pack("!H", IPV4HINT))
+        buffer.extend(struct.pack("!H", len(params.ipv4hint) * 4))
+        for ip in params.ipv4hint:
+            buffer.extend(ip.packed)
+
+    if params.ech is not None:
+        buffer.extend(struct.pack("!H", ECH))
+        ech_bytes = base64.b64decode(params.ech.encode('utf-8'))
+        buffer.extend(struct.pack("!H", len(ech_bytes)))
+        buffer.extend(ech_bytes)
+
+    if params.ipv6hint is not None:
+        buffer.extend(struct.pack("!H", IPV6HINT))
+        buffer.extend(struct.pack("!H", len(params.ipv6hint) * 16))
+        for ip in params.ipv6hint:
+            buffer.extend(ip.packed)
+
+    return bytes(buffer)
+
+def _pack_target_name(name: str) -> bytes:
+    """Converts the target name into its DNS encoded format"""
+    buffer = bytearray()
+    for label in name.split('.'):
+        if (len(label) == 0):
+            break
+        buffer.extend(struct.pack("!B", len(label)))
+        buffer.extend(label.encode('utf-8'))
+    buffer.extend(struct.pack('!B', 0))
+    return bytes(buffer)
+
+def pack(record: HTTPSRecord) -> bytes:
+    """Packs the HTTPS record into its bytes form."""
+    buffer = bytearray()
+    buffer.extend(struct.pack("!H", record.priority))
+    buffer.extend(_pack_target_name(record.target_name))
+    buffer.extend(_pack_params(record.params))
+    return bytes(buffer)
