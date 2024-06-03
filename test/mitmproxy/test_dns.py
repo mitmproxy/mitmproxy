@@ -29,7 +29,12 @@ class TestResourceRecord:
             str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
         )
         params = dns.https_records.SVCParams(
-            mandatory=[1,2,3], alpn=["h2", "h3"], no_default_alpn=True, ipv4hint=[ipaddress.IPv4Address('192.168.1.1')], ech="test", ipv6hint=[ipaddress.IPv6Address("1050:0000:0000:0000:0005:0600:300c:326b")]
+            mandatory=[1, 2, 3],
+            alpn=["h2", "h3"],
+            no_default_alpn=True,
+            ipv4hint=[ipaddress.IPv4Address("192.168.1.1")],
+            ech="test",
+            ipv6hint=[ipaddress.IPv6Address("1050:0000:0000:0000:0005:0600:300c:326b")],
         )
         record = dns.https_records.HTTPSRecord(1, "example.com", params)
         assert (
