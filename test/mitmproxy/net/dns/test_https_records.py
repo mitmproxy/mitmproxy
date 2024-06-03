@@ -64,7 +64,9 @@ class TestHTTPSRecords:
         with pytest.raises(
             struct.error, match=re.escape("unpack requires a buffer of 25 bytes")
         ):
-            https_records.unpack(b"\x00\x01\x07example\x03com\x00\x00\x01\x00\x06\x02h2")
+            https_records.unpack(
+                b"\x00\x01\x07example\x03com\x00\x00\x01\x00\x06\x02h2"
+            )
 
         with pytest.raises(
             struct.error, match=re.escape("unpack requires a buffer of 10 bytes")
