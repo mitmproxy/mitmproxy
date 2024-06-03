@@ -13,11 +13,11 @@ from mitmproxy import flow
 from mitmproxy.coretypes import serializable
 from mitmproxy.net.dns import classes
 from mitmproxy.net.dns import domain_names
-from mitmproxy.net.dns import https_record
+from mitmproxy.net.dns import https_records
 from mitmproxy.net.dns import op_codes
 from mitmproxy.net.dns import response_codes
 from mitmproxy.net.dns import types
-from mitmproxy.net.dns.https_record import HTTPSRecord
+from mitmproxy.net.dns.https_records import HTTPSRecord
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
@@ -67,7 +67,7 @@ class ResourceRecord(serializable.SerializableDataclass):
             if self.type == types.TXT:
                 return self.text
             if self.type == types.HTTPS:
-                return str(self.https_record)
+                return str(self.https_records)
         except Exception:
             return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
@@ -105,12 +105,12 @@ class ResourceRecord(serializable.SerializableDataclass):
         self.data = domain_names.pack(name)
 
     @property
-    def https_record(self) -> HTTPSRecord:
-        return https_record.unpack(self.data)
+    def https_records(self) -> HTTPSRecord:
+        return https_records.unpack(self.data)
 
-    @https_record.setter
-    def https_record(self, record: HTTPSRecord) -> None:
-        self.data = https_record.pack(record)
+    @https_records.setter
+    def https_records(self, record: HTTPSRecord) -> None:
+        self.data = https_records.pack(record)
 
     def to_json(self) -> dict:
         """
@@ -159,7 +159,7 @@ class ResourceRecord(serializable.SerializableDataclass):
         cls, name: str, record: HTTPSRecord, ttl: int = DEFAULT_TTL
     ) -> ResourceRecord:
         """Create a HTTPS resource record"""
-        return cls(name, types.HTTPS, classes.IN, ttl, https_record.pack(record))
+        return cls(name, types.HTTPS, classes.IN, ttl, https_records.pack(record))
 
 
 # comments are taken from rfc1035
