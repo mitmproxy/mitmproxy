@@ -109,3 +109,19 @@ class TestHTTPSRecords:
             https_records.unpack(data)
         except struct.error:
             pass
+
+    def test_str(self):
+        params = https_records.SVCParams(
+            mandatory=[1, 2, 3],
+            alpn=["h2", "h3"],
+            no_default_alpn=True,
+            port=8000,
+            ipv4hint=[IPv4Address("192.168.1.1")],
+            ech="test",
+            ipv6hint=[IPv6Address("1050:0000:0000:0000:0005:0600:300c:326b")],
+        )
+        record = https_records.HTTPSRecord(1, "example.com", params)
+        assert (
+            str(record) ==
+            "priority=1 target_name=\"example.com\" mandatory=['alpn', 'no-default-alpn', 'port'] alpn=['h2', 'h3'] no-default-alpn=True port=8000 ipv4hint=['192.168.1.1'] ech=\"test\" ipv6hint=['1050::5:600:300c:326b']"
+        )

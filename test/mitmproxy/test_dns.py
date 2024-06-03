@@ -32,6 +32,7 @@ class TestResourceRecord:
             mandatory=[1, 2, 3],
             alpn=["h2", "h3"],
             no_default_alpn=True,
+            port=8000,
             ipv4hint=[ipaddress.IPv4Address("192.168.1.1")],
             ech="test",
             ipv6hint=[ipaddress.IPv6Address("1050:0000:0000:0000:0005:0600:300c:326b")],
@@ -39,7 +40,7 @@ class TestResourceRecord:
         record = dns.https_records.HTTPSRecord(1, "example.com", params)
         assert (
             str(dns.ResourceRecord.HTTPS("example.com", record))
-            == "priority=1 target_name=\"example.com\" mandatory=['alpn', 'no-default-alpn', 'port'] alpn=['h2', 'h3'] no-default-alpn=True ipv4hint=['192.168.1.1'] ech=\"test\" ipv6hint=['1050::5:600:300c:326b']"
+            == "priority=1 target_name=\"example.com\" mandatory=['alpn', 'no-default-alpn', 'port'] alpn=['h2', 'h3'] no-default-alpn=True port=8000 ipv4hint=['192.168.1.1'] ech=\"test\" ipv6hint=['1050::5:600:300c:326b']"
         )
         assert (
             str(
