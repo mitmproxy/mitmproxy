@@ -35,7 +35,9 @@ class SVCParams:
 
     def __str__(self):
         params = [
-            f"mandatory={[_SVCPARAMKEYS.get(i, f'SVCPARAMKEY({i})') for i in self.mandatory]}" if self.mandatory is not None else "",
+            f"mandatory={[_SVCPARAMKEYS.get(i, f'SVCPARAMKEY({i})') for i in self.mandatory]}"
+            if self.mandatory is not None
+            else "",
             f"alpn={self.alpn}" if self.alpn is not None else "",
             f"no-default-alpn={self.no_default_alpn}"
             if self.no_default_alpn is not None
@@ -44,7 +46,7 @@ class SVCParams:
             f"ipv4hint={[str(ip) for ip in self.ipv4hint]}"
             if self.ipv4hint is not None
             else "",
-            f"ech=\"{self.ech}\"" if self.ech is not None else "",
+            f'ech="{self.ech}"' if self.ech is not None else "",
             f"ipv6hint={[str(ip) for ip in self.ipv6hint]}"
             if self.ipv6hint is not None
             else "",
@@ -128,7 +130,9 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
                 raise struct.error("malformed IP address found in HTTPS record")
             params.ipv6hint = ipv6_addresses
         else:
-            raise struct.error(f"unknown SVCParamKey {param_type} found in HTTPS record")
+            raise struct.error(
+                f"unknown SVCParamKey {param_type} found in HTTPS record"
+            )
     return params
 
 
@@ -177,6 +181,7 @@ def unpack(data: bytes) -> HTTPSRecord:
 
     return HTTPSRecord(priority=priority, target_name=target_name, params=params)
 
+
 def _pack_params(params: SVCParams) -> bytes:
     """Converts the service parameters into the raw byte format"""
     buffer = bytearray()
@@ -185,15 +190,15 @@ def _pack_params(params: SVCParams) -> bytes:
         buffer.extend(struct.pack("!H", MANDATORY))
         buffer.extend(struct.pack("!H", len(params.mandatory) * 2))
         for m in params.mandatory:
-            buffer.extend(struct.pack('!H', m))
+            buffer.extend(struct.pack("!H", m))
 
     if params.alpn is not None:
         buffer.extend(struct.pack("!H", ALPN))
         total_len = sum(len(param) + 1 for param in params.alpn)
         buffer.extend(struct.pack("!H", total_len))
         for param in params.alpn:
-            buffer.extend(struct.pack('!B', len(param)))
-            buffer.extend(param.encode('utf-8'))
+            buffer.extend(struct.pack("!B", len(param)))
+            buffer.extend(param.encode("utf-8"))
 
     if params.no_default_alpn is not None:
         buffer.extend(struct.pack("!H", NO_DEFAULT_ALPN))
@@ -202,7 +207,7 @@ def _pack_params(params: SVCParams) -> bytes:
     if params.port is not None:
         buffer.extend(struct.pack("!H", PORT))
         buffer.extend(struct.pack("!H", 2))
-        buffer.extend(struct.pack('!H', params.port))
+        buffer.extend(struct.pack("!H", params.port))
 
     if params.ipv4hint is not None:
         buffer.extend(struct.pack("!H", IPV4HINT))
@@ -212,7 +217,7 @@ def _pack_params(params: SVCParams) -> bytes:
 
     if params.ech is not None:
         buffer.extend(struct.pack("!H", ECH))
-        ech_bytes = base64.b64decode(params.ech.encode('utf-8'))
+        ech_bytes = base64.b64decode(params.ech.encode("utf-8"))
         buffer.extend(struct.pack("!H", len(ech_bytes)))
         buffer.extend(ech_bytes)
 
@@ -224,16 +229,18 @@ def _pack_params(params: SVCParams) -> bytes:
 
     return bytes(buffer)
 
+
 def _pack_target_name(name: str) -> bytes:
     """Converts the target name into its DNS encoded format"""
     buffer = bytearray()
-    for label in name.split('.'):
-        if (len(label) == 0):
+    for label in name.split("."):
+        if len(label) == 0:
             break
         buffer.extend(struct.pack("!B", len(label)))
-        buffer.extend(label.encode('utf-8'))
-    buffer.extend(struct.pack('!B', 0))
+        buffer.extend(label.encode("utf-8"))
+    buffer.extend(struct.pack("!B", 0))
     return bytes(buffer)
+
 
 def pack(record: HTTPSRecord) -> bytes:
     """Packs the HTTPS record into its bytes form."""

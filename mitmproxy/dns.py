@@ -14,10 +14,10 @@ from mitmproxy.coretypes import serializable
 from mitmproxy.net.dns import classes
 from mitmproxy.net.dns import domain_names
 from mitmproxy.net.dns import https_record
-from mitmproxy.net.dns.https_record import HTTPSRecord
 from mitmproxy.net.dns import op_codes
 from mitmproxy.net.dns import response_codes
 from mitmproxy.net.dns import types
+from mitmproxy.net.dns.https_record import HTTPSRecord
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
@@ -155,7 +155,9 @@ class ResourceRecord(serializable.SerializableDataclass):
         return cls(name, types.TXT, classes.IN, ttl, text.encode("utf-8"))
 
     @classmethod
-    def HTTPS(cls, name: str, record: HTTPSRecord, ttl: int = DEFAULT_TTL) -> ResourceRecord:
+    def HTTPS(
+        cls, name: str, record: HTTPSRecord, ttl: int = DEFAULT_TTL
+    ) -> ResourceRecord:
         """Create a HTTPS resource record"""
         return cls(name, types.HTTPS, classes.IN, ttl, https_record.pack(record))
 

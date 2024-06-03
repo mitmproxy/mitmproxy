@@ -28,9 +28,12 @@ class TestResourceRecord:
         assert (
             str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
         )
-        record = dns.https_record.HTTPSRecord(1, "example.com", dns.https_record.SVCParams(alpn=["h2", "h3"]))
+        record = dns.https_record.HTTPSRecord(
+            1, "example.com", dns.https_record.SVCParams(alpn=["h2", "h3"])
+        )
         assert (
-            str(dns.ResourceRecord.HTTPS("example.com", record)) == "priority=1 target_name=\"example.com\" alpn=['h2', 'h3']"
+            str(dns.ResourceRecord.HTTPS("example.com", record))
+            == "priority=1 target_name=\"example.com\" alpn=['h2', 'h3']"
         )
         assert (
             str(
