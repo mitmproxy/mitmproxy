@@ -110,16 +110,14 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
             params.port = port
         elif param_type == IPV4HINT:
             params.ipv4hint = [
-                IPv4Address(param_value[i : i + 4])
-                for i in range(0, param_length, 4)
+                IPv4Address(param_value[i : i + 4]) for i in range(0, param_length, 4)
             ]
         elif param_type == ECH:
             ech = base64.b64encode(param_value).decode("utf-8")
             params.ech = ech
         elif param_type == IPV6HINT:
             params.ipv6hint = [
-                IPv6Address(param_value[i : i + 16])
-                for i in range(0, param_length, 16)
+                IPv6Address(param_value[i : i + 16]) for i in range(0, param_length, 16)
             ]
         else:
             raise struct.error(

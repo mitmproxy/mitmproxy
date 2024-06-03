@@ -101,7 +101,7 @@ class TestHTTPSRecords:
         )
 
         record = https_records.HTTPSRecord(1, "", https_records.SVCParams())
-        assert (https_records.pack(record) == b"\x00\x01\x00")
+        assert https_records.pack(record) == b"\x00\x01\x00"
 
     @given(st.binary())
     def test_fuzz_unpack(self, data: bytes):
