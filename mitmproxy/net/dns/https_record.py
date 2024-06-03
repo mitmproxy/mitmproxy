@@ -74,7 +74,7 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
         offset += 2
         if offset + param_length > len(data):
             raise struct.error(
-                "Unpack requires a buffer of %i bytes" % (offset + param_length)
+                "unpack requires a buffer of %i bytes" % (offset + param_length)
             )
         param_value = data[offset : offset + param_length]
         offset += param_length
@@ -97,7 +97,7 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
                     )
                 except UnicodeDecodeError:
                     raise struct.error(
-                        "Unpack encountered illegal characters at offset %i" % (offset)
+                        "unpack encountered illegal characters at offset %i" % (offset)
                     )
                 i += alpn_length
             params.alpn = alpn_protocols
@@ -113,7 +113,7 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
                     for i in range(0, param_length, 4)
                 ]
             except ValueError:
-                raise struct.error("Malformed IP address found in HTTPS record")
+                raise struct.error("malformed IP address found in HTTPS record")
             params.ipv4hint = ipv4_addresses
         elif param_type == ECH:
             ech = base64.b64encode(param_value).decode("utf-8")
@@ -125,10 +125,10 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
                     for i in range(0, param_length, 16)
                 ]
             except ValueError:
-                raise struct.error("Malformed IP address found in HTTPS record")
+                raise struct.error("malformed IP address found in HTTPS record")
             params.ipv6hint = ipv6_addresses
         else:
-            raise struct.error(f"Unknown SVCParamKey {param_type} found in HTTPS record")
+            raise struct.error(f"unknown SVCParamKey {param_type} found in HTTPS record")
     return params
 
 
@@ -137,20 +137,20 @@ def _unpack_target_name(data: bytes, offset: int) -> tuple[str, int]:
     labels = []
     while True:
         if offset >= len(data):
-            raise struct.error("Unpack requires a buffer of %i bytes" % offset)
+            raise struct.error("unpack requires a buffer of %i bytes" % offset)
         length = data[offset]
         offset += 1
         if length == 0:
             break
         if offset + length > len(data):
             raise struct.error(
-                "Unpack requires a buffer of %i bytes" % (offset + length)
+                "unpack requires a buffer of %i bytes" % (offset + length)
             )
         try:
             labels.append(data[offset : offset + length].decode("utf-8"))
         except UnicodeDecodeError:
             raise struct.error(
-                "Unpack encountered illegal characters at offset %i" % (offset)
+                "unpack encountered illegal characters at offset %i" % (offset)
             )
         offset += length
     return ".".join(labels), offset
@@ -166,7 +166,7 @@ def unpack(data: bytes) -> HTTPSRecord:
     offset = 0
 
     # Priority (2 bytes)
-    priority = struct.unpack("!H", data[offset : offset + 2])[0]
+    priority = struct.unpack("!h", data[offset : offset + 2])[0]
     offset += 2
 
     # TargetName (variable length)
@@ -207,8 +207,8 @@ def _pack_params(params: SVCParams) -> bytes:
     if params.ipv4hint is not None:
         buffer.extend(struct.pack("!H", IPV4HINT))
         buffer.extend(struct.pack("!H", len(params.ipv4hint) * 4))
-        for ip in params.ipv4hint:
-            buffer.extend(ip.packed)
+        for ipv4 in params.ipv4hint:
+            buffer.extend(ipv4.packed)
 
     if params.ech is not None:
         buffer.extend(struct.pack("!H", ECH))
@@ -219,8 +219,8 @@ def _pack_params(params: SVCParams) -> bytes:
     if params.ipv6hint is not None:
         buffer.extend(struct.pack("!H", IPV6HINT))
         buffer.extend(struct.pack("!H", len(params.ipv6hint) * 16))
-        for ip in params.ipv6hint:
-            buffer.extend(ip.packed)
+        for ipv6 in params.ipv6hint:
+            buffer.extend(ipv6.packed)
 
     return bytes(buffer)
 
@@ -238,7 +238,7 @@ def _pack_target_name(name: str) -> bytes:
 def pack(record: HTTPSRecord) -> bytes:
     """Packs the HTTPS record into its bytes form."""
     buffer = bytearray()
-    buffer.extend(struct.pack("!H", record.priority))
+    buffer.extend(struct.pack("!h", record.priority))
     buffer.extend(_pack_target_name(record.target_name))
     buffer.extend(_pack_params(record.params))
     return bytes(buffer)

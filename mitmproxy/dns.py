@@ -14,6 +14,7 @@ from mitmproxy.coretypes import serializable
 from mitmproxy.net.dns import classes
 from mitmproxy.net.dns import domain_names
 from mitmproxy.net.dns import https_record
+from mitmproxy.net.dns.https_record import HTTPSRecord
 from mitmproxy.net.dns import op_codes
 from mitmproxy.net.dns import response_codes
 from mitmproxy.net.dns import types
@@ -104,12 +105,12 @@ class ResourceRecord(serializable.SerializableDataclass):
         self.data = domain_names.pack(name)
 
     @property
-    def https_record(self) -> https_record.HTTPSRecord:
+    def https_record(self) -> HTTPSRecord:
         return https_record.unpack(self.data)
 
-    # @https_record.setter
-    # def https_record(self, record: dict) -> None:
-    #     self.data = https_record.pack(record)
+    @https_record.setter
+    def https_record(self, record: HTTPSRecord) -> None:
+        self.data = https_record.pack(record)
 
     def to_json(self) -> dict:
         """
@@ -153,9 +154,10 @@ class ResourceRecord(serializable.SerializableDataclass):
         """Create a textual resource record."""
         return cls(name, types.TXT, classes.IN, ttl, text.encode("utf-8"))
 
-    # @classmethod
-    # def HTTPS(cls) -> ResourceRecord:
-    #     raise NotImplementedError
+    @classmethod
+    def HTTPS(cls, name: str, record: HTTPSRecord, ttl: int = DEFAULT_TTL) -> ResourceRecord:
+        """Create a HTTPS resource record"""
+        return cls(name, types.HTTPS, classes.IN, ttl, https_record.pack(record))
 
 
 # comments are taken from rfc1035
