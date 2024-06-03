@@ -67,7 +67,7 @@ class ResourceRecord(serializable.SerializableDataclass):
             if self.type == types.TXT:
                 return self.text
             if self.type == types.HTTPS:
-                return str(self.https_records)
+                return str(self.https_record)
         except Exception:
             return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
@@ -105,11 +105,11 @@ class ResourceRecord(serializable.SerializableDataclass):
         self.data = domain_names.pack(name)
 
     @property
-    def https_records(self) -> HTTPSRecord:
+    def https_record(self) -> HTTPSRecord:
         return https_records.unpack(self.data)
 
-    @https_records.setter
-    def https_records(self, record: HTTPSRecord) -> None:
+    @https_record.setter
+    def https_record(self, record: HTTPSRecord) -> None:
         self.data = https_records.pack(record)
 
     def to_json(self) -> dict:

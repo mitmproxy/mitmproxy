@@ -72,6 +72,10 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
+        params = dns.https_records.SVCParams(port=8000)
+        record = dns.https_records.HTTPSRecord(1, "example.org", params)
+        rr.https_record = record
+        assert rr.https_record == record
 
 
 class TestMessage:

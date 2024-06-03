@@ -109,26 +109,18 @@ def _unpack_params(data: bytes, offset: int) -> SVCParams:
             port = struct.unpack("!H", param_value)[0]
             params.port = port
         elif param_type == IPV4HINT:
-            try:
-                ipv4_addresses = [
-                    IPv4Address(param_value[i : i + 4])
-                    for i in range(0, param_length, 4)
-                ]
-            except ValueError:
-                raise struct.error("malformed IP address found in HTTPS record")
-            params.ipv4hint = ipv4_addresses
+            params.ipv4hint = [
+                IPv4Address(param_value[i : i + 4])
+                for i in range(0, param_length, 4)
+            ]
         elif param_type == ECH:
             ech = base64.b64encode(param_value).decode("utf-8")
             params.ech = ech
         elif param_type == IPV6HINT:
-            try:
-                ipv6_addresses = [
-                    IPv6Address(param_value[i : i + 16])
-                    for i in range(0, param_length, 16)
-                ]
-            except ValueError:
-                raise struct.error("malformed IP address found in HTTPS record")
-            params.ipv6hint = ipv6_addresses
+            params.ipv6hint = [
+                IPv6Address(param_value[i : i + 16])
+                for i in range(0, param_length, 16)
+            ]
         else:
             raise struct.error(
                 f"unknown SVCParamKey {param_type} found in HTTPS record"
