@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-
+import React, { Component, useState } from "react";
 import { onKeyDown } from "../ducks/ui/keyboard";
 import MainView from "./MainView";
 import Header from "./Header";
@@ -9,7 +8,7 @@ import Footer from "./Footer";
 import Modal from "./Modal/Modal";
 import { RootState } from "../ducks";
 import { connect } from "react-redux";
-import { TabMenuProvider } from "../context/useTabMenuContext";
+import StartMenu from "./Header/StartMenu";
 
 type ProxyAppMainProps = {
     showEventLog: boolean;
@@ -20,10 +19,18 @@ type ProxyAppMainProps = {
 type ProxyAppMainState = {
     error?: Error;
     errorInfo?: React.ErrorInfo;
+    ActiveMenu: Menu;
 };
 
+export interface Menu {
+    (): JSX.Element;
+    title: string;
+}
+
 class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
-    state: ProxyAppMainState = {};
+    state: ProxyAppMainState = {
+        ActiveMenu: StartMenu,
+    };
 
     render = () => {
         const { showEventLog, showCommandBar } = this.props;
@@ -54,10 +61,13 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
 
         return (
             <div id="container" tabIndex={0}>
-                <TabMenuProvider>
-                    <Header />
-                    <MainView />
-                </TabMenuProvider>
+                <Header
+                    ActiveMenu={this.state.ActiveMenu}
+                    setActiveMenu={(ActiveMenu) => {
+                        this.setState({ ActiveMenu });
+                    }}
+                />
+                <MainView ActiveMenu={this.state.ActiveMenu} />
                 {showCommandBar && <CommandBar key="commandbar" />}
                 {showEventLog && <EventLog key="eventlog" />}
                 <Footer />

@@ -4,18 +4,22 @@ import FileMenu from "./Header/FileMenu";
 import ConnectionIndicator from "./Header/ConnectionIndicator";
 import HideInStatic from "./common/HideInStatic";
 import CaptureMenu from "./Header/CaptureMenu";
-import { Menu, useTabMenuContext } from "../context/useTabMenuContext";
 import { useAppSelector } from "../ducks";
 import StartMenu from "./Header/StartMenu";
 import OptionMenu from "./Header/OptionMenu";
 import FlowMenu from "./Header/FlowMenu";
+import { Menu } from "./ProxyApp";
 
-export default function Header() {
+interface HeaderProps {
+    ActiveMenu: Menu;
+    setActiveMenu: React.Dispatch<Menu>;
+}
+
+export default function Header({ ActiveMenu, setActiveMenu }: HeaderProps) {
     const selectedFlows = useAppSelector((state) =>
         state.flows.selected.filter((id) => id in state.flows.byId)
     );
     const [wasFlowSelected, setWasFlowSelected] = useState(false);
-    const { ActiveMenu, setActiveMenu } = useTabMenuContext();
 
     let entries: Menu[] = [CaptureMenu, StartMenu, OptionMenu];
     if (selectedFlows.length > 0) {
@@ -24,21 +28,21 @@ export default function Header() {
 
     useEffect(() => {
         if (selectedFlows.length > 0 && !wasFlowSelected) {
-            setActiveMenu(() => FlowMenu);
+            setActiveMenu(FlowMenu);
             setWasFlowSelected(true);
         } else if (selectedFlows.length === 0) {
             if (wasFlowSelected) {
                 setWasFlowSelected(false);
             }
             if (ActiveMenu === FlowMenu) {
-                setActiveMenu(() => StartMenu);
+                setActiveMenu(StartMenu);
             }
         }
     }, [selectedFlows, wasFlowSelected, ActiveMenu, setActiveMenu]);
 
     function handleClick(active: Menu, e: React.MouseEvent<HTMLAnchorElement>) {
         e.preventDefault();
-        setActiveMenu(() => active);
+        setActiveMenu(active);
     }
 
     return (
