@@ -4,6 +4,21 @@ from dataclasses import dataclass
 from ipaddress import IPv4Address
 from ipaddress import IPv6Address
 
+"""
+HTTPS records are formatted as follows (as per RFC9460):
+- a 2-octet field for SvcPriority as an integer in network byte order.
+- the uncompressed, fully qualified TargetName, represented as a sequence of length-prefixed labels per Section 3.1 of [RFC1035].
+- the SvcParams, consuming the remainder of the record (so smaller than 65535 octets and constrained by the RDATA and DNS message sizes).
+
+When the list of SvcParams is non-empty, it contains a series of SvcParamKey=SvcParamValue pairs, represented as:
+- a 2-octet field containing the SvcParamKey as an integer in network byte order. (See Section 14.3.2 for the defined values.)
+- a 2-octet field containing the length of the SvcParamValue as an integer between 0 and 65535 in network byte order.
+- an octet string of this length whose contents are the SvcParamValue in a format determined by the SvcParamKey.
+
+    https://datatracker.ietf.org/doc/rfc9460/
+    https://datatracker.ietf.org/doc/rfc1035/
+"""
+
 MANDATORY = 0
 ALPN = 1
 NO_DEFAULT_ALPN = 2
