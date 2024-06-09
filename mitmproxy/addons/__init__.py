@@ -1,7 +1,6 @@
 from mitmproxy.addons import anticache
 from mitmproxy.addons import anticomp
 from mitmproxy.addons import block
-from mitmproxy.addons import strip_ech
 from mitmproxy.addons import blocklist
 from mitmproxy.addons import browser
 from mitmproxy.addons import clientplayback
@@ -26,6 +25,7 @@ from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
+from mitmproxy.addons import strip_ech
 from mitmproxy.addons import tlsconfig
 from mitmproxy.addons import upstream_auth
 

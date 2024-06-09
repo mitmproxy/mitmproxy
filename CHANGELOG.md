@@ -22,6 +22,7 @@
 * Allow parsing of HTTPS records from DNS RDATA
   ([#6884](https://github.com/mitmproxy/mitmproxy/pull/6884), @errorxyz)
 * Update strip_ech addon to use the new DNS HTTPS records API
+  ([#6905](https://github.com/mitmproxy/mitmproxy/pull/6905), @errorxyz)
 
 ## 17 April 2024: mitmproxy 10.3.0
 
