@@ -28,6 +28,20 @@ class TestResourceRecord:
         assert (
             str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
         )
+        params = {
+            0: b"\x00",
+            1: b"\x01",
+            2: b"",
+            3: b"\x02",
+            4: b"\x03",
+            5: b"\x04",
+            6: b"\x05",
+        }
+        record = dns.https_records.HTTPSRecord(1, "example.com", params)
+        assert (
+            str(dns.ResourceRecord.HTTPS("example.com", record))
+            == "priority: 1 target_name: 'example.com' {'mandatory': b'\\x00', 'alpn': b'\\x01', 'no_default_alpn': b'', 'port': b'\\x02', 'ipv4hint': b'\\x03', 'ech': b'\\x04', 'ipv6hint': b'\\x05'}"
+        )
         assert (
             str(
                 dns.ResourceRecord(
@@ -65,6 +79,14 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
+        params = {3: b"\x01\xbb"}
+        record = dns.https_records.HTTPSRecord(1, "example.org", params)
+        rr.data = dns.https_records.pack(record)
+        assert rr.https_ech is None
+        rr.https_ech = "dGVzdHN0cmluZwo="
+        assert rr.https_ech == "dGVzdHN0cmluZwo="
+        rr.https_ech = None
+        assert rr.https_ech is None
 
 
 class TestMessage:

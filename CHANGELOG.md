@@ -19,7 +19,8 @@
   ([#6875](https://github.com/mitmproxy/mitmproxy/pull/6875), @aib)
 * Add an option to strip HTTPS records from DNS responses to block encrypted ClientHellos.
   ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
-
+* Allow parsing of HTTPS records from DNS RDATA
+  ([#6884](https://github.com/mitmproxy/mitmproxy/pull/6884), @errorxyz)
 
 ## 17 April 2024: mitmproxy 10.3.0
 
