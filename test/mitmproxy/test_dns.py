@@ -29,13 +29,13 @@ class TestResourceRecord:
             str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
         )
         params = {
-            0: b'\x00',
-            1: b'\x01',
-            2: b'',
-            3: b'\x02',
-            4: b'\x03',
-            5: b'\x04',
-            6: b'\x05'
+            0: b"\x00",
+            1: b"\x01",
+            2: b"",
+            3: b"\x02",
+            4: b"\x03",
+            5: b"\x04",
+            6: b"\x05",
         }
         record = dns.https_records.HTTPSRecord(1, "example.com", params)
         assert (
@@ -79,7 +79,7 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
-        params = {3: b'\x01\xbb'}
+        params = {3: b"\x01\xbb"}
         record = dns.https_records.HTTPSRecord(1, "example.org", params)
         rr.https_record = record
         assert rr.https_record == record

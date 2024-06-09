@@ -17,6 +17,7 @@ When the list of SvcParams is non-empty, it contains a series of SvcParamKey=Svc
     https://datatracker.ietf.org/doc/rfc1035/
 """
 
+
 class SVCParamKeys(enum.Enum):
     MANDATORY = 0
     ALPN = 1
@@ -25,6 +26,7 @@ class SVCParamKeys(enum.Enum):
     IPV4HINT = 4
     ECH = 5
     IPV6HINT = 6
+
 
 @dataclass
 class HTTPSRecord:
@@ -40,9 +42,8 @@ class HTTPSRecord:
             except ValueError:
                 name = f"key{param_type}"
             params[name] = param_value
-        return (
-            f"priority: {self.priority} target_name: '{self.target_name}' {params}"
-        )
+        return f"priority: {self.priority} target_name: '{self.target_name}' {params}"
+
 
 def _unpack_params(data: bytes, offset: int) -> dict[int, bytes]:
     """Unpacks the service parameters from the given offset."""

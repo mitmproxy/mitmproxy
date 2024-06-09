@@ -118,7 +118,7 @@ class ResourceRecord(serializable.SerializableDataclass):
     def https_ech(self) -> str | None:
         ech_bytes = self.https_record.params.get(SVCParamKeys.ECH.value, None)
         if ech_bytes is not None:
-            return base64.b64encode(ech_bytes).decode('utf-8')
+            return base64.b64encode(ech_bytes).decode("utf-8")
         else:
             return None
 
