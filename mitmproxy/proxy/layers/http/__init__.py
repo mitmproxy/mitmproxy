@@ -756,6 +756,12 @@ class HttpStream(layer.Layer):
                 self.context.client,
             )
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
+        elif self.flow.response.status_code == 502:
+            self.flow.error = flow.Error("CONNECT failed")
+            yield HttpErrorHook(self.flow)
+            yield SendHttp(ResponseProtocolError(self.stream_id, "CONNECT failed"), self.context.client)
+            self.client_state = self.state_errored
+            self.flow.live = False
         else:
             yield from self.send_response()
 
