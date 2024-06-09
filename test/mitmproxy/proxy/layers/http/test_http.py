@@ -674,6 +674,8 @@ def test_server_unreachable(tctx, connect):
 
     playbook << OpenConnection(server)
     playbook >> reply("Connection failed")
+    playbook << http.HttpErrorHook(flow)
+    playbook >> reply()
     if not connect:
         playbook << http.HttpErrorHook(flow)
     else:
