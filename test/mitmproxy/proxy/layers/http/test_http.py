@@ -674,23 +674,21 @@ def test_server_unreachable(tctx, connect):
 
     playbook << OpenConnection(server)
     playbook >> reply("Connection failed")
+    playbook << http.HttpErrorHook(flow)
+    playbook >> reply()
     if not connect:
-        # Our API isn't ideal here, there is no error hook for CONNECT requests currently.
-        # We could fix this either by having CONNECT request go through all our regular hooks,
-        # or by adding dedicated ok/error hooks.
-        # See also: test_connect_unauthorized
-        playbook << http.HttpErrorHook(flow)
-        playbook >> reply()
-    playbook << SendData(
-        tctx.client, BytesMatching(b"502 Bad Gateway.+Connection failed")
-    )
-    if not connect:
-        playbook << CloseConnection(tctx.client)
+        playbook << SendData(
+            tctx.client, BytesMatching(b"502 Bad Gateway.+Connection failed")
+        )
+    else:
+        playbook << SendData(
+            tctx.client, BytesMatching(b"502 Bad Gateway.+CONNECT failed")
+        )
+    playbook << CloseConnection(tctx.client)
 
     assert playbook
-    if not connect:
-        assert flow().error
-        assert not flow().live
+    assert flow().error
+    assert not flow().live
 
 
 @pytest.mark.parametrize(
