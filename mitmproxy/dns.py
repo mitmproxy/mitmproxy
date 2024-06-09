@@ -69,7 +69,7 @@ class ResourceRecord(serializable.SerializableDataclass):
             if self.type == types.TXT:
                 return self.text
             if self.type == types.HTTPS:
-                return str(self.https_record)
+                return str(https_records.unpack(self.data))
         except Exception:
             return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
@@ -107,16 +107,9 @@ class ResourceRecord(serializable.SerializableDataclass):
         self.data = domain_names.pack(name)
 
     @property
-    def https_record(self) -> HTTPSRecord:
-        return https_records.unpack(self.data)
-
-    @https_record.setter
-    def https_record(self, record: HTTPSRecord) -> None:
-        self.data = https_records.pack(record)
-
-    @property
     def https_ech(self) -> str | None:
-        ech_bytes = self.https_record.params.get(SVCParamKeys.ECH.value, None)
+        record = https_records.unpack(self.data)
+        ech_bytes = record.params.get(SVCParamKeys.ECH.value, None)
         if ech_bytes is not None:
             return base64.b64encode(ech_bytes).decode("utf-8")
         else:
@@ -124,7 +117,7 @@ class ResourceRecord(serializable.SerializableDataclass):
 
     @https_ech.setter
     def https_ech(self, ech: str | None) -> None:
-        record = self.https_record
+        record = https_records.unpack(self.data)
         if ech is None:
             record.params.pop(SVCParamKeys.ECH.value, None)
         else:

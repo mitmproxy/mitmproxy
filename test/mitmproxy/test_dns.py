@@ -81,8 +81,8 @@ class TestResourceRecord:
         assert rr.text == "sample text"
         params = {3: b"\x01\xbb"}
         record = dns.https_records.HTTPSRecord(1, "example.org", params)
-        rr.https_record = record
-        assert rr.https_record == record
+        rr.data = dns.https_records.pack(record)
+        assert rr.https_ech is None
         rr.https_ech = "dGVzdHN0cmluZwo="
         assert rr.https_ech == "dGVzdHN0cmluZwo="
         rr.https_ech = None
