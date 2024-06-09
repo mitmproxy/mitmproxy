@@ -24,6 +24,7 @@
 * Update strip_ech addon to use the new DNS HTTPS records API
   ([#6905](https://github.com/mitmproxy/mitmproxy/pull/6905), @errorxyz)
 * Fix connect request triggering response hook
+  ([#6906](https://github.com/mitmproxy/mitmproxy/pull/6906), @errorxyz)
 
 ## 17 April 2024: mitmproxy 10.3.0
 
