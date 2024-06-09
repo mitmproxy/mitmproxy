@@ -1,7 +1,5 @@
 import re
 import struct
-from ipaddress import IPv4Address
-from ipaddress import IPv6Address
 
 import pytest
 from hypothesis import given
@@ -12,8 +10,8 @@ from mitmproxy.net.dns import https_records
 
 class TestHTTPSRecords:
     def test_simple(self):
-        assert https_records.ALPN == 1
-        assert https_records._SVCPARAMKEYS.get(1) == "alpn"
+        assert https_records.SVCParamKeys.ALPN.value == 1
+        assert https_records.SVCParamKeys(1).name == "ALPN"
 
     def test_httpsrecord(self):
         with pytest.raises(
@@ -25,18 +23,15 @@ class TestHTTPSRecords:
             https_records.HTTPSRecord()
 
     def test_unpack(self):
-        params = https_records.SVCParams(
-            mandatory=[1, 2, 3],
-            alpn=["h2", "h3"],
-            no_default_alpn=True,
-            port=8000,
-            ipv4hint=[IPv4Address("192.168.1.1"), IPv4Address("192.168.1.2")],
-            ech="dGVzdHN0cmluZw==",
-            ipv6hint=[
-                IPv6Address("0000:0000:0000:0000:0000:0000:0000:0000"),
-                IPv6Address("1050:0:0:0:5:600:300c:326b"),
-            ],
-        )
+        params = {
+            0: b'\x00\x04\x00\x06',
+            1: b'\x02h2\x02h3',
+            2: b'',
+            3: b'\x01\xbb',
+            4: b'\xb9\xc7l\x99\xb9\xc7m\x99\xb9\xc7n\x99\xb9\xc7o\x99',
+            5: b"testbytes",
+            6: b'&\x06P\xc0\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x02\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x03\x00\x00\x00\x00\x00\x00\x00\x00\x01S'
+        }
         record = https_records.HTTPSRecord(1, "example.com", params)
         assert https_records.unpack(https_records.pack(record)) == record
 
@@ -44,14 +39,6 @@ class TestHTTPSRecords:
             struct.error, match=re.escape("unpack requires a buffer of 2 bytes")
         ):
             https_records.unpack(b"")
-
-        with pytest.raises(
-            struct.error,
-            match=re.escape("unpack encountered illegal characters at offset 25"),
-        ):
-            https_records.unpack(
-                b"\x00\x01\x07example\x03com\x00\x00\x01\x00\x06\x02\x872\x02h3"
-            )
 
         with pytest.raises(
             struct.error,
@@ -73,34 +60,23 @@ class TestHTTPSRecords:
         ):
             https_records.unpack(b"\x00\x01\x07exa")
 
-        with pytest.raises(
-            struct.error,
-            match=re.escape("unknown SVCParamKey 255 found in HTTPS record"),
-        ):
-            https_records.unpack(
-                b"\x00\x01\x07example\x03com\x00\x00\xff\x00\x06\x02h2\x02h3"
-            )
-
     def test_pack(self):
-        params = https_records.SVCParams(
-            mandatory=[1, 2, 3],
-            alpn=["h2", "h3"],
-            no_default_alpn=True,
-            port=8000,
-            ipv4hint=[IPv4Address("192.168.1.1"), IPv4Address("192.168.1.2")],
-            ech="dGVzdHN0cmluZw==",
-            ipv6hint=[
-                IPv6Address("0000:0000:0000:0000:0000:0000:0000:0000"),
-                IPv6Address("1050:0:0:0:5:600:300c:326b"),
-            ],
-        )
+        params = {
+            0: b'\x00\x04\x00\x06',
+            1: b'\x02h2\x02h3',
+            2: b'',
+            3: b'\x01\xbb',
+            4: b'\xb9\xc7l\x99\xb9\xc7m\x99\xb9\xc7n\x99\xb9\xc7o\x99',
+            5: b"testbytes",
+            6: b'&\x06P\xc0\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x02\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x03\x00\x00\x00\x00\x00\x00\x00\x00\x01S'
+        }
         record = https_records.HTTPSRecord(1, "example.com", params)
         assert (
             https_records.pack(record)
-            == b"\x00\x01\x07example\x03com\x00\x00\x00\x00\x06\x00\x01\x00\x02\x00\x03\x00\x01\x00\x06\x02h2\x02h3\x00\x02\x00\x00\x00\x03\x00\x02\x1f@\x00\x04\x00\x08\xc0\xa8\x01\x01\xc0\xa8\x01\x02\x00\x05\x00\nteststring\x00\x06\x00 \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10P\x00\x00\x00\x00\x00\x00\x00\x05\x06\x000\x0c2k"
+            == b'\x00\x01\x07example\x03com\x00\x00\x00\x00\x04\x00\x04\x00\x06\x00\x01\x00\x06\x02h2\x02h3\x00\x02\x00\x00\x00\x03\x00\x02\x01\xbb\x00\x04\x00\x10\xb9\xc7l\x99\xb9\xc7m\x99\xb9\xc7n\x99\xb9\xc7o\x99\x00\x05\x00\ttestbytes\x00\x06\x00@&\x06P\xc0\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x02\x00\x00\x00\x00\x00\x00\x00\x00\x01S&\x06P\xc0\x80\x03\x00\x00\x00\x00\x00\x00\x00\x00\x01S'
         )
 
-        record = https_records.HTTPSRecord(1, "", https_records.SVCParams())
+        record = https_records.HTTPSRecord(1, "", {})
         assert https_records.pack(record) == b"\x00\x01\x00"
 
     @given(st.binary())
@@ -111,17 +87,21 @@ class TestHTTPSRecords:
             pass
 
     def test_str(self):
-        params = https_records.SVCParams(
-            mandatory=[1, 2, 3],
-            alpn=["h2", "h3"],
-            no_default_alpn=True,
-            port=8000,
-            ipv4hint=[IPv4Address("192.168.1.1")],
-            ech="test",
-            ipv6hint=[IPv6Address("1050:0000:0000:0000:0005:0600:300c:326b")],
-        )
+        params = {
+            0: b'\x00',
+            1: b'\x01',
+            2: b'',
+            3: b'\x02',
+            4: b'\x03',
+            5: b'\x04',
+            6: b'\x05'
+        }
         record = https_records.HTTPSRecord(1, "example.com", params)
         assert (
             str(record)
-            == "priority=1 target_name=\"example.com\" mandatory=['alpn', 'no-default-alpn', 'port'] alpn=['h2', 'h3'] no-default-alpn=True port=8000 ipv4hint=['192.168.1.1'] ech=\"test\" ipv6hint=['1050::5:600:300c:326b']"
+            == "priority: 1 target_name: 'example.com' {'mandatory': b'\\x00', 'alpn': b'\\x01', 'no_default_alpn': b'', 'port': b'\\x02', 'ipv4hint': b'\\x03', 'ech': b'\\x04', 'ipv6hint': b'\\x05'}"
         )
+
+        params = {111: b'\x00'}
+        record = https_records.HTTPSRecord(1, "example.com", params)
+        assert (str(record) == "priority: 1 target_name: 'example.com' {'key111': b'\\x00'}")

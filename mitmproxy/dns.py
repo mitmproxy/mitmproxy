@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import itertools
 import random
 import struct
@@ -18,6 +19,7 @@ from mitmproxy.net.dns import op_codes
 from mitmproxy.net.dns import response_codes
 from mitmproxy.net.dns import types
 from mitmproxy.net.dns.https_records import HTTPSRecord
+from mitmproxy.net.dns.https_records import SVCParamKeys
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
@@ -110,6 +112,24 @@ class ResourceRecord(serializable.SerializableDataclass):
 
     @https_record.setter
     def https_record(self, record: HTTPSRecord) -> None:
+        self.data = https_records.pack(record)
+
+    @property
+    def https_ech(self) -> str | None:
+        ech_bytes = self.https_record.params.get(SVCParamKeys.ECH.value, None)
+        if ech_bytes is not None:
+            return base64.b64encode(ech_bytes).decode('utf-8')
+        else:
+            return None
+
+    @https_ech.setter
+    def https_ech(self, ech: str | None) -> None:
+        record = self.https_record
+        if ech is None:
+            record.params.pop(SVCParamKeys.ECH.value, None)
+        else:
+            ech_bytes = base64.b64decode(ech.encode("utf-8"))
+            record.params[SVCParamKeys.ECH.value] = ech_bytes
         self.data = https_records.pack(record)
 
     def to_json(self) -> dict:

@@ -28,19 +28,19 @@ class TestResourceRecord:
         assert (
             str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
         )
-        params = dns.https_records.SVCParams(
-            mandatory=[1, 2, 3],
-            alpn=["h2", "h3"],
-            no_default_alpn=True,
-            port=8000,
-            ipv4hint=[ipaddress.IPv4Address("192.168.1.1")],
-            ech="test",
-            ipv6hint=[ipaddress.IPv6Address("1050:0000:0000:0000:0005:0600:300c:326b")],
-        )
+        params = {
+            0: b'\x00',
+            1: b'\x01',
+            2: b'',
+            3: b'\x02',
+            4: b'\x03',
+            5: b'\x04',
+            6: b'\x05'
+        }
         record = dns.https_records.HTTPSRecord(1, "example.com", params)
         assert (
             str(dns.ResourceRecord.HTTPS("example.com", record))
-            == "priority=1 target_name=\"example.com\" mandatory=['alpn', 'no-default-alpn', 'port'] alpn=['h2', 'h3'] no-default-alpn=True port=8000 ipv4hint=['192.168.1.1'] ech=\"test\" ipv6hint=['1050::5:600:300c:326b']"
+            == "priority: 1 target_name: 'example.com' {'mandatory': b'\\x00', 'alpn': b'\\x01', 'no_default_alpn': b'', 'port': b'\\x02', 'ipv4hint': b'\\x03', 'ech': b'\\x04', 'ipv6hint': b'\\x05'}"
         )
         assert (
             str(
@@ -79,10 +79,14 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
-        params = dns.https_records.SVCParams(port=8000)
+        params = {3: b'\x01\xbb'}
         record = dns.https_records.HTTPSRecord(1, "example.org", params)
         rr.https_record = record
         assert rr.https_record == record
+        rr.https_ech = "dGVzdHN0cmluZwo="
+        assert rr.https_ech == "dGVzdHN0cmluZwo="
+        rr.https_ech = None
+        assert rr.https_ech is None
 
 
 class TestMessage:
