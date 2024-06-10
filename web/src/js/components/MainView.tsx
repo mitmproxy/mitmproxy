@@ -4,18 +4,30 @@ import FlowTable from "./FlowTable";
 import FlowView from "./FlowView";
 import { useAppSelector } from "../ducks";
 import CaptureSetup from "./CaptureSetup";
+import CaptureMenu from "./Header/CaptureMenu";
+import { Menu } from "./ProxyApp";
 
-export default function MainView() {
+interface MainViewProps {
+    ActiveMenu: Menu;
+}
+
+export default function MainView({ ActiveMenu }: MainViewProps) {
     const hasSelection = useAppSelector(
         (state) => !!state.flows.byId[state.flows.selected[0]]
     );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
+
     return (
         <div className="main-view">
-            {hasFlows ? <FlowTable /> : <CaptureSetup />}
-
-            {hasSelection && <Splitter key="splitter" />}
-            {hasSelection && <FlowView key="flowDetails" />}
+            {ActiveMenu === CaptureMenu ? (
+                <>Coming soon...</>
+            ) : (
+                <>
+                    {hasFlows ? <FlowTable /> : <CaptureSetup />}
+                    {hasSelection && <Splitter key="splitter" />}
+                    {hasSelection && <FlowView key="flowDetails" />}
+                </>
+            )}
         </div>
     );
 }
