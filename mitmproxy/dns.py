@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import itertools
 import random
 import struct
@@ -13,9 +14,12 @@ from mitmproxy import flow
 from mitmproxy.coretypes import serializable
 from mitmproxy.net.dns import classes
 from mitmproxy.net.dns import domain_names
+from mitmproxy.net.dns import https_records
 from mitmproxy.net.dns import op_codes
 from mitmproxy.net.dns import response_codes
 from mitmproxy.net.dns import types
+from mitmproxy.net.dns.https_records import HTTPSRecord
+from mitmproxy.net.dns.https_records import SVCParamKeys
 
 # DNS parameters taken from https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
 
@@ -64,6 +68,8 @@ class ResourceRecord(serializable.SerializableDataclass):
                 return self.domain_name
             if self.type == types.TXT:
                 return self.text
+            if self.type == types.HTTPS:
+                return str(https_records.unpack(self.data))
         except Exception:
             return f"0x{self.data.hex()} (invalid {types.to_str(self.type)} data)"
         return f"0x{self.data.hex()}"
@@ -99,6 +105,25 @@ class ResourceRecord(serializable.SerializableDataclass):
     @domain_name.setter
     def domain_name(self, name: str) -> None:
         self.data = domain_names.pack(name)
+
+    @property
+    def https_ech(self) -> str | None:
+        record = https_records.unpack(self.data)
+        ech_bytes = record.params.get(SVCParamKeys.ECH.value, None)
+        if ech_bytes is not None:
+            return base64.b64encode(ech_bytes).decode("utf-8")
+        else:
+            return None
+
+    @https_ech.setter
+    def https_ech(self, ech: str | None) -> None:
+        record = https_records.unpack(self.data)
+        if ech is None:
+            record.params.pop(SVCParamKeys.ECH.value, None)
+        else:
+            ech_bytes = base64.b64decode(ech.encode("utf-8"))
+            record.params[SVCParamKeys.ECH.value] = ech_bytes
+        self.data = https_records.pack(record)
 
     def to_json(self) -> dict:
         """
@@ -141,6 +166,13 @@ class ResourceRecord(serializable.SerializableDataclass):
     def TXT(cls, name: str, text: str, *, ttl: int = DEFAULT_TTL) -> ResourceRecord:
         """Create a textual resource record."""
         return cls(name, types.TXT, classes.IN, ttl, text.encode("utf-8"))
+
+    @classmethod
+    def HTTPS(
+        cls, name: str, record: HTTPSRecord, ttl: int = DEFAULT_TTL
+    ) -> ResourceRecord:
+        """Create a HTTPS resource record"""
+        return cls(name, types.HTTPS, classes.IN, ttl, https_records.pack(record))
 
 
 # comments are taken from rfc1035
