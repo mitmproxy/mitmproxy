@@ -15,9 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: install-pinned/ruff@f91b0bd5d5680f7ecf60fcd37860121a4b6dadf5
+      - run: pip install -e .[dev]
       - run: ruff --fix-only .
       - run: ruff format .
+
+      - run: web/gen/all
 
       - name: Run prettier
         run: |
