@@ -674,16 +674,14 @@ def test_server_unreachable(tctx, connect):
 
     playbook << OpenConnection(server)
     playbook >> reply("Connection failed")
-    playbook << http.HttpErrorHook(flow)
-    playbook >> reply()
     if not connect:
-        playbook << SendData(
-            tctx.client, BytesMatching(b"502 Bad Gateway.+Connection failed")
-        )
+        playbook << http.HttpErrorHook(flow)
     else:
-        playbook << SendData(
-            tctx.client, BytesMatching(b"502 Bad Gateway.+CONNECT failed")
-        )
+        playbook << http.HttpConnectErrorHook(flow)
+    playbook >> reply()
+    playbook << SendData(
+        tctx.client, BytesMatching(b"502 Bad Gateway.+(CONNECT|Connection) failed")
+    )
     playbook << CloseConnection(tctx.client)
 
     assert playbook
