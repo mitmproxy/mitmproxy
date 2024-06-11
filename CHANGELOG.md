@@ -24,7 +24,6 @@
 * Releases now come with a Sigstore attestations file to demonstrate build provenance.
   ([f05c050](https://github.com/mitmproxy/mitmproxy/commit/f05c050f615b9ab9963707944c893bc94e738525), @mhils)
 
-
 ## 17 April 2024: mitmproxy 10.3.0
 
 * Add support for editing non text files in a hex editor
