@@ -100,10 +100,16 @@ class HttpConnectUpstreamHook(commands.StartHook):
 @dataclass
 class HttpConnectErrorHook(commands.StartHook):
     """
+<<<<<<< HEAD
     HTTP CONNECT has failed.
 
     This can happen when the upstream server is unreachable or proxy authentication is required.
     In contrast to the `error` hook, `flow.error` is not guaranteed to be set.
+=======
+    A HTTP CONNECT error has occured
+
+    This can happen when the upstream server is unreachable or proxy authentication is required
+>>>>>>> 1e498ac85 (Add HttpConnectErrorHook)
     """
 
     flow: http.HTTPFlow
