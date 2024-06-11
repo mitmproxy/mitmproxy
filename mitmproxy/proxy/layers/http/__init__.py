@@ -27,6 +27,7 @@ from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
 from ._events import ResponseTrailers
+from ._hooks import HttpConnectErrorHook
 from ._hooks import HttpConnectHook
 from ._hooks import HttpErrorHook
 from ._hooks import HttpRequestHeadersHook
@@ -756,11 +757,11 @@ class HttpStream(layer.Layer):
                 self.context.client,
             )
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-        elif self.flow.response.status_code == 502:
+        elif self.flow.response.status_code != 407:
             self.flow.error = flow.Error("CONNECT failed")
-            yield HttpErrorHook(self.flow)
+            yield HttpConnectErrorHook(self.flow)
             yield SendHttp(
-                ResponseProtocolError(self.stream_id, "CONNECT failed"),
+                ResponseProtocolError(self.stream_id, "CONNECT failed", self.flow.response.status_code),
                 self.context.client,
             )
             self.client_state = self.state_errored

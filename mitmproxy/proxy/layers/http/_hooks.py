@@ -96,3 +96,13 @@ class HttpConnectUpstreamHook(commands.StartHook):
     """
 
     flow: http.HTTPFlow
+
+@dataclass
+class HttpConnectErrorHook(commands.StartHook):
+    """
+    A HTTP CONNECT error has occured
+
+    This can happen when the upstream server is unreachable or proxy authentication is required
+    """
+
+    flow: http.HTTPFlow
