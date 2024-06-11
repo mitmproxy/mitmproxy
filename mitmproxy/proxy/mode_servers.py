@@ -271,7 +271,6 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     async def listen(
         self, host: str, port: int
     ) -> list[asyncio.Server | mitmproxy_rs.UdpServer]:
-
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
@@ -294,9 +293,13 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     logger.debug(
                         f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                     )
-                    servers.append(await asyncio.start_server(self.handle_stream, host, port))
+                    servers.append(
+                        await asyncio.start_server(self.handle_stream, host, port)
+                    )
             else:
-                servers.append(await asyncio.start_server(self.handle_stream, host, port))
+                servers.append(
+                    await asyncio.start_server(self.handle_stream, host, port)
+                )
         if self.mode.transport_protocol in ("udp", "both"):
             # we start two servers for dual-stack support.
             # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
@@ -327,6 +330,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 )
 
         return servers
+
 
 class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
     _server: mitmproxy_rs.WireGuardServer | None = None

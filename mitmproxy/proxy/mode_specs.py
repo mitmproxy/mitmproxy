@@ -176,6 +176,7 @@ TCP: Literal["tcp", "udp", "both"] = "tcp"
 UDP: Literal["tcp", "udp", "both"] = "udp"
 BOTH: Literal["tcp", "udp", "both"] = "both"
 
+
 def _check_empty(data):
     if data:
         raise ValueError("mode takes no arguments")
