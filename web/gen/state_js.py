@@ -1,31 +1,15 @@
 #!/usr/bin/env python3
 
 import asyncio
-import gzip
-import io
 import json
-import logging
 import textwrap
-from collections.abc import Sequence
-from contextlib import redirect_stdout
 from pathlib import Path
-from typing import Optional
-from unittest import mock
 from unittest.mock import Mock
 
-import pytest
-import tornado.testing
-from tornado import httpclient
-from tornado import websocket
-
-from mitmproxy import certs
-from mitmproxy import log
 from mitmproxy import options
-from mitmproxy import optmanager
-from mitmproxy.http import Headers
 from mitmproxy.proxy.mode_servers import ServerInstance
-from mitmproxy.test import tflow
-from mitmproxy.tools.web import app, master
+from mitmproxy.tools.web import app
+from mitmproxy.tools.web import master
 
 here = Path(__file__).parent.absolute()
 
@@ -69,15 +53,11 @@ async def make() -> str:
         "export function TBackendState(): Required<BackendState> {\n"
         "    return %s\n"
         "}\n"
-        % textwrap.indent(
-            json.dumps(data, indent=4, sort_keys=True), "    "
-        ).lstrip()
+        % textwrap.indent(json.dumps(data, indent=4, sort_keys=True), "    ").lstrip()
     )
 
     return content
 
 
 if __name__ == "__main__":
-    filename.write_bytes(
-        asyncio.run(make()).encode()
-    )
+    filename.write_bytes(asyncio.run(make()).encode())

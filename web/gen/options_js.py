@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
-from mitmproxy import options
-from mitmproxy.tools.web import master
-from mitmproxy import optmanager
-import io
-from contextlib import redirect_stdout
-import json
 import asyncio
+import io
+import json
+from collections.abc import Sequence
+from contextlib import redirect_stdout
 from pathlib import Path
 
-from collections.abc import Sequence
+from mitmproxy import options
+from mitmproxy import optmanager
+from mitmproxy.tools.web import master
 
 here = Path(__file__).parent.absolute()
 
 filename = here / "../src/js/ducks/_options_gen.ts"
+
 
 def _ts_type(t):
     if t == bool:
@@ -58,7 +59,6 @@ async def make() -> str:
     await m.done()
     return s.getvalue()
 
+
 if __name__ == "__main__":
-    filename.write_bytes(
-        asyncio.run(make()).encode()
-    )
+    filename.write_bytes(asyncio.run(make()).encode())
