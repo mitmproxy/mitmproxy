@@ -9,6 +9,7 @@ import Modal from "./Modal/Modal";
 import { RootState } from "../ducks";
 import { connect } from "react-redux";
 import StartMenu from "./Header/StartMenu";
+import CaptureMenu from "./Header/CaptureMenu";
 
 type ProxyAppMainProps = {
     showEventLog: boolean;
@@ -29,7 +30,7 @@ export interface Menu {
 
 class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
     state: ProxyAppMainState = {
-        ActiveMenu: StartMenu,
+        ActiveMenu: CaptureMenu,
     };
 
     render = () => {

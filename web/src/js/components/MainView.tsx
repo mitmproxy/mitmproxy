@@ -6,6 +6,7 @@ import { useAppSelector } from "../ducks";
 import CaptureSetup from "./CaptureSetup";
 import CaptureMenu from "./Header/CaptureMenu";
 import { Menu } from "./ProxyApp";
+import Modes from "./Modes";
 
 interface MainViewProps {
     ActiveMenu: Menu;
@@ -20,7 +21,7 @@ export default function MainView({ ActiveMenu }: MainViewProps) {
     return (
         <div className="main-view">
             {ActiveMenu === CaptureMenu ? (
-                <>Coming soon...</>
+                <Modes />
             ) : (
                 <>
                     {hasFlows ? <FlowTable /> : <CaptureSetup />}
