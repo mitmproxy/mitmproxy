@@ -24,6 +24,9 @@ jobs:
 
       - run: web/gen/all
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/node-version.txt
       - name: Run prettier
         run: |
           npm ci
