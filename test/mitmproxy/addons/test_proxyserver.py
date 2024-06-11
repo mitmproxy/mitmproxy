@@ -290,7 +290,7 @@ async def test_dns(caplog_async) -> None:
         ps.running()
         await caplog_async.await_log("DNS server listening at")
         assert ps.servers
-        dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
+        dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[1]
         s = await mitmproxy_rs.open_udp_connection(*dns_addr)
         req = tdnsreq()
         s.write(req.packed)

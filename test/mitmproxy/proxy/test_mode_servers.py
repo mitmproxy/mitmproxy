@@ -259,7 +259,7 @@ async def test_udp_start_stop(caplog_async):
         await inst.start()
         assert await caplog_async.await_log("server listening")
 
-        host, port, *_ = inst.listen_addrs[0]
+        host, port, *_ = inst.listen_addrs[1]
         stream = await mitmproxy_rs.open_udp_connection(host, port)
 
         stream.write(b"\x00\x00\x01")
@@ -278,7 +278,7 @@ async def test_udp_start_error():
     with taddons.context():
         inst = ServerInstance.make("dns@127.0.0.1:0", manager)
         await inst.start()
-        port = inst.listen_addrs[0][1]
+        port = inst.listen_addrs[1][1]
         inst2 = ServerInstance.make(f"dns@127.0.0.1:{port}", manager)
         with pytest.raises(
             Exception, match=f"Failed to bind UDP socket to 127.0.0.1:{port}"
@@ -297,7 +297,7 @@ async def test_udp_dual_stack(caplog_async):
         await inst.start()
         assert await caplog_async.await_log("server listening")
 
-        _, port, *_ = inst.listen_addrs[0]
+        _, port, *_ = inst.listen_addrs[2]
         stream = await mitmproxy_rs.open_udp_connection("127.0.0.1", port)
         stream.write(b"\x00\x00\x01")
         assert await caplog_async.await_log("sent an invalid message")
