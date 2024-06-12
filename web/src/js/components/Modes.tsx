@@ -1,14 +1,23 @@
 import * as React from "react";
-import ModeToggle from "./Modes/ModeToggle";
+import HTTPS from "./Modes/HTTPS";
+import Local from "./Modes/Local";
+import Wireguard from "./Modes/Wireguard";
+import Reverse from "./Modes/Reverse";
+
 
 export default function Modes() {
     return (
         <div style={{ padding: "1em 2em" }}>
-            <h3>Intercept Traffic</h3>
+            <h2>Intercept Traffic</h2>
             <p>Configure how you want to intercept traffic with mitmproxy.</p>
 
-            <h4>Recommended</h4>
-            <ModeToggle />
+            <h3 style={{ marginTop: 30, marginBottom: 10 }}>Recommended</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+                <HTTPS />
+                <Local />
+                <Wireguard />
+                <Reverse />
+            </div>
         </div>
     );
 }
