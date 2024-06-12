@@ -30,13 +30,16 @@ from mitmproxy.connection import Address
 from mitmproxy.connection import Client
 from mitmproxy.connection import Connection
 from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import mode_specs
 from mitmproxy.proxy import server_hooks
+from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.context import Context
+from mitmproxy.proxy.layers.http._upstream_proxy import HttpUpstreamProxy
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
@@ -98,6 +101,7 @@ class ConnectionIO:
 
 class ConnectionHandler(metaclass=abc.ABCMeta):
     transports: MutableMapping[Connection, ConnectionIO]
+    via_layer_stacks: MutableMapping[Connection, tunnel.LayerStack]
     timeout_watchdog: TimeoutWatchdog
     client: Client
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
@@ -108,6 +112,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
+        self.via_layer_stacks = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
         self.hook_tasks = set()
@@ -202,6 +207,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             )
             return
 
+        if command.connection.via:
+            address = command.connection.via[1]
+            # support only http upstream proxy for now
+            self.via_layer_stacks[command.connection] = HttpUpstreamProxy.make(self.layer.context.fork(), True) / self.layer
+        else:
+            address = command.connection.address
         async with self.max_conns[command.connection.address]:
             reader: asyncio.StreamReader | mitmproxy_rs.Stream
             writer: asyncio.StreamWriter | mitmproxy_rs.Stream
@@ -209,12 +220,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 command.connection.timestamp_start = time.time()
                 if command.connection.transport_protocol == "tcp":
                     reader, writer = await asyncio.open_connection(
-                        *command.connection.address,
+                        *address,
                         local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
                     reader = writer = await mitmproxy_rs.open_udp_connection(
-                        *command.connection.address,
+                        *address,
                         local_addr=command.connection.sockname,
                     )
                 else:
@@ -250,6 +261,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     addr = f"{human.format_address(command.connection.address)} ({human.format_address(command.connection.peername)})"
                 else:
                     addr = human.format_address(command.connection.address)
+                if command.connection.via:
+                    addr += f" via {human.format_address(command.connection.via[1])}"
                 self.log(f"server connect {addr}")
                 await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
                 self.server_event(events.OpenConnectionCompleted(command, None))
@@ -376,7 +389,17 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     def server_event(self, event: events.Event) -> None:
         self.timeout_watchdog.register_activity()
         try:
-            layer_commands = self.layer.handle_event(event)
+            if (
+                isinstance(event, events.DataReceived)
+                and isinstance(event.connection, Server)
+                and event.connection.via
+            ):
+                # data came from upstream proxy,
+                # send it to via stack to be processed
+                stack = self.via_layer_stacks[event.connection]
+                layer_commands = stack[0].handle_event(event)
+            else:
+                layer_commands = self.layer.handle_event(event)
             for command in layer_commands:
                 if isinstance(command, commands.OpenConnection):
                     assert command.connection not in self.transports

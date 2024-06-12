@@ -206,8 +206,8 @@ class HttpStream(layer.Layer):
             self.client_state = self.state_errored
             return (yield from self.send_response())
 
-        if self.flow.request.method == "CONNECT":
-            return (yield from self.handle_connect())
+        # if self.flow.request.method == "CONNECT":
+        #     return (yield from self.handle_connect())
 
         if self.mode is HTTPMode.transparent:
             # Determine .scheme, .host and .port attributes for transparent requests
@@ -1035,8 +1035,8 @@ class HttpLayer(layer.Layer):
             if event.via:
                 context.server.via = event.via
                 # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in upstream mode.
-                send_connect = event.tls or self.mode != HTTPMode.upstream
-                stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
+                # send_connect = event.tls or self.mode != HTTPMode.upstream
+                # stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
             if event.tls:
                 # Assume that we are in transparent mode and lazily did not open a connection yet.
                 # We don't want the IP (which is the address) as the upstream SNI, but the client's SNI instead.
