@@ -15,16 +15,14 @@
   ([#6821](https://github.com/mitmproxy/mitmproxy/pull/6821), @Prinzhorn)
 * Fix a bug where client replay would not work with proxyauth.
   ([#6866](https://github.com/mitmproxy/mitmproxy/pull/6866), @mhils)
-* Fix slowdown when sending large data over HTTP/2
+* Fix slowdown when sending large amounts of data over HTTP/2.
   ([#6875](https://github.com/mitmproxy/mitmproxy/pull/6875), @aib)
 * Add an option to strip HTTPS records from DNS responses to block encrypted ClientHellos.
   ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
-* Allow parsing of HTTPS records from DNS RDATA
+* Add an API to parse HTTPS records from DNS RDATA.
   ([#6884](https://github.com/mitmproxy/mitmproxy/pull/6884), @errorxyz)
-* Update strip_ech addon to use the new DNS HTTPS records API
-  ([#6905](https://github.com/mitmproxy/mitmproxy/pull/6905), @errorxyz)
-* Fix connect request triggering response hook
-  ([#6906](https://github.com/mitmproxy/mitmproxy/pull/6906), @errorxyz)
+* Releases now come with a Sigstore attestations file to demonstrate build provenance.
+  ([f05c050](https://github.com/mitmproxy/mitmproxy/commit/f05c050f615b9ab9963707944c893bc94e738525), @mhils)
 
 ## 17 April 2024: mitmproxy 10.3.0
 

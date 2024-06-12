@@ -637,16 +637,17 @@ class DnsRebind(RequestHandler):
 
 
 class State(RequestHandler):
+    # Separate method for testability.
+    @staticmethod
+    def get_json(master: mitmproxy.tools.web.master.WebMaster):
+        return {
+            "version": version.VERSION,
+            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
+            "servers": [s.to_json() for s in master.proxyserver.servers],
+        }
+
     def get(self):
-        self.write(
-            {
-                "version": version.VERSION,
-                "contentViews": [
-                    v.name for v in contentviews.views if v.name != "Query"
-                ],
-                "servers": [s.to_json() for s in self.master.proxyserver.servers],
-            }
-        )
+        self.write(State.get_json(self.master))
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
