@@ -35,7 +35,7 @@
         "esbuild-jest": "^0.5.0",
         "gulp": "^4.0.2",
         "gulp-clean-css": "^4.3.0",
-        "gulp-esbuild": "^0.8.5",
+        "gulp-esbuild": "^0.12.0",
         "gulp-less": "^5.0.0",
         "gulp-livereload": "^4.0.2",
         "gulp-notify": "^4.0.0",
