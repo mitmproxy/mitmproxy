@@ -4,7 +4,7 @@ import {
     EventlogToggle,
     MenuToggle,
     OptionsToggle,
-} from "../../../components/Header/MenuToggle";
+} from "../../../components/common/MenuToggle";
 import { Provider } from "react-redux";
 import { TStore } from "../../ducks/tutils";
 import * as optionsEditorActions from "../../../ducks/ui/optionsEditor";

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ModeToggle } from "../common/MenuToggle";
 
 export interface ModeProps {
     title: string;
@@ -13,7 +14,7 @@ export default function Mode(props: ModeProps) {
             <p style={{ color: "#B2B2B2", marginTop: -10 }}>
                 {props.description}
             </p>
-            {props.children}
+            <ModeToggle>{props.children}</ModeToggle>
         </div>
     );
 }
