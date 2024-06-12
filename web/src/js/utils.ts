@@ -141,13 +141,15 @@ export function getDiff(obj1, obj2) {
  *
  * Never throws unless textPromise is rejected.
  */
-export async function copyToClipboard(textPromise: Promise<string>): Promise<void> {
+export async function copyToClipboard(
+    textPromise: Promise<string>
+): Promise<void> {
     // Try the new clipboard APIs first. If that fails, use textarea fallback.
     try {
         await navigator.clipboard.write([
             new ClipboardItem({
-                "text/plain": textPromise
-            })
+                "text/plain": textPromise,
+            }),
         ]);
         return;
     } catch (err) {
