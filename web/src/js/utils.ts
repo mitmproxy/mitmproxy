@@ -135,3 +135,48 @@ export function getDiff(obj1, obj2) {
     }
     return result;
 }
+
+/**
+ * `navigator.clipboard.writeText()`, but with an additional fallback for non-secure contexts.
+ *
+ * Never throws unless textPromise is rejected.
+ */
+export async function copyToClipboard(textPromise: Promise<string>): Promise<void> {
+    // Try the new clipboard APIs first. If that fails, use textarea fallback.
+    try {
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                "text/plain": textPromise
+            })
+        ]);
+        return;
+    } catch (err) {
+        console.warn(err);
+    }
+
+    let text = await textPromise;
+
+    try {
+        await navigator.clipboard.writeText(text);
+        return;
+    } catch (err) {
+        console.warn(err);
+    }
+
+    let t = document.createElement("textarea");
+    t.value = text;
+    t.style.position = "absolute";
+    t.style.opacity = "0";
+    document.body.appendChild(t);
+    try {
+        t.focus();
+        t.select();
+        if (!document.execCommand("copy")) {
+            throw "failed to copy";
+        }
+    } catch {
+        alert(text);
+    } finally {
+        t.remove();
+    }
+}
