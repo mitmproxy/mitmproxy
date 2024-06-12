@@ -39,8 +39,8 @@ from mitmproxy.proxy import mode_specs
 from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.layers.http._upstream_proxy import HttpUpstreamProxy
 from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.layers.http._upstream_proxy import HttpUpstreamProxy
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
@@ -210,7 +210,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if command.connection.via:
             address = command.connection.via[1]
             # support only http upstream proxy for now
-            self.via_layer_stacks[command.connection] = HttpUpstreamProxy.make(self.layer.context.fork(), True) / self.layer
+            self.via_layer_stacks[command.connection] = (
+                HttpUpstreamProxy.make(self.layer.context.fork(), True) / self.layer
+            )
         else:
             address = command.connection.address
         async with self.max_conns[command.connection.address]:
