@@ -390,7 +390,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.timeout_watchdog.register_activity()
         try:
             if (
-                isinstance(event, events.DataReceived)
+                isinstance(event, events.ConnectionEvent)
                 and isinstance(event.connection, Server)
                 and event.connection.via
             ):

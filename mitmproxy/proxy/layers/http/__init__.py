@@ -206,8 +206,8 @@ class HttpStream(layer.Layer):
             self.client_state = self.state_errored
             return (yield from self.send_response())
 
-        # if self.flow.request.method == "CONNECT":
-        #     return (yield from self.handle_connect())
+        if self.flow.request.method == "CONNECT":
+            return (yield from self.handle_connect())
 
         if self.mode is HTTPMode.transparent:
             # Determine .scheme, .host and .port attributes for transparent requests
@@ -707,10 +707,11 @@ class HttpStream(layer.Layer):
 
         self.context.server.address = (self.flow.request.host, self.flow.request.port)
 
-        if self.mode == HTTPMode.regular:
-            yield from self.handle_connect_regular()
-        else:
-            yield from self.handle_connect_upstream()
+        # if self.mode == HTTPMode.regular:
+        #     yield from self.handle_connect_regular()
+        # else:
+        #     yield from self.handle_connect_upstream()
+        yield from self.handle_connect_regular()
 
     def handle_connect_regular(self):
         if (
