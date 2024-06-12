@@ -761,7 +761,9 @@ class HttpStream(layer.Layer):
             self.flow.error = flow.Error("CONNECT failed")
             yield HttpConnectErrorHook(self.flow)
             yield SendHttp(
-                ResponseProtocolError(self.stream_id, "CONNECT failed", self.flow.response.status_code),
+                ResponseProtocolError(
+                    self.stream_id, "CONNECT failed", self.flow.response.status_code
+                ),
                 self.context.client,
             )
             self.client_state = self.state_errored
