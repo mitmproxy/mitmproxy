@@ -97,6 +97,7 @@ class HttpConnectUpstreamHook(commands.StartHook):
 
     flow: http.HTTPFlow
 
+
 @dataclass
 class HttpConnectedHook(commands.StartHook):
     """
@@ -108,6 +109,7 @@ class HttpConnectedHook(commands.StartHook):
     """
 
     flow: http.HTTPFlow
+
 
 @dataclass
 class HttpConnectErrorHook(commands.StartHook):
