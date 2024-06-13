@@ -95,15 +95,13 @@ export function ModeToggle({
 
     const handleToggleMode = () => {
         if (value) {
-          const updatedModes = modes.filter((m) => !m.includes(modeType));
-          dispatch(updateOptions("mode", updatedModes));
+            const updatedModes = modes.filter((m) => !m.includes(modeType));
+            dispatch(updateOptions("mode", updatedModes));
         } else {
-
-          const updatedModes = modes.concat(modeType);
-          dispatch(updateOptions("mode", updatedModes));
+            const updatedModes = modes.concat(modeType);
+            dispatch(updateOptions("mode", updatedModes));
         }
-      };
-      
+    };
 
     return (
         <MenuToggle
