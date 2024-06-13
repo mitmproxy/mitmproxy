@@ -27,6 +27,7 @@ from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
 from ._events import ResponseTrailers
+from ._hooks import HttpConnectedHook
 from ._hooks import HttpConnectErrorHook
 from ._hooks import HttpConnectHook
 from ._hooks import HttpErrorHook
@@ -749,6 +750,7 @@ class HttpStream(layer.Layer):
             )
 
         if 200 <= self.flow.response.status_code < 300:
+            yield HttpConnectedHook(self.flow)
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
             self._handle_event = self.passthrough
             yield from self.child_layer.handle_event(events.Start())

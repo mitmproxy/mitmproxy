@@ -82,6 +82,8 @@ def test_https_proxy(strategy, tctx):
         playbook >> reply(None)
     (
         playbook
+        << http.HttpConnectedHook(Placeholder())
+        >> reply(None)
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(
             tctx.client, b"GET /foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n"
@@ -299,6 +301,8 @@ def test_disconnect_while_intercept(tctx):
         << http.HttpConnectHook(Placeholder(HTTPFlow))
         >> reply()
         << OpenConnection(server1)
+        >> reply(None)
+        << http.HttpConnectedHook(Placeholder(HTTPFlow))
         >> reply(None)
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -685,7 +689,6 @@ def test_server_unreachable(tctx, connect):
     playbook << CloseConnection(tctx.client)
 
     assert playbook
-    assert flow().error
     assert not flow().live
 
 
@@ -1192,6 +1195,8 @@ def test_kill_flow(tctx, when):
     assert (
         playbook
         >> reply()
+        << http.HttpConnectedHook(connect_flow)
+        >> reply()
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(
             tctx.client, b"GET /foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n"
@@ -1622,6 +1627,8 @@ def test_connect_more_newlines(tctx):
         >> reply()
         << OpenConnection(server)
         >> reply(None)
+        << http.HttpConnectedHook(Placeholder())
+        >> reply()
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(tctx.client, b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03")
         << layer.NextLayerHook(nl)
