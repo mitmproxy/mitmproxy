@@ -34,7 +34,7 @@ export const tls: FlowColumn = ({ flow }) => {
                 "col-tls",
                 flow.client_conn.tls_established
                     ? "col-tls-https"
-                    : "col-tls-http"
+                    : "col-tls-http",
             )}
         />
     );
@@ -49,7 +49,6 @@ export const icon: FlowColumn = ({ flow }) => {
     );
 };
 icon.headerName = "";
-
 
 export const path: FlowColumn = ({ flow }) => {
     let err;
@@ -74,18 +73,15 @@ export const path: FlowColumn = ({ flow }) => {
 };
 path.headerName = "Path";
 
-
 export const method: FlowColumn = ({ flow }) => (
     <td className="col-method">{getMethod(flow)}</td>
 );
 method.headerName = "Method";
 
-
 export const version: FlowColumn = ({ flow }) => (
     <td className="col-http-version">{getVersion(flow)}</td>
 );
 version.headerName = "Version";
-
 
 export const status: FlowColumn = ({ flow }) => {
     let color = "darkred";
@@ -125,12 +121,10 @@ export const status: FlowColumn = ({ flow }) => {
 };
 status.headerName = "Status";
 
-
 export const size: FlowColumn = ({ flow }) => {
     return <td className="col-size">{formatSize(getTotalSize(flow))}</td>;
 };
 size.headerName = "Size";
-
 
 export const time: FlowColumn = ({ flow }) => {
     const start = startTime(flow),
@@ -143,7 +137,6 @@ export const time: FlowColumn = ({ flow }) => {
 };
 time.headerName = "Time";
 
-
 export const timestamp: FlowColumn = ({ flow }) => {
     const start = startTime(flow);
     return (
@@ -153,7 +146,6 @@ export const timestamp: FlowColumn = ({ flow }) => {
     );
 };
 timestamp.headerName = "Start time";
-
 
 const markers = {
     ":red_circle:": "🔴",
@@ -203,15 +195,13 @@ export const quickactions: FlowColumn = ({ flow }) => {
 };
 quickactions.headerName = "";
 
-
 export const comment: FlowColumn = ({ flow }) => {
     const text = flow.comment;
     return <td className="col-comment">{text}</td>;
 };
 comment.headerName = "Comment";
 
-
-const FlowColumns: {[key in keyof typeof sortFunctions]: FlowColumn} = {
+const FlowColumns: { [key in keyof typeof sortFunctions]: FlowColumn } = {
     icon,
     method,
     version,
@@ -223,5 +213,5 @@ const FlowColumns: {[key in keyof typeof sortFunctions]: FlowColumn} = {
     timestamp,
     tls,
     comment,
-}
+};
 export default FlowColumns;

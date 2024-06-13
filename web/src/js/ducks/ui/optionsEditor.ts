@@ -15,7 +15,6 @@ type OptionsEditorState = Partial<{
     [name in keyof OptionsState]: OptionUpdate<OptionsState[name]>;
 }>;
 
-
 const defaultState: OptionsEditorState = {};
 
 export default function reducer(state = defaultState, action) {

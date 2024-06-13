@@ -21,7 +21,7 @@ describe("MenuToggle Component", () => {
             menuToggle = renderer.create(
                 <MenuToggle onChange={changeFn} value={true}>
                     <p>foo children</p>
-                </MenuToggle>
+                </MenuToggle>,
             ),
             tree = menuToggle.toJSON();
         expect(tree).toMatchSnapshot();
@@ -30,17 +30,19 @@ describe("MenuToggle Component", () => {
 
 test("OptionsToggle", async () => {
     fetchMock.mockReject(new Error("backend missing"));
-    
+
     const { asFragment, store } = render(
-            <OptionsToggle name="anticache">toggle anticache</OptionsToggle>
-        );
+        <OptionsToggle name="anticache">toggle anticache</OptionsToggle>,
+    );
 
     expect(asFragment()).toMatchSnapshot();
     fireEvent.click(screen.getByText("toggle anticache"));
 
     await waitFor(() =>
-        expect(store.getState().ui.optionsEditor.anticache?.error).toContain("backend missing")
-    )
+        expect(store.getState().ui.optionsEditor.anticache?.error).toContain(
+            "backend missing",
+        ),
+    );
 });
 
 test("EventlogToggle", async () => {

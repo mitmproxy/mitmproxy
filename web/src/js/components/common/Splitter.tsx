@@ -47,7 +47,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
             0,
             (this.props.axis === "x"
                 ? prev.offsetWidth + e.pageX
-                : prev.offsetHeight + e.pageY) - this.state.startPos
+                : prev.offsetHeight + e.pageY) - this.state.startPos,
         )}px`;
         node.nextElementSibling.style.flex = "1 1 auto";
 
@@ -70,7 +70,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         // that their viewport may have changed.
         window.setTimeout(
             () => window.dispatchEvent(new CustomEvent("resize")),
-            1
+            1,
         );
     }
 
@@ -103,7 +103,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
             <div
                 className={classnames(
                     "splitter",
-                    this.props.axis === "x" ? "splitter-x" : "splitter-y"
+                    this.props.axis === "x" ? "splitter-x" : "splitter-y",
                 )}
             >
                 <div

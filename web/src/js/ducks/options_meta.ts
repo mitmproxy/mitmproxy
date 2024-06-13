@@ -16,7 +16,10 @@ type OptionsMetaState = Partial<{
 
 export const defaultState: OptionsMetaState = {};
 
-const reducer: Reducer<OptionsMetaState> = (state = defaultState, action): OptionsMetaState => {
+const reducer: Reducer<OptionsMetaState> = (
+    state = defaultState,
+    action,
+): OptionsMetaState => {
     switch (action.type) {
         case RECEIVE:
             return action.data as OptionsMetaState;

@@ -55,7 +55,7 @@ function esbuild(dev) {
                 minify: !dev,
                 keepNames: true,
                 bundle: true,
-            })
+            }),
         )
         .pipe(gulp.dest("../mitmproxy/tools/web/static"))
         .pipe(livereload({ auto: false }));
@@ -100,8 +100,8 @@ function peg() {
             replace(
                 "module.exports = ",
                 'import * as flowutils from "../flow/utils"\n' +
-                    "export default "
-            )
+                    "export default ",
+            ),
         )
         .pipe(gulp.dest("src/"));
 }
@@ -112,7 +112,7 @@ const dev = gulp.parallel(
     styles_app_dev,
     peg,
     scripts_dev,
-    templates
+    templates,
 );
 
 const prod = gulp.parallel(
@@ -121,7 +121,7 @@ const prod = gulp.parallel(
     styles_app_prod,
     peg,
     scripts_prod,
-    templates
+    templates,
 );
 
 exports.dev = dev;

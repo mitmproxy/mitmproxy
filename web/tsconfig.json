@@ -6,5 +6,5 @@
         "jsx": "react",
         "strictNullChecks": true,
         "skipLibCheck": true
-    },
+    }
 }

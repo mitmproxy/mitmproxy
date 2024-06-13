@@ -1,6 +1,6 @@
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
-import { RootState, } from "../../ducks";
+import { RootState } from "../../ducks";
 import { reducer } from "../../ducks/store";
 import { DNSFlow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
@@ -61,7 +61,11 @@ export const testState: RootState = {
         },
         optionsEditor: {
             anticache: { isUpdating: true, error: false, value: true },
-            cert_passphrase: { isUpdating: false, error: "incorrect password", value: "correcthorsebatterystaple" },
+            cert_passphrase: {
+                isUpdating: false,
+                error: "incorrect password",
+                value: "correcthorsebatterystaple",
+            },
         },
     },
     options: defaultOptions,
@@ -122,5 +126,5 @@ export const testState: RootState = {
     },
 };
 
-export const TStore = () => configureStore({reducer, preloadedState: testState});
-
+export const TStore = () =>
+    configureStore({ reducer, preloadedState: testState });

@@ -83,5 +83,5 @@ export default connect(
     }),
     {
         onKeyDown,
-    }
+    },
 )(ProxyAppMain);

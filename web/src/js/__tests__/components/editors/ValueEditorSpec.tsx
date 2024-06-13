@@ -10,7 +10,7 @@ test("ValueEditor", async () => {
             ref={(x) => (editor.current = x)}
             content="hello world"
             onEditDone={onEditDone}
-        />
+        />,
     );
     expect(asFragment()).toMatchSnapshot();
 

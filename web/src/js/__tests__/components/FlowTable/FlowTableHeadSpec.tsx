@@ -14,12 +14,15 @@ test("FlowTableHead Component", async () => {
                         <FlowTableHead />
                     </thead>
                 </table>
-            </Provider>
+            </Provider>,
         );
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Size"));
-    expect(store.getState().flows.sort).toEqual({column: "size", desc: false})
+    expect(store.getState().flows.sort).toEqual({
+        column: "size",
+        desc: false,
+    });
     fireEvent.click(screen.getByText("Size"));
-    expect(store.getState().flows.sort).toEqual({column: "size", desc: true})
+    expect(store.getState().flows.sort).toEqual({ column: "size", desc: true });
 });

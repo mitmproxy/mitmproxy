@@ -15,7 +15,7 @@ export class MessageUtils {
 
     static get_first_header(
         message: HTTPMessage,
-        regex: RegExp
+        regex: RegExp,
     ): string | undefined {
         //FIXME: Cache Invalidation.
         // @ts-ignore
@@ -58,7 +58,7 @@ export class MessageUtils {
         flow: Flow,
         part: HTTPMessage | "request" | "response" | "messages",
         view?: string,
-        lines?: number
+        lines?: number,
     ): string {
         if (flow.type === "http" && part === flow.request) {
             part = "request";
@@ -192,7 +192,6 @@ export const canReplay = (flow: Flow): boolean => {
     return flow.type === "http" && !flow.websocket;
 };
 
-
 export const getIcon = (flow: Flow): string => {
     if (flow.type !== "http") {
         if (flow.client_conn.tls_version === "QUIC") {
@@ -238,7 +237,7 @@ export const mainPath = (flow: Flow): string => {
         case "tcp":
         case "udp":
             return `${flow.client_conn.peername.join(
-                ":"
+                ":",
             )} ↔ ${flow.server_conn?.address?.join(":")}`;
         case "dns":
             return `${flow.request.questions
@@ -292,7 +291,7 @@ export const sortFunctions = {
     path: mainPath,
     method: getMethod,
     version: getVersion,
-    status: statusCode ,
+    status: statusCode,
     size: getTotalSize,
     time: (flow) => {
         const start = startTime(flow),

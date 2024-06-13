@@ -35,7 +35,7 @@ export const defaultState: FlowsState = {
 
 export default function reducer(
     state: FlowsState = defaultState,
-    action
+    action,
 ): FlowsState {
     switch (action.type) {
         case ADD:
@@ -45,7 +45,7 @@ export default function reducer(
             let storeAction = store[action.cmd](
                 action.data,
                 makeFilter(state.filter),
-                makeSort(state.sort)
+                makeSort(state.sort),
             );
 
             let selected = state.selected;
@@ -88,8 +88,8 @@ export default function reducer(
                     state,
                     store.setFilter(
                         makeFilter(action.filter),
-                        makeSort(state.sort)
-                    )
+                        makeSort(state.sort),
+                    ),
                 ),
             };
 

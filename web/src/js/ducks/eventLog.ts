@@ -25,7 +25,7 @@ const defaultState: EventLogState = {
 
 export default function reduce(
     state: EventLogState = defaultState,
-    action
+    action,
 ): EventLogState {
     switch (action.type) {
         case TOGGLE_VISIBILITY:
@@ -44,7 +44,7 @@ export default function reduce(
                 filters,
                 ...store.reduce(
                     state,
-                    store.setFilter<EventLogItem>((log) => filters[log.level])
+                    store.setFilter<EventLogItem>((log) => filters[log.level]),
                 ),
             };
 
@@ -56,8 +56,8 @@ export default function reduce(
                     state,
                     store[action.cmd](
                         action.data,
-                        (log) => state.filters[log.level]
-                    )
+                        (log) => state.filters[log.level],
+                    ),
                 ),
             };
 

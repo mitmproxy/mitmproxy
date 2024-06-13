@@ -12,7 +12,7 @@ describe("Button Component", () => {
                     icon="icon"
                 >
                     <a>foo</a>
-                </Button>
+                </Button>,
             ),
             tree = button.toJSON();
         expect(tree).toMatchSnapshot();
@@ -26,7 +26,7 @@ describe("Button Component", () => {
                     disabled
                 >
                     <a>foo</a>
-                </Button>
+                </Button>,
             ),
             tree = button.toJSON();
         expect(tree).toMatchSnapshot();

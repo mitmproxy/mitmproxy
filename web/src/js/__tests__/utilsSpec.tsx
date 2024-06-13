@@ -23,10 +23,10 @@ describe("formatTimeDelta", () => {
 describe("formatTimeStamp", () => {
     it("should return formatted time", () => {
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: false })
+            utils.formatTimeStamp(1483228800, { milliseconds: false }),
         ).toEqual("2017-01-01 00:00:00");
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: true })
+            utils.formatTimeStamp(1483228800, { milliseconds: true }),
         ).toEqual("2017-01-01 00:00:00.000");
     });
 });
@@ -34,7 +34,7 @@ describe("formatTimeStamp", () => {
 describe("formatAddress", () => {
     it("should return formatted addresses", () => {
         expect(utils.formatAddress(["127.0.0.1", 8080])).toEqual(
-            "127.0.0.1:8080"
+            "127.0.0.1:8080",
         );
         expect(utils.formatAddress(["::1", 8080])).toEqual("[::1]:8080");
     });
@@ -45,7 +45,7 @@ describe("reverseString", () => {
         let str1 = "abc",
             str2 = "xyz";
         expect(
-            utils.reverseString(str1) > utils.reverseString(str2)
+            utils.reverseString(str1) > utils.reverseString(str2),
         ).toBeTruthy();
     });
 });

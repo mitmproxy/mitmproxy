@@ -9,7 +9,7 @@ enableFetchMocks();
 describe("option reducer", () => {
     it("should return initial state", () => {
         expect(reduceOptions(undefined, { type: "other" })).toEqual(
-            optionsActions.defaultState
+            optionsActions.defaultState,
         );
     });
 
@@ -38,11 +38,19 @@ test("sendUpdate", async () => {
 
     fetchMock.mockResponseOnce("fooerror", { status: 404 });
     await store.dispatch(optionsActions.update("intercept", "~~~"));
-    await waitFor(() => expect(store.getState().ui.optionsEditor.intercept).toEqual({error: "fooerror", isUpdating: false, value: "~~~"}))
+    await waitFor(() =>
+        expect(store.getState().ui.optionsEditor.intercept).toEqual({
+            error: "fooerror",
+            isUpdating: false,
+            value: "~~~",
+        }),
+    );
 
     fetchMock.mockResponseOnce("", { status: 200 });
     await store.dispatch(optionsActions.update("intercept", "valid"));
-    await waitFor(() => expect(store.getState().ui.optionsEditor.intercept).toBeUndefined())
+    await waitFor(() =>
+        expect(store.getState().ui.optionsEditor.intercept).toBeUndefined(),
+    );
 });
 
 test("save", async () => {
@@ -59,13 +67,16 @@ test("addInterceptFilter", async () => {
     await store.dispatch(optionsActions.addInterceptFilter("~u foo"));
     expect(fetchMock.mock.calls[0][1]?.body).toEqual('{"intercept":"~u foo"}');
 
-    store.dispatch({type: optionsActions.UPDATE, data: { intercept: {value: "~u foo"}}})
+    store.dispatch({
+        type: optionsActions.UPDATE,
+        data: { intercept: { value: "~u foo" } },
+    });
 
     await store.dispatch(optionsActions.addInterceptFilter("~u foo"));
     expect(fetchMock.mock.calls).toHaveLength(1);
 
     await store.dispatch(optionsActions.addInterceptFilter("~u bar"));
     expect(fetchMock.mock.calls[1][1]?.body).toEqual(
-        '{"intercept":"~u foo | ~u bar"}'
+        '{"intercept":"~u foo | ~u bar"}',
     );
 });

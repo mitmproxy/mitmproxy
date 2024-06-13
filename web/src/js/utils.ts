@@ -33,7 +33,7 @@ export var formatTimeDelta = function (milliseconds) {
 
 export var formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {}
+    { milliseconds = true } = {},
 ) {
     let utc = new Date(seconds * 1000);
     let ts = utc.toISOString().replace("T", " ").replace("Z", "");
@@ -60,7 +60,7 @@ export function reverseString(s) {
             String,
             _.map(s.split(""), function (c) {
                 return 0xffff - c.charCodeAt(0);
-            })
+            }),
         ) + end
     );
 }
@@ -74,7 +74,7 @@ const xsrf = getCookie("_xsrf");
 
 export function fetchApi(
     url: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
         options.headers = options.headers || {};
@@ -142,7 +142,7 @@ export function getDiff(obj1, obj2) {
  * Never throws unless textPromise is rejected.
  */
 export async function copyToClipboard(
-    textPromise: Promise<string>
+    textPromise: Promise<string>,
 ): Promise<void> {
     // Try the new clipboard APIs first. If that fails, use textarea fallback.
     try {

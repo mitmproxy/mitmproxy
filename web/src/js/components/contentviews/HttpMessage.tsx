@@ -21,15 +21,15 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
     const dispatch = useAppDispatch();
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
-        (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto"
+        (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
     );
     const editorRef = useRef<CodeEditor>(null);
     const [maxLines, setMaxLines] = useState<number>(
-        useAppSelector((state) => state.options.content_view_lines_cutoff)
+        useAppSelector((state) => state.options.content_view_lines_cutoff),
     );
     const showMore = useCallback(
         () => setMaxLines(Math.max(1024, maxLines * 2)),
-        [maxLines]
+        [maxLines],
     );
     const [edit, setEdit] = useState<boolean>(false);
     let url;
@@ -40,7 +40,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             flow,
             message,
             contentView,
-            maxLines + 1
+            maxLines + 1,
         );
     }
     const content = useContent(url, message.contentHash);

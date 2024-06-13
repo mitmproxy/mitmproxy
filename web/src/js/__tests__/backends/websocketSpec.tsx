@@ -19,7 +19,7 @@ test("websocket backend", async () => {
     fetchMock.mockOnceIf("./options", "{}");
 
     let actions: Array<UnknownAction> = [];
-    const backend = new WebSocketBackend({dispatch: (e) => actions.push(e)});
+    const backend = new WebSocketBackend({ dispatch: (e) => actions.push(e) });
 
     backend.onOpen();
 
@@ -51,7 +51,7 @@ test("websocket backend", async () => {
                 resource: "options",
             },
             connectionActions.connectionEstablished(),
-        ])
+        ]),
     );
 
     actions.length = 0;
@@ -84,7 +84,7 @@ test("websocket backend", async () => {
                 resource: "events",
             },
             connectionActions.connectionEstablished(),
-        ])
+        ]),
     );
     actions.length = 0;
     expect(fetchMock.mock.calls).toHaveLength(5);
@@ -92,9 +92,7 @@ test("websocket backend", async () => {
     console.error = jest.fn();
     backend.onClose(new CloseEvent("Connection closed"));
     expect(console.error).toHaveBeenCalledTimes(1);
-    expect(actions[0].type).toEqual(
-        connectionActions.ConnectionState.ERROR
-    );
+    expect(actions[0].type).toEqual(connectionActions.ConnectionState.ERROR);
     actions.length = 0;
 
     backend.onError(null);

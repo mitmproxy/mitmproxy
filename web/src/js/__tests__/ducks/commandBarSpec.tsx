@@ -5,7 +5,7 @@ test("CommandBar", async () => {
         visible: false,
     });
     expect(
-        reduceCommandBar(undefined, commandBarActions.toggleVisibility())
+        reduceCommandBar(undefined, commandBarActions.toggleVisibility()),
     ).toEqual({
         visible: true,
     });

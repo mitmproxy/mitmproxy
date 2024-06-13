@@ -9,10 +9,7 @@ import { TStore } from "./ducks/tutils";
 export { waitFor, fireEvent, act, screen } from "@testing-library/react";
 export { userEvent };
 
-export function render(
-    ui,
-    { store = TStore(), ...renderOptions } = {}
-) {
+export function render(ui, { store = TStore(), ...renderOptions } = {}) {
     function Wrapper({ children }) {
         return <Provider store={store}>{children}</Provider>;
     }

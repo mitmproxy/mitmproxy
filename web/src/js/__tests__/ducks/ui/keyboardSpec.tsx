@@ -8,28 +8,31 @@ import { TStore } from "../tutils";
 jest.mock("../../../utils");
 
 describe("onKeyDown", () => {
-
     const makeStore = () => {
         const store = TStore();
-        store.dispatch({ type: flowsActions.RECEIVE, cmd: "receive", data: []});
+        store.dispatch({
+            type: flowsActions.RECEIVE,
+            cmd: "receive",
+            data: [],
+        });
         store.dispatch(flowsActions.setFilter(""));
         store.dispatch(flowsActions.select("1"));
         for (let i = 1; i <= 12; i++) {
             store.dispatch({
                 type: flowsActions.ADD,
                 cmd: "add",
-                data: { 
-                    id: i + "", 
-                    request: true, 
-                    response: true, 
-                    type: "http", 
-                    intercepted: true, 
-                    modified: true 
+                data: {
+                    id: i + "",
+                    request: true,
+                    response: true,
+                    type: "http",
+                    intercepted: true,
+                    modified: true,
                 },
             });
         }
         return store;
-    }
+    };
 
     let createKeyEvent = (key, ctrlKey = false) => {
         // @ts-ignore
@@ -104,7 +107,7 @@ describe("onKeyDown", () => {
         expect(runCommand).toHaveBeenCalledWith(
             "view.flows.create",
             "get",
-            "https://example.com/"
+            "https://example.com/",
         );
     });
 
@@ -120,35 +123,47 @@ describe("onKeyDown", () => {
         const store = makeStore();
         // resume all
         store.dispatch(createKeyEvent("A"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", {
+            method: "POST",
+        });
         // resume
         store.getState().flows.byId[
             store.getState().flows.selected[0]
         ].intercepted = true;
         store.dispatch(createKeyEvent("a"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", {
+            method: "POST",
+        });
     });
 
     it("should handle replay action", () => {
         const store = makeStore();
         store.dispatch(createKeyEvent("r"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/1/replay", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/replay", {
+            method: "POST",
+        });
     });
 
     it("should handle revert action", () => {
         const store = makeStore();
         store.dispatch(createKeyEvent("v"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/1/revert", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/revert", {
+            method: "POST",
+        });
     });
 
     it("should handle kill action", () => {
         const store = makeStore();
         // kill all
         store.dispatch(createKeyEvent("X"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/kill", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/kill", {
+            method: "POST",
+        });
         // kill
         store.dispatch(createKeyEvent("x"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/1/kill", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/kill", {
+            method: "POST",
+        });
     });
 
     it("should handle clear action", () => {
@@ -176,7 +191,7 @@ describe("onKeyDown", () => {
 
     it("should close modal", () => {
         const store = makeStore();
-        store.dispatch(modalActions.setActiveModal("OptionModal"))
+        store.dispatch(modalActions.setActiveModal("OptionModal"));
         expect(store.getState().ui.modal.activeModal).toEqual("OptionModal");
         store.dispatch(createKeyEvent("Escape"));
         expect(store.getState().ui.modal.activeModal).toEqual(undefined);
