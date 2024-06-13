@@ -1,12 +1,22 @@
+import { OptionsState } from "../_options_gen";
 import { HIDE_MODAL } from "./modal";
 
 export const OPTION_UPDATE_START = "UI_OPTION_UPDATE_START";
 export const OPTION_UPDATE_SUCCESS = "UI_OPTION_UPDATE_SUCCESS";
 export const OPTION_UPDATE_ERROR = "UI_OPTION_UPDATE_ERROR";
 
-const defaultState = {
-    /* optionName -> {isUpdating, value (client-side), error} */
-};
+interface OptionUpdate<T> {
+    isUpdating: boolean;
+    value: T;
+    error: string | false;
+}
+
+type OptionsEditorState = Partial<{
+    [name in keyof OptionsState]: OptionUpdate<OptionsState[name]>;
+}>;
+
+
+const defaultState: OptionsEditorState = {};
 
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
@@ -68,6 +78,6 @@ export function updateError(option, error) {
     return {
         type: OPTION_UPDATE_ERROR,
         option,
-        error,
+        error: String(error),
     };
 }

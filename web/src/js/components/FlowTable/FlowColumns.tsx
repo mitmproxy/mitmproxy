@@ -1,13 +1,17 @@
 import React, { ReactElement, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from "../../ducks";
 import classnames from "classnames";
 import {
     canReplay,
     endTime,
     getTotalSize,
-    RequestUtils,
-    ResponseUtils,
     startTime,
+    sortFunctions,
+    getIcon,
+    mainPath,
+    statusCode,
+    getMethod,
+    getVersion,
 } from "../../flow/utils";
 import { formatSize, formatTimeDelta, formatTimeStamp } from "../../utils";
 import * as flowActions from "../../ducks/flows";
@@ -21,7 +25,6 @@ interface FlowColumn {
     (props: FlowColumnProps): JSX.Element;
 
     headerName: string; // Shown in the UI
-    sortKey: (flow: Flow) => any;
 }
 
 export const tls: FlowColumn = ({ flow }) => {
@@ -37,7 +40,6 @@ export const tls: FlowColumn = ({ flow }) => {
     );
 };
 tls.headerName = "";
-tls.sortKey = (flow) => flow.type === "http" && flow.request.scheme;
 
 export const icon: FlowColumn = ({ flow }) => {
     return (
@@ -47,65 +49,7 @@ export const icon: FlowColumn = ({ flow }) => {
     );
 };
 icon.headerName = "";
-icon.sortKey = (flow) => getIcon(flow);
 
-const getIcon = (flow: Flow): string => {
-    if (flow.type !== "http") {
-        if (flow.client_conn.tls_version === "QUIC") {
-            return `resource-icon-quic`;
-        }
-        return `resource-icon-${flow.type}`;
-    }
-    if (flow.websocket) {
-        return "resource-icon-websocket";
-    }
-    if (!flow.response) {
-        return "resource-icon-plain";
-    }
-
-    var contentType = ResponseUtils.getContentType(flow.response) || "";
-
-    if (flow.response.status_code === 304) {
-        return "resource-icon-not-modified";
-    }
-    if (300 <= flow.response.status_code && flow.response.status_code < 400) {
-        return "resource-icon-redirect";
-    }
-    if (contentType.indexOf("image") >= 0) {
-        return "resource-icon-image";
-    }
-    if (contentType.indexOf("javascript") >= 0) {
-        return "resource-icon-js";
-    }
-    if (contentType.indexOf("css") >= 0) {
-        return "resource-icon-css";
-    }
-    if (contentType.indexOf("html") >= 0) {
-        return "resource-icon-document";
-    }
-
-    return "resource-icon-plain";
-};
-
-const mainPath = (flow: Flow): string => {
-    switch (flow.type) {
-        case "http":
-            return RequestUtils.pretty_url(flow.request);
-        case "tcp":
-        case "udp":
-            return `${flow.client_conn.peername.join(
-                ":"
-            )} ↔ ${flow.server_conn?.address?.join(":")}`;
-        case "dns":
-            return `${flow.request.questions
-                .map((q) => `${q.name} ${q.type}`)
-                .join(", ")} = ${
-                (flow.response?.answers.map((q) => q.data).join(", ") ??
-                    "...") ||
-                "?"
-            }`;
-    }
-};
 
 export const path: FlowColumn = ({ flow }) => {
     let err;
@@ -129,39 +73,19 @@ export const path: FlowColumn = ({ flow }) => {
     );
 };
 path.headerName = "Path";
-path.sortKey = (flow) => mainPath(flow);
+
 
 export const method: FlowColumn = ({ flow }) => (
-    <td className="col-method">{method.sortKey(flow)}</td>
+    <td className="col-method">{getMethod(flow)}</td>
 );
 method.headerName = "Method";
-method.sortKey = (flow) => {
-    switch (flow.type) {
-        case "http":
-            return flow.websocket
-                ? flow.client_conn.tls_established
-                    ? "WSS"
-                    : "WS"
-                : flow.request.method;
-        case "dns":
-            return flow.request.op_code;
-        default:
-            return flow.type.toUpperCase();
-    }
-};
+
 
 export const version: FlowColumn = ({ flow }) => (
-    <td className="col-http-version">{version.sortKey(flow)}</td>
+    <td className="col-http-version">{getVersion(flow)}</td>
 );
 version.headerName = "Version";
-version.sortKey = (flow) => {
-    switch (flow.type) {
-        case "http":
-            return flow.request.http_version;
-        default:
-            return "";
-    }
-};
+
 
 export const status: FlowColumn = ({ flow }) => {
     let color = "darkred";
@@ -195,27 +119,18 @@ export const status: FlowColumn = ({ flow }) => {
 
     return (
         <td className="col-status" style={{ color: color }}>
-            {status.sortKey(flow)}
+            {statusCode(flow)}
         </td>
     );
 };
 status.headerName = "Status";
-status.sortKey = (flow) => {
-    switch (flow.type) {
-        case "http":
-            return flow.response?.status_code;
-        case "dns":
-            return flow.response?.response_code;
-        default:
-            return undefined;
-    }
-};
+
 
 export const size: FlowColumn = ({ flow }) => {
     return <td className="col-size">{formatSize(getTotalSize(flow))}</td>;
 };
 size.headerName = "Size";
-size.sortKey = (flow) => getTotalSize(flow);
+
 
 export const time: FlowColumn = ({ flow }) => {
     const start = startTime(flow),
@@ -227,11 +142,7 @@ export const time: FlowColumn = ({ flow }) => {
     );
 };
 time.headerName = "Time";
-time.sortKey = (flow) => {
-    const start = startTime(flow),
-        end = endTime(flow);
-    return start && end && end - start;
-};
+
 
 export const timestamp: FlowColumn = ({ flow }) => {
     const start = startTime(flow);
@@ -242,7 +153,7 @@ export const timestamp: FlowColumn = ({ flow }) => {
     );
 };
 timestamp.headerName = "Start time";
-timestamp.sortKey = (flow) => startTime(flow);
+
 
 const markers = {
     ":red_circle:": "🔴",
@@ -255,7 +166,7 @@ const markers = {
 };
 
 export const quickactions: FlowColumn = ({ flow }) => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     let [open, setOpen] = useState(false);
 
     let resume_or_replay: ReactElement | null = null;
@@ -290,18 +201,17 @@ export const quickactions: FlowColumn = ({ flow }) => {
         </td>
     );
 };
+quickactions.headerName = "";
+
 
 export const comment: FlowColumn = ({ flow }) => {
     const text = flow.comment;
     return <td className="col-comment">{text}</td>;
 };
 comment.headerName = "Comment";
-comment.sortKey = (flow) => flow.comment;
 
-quickactions.headerName = "";
-quickactions.sortKey = (flow) => 0;
 
-export default {
+const FlowColumns: {[key in keyof typeof sortFunctions]: FlowColumn} = {
     icon,
     method,
     version,
@@ -313,4 +223,5 @@ export default {
     timestamp,
     tls,
     comment,
-};
+}
+export default FlowColumns;

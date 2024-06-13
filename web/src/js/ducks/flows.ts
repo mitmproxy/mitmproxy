@@ -1,8 +1,9 @@
 import { fetchApi } from "../utils";
+
 import * as store from "./utils/store";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
-import FlowColumns from "../components/FlowTable/FlowColumns";
+import { sortFunctions } from "../flow/utils";
 
 export const ADD = "FLOWS_ADD";
 export const UPDATE = "FLOWS_UPDATE";
@@ -20,7 +21,7 @@ interface FlowFilterFn extends store.FilterFn<Flow> {}
 export interface FlowsState extends store.State<Flow> {
     highlight?: string;
     filter?: string;
-    sort: { column?: keyof typeof FlowColumns; desc: boolean };
+    sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: string[];
 }
 
@@ -127,13 +128,13 @@ export function makeSort({
     column,
     desc,
 }: {
-    column?: keyof typeof FlowColumns;
+    column?: keyof typeof sortFunctions;
     desc: boolean;
 }): FlowSortFn {
     if (!column) {
         return (a, b) => 0;
     }
-    const sortKeyFun = FlowColumns[column].sortKey;
+    const sortKeyFun = sortFunctions[column];
     return (a, b) => {
         const ka = sortKeyFun(a);
         const kb = sortKeyFun(b);

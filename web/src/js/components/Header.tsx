@@ -7,6 +7,8 @@ import FlowMenu from "./Header/FlowMenu";
 import ConnectionIndicator from "./Header/ConnectionIndicator";
 import HideInStatic from "./common/HideInStatic";
 import { useAppSelector } from "../ducks";
+import { shallowEqual } from 'react-redux'
+
 
 interface Menu {
     (): JSX.Element;
@@ -15,8 +17,9 @@ interface Menu {
 }
 
 export default function Header() {
-    const selectedFlows = useAppSelector((state) =>
-            state.flows.selected.filter((id) => id in state.flows.byId)
+    const selectedFlows = useAppSelector(
+            (state) => state.flows.selected.filter((id) => id in state.flows.byId),
+            shallowEqual
         ),
         [ActiveMenu, setActiveMenu] = useState<Menu>(() => StartMenu),
         [wasFlowSelected, setWasFlowSelected] = useState(false);

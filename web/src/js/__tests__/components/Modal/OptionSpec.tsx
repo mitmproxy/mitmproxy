@@ -1,6 +1,7 @@
 import * as React from "react";
 import renderer from "react-test-renderer";
 import { Options, ChoicesOption } from "../../../components/Modal/Option";
+import { act } from "react-test-renderer";
 
 describe("BooleanOption Component", () => {
     let BooleanOption = Options["bool"],
@@ -96,7 +97,7 @@ describe("StringOption Component", () => {
 
     it("should handle onChange", () => {
         let mockEvent = { target: { value: "a\nb\nc\n" } };
-        tree.props.onChange(mockEvent);
+        act(() => tree.props.onChange(mockEvent));
         expect(onChangeFn).toBeCalledWith(["a", "b", "c"]);
     });
 });
