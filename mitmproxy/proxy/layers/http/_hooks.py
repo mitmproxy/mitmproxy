@@ -110,6 +110,7 @@ class HttpConnectedHook(commands.StartHook):
 
     flow: http.HTTPFlow
 
+
 @dataclass
 class HttpConnectErrorHook(commands.StartHook):
     """
