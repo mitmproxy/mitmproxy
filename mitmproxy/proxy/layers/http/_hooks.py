@@ -99,6 +99,18 @@ class HttpConnectUpstreamHook(commands.StartHook):
 
 
 @dataclass
+class HttpConnectedHook(commands.StartHook):
+    """
+    HTTP CONNECT was successful
+
+    warning::
+    This may fire before an upstream connection has been established
+    if `connection_strategy` is set to `lazy` (default)
+    """
+
+    flow: http.HTTPFlow
+
+@dataclass
 class HttpConnectErrorHook(commands.StartHook):
     """
 <<<<<<< HEAD
