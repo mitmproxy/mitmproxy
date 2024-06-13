@@ -284,15 +284,16 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.bind(("", 0))
-                    fixed_port = s.getsockname()[1]
+                    port = s.getsockname()[1]
                     s.close()
                     servers.append(
-                        await asyncio.start_server(self.handle_stream, host, fixed_port)
+                        await asyncio.start_server(self.handle_stream, host, port)
                     )
                 except Exception as e:
                     logger.debug(
                         f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                     )
+                    port = 0
                     servers.append(
                         await asyncio.start_server(self.handle_stream, host, port)
                     )
@@ -309,17 +310,16 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     port,
                     self.handle_udp_stream,
                 )
+                servers.append(ipv4)
                 try:
                     ipv6 = await mitmproxy_rs.start_udp_server(
                         "::",
                         ipv4.getsockname()[1],
                         self.handle_udp_stream,
                     )
+                    servers.append(ipv6) # pragma: no cover
                 except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
-                    servers.append(ipv4)
-                else:  # pragma: no cover
-                    servers.extend([ipv4, ipv6])
             else:
                 servers.append(
                     await mitmproxy_rs.start_udp_server(
