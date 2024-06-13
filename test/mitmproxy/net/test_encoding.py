@@ -96,11 +96,10 @@ def test_cache():
 
 
 def test_zstd():
-
     FRAME_SIZE = 1024
 
     # Create payload of 1024b
-    test_content = 'a' * FRAME_SIZE
+    test_content = "a" * FRAME_SIZE
 
     # Compress it, will result a single frame
     single_frame = encoding.encode_zstd(test_content.encode())
