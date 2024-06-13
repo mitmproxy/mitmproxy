@@ -4,6 +4,8 @@ import * as eventLogActions from "../../ducks/eventLog";
 import * as commandBarActions from "../../ducks/commandBar";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as optionsActions from "../../ducks/options";
+import { ModeType } from "../Modes/Mode";
+import { update as updateOptions } from "../../ducks/options";
 
 type MenuToggleProps = {
     value: boolean;
@@ -78,10 +80,37 @@ export function CommandBarToggle() {
     );
 }
 
-export function ModeToggle({ children }: { children: React.ReactNode }) {
-    const [value, setValue] = React.useState(false); //just temprary
+export function ModeToggle({
+    children,
+    modeType,
+}: {
+    children: React.ReactNode;
+    modeType: ModeType;
+}) {
+    const dispatch = useDispatch();
+    const modes = useAppSelector((state) => state.options.mode);
+    const value = useAppSelector((state) =>
+        state.options.mode.includes(modeType)
+    );
+
+    const handleToggleMode = () => {
+        if (value) {
+          const updatedModes = modes.filter((m) => !m.includes(modeType));
+          dispatch(updateOptions("mode", updatedModes));
+        } else {
+
+          const updatedModes = modes.concat(modeType);
+          dispatch(updateOptions("mode", updatedModes));
+        }
+      };
+      
+
     return (
-        <MenuToggle value={value} onChange={() => setValue(!value)} className="mode-entry">
+        <MenuToggle
+            value={value}
+            onChange={handleToggleMode}
+            className="mode-entry"
+        >
             {children}
         </MenuToggle>
     );
