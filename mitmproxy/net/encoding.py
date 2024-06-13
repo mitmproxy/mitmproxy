@@ -174,7 +174,7 @@ def decode_zstd(content: bytes) -> bytes:
     if not content:
         return b""
     zstd_ctx = zstd.ZstdDecompressor()
-    return zstd_ctx.stream_reader(BytesIO(content)).read()
+    return zstd_ctx.stream_reader(BytesIO(content), read_across_frames=True).read()
 
 
 def encode_zstd(content: bytes) -> bytes:
