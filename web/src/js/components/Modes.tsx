@@ -4,7 +4,6 @@ import Local from "./Modes/Local";
 import Wireguard from "./Modes/Wireguard";
 import Reverse from "./Modes/Reverse";
 
-
 export default function Modes() {
     return (
         <div style={{ padding: "1em 2em" }}>

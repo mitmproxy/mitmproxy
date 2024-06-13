@@ -81,7 +81,11 @@ export function CommandBarToggle() {
 export function ModeToggle({ children }: { children: React.ReactNode }) {
     const [value, setValue] = React.useState(false); //just temprary
     return (
-        <MenuToggle value={value} onChange={() => setValue(!value)} className="mode-entry">
+        <MenuToggle
+            value={value}
+            onChange={() => setValue(!value)}
+            className="mode-entry"
+        >
             {children}
         </MenuToggle>
     );

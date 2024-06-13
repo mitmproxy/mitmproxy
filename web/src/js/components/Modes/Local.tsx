@@ -1,5 +1,5 @@
-import * as React from 'react';
-import Mode from './Mode';
+import * as React from "react";
+import Mode from "./Mode";
 
 export default function Local() {
     return (

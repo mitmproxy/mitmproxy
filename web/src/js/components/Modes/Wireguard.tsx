@@ -1,5 +1,5 @@
-import * as React from 'react';
-import Mode from './Mode';
+import * as React from "react";
+import Mode from "./Mode";
 
 export default function Wireguard() {
     return (
@@ -9,5 +9,5 @@ export default function Wireguard() {
         >
             <p>Run WireGuard Server</p>
         </Mode>
-    )
+    );
 }
