@@ -282,11 +282,7 @@ async def test_udp_start_error():
         with pytest.raises(
             Exception, match=f"Failed to bind UDP socket to 127.0.0.1:{port}"
         ):
-            await mitmproxy_rs.start_udp_server(
-                "127.0.0.1",
-                port,
-                MagicMock()
-            )
+            await mitmproxy_rs.start_udp_server("127.0.0.1", port, MagicMock())
         await inst.stop()
 
 

@@ -317,7 +317,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                         ipv4.getsockname()[1],
                         self.handle_udp_stream,
                     )
-                    servers.append(ipv6) # pragma: no cover
+                    servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
             else:
