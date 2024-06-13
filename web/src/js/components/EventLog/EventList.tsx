@@ -57,7 +57,7 @@ class EventLogList extends Component<EventLogListProps, EventLogListState> {
             viewportTop: viewport.scrollTop,
             viewportHeight: viewport.offsetHeight,
             itemHeights: this.props.events.map(
-                (entry) => this.heights[entry.id]
+                (entry) => this.heights[entry.id],
             ),
         });
 

@@ -7,7 +7,7 @@ import CaptureSetup from "./CaptureSetup";
 
 export default function MainView() {
     const hasSelection = useAppSelector(
-        (state) => !!state.flows.byId[state.flows.selected[0]]
+        (state) => !!state.flows.byId[state.flows.selected[0]],
     );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
     return (

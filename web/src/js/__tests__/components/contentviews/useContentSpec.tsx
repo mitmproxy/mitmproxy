@@ -27,6 +27,6 @@ test("network error", async () => {
     fetchMock.mockRejectOnce(new Error("I/O error"));
     render(<TComp url="/content" hash="hash" />);
     await waitFor(() =>
-        screen.getByText("Error getting content: Error: I/O error.")
+        screen.getByText("Error getting content: Error: I/O error."),
     );
 });

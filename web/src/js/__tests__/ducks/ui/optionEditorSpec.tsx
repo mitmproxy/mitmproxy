@@ -10,7 +10,7 @@ describe("optionsEditor reducer", () => {
     it("should handle option update start", () => {
         let state = reduceOptionsEditor(
             undefined,
-            optionsEditorActions.startUpdate("foo", "bar")
+            optionsEditorActions.startUpdate("foo", "bar"),
         );
         expect(state).toEqual({
             foo: { error: false, isUpdating: true, value: "bar" },
@@ -21,19 +21,19 @@ describe("optionsEditor reducer", () => {
         expect(
             reduceOptionsEditor(
                 undefined,
-                optionsEditorActions.updateSuccess("foo")
-            )
+                optionsEditorActions.updateSuccess("foo"),
+            ),
         ).toEqual({ foo: undefined });
     });
 
     it("should handle option update error", () => {
         let state = reduceOptionsEditor(
             undefined,
-            optionsEditorActions.startUpdate("foo", "bar")
+            optionsEditorActions.startUpdate("foo", "bar"),
         );
         state = reduceOptionsEditor(
             state,
-            optionsEditorActions.updateError("foo", "errorMsg")
+            optionsEditorActions.updateError("foo", "errorMsg"),
         );
         expect(state).toEqual({
             foo: { error: "errorMsg", isUpdating: false, value: "bar" },
@@ -41,11 +41,11 @@ describe("optionsEditor reducer", () => {
         // boolean type
         state = reduceOptionsEditor(
             undefined,
-            optionsEditorActions.startUpdate("foo", true)
+            optionsEditorActions.startUpdate("foo", true),
         );
         state = reduceOptionsEditor(
             state,
-            optionsEditorActions.updateError("foo", "errorMsg")
+            optionsEditorActions.updateError("foo", "errorMsg"),
         );
         expect(state).toEqual({
             foo: { error: "errorMsg", isUpdating: false, value: false },
@@ -54,7 +54,7 @@ describe("optionsEditor reducer", () => {
 
     it("should handle hide modal", () => {
         expect(reduceOptionsEditor(undefined, { type: HIDE_MODAL })).toEqual(
-            {}
+            {},
         );
     });
 });

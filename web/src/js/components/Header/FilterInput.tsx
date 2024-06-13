@@ -10,7 +10,7 @@ type FilterInputProps = {
     placeholder: string;
     value: string;
     onChange: (
-        value
+        value,
     ) => { type: string; filter?: string; highlight?: string } | void;
 };
 

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useDispatch } from "react-redux";
 import * as eventLogActions from "../../ducks/eventLog";
 import * as commandBarActions from "../../ducks/commandBar";
 import { useAppDispatch, useAppSelector } from "../../ducks";
@@ -42,7 +41,7 @@ export function OptionsToggle({ name, children }: OptionsToggleProps) {
 }
 
 export function EventlogToggle() {
-    const dispatch = useDispatch(),
+    const dispatch = useAppDispatch(),
         visible = useAppSelector((state) => state.eventLog.visible);
 
     return (
@@ -56,7 +55,7 @@ export function EventlogToggle() {
 }
 
 export function CommandBarToggle() {
-    const dispatch = useDispatch(),
+    const dispatch = useAppDispatch(),
         visible = useAppSelector((state) => state.commandBar.visible);
 
     return (

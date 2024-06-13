@@ -28,6 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <Provider store={store}>
             <ProxyApp />
         </Provider>,
-        document.getElementById("mitmproxy")
+        document.getElementById("mitmproxy"),
     );
 });

@@ -16,7 +16,7 @@ test("LineRenderer", async () => {
 
     const showMore = jest.fn();
     const { asFragment } = render(
-        <LineRenderer lines={lines} maxLines={1} showMore={showMore} />
+        <LineRenderer lines={lines} maxLines={1} showMore={showMore} />,
     );
     expect(asFragment()).toMatchSnapshot();
     fireEvent.click(screen.getByText("Show more"));
@@ -25,7 +25,7 @@ test("LineRenderer", async () => {
 
 test("No lines", async () => {
     const { asFragment } = render(
-        <LineRenderer lines={[]} maxLines={1} showMore={() => 0} />
+        <LineRenderer lines={[]} maxLines={1} showMore={() => 0} />,
     );
     expect(asFragment()).toMatchSnapshot();
 });

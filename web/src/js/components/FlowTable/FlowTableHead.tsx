@@ -10,7 +10,7 @@ export default React.memo(function FlowTableHead() {
         sortDesc = useAppSelector((state) => state.flows.sort.desc),
         sortColumn = useAppSelector((state) => state.flows.sort.column),
         displayColumnNames = useAppSelector(
-            (state) => state.options.web_columns
+            (state) => state.options.web_columns,
         );
 
     const sortType = sortDesc ? "sort-desc" : "sort-asc";
@@ -25,7 +25,7 @@ export default React.memo(function FlowTableHead() {
                 <th
                     className={classnames(
                         `col-${Column.name}`,
-                        sortColumn === Column.name && sortType
+                        sortColumn === Column.name && sortType,
                     )}
                     key={Column.name}
                     onClick={() =>
@@ -34,8 +34,8 @@ export default React.memo(function FlowTableHead() {
                                 Column.name === sortColumn && sortDesc
                                     ? undefined
                                     : Column.name,
-                                Column.name !== sortColumn ? false : !sortDesc
-                            )
+                                Column.name !== sortColumn ? false : !sortDesc,
+                            ),
                         )
                     }
                 >

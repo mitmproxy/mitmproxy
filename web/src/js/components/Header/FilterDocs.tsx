@@ -26,7 +26,7 @@ export default class FilterDocs extends Component<
     componentDidMount() {
         if (!FilterDocs.xhr) {
             FilterDocs.xhr = fetchApi("/filter-help").then((response) =>
-                response.json()
+                response.json(),
             );
             FilterDocs.xhr.catch(() => {
                 FilterDocs.xhr = null;
@@ -52,7 +52,7 @@ export default class FilterDocs extends Component<
                             key={cmd[1]}
                             onClick={(e) =>
                                 this.props.selectHandler(
-                                    cmd[0].split(" ")[0] + " "
+                                    cmd[0].split(" ")[0] + " ",
                                 )
                             }
                         >

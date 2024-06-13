@@ -110,7 +110,7 @@ function StringSequenceOption({ value, onChange, ...props }) {
             newValue
                 .split("\n")
                 .map((line) => line.trim())
-                .filter((line) => line !== "")
+                .filter((line) => line !== ""),
         );
     };
 
@@ -167,5 +167,5 @@ export default connect(
     }),
     (dispatch, { name }) => ({
         onChange: (value) => dispatch(updateOptions(name, value)),
-    })
+    }),
 )(PureOption);
