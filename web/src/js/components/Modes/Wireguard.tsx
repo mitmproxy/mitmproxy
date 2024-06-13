@@ -10,5 +10,5 @@ export default function Wireguard() {
         >
             <p>Run WireGuard Server</p>
         </Mode>
-    )
+    );
 }
