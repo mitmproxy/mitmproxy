@@ -113,7 +113,7 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             http.HttpConnectHook,
             http.HttpConnectUpstreamHook,
             http.HttpConnectErrorHook,
-            http.HttpConnectedHook
+            http.HttpConnectedHook,
         ],
     )
 
