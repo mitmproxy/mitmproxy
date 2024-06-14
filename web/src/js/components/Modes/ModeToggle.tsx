@@ -6,11 +6,7 @@ type ModeToggleProps = {
     children: React.ReactNode;
 };
 
-export function ModeToggle({
-    value,
-    onChange,
-    children,
-}: ModeToggleProps) {
+export function ModeToggle({ value, onChange, children }: ModeToggleProps) {
     return (
         <div className="mode-entry">
             <label>
