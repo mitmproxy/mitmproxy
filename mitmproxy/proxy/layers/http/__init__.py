@@ -28,6 +28,8 @@ from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
 from ._events import ResponseTrailers
 from ._hooks import HttpConnectHook
+from ._hooks import HttpConnectedHook
+from ._hooks import HttpConnectErrorHook
 from ._hooks import HttpErrorHook
 from ._hooks import HttpRequestHeadersHook
 from ._hooks import HttpRequestHook
@@ -748,16 +750,30 @@ class HttpStream(layer.Layer):
             )
 
         if 200 <= self.flow.response.status_code < 300:
+            yield HttpConnectedHook(self.flow)
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
             self._handle_event = self.passthrough
             yield from self.child_layer.handle_event(events.Start())
+        else:
+            yield HttpConnectErrorHook(self.flow)
+            self.client_state = self.state_errored
+            self.flow.live = False
+
+        content = self.flow.response.raw_content
+        done_after_headers = not (content or self.flow.response.trailers)
+        yield SendHttp(
+            ResponseHeaders(self.stream_id, self.flow.response, done_after_headers),
+            self.context.client,
+        )
+        if content:
+            yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
+
+        if self.flow.response.trailers:
             yield SendHttp(
-                ResponseHeaders(self.stream_id, self.flow.response, True),
+                ResponseTrailers(self.stream_id, self.flow.response.trailers),
                 self.context.client,
             )
-            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-        else:
-            yield from self.send_response()
+        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     @expect(RequestData, RequestEndOfMessage, events.Event)
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:
