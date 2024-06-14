@@ -2,6 +2,7 @@ import { fetchApi } from "../../utils";
 import { ModeState, updateMode } from "../modes";
 
 const TOGGLE_REGULAR = "TOGGLE_REGULAR";
+const ERROR_REGULAR = "ERROR_REGULAR";
 
 interface RegularState extends ModeState {}
 
@@ -10,25 +11,14 @@ const initialState: RegularState = {
 };
 
 export const toggleRegular = () => {
-    return async (dispatch, getState) => {
-        const { active, listen_port, listen_host } = getState().modes.regular;
+    return async (dispatch) => {
+        dispatch({ type: TOGGLE_REGULAR });
 
-        let baseMode = "regular";
+        const result = await dispatch(updateMode());
 
-        if (listen_host) {
-            baseMode += `@${listen_host}`;
-        }
-
-        if (listen_port) {
-            baseMode += `:${listen_port}`;
-        }
-
-        const result = await updateMode(baseMode, active);
-
-        if (result.success) {
-            dispatch({ type: TOGGLE_REGULAR });
-        } else {
+        if (!result.success) {
             console.error("error", result.error);
+            dispatch({ type: ERROR_REGULAR, error: result.error });
         }
     };
 };
@@ -39,6 +29,11 @@ const regularReducer = (state = initialState, action): RegularState => {
             return {
                 ...state,
                 active: !state.active,
+            };
+        case ERROR_REGULAR:
+            return {
+                ...state,
+                error: action.error,
             };
         default:
             return state;

@@ -5,7 +5,8 @@ import { toggleRegular } from "../../ducks/modes/regular";
 
 export default function Regular() {
     const dispatch = useAppDispatch(),
-        active = useAppSelector((state) => state.modes.regular.active);
+        active = useAppSelector((state) => state.modes.regular.active),
+        error = useAppSelector((state) => state.modes.regular.error);
 
     return (
         <div>
@@ -20,6 +21,7 @@ export default function Regular() {
             >
                 Run HTTP/S Proxy
             </ModeToggle>
+            {error && <div className="mode-error text-danger">{error}</div>}
         </div>
     );
 }
