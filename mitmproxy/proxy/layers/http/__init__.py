@@ -754,23 +754,28 @@ class HttpStream(layer.Layer):
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
             self._handle_event = self.passthrough
             yield from self.child_layer.handle_event(events.Start())
-            yield SendHttp(
-                ResponseHeaders(self.stream_id, self.flow.response, True),
-                self.context.client,
-            )
-            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-        elif self.flow.response.status_code != 407:
+        else:
             yield HttpConnectErrorHook(self.flow)
-            yield SendHttp(
-                ResponseProtocolError(
-                    self.stream_id, "CONNECT failed", self.flow.response.status_code
-                ),
-                self.context.client,
-            )
             self.client_state = self.state_errored
             self.flow.live = False
-        else:
-            yield from self.send_response()
+
+        content = self.flow.response.raw_content
+        done_after_headers = not (content or self.flow.response.trailers)
+        yield SendHttp(
+            ResponseHeaders(self.stream_id, self.flow.response, done_after_headers),
+            self.context.client,
+        )
+        if content:
+            yield SendHttp(
+                ResponseData(self.stream_id, content), self.context.client
+            )
+
+        if self.flow.response.trailers:
+            yield SendHttp(
+                ResponseTrailers(self.stream_id, self.flow.response.trailers),
+                self.context.client,
+            )
+        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     @expect(RequestData, RequestEndOfMessage, events.Event)
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:

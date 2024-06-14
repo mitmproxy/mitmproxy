@@ -684,9 +684,10 @@ def test_server_unreachable(tctx, connect):
         playbook << http.HttpConnectErrorHook(flow)
     playbook >> reply()
     playbook << SendData(
-        tctx.client, BytesMatching(b"502 Bad Gateway.+(CONNECT|Connection) failed")
+        tctx.client, BytesMatching(b"502 Bad Gateway.+Connection failed")
     )
-    playbook << CloseConnection(tctx.client)
+    if not connect:
+        playbook << CloseConnection(tctx.client)
 
     assert playbook
     assert not flow().live
@@ -1651,9 +1652,7 @@ def test_connect_unauthorized(tctx):
         >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
         << http.HttpConnectHook(flow)
         >> reply(side_effect=require_auth)
-        # This isn't ideal - we should probably have a custom CONNECT error hook here.
-        # See also: test_server_unreachable
-        << http.HttpResponseHook(flow)
+        << http.HttpConnectErrorHook(flow)
         >> reply()
         << SendData(
             tctx.client,
