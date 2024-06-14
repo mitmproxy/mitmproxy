@@ -21,6 +21,7 @@ import thunk, {
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import backendState from "./backendState";
 import options_meta from "./options_meta";
+import modes from "./modes";
 
 // @ts-ignore
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
@@ -34,6 +35,7 @@ export const rootReducer = combineReducers({
     options,
     options_meta,
     backendState,
+    modes,
 });
 export type RootState = ReturnType<typeof rootReducer>;
 
