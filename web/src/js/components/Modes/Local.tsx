@@ -1,14 +1,18 @@
 import * as React from "react";
-import Mode, { ModeType } from "./Mode";
+import { ModeToggle } from "./ModeToggle";
 
 export default function Local() {
+    const [active, setActive] = React.useState(false); // temporary
+
     return (
-        <Mode
-            title="Local Applications"
-            description="Transparently Intercept local application(s)"
-            type={ModeType.LOCAL}
-        >
-            <p>Intercept traffic for</p>
-        </Mode>
+        <div>
+            <h4 className="mode-title">Local Applications</h4>
+            <p className="mode-description">
+                Transparently Intercept local application(s).
+            </p>
+            <ModeToggle value={active} onChange={() => setActive(!active)}>
+                Intercept traffic for
+            </ModeToggle>
+        </div>
     );
 }

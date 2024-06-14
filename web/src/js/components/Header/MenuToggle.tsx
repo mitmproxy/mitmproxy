@@ -4,24 +4,16 @@ import * as eventLogActions from "../../ducks/eventLog";
 import * as commandBarActions from "../../ducks/commandBar";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as optionsActions from "../../ducks/options";
-import { ModeType } from "../Modes/Mode";
-import { update as updateOptions } from "../../ducks/options";
 
 type MenuToggleProps = {
     value: boolean;
     onChange: (e: React.ChangeEvent) => void;
     children: React.ReactNode;
-    className: string;
 };
 
-export function MenuToggle({
-    value,
-    onChange,
-    children,
-    className,
-}: MenuToggleProps) {
+export function MenuToggle({ value, onChange, children }: MenuToggleProps) {
     return (
-        <div className={className}>
+        <div className="menu-entry">
             <label>
                 <input type="checkbox" checked={value} onChange={onChange} />
                 {children}
@@ -43,7 +35,6 @@ export function OptionsToggle({ name, children }: OptionsToggleProps) {
         <MenuToggle
             value={!!value}
             onChange={() => dispatch(optionsActions.update(name, !value))}
-            className="menu-entry"
         >
             {children}
         </MenuToggle>
@@ -58,7 +49,6 @@ export function EventlogToggle() {
         <MenuToggle
             value={visible}
             onChange={() => dispatch(eventLogActions.toggleVisibility())}
-            className="menu-entry"
         >
             Display Event Log
         </MenuToggle>
@@ -73,43 +63,8 @@ export function CommandBarToggle() {
         <MenuToggle
             value={visible}
             onChange={() => dispatch(commandBarActions.toggleVisibility())}
-            className="menu-entry"
         >
             Display Command Bar
-        </MenuToggle>
-    );
-}
-
-export function ModeToggle({
-    children,
-    modeType,
-}: {
-    children: React.ReactNode;
-    modeType: ModeType;
-}) {
-    const dispatch = useDispatch();
-    const modes = useAppSelector((state) => state.options.mode);
-    const value = useAppSelector((state) =>
-        state.options.mode.includes(modeType)
-    );
-
-    const handleToggleMode = () => {
-        if (value) {
-            const updatedModes = modes.filter((m) => !m.includes(modeType));
-            dispatch(updateOptions("mode", updatedModes));
-        } else {
-            const updatedModes = modes.concat(modeType);
-            dispatch(updateOptions("mode", updatedModes));
-        }
-    };
-
-    return (
-        <MenuToggle
-            value={value}
-            onChange={handleToggleMode}
-            className="mode-entry"
-        >
-            {children}
         </MenuToggle>
     );
 }

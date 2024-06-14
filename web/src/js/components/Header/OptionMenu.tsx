@@ -3,7 +3,7 @@ import {
     CommandBarToggle,
     EventlogToggle,
     OptionsToggle,
-} from "../common/MenuToggle";
+} from "./MenuToggle";
 import Button from "../common/Button";
 import DocsLink from "../common/DocsLink";
 import HideInStatic from "../common/HideInStatic";
