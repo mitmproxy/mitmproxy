@@ -766,9 +766,7 @@ class HttpStream(layer.Layer):
             self.context.client,
         )
         if content:
-            yield SendHttp(
-                ResponseData(self.stream_id, content), self.context.client
-            )
+            yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
 
         if self.flow.response.trailers:
             yield SendHttp(
