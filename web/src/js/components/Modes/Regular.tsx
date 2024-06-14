@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleRegular } from "../../ducks/modes/regularDuck";
+import { toggleRegular } from "../../ducks/modes/regular";
 
 export default function Regular() {
     const dispatch = useAppDispatch(),
