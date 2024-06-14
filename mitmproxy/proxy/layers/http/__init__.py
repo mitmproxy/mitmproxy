@@ -27,9 +27,9 @@ from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
 from ._events import ResponseTrailers
-from ._hooks import HttpConnectHook
 from ._hooks import HttpConnectedHook
 from ._hooks import HttpConnectErrorHook
+from ._hooks import HttpConnectHook
 from ._hooks import HttpErrorHook
 from ._hooks import HttpRequestHeadersHook
 from ._hooks import HttpRequestHook
