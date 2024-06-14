@@ -279,7 +279,9 @@ async def test_udp_start_error():
         inst = ServerInstance.make("reverse:udp://127.0.0.1:1234@127.0.0.1:0", manager)
         await inst.start()
         port = inst.listen_addrs[0][1]
-        inst2 = ServerInstance.make(f"reverse:udp://127.0.0.1:1234@127.0.0.1:{port}", manager)
+        inst2 = ServerInstance.make(
+            f"reverse:udp://127.0.0.1:1234@127.0.0.1:{port}", manager
+        )
         with pytest.raises(
             Exception, match=f"Failed to bind UDP socket to 127.0.0.1:{port}"
         ):
