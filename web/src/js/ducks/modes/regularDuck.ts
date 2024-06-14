@@ -11,16 +11,16 @@ const initialState: RegularState = {
 
 export const toggleRegular = () => {
     return async (dispatch, getState) => {
-        const {active ,listen_port, listen_host} = getState().modes.regular;
+        const { active, listen_port, listen_host } = getState().modes.regular;
 
-        let baseMode = "regular"
+        let baseMode = "regular";
 
-        if(listen_host) {
-            baseMode += `@${listen_host}`
+        if (listen_host) {
+            baseMode += `@${listen_host}`;
         }
-        
-        if(listen_port) {
-            baseMode += `:${listen_port}`
+
+        if (listen_port) {
+            baseMode += `:${listen_port}`;
         }
 
         const result = await updateMode(baseMode, active);

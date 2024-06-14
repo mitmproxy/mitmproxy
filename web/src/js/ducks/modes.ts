@@ -1,6 +1,6 @@
-import { combineReducers } from 'redux';
-import regularReducer from './modes/regularDuck';
-import { fetchApi } from '../utils';
+import { combineReducers } from "redux";
+import regularReducer from "./modes/regularDuck";
+import { fetchApi } from "../utils";
 
 export interface ModeState {
     active: boolean;
