@@ -21,7 +21,7 @@ export default function Reverse() {
 
     let inner = (
         <span>
-            &nbsp;<b>{protocol === "" ? "Select" : protocol}{" "}</b>
+            &nbsp;<b>{protocol === "" ? "Select" : protocol} </b>
             <span className="caret" />
         </span>
     );
