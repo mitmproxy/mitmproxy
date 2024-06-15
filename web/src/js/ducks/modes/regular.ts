@@ -1,4 +1,3 @@
-import { fetchApi } from "../../utils";
 import { ModeState, updateMode } from "../modes";
 
 const TOGGLE_REGULAR = "TOGGLE_REGULAR";
@@ -8,6 +7,21 @@ interface RegularState extends ModeState {}
 
 const initialState: RegularState = {
     active: true,
+};
+
+export const getMode = (modes) => {
+    const regularMode = modes.regular;
+    let mode = "regular";
+    if (regularMode.active) {
+        if (regularMode.listen_host) {
+            mode += `@${regularMode.listen_host}`;
+        }
+        if (regularMode.listen_port) {
+            mode += `:${regularMode.listen_port}`;
+        }
+        return mode;
+    }
+    return ""
 };
 
 export const toggleRegular = () => {

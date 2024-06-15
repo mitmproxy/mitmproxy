@@ -1,5 +1,7 @@
 import { combineReducers } from "redux";
-import regularReducer from "./modes/regular";
+import regularReducer, {
+    getMode as getRegularModeConfig,
+} from "./modes/regular";
 import { fetchApi } from "../utils";
 
 export interface ModeState {
@@ -12,23 +14,11 @@ export interface ModeState {
 export const updateMode = () => {
     return async (_, getState) => {
         try {
-            const state = getState().modes;
+            const modes = getState().modes;
 
-            const activeModes: string[] = [];
-
-            Object.keys(state).forEach((key) => {
-                const modeState = state[key];
-                if (modeState.active) {
-                    let mode = key;
-                    if (modeState.listen_host) {
-                        mode += `@${modeState.listen_host}`;
-                    }
-                    if (modeState.listen_port) {
-                        mode += `:${modeState.listen_port}`;
-                    }
-                    activeModes.push(mode);
-                }
-            });
+            const activeModes: string[] = [getRegularModeConfig(modes)].filter(
+                (mode) => mode !== ""
+            );
             console.log(activeModes);
             const response = await fetchApi.put("/options", {
                 mode: activeModes,
