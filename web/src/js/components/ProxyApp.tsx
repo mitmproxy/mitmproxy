@@ -8,7 +8,6 @@ import Footer from "./Footer";
 import Modal from "./Modal/Modal";
 import { RootState } from "../ducks";
 import { connect } from "react-redux";
-import StartMenu from "./Header/StartMenu";
 import CaptureMenu from "./Header/CaptureMenu";
 
 type ProxyAppMainProps = {
@@ -78,12 +77,27 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
     };
 
     componentDidMount() {
-        window.addEventListener("keydown", this.props.onKeyDown);
+        //window.addEventListener("keydown", this.props.onKeyDown);
+        this.updateKeyDownListener(this.state.ActiveMenu);
+    }
+
+    componentDidUpdate(_, prevState: ProxyAppMainState) {
+        if (prevState.ActiveMenu !== this.state.ActiveMenu) {
+            this.updateKeyDownListener(this.state.ActiveMenu);
+        }
     }
 
     componentWillUnmount() {
         window.removeEventListener("keydown", this.props.onKeyDown);
     }
+
+    updateKeyDownListener = (ActiveMenu: Menu) => {
+        if (ActiveMenu !== CaptureMenu) {
+            window.addEventListener("keydown", this.props.onKeyDown);
+        } else {
+            window.removeEventListener("keydown", this.props.onKeyDown);
+        }
+    };
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         this.setState({ error, errorInfo });
