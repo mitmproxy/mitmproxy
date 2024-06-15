@@ -3,6 +3,7 @@ import regularReducer, {
     getMode as getRegularModeConfig,
 } from "./modes/regular";
 import { fetchApi } from "../utils";
+import localReducer, { getMode as getLocalModeConfig } from "./modes/local";
 
 export interface ModeState {
     active: boolean;
@@ -16,9 +17,10 @@ export const updateMode = () => {
         try {
             const modes = getState().modes;
 
-            const activeModes: string[] = [getRegularModeConfig(modes)].filter(
-                (mode) => mode !== ""
-            );
+            const activeModes: string[] = [
+                getRegularModeConfig(modes),
+                getLocalModeConfig(modes),
+            ].filter((mode) => mode !== "");
             console.log(activeModes);
             const response = await fetchApi.put("/options", {
                 mode: activeModes,
@@ -37,6 +39,7 @@ export const updateMode = () => {
 
 const modes = combineReducers({
     regular: regularReducer,
+    local: localReducer,
     //add new modes here
 });
 

@@ -1,10 +1,14 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
+import { useAppDispatch, useAppSelector } from "../../ducks";
+import { toggleLocal } from "../../ducks/modes/local";
 
 export default function Local() {
-    const [active, setActive] = React.useState(false); // temporary
+    const dispatch = useAppDispatch();
 
-    const [localApps, setLocalApps] = React.useState("");
+    const { active, applications, error } = useAppSelector(
+        (state) => state.modes.local
+    );
 
     return (
         <div>
@@ -12,15 +16,16 @@ export default function Local() {
             <p className="mode-description">
                 Transparently Intercept local application(s).
             </p>
-            <ModeToggle value={active} onChange={() => setActive(!active)}>
+            <ModeToggle value={active} onChange={() => dispatch(toggleLocal())}>
                 Intercept traffic for
                 <input
                     type="text"
                     className="mode-local-input"
-                    value={localApps}
-                    onChange={(e) => setLocalApps(e.target.value)}
+                    value={applications?.join(",")}
+                    onChange={(e) => console.log(e.target.value)} //TODO
                 />
             </ModeToggle>
+            {error && <div className="mode-error text-danger">{error}</div>}
         </div>
     );
 }
