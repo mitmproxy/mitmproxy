@@ -21,7 +21,7 @@ export const getMode = (modes) => {
         }
         return mode;
     }
-    return ""
+    return "";
 };
 
 export const toggleRegular = () => {
