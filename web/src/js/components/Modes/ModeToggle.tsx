@@ -9,10 +9,8 @@ type ModeToggleProps = {
 export function ModeToggle({ value, onChange, children }: ModeToggleProps) {
     return (
         <div className="mode-entry">
-            <label>
-                <input type="checkbox" checked={value} onChange={onChange} />
-                {children}
-            </label>
+            <input type="checkbox" checked={value} onChange={onChange} />
+            {children}
         </div>
     );
 }
