@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleLocal } from "../../ducks/modes/local";
+import { addApplications, toggleLocal } from "../../ducks/modes/local";
 
 export default function Local() {
     const dispatch = useAppDispatch();
@@ -9,6 +9,17 @@ export default function Local() {
     const { active, applications, error } = useAppSelector(
         (state) => state.modes.local
     );
+
+    const [listApplications, setListApplications] = React.useState(
+        applications || ""
+    );
+
+    const handleListApplicationsChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        setListApplications(e.target.value);
+        dispatch(addApplications(e.target.value));
+    };
 
     return (
         <div>
@@ -21,8 +32,8 @@ export default function Local() {
                 <input
                     type="text"
                     className="mode-local-input"
-                    value={applications?.join(",")}
-                    onChange={(e) => console.log(e.target.value)} //TODO
+                    value={listApplications}
+                    onChange={(e) => handleListApplicationsChange(e)}
                 />
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
