@@ -42,9 +42,14 @@ export const toggleLocal = () => {
     };
 };
 
+const sanitizeInput = (input: string) => {
+    return input.replace(/,$/, ''); // Remove trailing comma
+};
+
 export const addApplications = (applications: string) => {
     return async (dispatch) => {
-        dispatch({ type: ADD_APPLICATIONS, applications: applications });
+        const sanitizeApplications = sanitizeInput(applications);
+        dispatch({ type: ADD_APPLICATIONS, applications: sanitizeApplications });
         const result = await dispatch(updateMode());
 
         if (!result.success) {
