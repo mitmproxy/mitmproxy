@@ -54,14 +54,6 @@ const regularReducer = (state = initialState, action): RegularState => {
                 error: action.error,
             };
         case UPDATE_OPTIONS:
-            if (action.data && action.data.mode) {
-                const isActive = action.data.mode.value.includes("regular");
-                return {
-                    ...state,
-                    active: isActive,
-                };
-            }
-            return state;
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
                 const isActive = action.data.mode.value.includes("regular");
