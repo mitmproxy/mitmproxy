@@ -4,6 +4,7 @@ import regularReducer, {
 } from "./modes/regular";
 import { fetchApi } from "../utils";
 import localReducer, { getMode as getLocalModeConfig } from "./modes/local";
+import wireguardReducer, {getMode as getWireguardModeConfig} from "./modes/wireguard";
 
 export interface ModeState {
     active: boolean;
@@ -20,6 +21,7 @@ export const updateMode = () => {
             const activeModes: string[] = [
                 getRegularModeConfig(modes),
                 getLocalModeConfig(modes),
+                getWireguardModeConfig(modes),
             ].filter((mode) => mode !== "");
             console.log(activeModes);
             const response = await fetchApi.put("/options", {
@@ -40,6 +42,7 @@ export const updateMode = () => {
 const modes = combineReducers({
     regular: regularReducer,
     local: localReducer,
+    wireguard: wireguardReducer,
     //add new modes here
 });
 
