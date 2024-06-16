@@ -11,11 +11,21 @@ export default function Reverse() {
         (state) => state.modes.reverse
     );
 
-    const [protocol, setProtocol] = React.useState(protocols[0].name);
+    const [protocol, setProtocol] = React.useState("");
+
+    React.useEffect(() => {
+        setProtocol("");
+        protocols.map((protocol) => {
+            if (protocol.isSelected) {
+                setProtocol(protocol.name);
+                return;
+            }
+        });
+    }, [protocols]);
 
     let inner = (
         <span>
-            &nbsp;<b>{protocol} </b>
+            &nbsp;<b>{protocol === "" ? "Select protocol" : protocol} </b>
             <span className="caret" />
         </span>
     );
@@ -34,7 +44,9 @@ export default function Reverse() {
             <ModeToggle
                 value={active}
                 onChange={() => {
-                    dispatch(toggleReverse());
+                    if (protocol !== "") {
+                        dispatch(toggleReverse());
+                    }
                 }}
             >
                 Forward
