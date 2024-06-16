@@ -51,7 +51,7 @@ describe("localReducer", () => {
         expect(newState.applications).toBe("app1");
         expect(newState.error).toBeUndefined();
     });
-    
+
     it('should handle UPDATE_OPTIONS action with data.mode not containing "local"', () => {
         const action = {
             type: RECEIVE_OPTIONS,
@@ -66,7 +66,7 @@ describe("localReducer", () => {
         expect(newState.applications).toBe("");
         expect(newState.error).toBeUndefined();
     });
-    
+
     it("should handle ERROR_LOCAL action", () => {
         const error = "Some error occurred";
         const action = { type: ERROR_LOCAL, error };
