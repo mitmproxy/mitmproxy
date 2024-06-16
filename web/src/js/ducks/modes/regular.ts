@@ -1,4 +1,7 @@
-import { UPDATE as UPDATE_OPTIONS } from "../options";
+import {
+    RECEIVE as RECEIVE_OPTIONS,
+    UPDATE as UPDATE_OPTIONS,
+} from "../options";
 import { ModeState, updateMode } from "../modes";
 
 const TOGGLE_REGULAR = "TOGGLE_REGULAR";
@@ -51,6 +54,15 @@ const regularReducer = (state = initialState, action): RegularState => {
                 error: action.error,
             };
         case UPDATE_OPTIONS:
+            if (action.data && action.data.mode) {
+                const isActive = action.data.mode.value.includes("regular");
+                return {
+                    ...state,
+                    active: isActive,
+                };
+            }
+            return state;
+        case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
                 const isActive = action.data.mode.value.includes("regular");
                 return {
