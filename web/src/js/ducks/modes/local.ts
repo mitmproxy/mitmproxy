@@ -4,15 +4,15 @@ import {
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
 
-const TOGGLE_LOCAL = "TOGGLE_LOCAL";
-const ADD_APPLICATIONS = "ADD_APPLICATIONS";
-const ERROR_LOCAL = "ERROR_LOCAL";
+export const TOGGLE_LOCAL = "TOGGLE_LOCAL";
+export const ADD_APPLICATIONS = "ADD_APPLICATIONS";
+export const ERROR_LOCAL = "ERROR_LOCAL";
 
 interface LocalState extends ModeState {
     applications?: string;
 }
 
-const initialState: LocalState = {
+export const initialState: LocalState = {
     active: false,
     applications: "",
 };

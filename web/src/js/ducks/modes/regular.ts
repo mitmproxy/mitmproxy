@@ -4,12 +4,12 @@ import {
 } from "../options";
 import { ModeState, updateMode } from "../modes";
 
-const TOGGLE_REGULAR = "TOGGLE_REGULAR";
-const ERROR_REGULAR = "ERROR_REGULAR";
+export const TOGGLE_REGULAR = "TOGGLE_REGULAR";
+export const ERROR_REGULAR = "ERROR_REGULAR";
 
 interface RegularState extends ModeState {}
 
-const initialState: RegularState = {
+export const initialState: RegularState = {
     active: true,
 };
 

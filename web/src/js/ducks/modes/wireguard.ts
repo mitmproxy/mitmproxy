@@ -4,14 +4,14 @@ import {
 } from "../options";
 import { ModeState, updateMode } from "../modes";
 
-const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
-const ERROR_WIREGUARD = "ERROR_WIREGUARD";
+export const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
+export const ERROR_WIREGUARD = "ERROR_WIREGUARD";
 
 interface WireguardState extends ModeState {
     path?: string;
 }
 
-const initialState: WireguardState = {
+export const initialState: WireguardState = {
     active: false,
     path: "",
 };

@@ -4,9 +4,9 @@ import {
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
 
-const TOGGLE_REVERSE = "TOGGLE_REVERSE";
-const ERROR_REVERSE = "ERROR_REVERSE";
-const SET_PROTOCOLS = "SET_PROTOCOLS";
+export const TOGGLE_REVERSE = "TOGGLE_REVERSE";
+export const ERROR_REVERSE = "ERROR_REVERSE";
+export const SET_PROTOCOLS = "SET_PROTOCOLS";
 
 interface ProtocolState {
     name: string;
@@ -17,7 +17,7 @@ interface ReverseState extends ModeState {
     protocols: ProtocolState[];
 }
 
-const initialState: ReverseState = {
+export const initialState: ReverseState = {
     active: false,
     protocols: [
         { name: "http", isSelected: false },
