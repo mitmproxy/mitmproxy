@@ -1,30 +1,29 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import Dropdown, { MenuItem } from "../common/Dropdown";
+import { useAppDispatch, useAppSelector } from "../../ducks";
+import { addProtocols, toggleReverse } from "../../ducks/modes/reverse";
 
 export default function Reverse() {
-    const [active, setActive] = React.useState(false); // temporary
+    const dispatch = useAppDispatch();
 
-    const [protocol, setProtocol] = React.useState("");
+    const { active, protocols, error } = useAppSelector(
+        (state) => state.modes.reverse
+    );
 
-    const protocols = [
-        "http",
-        "https",
-        "dns",
-        "http3",
-        "quic",
-        "tcp",
-        "tls",
-        "udp",
-        "dtls",
-    ];
+    const [protocol, setProtocol] = React.useState(protocols[0].name);
 
     let inner = (
         <span>
-            &nbsp;<b>{protocol === "" ? "Select" : protocol} </b>
+            &nbsp;<b>{protocol} </b>
             <span className="caret" />
         </span>
     );
+
+    const handleProtocolChange = (protocolName: string) => {
+        setProtocol(protocolName);
+        dispatch(addProtocols(protocolName));
+    };
 
     return (
         <div>
@@ -32,21 +31,30 @@ export default function Reverse() {
             <p className="mode-description">
                 Requests are forwarded to a preconfigured destination.
             </p>
-            <ModeToggle value={active} onChange={() => setActive(!active)}>
+            <ModeToggle
+                value={active}
+                onChange={() => {
+                    dispatch(toggleReverse());
+                }}
+            >
                 Forward
                 <Dropdown
                     text={inner}
                     className="btn btn-default btn-xs mode-reverse-dropdown"
                     options={{ placement: "bottom" }}
                 >
-                    {protocols.map((name) => (
-                        <MenuItem key={name} onClick={() => setProtocol(name)}>
-                            {name}
+                    {protocols.map((protocol) => (
+                        <MenuItem
+                            key={protocol.name}
+                            onClick={() => handleProtocolChange(protocol.name)}
+                        >
+                            {protocol.name}
                         </MenuItem>
                     ))}
                 </Dropdown>{" "}
                 traffic from *:8080 to example.com.
             </ModeToggle>
+            {error && <div className="mode-error text-danger">{error}</div>}
         </div>
     );
 }
