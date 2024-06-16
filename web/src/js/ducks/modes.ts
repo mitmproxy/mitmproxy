@@ -4,7 +4,9 @@ import regularReducer, {
 } from "./modes/regular";
 import { fetchApi } from "../utils";
 import localReducer, { getMode as getLocalModeConfig } from "./modes/local";
-import wireguardReducer, {getMode as getWireguardModeConfig} from "./modes/wireguard";
+import wireguardReducer, {
+    getMode as getWireguardModeConfig,
+} from "./modes/wireguard";
 
 export interface ModeState {
     active: boolean;

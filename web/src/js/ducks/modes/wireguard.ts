@@ -44,10 +44,7 @@ export const toggleWireguard = () => {
     };
 };
 
-const wireguardReducer = (
-    state = initialState,
-    action
-): WireguardState => {
+const wireguardReducer = (state = initialState, action): WireguardState => {
     switch (action.type) {
         case TOGGLE_WIREGUARD:
             return {
