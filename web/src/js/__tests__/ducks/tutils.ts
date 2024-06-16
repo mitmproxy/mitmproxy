@@ -128,6 +128,32 @@ export const testState: RootState = {
     commandBar: {
         visible: false,
     },
+    modes: {
+        regular: {
+            active: true,
+        },
+        local: {
+            active: false,
+            applications: "",
+        },
+        wireguard: {
+            active: false,
+        },
+        reverse: {
+            active: false,
+            protocols: [
+                { name: "http", isSelected: false },
+                { name: "https", isSelected: false },
+                { name: "dns", isSelected: false },
+                { name: "http3", isSelected: false },
+                { name: "quic", isSelected: false },
+                { name: "tcp", isSelected: false },
+                { name: "tls", isSelected: false },
+                { name: "udp", isSelected: false },
+                { name: "dtls", isSelected: false },
+            ],
+        },
+    },
 };
 
 export function TStore(): MockStoreEnhanced<RootState, AppDispatch> {
