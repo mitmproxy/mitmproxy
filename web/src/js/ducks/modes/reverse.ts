@@ -71,7 +71,7 @@ export const addProtocols = (protocolName: string) => {
 
         const mode = getState().modes.reverse;
 
-        if(mode.active) {
+        if (mode.active) {
             const result = await dispatch(updateMode());
 
             if (!result.success) {

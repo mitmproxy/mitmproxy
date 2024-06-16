@@ -14,9 +14,9 @@ export default function Local() {
         applications || ""
     );
 
-    React.useEffect(()=> {
+    React.useEffect(() => {
         setListApplications(applications || "");
-    },[applications])
+    }, [applications]);
 
     const handleListApplicationsChange = (
         e: React.ChangeEvent<HTMLInputElement>
