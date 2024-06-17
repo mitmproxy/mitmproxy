@@ -5,7 +5,6 @@ import {
 import { ModeState, updateMode } from "../modes";
 
 export const TOGGLE_REGULAR = "TOGGLE_REGULAR";
-export const ERROR_REGULAR = "ERROR_REGULAR";
 
 interface RegularState extends ModeState {}
 
@@ -35,8 +34,8 @@ export const toggleRegular = () => {
         const result = await dispatch(updateMode());
 
         if (!result.success) {
+            //TODO: handle error
             console.error("error", result.error);
-            dispatch({ type: ERROR_REGULAR, error: result.error });
         }
     };
 };
@@ -47,11 +46,6 @@ const regularReducer = (state = initialState, action): RegularState => {
             return {
                 ...state,
                 active: !state.active,
-            };
-        case ERROR_REGULAR:
-            return {
-                ...state,
-                error: action.error,
             };
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:

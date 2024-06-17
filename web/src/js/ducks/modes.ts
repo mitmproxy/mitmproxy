@@ -40,7 +40,7 @@ export const updateMode = () => {
                 return { success: false, error: errorText };
             }
         } catch (error) {
-            return { success: false, error: error.message };
+            //TODO: handle error
         }
     };
 };

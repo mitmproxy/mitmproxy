@@ -6,7 +6,6 @@ import {
 
 export const TOGGLE_LOCAL = "TOGGLE_LOCAL";
 export const SET_APPLICATIONS = "SET_APPLICATIONS";
-export const ERROR_LOCAL = "ERROR_LOCAL";
 
 interface LocalState extends ModeState {
     applications?: string;
@@ -36,8 +35,8 @@ export const toggleLocal = () => {
         const result = await dispatch(updateMode());
 
         if (!result.success) {
+            //TODO: handle error
             console.error("error", result.error);
-            dispatch({ type: ERROR_LOCAL, error: result.error });
         }
     };
 };
@@ -56,8 +55,8 @@ export const setApplications = (applications: string) => {
         const result = await dispatch(updateMode());
 
         if (!result.success) {
+            //TODO: handle error
             console.error("error", result.error);
-            dispatch({ type: ERROR_LOCAL, error: result.error });
         }
     };
 };
@@ -98,11 +97,6 @@ const localReducer = (state = initialState, action): LocalState => {
                 };
             }
             return state;
-        case ERROR_LOCAL:
-            return {
-                ...state,
-                error: action.error,
-            };
         default:
             return state;
     }

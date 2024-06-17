@@ -5,7 +5,6 @@ import {
 } from "../options";
 
 export const TOGGLE_REVERSE = "TOGGLE_REVERSE";
-export const ERROR_REVERSE = "ERROR_REVERSE";
 export const SET_PROTOCOLS = "SET_PROTOCOLS";
 
 interface ProtocolState {
@@ -59,8 +58,8 @@ export const toggleReverse = () => {
         const result = await dispatch(updateMode());
 
         if (!result.success) {
+            //TODO: handle error
             console.error("error", result.error);
-            dispatch({ type: ERROR_REVERSE, error: result.error });
         }
     };
 };
@@ -75,8 +74,8 @@ export const addProtocols = (protocolName: string) => {
             const result = await dispatch(updateMode());
 
             if (!result.success) {
+                //TODO: handle error
                 console.error("error", result.error);
-                dispatch({ type: ERROR_REVERSE, error: result.error });
             }
         }
     };
@@ -126,11 +125,6 @@ const reverseReducer = (state = initialState, action): ReverseState => {
                 };
             }
             return state;
-        case ERROR_REVERSE:
-            return {
-                ...state,
-                error: action.error,
-            };
         default:
             return state;
     }

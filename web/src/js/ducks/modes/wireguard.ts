@@ -5,7 +5,6 @@ import {
 import { ModeState, updateMode } from "../modes";
 
 export const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
-export const ERROR_WIREGUARD = "ERROR_WIREGUARD";
 
 interface WireguardState extends ModeState {
     path?: string;
@@ -38,8 +37,8 @@ export const toggleWireguard = () => {
         const result = await dispatch(updateMode());
 
         if (!result.success) {
+            //TODO: handle error
             console.error("error", result.error);
-            dispatch({ type: ERROR_WIREGUARD, error: result.error });
         }
     };
 };
@@ -50,11 +49,6 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
             return {
                 ...state,
                 active: !state.active,
-            };
-        case ERROR_WIREGUARD:
-            return {
-                ...state,
-                error: action.error,
             };
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
