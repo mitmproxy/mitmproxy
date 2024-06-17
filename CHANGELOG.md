@@ -12,6 +12,7 @@
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
 * mitmproxy now officially supports Python 3.13.
+  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
 
 ## 12 June 2024: mitmproxy 10.3.1
 
