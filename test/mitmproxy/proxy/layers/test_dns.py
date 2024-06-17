@@ -16,6 +16,8 @@ from mitmproxy.test.tutils import tdnsresp
 
 
 def test_invalid_and_dummy_end(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
     assert (
         Playbook(dns.DNSLayer(tctx))
         >> DataReceived(tctx.client, b"Not a DNS packet")
@@ -28,6 +30,9 @@ def test_invalid_and_dummy_end(tctx):
 
 
 def test_regular(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(DNSFlow)
 
     req = tdnsreq()
@@ -58,6 +63,9 @@ def test_regular(tctx):
 
 
 def test_regular_mode_no_hook(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = None
@@ -86,6 +94,9 @@ def test_regular_mode_no_hook(tctx):
 
 
 def test_reverse_premature_close(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -112,6 +123,9 @@ def test_reverse_premature_close(tctx):
 
 
 def test_reverse(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -144,6 +158,9 @@ def test_reverse(tctx):
 
 
 def test_reverse_fail_connection(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -169,6 +186,9 @@ def test_reverse_fail_connection(tctx):
 
 
 def test_reverse_with_query_resend(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
