@@ -1,7 +1,5 @@
 import * as React from "react";
 import Local from "./Modes/Local";
-import Wireguard from "./Modes/Wireguard";
-import Reverse from "./Modes/Reverse";
 import Regular from "./Modes/Regular";
 
 export default function Modes() {
@@ -14,8 +12,6 @@ export default function Modes() {
             <div className="modes-container">
                 <Regular />
                 <Local />
-                <Wireguard />
-                <Reverse />
             </div>
         </div>
     );

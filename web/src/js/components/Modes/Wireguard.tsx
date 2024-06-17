@@ -12,7 +12,7 @@ export default function Wireguard() {
         <div>
             <h4 className="mode-title">WireGuard Server</h4>
             <p className="mode-description">
-                Start a WireGuard(tm) server and connect an external device for
+                Start a WireGuard™ server and connect an external device for
                 transparent proxying.
             </p>
             <ModeToggle
