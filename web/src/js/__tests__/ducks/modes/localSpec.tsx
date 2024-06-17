@@ -1,9 +1,9 @@
 import localReducer, {
     toggleLocal,
-    addApplications,
+    setApplications,
     initialState,
     TOGGLE_LOCAL,
-    ADD_APPLICATIONS,
+    SET_APPLICATIONS,
     ERROR_LOCAL,
 } from "../../../ducks/modes/local";
 import { updateMode } from "../../../ducks/modes";
@@ -31,7 +31,7 @@ describe("localReducer", () => {
 
     it("should handle ADD_APPLICATIONS action", () => {
         const applications = "app1, app2";
-        const action = { type: ADD_APPLICATIONS, applications };
+        const action = { type: SET_APPLICATIONS, applications };
         const newState = localReducer(initialState, action);
         expect(newState.applications).toBe(applications);
         expect(newState.error).toBeUndefined();

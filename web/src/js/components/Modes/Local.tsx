@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { addApplications, toggleLocal } from "../../ducks/modes/local";
+import { setApplications, toggleLocal } from "../../ducks/modes/local";
 
 export default function Local() {
     const dispatch = useAppDispatch();
@@ -22,7 +22,7 @@ export default function Local() {
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         setListApplications(e.target.value);
-        dispatch(addApplications(e.target.value));
+        dispatch(setApplications(e.target.value));
     };
 
     return (

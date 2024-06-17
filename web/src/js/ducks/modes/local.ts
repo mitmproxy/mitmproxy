@@ -5,7 +5,7 @@ import {
 } from "../options";
 
 export const TOGGLE_LOCAL = "TOGGLE_LOCAL";
-export const ADD_APPLICATIONS = "ADD_APPLICATIONS";
+export const SET_APPLICATIONS = "SET_APPLICATIONS";
 export const ERROR_LOCAL = "ERROR_LOCAL";
 
 interface LocalState extends ModeState {
@@ -46,11 +46,11 @@ const sanitizeInput = (input: string) => {
     return input.replace(/,$/, ""); // Remove trailing comma
 };
 
-export const addApplications = (applications: string) => {
+export const setApplications = (applications: string) => {
     return async (dispatch) => {
         const sanitizeApplications = sanitizeInput(applications);
         dispatch({
-            type: ADD_APPLICATIONS,
+            type: SET_APPLICATIONS,
             applications: sanitizeApplications,
         });
         const result = await dispatch(updateMode());
@@ -70,7 +70,7 @@ const localReducer = (state = initialState, action): LocalState => {
                 active: !state.active,
                 error: undefined,
             };
-        case ADD_APPLICATIONS:
+        case SET_APPLICATIONS:
             return {
                 ...state,
                 applications: action.applications,
