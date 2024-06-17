@@ -12,6 +12,7 @@ from mitmproxy.proxy.utils import expect
 
 _LENGTH_LABEL = struct.Struct("!H")
 
+
 @dataclass
 class DnsRequestHook(commands.StartHook):
     """
@@ -72,7 +73,9 @@ class DNSLayer(layer.Layer):
                     yield from self.handle_error(flow, str(err))
                     # cannot recover from this
                     return
-            packed = self.pack_message(flow.request, flow.server_conn.transport_protocol)
+            packed = self.pack_message(
+                flow.request, flow.server_conn.transport_protocol
+            )
             yield commands.SendData(self.context.server, packed)
 
     def handle_response(
@@ -81,10 +84,14 @@ class DNSLayer(layer.Layer):
         flow.response = msg
         yield DnsResponseHook(flow)
         if flow.response:
-            packed = self.pack_message(flow.response, flow.client_conn.transport_protocol)
+            packed = self.pack_message(
+                flow.response, flow.client_conn.transport_protocol
+            )
             yield commands.SendData(self.context.client, packed)
 
-    def pack_message(self, message: dns.Message, transport_protocol: Literal["tcp", "udp"]) -> bytes:
+    def pack_message(
+        self, message: dns.Message, transport_protocol: Literal["tcp", "udp"]
+    ) -> bytes:
         packed = message.packed
         if transport_protocol == "tcp":
             return struct.pack("!H", len(packed)) + packed
@@ -113,8 +120,8 @@ class DNSLayer(layer.Layer):
                 elif self.context.client.transport_protocol == "tcp":
                     if self.expected_size is None:
                         assert self.buf is None
-                        (self.expected_size, ) = _LENGTH_LABEL.unpack_from(event.data, 0)
-                        self.buf = event.data[_LENGTH_LABEL.size:]
+                        (self.expected_size,) = _LENGTH_LABEL.unpack_from(event.data, 0)
+                        self.buf = event.data[_LENGTH_LABEL.size :]
                     else:
                         assert self.buf is not None
                         self.buf += event.data
