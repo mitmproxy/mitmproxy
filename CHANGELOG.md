@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+* mitmproxy now officially supports Python 3.13.
+  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
 
 ## 25 July 2024: mitmproxy 10.4.0
 
