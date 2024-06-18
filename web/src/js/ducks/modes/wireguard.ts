@@ -19,7 +19,7 @@ export const initialState: WireguardState = {
 
 export const getMode = (modes) => {
     const wireguardMode = modes.wireguard;
-    return addListenAddr(wireguardMode)
+    return addListenAddr(wireguardMode);
 };
 
 export const toggleWireguard = () => {

@@ -11,12 +11,12 @@ interface RegularState extends ModeState {}
 
 export const initialState: RegularState = {
     active: true,
-    name: "regular"
+    name: "regular",
 };
 
 export const getMode = (modes) => {
     const regularMode = modes.regular;
-    return addListenAddr(regularMode)
+    return addListenAddr(regularMode);
 };
 
 export const toggleRegular = () => {

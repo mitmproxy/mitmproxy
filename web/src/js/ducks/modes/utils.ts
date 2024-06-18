@@ -1,7 +1,7 @@
 import { ModeState } from "../modes";
 
 export const addListenAddr = (mode: ModeState) => {
-    let stringMode = mode.name
+    let stringMode = mode.name;
     if (mode.active) {
         if (mode.listen_host) {
             stringMode += `@${mode.listen_host}`;
@@ -11,5 +11,5 @@ export const addListenAddr = (mode: ModeState) => {
         }
         return [stringMode];
     }
-    return []
-}
+    return [];
+};
