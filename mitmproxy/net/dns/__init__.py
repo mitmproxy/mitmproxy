@@ -9,17 +9,10 @@ _MESSAGE_HEADERS = struct.Struct("!HHHHHH")
 def starts_like_dns_record(data: bytes) -> bool:
     try:
         offset = 0
-        (
-            id,
-            flags,
-            len_questions,
-            len_answers,
-            len_authorities,
-            len_additionals,
-        ) = _MESSAGE_HEADERS.unpack_from(data, offset)
+        _ = _MESSAGE_HEADERS.unpack_from(data, offset)
         offset += _MESSAGE_HEADERS.size
-        name, offset = unpack_from(data[offset:], offset)
-    except:
+        _, offset = unpack_from(data[offset:], offset)
+    except struct.error:
         return False
     else:
         return True
@@ -30,7 +23,7 @@ def starts_like_dns_over_tcp_record(data: bytes) -> bool:
     try:
         (length,) = _LENGTH_LABEL.unpack_from(data, offset)
         offset += _LENGTH_LABEL.size
-    except:
+    except struct.error:
         return False
 
     if length >= len(data[offset:]) and starts_like_dns_record(data[offset:]):
