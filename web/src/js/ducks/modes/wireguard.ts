@@ -3,6 +3,7 @@ import {
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
 import { ModeState, updateMode } from "../modes";
+import { addListenAddr } from "./utils";
 
 export const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
 
@@ -12,22 +13,13 @@ interface WireguardState extends ModeState {
 
 export const initialState: WireguardState = {
     active: false,
+    name: "wireguard",
     path: "",
 };
 
 export const getMode = (modes) => {
     const wireguardMode = modes.wireguard;
-    let mode = "wireguard";
-    if (wireguardMode.active) {
-        if (wireguardMode.listen_host) {
-            mode += `@${wireguardMode.listen_host}`;
-        }
-        if (wireguardMode.listen_port) {
-            mode += `:${wireguardMode.listen_port}`;
-        }
-        return mode;
-    }
-    return "";
+    return addListenAddr(wireguardMode)
 };
 
 export const toggleWireguard = () => {

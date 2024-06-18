@@ -18,6 +18,7 @@ interface ReverseState extends ModeState {
 
 export const initialState: ReverseState = {
     active: false,
+    name: "reverse",
     protocols: [
         { name: "http", isSelected: false },
         { name: "https", isSelected: false },
@@ -44,11 +45,11 @@ export const getMode = (modes) => {
                 if (reverseMode.listen_port) {
                     mode += `:${reverseMode.listen_port}`;
                 }
-                return mode;
+                return [mode];
             }
         }
     }
-    return "";
+    return [];
 };
 
 export const toggleReverse = () => {

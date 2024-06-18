@@ -3,6 +3,7 @@ import {
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
 import { ModeState, updateMode } from "../modes";
+import { addListenAddr } from "./utils";
 
 export const TOGGLE_REGULAR = "TOGGLE_REGULAR";
 
@@ -10,21 +11,12 @@ interface RegularState extends ModeState {}
 
 export const initialState: RegularState = {
     active: true,
+    name: "regular"
 };
 
 export const getMode = (modes) => {
     const regularMode = modes.regular;
-    let mode = "regular";
-    if (regularMode.active) {
-        if (regularMode.listen_host) {
-            mode += `@${regularMode.listen_host}`;
-        }
-        if (regularMode.listen_port) {
-            mode += `:${regularMode.listen_port}`;
-        }
-        return mode;
-    }
-    return "";
+    return addListenAddr(regularMode)
 };
 
 export const toggleRegular = () => {

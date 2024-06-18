@@ -13,6 +13,7 @@ import reverseReducer, {
 
 export interface ModeState {
     active: boolean;
+    name: string
     listen_port?: number;
     listen_host?: string;
     error?: string;
@@ -24,11 +25,11 @@ export const updateMode = () => {
             const modes = getState().modes;
 
             const activeModes: string[] = [
-                getRegularModeConfig(modes),
-                getLocalModeConfig(modes),
-                getWireguardModeConfig(modes),
-                getReverseModeConfig(modes),
-            ].filter((mode) => mode !== "");
+                ...getRegularModeConfig(modes),
+                ...getLocalModeConfig(modes),
+                //add other modes as well
+            ];
+            console.log(activeModes)
             const response = await fetchApi.put("/options", {
                 mode: activeModes,
             });

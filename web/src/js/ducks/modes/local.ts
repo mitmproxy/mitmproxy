@@ -13,19 +13,19 @@ interface LocalState extends ModeState {
 
 export const initialState: LocalState = {
     active: false,
+    name: "local",
     applications: "",
 };
 
 export const getMode = (modes) => {
     const localMode = modes.local;
-    let mode = "local";
     if (localMode.active) {
-        if (localMode.applications && localMode.applications.length > 0) {
-            mode += `:${localMode.applications}`;
+        if (localMode.applications.length > 0) {
+            return [`local:${localMode.applications}`];
         }
-        return mode;
+        return ["local"]
     }
-    return "";
+    return [];
 };
 
 export const toggleLocal = () => {
