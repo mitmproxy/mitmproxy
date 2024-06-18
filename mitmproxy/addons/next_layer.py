@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import logging
 import re
-import struct
 import sys
 from collections.abc import Iterable
 from collections.abc import Sequence
@@ -27,8 +26,8 @@ from typing import Any
 from typing import cast
 
 from mitmproxy import ctx
-from mitmproxy.net.dns import starts_like_dns_record
 from mitmproxy.net.dns import starts_like_dns_over_tcp_record
+from mitmproxy.net.dns import starts_like_dns_record
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import layer
@@ -169,8 +168,10 @@ class NextLayer:
         # 5)  Handle application protocol
         # 5a) Is it DNS?
         is_dns = (
-            udp_based and starts_like_dns_record(data_client)
-            or tcp_based and starts_like_dns_over_tcp_record(data_client)
+            udp_based
+            and starts_like_dns_record(data_client)
+            or tcp_based
+            and starts_like_dns_over_tcp_record(data_client)
         )
         if is_dns:
             return layers.DNSLayer(context)
