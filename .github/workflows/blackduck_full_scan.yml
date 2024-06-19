@@ -1,0 +1,17 @@
+name: Running Blackduck Full Scans
+on:
+  workflow_dispatch:
+    inputs:
+      blackduck-project-version-name:
+        description: "Version of Repo you want to scan"
+        required: true
+        type: string
+jobs:
+  blackduck-python-scan:
+    uses: projectxyzio/gh-actions/.github/workflows/blackduck_full_scan.yml@master
+    with:
+      blackduck-project-name: "mitmproxy"
+      blackduck-project-group-name: "HeadSpin Codebase"
+      blackduck-project-version-name: ${{inputs.blackduck-project-version-name}}
+      blackduck-project-tags: "deployed,fork,python"
+    secrets: inherit
