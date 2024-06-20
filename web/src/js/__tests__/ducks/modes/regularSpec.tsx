@@ -65,7 +65,9 @@ describe("regularReducer", () => {
                 },
             };
             const mode = getMode(modes);
-            expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular@localhost:8080"]));
+            expect(JSON.stringify(mode)).toBe(
+                JSON.stringify(["regular@localhost:8080"])
+            );
         });
 
         it("should return an empty string when not active", () => {
