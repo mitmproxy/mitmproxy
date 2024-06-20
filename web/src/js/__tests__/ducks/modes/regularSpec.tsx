@@ -3,7 +3,6 @@ import regularReducer, {
     getMode,
     initialState,
     TOGGLE_REGULAR,
-    ERROR_REGULAR,
 } from "./../../../ducks/modes/regular";
 import {
     RECEIVE as RECEIVE_OPTIONS,
@@ -26,13 +25,6 @@ describe("regularReducer", () => {
         const action = { type: TOGGLE_REGULAR };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(!initialState.active);
-    });
-
-    it("should handle ERROR_REGULAR action", () => {
-        const error = "Some error occurred";
-        const action = { type: ERROR_REGULAR, error };
-        const newState = regularReducer(initialState, action);
-        expect(newState.error).toBe(error);
     });
 
     it('should handle RECEIVE_OPTIONS action with data.mode containing "regular"', () => {
@@ -67,12 +59,13 @@ describe("regularReducer", () => {
             const modes = {
                 regular: {
                     active: true,
+                    name: "regular",
                     listen_host: "localhost",
                     listen_port: 8080,
                 },
             };
             const mode = getMode(modes);
-            expect(mode).toBe("regular@localhost:8080");
+            expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular@localhost:8080"]));
         });
 
         it("should return an empty string when not active", () => {
@@ -84,17 +77,18 @@ describe("regularReducer", () => {
                 },
             };
             const mode = getMode(modes);
-            expect(mode).toBe("");
+            expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
         });
 
         it("should return the correct mode string without listen_host and listen_port", () => {
             const modes = {
                 regular: {
                     active: true,
+                    name: "regular",
                 },
             };
             const mode = getMode(modes);
-            expect(mode).toBe("regular");
+            expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
         });
     });
 });

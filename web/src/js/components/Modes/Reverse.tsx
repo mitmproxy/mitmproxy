@@ -7,21 +7,33 @@ import { addProtocols, toggleReverse } from "../../ducks/modes/reverse";
 export default function Reverse() {
     const dispatch = useAppDispatch();
 
-    const { active, protocols, error } = useAppSelector(
+    const { active, protocol, error } = useAppSelector(
         (state) => state.modes.reverse
     );
 
-    const [protocol, setProtocol] = React.useState("");
+    const protocols = [
+        "http",
+        "https",
+        "dns",
+        "http3",
+        "quic",
+        "tcp",
+        "tls",
+        "udp",
+        "dtls",
+    ];
+
+    const [currentProtocol, setCurrentProtocol] = React.useState("");
 
     React.useEffect(() => {
-        setProtocol("");
-        protocols.map((protocol) => {
-            if (protocol.isSelected) {
-                setProtocol(protocol.name);
+        setCurrentProtocol("");
+        protocols.map((prot) => {
+            if (prot === protocol) {
+                setCurrentProtocol(protocol);
                 return;
             }
         });
-    }, [protocols]);
+    }, [protocol]);
 
     let inner = (
         <span>
@@ -31,7 +43,7 @@ export default function Reverse() {
     );
 
     const handleProtocolChange = (protocolName: string) => {
-        setProtocol(protocolName);
+        setCurrentProtocol(protocolName);
         dispatch(addProtocols(protocolName));
     };
 
@@ -55,12 +67,12 @@ export default function Reverse() {
                     className="btn btn-default btn-xs mode-reverse-dropdown"
                     options={{ placement: "bottom" }}
                 >
-                    {protocols.map((protocol) => (
+                    {protocols.map((prot) => (
                         <MenuItem
-                            key={protocol.name}
-                            onClick={() => handleProtocolChange(protocol.name)}
+                            key={prot}
+                            onClick={() => handleProtocolChange(prot)}
                         >
-                            {protocol.name}
+                            {prot}
                         </MenuItem>
                     ))}
                 </Dropdown>{" "}

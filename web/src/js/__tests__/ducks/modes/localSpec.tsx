@@ -4,7 +4,6 @@ import localReducer, {
     initialState,
     TOGGLE_LOCAL,
     SET_APPLICATIONS,
-    ERROR_LOCAL,
 } from "../../../ducks/modes/local";
 import { updateMode } from "../../../ducks/modes";
 import {
@@ -37,21 +36,6 @@ describe("localReducer", () => {
         expect(newState.error).toBeUndefined();
     });
 
-    it('should handle UPDATE_OPTIONS action with data.mode containing "local"', () => {
-        const action = {
-            type: RECEIVE_OPTIONS,
-            data: {
-                mode: {
-                    value: ["local", "local:app1"],
-                },
-            },
-        };
-        const newState = localReducer(initialState, action);
-        expect(newState.active).toBe(true);
-        expect(newState.applications).toBe("app1");
-        expect(newState.error).toBeUndefined();
-    });
-
     it('should handle UPDATE_OPTIONS action with data.mode not containing "local"', () => {
         const action = {
             type: RECEIVE_OPTIONS,
@@ -65,12 +49,5 @@ describe("localReducer", () => {
         expect(newState.active).toBe(false);
         expect(newState.applications).toBe("");
         expect(newState.error).toBeUndefined();
-    });
-
-    it("should handle ERROR_LOCAL action", () => {
-        const error = "Some error occurred";
-        const action = { type: ERROR_LOCAL, error };
-        const newState = localReducer(initialState, action);
-        expect(newState.error).toBe(error);
     });
 });

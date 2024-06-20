@@ -131,27 +131,30 @@ export const testState: RootState = {
     modes: {
         regular: {
             active: true,
+            name: "regular",
         },
         local: {
             active: false,
+            name: "local",
             applications: "",
         },
         wireguard: {
+            name: "wireguard",
             active: false,
         },
         reverse: {
             active: false,
-            protocols: [
-                { name: "http", isSelected: false },
-                { name: "https", isSelected: false },
-                { name: "dns", isSelected: false },
-                { name: "http3", isSelected: false },
-                { name: "quic", isSelected: false },
-                { name: "tcp", isSelected: false },
-                { name: "tls", isSelected: false },
-                { name: "udp", isSelected: false },
-                { name: "dtls", isSelected: false },
-            ],
+            name: "reverse",
+            protocol:
+                "http" ||
+                "https" ||
+                "dns" ||
+                "http3" ||
+                "quic" ||
+                "tcp" ||
+                "tls" ||
+                "udp" ||
+                "dtls",
         },
     },
 };
