@@ -3,7 +3,7 @@ import {
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
 import { ModeState, updateMode } from "../modes";
-import { addListenAddr } from "./utils";
+import { addListenAddr, getModesOfType } from "./utils";
 
 export const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
 
@@ -45,10 +45,13 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
-                const isActive = action.data.mode.value.includes("wireguard");
+                const currentModeConfig = getModesOfType("wireguard", action.data.mode.value)[0]
+                const isActive = currentModeConfig !== undefined
                 return {
                     ...state,
                     active: isActive,
+                    listen_host: currentModeConfig?.listen_host || state.listen_host,
+                    listen_port: currentModeConfig?.listen_port || state.listen_port,
                 };
             }
             return state;

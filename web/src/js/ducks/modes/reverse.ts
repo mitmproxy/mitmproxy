@@ -3,7 +3,7 @@ import {
     RECEIVE as RECEIVE_OPTIONS,
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
-import { addListenAddr } from "./utils";
+import { addListenAddr, getModesOfType } from "./utils";
 
 export const TOGGLE_REVERSE = "TOGGLE_REVERSE";
 export const SET_PROTOCOL = "SET_PROTOCOL";
@@ -71,18 +71,14 @@ const reverseReducer = (state = initialState, action): ReverseState => {
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
-                const modes = action.data.mode.value;
-                const isActive = modes.some((mode) => mode.includes("reverse"));
-                let currentProtocol = "";
-                modes.forEach((mode) => {
-                    if (mode.startsWith("reverse:")) {
-                        currentProtocol = mode.substring("reverse:".length);
-                    }
-                });
+                const currentModeConfig = getModesOfType("reverse", action.data.mode.value)[0] //remove [0] TODO
+                const isActive = currentModeConfig !== undefined
                 return {
                     ...state,
                     active: isActive,
-                    protocol: action.protocolName !== "" ? action.protocolName : state.protocol,
+                    protocol: currentModeConfig?.protocol || state.protocol,
+                    listen_host: currentModeConfig?.listen_host || state.listen_host,
+                    listen_port: currentModeConfig?.listen_port || state.listen_port,
                     error: undefined,
                 };
             }

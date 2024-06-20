@@ -3,6 +3,7 @@ import {
     RECEIVE as RECEIVE_OPTIONS,
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
+import { getModesOfType } from "./utils";
 
 export const TOGGLE_LOCAL = "TOGGLE_LOCAL";
 export const SET_APPLICATIONS = "SET_APPLICATIONS";
@@ -78,21 +79,12 @@ const localReducer = (state = initialState, action): LocalState => {
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
-                const modes = action.data.mode.value;
-                const isActive = modes.some((mode) => mode.includes("local"));
-                let extractedApplications = "";
-                modes.forEach((mode) => {
-                    if (mode.startsWith("local:")) {
-                        extractedApplications = mode.substring("local:".length);
-                    }
-                });
+                const currentModeConfig = getModesOfType("local", action.data.mode.value)[0]
+                const isActive = currentModeConfig !== undefined
                 return {
                     ...state,
                     active: isActive,
-                    applications:
-                        extractedApplications !== ""
-                            ? extractedApplications
-                            : state.applications,
+                    applications: currentModeConfig?.applications || state.applications,
                     error: undefined,
                 };
             }
