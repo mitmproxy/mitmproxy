@@ -71,7 +71,7 @@ const localReducer = (state = initialState, action): LocalState => {
                 error: undefined,
             };
         case SET_APPLICATIONS:
-            console.log(action.applications)
+            console.log(action.applications);
             return {
                 ...state,
                 applications: action.applications,
@@ -80,12 +80,17 @@ const localReducer = (state = initialState, action): LocalState => {
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
-                const currentModeConfig = getModesOfType("local", action.data.mode.value)[0]
-                const isActive = currentModeConfig !== undefined
+                const currentModeConfig = getModesOfType(
+                    "local",
+                    action.data.mode.value
+                )[0];
+                const isActive = currentModeConfig !== undefined;
                 return {
                     ...state,
                     active: isActive,
-                    applications: isActive ? currentModeConfig.applications : state.applications,
+                    applications: isActive
+                        ? currentModeConfig.applications
+                        : state.applications,
                     error: undefined,
                 };
             }

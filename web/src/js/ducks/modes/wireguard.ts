@@ -45,13 +45,18 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
-                const currentModeConfig = getModesOfType("wireguard", action.data.mode.value)[0]
-                const isActive = currentModeConfig !== undefined
+                const currentModeConfig = getModesOfType(
+                    "wireguard",
+                    action.data.mode.value
+                )[0];
+                const isActive = currentModeConfig !== undefined;
                 return {
                     ...state,
                     active: isActive,
-                    listen_host: currentModeConfig?.listen_host || state.listen_host,
-                    listen_port: currentModeConfig?.listen_port || state.listen_port,
+                    listen_host:
+                        currentModeConfig?.listen_host || state.listen_host,
+                    listen_port:
+                        currentModeConfig?.listen_port || state.listen_port,
                 };
             }
             return state;

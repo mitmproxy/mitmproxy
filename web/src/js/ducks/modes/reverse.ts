@@ -8,7 +8,6 @@ import { addListenAddr, getModesOfType } from "./utils";
 export const TOGGLE_REVERSE = "TOGGLE_REVERSE";
 export const SET_PROTOCOL = "SET_PROTOCOL";
 
-
 export interface ReverseState extends ModeState {
     protocol: string;
 }
@@ -16,12 +15,21 @@ export interface ReverseState extends ModeState {
 export const initialState: ReverseState = {
     active: false,
     name: "reverse",
-    protocol: "http" || "https" || "dns" || "http3" || "quic" || "tcp" || "tls" || "udp" || "dtls",
+    protocol:
+        "http" ||
+        "https" ||
+        "dns" ||
+        "http3" ||
+        "quic" ||
+        "tcp" ||
+        "tls" ||
+        "udp" ||
+        "dtls",
 };
 
 export const getMode = (modes) => {
     const reverseMode = modes.reverse;
-    return addListenAddr(reverseMode)
+    return addListenAddr(reverseMode);
 };
 
 export const toggleReverse = () => {
@@ -71,14 +79,19 @@ const reverseReducer = (state = initialState, action): ReverseState => {
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
             if (action.data && action.data.mode) {
-                const currentModeConfig = getModesOfType("reverse", action.data.mode.value)[0] //remove [0] TODO
-                const isActive = currentModeConfig !== undefined
+                const currentModeConfig = getModesOfType(
+                    "reverse",
+                    action.data.mode.value
+                )[0]; //remove [0] TODO
+                const isActive = currentModeConfig !== undefined;
                 return {
                     ...state,
                     active: isActive,
                     protocol: currentModeConfig?.protocol || state.protocol,
-                    listen_host: currentModeConfig?.listen_host || state.listen_host,
-                    listen_port: currentModeConfig?.listen_port || state.listen_port,
+                    listen_host:
+                        currentModeConfig?.listen_host || state.listen_host,
+                    listen_port:
+                        currentModeConfig?.listen_port || state.listen_port,
                     error: undefined,
                 };
             }
