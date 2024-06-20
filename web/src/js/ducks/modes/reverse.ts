@@ -6,31 +6,17 @@ import {
 import { addListenAddr } from "./utils";
 
 export const TOGGLE_REVERSE = "TOGGLE_REVERSE";
-export const SET_PROTOCOLS = "SET_PROTOCOLS";
+export const SET_PROTOCOL = "SET_PROTOCOL";
 
-interface ProtocolState {
-    name: string;
-    isSelected: boolean;
-}
 
 export interface ReverseState extends ModeState {
-    protocols: ProtocolState[];
+    protocol: string;
 }
 
 export const initialState: ReverseState = {
     active: false,
     name: "reverse",
-    protocols: [
-        { name: "http", isSelected: false },
-        { name: "https", isSelected: false },
-        { name: "dns", isSelected: false },
-        { name: "http3", isSelected: false },
-        { name: "quic", isSelected: false },
-        { name: "tcp", isSelected: false },
-        { name: "tls", isSelected: false },
-        { name: "udp", isSelected: false },
-        { name: "dtls", isSelected: false },
-    ],
+    protocol: "http" || "https" || "dns" || "http3" || "quic" || "tcp" || "tls" || "udp" || "dtls",
 };
 
 export const getMode = (modes) => {
@@ -53,7 +39,7 @@ export const toggleReverse = () => {
 
 export const addProtocols = (protocolName: string) => {
     return async (dispatch, getState) => {
-        dispatch({ type: SET_PROTOCOLS, protocolName: protocolName });
+        dispatch({ type: SET_PROTOCOL, protocolName: protocolName });
 
         const mode = getState().modes.reverse;
 
@@ -76,15 +62,10 @@ const reverseReducer = (state = initialState, action): ReverseState => {
                 active: !state.active,
                 error: undefined,
             };
-        case SET_PROTOCOLS:
-            const updatedProtocols = state.protocols.map((protocol) =>
-                protocol.name === action.protocolName
-                    ? { ...protocol, isSelected: true }
-                    : { ...protocol, isSelected: false }
-            );
+        case SET_PROTOCOL:
             return {
                 ...state,
-                protocols: updatedProtocols,
+                protocol: action.protocolName,
                 error: undefined,
             };
         case UPDATE_OPTIONS:
@@ -98,15 +79,10 @@ const reverseReducer = (state = initialState, action): ReverseState => {
                         currentProtocol = mode.substring("reverse:".length);
                     }
                 });
-                const updatedProtocols = state.protocols.map((protocol) =>
-                    currentProtocol === protocol.name
-                        ? { ...protocol, isSelected: true }
-                        : { ...protocol, isSelected: false }
-                );
                 return {
                     ...state,
                     active: isActive,
-                    protocols: updatedProtocols,
+                    protocol: action.protocolName !== "" ? action.protocolName : state.protocol,
                     error: undefined,
                 };
             }
