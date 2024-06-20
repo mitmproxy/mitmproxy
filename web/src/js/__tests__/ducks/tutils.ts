@@ -137,25 +137,7 @@ export const testState: RootState = {
             active: false,
             name: "local",
             applications: "",
-        },
-        wireguard: {
-            name: "wireguard",
-            active: false,
-        },
-        reverse: {
-            active: false,
-            name: "reverse",
-            protocol:
-                "http" ||
-                "https" ||
-                "dns" ||
-                "http3" ||
-                "quic" ||
-                "tcp" ||
-                "tls" ||
-                "udp" ||
-                "dtls",
-        },
+        }
     },
 };
 

@@ -1,16 +1,8 @@
 import { ModeState } from "../modes";
-import { ReverseState } from "./reverse";
-
-const isReverseState = (mode: ModeState): mode is ReverseState => {
-    return "protocol" in mode;
-};
 
 export const addListenAddr = (mode: ModeState) => {
     let stringMode = mode.name;
     if (mode.active) {
-        if (isReverseState(mode)) {
-            stringMode += `:${mode.protocol}`;
-        }
         if (mode.listen_host && mode.listen_port) {
             stringMode += `@${mode.listen_host}:${mode.listen_port}`;
         } else if (mode.listen_port) {
@@ -33,23 +25,6 @@ const parseMode = (modeConfig) => {
                 name: "local",
                 applications: modeConfig.substring("local:".length),
             };
-        }
-        if (modeConfig.startsWith("reverse")) {
-            const reversePattern = /^reverse:([^:\/]+):\/\/([^:\/]+)(:(\d+))?$/;
-            const match = modeConfig.match(reversePattern);
-            if (match) {
-                const protocol = match[1];
-                const listen_host = match[2];
-                const listen_port_num = match[4]
-                    ? parseInt(match[4])
-                    : undefined;
-                return {
-                    name: "reverse",
-                    protocol,
-                    listen_host,
-                    listen_port: listen_port_num,
-                };
-            }
         }
         const [name, listen] = modeConfig.split("@");
         const [listen_host, listen_port] = listen.split(":");

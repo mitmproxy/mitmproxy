@@ -4,12 +4,6 @@ import regularReducer, {
 } from "./modes/regular";
 import { fetchApi } from "../utils";
 import localReducer, { getMode as getLocalModeConfig } from "./modes/local";
-import wireguardReducer, {
-    getMode as getWireguardModeConfig,
-} from "./modes/wireguard";
-import reverseReducer, {
-    getMode as getReverseModeConfig,
-} from "./modes/reverse";
 
 export interface ModeState {
     active: boolean;
@@ -27,8 +21,7 @@ export const updateMode = () => {
             const activeModes: string[] = [
                 ...getRegularModeConfig(modes),
                 ...getLocalModeConfig(modes),
-                //...getWireguardModeConfig(modes),
-                //...getReverseModeConfig(modes),
+                //add new modes here
             ];
             const response = await fetchApi.put("/options", {
                 mode: activeModes,
@@ -48,8 +41,6 @@ export const updateMode = () => {
 const modes = combineReducers({
     regular: regularReducer,
     local: localReducer,
-    wireguard: wireguardReducer,
-    reverse: reverseReducer,
     //add new modes here
 });
 
