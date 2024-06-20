@@ -3,6 +3,7 @@ import {
     RECEIVE as RECEIVE_OPTIONS,
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
+import { addListenAddr } from "./utils";
 
 export const TOGGLE_REVERSE = "TOGGLE_REVERSE";
 export const SET_PROTOCOLS = "SET_PROTOCOLS";
@@ -12,7 +13,7 @@ interface ProtocolState {
     isSelected: boolean;
 }
 
-interface ReverseState extends ModeState {
+export interface ReverseState extends ModeState {
     protocols: ProtocolState[];
 }
 
@@ -34,22 +35,7 @@ export const initialState: ReverseState = {
 
 export const getMode = (modes) => {
     const reverseMode = modes.reverse;
-    let mode = "reverse";
-    if (reverseMode.active) {
-        for (const protocol of reverseMode.protocols) {
-            if (protocol.isSelected) {
-                mode += `:${protocol.name}`;
-                if (reverseMode.listen_host) {
-                    mode += `@${reverseMode.listen_host}`;
-                }
-                if (reverseMode.listen_port) {
-                    mode += `:${reverseMode.listen_port}`;
-                }
-                return [mode];
-            }
-        }
-    }
-    return [];
+    return addListenAddr(reverseMode)
 };
 
 export const toggleReverse = () => {
@@ -112,7 +98,6 @@ const reverseReducer = (state = initialState, action): ReverseState => {
                         currentProtocol = mode.substring("reverse:".length);
                     }
                 });
-                console.log(currentProtocol);
                 const updatedProtocols = state.protocols.map((protocol) =>
                     currentProtocol === protocol.name
                         ? { ...protocol, isSelected: true }

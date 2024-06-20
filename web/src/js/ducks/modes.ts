@@ -27,7 +27,8 @@ export const updateMode = () => {
             const activeModes: string[] = [
                 ...getRegularModeConfig(modes),
                 ...getLocalModeConfig(modes),
-                //add other modes as well
+                //...getWireguardModeConfig(modes),
+                //...getReverseModeConfig(modes),
             ];
             console.log(activeModes)
             const response = await fetchApi.put("/options", {
