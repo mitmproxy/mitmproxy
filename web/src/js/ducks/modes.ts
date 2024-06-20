@@ -30,6 +30,7 @@ export const updateMode = () => {
                 //...getWireguardModeConfig(modes),
                 //...getReverseModeConfig(modes),
             ];
+            console.log(activeModes)
             const response = await fetchApi.put("/options", {
                 mode: activeModes,
             });

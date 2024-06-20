@@ -2,6 +2,7 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setApplications, toggleLocal } from "../../ducks/modes/local";
+import ValueEditor from "../editors/ValueEditor";
 
 export default function Local() {
     const dispatch = useAppDispatch();
@@ -18,11 +19,9 @@ export default function Local() {
         setListApplications(applications || "");
     }, [applications]);
 
-    const handleListApplicationsChange = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        setListApplications(e.target.value);
-        dispatch(setApplications(e.target.value));
+    const handleListApplicationsChange = (applications: string) => {
+        setListApplications(applications);
+        dispatch(setApplications(applications));
     };
 
     return (
@@ -33,11 +32,12 @@ export default function Local() {
             </p>
             <ModeToggle value={active} onChange={() => dispatch(toggleLocal())}>
                 Intercept traffic for
-                <input
-                    type="text"
+                <ValueEditor
                     className="mode-local-input"
-                    value={listApplications}
-                    onChange={(e) => handleListApplicationsChange(e)}
+                    content={listApplications}
+                    onEditDone={(applications) =>
+                        handleListApplicationsChange(applications)
+                    }
                 />
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}

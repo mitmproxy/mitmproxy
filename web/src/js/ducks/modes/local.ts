@@ -21,7 +21,7 @@ export const initialState: LocalState = {
 export const getMode = (modes) => {
     const localMode = modes.local;
     if (localMode.active) {
-        if (localMode.applications.length > 0) {
+        if (localMode.applications && localMode.applications.length > 0) {
             return [`local:${localMode.applications}`];
         }
         return ["local"]
@@ -71,6 +71,7 @@ const localReducer = (state = initialState, action): LocalState => {
                 error: undefined,
             };
         case SET_APPLICATIONS:
+            console.log(action.applications)
             return {
                 ...state,
                 applications: action.applications,
