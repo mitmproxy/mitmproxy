@@ -24,7 +24,7 @@ export const getMode = (modes) => {
         if (localMode.applications && localMode.applications.length > 0) {
             return [`local:${localMode.applications}`];
         }
-        return ["local"]
+        return ["local"];
     }
     return [];
 };
