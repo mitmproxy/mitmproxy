@@ -11,7 +11,7 @@ describe("CaptureMenu Component", () => {
             provider = renderer.create(
                 <Provider store={store}>
                     <CaptureMenu />
-                </Provider>
+                </Provider>,
             ),
             tree = provider.toJSON();
         expect(tree).toMatchSnapshot();
