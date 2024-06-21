@@ -4,7 +4,7 @@ exports[`EventLog Component should connect to state and render correctly 1`] = `
 <div
   className="eventlog"
   style={
-    Object {
+    {
       "height": 200,
     }
   }

@@ -95,7 +95,7 @@ class FlowTable extends React.Component {
             // the maximum viewportTop value. See https://github.com/mitmproxy/mitmproxy/pull/5658 for details.
             let newViewportTop = Math.min(
                 viewportTop,
-                vScroll.end * this.props.rowHeight
+                vScroll.end * this.props.rowHeight,
             );
             this.setState({
                 vScroll,

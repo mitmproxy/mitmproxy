@@ -13,7 +13,7 @@ test("Dropdown", async () => {
             <MenuItem onClick={() => 0}>click me</MenuItem>
             <Divider />
             <MenuItem onClick={() => 0}>click me</MenuItem>
-        </Dropdown>
+        </Dropdown>,
     );
     expect(asFragment()).toMatchSnapshot();
 
@@ -30,7 +30,7 @@ test("SubMenu", async () => {
     const { asFragment } = render(
         <SubMenu title="submenu">
             <MenuItem onClick={() => 0}>click me</MenuItem>
-        </SubMenu>
+        </SubMenu>,
     );
     expect(asFragment()).toMatchSnapshot();
 

@@ -27,5 +27,5 @@ export default (Component) =>
                 super.componentDidUpdate && super.componentDidUpdate();
             }
         },
-        Component
+        Component,
     );

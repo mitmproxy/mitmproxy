@@ -48,19 +48,19 @@ test("CommandBar", async () => {
                 return_type: null,
                 signature_help: "flow.encode flows part encoding",
             },
-        })
+        }),
     );
     fetchMock.mockOnceIf(
         "./commands/commands.history.get",
-        JSON.stringify({ value: ["foo"] })
+        JSON.stringify({ value: ["foo"] }),
     );
     fetchMock.mockOnceIf(
         "./commands/commands.history.add",
-        JSON.stringify({ value: null })
+        JSON.stringify({ value: null }),
     );
     fetchMock.mockOnceIf(
         "./commands/flow.encode",
-        JSON.stringify({ value: null })
+        JSON.stringify({ value: null }),
     );
 
     const { asFragment } = render(<CommandBar />);

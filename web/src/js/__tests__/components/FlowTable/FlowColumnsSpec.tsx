@@ -14,7 +14,7 @@ test("should render columns", async () => {
                         <Col flow={tflow} />
                     </tr>
                 </tbody>
-            </table>
+            </table>,
         );
         expect(asFragment()).toMatchSnapshot(name);
     });
@@ -77,7 +77,7 @@ describe("Flowcolumns Components", () => {
         // no response
         let noResponseFlow = { ...TFlow(), response: undefined };
         iconColumn = renderer.create(
-            <FlowColumns.icon flow={noResponseFlow} />
+            <FlowColumns.icon flow={noResponseFlow} />,
         );
         tree = iconColumn.toJSON();
         expect(tree).toMatchSnapshot();
@@ -104,7 +104,7 @@ describe("Flowcolumns Components", () => {
 
         let noResponseFlow = { ...tflow, response: undefined };
         timeColumn = renderer.create(
-            <FlowColumns.time flow={noResponseFlow} />
+            <FlowColumns.time flow={noResponseFlow} />,
         );
         tree = timeColumn.toJSON();
         expect(tree).toMatchSnapshot();
@@ -113,7 +113,7 @@ describe("Flowcolumns Components", () => {
     it("should render CommentColumn", () => {
         let tflow = TFlow(),
             commentColumn = renderer.create(
-                <FlowColumns.comment flow={tflow} />
+                <FlowColumns.comment flow={tflow} />,
             ),
             tree = commentColumn.toJSON();
         expect(tree).toMatchSnapshot();

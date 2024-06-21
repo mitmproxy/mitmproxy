@@ -67,7 +67,7 @@ export function ServerDescription({
         (listen_addrs.length === 2 &&
             listen_addrs[0][1] === listen_addrs[1][1]);
     const unbound = listen_addrs.every((addr) =>
-        ["::", "0.0.0.0"].includes(addr[0])
+        ["::", "0.0.0.0"].includes(addr[0]),
     );
     if (all_same_port && unbound) {
         listen_str = formatAddress(["*", listen_addrs[0][1]]);

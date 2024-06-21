@@ -9,6 +9,7 @@ import StartMenu from "./Header/StartMenu";
 import OptionMenu from "./Header/OptionMenu";
 import FlowMenu from "./Header/FlowMenu";
 import { Menu } from "./ProxyApp";
+import { shallowEqual } from "react-redux";
 
 interface HeaderProps {
     ActiveMenu: Menu;
@@ -16,10 +17,12 @@ interface HeaderProps {
 }
 
 export default function Header({ ActiveMenu, setActiveMenu }: HeaderProps) {
-    const selectedFlows = useAppSelector((state) =>
-        state.flows.selected.filter((id) => id in state.flows.byId)
-    );
-    const [wasFlowSelected, setWasFlowSelected] = useState(false);
+    const selectedFlows = useAppSelector(
+            (state) =>
+                state.flows.selected.filter((id) => id in state.flows.byId),
+            shallowEqual,
+        ),
+        [wasFlowSelected, setWasFlowSelected] = useState(false);
 
     let entries: Menu[] = [CaptureMenu, StartMenu, OptionMenu];
     if (selectedFlows.length > 0) {

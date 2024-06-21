@@ -47,7 +47,7 @@ describe("updateStoreFromUrl", () => {
         let store = mockStore();
         updateStoreFromUrl(store);
         expect(console.error).toBeCalledWith(
-            "unimplemented query arg: foo=bar"
+            "unimplemented query arg: foo=bar",
         );
     });
 
@@ -93,7 +93,7 @@ describe("updateUrlFromStore", () => {
         expect(history.replaceState).toBeCalledWith(
             undefined,
             "",
-            "/#/flows/123/request?s=~u%20foo"
+            "/#/flows/123/request?s=~u%20foo",
         );
     });
 });

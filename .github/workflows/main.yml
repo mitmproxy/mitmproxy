@@ -312,7 +312,9 @@ jobs:
         uses: actions/attest-build-provenance@v1
         with:
           subject-path: 'release/dist/*'
-      - run: mv ${{ steps.provenance.outputs.bundle-path }} release/dist/mitmproxy-${{ github.ref_name }}.sigstore
+      - run: |
+          REF=${{ github.ref_name }}
+          mv ${{ steps.provenance.outputs.bundle-path }} release/dist/mitmproxy-${REF#v}.sigstore
       - run: ls docs/public
       - run: ls release/dist
 

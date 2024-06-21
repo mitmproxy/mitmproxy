@@ -113,5 +113,5 @@ export default connect(
     {
         hideModal: modalAction.hideModal,
         save: optionAction.save,
-    }
+    },
 )(PureOptionModal);

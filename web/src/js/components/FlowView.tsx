@@ -67,7 +67,7 @@ export function tabsForFlow(flow: Flow): string[] {
 export default function FlowView() {
     const dispatch = useAppDispatch(),
         flow = useAppSelector(
-            (state) => state.flows.byId[state.flows.selected[0]]
+            (state) => state.flows.byId[state.flows.selected[0]],
         ),
         tabs = tabsForFlow(flow);
 
