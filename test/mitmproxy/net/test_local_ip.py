@@ -1,5 +1,5 @@
-from mitmproxy.net import local_ip
 from ...conftest import skip_no_ipv6
+from mitmproxy.net import local_ip
 
 
 def test_get_local_ip():
