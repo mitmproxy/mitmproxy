@@ -4,9 +4,7 @@ import regularReducer, {
     initialState,
     MODE_REGULAR_TOGGLE,
 } from "./../../../ducks/modes/regular";
-import {
-    RECEIVE as RECEIVE_OPTIONS,
-} from "../../../ducks/options";
+import { RECEIVE as RECEIVE_OPTIONS } from "../../../ducks/options";
 import { TStore } from "../tutils";
 
 jest.mock("../../../ducks/modes", () => ({
@@ -25,7 +23,7 @@ describe("regularReducer", () => {
         expect(newState.active).toBe(!initialState.active);
     });
 
-    it('should dispatch MODE_LOCAL_TOGGLE and updateMode', async () => {
+    it("should dispatch MODE_LOCAL_TOGGLE and updateMode", async () => {
         const store = TStore();
         const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
 
@@ -47,8 +45,8 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("http")
-        expect(newState.listen_port).toBe(8081)
+        expect(newState.listen_host).toBe("http");
+        expect(newState.listen_port).toBe(8081);
     });
 
     it('should handle RECEIVE_OPTIONS action with data.mode containing "regular" and a port', () => {
@@ -62,8 +60,8 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe(undefined)
-        expect(newState.listen_port).toBe(8081)
+        expect(newState.listen_host).toBe(undefined);
+        expect(newState.listen_port).toBe(8081);
     });
     it('should handle RECEIVE_OPTIONS action with data.mode containing "regular"', () => {
         const action = {
@@ -76,8 +74,8 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe(undefined)
-        expect(newState.listen_port).toBe(undefined)
+        expect(newState.listen_host).toBe(undefined);
+        expect(newState.listen_port).toBe(undefined);
     });
 });
 

@@ -7,9 +7,7 @@ import localReducer, {
     getMode,
     sanitizeInput,
 } from "../../../ducks/modes/local";
-import {
-    RECEIVE as RECEIVE_OPTIONS,
-} from "../../../ducks/options";
+import { RECEIVE as RECEIVE_OPTIONS } from "../../../ducks/options";
 import { TStore } from "../tutils";
 
 jest.mock("../../../ducks/modes", () => ({
@@ -37,7 +35,7 @@ describe("localReducer", () => {
         expect(newState.error).toBeUndefined();
     });
 
-    it('should dispatch MODE_LOCAL_TOGGLE and updateMode', async () => {
+    it("should dispatch MODE_LOCAL_TOGGLE and updateMode", async () => {
         const store = TStore();
         const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
 
@@ -48,7 +46,7 @@ describe("localReducer", () => {
         expect(mockUpdateMode).toHaveBeenCalled();
     });
 
-    it('should dispatch MODE_LOCAL_SET_APPLICATIONS and updateMode', async () => {
+    it("should dispatch MODE_LOCAL_SET_APPLICATIONS and updateMode", async () => {
         const store = TStore();
         const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
 
@@ -62,7 +60,7 @@ describe("localReducer", () => {
         expect(mockUpdateMode).toHaveBeenCalled();
     });
 
-    it('should handle RECEIVE_OPTIONS action', () => {
+    it("should handle RECEIVE_OPTIONS action", () => {
         const action = {
             type: RECEIVE_OPTIONS,
             data: {

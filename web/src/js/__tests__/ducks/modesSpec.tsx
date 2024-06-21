@@ -30,7 +30,7 @@ describe("updateMode action creator", () => {
             local: {
                 active: false,
                 name: "local",
-                applications: ""
+                applications: "",
             },
         });
     });

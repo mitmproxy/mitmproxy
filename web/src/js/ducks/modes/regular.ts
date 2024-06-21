@@ -19,15 +19,17 @@ export const getMode = (modes) => {
     return addListenAddr(regularMode);
 };
 
-export const toggleRegular = (updateModeFunc = updateMode) => async (dispatch) => {
-    dispatch({ type: MODE_REGULAR_TOGGLE });
+export const toggleRegular =
+    (updateModeFunc = updateMode) =>
+    async (dispatch) => {
+        dispatch({ type: MODE_REGULAR_TOGGLE });
 
-    const result = await dispatch(updateModeFunc());
+        const result = await dispatch(updateModeFunc());
 
-    if (!result.success) {
-        // TODO: handle error
-    }
-};
+        if (!result.success) {
+            // TODO: handle error
+        }
+    };
 
 const regularReducer = (state = initialState, action): RegularState => {
     switch (action.type) {

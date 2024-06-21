@@ -137,7 +137,7 @@ export const testState: RootState = {
             active: false,
             name: "local",
             applications: "",
-        }
+        },
     },
 };
 

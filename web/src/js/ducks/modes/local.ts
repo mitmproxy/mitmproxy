@@ -29,33 +29,37 @@ export const getMode = (modes) => {
     return [];
 };
 
-export const toggleLocal = (updateModeFunc = updateMode) => async (dispatch) => {
-    dispatch({ type: MODE_LOCAL_TOGGLE });
+export const toggleLocal =
+    (updateModeFunc = updateMode) =>
+    async (dispatch) => {
+        dispatch({ type: MODE_LOCAL_TOGGLE });
 
-    const result = await dispatch(updateModeFunc());
+        const result = await dispatch(updateModeFunc());
 
-    if (!result.success) {
-        // TODO: handle error
-    }
-};
+        if (!result.success) {
+            // TODO: handle error
+        }
+    };
 
 export const sanitizeInput = (input: string) => {
     return input.replace(/,$/, ""); // Remove trailing comma
 };
 
-export const setApplications = (applications, updateModeFunc = updateMode) => async (dispatch) => {
-    const sanitizeApplications = sanitizeInput(applications);
-    dispatch({
-        type: MODE_LOCAL_SET_APPLICATIONS,
-        applications: sanitizeApplications,
-    });
+export const setApplications =
+    (applications, updateModeFunc = updateMode) =>
+    async (dispatch) => {
+        const sanitizeApplications = sanitizeInput(applications);
+        dispatch({
+            type: MODE_LOCAL_SET_APPLICATIONS,
+            applications: sanitizeApplications,
+        });
 
-    const result = await dispatch(updateModeFunc());
+        const result = await dispatch(updateModeFunc());
 
-    if (!result.success) {
-        // TODO: handle error
-    }
-};
+        if (!result.success) {
+            // TODO: handle error
+        }
+    };
 
 const localReducer = (state = initialState, action): LocalState => {
     switch (action.type) {
