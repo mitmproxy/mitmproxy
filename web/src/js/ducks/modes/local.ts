@@ -5,8 +5,8 @@ import {
 } from "../options";
 import { getModesOfType } from "./utils";
 
-export const TOGGLE_LOCAL = "TOGGLE_LOCAL";
-export const SET_APPLICATIONS = "SET_APPLICATIONS";
+export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
+export const MODE_LOCAL_SET_APPLICATIONS = "MODE_LOCAL_SET_APPLICATIONS";
 
 interface LocalState extends ModeState {
     applications?: string;
@@ -29,48 +29,43 @@ export const getMode = (modes) => {
     return [];
 };
 
-export const toggleLocal = () => {
-    return async (dispatch) => {
-        dispatch({ type: TOGGLE_LOCAL });
+export const toggleLocal = (updateModeFunc = updateMode) => async (dispatch) => {
+    dispatch({ type: MODE_LOCAL_TOGGLE });
 
-        const result = await dispatch(updateMode());
+    const result = await dispatch(updateModeFunc());
 
-        if (!result.success) {
-            //TODO: handle error
-            console.error("error", result.error);
-        }
-    };
+    if (!result.success) {
+        // TODO: handle error
+    }
 };
 
-const sanitizeInput = (input: string) => {
+export const sanitizeInput = (input: string) => {
     return input.replace(/,$/, ""); // Remove trailing comma
 };
 
-export const setApplications = (applications: string) => {
-    return async (dispatch) => {
-        const sanitizeApplications = sanitizeInput(applications);
-        dispatch({
-            type: SET_APPLICATIONS,
-            applications: sanitizeApplications,
-        });
-        const result = await dispatch(updateMode());
+export const setApplications = (applications, updateModeFunc = updateMode) => async (dispatch) => {
+    const sanitizeApplications = sanitizeInput(applications);
+    dispatch({
+        type: MODE_LOCAL_SET_APPLICATIONS,
+        applications: sanitizeApplications,
+    });
 
-        if (!result.success) {
-            //TODO: handle error
-            console.error("error", result.error);
-        }
-    };
+    const result = await dispatch(updateModeFunc());
+
+    if (!result.success) {
+        // TODO: handle error
+    }
 };
 
 const localReducer = (state = initialState, action): LocalState => {
     switch (action.type) {
-        case TOGGLE_LOCAL:
+        case MODE_LOCAL_TOGGLE:
             return {
                 ...state,
                 active: !state.active,
                 error: undefined,
             };
-        case SET_APPLICATIONS:
+        case MODE_LOCAL_SET_APPLICATIONS:
             console.log(action.applications);
             return {
                 ...state,
