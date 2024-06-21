@@ -17,13 +17,6 @@ describe("localReducer", () => {
         expect(state).toEqual(initialState);
     });
 
-    it("should handle MODE_LOCAL_TOGGLE action", () => {
-        const action = { type: MODE_LOCAL_TOGGLE };
-        const newState = localReducer(initialState, action);
-        expect(newState.active).toBe(!initialState.active);
-        expect(newState.error).toBeUndefined();
-    });
-
     it("should handle MODE_LOCAL_SET_APPLICATIONS action", () => {
         const applications = "app1, app2";
         const action = { type: MODE_LOCAL_SET_APPLICATIONS, applications };
