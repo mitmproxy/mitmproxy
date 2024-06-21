@@ -36,6 +36,35 @@ describe("regularReducer", () => {
         expect(mockUpdateMode).toHaveBeenCalled();
     });
 
+    it('should handle RECEIVE_OPTIONS action with data.mode containing "regular", an host and a port', () => {
+        const action = {
+            type: RECEIVE_OPTIONS,
+            data: {
+                mode: {
+                    value: ["regular@http:8081"],
+                },
+            },
+        };
+        const newState = regularReducer(initialState, action);
+        expect(newState.active).toBe(true);
+        expect(newState.listen_host).toBe("http")
+        expect(newState.listen_port).toBe(8081)
+    });
+
+    it('should handle RECEIVE_OPTIONS action with data.mode containing "regular" and a port', () => {
+        const action = {
+            type: RECEIVE_OPTIONS,
+            data: {
+                mode: {
+                    value: ["regular@8081"],
+                },
+            },
+        };
+        const newState = regularReducer(initialState, action);
+        expect(newState.active).toBe(true);
+        expect(newState.listen_host).toBe(undefined)
+        expect(newState.listen_port).toBe(8081)
+    });
     it('should handle RECEIVE_OPTIONS action with data.mode containing "regular"', () => {
         const action = {
             type: RECEIVE_OPTIONS,
@@ -47,19 +76,8 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-    });
-
-    it('should handle RECEIVE_OPTIONS action with data.mode not containing "regular"', () => {
-        const action = {
-            type: RECEIVE_OPTIONS,
-            data: {
-                mode: {
-                    value: ["othermode"],
-                },
-            },
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(false);
+        expect(newState.listen_host).toBe(undefined)
+        expect(newState.listen_port).toBe(undefined)
     });
 });
 
