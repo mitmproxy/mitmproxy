@@ -28,7 +28,7 @@ describe("localReducer", () => {
         expect(newState.error).toBeUndefined();
     });
 
-    it("should handle ADD_APPLICATIONS action", () => {
+    it("should handle SET_APPLICATIONS action", () => {
         const applications = "app1, app2";
         const action = { type: SET_APPLICATIONS, applications };
         const newState = localReducer(initialState, action);

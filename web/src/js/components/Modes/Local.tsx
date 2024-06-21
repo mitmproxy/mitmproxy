@@ -11,16 +11,7 @@ export default function Local() {
         (state) => state.modes.local
     );
 
-    const [listApplications, setListApplications] = React.useState(
-        applications || ""
-    );
-
-    React.useEffect(() => {
-        setListApplications(applications || "");
-    }, [applications]);
-
     const handleListApplicationsChange = (applications: string) => {
-        setListApplications(applications);
         dispatch(setApplications(applications));
     };
 
@@ -34,7 +25,7 @@ export default function Local() {
                 Intercept traffic for
                 <ValueEditor
                     className="mode-local-input"
-                    content={listApplications}
+                    content={applications || ""}
                     onEditDone={(applications) =>
                         handleListApplicationsChange(applications)
                     }
