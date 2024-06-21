@@ -13,7 +13,7 @@ interface MainViewProps {
 
 export default function MainView({ ActiveMenu }: MainViewProps) {
     const hasSelection = useAppSelector(
-        (state) => !!state.flows.byId[state.flows.selected[0]]
+        (state) => !!state.flows.byId[state.flows.selected[0]],
     );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
 

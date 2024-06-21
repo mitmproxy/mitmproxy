@@ -15,7 +15,7 @@ test("ValidateEditor", async () => {
             content="ok"
             isValid={(x) => x.includes("ok")}
             onEditDone={onEditDone}
-        />
+        />,
     );
     expect(asFragment()).toMatchSnapshot();
 

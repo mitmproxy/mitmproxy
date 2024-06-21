@@ -93,7 +93,7 @@ export default function Timing({ flow }: { flow: Flow }) {
                     t: flow.response?.timestamp_end,
                     deltaTo: ref,
                 },
-            ]
+            ],
         );
     }
 

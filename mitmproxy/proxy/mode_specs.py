@@ -90,7 +90,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def transport_protocol(self) -> Literal["tcp", "udp"] | None:
+    def transport_protocol(self) -> Literal["tcp", "udp", "both"] | None:
         """The transport protocol used by this mode's server."""
 
     @classmethod
@@ -172,8 +172,9 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise dataclasses.FrozenInstanceError("Proxy modes are immutable.")
 
 
-TCP: Literal["tcp", "udp"] = "tcp"
-UDP: Literal["tcp", "udp"] = "udp"
+TCP: Literal["tcp", "udp", "both"] = "tcp"
+UDP: Literal["tcp", "udp", "both"] = "udp"
+BOTH: Literal["tcp", "udp", "both"] = "both"
 
 
 def _check_empty(data):
@@ -230,8 +231,10 @@ class ReverseMode(ProxyMode):
     # noinspection PyDataclass
     def __post_init__(self) -> None:
         self.scheme, self.address = server_spec.parse(self.data, default_scheme="https")
-        if self.scheme in ("http3", "dtls", "udp", "dns", "quic"):
+        if self.scheme in ("http3", "dtls", "udp", "quic"):
             self.transport_protocol = UDP
+        elif self.scheme == "dns":
+            self.transport_protocol = BOTH
         self.description = f"{self.description} to {self.data}"
 
     @property
@@ -257,7 +260,7 @@ class DnsMode(ProxyMode):
 
     description = "DNS server"
     default_port = 53
-    transport_protocol = UDP
+    transport_protocol = BOTH
 
     def __post_init__(self) -> None:
         _check_empty(self.data)

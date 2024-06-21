@@ -7,10 +7,10 @@ describe("MessageUtils", () => {
     it("should be possible to get first header", () => {
         let tflow = TFlow();
         expect(
-            utils.MessageUtils.get_first_header(tflow.request, /header/)
+            utils.MessageUtils.get_first_header(tflow.request, /header/),
         ).toEqual("qvalue");
         expect(
-            utils.MessageUtils.get_first_header(tflow.request, /123/)
+            utils.MessageUtils.get_first_header(tflow.request, /123/),
         ).toEqual(undefined);
     });
 
@@ -18,7 +18,7 @@ describe("MessageUtils", () => {
         let tflow = TFlow();
         tflow.request.headers = [["Content-Type", "text/html"]];
         expect(utils.MessageUtils.getContentType(tflow.request)).toEqual(
-            "text/html"
+            "text/html",
         );
     });
 
@@ -34,20 +34,20 @@ describe("MessageUtils", () => {
         // request
         let view = "bar";
         expect(
-            utils.MessageUtils.getContentURL(flow, flow.request, view)
+            utils.MessageUtils.getContentURL(flow, flow.request, view),
         ).toEqual(
-            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content/bar.json"
+            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content/bar.json",
         );
         expect(
-            utils.MessageUtils.getContentURL(flow, flow.request, "")
+            utils.MessageUtils.getContentURL(flow, flow.request, ""),
         ).toEqual(
-            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content.data"
+            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content.data",
         );
         // response
         expect(
-            utils.MessageUtils.getContentURL(flow, flow.response, view)
+            utils.MessageUtils.getContentURL(flow, flow.response, view),
         ).toEqual(
-            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content/bar.json"
+            "./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content/bar.json",
         );
     });
 });
@@ -56,7 +56,7 @@ describe("RequestUtils", () => {
     it("should be possible prettify url", () => {
         let flow = TFlow();
         expect(utils.RequestUtils.pretty_url(flow.request)).toEqual(
-            "http://address:22/path"
+            "http://address:22/path",
         );
     });
 });

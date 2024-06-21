@@ -5,7 +5,7 @@ import OptionMenu from "../../components/Header/OptionMenu";
 
 test("Header", async () => {
     const { asFragment } = render(
-        <Header ActiveMenu={OptionMenu} setActiveMenu={jest.fn()} />
+        <Header ActiveMenu={OptionMenu} setActiveMenu={jest.fn()} />,
     );
 
     expect(asFragment()).toMatchSnapshot();

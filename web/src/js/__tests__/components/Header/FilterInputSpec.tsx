@@ -14,7 +14,7 @@ describe("FilterInput Component", () => {
                     placeholder="bar"
                     onChange={() => undefined}
                     value="42"
-                />
+                />,
             ),
             tree = filterInput.toJSON();
         expect(tree).toMatchSnapshot();
@@ -27,7 +27,7 @@ describe("FilterInput Component", () => {
             placeholder="bar"
             value=""
             onChange={jest.fn()}
-        />
+        />,
     );
     it("should handle componentWillReceiveProps", () => {
         filterInput.UNSAFE_componentWillReceiveProps({ value: "foo" });
@@ -49,7 +49,7 @@ describe("FilterInput Component", () => {
 
         filterInput.state.value = "~foo bar";
         expect(filterInput.getDesc()).toEqual(
-            'SyntaxError: Expected filter expression but "~" found.'
+            'SyntaxError: Expected filter expression but "~" found.',
         );
     });
 
