@@ -2,7 +2,7 @@ import {
     RECEIVE as RECEIVE_OPTIONS,
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
-import { ModeState, updateMode } from "../modes";
+import { ModeState, updateMode } from "./utils";
 import { addListenAddr, getModesOfType } from "./utils";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";

@@ -1,4 +1,4 @@
-import { updateMode } from "../../ducks/modes";
+import { updateMode } from "../../ducks/modes/utils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "./tutils";
 import { fetchApi } from "../../utils";

@@ -1,8 +1,5 @@
-import { ModeState, updateMode } from "../modes";
-import {
-    RECEIVE as RECEIVE_OPTIONS,
-    UPDATE as UPDATE_OPTIONS,
-} from "../options";
+import { ModeState, updateMode } from "./utils";
+import * as options from "../options";
 import { getModesOfType } from "./utils";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
@@ -29,16 +26,10 @@ export const getMode = (modes) => {
     return [];
 };
 
-export const toggleLocal =
-    (updateModeFunc = updateMode) =>
+export const toggleLocal = () =>
     async (dispatch) => {
         dispatch({ type: MODE_LOCAL_TOGGLE });
-
-        const result = await dispatch(updateModeFunc());
-
-        if (!result.success) {
-            // TODO: handle error
-        }
+        await dispatch(updateMode());
     };
 
 export const sanitizeInput = (input: string) => {
@@ -70,14 +61,13 @@ const localReducer = (state = initialState, action): LocalState => {
                 error: undefined,
             };
         case MODE_LOCAL_SET_APPLICATIONS:
-            console.log(action.applications);
             return {
                 ...state,
                 applications: action.applications,
                 error: undefined,
             };
-        case UPDATE_OPTIONS:
-        case RECEIVE_OPTIONS:
+        case options.UPDATE:
+        case options.RECEIVE:
             if (action.data && action.data.mode) {
                 const currentModeConfig = getModesOfType(
                     "local",
