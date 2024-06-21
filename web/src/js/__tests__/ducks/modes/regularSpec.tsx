@@ -2,17 +2,15 @@ import regularReducer, {
     toggleRegular,
     getMode,
     initialState,
-    TOGGLE_REGULAR,
+    MODE_REGULAR_TOGGLE,
 } from "./../../../ducks/modes/regular";
 import {
     RECEIVE as RECEIVE_OPTIONS,
-    UPDATE as UPDATE_OPTIONS,
 } from "../../../ducks/options";
-import { updateMode } from "../../../ducks/modes";
+import { TStore } from "../tutils";
 
-// Mock updateMode if needed
 jest.mock("../../../ducks/modes", () => ({
-    updateMode: jest.fn(),
+    updateMode: jest.fn(() => ({ success: true })),
 }));
 
 describe("regularReducer", () => {
@@ -22,9 +20,20 @@ describe("regularReducer", () => {
     });
 
     it("should handle TOGGLE_REGULAR action", () => {
-        const action = { type: TOGGLE_REGULAR };
+        const action = { type: MODE_REGULAR_TOGGLE };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(!initialState.active);
+    });
+
+    it('should dispatch MODE_LOCAL_TOGGLE and updateMode', async () => {
+        const store = TStore();
+        const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
+
+        await store.dispatch(toggleRegular(mockUpdateMode));
+
+        const actions = store.getActions();
+        expect(actions[0]).toEqual({ type: MODE_REGULAR_TOGGLE });
+        expect(mockUpdateMode).toHaveBeenCalled();
     });
 
     it('should handle RECEIVE_OPTIONS action with data.mode containing "regular"', () => {
@@ -52,45 +61,44 @@ describe("regularReducer", () => {
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(false);
     });
+});
 
-    // Tests for getMode function
-    describe("getMode", () => {
-        it("should return the correct mode string when active", () => {
-            const modes = {
-                regular: {
-                    active: true,
-                    name: "regular",
-                    listen_host: "localhost",
-                    listen_port: 8080,
-                },
-            };
-            const mode = getMode(modes);
-            expect(JSON.stringify(mode)).toBe(
-                JSON.stringify(["regular@localhost:8080"])
-            );
-        });
+describe("getMode", () => {
+    it("should return the correct mode string when active", () => {
+        const modes = {
+            regular: {
+                active: true,
+                name: "regular",
+                listen_host: "localhost",
+                listen_port: 8080,
+            },
+        };
+        const mode = getMode(modes);
+        expect(JSON.stringify(mode)).toBe(
+            JSON.stringify(["regular@localhost:8080"])
+        );
+    });
 
-        it("should return an empty string when not active", () => {
-            const modes = {
-                regular: {
-                    active: false,
-                    listen_host: "localhost",
-                    listen_port: 8080,
-                },
-            };
-            const mode = getMode(modes);
-            expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
-        });
+    it("should return an empty string when not active", () => {
+        const modes = {
+            regular: {
+                active: false,
+                listen_host: "localhost",
+                listen_port: 8080,
+            },
+        };
+        const mode = getMode(modes);
+        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
+    });
 
-        it("should return the correct mode string without listen_host and listen_port", () => {
-            const modes = {
-                regular: {
-                    active: true,
-                    name: "regular",
-                },
-            };
-            const mode = getMode(modes);
-            expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
-        });
+    it("should return the correct mode string without listen_host and listen_port", () => {
+        const modes = {
+            regular: {
+                active: true,
+                name: "regular",
+            },
+        };
+        const mode = getMode(modes);
+        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
     });
 });

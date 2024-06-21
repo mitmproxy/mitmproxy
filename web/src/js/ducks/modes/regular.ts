@@ -5,7 +5,7 @@ import {
 import { ModeState, updateMode } from "../modes";
 import { addListenAddr, getModesOfType } from "./utils";
 
-export const TOGGLE_REGULAR = "TOGGLE_REGULAR";
+export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 
 interface RegularState extends ModeState {}
 
@@ -19,22 +19,19 @@ export const getMode = (modes) => {
     return addListenAddr(regularMode);
 };
 
-export const toggleRegular = () => {
-    return async (dispatch) => {
-        dispatch({ type: TOGGLE_REGULAR });
+export const toggleRegular = (updateModeFunc = updateMode) => async (dispatch) => {
+    dispatch({ type: MODE_REGULAR_TOGGLE });
 
-        const result = await dispatch(updateMode());
+    const result = await dispatch(updateModeFunc());
 
-        if (!result.success) {
-            //TODO: handle error
-            console.error("error", result.error);
-        }
-    };
+    if (!result.success) {
+        // TODO: handle error
+    }
 };
 
 const regularReducer = (state = initialState, action): RegularState => {
     switch (action.type) {
-        case TOGGLE_REGULAR:
+        case MODE_REGULAR_TOGGLE:
             return {
                 ...state,
                 active: !state.active,

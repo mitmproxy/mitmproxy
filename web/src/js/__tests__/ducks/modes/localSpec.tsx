@@ -13,7 +13,7 @@ import {
 import { TStore } from "../tutils";
 
 jest.mock("../../../ducks/modes", () => ({
-    updateMode: jest.fn(() => ({ success: true })), // mock the updateMode function
+    updateMode: jest.fn(() => ({ success: true })),
 }));
 
 describe("localReducer", () => {
