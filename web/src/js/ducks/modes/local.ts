@@ -26,11 +26,10 @@ export const getMode = (modes) => {
     return [];
 };
 
-export const toggleLocal = () =>
-    async (dispatch) => {
-        dispatch({ type: MODE_LOCAL_TOGGLE });
-        await dispatch(updateMode());
-    };
+export const toggleLocal = () => async (dispatch) => {
+    dispatch({ type: MODE_LOCAL_TOGGLE });
+    await dispatch(updateMode());
+};
 
 export const sanitizeInput = (input: string) => {
     return input.replace(/,$/, ""); // Remove trailing comma
@@ -71,7 +70,7 @@ const localReducer = (state = initialState, action): LocalState => {
             if (action.data && action.data.mode) {
                 const currentModeConfig = getModesOfType(
                     "local",
-                    action.data.mode.value
+                    action.data.mode.value,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 return {

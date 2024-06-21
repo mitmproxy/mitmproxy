@@ -1,6 +1,6 @@
-import {getMode as getRegularModeConfig} from "./regular";
-import {getMode as getLocalModeConfig} from "./local";
-import {fetchApi} from "../../utils";
+import { getMode as getRegularModeConfig } from "./regular";
+import { getMode as getLocalModeConfig } from "./local";
+import { fetchApi } from "../../utils";
 
 export interface ModeState {
     active: boolean;

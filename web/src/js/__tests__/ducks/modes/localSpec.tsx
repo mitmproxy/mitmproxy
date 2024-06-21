@@ -33,7 +33,7 @@ describe("localReducer", () => {
         expect(store.getState().modes.local.active).toBe(false);
         await store.dispatch(toggleLocal());
         expect(store.getState().modes.local.active).toBe(true);
-        expect(fetchMock).toHaveBeenCalled()
+        expect(fetchMock).toHaveBeenCalled();
     });
 
     it("should dispatch MODE_LOCAL_SET_APPLICATIONS and updateMode", async () => {

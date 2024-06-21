@@ -8,7 +8,7 @@ export default function Local() {
     const dispatch = useAppDispatch();
 
     const { active, applications, error } = useAppSelector(
-        (state) => state.modes.local
+        (state) => state.modes.local,
     );
 
     const handleListApplicationsChange = (applications: string) => {

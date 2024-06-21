@@ -94,7 +94,7 @@ describe("getMode", () => {
         };
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(
-            JSON.stringify(["regular@localhost:8080"])
+            JSON.stringify(["regular@localhost:8080"]),
         );
     });
 

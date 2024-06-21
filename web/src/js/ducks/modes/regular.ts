@@ -43,7 +43,7 @@ const regularReducer = (state = initialState, action): RegularState => {
             if (action.data && action.data.mode) {
                 const currentModeConfig = getModesOfType(
                     "regular",
-                    action.data.mode.value
+                    action.data.mode.value,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 return {
