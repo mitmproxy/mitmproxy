@@ -111,7 +111,7 @@ class DNSLayer(layer.Layer):
             offset = 0
             if size >= _LENGTH_LABEL.size:
                 if not self.expected_size:
-                    data = bytes(self.buf[offset:_LENGTH_LABEL.size])
+                    data = bytes(self.buf[offset : _LENGTH_LABEL.size])
                     (self.expected_size,) = _LENGTH_LABEL.unpack_from(data, offset)
                     offset += _LENGTH_LABEL.size
             else:
