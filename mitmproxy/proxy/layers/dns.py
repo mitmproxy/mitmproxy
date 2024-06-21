@@ -1,5 +1,5 @@
-import struct
 from dataclasses import dataclass
+import struct
 from typing import List
 from typing import Literal
 
@@ -40,6 +40,43 @@ class DnsErrorHook(commands.StartHook):
 
     flow: dns.DNSFlow
 
+def pack_message(
+    message: dns.Message, transport_protocol: Literal["tcp", "udp"]
+) -> bytes:
+    packed = message.packed
+    if transport_protocol == "tcp":
+        return struct.pack("!H", len(packed)) + packed
+    else:
+        return packed
+
+def unpack_message(data: bytes, transport_protocol: Literal["tcp", "udp"], buf: bytearray) -> List[dns.Message]:
+    msgs: List[dns.Message] = []
+
+    if transport_protocol == "udp":
+        msgs.append(dns.Message.unpack(data))
+    elif transport_protocol == "tcp":
+        buf.extend(data)
+        size = len(buf)
+        offset = 0
+
+        while True:
+            if size - offset < _LENGTH_LABEL.size:
+                break
+            (expected_size,) = _LENGTH_LABEL.unpack_from(buf, offset)
+            offset += _LENGTH_LABEL.size
+
+            if size - offset < expected_size:
+                offset -= _LENGTH_LABEL.size
+                break
+
+            data = bytes(buf[offset : expected_size + offset])
+            offset += expected_size
+            msgs.append(dns.Message.unpack(data))
+            expected_size = 0
+
+        del buf[:offset]
+    return msgs
+
 
 class DNSLayer(layer.Layer):
     """
@@ -47,14 +84,14 @@ class DNSLayer(layer.Layer):
     """
 
     flows: dict[int, dns.DNSFlow]
-    buf: bytearray
-    expected_size: int
+    req_buf: bytearray
+    resp_buf: bytearray
 
     def __init__(self, context: Context):
         super().__init__(context)
         self.flows = {}
-        self.buf = bytearray()
-        self.expected_size = 0
+        self.req_buf = bytearray()
+        self.resp_buf = bytearray()
 
     def handle_request(
         self, flow: dns.DNSFlow, msg: dns.Message
@@ -74,7 +111,7 @@ class DNSLayer(layer.Layer):
                     yield from self.handle_error(flow, str(err))
                     # cannot recover from this
                     return
-            packed = self.pack_message(
+            packed = pack_message(
                 flow.request, flow.server_conn.transport_protocol
             )
             yield commands.SendData(self.context.server, packed)
@@ -85,57 +122,14 @@ class DNSLayer(layer.Layer):
         flow.response = msg
         yield DnsResponseHook(flow)
         if flow.response:
-            packed = self.pack_message(
+            packed = pack_message(
                 flow.response, flow.client_conn.transport_protocol
             )
             yield commands.SendData(self.context.client, packed)
 
-    def pack_message(
-        self, message: dns.Message, transport_protocol: Literal["tcp", "udp"]
-    ) -> bytes:
-        packed = message.packed
-        if transport_protocol == "tcp":
-            return struct.pack("!H", len(packed)) + packed
-        else:
-            return packed
-
     def handle_error(self, flow: dns.DNSFlow, err: str) -> layer.CommandGenerator[None]:
         flow.error = mflow.Error(err)
         yield DnsErrorHook(flow)
-
-    def unpack_tcp_message(self) -> List[dns.Message]:
-        size = len(self.buf)
-        pipelined = False
-        msgs: List[dns.Message] = []
-        while size:
-            offset = 0
-            if size >= _LENGTH_LABEL.size:
-                if not self.expected_size:
-                    data = bytes(self.buf[offset : _LENGTH_LABEL.size])
-                    (self.expected_size,) = _LENGTH_LABEL.unpack_from(data, offset)
-                    offset += _LENGTH_LABEL.size
-            else:
-                break
-
-            if self.expected_size and size - offset >= self.expected_size:
-                data = bytes(self.buf[offset : self.expected_size + offset])
-                offset += self.expected_size
-                msgs.append(dns.Message.unpack(data))
-                self.expected_size = 0
-            else:
-                pipelined = True
-
-            # handle query pipelining
-            if offset < size:
-                self.buf = self.buf[offset:]
-            else:
-                self.buf = bytearray()
-
-            if pipelined:
-                break
-
-            size = len(self.buf)
-        return msgs
 
     @expect(events.Start)
     def state_start(self, _) -> layer.CommandGenerator[None]:
@@ -150,13 +144,10 @@ class DNSLayer(layer.Layer):
         if isinstance(event, events.DataReceived):
             msgs: List[dns.Message] = []
             try:
-                if self.context.client.transport_protocol == "udp":
-                    assert self.context.server.transport_protocol == "udp"
-                    msgs.append(dns.Message.unpack(event.data))
-                elif self.context.client.transport_protocol == "tcp":
-                    assert self.context.server.transport_protocol == "tcp"
-                    self.buf.extend(event.data)
-                    msgs = self.unpack_tcp_message()
+                buf = self.resp_buf
+                if from_client:
+                    buf = self.req_buf
+                msgs = unpack_message(event.data, event.connection.transport_protocol, buf)
             except struct.error as e:
                 yield commands.Log(f"{event.connection} sent an invalid message: {e}")
                 yield commands.CloseConnection(event.connection)
