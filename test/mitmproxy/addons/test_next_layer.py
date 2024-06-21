@@ -674,7 +674,7 @@ transparent_proxy_configs = [
         udp := TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, UDPLayer],
-            server_address=("192.0.2.1", 53),
+            server_address=("192.0.2.1", 553),
             transport_protocol="udp",
             data_client=b"\xff",
         ),
@@ -685,6 +685,7 @@ transparent_proxy_configs = [
             udp,
             after=[modes.TransparentProxy, DNSLayer],
             data_client=dns_query,
+            server_address=("192.0.2.1", 53),
         ),
         id="transparent proxy: dns",
     ),

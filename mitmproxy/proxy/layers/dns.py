@@ -1,5 +1,6 @@
 import struct
 from dataclasses import dataclass
+from typing import List
 from typing import Literal
 
 from mitmproxy import dns
@@ -46,14 +47,14 @@ class DNSLayer(layer.Layer):
     """
 
     flows: dict[int, dns.DNSFlow]
-    buf: bytes | None
-    expected_size: int | None
+    buf: bytearray
+    expected_size: int
 
     def __init__(self, context: Context):
         super().__init__(context)
         self.flows = {}
-        self.buf = None
-        self.expected_size = None
+        self.buf = bytearray()
+        self.expected_size = 0
 
     def handle_request(
         self, flow: dns.DNSFlow, msg: dns.Message
@@ -102,6 +103,40 @@ class DNSLayer(layer.Layer):
         flow.error = mflow.Error(err)
         yield DnsErrorHook(flow)
 
+    def unpack_tcp_message(self) -> List[dns.Message]:
+        size = len(self.buf)
+        pipelined = False
+        msgs: List[dns.Message] = []
+        while size:
+            offset = 0
+            if size >= _LENGTH_LABEL.size:
+                if not self.expected_size:
+                    data = bytes(self.buf[offset:_LENGTH_LABEL.size])
+                    (self.expected_size,) = _LENGTH_LABEL.unpack_from(data, offset)
+                    offset += _LENGTH_LABEL.size
+            else:
+                break
+
+            if self.expected_size and size - offset >= self.expected_size:
+                data = bytes(self.buf[offset : self.expected_size + offset])
+                offset += self.expected_size
+                msgs.append(dns.Message.unpack(data))
+                self.expected_size = 0
+            else:
+                pipelined = True
+
+            # handle query pipelining
+            if offset < size:
+                self.buf = self.buf[offset:]
+            else:
+                self.buf = bytearray()
+
+            if pipelined:
+                break
+
+            size = len(self.buf)
+        return msgs
+
     @expect(events.Start)
     def state_start(self, _) -> layer.CommandGenerator[None]:
         self._handle_event = self.state_query
@@ -113,31 +148,21 @@ class DNSLayer(layer.Layer):
         from_client = event.connection is self.context.client
 
         if isinstance(event, events.DataReceived):
-            msg = None
+            msgs: List[dns.Message] = []
             try:
                 if self.context.client.transport_protocol == "udp":
-                    msg = dns.Message.unpack(event.data)
+                    assert self.context.server.transport_protocol == "udp"
+                    msgs.append(dns.Message.unpack(event.data))
                 elif self.context.client.transport_protocol == "tcp":
-                    if self.expected_size is None:
-                        assert self.buf is None
-                        (self.expected_size,) = _LENGTH_LABEL.unpack_from(event.data, 0)
-                        self.buf = event.data[_LENGTH_LABEL.size :]
-                    else:
-                        assert self.buf is not None
-                        self.buf += event.data
-
-                    if self.expected_size == len(self.buf):
-                        msg = dns.Message.unpack(self.buf)
-                        self.buf = None
-                        self.expected_size = None
-                    elif self.expected_size < len(self.buf):
-                        raise struct.error("Message size exceeds expected size")
+                    assert self.context.server.transport_protocol == "tcp"
+                    self.buf.extend(event.data)
+                    msgs = self.unpack_tcp_message()
             except struct.error as e:
                 yield commands.Log(f"{event.connection} sent an invalid message: {e}")
                 yield commands.CloseConnection(event.connection)
                 self._handle_event = self.state_done
             else:
-                if msg is not None:
+                for msg in msgs:
                     try:
                         flow = self.flows[msg.id]
                     except KeyError:
@@ -149,8 +174,6 @@ class DNSLayer(layer.Layer):
                         yield from self.handle_request(flow, msg)
                     else:
                         yield from self.handle_response(flow, msg)
-                else:
-                    yield from ()
 
         elif isinstance(event, events.ConnectionClosed):
             other_conn = self.context.server if from_client else self.context.client
