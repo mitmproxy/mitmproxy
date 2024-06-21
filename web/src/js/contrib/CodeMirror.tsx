@@ -57,7 +57,7 @@ export default class CodeMirror extends React.Component<
         //this.componentWillReceiveProps = _.debounce(this.componentWillReceiveProps, 0);
         if (this.props.path) {
             console.error(
-                "Warning: react-codemirror: the `path` prop has been changed to `name`"
+                "Warning: react-codemirror: the `path` prop has been changed to `name`",
             );
         }
     }
@@ -66,7 +66,7 @@ export default class CodeMirror extends React.Component<
         const codeMirrorInstance = this.getCodeMirrorInstance();
         this.codeMirror = codeMirrorInstance.fromTextArea(
             this.textareaNode,
-            this.props.options
+            this.props.options,
         );
         this.codeMirror.on("change", this.codemirrorValueChanged.bind(this));
         this.codeMirror.on("cursorActivity", this.cursorActivity.bind(this));
@@ -74,7 +74,7 @@ export default class CodeMirror extends React.Component<
         this.codeMirror.on("blur", this.focusChanged.bind(this, false));
         this.codeMirror.on("scroll", this.scrollChanged.bind(this));
         this.codeMirror.setValue(
-            this.props.defaultValue || this.props.value || ""
+            this.props.defaultValue || this.props.value || "",
         );
     }
 
@@ -98,7 +98,7 @@ export default class CodeMirror extends React.Component<
                 this.codeMirror.setValue(nextProps.value);
                 this.codeMirror.scrollTo(
                     prevScrollPosition.left,
-                    prevScrollPosition.top
+                    prevScrollPosition.top,
                 );
             } else {
                 this.codeMirror.setValue(nextProps.value);
@@ -109,7 +109,7 @@ export default class CodeMirror extends React.Component<
                 if (nextProps.options.hasOwnProperty(optionName)) {
                     this.setOptionIfChanged(
                         optionName,
-                        nextProps.options[optionName]
+                        nextProps.options[optionName],
                     );
                 }
             }
@@ -158,7 +158,7 @@ export default class CodeMirror extends React.Component<
         const editorClassName = className(
             "ReactCodeMirror",
             this.state.isFocused ? "ReactCodeMirror--focused" : null,
-            this.props.className
+            this.props.className,
         );
         return (
             <div className={editorClassName}>

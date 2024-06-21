@@ -13,7 +13,7 @@ test("ProxyApp", async () => {
     };
     fetchMock.doMockOnceIf(
         "./flows/flow2/request/content/Auto.json?lines=513",
-        JSON.stringify(cv)
+        JSON.stringify(cv),
     );
     render(<ProxyApp />);
     expect(screen.getByTitle("Mitmproxy Version")).toBeDefined();

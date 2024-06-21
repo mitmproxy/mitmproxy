@@ -1,17 +1,11 @@
-import thunk from "redux-thunk";
-import configureStore, {
-    MockStoreCreator,
-    MockStoreEnhanced,
-} from "redux-mock-store";
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
-import { AppDispatch, RootState } from "../../ducks";
+import { RootState } from "../../ducks";
+import { reducer } from "../../ducks/store";
 import { DNSFlow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
-
-const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> =
-    configureStore([thunk]);
+import { configureStore } from "@reduxjs/toolkit";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -66,10 +60,12 @@ export const testState: RootState = {
             activeModal: undefined,
         },
         optionsEditor: {
-            booleanOption: { isUpdating: true, error: false },
-            strOption: { error: true },
-            intOption: {},
-            choiceOption: {},
+            anticache: { isUpdating: true, error: false, value: true },
+            cert_passphrase: {
+                isUpdating: false,
+                error: "incorrect password",
+                value: "correcthorsebatterystaple",
+            },
         },
     },
     options: defaultOptions,
@@ -141,6 +137,5 @@ export const testState: RootState = {
     },
 };
 
-export function TStore(): MockStoreEnhanced<RootState, AppDispatch> {
-    return mockStoreCreator(testState);
-}
+export const TStore = () =>
+    configureStore({ reducer, preloadedState: testState });

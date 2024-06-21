@@ -18,18 +18,18 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
     const dispatch = useAppDispatch();
 
     const contentView = useAppSelector(
-        (state) => state.ui.flow.contentViewFor[flow.id + "messages"] || "Auto"
+        (state) => state.ui.flow.contentViewFor[flow.id + "messages"] || "Auto",
     );
     let [maxLines, setMaxLines] = useState<number>(
-        useAppSelector((state) => state.options.content_view_lines_cutoff)
+        useAppSelector((state) => state.options.content_view_lines_cutoff),
     );
     const showMore = useCallback(
         () => setMaxLines(Math.max(1024, maxLines * 2)),
-        [maxLines]
+        [maxLines],
     );
     const content = useContent(
         MessageUtils.getContentURL(flow, "messages", contentView, maxLines + 1),
-        flow.id + messages_meta.count
+        flow.id + messages_meta.count,
     );
     const messages =
         useMemo<ContentViewData[] | undefined>(() => {

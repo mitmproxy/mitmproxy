@@ -54,7 +54,7 @@ dependencies = [
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado>=6.2,<=6.4",
     "typing-extensions>=4.3,<=4.11.0; python_version<'3.11'",
-    "urwid-mitmproxy>=2.1.1,<2.2",  # relaxed upper bound here: we control this
+    "urwid>=2.6.14,<=2.6.14",
     "wsproto>=1.0,<=1.2.0",
     "publicsuffix2>=2.20190812,<=2.20191221",
     "zstandard>=0.15,<=0.22.0",

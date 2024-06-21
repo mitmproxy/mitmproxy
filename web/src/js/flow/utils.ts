@@ -15,7 +15,7 @@ export class MessageUtils {
 
     static get_first_header(
         message: HTTPMessage,
-        regex: RegExp
+        regex: RegExp,
     ): string | undefined {
         //FIXME: Cache Invalidation.
         // @ts-ignore
@@ -58,7 +58,7 @@ export class MessageUtils {
         flow: Flow,
         part: HTTPMessage | "request" | "response" | "messages",
         view?: string,
-        lines?: number
+        lines?: number,
     ): string {
         if (flow.type === "http" && part === flow.request) {
             part = "request";
@@ -190,4 +190,115 @@ export const getTotalSize = (flow: Flow): number => {
 
 export const canReplay = (flow: Flow): boolean => {
     return flow.type === "http" && !flow.websocket;
+};
+
+export const getIcon = (flow: Flow): string => {
+    if (flow.type !== "http") {
+        if (flow.client_conn.tls_version === "QUIC") {
+            return `resource-icon-quic`;
+        }
+        return `resource-icon-${flow.type}`;
+    }
+    if (flow.websocket) {
+        return "resource-icon-websocket";
+    }
+    if (!flow.response) {
+        return "resource-icon-plain";
+    }
+
+    var contentType = ResponseUtils.getContentType(flow.response) || "";
+
+    if (flow.response.status_code === 304) {
+        return "resource-icon-not-modified";
+    }
+    if (300 <= flow.response.status_code && flow.response.status_code < 400) {
+        return "resource-icon-redirect";
+    }
+    if (contentType.indexOf("image") >= 0) {
+        return "resource-icon-image";
+    }
+    if (contentType.indexOf("javascript") >= 0) {
+        return "resource-icon-js";
+    }
+    if (contentType.indexOf("css") >= 0) {
+        return "resource-icon-css";
+    }
+    if (contentType.indexOf("html") >= 0) {
+        return "resource-icon-document";
+    }
+
+    return "resource-icon-plain";
+};
+
+export const mainPath = (flow: Flow): string => {
+    switch (flow.type) {
+        case "http":
+            return RequestUtils.pretty_url(flow.request);
+        case "tcp":
+        case "udp":
+            return `${flow.client_conn.peername.join(
+                ":",
+            )} ↔ ${flow.server_conn?.address?.join(":")}`;
+        case "dns":
+            return `${flow.request.questions
+                .map((q) => `${q.name} ${q.type}`)
+                .join(", ")} = ${
+                (flow.response?.answers.map((q) => q.data).join(", ") ??
+                    "...") ||
+                "?"
+            }`;
+    }
+};
+
+export const statusCode = (flow: Flow): string | number | undefined => {
+    switch (flow.type) {
+        case "http":
+            return flow.response?.status_code;
+        case "dns":
+            return flow.response?.response_code;
+        default:
+            return undefined;
+    }
+};
+
+export const getMethod = (flow: Flow): string => {
+    switch (flow.type) {
+        case "http":
+            return flow.websocket
+                ? flow.client_conn.tls_established
+                    ? "WSS"
+                    : "WS"
+                : flow.request.method;
+        case "dns":
+            return flow.request.op_code;
+        default:
+            return flow.type.toUpperCase();
+    }
+};
+
+export const getVersion = (flow: Flow): string => {
+    switch (flow.type) {
+        case "http":
+            return flow.request.http_version;
+        default:
+            return "";
+    }
+};
+
+export const sortFunctions = {
+    tls: (flow) => flow.type === "http" && flow.request.scheme,
+    icon: getIcon,
+    path: mainPath,
+    method: getMethod,
+    version: getVersion,
+    status: statusCode,
+    size: getTotalSize,
+    time: (flow) => {
+        const start = startTime(flow),
+            end = endTime(flow);
+        return start && end && end - start;
+    },
+    timestamp: startTime,
+    quickactions: (flow) => 0,
+    comment: (flow) => flow.comment,
 };

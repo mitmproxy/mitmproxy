@@ -29,12 +29,12 @@ export default class WebsocketBackend {
         this.socket = new WebSocket(
             location.origin.replace("http", "ws") +
                 location.pathname.replace(/\/$/, "") +
-                "/updates"
+                "/updates",
         );
         this.socket.addEventListener("open", () => this.onOpen());
         this.socket.addEventListener("close", (event) => this.onClose(event));
         this.socket.addEventListener("message", (msg) =>
-            this.onMessage(JSON.parse(msg.data))
+            this.onMessage(JSON.parse(msg.data)),
         );
         this.socket.addEventListener("error", (error) => this.onError(error));
     }
@@ -89,8 +89,8 @@ export default class WebsocketBackend {
             connectionActions.connectionError(
                 `Connection closed at ${new Date().toUTCString()} with error code ${
                     closeEvent.code
-                }.`
-            )
+                }.`,
+            ),
         );
         console.error("websocket connection closed", closeEvent);
     }

@@ -14,7 +14,7 @@ export type VScroll = {
 };
 
 export function calcVScroll(
-    opts: VScrollArgs | undefined = undefined
+    opts: VScrollArgs | undefined = undefined,
 ): VScroll {
     if (!opts) {
         return { start: 0, end: 0, paddingTop: 0, paddingBottom: 0 };
@@ -64,14 +64,14 @@ export function calcVScroll(
         // which means viewportTop will move up.
         let newViewportTop = Math.min(
             viewportTop,
-            Math.max(0, itemCount * rowHeight - viewportHeight)
+            Math.max(0, itemCount * rowHeight - viewportHeight),
         );
 
         // Make sure that we start at an even row so that CSS `:nth-child(even)` is preserved
         start = Math.max(0, Math.floor(newViewportTop / rowHeight) - 1) & ~1;
         end = Math.min(
             itemCount,
-            start + Math.ceil(viewportHeight / rowHeight) + 2
+            start + Math.ceil(viewportHeight / rowHeight) + 2,
         );
 
         paddingTop = start * rowHeight;

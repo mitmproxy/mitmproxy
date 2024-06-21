@@ -8,7 +8,7 @@ exports[`FlowTable Component should render correctly 1`] = `
   <table>
     <thead
       style={
-        Object {
+        {
           "transform": "translateY(0px)",
         }
       }
@@ -67,7 +67,7 @@ exports[`FlowTable Component should render correctly 1`] = `
     <tbody>
       <tr
         style={
-          Object {
+          {
             "height": 0,
           }
         }
@@ -107,7 +107,7 @@ exports[`FlowTable Component should render correctly 1`] = `
         <td
           className="col-status"
           style={
-            Object {
+            {
               "color": "darkgreen",
             }
           }
@@ -131,7 +131,7 @@ exports[`FlowTable Component should render correctly 1`] = `
       </tr>
       <tr
         style={
-          Object {
+          {
             "height": 0,
           }
         }

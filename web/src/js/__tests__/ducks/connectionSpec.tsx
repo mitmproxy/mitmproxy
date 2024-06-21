@@ -12,7 +12,7 @@ describe("connection reducer", () => {
 
     it("should handle start fetch", () => {
         expect(
-            reduceConnection(undefined, ConnectionActions.startFetching())
+            reduceConnection(undefined, ConnectionActions.startFetching()),
         ).toEqual({
             state: ConnectionState.FETCHING,
             message: undefined,
@@ -23,8 +23,8 @@ describe("connection reducer", () => {
         expect(
             reduceConnection(
                 undefined,
-                ConnectionActions.connectionEstablished()
-            )
+                ConnectionActions.connectionEstablished(),
+            ),
         ).toEqual({
             state: ConnectionState.ESTABLISHED,
             message: undefined,
@@ -35,8 +35,8 @@ describe("connection reducer", () => {
         expect(
             reduceConnection(
                 undefined,
-                ConnectionActions.connectionError("no internet")
-            )
+                ConnectionActions.connectionError("no internet"),
+            ),
         ).toEqual({
             state: ConnectionState.ERROR,
             message: "no internet",
@@ -45,7 +45,7 @@ describe("connection reducer", () => {
 
     it("should handle offline mode", () => {
         expect(
-            reduceConnection(undefined, ConnectionActions.setOffline())
+            reduceConnection(undefined, ConnectionActions.setOffline()),
         ).toEqual({
             state: ConnectionState.OFFLINE,
             message: undefined,

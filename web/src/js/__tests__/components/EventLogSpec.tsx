@@ -14,7 +14,7 @@ describe("EventLog Component", () => {
         provider = renderer.create(
             <Provider store={store}>
                 <EventLog />
-            </Provider>
+            </Provider>,
         ),
         tree = provider.toJSON();
 
@@ -30,7 +30,7 @@ describe("EventLog Component", () => {
     provider = renderer.create(
         <Provider store={store}>
             <EventLog />
-        </Provider>
+        </Provider>,
     );
     let eventLog = provider.root.findByType(PureEventLog),
         mockEvent = { preventDefault: jest.fn() };
@@ -40,15 +40,15 @@ describe("EventLog Component", () => {
         expect(mockEvent.preventDefault).toBeCalled();
         expect(window.addEventListener).toBeCalledWith(
             "mousemove",
-            eventLog.instance.onDragMove
+            eventLog.instance.onDragMove,
         );
         expect(window.addEventListener).toBeCalledWith(
             "mouseup",
-            eventLog.instance.onDragStop
+            eventLog.instance.onDragStop,
         );
         expect(window.addEventListener).toBeCalledWith(
             "dragend",
-            eventLog.instance.onDragStop
+            eventLog.instance.onDragStop,
         );
         mockEvent.preventDefault.mockClear();
     });
@@ -65,7 +65,7 @@ describe("EventLog Component", () => {
         expect(mockEvent.preventDefault).toBeCalled();
         expect(window.removeEventListener).toBeCalledWith(
             "mousemove",
-            eventLog.instance.onDragMove
+            eventLog.instance.onDragMove,
         );
     });
 });

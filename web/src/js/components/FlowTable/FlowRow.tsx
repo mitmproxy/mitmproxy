@@ -18,7 +18,7 @@ export default React.memo(function FlowRow({
 }: FlowRowProps) {
     const dispatch = useAppDispatch(),
         displayColumnNames = useAppSelector(
-            (state) => state.options.web_columns
+            (state) => state.options.web_columns,
         ),
         className = classnames({
             selected: selected,
@@ -38,7 +38,7 @@ export default React.memo(function FlowRow({
             }
             dispatch(select(flow.id));
         },
-        [flow]
+        [flow],
     );
 
     const displayColumns = displayColumnNames

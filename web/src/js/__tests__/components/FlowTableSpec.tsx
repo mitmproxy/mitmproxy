@@ -16,7 +16,7 @@ describe("FlowTable Component", () => {
         let provider = renderer.create(
                 <Provider store={store}>
                     <FlowTable selectFlow={selectFn} flows={[tflow]} />
-                </Provider>
+                </Provider>,
             ),
             tree = provider.toJSON();
         expect(tree).toMatchSnapshot();
@@ -25,7 +25,7 @@ describe("FlowTable Component", () => {
     let provider = renderer.create(
             <Provider store={store}>
                 <FlowTable selectFlow={selectFn} flows={[tflow]} />
-            </Provider>
+            </Provider>,
         ),
         flowTable = provider.root.findByType(FlowTable);
 
@@ -33,7 +33,7 @@ describe("FlowTable Component", () => {
         flowTable.instance.UNSAFE_componentWillUnmount();
         expect(window.addEventListener).toBeCalledWith(
             "resize",
-            flowTable.instance.onViewportUpdate
+            flowTable.instance.onViewportUpdate,
         );
     });
 
