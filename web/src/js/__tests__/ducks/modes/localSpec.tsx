@@ -9,10 +9,7 @@ import localReducer, {
 } from "../../../ducks/modes/local";
 import { RECEIVE as RECEIVE_OPTIONS } from "../../../ducks/options";
 import { TStore } from "../tutils";
-
-jest.mock("../../../ducks/modes", () => ({
-    updateMode: jest.fn(() => ({ success: true })),
-}));
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 describe("localReducer", () => {
     it("should return the initial state", () => {
