@@ -26,14 +26,14 @@ describe("localReducer", () => {
     });
 
     it("should dispatch MODE_LOCAL_TOGGLE and updateMode", async () => {
+        enableFetchMocks();
+
         const store = TStore();
-        const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
 
-        await store.dispatch(toggleLocal(mockUpdateMode));
-
-        const actions = store.getActions();
-        expect(actions[0]).toEqual({ type: MODE_LOCAL_TOGGLE });
-        expect(mockUpdateMode).toHaveBeenCalled();
+        expect(store.getState().modes.local.active).toBe(false);
+        await store.dispatch(toggleLocal());
+        expect(store.getState().modes.local.active).toBe(true);
+        expect(fetchMock).toHaveBeenCalled()
     });
 
     it("should dispatch MODE_LOCAL_SET_APPLICATIONS and updateMode", async () => {
