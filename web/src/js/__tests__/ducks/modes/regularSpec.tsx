@@ -45,7 +45,7 @@ describe("regularReducer", () => {
             name: "regular",
             listen_host: "localhost",
             listen_port: 8080,
-        }
+        };
         const action = {
             type: options.RECEIVE,
             data: {
@@ -70,9 +70,7 @@ describe("getMode", () => {
             },
         };
         const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(
-            JSON.stringify(["regular"]),
-        );
+        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
     });
 
     it("should return an empty string when not active", () => {

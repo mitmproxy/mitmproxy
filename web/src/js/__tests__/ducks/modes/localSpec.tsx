@@ -70,7 +70,7 @@ describe("localReducer", () => {
             active: false,
             name: "local",
             applications: "curl",
-        }
+        };
         const action = {
             type: options.RECEIVE,
             data: {

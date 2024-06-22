@@ -49,16 +49,15 @@ export const addListenAddr = (mode: ModeState) => {
 };
 
 export const parseMode = (spec: string) => {
-
-    const [head, listenAt] = spec.includes('@') ? spec.split('@') : [spec, ''];
-    const [mode, data] = head.includes(':') ? head.split(':') : [head, ''];
+    const [head, listenAt] = spec.includes("@") ? spec.split("@") : [spec, ""];
+    const [mode, data] = head.includes(":") ? head.split(":") : [head, ""];
 
     let host = "";
     let port: string | number = "";
 
     if (listenAt) {
-        if (listenAt.includes(':')) {
-            [host, port] = listenAt.split(':');
+        if (listenAt.includes(":")) {
+            [host, port] = listenAt.split(":");
         } else {
             port = listenAt;
         }
