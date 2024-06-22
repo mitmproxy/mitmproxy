@@ -1,9 +1,6 @@
 import { combineReducers } from "redux";
-import regularReducer, {
-    getMode as getRegularModeConfig,
-} from "./modes/regular";
-import { fetchApi } from "../utils";
-import localReducer, { getMode as getLocalModeConfig } from "./modes/local";
+import regularReducer from "./modes/regular";
+import localReducer from "./modes/local";
 
 const modes = combineReducers({
     regular: regularReducer,

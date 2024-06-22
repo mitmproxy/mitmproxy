@@ -37,18 +37,14 @@ describe("localReducer", () => {
     });
 
     it("should dispatch MODE_LOCAL_SET_APPLICATIONS and updateMode", async () => {
+        enableFetchMocks();
         const store = TStore();
-        const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
 
-        await store.dispatch(setApplications("curl", mockUpdateMode));
-
-        // FIXME
-        /*const actions = store.getActions();
-        expect(actions[0]).toEqual({
-            type: MODE_LOCAL_SET_APPLICATIONS,
-            applications: "curl",
-        });
-        expect(mockUpdateMode).toHaveBeenCalled();*/
+        await store.dispatch(setApplications("curl"));
+        
+        const state = store.getState().modes.local;
+        expect(state.applications).toEqual("curl");
+        expect(fetchMock).toHaveBeenCalled();
     });
 
     it("should handle RECEIVE_OPTIONS action", () => {

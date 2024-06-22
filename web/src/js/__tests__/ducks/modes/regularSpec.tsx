@@ -6,10 +6,7 @@ import regularReducer, {
 } from "./../../../ducks/modes/regular";
 import * as options from "../../../ducks/options";
 import { TStore } from "../tutils";
-
-jest.mock("../../../ducks/modes", () => ({
-    updateMode: jest.fn(() => ({ success: true })),
-}));
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 describe("regularReducer", () => {
     it("should return the initial state", () => {
@@ -17,24 +14,15 @@ describe("regularReducer", () => {
         expect(state).toEqual(initialState);
     });
 
-    it("should handle TOGGLE_REGULAR action", () => {
-        const action = { type: MODE_REGULAR_TOGGLE };
-        const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(!initialState.active);
-    });
+    it("should dispatch MODE_REGULAR_TOGGLE and updateMode", async () => {
+        enableFetchMocks();
 
-    it("should dispatch MODE_LOCAL_TOGGLE and updateMode", async () => {
         const store = TStore();
-        const mockUpdateMode = jest.fn(() => async () => ({ success: true }));
 
-        await store.dispatch(toggleRegular(mockUpdateMode));
-
-        // FIXME
-        /*
-        const actions = store.getActions();
-        expect(actions[0]).toEqual({ type: MODE_REGULAR_TOGGLE });
-        expect(mockUpdateMode).toHaveBeenCalled();
-        */
+        expect(store.getState().modes.regular.active).toBe(true);
+        await store.dispatch(toggleRegular());
+        expect(store.getState().modes.regular.active).toBe(false);
+        expect(fetchMock).toHaveBeenCalled();
     });
 
     it('should handle RECEIVE_OPTIONS action with data.mode containing "regular", an host and a port', () => {
@@ -119,5 +107,19 @@ describe("getMode", () => {
         };
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
+    });
+
+    it("should return the correct mode string with listen_port and without listen_host", () => {
+        const modes = {
+            regular: {
+                active: true,
+                name: "regular",
+                listen_port: 8080,
+            },
+        };
+        const mode = getMode(modes);
+        expect(JSON.stringify(mode)).toBe(
+            JSON.stringify(["regular@8080"]),
+        );
     });
 });
