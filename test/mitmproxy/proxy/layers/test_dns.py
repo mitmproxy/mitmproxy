@@ -378,7 +378,6 @@ def test_query_pipelining_multiple_events(tctx):
     assert (
         Playbook(layer)
         >> DataReceived(tctx.client, req_bytes[:split])
-
         << dns.DnsRequestHook(f1)
         >> reply()
         << OpenConnection(tctx.server)

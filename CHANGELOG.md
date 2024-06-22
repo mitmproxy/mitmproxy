@@ -12,6 +12,7 @@
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
 * Parse DNS over TCP messages
+  ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
 
 ## 12 June 2024: mitmproxy 10.3.1
 
