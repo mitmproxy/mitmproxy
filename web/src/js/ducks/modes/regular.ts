@@ -49,10 +49,12 @@ const regularReducer = (state = initialState, action): RegularState => {
                 return {
                     ...state,
                     active: isActive,
-                    listen_host:
-                        currentModeConfig?.listen_host || state.listen_host,
-                    listen_port:
-                        currentModeConfig?.listen_port || state.listen_port,
+                    listen_host: currentModeConfig.listen_host
+                        ? currentModeConfig.listen_host
+                        : state.listen_host,
+                    listen_port: currentModeConfig.listen_port
+                        ? (currentModeConfig.listen_port as number)
+                        : state.listen_port,
                 };
             }
             return state;

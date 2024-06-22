@@ -48,30 +48,35 @@ export const addListenAddr = (mode: ModeState) => {
     return [];
 };
 
-const parseMode = (modeConfig) => {
-    /*examples:
-        "regular@http:8081" or "regular@8081" or "regular"
-        "local:google,curl" or "local"
-        "reverse:http://host" or "reverse:https://host" or "reverse:http://host:8081"
-    */
-    if (modeConfig.includes(":")) {
-        if (modeConfig.startsWith("local")) {
-            return {
-                name: "local",
-                applications: modeConfig.substring("local:".length),
-            };
+export const parseMode = (spec: string) => {
+
+    const [head, listenAt] = spec.includes('@') ? spec.split('@') : [spec, ''];
+    const [mode, data] = head.includes(':') ? head.split(':') : [head, ''];
+
+    let host = "";
+    let port: string | number = "";
+
+    if (listenAt) {
+        if (listenAt.includes(':')) {
+            [host, port] = listenAt.split(':');
+        } else {
+            port = listenAt;
         }
-        const [name, listen] = modeConfig.split("@");
-        const [listen_host, listen_port] = listen.split(":");
-        const listen_port_num = parseInt(listen_port);
-        return { name, listen_host, listen_port: listen_port_num };
-    } else if (modeConfig.includes("@")) {
-        const [name, listen_port] = modeConfig.split("@");
-        const listen_port_num = parseInt(listen_port);
-        return { name, listen_port: listen_port_num };
-    } else {
-        return { name: modeConfig };
+
+        if (port) {
+            port = parseInt(port, 10);
+            if (isNaN(port) || port < 0 || port > 65535) {
+                throw new Error(`invalid port: ${port}`);
+            }
+        }
     }
+
+    return {
+        name: mode,
+        data: data,
+        listen_host: host,
+        listen_port: port,
+    };
 };
 
 export const getModesOfType = (currentMode: string, modes: string[]) => {

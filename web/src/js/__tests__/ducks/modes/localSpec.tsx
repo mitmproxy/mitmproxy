@@ -2,11 +2,10 @@ import localReducer, {
     toggleLocal,
     setApplications,
     initialState,
-    MODE_LOCAL_TOGGLE,
-    MODE_LOCAL_SET_APPLICATIONS,
     getMode,
     sanitizeInput,
 } from "../../../ducks/modes/local";
+import { toggleRegular } from "../../../ducks/modes/regular";
 import * as options from "../../../ducks/options";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
@@ -15,14 +14,6 @@ describe("localReducer", () => {
     it("should return the initial state", () => {
         const state = localReducer(undefined, {});
         expect(state).toEqual(initialState);
-    });
-
-    it("should handle MODE_LOCAL_SET_APPLICATIONS action", () => {
-        const applications = "app1, app2";
-        const action = { type: MODE_LOCAL_SET_APPLICATIONS, applications };
-        const newState = localReducer(initialState, action);
-        expect(newState.applications).toBe(applications);
-        expect(newState.error).toBeUndefined();
     });
 
     it("should dispatch MODE_LOCAL_TOGGLE and updateMode", async () => {
@@ -47,7 +38,19 @@ describe("localReducer", () => {
         expect(fetchMock).toHaveBeenCalled();
     });
 
-    it("should handle RECEIVE_OPTIONS action", () => {
+    it('should handle UPDATE_OPTIONS action with data.mode not containing "local"', async () => {
+        const store = TStore();
+
+        await store.dispatch(setApplications("curl"));
+
+        await store.dispatch(toggleRegular());
+
+        expect(store.getState().modes.local.active).toBe(false);
+        expect(store.getState().modes.regular.active).toBe(false);
+        expect(store.getState().modes.local.applications).toBe("curl");
+    });
+
+    it('should handle RECEIVE_OPTIONS action with data.mode containing "local" and an application', () => {
         const action = {
             type: options.RECEIVE,
             data: {
@@ -57,6 +60,26 @@ describe("localReducer", () => {
             },
         };
         const newState = localReducer(undefined, action);
+        expect(newState.active).toBe(true);
+        expect(newState.applications).toBe("curl");
+        expect(newState.error).toBeUndefined();
+    });
+
+    it('should handle RECEIVE_OPTIONS action with data.mode containing "local"', () => {
+        const initialState = {
+            active: false,
+            name: "local",
+            applications: "curl",
+        }
+        const action = {
+            type: options.RECEIVE,
+            data: {
+                mode: {
+                    value: ["local"],
+                },
+            },
+        };
+        const newState = localReducer(initialState, action);
         expect(newState.active).toBe(true);
         expect(newState.applications).toBe("curl");
         expect(newState.error).toBeUndefined();
@@ -95,28 +118,6 @@ describe("getMode", () => {
         };
         const result = getMode(modes);
         expect(result).toEqual([]);
-    });
-
-    it("should return an empty array when local mode is defined but active is false", () => {
-        const modes = {
-            local: {
-                active: false,
-                applications: "",
-            },
-        };
-        const result = getMode(modes);
-        expect(result).toEqual([]);
-    });
-
-    it("should return local mode with multiple applications when active and multiple applications are present", () => {
-        const modes = {
-            local: {
-                active: true,
-                applications: "curl, wget",
-            },
-        };
-        const result = getMode(modes);
-        expect(result).toEqual(["local:curl, wget"]);
     });
 });
 

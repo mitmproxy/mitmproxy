@@ -2,7 +2,6 @@ import regularReducer, {
     toggleRegular,
     getMode,
     initialState,
-    MODE_REGULAR_TOGGLE,
 } from "./../../../ducks/modes/regular";
 import * as options from "../../../ducks/options";
 import { TStore } from "../tutils";
@@ -30,31 +29,23 @@ describe("regularReducer", () => {
             type: options.RECEIVE,
             data: {
                 mode: {
-                    value: ["regular@http:8081"],
+                    value: ["regular@localhost:8081"],
                 },
             },
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("http");
+        expect(newState.listen_host).toBe("localhost");
         expect(newState.listen_port).toBe(8081);
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing "regular" and a port', () => {
-        const action = {
-            type: options.RECEIVE,
-            data: {
-                mode: {
-                    value: ["regular@8081"],
-                },
-            },
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe(undefined);
-        expect(newState.listen_port).toBe(8081);
-    });
-    it('should handle RECEIVE_OPTIONS action with data.mode containing "regular"', () => {
+    it('should handle RECEIVE_OPTIONS action with data.mode containing just "regular"', () => {
+        const initialState = {
+            active: false,
+            name: "regular",
+            listen_host: "localhost",
+            listen_port: 8080,
+        }
         const action = {
             type: options.RECEIVE,
             data: {
@@ -65,8 +56,8 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe(undefined);
-        expect(newState.listen_port).toBe(undefined);
+        expect(newState.listen_host).toBe(initialState.listen_host);
+        expect(newState.listen_port).toBe(initialState.listen_port);
     });
 });
 
@@ -76,13 +67,11 @@ describe("getMode", () => {
             regular: {
                 active: true,
                 name: "regular",
-                listen_host: "localhost",
-                listen_port: 8080,
             },
         };
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(
-            JSON.stringify(["regular@localhost:8080"]),
+            JSON.stringify(["regular"]),
         );
     });
 
@@ -96,28 +85,5 @@ describe("getMode", () => {
         };
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
-    });
-
-    it("should return the correct mode string without listen_host and listen_port", () => {
-        const modes = {
-            regular: {
-                active: true,
-                name: "regular",
-            },
-        };
-        const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
-    });
-
-    it("should return the correct mode string with listen_port and without listen_host", () => {
-        const modes = {
-            regular: {
-                active: true,
-                name: "regular",
-                listen_port: 8080,
-            },
-        };
-        const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular@8080"]));
     });
 });
