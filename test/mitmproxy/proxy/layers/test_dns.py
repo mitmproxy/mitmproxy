@@ -392,7 +392,6 @@ def test_query_pipelining_multiple_events(tctx):
         << SendData(
             tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol)
         )
-
         >> DataReceived(tctx.client, req_bytes[split:])
         << dns.DnsRequestHook(f2)
         >> reply()
