@@ -41,7 +41,7 @@ describe("localReducer", () => {
         const store = TStore();
 
         await store.dispatch(setApplications("curl"));
-        
+
         const state = store.getState().modes.local;
         expect(state.applications).toEqual("curl");
         expect(fetchMock).toHaveBeenCalled();

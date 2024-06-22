@@ -118,8 +118,6 @@ describe("getMode", () => {
             },
         };
         const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(
-            JSON.stringify(["regular@8080"]),
-        );
+        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular@8080"]));
     });
 });
