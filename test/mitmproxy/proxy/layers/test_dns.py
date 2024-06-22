@@ -1,12 +1,13 @@
-import pytest
 import struct
 import time
+
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from ..tutils import Placeholder
 from ..tutils import Playbook
 from ..tutils import reply
-from hypothesis import given
-from hypothesis import strategies as st
 from mitmproxy.dns import DNSFlow
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
@@ -108,7 +109,9 @@ def test_regular_mode_no_hook(tctx, transport_protocol):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply(side_effect=no_resolve)
         << dns.DnsErrorHook(f)
@@ -134,7 +137,9 @@ def test_reverse_premature_close(tctx, transport_protocol):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
@@ -165,13 +170,17 @@ def test_reverse(tctx, transport_protocol):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
         << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
-        >> DataReceived(tctx.server, dns.pack_message(resp, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f)
         >> reply()
         << SendData(tctx.client, dns.pack_message(resp, tctx.client.transport_protocol))
@@ -200,7 +209,9 @@ def test_reverse_fail_connection(tctx, transport_protocol):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
@@ -232,17 +243,23 @@ def test_reverse_with_query_resend(tctx, transport_protocol):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
         << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
-        >> DataReceived(tctx.client, dns.pack_message(req2, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req2, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
-        >> DataReceived(tctx.server, dns.pack_message(resp,tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f)
         >> reply()
         << SendData(tctx.client, dns.pack_message(resp, tctx.client.transport_protocol))
@@ -273,7 +290,9 @@ def test_tcp_message_over_multiple_events(tctx):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
@@ -302,32 +321,37 @@ def test_query_pipelining_same_event(tctx):
     req2 = tdnsreq(id=2)
     resp1 = tdnsresp(id=1)
     resp2 = tdnsresp(id=2)
-    req_bytes = dns.pack_message(req1, tctx.client.transport_protocol) + dns.pack_message(req2, tctx.client.transport_protocol)
+    req_bytes = dns.pack_message(
+        req1, tctx.client.transport_protocol
+    ) + dns.pack_message(req2, tctx.client.transport_protocol)
 
     assert (
         Playbook(layer)
         >> DataReceived(tctx.client, req_bytes)
-
         << dns.DnsRequestHook(f1)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
         << SendData(tctx.server, dns.pack_message(req1, tctx.server.transport_protocol))
-
         << dns.DnsRequestHook(f2)
         >> reply()
         << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
-
-        >> DataReceived(tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f1)
         >> reply()
-        << SendData(tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol))
-
-        >> DataReceived(tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol))
+        << SendData(
+            tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f2)
         >> reply()
-        << SendData(tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol))
-
+        << SendData(
+            tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << None
@@ -346,33 +370,41 @@ def test_query_pipelining_multiple_events(tctx):
     req2 = tdnsreq(id=2)
     resp1 = tdnsresp(id=1)
     resp2 = tdnsresp(id=2)
-    req_bytes = dns.pack_message(req1, tctx.client.transport_protocol) + dns.pack_message(req2, tctx.client.transport_protocol)
+    req_bytes = dns.pack_message(
+        req1, tctx.client.transport_protocol
+    ) + dns.pack_message(req2, tctx.client.transport_protocol)
     split = len(req_bytes) * 3 // 4
 
     assert (
         Playbook(layer)
         >> DataReceived(tctx.client, req_bytes[:split])
+
         << dns.DnsRequestHook(f1)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
         << SendData(tctx.server, dns.pack_message(req1, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
+        << dns.DnsResponseHook(f1)
+        >> reply()
+        << SendData(
+            tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
 
         >> DataReceived(tctx.client, req_bytes[split:])
         << dns.DnsRequestHook(f2)
         >> reply()
         << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
-
-        >> DataReceived(tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol))
-        << dns.DnsResponseHook(f1)
-        >> reply()
-        << SendData(tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol))
-
-        >> DataReceived(tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f2)
         >> reply()
-        << SendData(tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol))
-
+        << SendData(
+            tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << None

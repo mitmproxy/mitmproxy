@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import struct
+from dataclasses import dataclass
 from typing import List
 from typing import Literal
 
@@ -40,6 +40,7 @@ class DnsErrorHook(commands.StartHook):
 
     flow: dns.DNSFlow
 
+
 def pack_message(
     message: dns.Message, transport_protocol: Literal["tcp", "udp"]
 ) -> bytes:
@@ -49,7 +50,10 @@ def pack_message(
     else:
         return packed
 
-def unpack_message(data: bytes, transport_protocol: Literal["tcp", "udp"], buf: bytearray = bytearray()) -> List[dns.Message]:
+
+def unpack_message(
+    data: bytes, transport_protocol: Literal["tcp", "udp"], buf: bytearray = bytearray()
+) -> List[dns.Message]:
     msgs: List[dns.Message] = []
 
     if transport_protocol == "udp":
@@ -111,9 +115,7 @@ class DNSLayer(layer.Layer):
                     yield from self.handle_error(flow, str(err))
                     # cannot recover from this
                     return
-            packed = pack_message(
-                flow.request, flow.server_conn.transport_protocol
-            )
+            packed = pack_message(flow.request, flow.server_conn.transport_protocol)
             yield commands.SendData(self.context.server, packed)
 
     def handle_response(
@@ -122,9 +124,7 @@ class DNSLayer(layer.Layer):
         flow.response = msg
         yield DnsResponseHook(flow)
         if flow.response:
-            packed = pack_message(
-                flow.response, flow.client_conn.transport_protocol
-            )
+            packed = pack_message(flow.response, flow.client_conn.transport_protocol)
             yield commands.SendData(self.context.client, packed)
 
     def handle_error(self, flow: dns.DNSFlow, err: str) -> layer.CommandGenerator[None]:
@@ -147,7 +147,9 @@ class DNSLayer(layer.Layer):
                 buf = self.resp_buf
                 if from_client:
                     buf = self.req_buf
-                msgs = unpack_message(event.data, event.connection.transport_protocol, buf)
+                msgs = unpack_message(
+                    event.data, event.connection.transport_protocol, buf
+                )
             except struct.error as e:
                 yield commands.Log(f"{event.connection} sent an invalid message: {e}")
                 yield commands.CloseConnection(event.connection)
