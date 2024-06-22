@@ -18,20 +18,22 @@ from mitmproxy.proxy.layers import dns
 from mitmproxy.test.tutils import tdnsreq
 from mitmproxy.test.tutils import tdnsresp
 
-# add @examples for this
+
 @given(st.binary())
 def test_fuzz_unpack_tcp_message(data):
     try:
-        dns.unpack_message(data, "tcp", bytearray())
+        dns.unpack_message(data, "tcp")
     except struct.error:
         pass
+
 
 @given(st.binary())
 def test_fuzz_unpack_udp_message(data):
     try:
-        dns.unpack_message(data, "udp", bytearray())
+        dns.unpack_message(data, "udp")
     except struct.error:
         pass
+
 
 @pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
 def test_invalid_and_dummy_end(tctx, transport_protocol):
@@ -213,6 +215,7 @@ def test_reverse_fail_connection(tctx, transport_protocol):
     req.timestamp = f().request.timestamp
     assert f().request == req
 
+
 @pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
 def test_reverse_with_query_resend(tctx, transport_protocol):
     tctx.client.transport_protocol = transport_protocol
@@ -254,3 +257,123 @@ def test_reverse_with_query_resend(tctx, transport_protocol):
     resp.timestamp = f().response.timestamp
     assert f().request == req2
     assert f().response == resp
+
+
+def test_tcp_message_over_multiple_events(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ("8.8.8.8", 53)
+    f = Placeholder(DNSFlow)
+    req = tdnsreq()
+    resp = tdnsresp()
+    resp_bytes = dns.pack_message(resp, tctx.client.transport_protocol)
+    split = len(resp_bytes) // 2
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        << dns.DnsRequestHook(f)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
+        >> DataReceived(tctx.server, resp_bytes[:split])
+        >> DataReceived(tctx.server, resp_bytes[split:])
+        << dns.DnsResponseHook(f)
+        >> reply()
+        << SendData(tctx.client, dns.pack_message(resp, tctx.client.transport_protocol))
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )
+
+
+def test_query_pipelining_same_event(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ("8.8.8.8", 53)
+    f1 = Placeholder(DNSFlow)
+    f2 = Placeholder(DNSFlow)
+    req1 = tdnsreq(id=1)
+    req2 = tdnsreq(id=2)
+    resp1 = tdnsresp(id=1)
+    resp2 = tdnsresp(id=2)
+    req_bytes = dns.pack_message(req1, tctx.client.transport_protocol) + dns.pack_message(req2, tctx.client.transport_protocol)
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(tctx.client, req_bytes)
+
+        << dns.DnsRequestHook(f1)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, dns.pack_message(req1, tctx.server.transport_protocol))
+
+        << dns.DnsRequestHook(f2)
+        >> reply()
+        << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
+
+        >> DataReceived(tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol))
+        << dns.DnsResponseHook(f1)
+        >> reply()
+        << SendData(tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol))
+
+        >> DataReceived(tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol))
+        << dns.DnsResponseHook(f2)
+        >> reply()
+        << SendData(tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol))
+
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )
+
+
+def test_query_pipelining_multiple_events(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ("8.8.8.8", 53)
+    f1 = Placeholder(DNSFlow)
+    f2 = Placeholder(DNSFlow)
+    req1 = tdnsreq(id=1)
+    req2 = tdnsreq(id=2)
+    resp1 = tdnsresp(id=1)
+    resp2 = tdnsresp(id=2)
+    req_bytes = dns.pack_message(req1, tctx.client.transport_protocol) + dns.pack_message(req2, tctx.client.transport_protocol)
+    split = len(req_bytes) * 3 // 4
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(tctx.client, req_bytes[:split])
+        << dns.DnsRequestHook(f1)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, dns.pack_message(req1, tctx.server.transport_protocol))
+
+        >> DataReceived(tctx.client, req_bytes[split:])
+        << dns.DnsRequestHook(f2)
+        >> reply()
+        << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
+
+        >> DataReceived(tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol))
+        << dns.DnsResponseHook(f1)
+        >> reply()
+        << SendData(tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol))
+
+        >> DataReceived(tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol))
+        << dns.DnsResponseHook(f2)
+        >> reply()
+        << SendData(tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol))
+
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )

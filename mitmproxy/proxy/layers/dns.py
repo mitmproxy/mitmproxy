@@ -49,7 +49,7 @@ def pack_message(
     else:
         return packed
 
-def unpack_message(data: bytes, transport_protocol: Literal["tcp", "udp"], buf: bytearray) -> List[dns.Message]:
+def unpack_message(data: bytes, transport_protocol: Literal["tcp", "udp"], buf: bytearray = bytearray()) -> List[dns.Message]:
     msgs: List[dns.Message] = []
 
     if transport_protocol == "udp":
