@@ -681,13 +681,20 @@ transparent_proxy_configs = [
         id="transparent proxy: raw udp",
     ),
     pytest.param(
-        dataclasses.replace(
+        dns := dataclasses.replace(
             udp,
             after=[modes.TransparentProxy, DNSLayer],
             data_client=dns_query,
             server_address=("192.0.2.1", 53),
         ),
-        id="transparent proxy: dns",
+        id="transparent proxy: dns over udp",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            dns,
+            transport_protocol="tcp",
+        ),
+        id="transparent proxy: dns over tcp",
     ),
     pytest.param(
         dataclasses.replace(
