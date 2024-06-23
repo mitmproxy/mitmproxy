@@ -84,7 +84,7 @@ describe("localReducer", () => {
         expect(newState.error).toBeUndefined();
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing another mode', () => {
+    it("should handle RECEIVE_OPTIONS action with data.mode containing another mode", () => {
         const initialState = {
             active: false,
             applications: "curl",

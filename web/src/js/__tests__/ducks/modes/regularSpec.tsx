@@ -59,7 +59,7 @@ describe("regularReducer", () => {
         expect(newState.listen_port).toBe("");
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing another mode', () => {
+    it("should handle RECEIVE_OPTIONS action with data.mode containing another mode", () => {
         const initialState = {
             active: false,
             listen_host: "localhost",
