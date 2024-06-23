@@ -50,7 +50,7 @@ export const addListenAddr = (mode: ModeState) => {
 
 export const parseMode = (spec: string) => {
     const [head, listenAt] = spec.includes("@") ? spec.split("@") : [spec, ""];
-    
+
     let mode = "";
     let data = "";
 
