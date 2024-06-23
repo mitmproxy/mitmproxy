@@ -1,6 +1,7 @@
 import enum
 import struct
 from dataclasses import dataclass
+
 from . import domain_names
 
 """
