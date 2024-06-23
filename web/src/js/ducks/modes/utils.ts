@@ -50,7 +50,17 @@ export const addListenAddr = (mode: ModeState) => {
 
 export const parseMode = (spec: string) => {
     const [head, listenAt] = spec.includes("@") ? spec.split("@") : [spec, ""];
-    const [mode, data] = head.includes(":") ? head.split(":") : [head, ""];
+    
+    let mode = "";
+    let data = "";
+
+    const firstColonIndex = head.indexOf(":");
+    if (firstColonIndex !== -1) {
+        mode = head.slice(0, firstColonIndex);
+        data = head.slice(firstColonIndex + 1);
+    } else {
+        mode = head;
+    }
 
     let host = "";
     let port: string | number = "";
@@ -69,7 +79,6 @@ export const parseMode = (spec: string) => {
             }
         }
     }
-
     return {
         name: mode,
         data: data,

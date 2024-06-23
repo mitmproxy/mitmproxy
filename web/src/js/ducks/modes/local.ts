@@ -76,7 +76,7 @@ const localReducer = (state = initialState, action): LocalState => {
                 return {
                     ...state,
                     active: isActive,
-                    applications: currentModeConfig.data
+                    applications: currentModeConfig && currentModeConfig.data
                         ? currentModeConfig.data
                         : state.applications,
                     error: undefined,
