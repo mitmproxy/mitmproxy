@@ -417,6 +417,7 @@ def test_query_pipelining_multiple_events(tctx):
         << None
     )
 
+
 def test_invalid_tcp_message_length(tctx):
     tctx.client.transport_protocol = "tcp"
     tctx.server.transport_protocol = "tcp"
