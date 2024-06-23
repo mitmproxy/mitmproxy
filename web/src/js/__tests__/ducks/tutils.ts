@@ -127,11 +127,9 @@ export const testState: RootState = {
     modes: {
         regular: {
             active: true,
-            name: "regular",
         },
         local: {
             active: false,
-            name: "local",
             applications: "",
         },
     },

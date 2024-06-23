@@ -68,7 +68,6 @@ describe("localReducer", () => {
     it('should handle RECEIVE_OPTIONS action with data.mode containing "local"', () => {
         const initialState = {
             active: false,
-            name: "local",
             applications: "curl",
         };
         const action = {
@@ -81,8 +80,26 @@ describe("localReducer", () => {
         };
         const newState = localReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.applications).toBe("curl");
+        expect(newState.applications).toBe("");
         expect(newState.error).toBeUndefined();
+    });
+
+    it('should handle RECEIVE_OPTIONS action with data.mode containing another mode', () => {
+        const initialState = {
+            active: false,
+            applications: "curl",
+        };
+        const action = {
+            type: options.RECEIVE,
+            data: {
+                mode: {
+                    value: ["regular"],
+                },
+            },
+        };
+        const newState = localReducer(initialState, action);
+        expect(newState.active).toBe(false);
+        expect(newState.applications).toBe(initialState.applications);
     });
 });
 

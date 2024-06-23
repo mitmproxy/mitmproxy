@@ -11,7 +11,6 @@ interface LocalState extends ModeState {
 
 export const initialState: LocalState = {
     active: false,
-    name: "local",
     applications: "",
 };
 
@@ -76,10 +75,9 @@ const localReducer = (state = initialState, action): LocalState => {
                 return {
                     ...state,
                     active: isActive,
-                    applications:
-                        currentModeConfig && currentModeConfig.data
-                            ? currentModeConfig.data
-                            : state.applications,
+                    applications: isActive
+                        ? currentModeConfig.data
+                        : state.applications,
                     error: undefined,
                 };
             }

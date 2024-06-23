@@ -3,7 +3,7 @@ import {
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
 import { ModeState, updateMode } from "./utils";
-import { addListenAddr, getModesOfType } from "./utils";
+import { includeModeState, getModesOfType } from "./utils";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 
@@ -11,12 +11,11 @@ interface RegularState extends ModeState {}
 
 export const initialState: RegularState = {
     active: true,
-    name: "regular",
 };
 
 export const getMode = (modes) => {
     const regularMode = modes.regular;
-    return addListenAddr(regularMode);
+    return includeModeState("regular", regularMode);
 };
 
 export const toggleRegular =
@@ -49,14 +48,12 @@ const regularReducer = (state = initialState, action): RegularState => {
                 return {
                     ...state,
                     active: isActive,
-                    listen_host:
-                        currentModeConfig && currentModeConfig.listen_host
-                            ? currentModeConfig.listen_host
-                            : state.listen_host,
-                    listen_port:
-                        currentModeConfig && currentModeConfig.listen_port
-                            ? (currentModeConfig.listen_port as number)
-                            : state.listen_port,
+                    listen_host: isActive
+                        ? currentModeConfig.listen_host
+                        : state.listen_host,
+                    listen_port: isActive
+                        ? (currentModeConfig.listen_port as number)
+                        : state.listen_port,
                 };
             }
             return state;

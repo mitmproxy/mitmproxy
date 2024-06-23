@@ -4,7 +4,6 @@ import { fetchApi } from "../../utils";
 
 export interface ModeState {
     active: boolean;
-    name: string;
     listen_port?: number;
     listen_host?: string;
     error?: string;
@@ -35,8 +34,8 @@ export const updateMode = () => {
     };
 };
 
-export const addListenAddr = (mode: ModeState) => {
-    let stringMode = mode.name;
+export const includeModeState = (modeName: string, mode: ModeState) => {
+    let stringMode = modeName;
     if (mode.active) {
         if (mode.listen_host && mode.listen_port) {
             stringMode += `@${mode.listen_host}:${mode.listen_port}`;

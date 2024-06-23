@@ -1,16 +1,9 @@
-import { enableFetchMocks } from "jest-fetch-mock";
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "../tutils";
-import { fetchApi } from "../../../utils";
-import { addListenAddr, updateMode } from "../../../ducks/modes/utils";
+import { includeModeState, updateMode } from "../../../ducks/modes/utils";
 import { parseMode } from "../../../ducks/modes/utils";
 
 enableFetchMocks();
-
-jest.mock("../../../utils", () => ({
-    fetchApi: {
-        put: jest.fn(),
-    },
-}));
 
 describe("updateMode action creator", () => {
     beforeEach(() => {
@@ -19,35 +12,39 @@ describe("updateMode action creator", () => {
 
     it("should call updateMode method with a successful api call", async () => {
         const store = TStore();
-        (fetchApi.put as jest.Mock).mockResolvedValueOnce({ status: 200 });
+        fetchMock.mockResponseOnce(JSON.stringify({ success: true }));
 
         await store.dispatch(updateMode());
 
-        expect(fetchApi.put).toBeCalledWith("/options", {
-            mode: ["regular"],
-        });
+        const expectedUrl = "./options";
+        const expectedBody = JSON.stringify({ mode: ["regular"] });
+
+        const actualCall = fetchMock.mock.calls[0];
+        const actualUrl = actualCall[0];
+        const actualBody = actualCall[1]?.body;
+
+        expect(actualUrl).toEqual(expectedUrl);
+        expect(actualBody).toEqual(expectedBody);
     });
 });
 
-describe("addListenAddr", () => {
+describe("includeModeState", () => {
     it("should return array with mode name and listen_port if mode is active with listen_port", () => {
         const mode = {
-            name: "regular",
             active: true,
             listen_port: 8080,
         };
-        const result = addListenAddr(mode);
+        const result = includeModeState("regular", mode);
         expect(result).toEqual(["regular@8080"]);
     });
 
     it("should return array with mode name, listen_host, and listen_port if mode is active with listen_host and listen_port", () => {
         const mode = {
-            name: "regular",
             active: true,
             listen_host: "localhost",
             listen_port: 8080,
         };
-        const result = addListenAddr(mode);
+        const result = includeModeState("regular", mode);
         expect(result).toEqual(["regular@localhost:8080"]);
     });
 
@@ -57,7 +54,7 @@ describe("addListenAddr", () => {
             active: true,
             listen_host: "localhost",
         };
-        const result = addListenAddr(mode);
+        const result = includeModeState("regular", mode);
         expect(result).toEqual(["regular"]);
     });
 });
