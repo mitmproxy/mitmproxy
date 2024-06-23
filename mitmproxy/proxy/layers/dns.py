@@ -51,37 +51,6 @@ def pack_message(
         return packed
 
 
-def unpack_message(
-    data: bytes, transport_protocol: Literal["tcp", "udp"], buf: bytearray = bytearray()
-) -> List[dns.Message]:
-    msgs: List[dns.Message] = []
-
-    if transport_protocol == "udp":
-        msgs.append(dns.Message.unpack(data))
-    elif transport_protocol == "tcp":
-        buf.extend(data)
-        size = len(buf)
-        offset = 0
-
-        while True:
-            if size - offset < _LENGTH_LABEL.size:
-                break
-            (expected_size,) = _LENGTH_LABEL.unpack_from(buf, offset)
-            offset += _LENGTH_LABEL.size
-
-            if size - offset < expected_size:
-                offset -= _LENGTH_LABEL.size
-                break
-
-            data = bytes(buf[offset : expected_size + offset])
-            offset += expected_size
-            msgs.append(dns.Message.unpack(data))
-            expected_size = 0
-
-        del buf[:offset]
-    return msgs
-
-
 class DNSLayer(layer.Layer):
     """
     Layer that handles resolving DNS queries.
@@ -131,6 +100,38 @@ class DNSLayer(layer.Layer):
         flow.error = mflow.Error(err)
         yield DnsErrorHook(flow)
 
+    def unpack_message(self, data: bytes, from_client: bool) -> List[dns.Message]:
+        msgs: List[dns.Message] = []
+
+        buf = self.req_buf if from_client else self.resp_buf
+
+        if self.context.client.transport_protocol == "udp":
+            msgs.append(dns.Message.unpack(data))
+        elif self.context.client.transport_protocol == "tcp":
+            buf.extend(data)
+            size = len(buf)
+            offset = 0
+
+            while True:
+                if size - offset < _LENGTH_LABEL.size:
+                    break
+                (expected_size,) = _LENGTH_LABEL.unpack_from(buf, offset)
+                offset += _LENGTH_LABEL.size
+                if expected_size == 0:
+                    raise struct.error("Message length field cannot be zero")
+
+                if size - offset < expected_size:
+                    offset -= _LENGTH_LABEL.size
+                    break
+
+                data = bytes(buf[offset : expected_size + offset])
+                offset += expected_size
+                msgs.append(dns.Message.unpack(data))
+                expected_size = 0
+
+            del buf[:offset]
+        return msgs
+
     @expect(events.Start)
     def state_start(self, _) -> layer.CommandGenerator[None]:
         self._handle_event = self.state_query
@@ -144,12 +145,7 @@ class DNSLayer(layer.Layer):
         if isinstance(event, events.DataReceived):
             msgs: List[dns.Message] = []
             try:
-                buf = self.resp_buf
-                if from_client:
-                    buf = self.req_buf
-                msgs = unpack_message(
-                    event.data, event.connection.transport_protocol, buf
-                )
+                msgs = self.unpack_message(event.data, from_client)
             except struct.error as e:
                 yield commands.Log(f"{event.connection} sent an invalid message: {e}")
                 yield commands.CloseConnection(event.connection)

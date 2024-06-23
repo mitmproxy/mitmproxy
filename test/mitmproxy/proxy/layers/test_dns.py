@@ -3,6 +3,8 @@ import time
 
 import pytest
 from hypothesis import given
+from hypothesis import HealthCheck
+from hypothesis import settings
 from hypothesis import strategies as st
 
 from ..tutils import Placeholder
@@ -20,18 +22,25 @@ from mitmproxy.test.tutils import tdnsreq
 from mitmproxy.test.tutils import tdnsresp
 
 
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(st.binary())
-def test_fuzz_unpack_tcp_message(data):
+def test_fuzz_unpack_tcp_message(tctx, data):
+    layer = dns.DNSLayer(tctx)
     try:
-        dns.unpack_message(data, "tcp")
+        layer.unpack_message(data, True)
     except struct.error:
         pass
 
 
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(st.binary())
-def test_fuzz_unpack_udp_message(data):
+def test_fuzz_unpack_udp_message(tctx, data):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
+    layer = dns.DNSLayer(tctx)
     try:
-        dns.unpack_message(data, "udp")
+        layer.unpack_message(data, True)
     except struct.error:
         pass
 
@@ -406,4 +415,18 @@ def test_query_pipelining_multiple_events(tctx):
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << None
+    )
+
+def test_invalid_tcp_message_length(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    assert (
+        Playbook(dns.DNSLayer(tctx))
+        >> DataReceived(tctx.client, b"\x00\x00")
+        << Log(
+            "Client(client:1234, state=open) sent an invalid message: Message length field cannot be zero"
+        )
+        << CloseConnection(tctx.client)
+        >> ConnectionClosed(tctx.client)
     )
