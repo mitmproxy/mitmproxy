@@ -63,7 +63,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "click>=7.0,<=8.1.7",
-    "hypothesis>=5.49.0,<=6.102.4",
+    "hypothesis>=6.102.4,<=6.102.4",
     "pdoc>=4.0.0,<=14.5.0",
     "pyinstaller==6.7.0",
     "pytest-asyncio>=0.23.6,<=0.23.7",
