@@ -47,7 +47,7 @@ def test_unpack():
         domain_names.unpack(b"\x40" + (b"a" * 64) + b"\x00")
     with pytest.raises(
         struct.error,
-        match=re.escape("unpack encountered a illegal characters at offset 1"),
+        match=re.escape("unpack encountered an illegal characters at offset 1"),
     ):
         domain_names.unpack(b"\x03\xff\xff\xff\00")
 
