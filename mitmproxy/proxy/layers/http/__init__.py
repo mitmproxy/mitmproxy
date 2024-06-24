@@ -615,7 +615,7 @@ class HttpStream(layer.Layer):
                 self.flow.request.stream = True
                 if self.request_body_buf:
                     # clear buffer and then fake a DataReceived event with everything we had in the buffer so far.
-                    body_buf = b''.join(self.request_body_buf)
+                    body_buf = b"".join(self.request_body_buf)
                     self.request_body_buf = []
                     self.request_body_size = 0
                     yield from self.start_request_stream()
@@ -624,7 +624,7 @@ class HttpStream(layer.Layer):
                 assert self.flow.response
                 self.flow.response.stream = True
                 if self.response_body_buf:
-                    body_buf = b''.join(self.response_body_buf)
+                    body_buf = b"".join(self.response_body_buf)
                     self.response_body_buf = []
                     self.response_body_size = 0
                     yield from self.start_response_stream()
