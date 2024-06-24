@@ -11,6 +11,8 @@
   ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
+* Fix the issue of non-linear growth in processing time in mitmproxy related to packet size.
+  ([#6952](https://github.com/mitmproxy/mitmproxy/pull/6952), @jackfromeast)
 
 ## 12 June 2024: mitmproxy 10.3.1
 
