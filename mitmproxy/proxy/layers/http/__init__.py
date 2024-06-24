@@ -145,8 +145,10 @@ class DropStream(HttpCommand):
 
 
 class HttpStream(layer.Layer):
-    request_body_buf: bytes
-    response_body_buf: bytes
+    request_body_buf: list
+    response_body_buf: list
+    request_body_size: int
+    response_body_size: int
     flow: http.HTTPFlow
     stream_id: StreamId
     child_layer: layer.Layer | None = None
@@ -160,8 +162,10 @@ class HttpStream(layer.Layer):
 
     def __init__(self, context: Context, stream_id: int) -> None:
         super().__init__(context)
-        self.request_body_buf = b""
-        self.response_body_buf = b""
+        self.request_body_buf = []
+        self.response_body_buf = []
+        self.request_body_size = 0
+        self.response_body_size = 0
         self.client_state = self.state_uninitialized
         self.server_state = self.state_uninitialized
         self.stream_id = stream_id
@@ -347,15 +351,17 @@ class HttpStream(layer.Layer):
         self, event: events.Event
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
-            self.request_body_buf += event.data
+            self.request_body_buf.append(event.data)
+            self.request_body_size += len(event.data)
             yield from self.check_body_size(True)
         elif isinstance(event, RequestTrailers):
             assert self.flow.request
             self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
             self.flow.request.timestamp_end = time.time()
-            self.flow.request.data.content = self.request_body_buf
-            self.request_body_buf = b""
+            self.flow.request.data.content = b"".join(self.request_body_buf)
+            self.request_body_buf.clear()
+            self.request_body_size = 0
             self.client_state = self.state_done
             yield HttpRequestHook(self.flow)
             if (yield from self.check_killed(True)):
@@ -454,15 +460,17 @@ class HttpStream(layer.Layer):
         self, event: events.Event
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
-            self.response_body_buf += event.data
+            self.response_body_buf.append(event.data)
+            self.response_body_size += len(event.data)
             yield from self.check_body_size(False)
         elif isinstance(event, ResponseTrailers):
             assert self.flow.response
             self.flow.response.trailers = event.trailers
         elif isinstance(event, ResponseEndOfMessage):
             assert self.flow.response
-            self.flow.response.data.content = self.response_body_buf
-            self.response_body_buf = b""
+            self.flow.response.data.content = b"".join(self.response_body_buf)
+            self.response_body_buf.clear()
+            self.response_body_size = 0
             yield from self.send_response()
 
     def send_response(self, already_streamed: bool = False):
@@ -557,9 +565,9 @@ class HttpStream(layer.Layer):
         expected_size: int | None
         # the 'late' case: we already started consuming the body
         if request and self.request_body_buf:
-            expected_size = len(self.request_body_buf)
+            expected_size = self.request_body_size
         elif response and self.response_body_buf:
-            expected_size = len(self.response_body_buf)
+            expected_size = self.response_body_size
         else:
             # the 'early' case: we have not started consuming the body
             try:
@@ -607,16 +615,18 @@ class HttpStream(layer.Layer):
                 self.flow.request.stream = True
                 if self.request_body_buf:
                     # clear buffer and then fake a DataReceived event with everything we had in the buffer so far.
-                    body_buf = self.request_body_buf
-                    self.request_body_buf = b""
+                    body_buf = b''.join(self.request_body_buf)
+                    self.request_body_buf = []
+                    self.request_body_size = 0
                     yield from self.start_request_stream()
                     yield from self.handle_event(RequestData(self.stream_id, body_buf))
             if response:
                 assert self.flow.response
                 self.flow.response.stream = True
                 if self.response_body_buf:
-                    body_buf = self.response_body_buf
-                    self.response_body_buf = b""
+                    body_buf = b''.join(self.response_body_buf)
+                    self.response_body_buf = []
+                    self.response_body_size = 0
                     yield from self.start_response_stream()
                     yield from self.handle_event(ResponseData(self.stream_id, body_buf))
         return False
