@@ -1,6 +1,6 @@
 import { getMode as getRegularModeConfig } from "./regular";
 import { getMode as getLocalModeConfig } from "./local";
-import { fetchApi } from "../../utils";
+import { fetchApi, rpartition } from "../../utils";
 
 export interface ModeState {
     active: boolean;
@@ -48,29 +48,24 @@ export const includeModeState = (modeName: string, mode: ModeState) => {
 };
 
 export const parseMode = (spec: string) => {
-    const [head, listenAt] = spec.includes("@") ? spec.split("@") : [spec, ""];
+    let [head, listenAt] = rpartition(spec, "@");
 
-    let mode = "";
-    let data = "";
-
-    const firstColonIndex = head.indexOf(":");
-    if (firstColonIndex !== -1) {
-        mode = head.slice(0, firstColonIndex);
-        data = head.slice(firstColonIndex + 1);
-    } else {
-        mode = head;
+    if (!head) {
+        head = listenAt;
+        listenAt = "";
     }
 
+    let [mode, data] = head.split(":");
     let host = "";
     let port: string | number = "";
 
     if (listenAt) {
         if (listenAt.includes(":")) {
-            [host, port] = listenAt.split(":");
+            [host, port] = rpartition(listenAt, ":");
         } else {
+            host = "";
             port = listenAt;
         }
-
         if (port) {
             port = parseInt(port, 10);
             if (isNaN(port) || port < 0 || port > 65535) {
@@ -80,7 +75,7 @@ export const parseMode = (spec: string) => {
     }
     return {
         name: mode,
-        data: data,
+        data: data ? data : "",
         listen_host: host,
         listen_port: port,
     };
