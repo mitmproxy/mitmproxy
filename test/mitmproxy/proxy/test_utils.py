@@ -1,7 +1,7 @@
 import pytest
 
-from mitmproxy.proxy.utils import ReceiveBuffer
 from mitmproxy.proxy.utils import expect
+from mitmproxy.proxy.utils import ReceiveBuffer
 
 
 def test_expect():

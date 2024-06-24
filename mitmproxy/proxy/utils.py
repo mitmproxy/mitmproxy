@@ -40,6 +40,7 @@ class ReceiveBuffer:
     """
     A data structure to collect stream contents efficiently in O(n).
     """
+
     _chunks: list[bytes]
     _len: int
 
