@@ -356,12 +356,16 @@ class Message(serializable.SerializableDataclass):
                             f"unpack requires a data buffer of {len_data} bytes"
                         )
 
-                    data = bytearray(buffer[offset : end_data])
+                    data = bytearray(buffer[offset:end_data])
                     data_offset = 0
                     decompress_size = 0
                     # the resource record might contain a compressed domain name, if so, uncompress in advance
                     while data_offset < end_data - offset:
-                        if buffer[offset + data_offset] & domain_names._POINTER_INDICATOR == domain_names._POINTER_INDICATOR:
+                        if (
+                            buffer[offset + data_offset]
+                            & domain_names._POINTER_INDICATOR
+                            == domain_names._POINTER_INDICATOR
+                        ):
                             try:
                                 (
                                     rr_name,
@@ -369,7 +373,11 @@ class Message(serializable.SerializableDataclass):
                                 ) = domain_names.unpack_from_with_compression(
                                     buffer, offset + data_offset, cached_names
                                 )
-                                data[data_offset + decompress_size : data_offset + decompress_size + rr_name_len] = domain_names.pack(rr_name)
+                                data[
+                                    data_offset + decompress_size : data_offset
+                                    + decompress_size
+                                    + rr_name_len
+                                ] = domain_names.pack(rr_name)
                                 decompress_size += len(rr_name)
                                 data_offset += rr_name_len
                                 continue
