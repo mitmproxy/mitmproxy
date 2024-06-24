@@ -318,6 +318,33 @@ async def test_udp_dual_stack(caplog_async):
         assert await caplog_async.await_log("stopped")
 
 
+@pytest.mark.parametrize("transport_protocol", ["udp", "tcp"])
+async def test_dns_start_stop(caplog_async, transport_protocol):
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+    manager.connections = {}
+
+    with taddons.context():
+        inst = ServerInstance.make("dns@127.0.0.1:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("server listening")
+
+        host, port, *_ = inst.listen_addrs[0]
+        if transport_protocol == "tcp":
+            _, stream = await asyncio.open_connection("127.0.0.1", port)
+        elif transport_protocol == "udp":
+            stream = await mitmproxy_rs.open_udp_connection("127.0.0.1", port)
+
+        stream.write(b"\x00\x00\x01")
+        assert await caplog_async.await_log("sent an invalid message")
+
+        stream.close()
+        await stream.wait_closed()
+
+        await inst.stop()
+        assert await caplog_async.await_log("stopped")
+
+
 @pytest.fixture()
 def patched_local_redirector(monkeypatch):
     start_local_redirector = AsyncMock(return_value=Mock())
