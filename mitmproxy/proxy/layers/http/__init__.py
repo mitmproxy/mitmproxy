@@ -710,10 +710,11 @@ class HttpStream(layer.Layer):
 
         self.context.server.address = (self.flow.request.host, self.flow.request.port)
 
-        if self.mode == HTTPMode.regular:
-            yield from self.handle_connect_regular()
-        else:
-            yield from self.handle_connect_upstream()
+        # if self.mode == HTTPMode.regular:
+        #     yield from self.handle_connect_regular()
+        # else:
+        #     yield from self.handle_connect_upstream()
+        yield from self.handle_connect_regular()
 
     def handle_connect_regular(self):
         if (
@@ -1052,8 +1053,8 @@ class HttpLayer(layer.Layer):
             if event.via:
                 context.server.via = event.via
                 # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in upstream mode.
-                send_connect = event.tls or self.mode != HTTPMode.upstream
-                stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
+                # send_connect = event.tls or self.mode != HTTPMode.upstream
+                # stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
             if event.tls:
                 # Assume that we are in transparent mode and lazily did not open a connection yet.
                 # We don't want the IP (which is the address) as the upstream SNI, but the client's SNI instead.
