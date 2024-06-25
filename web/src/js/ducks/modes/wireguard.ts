@@ -9,7 +9,7 @@ import {
     getModesOfType,
 } from "./utils";
 
-export const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
+export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
 
 interface WireguardState extends ModeState {
     path?: string;
@@ -22,12 +22,12 @@ export const initialState: WireguardState = {
 
 export const getMode = (modes) => {
     const wireguardMode = modes.wireguard;
-    return includeModeState("regular", wireguardMode);
+    return includeModeState("wireguard", wireguardMode);
 };
 
 export const toggleWireguard = () => {
     return async (dispatch) => {
-        dispatch({ type: TOGGLE_WIREGUARD });
+        dispatch({ type: MODE_WIREGUARD_TOGGLE });
 
         const result = await dispatch(updateMode());
 
@@ -40,7 +40,7 @@ export const toggleWireguard = () => {
 
 const wireguardReducer = (state = initialState, action): WireguardState => {
     switch (action.type) {
-        case TOGGLE_WIREGUARD:
+        case MODE_WIREGUARD_TOGGLE:
             return {
                 ...state,
                 active: !state.active,
@@ -56,14 +56,13 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
                 return {
                     ...state,
                     active: isActive,
-                    listen_host:
-                        currentModeConfig && currentModeConfig.listen_host
-                            ? currentModeConfig.listen_host
-                            : state.listen_host,
-                    listen_port:
-                        currentModeConfig && currentModeConfig.listen_port
-                            ? (currentModeConfig.listen_port as number)
-                            : state.listen_port,
+                    path: isActive ? currentModeConfig.data : state.path,
+                    listen_host: isActive
+                        ? currentModeConfig.listen_host
+                        : state.listen_host,
+                    listen_port: isActive
+                        ? (currentModeConfig.listen_port as number)
+                        : state.listen_port,
                 };
             }
             return state;
