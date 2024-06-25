@@ -2,8 +2,12 @@ import {
     RECEIVE as RECEIVE_OPTIONS,
     UPDATE as UPDATE_OPTIONS,
 } from "../options";
-import { ModeState, updateMode } from "./utils";
-import { addListenAddr, getModesOfType } from "./utils";
+import {
+    ModeState,
+    includeModeState,
+    updateMode,
+    getModesOfType,
+} from "./utils";
 
 export const TOGGLE_WIREGUARD = "TOGGLE_WIREGUARD";
 
@@ -13,13 +17,12 @@ interface WireguardState extends ModeState {
 
 export const initialState: WireguardState = {
     active: false,
-    name: "wireguard",
     path: "",
 };
 
 export const getMode = (modes) => {
     const wireguardMode = modes.wireguard;
-    return addListenAddr(wireguardMode);
+    return includeModeState("regular", wireguardMode);
 };
 
 export const toggleWireguard = () => {
