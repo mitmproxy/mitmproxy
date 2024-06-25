@@ -133,8 +133,8 @@ export const testState: RootState = {
             applications: "",
         },
         wireguard: {
-            active: false
-        }
+            active: false,
+        },
     },
 };
 

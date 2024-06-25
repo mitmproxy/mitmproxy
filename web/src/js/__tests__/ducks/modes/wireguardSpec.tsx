@@ -1,10 +1,13 @@
 import { enableFetchMocks } from "jest-fetch-mock";
-import wireguardReducer, { getMode, initialState, toggleWireguard } from "../../../ducks/modes/wireguard";
+import wireguardReducer, {
+    getMode,
+    initialState,
+    toggleWireguard,
+} from "../../../ducks/modes/wireguard";
 import { TStore } from "../tutils";
 import * as options from "../../../ducks/options";
 
-
-describe("wireguardReducer", ()=> {
+describe("wireguardReducer", () => {
     it("should return the initial state", () => {
         const state = wireguardReducer(undefined, {});
         expect(state).toEqual(initialState);
@@ -79,7 +82,7 @@ describe("wireguardReducer", ()=> {
         expect(newState.listen_port).toBe(initialState.listen_port);
         expect(newState.path).toBe(initialState.path);
     });
-})
+});
 
 describe("getMode", () => {
     it("should return the correct mode string when active", () => {
