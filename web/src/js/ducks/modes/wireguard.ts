@@ -33,7 +33,6 @@ export const toggleWireguard = () => {
 
         if (!result.success) {
             //TODO: handle error
-            console.error("error", result.error);
         }
     };
 };
