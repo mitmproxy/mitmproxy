@@ -20,7 +20,7 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
     const contentView = useAppSelector(
         (state) => state.ui.flow.contentViewFor[flow.id + "messages"] || "Auto",
     );
-    let [maxLines, setMaxLines] = useState<number>(
+    const [maxLines, setMaxLines] = useState<number>(
         useAppSelector((state) => state.options.content_view_lines_cutoff),
     );
     const showMore = useCallback(
@@ -48,6 +48,8 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
             }
         }, [content]) || [];
 
+    let remainingLines = maxLines;
+
     return (
         <div className="contentview">
             <div className="controls">
@@ -73,12 +75,12 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                         </small>
                         <LineRenderer
                             lines={d.lines}
-                            maxLines={maxLines}
+                            maxLines={remainingLines}
                             showMore={showMore}
                         />
                     </div>
                 );
-                maxLines -= d.lines.length;
+                remainingLines -= d.lines.length;
                 return renderer;
             })}
         </div>
