@@ -132,6 +132,9 @@ export const testState: RootState = {
             active: false,
             applications: "",
         },
+        wireguard: {
+            active: false
+        }
     },
 };
 
