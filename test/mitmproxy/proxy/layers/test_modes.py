@@ -174,6 +174,9 @@ def test_reverse_proxy(tctx, keep_host_header):
 
 
 def test_reverse_dns(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(dns.DNSFlow)
     server = Placeholder(Server)
     tctx.client.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8:53")

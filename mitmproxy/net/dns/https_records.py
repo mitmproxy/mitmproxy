@@ -2,6 +2,8 @@ import enum
 import struct
 from dataclasses import dataclass
 
+from . import domain_names
+
 """
 HTTPS records are formatted as follows (as per RFC9460):
 - a 2-octet field for SvcPriority as an integer in network byte order.
@@ -63,30 +65,6 @@ def _unpack_params(data: bytes, offset: int) -> dict[int, bytes]:
     return params
 
 
-def _unpack_target_name(data: bytes, offset: int) -> tuple[str, int]:
-    """Unpacks the DNS-encoded domain name from data starting at the given offset."""
-    labels = []
-    while True:
-        if offset >= len(data):
-            raise struct.error("unpack requires a buffer of %i bytes" % offset)
-        length = data[offset]
-        offset += 1
-        if length == 0:
-            break
-        if offset + length > len(data):
-            raise struct.error(
-                "unpack requires a buffer of %i bytes" % (offset + length)
-            )
-        try:
-            labels.append(data[offset : offset + length].decode("utf-8"))
-        except UnicodeDecodeError:
-            raise struct.error(
-                "unpack encountered illegal characters at offset %i" % (offset)
-            )
-        offset += length
-    return ".".join(labels), offset
-
-
 def unpack(data: bytes) -> HTTPSRecord:
     """
     Unpacks HTTPS RDATA from byte data.
@@ -101,7 +79,7 @@ def unpack(data: bytes) -> HTTPSRecord:
     offset += 2
 
     # TargetName (variable length)
-    target_name, offset = _unpack_target_name(data, offset)
+    target_name, offset = domain_names.unpack_from(data, offset)
 
     # Service Parameters (remaining bytes)
     params = _unpack_params(data, offset)
@@ -121,22 +99,10 @@ def _pack_params(params: dict[int, bytes]) -> bytes:
     return bytes(buffer)
 
 
-def _pack_target_name(name: str) -> bytes:
-    """Converts the target name into its DNS encoded format"""
-    buffer = bytearray()
-    for label in name.split("."):
-        if len(label) == 0:
-            break
-        buffer.extend(struct.pack("!B", len(label)))
-        buffer.extend(label.encode("utf-8"))
-    buffer.extend(struct.pack("!B", 0))
-    return bytes(buffer)
-
-
 def pack(record: HTTPSRecord) -> bytes:
     """Packs the HTTPS record into its bytes form."""
     buffer = bytearray()
     buffer.extend(struct.pack("!h", record.priority))
-    buffer.extend(_pack_target_name(record.target_name))
+    buffer.extend(domain_names.pack(record.target_name))
     buffer.extend(_pack_params(record.params))
     return bytes(buffer)

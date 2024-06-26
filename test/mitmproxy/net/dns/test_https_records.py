@@ -42,7 +42,7 @@ class TestHTTPSRecords:
 
         with pytest.raises(
             struct.error,
-            match=re.escape("unpack encountered illegal characters at offset 3"),
+            match=re.escape("unpack encountered an illegal characters at offset 3"),
         ):
             https_records.unpack(
                 b"\x00\x01\x07exampl\x87\x03com\x00\x00\x01\x00\x06\x02h2\x02h3"
@@ -56,7 +56,7 @@ class TestHTTPSRecords:
             )
 
         with pytest.raises(
-            struct.error, match=re.escape("unpack requires a buffer of 10 bytes")
+            struct.error, match=re.escape("unpack requires a label buffer of 7 bytes")
         ):
             https_records.unpack(b"\x00\x01\x07exa")
 

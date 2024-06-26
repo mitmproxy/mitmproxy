@@ -28,7 +28,7 @@ def _unpack_label_into(labels: list[str], buffer: bytes, offset: int) -> int:
             labels.append(buffer[offset:end_label].decode("idna"))
         except UnicodeDecodeError:
             raise struct.error(
-                f"unpack encountered a illegal characters at offset {offset}"
+                f"unpack encountered an illegal characters at offset {offset}"
             )
         return _LABEL_SIZE.size + size
 

@@ -1,4 +1,11 @@
+import struct
 import time
+
+import pytest
+from hypothesis import given
+from hypothesis import HealthCheck
+from hypothesis import settings
+from hypothesis import strategies as st
 
 from ..tutils import Placeholder
 from ..tutils import Playbook
@@ -15,10 +22,41 @@ from mitmproxy.test.tutils import tdnsreq
 from mitmproxy.test.tutils import tdnsresp
 
 
-def test_invalid_and_dummy_end(tctx):
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(st.binary())
+def test_fuzz_unpack_tcp_message(tctx, data):
+    layer = dns.DNSLayer(tctx)
+    try:
+        layer.unpack_message(data, True)
+    except struct.error:
+        pass
+
+
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(st.binary())
+def test_fuzz_unpack_udp_message(tctx, data):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
+    layer = dns.DNSLayer(tctx)
+    try:
+        layer.unpack_message(data, True)
+    except struct.error:
+        pass
+
+
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_invalid_and_dummy_end(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
+    data = b"Not a DNS packet"
+    if tctx.client.transport_protocol == "tcp":
+        data = struct.pack("!H", len(data)) + data
+
     assert (
         Playbook(dns.DNSLayer(tctx))
-        >> DataReceived(tctx.client, b"Not a DNS packet")
+        >> DataReceived(tctx.client, data)
         << Log(
             "Client(client:1234, state=open) sent an invalid message: question #0: unpack encountered a label of length 99"
         )
@@ -27,7 +65,11 @@ def test_invalid_and_dummy_end(tctx):
     )
 
 
-def test_regular(tctx):
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_regular(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
     f = Placeholder(DNSFlow)
 
     req = tdnsreq()
@@ -43,12 +85,12 @@ def test_regular(tctx):
 
     assert (
         Playbook(dns.DNSLayer(tctx))
-        >> DataReceived(tctx.client, req.packed)
+        >> DataReceived(tctx.client, dns.pack_message(req, transport_protocol))
         << dns.DnsRequestHook(f)
         >> reply(side_effect=resolve)
         << dns.DnsResponseHook(f)
         >> reply()
-        << SendData(tctx.client, resp.packed)
+        << SendData(tctx.client, dns.pack_message(resp, transport_protocol))
         >> ConnectionClosed(tctx.client)
         << None
     )
@@ -57,7 +99,11 @@ def test_regular(tctx):
     assert not f().live
 
 
-def test_regular_mode_no_hook(tctx):
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_regular_mode_no_hook(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = None
@@ -72,7 +118,9 @@ def test_regular_mode_no_hook(tctx):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply(side_effect=no_resolve)
         << dns.DnsErrorHook(f)
@@ -85,7 +133,11 @@ def test_regular_mode_no_hook(tctx):
     assert not f().live
 
 
-def test_reverse_premature_close(tctx):
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_reverse_premature_close(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -94,12 +146,14 @@ def test_reverse_premature_close(tctx):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
-        << SendData(tctx.server, req.packed)
+        << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << None
@@ -111,7 +165,11 @@ def test_reverse_premature_close(tctx):
     assert f().request == req
 
 
-def test_reverse(tctx):
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_reverse(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -121,16 +179,20 @@ def test_reverse(tctx):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
-        << SendData(tctx.server, req.packed)
-        >> DataReceived(tctx.server, resp.packed)
+        << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f)
         >> reply()
-        << SendData(tctx.client, resp.packed)
+        << SendData(tctx.client, dns.pack_message(resp, tctx.client.transport_protocol))
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << None
@@ -143,7 +205,11 @@ def test_reverse(tctx):
     assert f().request == req and f().response == resp
 
 
-def test_reverse_fail_connection(tctx):
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_reverse_fail_connection(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -152,7 +218,9 @@ def test_reverse_fail_connection(tctx):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
@@ -168,7 +236,11 @@ def test_reverse_fail_connection(tctx):
     assert f().request == req
 
 
-def test_reverse_with_query_resend(tctx):
+@pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
+def test_reverse_with_query_resend(tctx, transport_protocol):
+    tctx.client.transport_protocol = transport_protocol
+    tctx.server.transport_protocol = transport_protocol
+
     f = Placeholder(DNSFlow)
     layer = dns.DNSLayer(tctx)
     layer.context.server.address = ("8.8.8.8", 53)
@@ -180,20 +252,26 @@ def test_reverse_with_query_resend(tctx):
 
     assert (
         Playbook(layer)
-        >> DataReceived(tctx.client, req.packed)
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
         << OpenConnection(tctx.server)
         >> reply(None)
-        << SendData(tctx.server, req.packed)
-        >> DataReceived(tctx.client, req2.packed)
+        << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req2, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply()
-        << SendData(tctx.server, req2.packed)
-        >> DataReceived(tctx.server, resp.packed)
+        << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp, tctx.server.transport_protocol)
+        )
         << dns.DnsResponseHook(f)
         >> reply()
-        << SendData(tctx.client, resp.packed)
+        << SendData(tctx.client, dns.pack_message(resp, tctx.client.transport_protocol))
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << None
@@ -205,3 +283,151 @@ def test_reverse_with_query_resend(tctx):
     resp.timestamp = f().response.timestamp
     assert f().request == req2
     assert f().response == resp
+
+
+def test_tcp_message_over_multiple_events(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ("8.8.8.8", 53)
+    f = Placeholder(DNSFlow)
+    req = tdnsreq()
+    resp = tdnsresp()
+    resp_bytes = dns.pack_message(resp, tctx.client.transport_protocol)
+    split = len(resp_bytes) // 2
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
+        << dns.DnsRequestHook(f)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, dns.pack_message(req, tctx.server.transport_protocol))
+        >> DataReceived(tctx.server, resp_bytes[:split])
+        >> DataReceived(tctx.server, resp_bytes[split:])
+        << dns.DnsResponseHook(f)
+        >> reply()
+        << SendData(tctx.client, dns.pack_message(resp, tctx.client.transport_protocol))
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )
+
+
+def test_query_pipelining_same_event(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ("8.8.8.8", 53)
+    f1 = Placeholder(DNSFlow)
+    f2 = Placeholder(DNSFlow)
+    req1 = tdnsreq(id=1)
+    req2 = tdnsreq(id=2)
+    resp1 = tdnsresp(id=1)
+    resp2 = tdnsresp(id=2)
+    req_bytes = dns.pack_message(
+        req1, tctx.client.transport_protocol
+    ) + dns.pack_message(req2, tctx.client.transport_protocol)
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(tctx.client, req_bytes)
+        << dns.DnsRequestHook(f1)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, dns.pack_message(req1, tctx.server.transport_protocol))
+        << dns.DnsRequestHook(f2)
+        >> reply()
+        << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
+        << dns.DnsResponseHook(f1)
+        >> reply()
+        << SendData(
+            tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
+        << dns.DnsResponseHook(f2)
+        >> reply()
+        << SendData(
+            tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )
+
+
+def test_query_pipelining_multiple_events(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    layer = dns.DNSLayer(tctx)
+    layer.context.server.address = ("8.8.8.8", 53)
+    f1 = Placeholder(DNSFlow)
+    f2 = Placeholder(DNSFlow)
+    req1 = tdnsreq(id=1)
+    req2 = tdnsreq(id=2)
+    resp1 = tdnsresp(id=1)
+    resp2 = tdnsresp(id=2)
+    req_bytes = dns.pack_message(
+        req1, tctx.client.transport_protocol
+    ) + dns.pack_message(req2, tctx.client.transport_protocol)
+    split = len(req_bytes) * 3 // 4
+
+    assert (
+        Playbook(layer)
+        >> DataReceived(tctx.client, req_bytes[:split])
+        << dns.DnsRequestHook(f1)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        << SendData(tctx.server, dns.pack_message(req1, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
+        << dns.DnsResponseHook(f1)
+        >> reply()
+        << SendData(
+            tctx.client, dns.pack_message(resp1, tctx.server.transport_protocol)
+        )
+        >> DataReceived(tctx.client, req_bytes[split:])
+        << dns.DnsRequestHook(f2)
+        >> reply()
+        << SendData(tctx.server, dns.pack_message(req2, tctx.server.transport_protocol))
+        >> DataReceived(
+            tctx.server, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
+        << dns.DnsResponseHook(f2)
+        >> reply()
+        << SendData(
+            tctx.client, dns.pack_message(resp2, tctx.server.transport_protocol)
+        )
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.server)
+        << None
+    )
+
+
+def test_invalid_tcp_message_length(tctx):
+    tctx.client.transport_protocol = "tcp"
+    tctx.server.transport_protocol = "tcp"
+
+    assert (
+        Playbook(dns.DNSLayer(tctx))
+        >> DataReceived(tctx.client, b"\x00\x00")
+        << Log(
+            "Client(client:1234, state=open) sent an invalid message: Message length field cannot be zero"
+        )
+        << CloseConnection(tctx.client)
+        >> ConnectionClosed(tctx.client)
+    )

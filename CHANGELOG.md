@@ -7,9 +7,13 @@
 
 ## Unreleased: mitmproxy next
 
+* Add support for DNS over TCP.
+  ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
+* Fix non-linear growth in processing time for large HTTP bodies.
+  ([#6952](https://github.com/mitmproxy/mitmproxy/pull/6952), @jackfromeast)
 * Fix zstd decompression to read across frames.
   ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
-* Add `HttpConnectedHook` and `HttpConnectErrorHook`
+* Add `HttpConnectedHook` and `HttpConnectErrorHook`.
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
 
 ## 12 June 2024: mitmproxy 10.3.1
