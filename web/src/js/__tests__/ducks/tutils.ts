@@ -124,6 +124,18 @@ export const testState: RootState = {
     commandBar: {
         visible: false,
     },
+    modes: {
+        regular: {
+            active: true,
+        },
+        local: {
+            active: false,
+            applications: "",
+        },
+        wireguard: {
+            active: false,
+        },
+    },
 };
 
 export const TStore = () =>

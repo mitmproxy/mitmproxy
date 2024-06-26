@@ -5,6 +5,7 @@ import * as flowActions from "../../ducks/flows";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { fireEvent } from "@testing-library/react";
 import MainView from "../../components/MainView";
+import StartMenu from "../../components/Header/StartMenu";
 
 enableFetchMocks();
 
@@ -61,7 +62,7 @@ test("FlowView", async () => {
 });
 
 test("FlowView close button", async () => {
-    const { getByTestId, store } = render(<MainView />);
+    const { getByTestId, store } = render(<MainView ActiveMenu={StartMenu} />);
     fireEvent.click(getByTestId("close-button-id"));
     expect(store.getState().flows.selected).toEqual([]);
 });
