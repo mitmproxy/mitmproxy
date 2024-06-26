@@ -56,7 +56,7 @@ describe("regularReducer", () => {
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
         expect(newState.listen_host).toBe("");
-        expect(newState.listen_port).toBe("");
+        expect(newState.listen_port).toBe(8080);
     });
 
     it("should handle RECEIVE_OPTIONS action with data.mode containing another mode", () => {

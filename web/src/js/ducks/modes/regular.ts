@@ -1,4 +1,3 @@
-import { DEFAULT_PORT } from "../modes";
 import {
     RECEIVE as RECEIVE_OPTIONS,
     UPDATE as UPDATE_OPTIONS,
@@ -9,11 +8,12 @@ import { includeModeState, getModesOfType } from "./utils";
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
 
+export const DEFAULT_PORT = 8080;
+
 interface RegularState extends ModeState {}
 
 export const initialState: RegularState = {
     active: true,
-    listen_port: DEFAULT_PORT,
 };
 
 export const getMode = (modes) => {
