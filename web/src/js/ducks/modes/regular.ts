@@ -11,6 +11,7 @@ interface RegularState extends ModeState {}
 
 export const initialState: RegularState = {
     active: true,
+    listen_port: 8080,
 };
 
 export const getMode = (modes) => {
@@ -52,7 +53,7 @@ const regularReducer = (state = initialState, action): RegularState => {
                         ? currentModeConfig.listen_host
                         : state.listen_host,
                     listen_port: isActive
-                        ? (currentModeConfig.listen_port as number)
+                        ? (currentModeConfig.listen_port as number) || 8080
                         : state.listen_port,
                 };
             }
