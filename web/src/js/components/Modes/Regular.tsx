@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleRegular } from "../../ducks/modes/regular";
+import { setPort, toggleRegular } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
 
 export default function Regular() {
@@ -10,6 +10,10 @@ export default function Regular() {
     const { active, error, listen_port } = useAppSelector(
         (state) => state.modes.regular,
     );
+
+    const handlePortChange = (port: string) => {
+        dispatch(setPort(port));
+    };
 
     return (
         <div>
@@ -26,7 +30,7 @@ export default function Regular() {
                 <ValueEditor
                     className="mode-regular-input"
                     content={listen_port?.toString() || ""}
-                    onEditDone={(port) => console.log(port)}
+                    onEditDone={(port) => handlePortChange(port)}
                 />
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
