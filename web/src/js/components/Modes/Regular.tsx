@@ -11,10 +11,6 @@ export default function Regular() {
         (state) => state.modes.regular,
     );
 
-    React.useEffect(()=> {
-        console.log(listen_port)
-    },[])
-
     return (
         <div>
             <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
