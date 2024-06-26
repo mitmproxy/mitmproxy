@@ -1,5 +1,6 @@
 import { getMode as getRegularModeConfig } from "./regular";
 import { getMode as getLocalModeConfig } from "./local";
+import { getMode as getWireguardModeConfig } from "./wireguard";
 import { fetchApi, rpartition } from "../../utils";
 
 export interface ModeState {
@@ -17,6 +18,7 @@ export const updateMode = () => {
             const activeModes: string[] = [
                 ...getRegularModeConfig(modes),
                 ...getLocalModeConfig(modes),
+                ...getWireguardModeConfig(modes),
                 //add new modes here
             ];
             const response = await fetchApi.put("/options", {
