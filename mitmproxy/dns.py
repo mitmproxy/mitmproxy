@@ -359,7 +359,22 @@ class Message(serializable.SerializableDataclass):
                     data = bytearray(buffer[offset:end_data])
                     data_offset = 0
                     decompress_size = 0
-                    # the resource record might contain a compressed domain name, if so, uncompress in advance
+                    # whats happening here is that DNS uses compression pointers to reduce the size of the message
+                    # transmitted. DNS messages contain multiple ResourceRecords and these ResourceRecords contain
+                    # the domain name followed by the data (such as IP address, mail address, other domain names, etc.)
+                    # along with some other stuff. These domain names are usually represented by compression pointers
+                    # (2 bytes in size) that are recognized by a leading 11 in their binary format followed by a pointer
+                    # pointing to the data in the message. The compressed domain names not part of ResourceRecord.data
+                    # are decompressed elsewhere and here we decompress compressed domain names in ResourceRecord.data.
+                    # We must decompress ALL compression pointers, decompressing only a few of them would corrupt the rest.
+                    #
+                    # We decompress these pointers by iterating through each byte and checking if it has a leading 0b11,
+                    # if so we try to decompress it and update it in the data variable. The offsets are adjusted
+                    # accordingly. Now one caveat to this method is that, sometimes we might incorrectly identify data
+                    # that would not contain compression pointers like A, AAAA records to contain compression pointers
+                    # since their data might have a byte with a leading 0b11. In such a case, we hope that it raises a
+                    # struct.error due to some reason (eg: pointer out of index, pointer points to corrupt data) that
+                    # is silenced by the `except struct.error` block
                     while data_offset < end_data - offset:
                         if (
                             buffer[offset + data_offset]
