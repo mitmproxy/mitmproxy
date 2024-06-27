@@ -2,6 +2,7 @@ import regularReducer, {
     toggleRegular,
     getMode,
     initialState,
+    setPort,
 } from "./../../../ducks/modes/regular";
 import * as options from "../../../ducks/options";
 import { TStore } from "../tutils";
@@ -21,6 +22,17 @@ describe("regularReducer", () => {
         expect(store.getState().modes.regular.active).toBe(true);
         await store.dispatch(toggleRegular());
         expect(store.getState().modes.regular.active).toBe(false);
+        expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it("should dispatch MODE_REGULAR_SET_PORT and updateMode", async () => {
+        enableFetchMocks();
+        const store = TStore();
+
+        await store.dispatch(setPort("8082"));
+
+        const state = store.getState().modes.regular;
+        expect(state.listen_port).toEqual("8082");
         expect(fetchMock).toHaveBeenCalled();
     });
 
