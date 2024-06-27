@@ -6,6 +6,9 @@ import { ModeState, updateMode } from "./utils";
 import { includeModeState, getModesOfType } from "./utils";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
+export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
+
+export const DEFAULT_PORT = 8080;
 
 interface RegularState extends ModeState {}
 
@@ -30,12 +33,29 @@ export const toggleRegular =
         }
     };
 
+export const setPort =
+    (port: string, updateModeFunc = updateMode) =>
+    async (dispatch) => {
+        dispatch({ type: MODE_REGULAR_SET_PORT, port });
+
+        const result = await dispatch(updateModeFunc());
+
+        if (!result.success) {
+            //TODO: handle error
+        }
+    };
+
 const regularReducer = (state = initialState, action): RegularState => {
     switch (action.type) {
         case MODE_REGULAR_TOGGLE:
             return {
                 ...state,
                 active: !state.active,
+            };
+        case MODE_REGULAR_SET_PORT:
+            return {
+                ...state,
+                listen_port: action.port as number,
             };
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
@@ -52,7 +72,8 @@ const regularReducer = (state = initialState, action): RegularState => {
                         ? currentModeConfig.listen_host
                         : state.listen_host,
                     listen_port: isActive
-                        ? (currentModeConfig.listen_port as number)
+                        ? (currentModeConfig.listen_port as number) ||
+                          DEFAULT_PORT
                         : state.listen_port,
                 };
             }

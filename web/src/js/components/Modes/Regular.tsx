@@ -1,12 +1,19 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleRegular } from "../../ducks/modes/regular";
+import { setPort, toggleRegular } from "../../ducks/modes/regular";
+import ValueEditor from "../editors/ValueEditor";
 
 export default function Regular() {
-    const dispatch = useAppDispatch(),
-        active = useAppSelector((state) => state.modes.regular.active),
-        error = useAppSelector((state) => state.modes.regular.error);
+    const dispatch = useAppDispatch();
+
+    const { active, error, listen_port } = useAppSelector(
+        (state) => state.modes.regular,
+    );
+
+    const handlePortChange = (port: string) => {
+        dispatch(setPort(port));
+    };
 
     return (
         <div>
@@ -19,7 +26,12 @@ export default function Regular() {
                 value={active}
                 onChange={() => dispatch(toggleRegular())}
             >
-                Run HTTP/S Proxy
+                Run HTTP/S Proxy on port{" "}
+                <ValueEditor
+                    className="mode-regular-input"
+                    content={listen_port?.toString() || ""}
+                    onEditDone={(port) => handlePortChange(port)}
+                />
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
         </div>
