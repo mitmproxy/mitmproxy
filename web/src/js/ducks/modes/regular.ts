@@ -72,7 +72,8 @@ const regularReducer = (state = initialState, action): RegularState => {
                         ? currentModeConfig.listen_host
                         : state.listen_host,
                     listen_port: isActive
-                        ? (currentModeConfig.listen_port as number) || DEFAULT_PORT
+                        ? (currentModeConfig.listen_port as number) ||
+                          DEFAULT_PORT
                         : state.listen_port,
                 };
             }
