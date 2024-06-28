@@ -7,6 +7,7 @@ import { includeModeState, getModesOfType } from "./utils";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
+export const MODE_REGULAR_ERROR = "MODE_REGULAR_ERROR";
 
 export const DEFAULT_PORT = 8080;
 
@@ -29,7 +30,8 @@ export const toggleRegular =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            // TODO: handle error
+            console.error(result.error);
+            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
 
@@ -41,7 +43,7 @@ export const setPort =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            //TODO: handle error
+            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
 
@@ -51,11 +53,13 @@ const regularReducer = (state = initialState, action): RegularState => {
             return {
                 ...state,
                 active: !state.active,
+                error: undefined,
             };
         case MODE_REGULAR_SET_PORT:
             return {
                 ...state,
                 listen_port: action.port as number,
+                error: undefined,
             };
         case UPDATE_OPTIONS:
         case RECEIVE_OPTIONS:
@@ -78,6 +82,11 @@ const regularReducer = (state = initialState, action): RegularState => {
                 };
             }
             return state;
+        case MODE_REGULAR_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         default:
             return state;
     }

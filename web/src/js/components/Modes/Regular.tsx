@@ -11,6 +11,12 @@ export default function Regular() {
         (state) => state.modes.regular,
     );
 
+    const error_state = useAppSelector((state) => {
+        if(state.backendState.servers[0]) {
+            return state.backendState.servers[0].last_exception;
+        }
+    });
+
     const handlePortChange = (port: string) => {
         dispatch(setPort(port));
     };
@@ -33,7 +39,11 @@ export default function Regular() {
                     onEditDone={(port) => handlePortChange(port)}
                 />
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            {(error || error_state) && (
+                <div className="mode-error text-danger">
+                    {error || error_state}
+                </div>
+            )}
         </div>
     );
 }
