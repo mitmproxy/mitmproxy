@@ -31,7 +31,7 @@ export const updateMode = () => {
                 return { success: false, error: errorText };
             }
         } catch (error) {
-            //TODO: handle error
+            return { success: false, error: error.message };
         }
     };
 };

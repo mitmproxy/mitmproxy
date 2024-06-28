@@ -30,7 +30,6 @@ export const toggleRegular =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            console.error(result.error);
             dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
