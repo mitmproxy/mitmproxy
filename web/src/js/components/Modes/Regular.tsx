@@ -12,7 +12,7 @@ export default function Regular() {
     );
 
     const error_state = useAppSelector((state) => {
-        if(state.backendState.servers[0]) {
+        if (state.backendState.servers[0]) {
             return state.backendState.servers[0].last_exception;
         }
     });

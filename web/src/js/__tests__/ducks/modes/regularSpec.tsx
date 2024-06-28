@@ -104,16 +104,19 @@ describe("regularReducer", () => {
         expect(newState.active).toBe(false);
     });
 
-    it('should handle error when toggling regular', async () => {
-        enableFetchMocks()
-        fetchMock.mockResponseOnce(JSON.stringify({ success: false, error: 'error message' }), { status: 400 });
+    it("should handle error when toggling regular", async () => {
+        enableFetchMocks();
+        fetchMock.mockResponseOnce(
+            JSON.stringify({ success: false, error: "error message" }),
+            { status: 400 },
+        );
         const store = TStore();
 
         await store.dispatch(toggleRegular());
 
         const state = store.getState().modes.regular;
         expect(fetchMock).toHaveBeenCalled();
-        expect(state.error).toBe('error message');
+        expect(state.error).toBe("error message");
     });
 });
 
