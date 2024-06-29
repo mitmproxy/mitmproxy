@@ -6,6 +6,7 @@ from collections.abc import Iterable
 
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
+import mitmproxy_rs
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -21,28 +22,20 @@ class ResolveError(Exception):
 
 async def resolve_question_by_name(
     question: dns.Question,
-    loop: asyncio.AbstractEventLoop,
-    family: socket.AddressFamily,
+    is_ipv6: bool,
     ip: Callable[[str], ipaddress.IPv4Address | ipaddress.IPv6Address],
 ) -> Iterable[dns.ResourceRecord]:
     try:
-        addrinfos = await loop.getaddrinfo(
-            host=question.name, port=0, family=family, type=socket.SOCK_STREAM
-        )
-    except socket.gaierror as e:
-        if e.errno == socket.EAI_NONAME:
-            raise ResolveError(dns.response_codes.NXDOMAIN)
-        else:
-            # NOTE might fail on Windows for IPv6 queries:
-            # https://stackoverflow.com/questions/66755681/getaddrinfo-c-on-windows-not-handling-ipv6-correctly-returning-error-code-1
-            raise ResolveError(dns.response_codes.SERVFAIL)  # pragma: no cover
+        addrinfos = await mitmproxy_rs.getaddrinfo(question.name, is_ipv6)
+    except Exception:
+        raise ResolveError(dns.response_codes.NXDOMAIN)
     return map(
         lambda addrinfo: dns.ResourceRecord(
             name=question.name,
             type=question.type,
             class_=question.class_,
             ttl=dns.ResourceRecord.DEFAULT_TTL,
-            data=ip(addrinfo[4][0]).packed,
+            data=ip(addrinfo).packed,
         ),
         addrinfos,
     )
@@ -86,11 +79,11 @@ async def resolve_question(
         raise ResolveError(dns.response_codes.NOTIMP)
     if question.type == dns.types.A:
         return await resolve_question_by_name(
-            question, loop, socket.AddressFamily.AF_INET, ipaddress.IPv4Address
+            question, False, ipaddress.IPv4Address
         )
     elif question.type == dns.types.AAAA:
         return await resolve_question_by_name(
-            question, loop, socket.AddressFamily.AF_INET6, ipaddress.IPv6Address
+            question, True, ipaddress.IPv6Address
         )
     elif question.type == dns.types.PTR:
         name_lower = question.name.lower()
