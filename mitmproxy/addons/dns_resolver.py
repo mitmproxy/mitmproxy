@@ -4,9 +4,10 @@ import socket
 from collections.abc import Callable
 from collections.abc import Iterable
 
+import mitmproxy_rs
+
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
-import mitmproxy_rs
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -78,13 +79,9 @@ async def resolve_question(
     if question.class_ != dns.classes.IN:
         raise ResolveError(dns.response_codes.NOTIMP)
     if question.type == dns.types.A:
-        return await resolve_question_by_name(
-            question, False, ipaddress.IPv4Address
-        )
+        return await resolve_question_by_name(question, False, ipaddress.IPv4Address)
     elif question.type == dns.types.AAAA:
-        return await resolve_question_by_name(
-            question, True, ipaddress.IPv6Address
-        )
+        return await resolve_question_by_name(question, True, ipaddress.IPv6Address)
     elif question.type == dns.types.PTR:
         name_lower = question.name.lower()
         if name_lower.endswith(IP4_PTR_SUFFIX):
