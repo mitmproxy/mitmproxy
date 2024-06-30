@@ -7,7 +7,11 @@ import ValueEditor from "../editors/ValueEditor";
 export default function Regular() {
     const dispatch = useAppDispatch();
 
-    const { active, error: ui_error, listen_port } = useAppSelector((state) => state.modes.regular);
+    const {
+        active,
+        error: ui_error,
+        listen_port,
+    } = useAppSelector((state) => state.modes.regular);
 
     const backend_error = useAppSelector((state) => {
         if (state.backendState.servers[0]) {
