@@ -7,11 +7,9 @@ import ValueEditor from "../editors/ValueEditor";
 export default function Regular() {
     const dispatch = useAppDispatch();
 
-    const { active, error, listen_port } = useAppSelector(
-        (state) => state.modes.regular,
-    );
+    const { active, error: ui_error, listen_port } = useAppSelector((state) => state.modes.regular);
 
-    const error_state = useAppSelector((state) => {
+    const backend_error = useAppSelector((state) => {
         if (state.backendState.servers[0]) {
             return state.backendState.servers[0].last_exception;
         }
@@ -39,9 +37,9 @@ export default function Regular() {
                     onEditDone={(port) => handlePortChange(port)}
                 />
             </ModeToggle>
-            {(error || error_state) && (
+            {(ui_error || backend_error) && (
                 <div className="mode-error text-danger">
-                    {error || error_state}
+                    {ui_error || backend_error}
                 </div>
             )}
         </div>
