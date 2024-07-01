@@ -465,10 +465,8 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         if self._instance:
             raise RuntimeError("Cannot spawn more than one local redirector.")
 
-        if self.mode.data.startswith("!"):
-            spec = f"{self.mode.data},{os.getpid()}"
-        elif self.mode.data:
-            spec = self.mode.data
+        if self.mode.data:
+            spec = f"{self.mode.data},!{os.getpid()}"
         else:
             spec = f"!{os.getpid()}"
 
