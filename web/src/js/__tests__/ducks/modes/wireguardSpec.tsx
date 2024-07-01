@@ -5,7 +5,7 @@ import wireguardReducer, {
     toggleWireguard,
 } from "../../../ducks/modes/wireguard";
 import { TStore } from "../tutils";
-import * as options from "../../../ducks/options";
+import * as backendState from "../../../ducks/backendState";
 
 describe("wireguardReducer", () => {
     it("should return the initial state", () => {
@@ -24,13 +24,21 @@ describe("wireguardReducer", () => {
         expect(fetchMock).toHaveBeenCalled();
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing "wireguard", an host and a port', () => {
+    it('should handle RECEIVE_STATE action with data.servers containing "wireguard", an host and a port', () => {
         const action = {
-            type: options.RECEIVE,
+            type: backendState.RECEIVE,
             data: {
-                mode: {
-                    value: ["wireguard:/path_example@localhost:8081"],
-                },
+                servers: [
+                    {
+                        wireguard_conf: null,
+                        type: "wireguard",
+                        description: "WireGuard server",
+                        full_spec: "wireguard:/path_example@localhost:8081",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [],
+                    },
+                ],
             },
         };
         const newState = wireguardReducer(initialState, action);
@@ -40,18 +48,26 @@ describe("wireguardReducer", () => {
         expect(newState.path).toBe("/path_example");
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing just "wireguard"', () => {
+    it('should handle RECEIVE_STATE action with data.servers containing just "wireguard"', () => {
         const initialState = {
             active: false,
             listen_host: "localhost",
             listen_port: 8080,
         };
         const action = {
-            type: options.RECEIVE,
+            type: backendState.RECEIVE,
             data: {
-                mode: {
-                    value: ["wireguard"],
-                },
+                servers: [
+                    {
+                        wireguard_conf: null,
+                        type: "wireguard",
+                        description: "WireGuard server",
+                        full_spec: "wireguard",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [["0.0.0.0", 51820]],
+                    },
+                ],
             },
         };
         const newState = wireguardReducer(initialState, action);
@@ -61,7 +77,7 @@ describe("wireguardReducer", () => {
         expect(newState.path).toBe("");
     });
 
-    it("should handle RECEIVE_OPTIONS action with data.mode containing another mode", () => {
+    it("should handle RECEIVE_STATE action with data.servers containing another mode", () => {
         const initialState = {
             active: false,
             listen_host: "localhost",
@@ -69,11 +85,18 @@ describe("wireguardReducer", () => {
             path: "/path_example",
         };
         const action = {
-            type: options.RECEIVE,
+            type: backendState.RECEIVE,
             data: {
-                mode: {
-                    value: ["local"],
-                },
+                servers: [
+                    {
+                        description: "Local redirector",
+                        full_spec: "local",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [],
+                        type: "local",
+                    },
+                ],
             },
         };
         const newState = wireguardReducer(initialState, action);
@@ -81,6 +104,22 @@ describe("wireguardReducer", () => {
         expect(newState.listen_host).toBe(initialState.listen_host);
         expect(newState.listen_port).toBe(initialState.listen_port);
         expect(newState.path).toBe(initialState.path);
+    });
+
+    it("should handle RECEIVE_STATE action without data.servers", () => {
+        const initialState = {
+            active: false,
+            listen_host: "localhost",
+            listen_port: 8080,
+        };
+        const action = {
+            type: backendState.RECEIVE,
+            data: {},
+        };
+        const newState = wireguardReducer(initialState, action);
+        expect(newState.active).toBe(initialState.active);
+        expect(newState.listen_host).toBe(initialState.listen_host);
+        expect(newState.listen_port).toBe(initialState.listen_port);
     });
 });
 
