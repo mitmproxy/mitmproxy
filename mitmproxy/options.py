@@ -21,6 +21,16 @@ class Options(optmanager.OptManager):
             False,
             "Use the Host header to construct URLs for display.",
         )
+        self.add_option(
+            "show_ignored_hosts",
+            bool,
+            False,
+            """
+            Show ignored (i.e. non-MITM'ed) hosts.
+            This option is useful together with `--ignore-hosts` or `--allow-hosts`.
+            To turn mitmproxy into a regular proxy you can use: `--ignore-hosts '.*' --show-ignored-hosts`
+            """,
+        )
 
         # Proxy options
         self.add_option(
