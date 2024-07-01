@@ -1,7 +1,7 @@
 import {
-    RECEIVE as RECEIVE_OPTIONS,
-    UPDATE as UPDATE_OPTIONS,
-} from "../options";
+    RECEIVE as RECEIVE_STATE,
+    UPDATE as UPDATE_STATE,
+} from "../backendState";
 import { ModeState, updateMode } from "./utils";
 import { includeModeState, getModesOfType } from "./utils";
 
@@ -60,12 +60,12 @@ const regularReducer = (state = initialState, action): RegularState => {
                 listen_port: action.port as number,
                 error: undefined,
             };
-        case UPDATE_OPTIONS:
-        case RECEIVE_OPTIONS:
-            if (action.data && action.data.mode) {
+        case UPDATE_STATE:
+        case RECEIVE_STATE:
+            if (action.data && action.data.servers) {
                 const currentModeConfig = getModesOfType(
                     "regular",
-                    action.data.mode.value,
+                    action.data.servers,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 return {

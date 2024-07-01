@@ -1,7 +1,7 @@
 import {
-    RECEIVE as RECEIVE_OPTIONS,
-    UPDATE as UPDATE_OPTIONS,
-} from "../options";
+    RECEIVE as RECEIVE_STATE,
+    UPDATE as UPDATE_STATE,
+} from "../backendState";
 import {
     ModeState,
     includeModeState,
@@ -44,12 +44,12 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
                 ...state,
                 active: !state.active,
             };
-        case UPDATE_OPTIONS:
-        case RECEIVE_OPTIONS:
-            if (action.data && action.data.mode) {
+        case UPDATE_STATE:
+        case RECEIVE_STATE:
+            if (action.data && action.data.servers) {
                 const currentModeConfig = getModesOfType(
                     "wireguard",
-                    action.data.mode.value,
+                    action.data.servers,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 return {
