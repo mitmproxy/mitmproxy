@@ -121,6 +121,32 @@ describe("wireguardReducer", () => {
         expect(newState.listen_host).toBe(initialState.listen_host);
         expect(newState.listen_port).toBe(initialState.listen_port);
     });
+
+    it("should handle MODE_WIREGUARD_ERROR action", () => {
+        const initialState = {
+            active: false,
+        };
+        const action = {
+            type: "MODE_WIREGUARD_ERROR",
+            error: "error message",
+        };
+        const newState = wireguardReducer(initialState, action);
+        expect(newState.error).toBe("error message");
+        expect(newState.active).toBe(false);
+    });
+
+    it("should handle error when toggling wireguard", async () => {
+        const updateModeMock = jest
+            .fn()
+            .mockResolvedValue({ success: false, error: "error message" });
+        const store = TStore();
+
+        await store.dispatch(toggleWireguard(() => updateModeMock));
+
+        const state = store.getState().modes.wireguard;
+        expect(updateModeMock).toHaveBeenCalled();
+        expect(state.error).toBe("error message");
+    });
 });
 
 describe("getMode", () => {

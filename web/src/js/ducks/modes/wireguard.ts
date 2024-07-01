@@ -26,17 +26,17 @@ export const getMode = (modes) => {
     return includeModeState("wireguard", wireguardMode);
 };
 
-export const toggleWireguard = () => {
-    return async (dispatch) => {
+export const toggleWireguard =
+    (updateModeFunc = updateMode) =>
+    async (dispatch) => {
         dispatch({ type: MODE_WIREGUARD_TOGGLE });
 
-        const result = await dispatch(updateMode());
+        const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
             dispatch({ type: MODE_WIREGUARD_ERROR, error: result.error });
         }
     };
-};
 
 const wireguardReducer = (state = initialState, action): WireguardState => {
     switch (action.type) {
