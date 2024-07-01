@@ -10,6 +10,7 @@ from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
 from mitmproxy.addons import dns_resolver
+from mitmproxy.addons import docker
 from mitmproxy.addons import export
 from mitmproxy.addons import maplocal
 from mitmproxy.addons import mapremote
@@ -34,6 +35,7 @@ def default_addons():
     return [
         core.Core(),
         browser.Browser(),
+        docker.Docker(),
         block.Block(),
         strip_ech.StripECH(),
         blocklist.BlockList(),
