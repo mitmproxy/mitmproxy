@@ -55,6 +55,7 @@ export const testState: RootState = {
         flow: {
             contentViewFor: {},
             tab: "request",
+            isTreeView: false,
         },
         modal: {
             activeModal: undefined,
