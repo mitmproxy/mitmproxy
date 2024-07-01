@@ -10,6 +10,7 @@ import {
 } from "./utils";
 
 export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
+export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
 
 interface WireguardState extends ModeState {
     path?: string;
@@ -32,7 +33,7 @@ export const toggleWireguard = () => {
         const result = await dispatch(updateMode());
 
         if (!result.success) {
-            //TODO: handle error
+            dispatch({ type: MODE_WIREGUARD_ERROR, error: result.error });
         }
     };
 };
@@ -62,9 +63,15 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
                     listen_port: isActive
                         ? (currentModeConfig.listen_port as number)
                         : state.listen_port,
+                    error: isActive ? undefined : state.error,
                 };
             }
             return state;
+        case MODE_WIREGUARD_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         default:
             return state;
     }

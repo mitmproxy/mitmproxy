@@ -6,7 +6,20 @@ import { toggleWireguard } from "../../ducks/modes/wireguard";
 export default function Wireguard() {
     const dispatch = useAppDispatch();
 
-    const { active, error } = useAppSelector((state) => state.modes.wireguard);
+    const { active, error: ui_error } = useAppSelector(
+        (state) => state.modes.wireguard,
+    );
+
+    const backend_error = useAppSelector((state) => {
+        if (state.backendState.servers) {
+            for (const server of state.backendState.servers) {
+                if (server.type === "wireguard") {
+                    return server.last_exception;
+                }
+            }
+        }
+        return "";
+    });
 
     return (
         <div>
@@ -21,7 +34,11 @@ export default function Wireguard() {
             >
                 Run WireGuard Server
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            {(ui_error || backend_error) && (
+                <div className="mode-error text-danger">
+                    {ui_error || backend_error}
+                </div>
+            )}
         </div>
     );
 }
