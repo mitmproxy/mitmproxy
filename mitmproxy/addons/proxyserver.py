@@ -77,7 +77,7 @@ class Servers:
             ]
 
             if not start_tasks and not stop_tasks:
-                return True # nothing to do
+                return True  # nothing to do
 
             self._instances = new_instances
             # Notify listeners about the new not-yet-started servers.
