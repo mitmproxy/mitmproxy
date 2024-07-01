@@ -76,6 +76,9 @@ class Servers:
                 if spec not in new_instances
             ]
 
+            if not start_tasks and not stop_tasks:
+                return True # nothing to do
+
             self._instances = new_instances
             # Notify listeners about the new not-yet-started servers.
             await self.changed.send()
