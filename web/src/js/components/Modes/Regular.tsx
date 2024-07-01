@@ -14,9 +14,14 @@ export default function Regular() {
     } = useAppSelector((state) => state.modes.regular);
 
     const backend_error = useAppSelector((state) => {
-        if (state.backendState.servers[0]) {
-            return state.backendState.servers[0].last_exception;
+        if (state.backendState.servers) {
+            for (const server of state.backendState.servers) {
+                if (server.type === "regular") {
+                    return server.last_exception;
+                }
+            }
         }
+        return "";
     });
 
     const handlePortChange = (port: string) => {
