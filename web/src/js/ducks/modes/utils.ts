@@ -2,6 +2,7 @@ import { getMode as getRegularModeConfig } from "./regular";
 import { getMode as getLocalModeConfig } from "./local";
 import { getMode as getWireguardModeConfig } from "./wireguard";
 import { fetchApi, rpartition } from "../../utils";
+import { ServerInfo } from "../backendState";
 
 export interface ModeState {
     active: boolean;
@@ -31,7 +32,7 @@ export const updateMode = () => {
                 return { success: false, error: errorText };
             }
         } catch (error) {
-            //TODO: handle error
+            return { success: false, error: error.message };
         }
     };
 };
@@ -83,8 +84,8 @@ export const parseMode = (spec: string) => {
     };
 };
 
-export const getModesOfType = (currentMode: string, modes: string[]) => {
-    return modes
-        .filter((mode) => mode.startsWith(currentMode))
-        .map((mode) => parseMode(mode));
+export const getModesOfType = (currentMode: string, servers: ServerInfo[]) => {
+    return servers
+        .filter((server) => server.type === currentMode)
+        .map((server) => parseMode(server.full_spec));
 };

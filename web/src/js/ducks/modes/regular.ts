@@ -1,12 +1,13 @@
 import {
-    RECEIVE as RECEIVE_OPTIONS,
-    UPDATE as UPDATE_OPTIONS,
-} from "../options";
+    RECEIVE as RECEIVE_STATE,
+    UPDATE as UPDATE_STATE,
+} from "../backendState";
 import { ModeState, updateMode } from "./utils";
 import { includeModeState, getModesOfType } from "./utils";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
+export const MODE_REGULAR_ERROR = "MODE_REGULAR_ERROR";
 
 export const DEFAULT_PORT = 8080;
 
@@ -29,7 +30,7 @@ export const toggleRegular =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            // TODO: handle error
+            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
 
@@ -41,7 +42,7 @@ export const setPort =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            //TODO: handle error
+            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
 
@@ -51,18 +52,20 @@ const regularReducer = (state = initialState, action): RegularState => {
             return {
                 ...state,
                 active: !state.active,
+                error: undefined,
             };
         case MODE_REGULAR_SET_PORT:
             return {
                 ...state,
                 listen_port: action.port as number,
+                error: undefined,
             };
-        case UPDATE_OPTIONS:
-        case RECEIVE_OPTIONS:
-            if (action.data && action.data.mode) {
+        case UPDATE_STATE:
+        case RECEIVE_STATE:
+            if (action.data && action.data.servers) {
                 const currentModeConfig = getModesOfType(
                     "regular",
-                    action.data.mode.value,
+                    action.data.servers,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 return {
@@ -75,9 +78,15 @@ const regularReducer = (state = initialState, action): RegularState => {
                         ? (currentModeConfig.listen_port as number) ||
                           DEFAULT_PORT
                         : state.listen_port,
+                    error: isActive ? undefined : state.error,
                 };
             }
             return state;
+        case MODE_REGULAR_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         default:
             return state;
     }

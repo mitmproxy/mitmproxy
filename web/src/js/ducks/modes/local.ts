@@ -1,5 +1,8 @@
 import { ModeState, updateMode } from "./utils";
-import * as options from "../options";
+import {
+    RECEIVE as RECEIVE_STATE,
+    UPDATE as UPDATE_STATE,
+} from "../backendState";
 import { getModesOfType } from "./utils";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
@@ -64,12 +67,12 @@ const localReducer = (state = initialState, action): LocalState => {
                 applications: action.applications,
                 error: undefined,
             };
-        case options.UPDATE:
-        case options.RECEIVE:
-            if (action.data && action.data.mode) {
+        case UPDATE_STATE:
+        case RECEIVE_STATE:
+            if (action.data && action.data.servers) {
                 const currentModeConfig = getModesOfType(
                     "local",
-                    action.data.mode.value,
+                    action.data.servers,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 return {

@@ -6,7 +6,7 @@ import localReducer, {
     sanitizeInput,
 } from "../../../ducks/modes/local";
 import { toggleRegular } from "../../../ducks/modes/regular";
-import * as options from "../../../ducks/options";
+import * as backendState from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
@@ -38,7 +38,7 @@ describe("localReducer", () => {
         expect(fetchMock).toHaveBeenCalled();
     });
 
-    it('should handle UPDATE_OPTIONS action with data.mode not containing "local"', async () => {
+    it('should handle UPDATE_STATE action with data.mode not containing "local"', async () => {
         const store = TStore();
 
         await store.dispatch(setApplications("curl"));
@@ -50,13 +50,20 @@ describe("localReducer", () => {
         expect(store.getState().modes.local.applications).toBe("curl");
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing "local" and an application', () => {
+    it('should handle RECEIVE_STATE action with data.servers containing "local" and an application', () => {
         const action = {
-            type: options.RECEIVE,
+            type: backendState.RECEIVE,
             data: {
-                mode: {
-                    value: ["local:curl"],
-                },
+                servers: [
+                    {
+                        type: "local",
+                        description: "Local redirector",
+                        full_spec: "local:curl",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [],
+                    },
+                ],
             },
         };
         const newState = localReducer(undefined, action);
@@ -65,17 +72,24 @@ describe("localReducer", () => {
         expect(newState.error).toBeUndefined();
     });
 
-    it('should handle RECEIVE_OPTIONS action with data.mode containing "local"', () => {
+    it('should handle RECEIVE_STATE action with data.servers containing "local"', () => {
         const initialState = {
             active: false,
             applications: "curl",
         };
         const action = {
-            type: options.RECEIVE,
+            type: backendState.RECEIVE,
             data: {
-                mode: {
-                    value: ["local"],
-                },
+                servers: [
+                    {
+                        type: "local",
+                        description: "Local redirector",
+                        full_spec: "local",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [],
+                    },
+                ],
             },
         };
         const newState = localReducer(initialState, action);
@@ -84,21 +98,45 @@ describe("localReducer", () => {
         expect(newState.error).toBeUndefined();
     });
 
-    it("should handle RECEIVE_OPTIONS action with data.mode containing another mode", () => {
+    it("should handle RECEIVE_OPTIONS action with data.servers containing another mode", () => {
         const initialState = {
             active: false,
             applications: "curl",
         };
         const action = {
-            type: options.RECEIVE,
+            type: backendState.RECEIVE,
             data: {
-                mode: {
-                    value: ["regular"],
-                },
+                servers: [
+                    {
+                        description: "HTTP(S) proxy",
+                        full_spec: "regular@localhost:8081",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [
+                            ["127.0.0.1", 8081],
+                            ["::1", 8081],
+                        ],
+                        type: "regular",
+                    },
+                ],
             },
         };
         const newState = localReducer(initialState, action);
         expect(newState.active).toBe(false);
+        expect(newState.applications).toBe(initialState.applications);
+    });
+
+    it("should handle RECEIVE_OPTIONS action without data.servers", () => {
+        const initialState = {
+            active: false,
+            applications: "curl",
+        };
+        const action = {
+            type: backendState.RECEIVE,
+            data: {},
+        };
+        const newState = localReducer(initialState, action);
+        expect(newState.active).toBe(initialState.active);
         expect(newState.applications).toBe(initialState.applications);
     });
 });
