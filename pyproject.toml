@@ -76,7 +76,7 @@ dev = [
     "wheel>=0.36.2,<=0.43",
     "build>=0.10.0,<=1.2.1",
     "mypy<=1.10.1,>=1.10.1",
-    "ruff>=0.4.1,<=0.4.7",
+    "ruff<=0.5.0,>=0.5.0",
     "types-certifi>=2021.10.8.3,<=2021.10.8.3",
     "types-Flask>=1.1.6,<=1.1.6",
     "types-Werkzeug>=1.0.9,<=1.0.9",
@@ -299,7 +299,7 @@ uv_resolution = lowest-direct
 
 [testenv:lint]
 commands =
-  ruff .
+  ruff check .
 
 [testenv:filename_matching]
 deps =
