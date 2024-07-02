@@ -364,13 +364,13 @@ class TLSLayer(tunnel.TunnelLayer):
             for cert in all_certs:
                 try:
                     # This may fail for weird certs, https://github.com/mitmproxy/mitmproxy/issues/6968.
-                    cert = certs.Cert.from_pyopenssl(cert)
+                    parsed_cert = certs.Cert.from_pyopenssl(cert)
                 except ValueError as e:
                     yield commands.Log(
                         f"{self.debug}[tls] failed to parse certificate: {e}", WARNING
                     )
                 else:
-                    self.conn.certificate_list.append(cert)
+                    self.conn.certificate_list.append(parsed_cert)
 
             self.conn.timestamp_tls_setup = time.time()
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
