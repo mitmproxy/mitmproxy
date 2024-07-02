@@ -17,19 +17,21 @@ filename = here / "../src/js/ducks/_options_gen.ts"
 
 
 def _ts_type(t):
-    if t == bool:
-        return "boolean"
-    if t == str:
-        return "string"
-    if t == int:
-        return "number"
-    if t == Sequence[str]:
-        return "string[]"
-    if t == str | None:
-        return "string | undefined"
-    if t == int | None:
-        return "number | undefined"
-    raise RuntimeError(t)
+    match t:
+        case bool:
+            return "boolean"
+        case str:
+            return "string"
+        case int:
+            return "number"
+        case Sequence[str]:
+            return "string[]"
+        case str | None:
+            return "string | undefined"
+        case int | None:
+            return "number | undefined"
+        case _:
+            raise RuntimeError(t)
 
 
 async def make() -> str:
