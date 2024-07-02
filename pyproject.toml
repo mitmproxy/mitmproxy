@@ -299,7 +299,7 @@ uv_resolution = lowest-direct
 
 [testenv:lint]
 commands =
-  ruff .
+  ruff check .
 
 [testenv:filename_matching]
 deps =
