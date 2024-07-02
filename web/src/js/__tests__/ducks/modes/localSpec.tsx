@@ -3,7 +3,6 @@ import localReducer, {
     setApplications,
     initialState,
     getMode,
-    sanitizeInput,
 } from "../../../ducks/modes/local";
 import { toggleRegular } from "../../../ducks/modes/regular";
 import * as backendState from "../../../ducks/backendState";
@@ -139,6 +138,32 @@ describe("localReducer", () => {
         expect(newState.active).toBe(initialState.active);
         expect(newState.applications).toBe(initialState.applications);
     });
+
+    it("should handle error when toggling local", async () => {
+        const updateModeMock = jest
+            .fn()
+            .mockResolvedValue({ success: false, error: "error local mode" });
+        const store = TStore();
+
+        await store.dispatch(toggleLocal(() => updateModeMock));
+
+        const state = store.getState().modes.local;
+        expect(updateModeMock).toHaveBeenCalled();
+        expect(state.error).toBe("error local mode");
+    });
+
+    it("should handle error when setting applications", async () => {
+        const updateModeMock = jest
+            .fn()
+            .mockResolvedValue({ success: false, error: "error local mode" });
+        const store = TStore();
+
+        await store.dispatch(setApplications("curl", () => updateModeMock));
+
+        const state = store.getState().modes.local;
+        expect(updateModeMock).toHaveBeenCalled();
+        expect(state.error).toBe("error local mode");
+    });
 });
 
 describe("getMode", () => {
@@ -173,31 +198,5 @@ describe("getMode", () => {
         };
         const result = getMode(modes);
         expect(result).toEqual([]);
-    });
-});
-
-describe("sanitizeInput", () => {
-    it("should remove trailing comma", () => {
-        const input = "test,";
-        const result = sanitizeInput(input);
-        expect(result).toBe("test");
-    });
-
-    it("should return the same string if there is no trailing comma", () => {
-        const input = "test";
-        const result = sanitizeInput(input);
-        expect(result).toBe(input);
-    });
-
-    it("should return an empty string if input is empty", () => {
-        const input = "";
-        const result = sanitizeInput(input);
-        expect(result).toBe("");
-    });
-
-    it("should return an empty string if input is just a comma", () => {
-        const input = ",";
-        const result = sanitizeInput(input);
-        expect(result).toBe("");
     });
 });

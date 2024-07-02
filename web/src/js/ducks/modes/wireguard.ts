@@ -34,7 +34,9 @@ export const toggleWireguard =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            dispatch({ type: MODE_WIREGUARD_ERROR, error: result.error });
+            if (result.error.includes("wireguard")) {
+                dispatch({ type: MODE_WIREGUARD_ERROR, error: result.error });
+            }
         }
     };
 

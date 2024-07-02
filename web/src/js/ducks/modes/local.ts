@@ -7,6 +7,7 @@ import { getModesOfType } from "./utils";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
 export const MODE_LOCAL_SET_APPLICATIONS = "MODE_LOCAL_SET_APPLICATIONS";
+export const MODE_LOCAL_ERROR = "MODE_LOCAL_ERROR";
 
 interface LocalState extends ModeState {
     applications?: string;
@@ -28,28 +29,34 @@ export const getMode = (modes) => {
     return [];
 };
 
-export const toggleLocal = () => async (dispatch) => {
-    dispatch({ type: MODE_LOCAL_TOGGLE });
-    await dispatch(updateMode());
-};
+export const toggleLocal =
+    (updateModeFunc = updateMode) =>
+    async (dispatch) => {
+        dispatch({ type: MODE_LOCAL_TOGGLE });
 
-export const sanitizeInput = (input: string) => {
-    return input.replace(/,$/, ""); // Remove trailing comma
-};
+        const result = await dispatch(updateModeFunc());
+
+        if (!result.success) {
+            if (result.error.includes("local")) {
+                dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
+            }
+        }
+    };
 
 export const setApplications =
     (applications, updateModeFunc = updateMode) =>
     async (dispatch) => {
-        const sanitizeApplications = sanitizeInput(applications);
         dispatch({
             type: MODE_LOCAL_SET_APPLICATIONS,
-            applications: sanitizeApplications,
+            applications: applications,
         });
 
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            // TODO: handle error
+            if (result.error.includes("local")) {
+                dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
+            }
         }
     };
 
@@ -81,10 +88,15 @@ const localReducer = (state = initialState, action): LocalState => {
                     applications: isActive
                         ? currentModeConfig.data
                         : state.applications,
-                    error: undefined,
+                    error: isActive ? undefined : state.error,
                 };
             }
             return state;
+        case MODE_LOCAL_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         default:
             return state;
     }

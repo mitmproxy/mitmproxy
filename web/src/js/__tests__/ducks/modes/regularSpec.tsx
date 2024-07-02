@@ -150,27 +150,27 @@ describe("regularReducer", () => {
     it("should handle error when toggling regular", async () => {
         const updateModeMock = jest
             .fn()
-            .mockResolvedValue({ success: false, error: "error message" });
+            .mockResolvedValue({ success: false, error: "error regular mode" });
         const store = TStore();
 
         await store.dispatch(toggleRegular(() => updateModeMock));
 
         const state = store.getState().modes.regular;
         expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error message");
+        expect(state.error).toBe("error regular mode");
     });
 
     it("should handle error when setting port", async () => {
         const updateModeMock = jest
             .fn()
-            .mockResolvedValue({ success: false, error: "error message" });
+            .mockResolvedValue({ success: false, error: "error regular mode" });
         const store = TStore();
 
         await store.dispatch(setPort("8082", () => updateModeMock));
 
         const state = store.getState().modes.regular;
         expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error message");
+        expect(state.error).toBe("error regular mode");
     });
 });
 

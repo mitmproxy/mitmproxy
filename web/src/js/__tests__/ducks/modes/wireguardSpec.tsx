@@ -138,14 +138,14 @@ describe("wireguardReducer", () => {
     it("should handle error when toggling wireguard", async () => {
         const updateModeMock = jest
             .fn()
-            .mockResolvedValue({ success: false, error: "error message" });
+            .mockResolvedValue({ success: false, error: "error wireguard mode" });
         const store = TStore();
 
         await store.dispatch(toggleWireguard(() => updateModeMock));
 
         const state = store.getState().modes.wireguard;
         expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error message");
+        expect(state.error).toBe("error wireguard mode");
     });
 });
 
