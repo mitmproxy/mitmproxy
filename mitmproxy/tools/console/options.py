@@ -38,7 +38,7 @@ class OptionItem(urwid.WidgetWrap):
 
     def get_widget(self):
         val = self.opt.current()
-        if self.opt.typespec == bool:
+        if self.opt.typespec is bool:
             displayval = "true" if val else "false"
         elif not val:
             displayval = ""
