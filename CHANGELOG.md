@@ -15,6 +15,7 @@
   ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`.
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
+* Handle certificates we cannot parse more gracefully.
 
 ## 12 June 2024: mitmproxy 10.3.1
 
