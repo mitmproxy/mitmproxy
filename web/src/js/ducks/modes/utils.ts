@@ -39,7 +39,7 @@ export const updateMode = () => {
 
 export const includeModeState = (modeName: string, mode: ModeState) => {
     let stringMode = modeName;
-    if (mode.active) {
+    if (mode.active && !mode.error) {
         if (mode.listen_host && mode.listen_port) {
             stringMode += `@${mode.listen_host}:${mode.listen_port}`;
         } else if (mode.listen_port) {

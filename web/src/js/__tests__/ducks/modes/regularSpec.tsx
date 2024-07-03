@@ -196,17 +196,4 @@ describe("getMode", () => {
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
-
-    it("should return an empty string when there is a ui error", () => {
-        const modes = {
-            regular: {
-                active: false,
-                listen_host: "localhost",
-                listen_port: 8080,
-                error: "error regular mode",
-            },
-        };
-        const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
-    });
 });

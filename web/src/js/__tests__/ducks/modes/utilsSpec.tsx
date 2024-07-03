@@ -57,6 +57,17 @@ describe("includeModeState", () => {
         const result = includeModeState("regular", mode);
         expect(result).toEqual(["regular"]);
     });
+
+    it("should return an empty array if there is a ui_error", () => {
+        const mode = {
+            active: false,
+            listen_host: "localhost",
+            listen_port: 8080,
+            error: "error message",
+        };
+        const result = includeModeState("regular", mode);
+        expect(result).toEqual([]);
+    });
 });
 
 describe("parseMode", () => {
