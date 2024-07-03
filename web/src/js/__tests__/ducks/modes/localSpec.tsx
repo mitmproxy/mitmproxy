@@ -199,4 +199,17 @@ describe("getMode", () => {
         const result = getMode(modes);
         expect(result).toEqual([]);
     });
+
+    it("should return an empty string when there is a ui error", () => {
+        const modes = {
+            local: {
+                active: false,
+                listen_host: "localhost",
+                listen_port: 8080,
+                error: "error local mode"
+            },
+        };
+        const mode = getMode(modes);
+        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
+    });
 });

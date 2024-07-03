@@ -19,8 +19,8 @@ export const initialState: LocalState = {
 };
 
 export const getMode = (modes) => {
-    const localMode = modes.local;
-    if (localMode.active) {
+    const localMode: LocalState = modes.local;
+    if (localMode.active && !localMode.error) {
         if (localMode.applications && localMode.applications.length > 0) {
             return [`local:${localMode.applications}`];
         }

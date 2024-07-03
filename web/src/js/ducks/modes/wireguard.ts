@@ -22,8 +22,11 @@ export const initialState: WireguardState = {
 };
 
 export const getMode = (modes) => {
-    const wireguardMode = modes.wireguard;
-    return includeModeState("wireguard", wireguardMode);
+    const wireguardMode: WireguardState = modes.wireguard;
+    if(!wireguardMode.error) {
+        return includeModeState("wireguard", wireguardMode);
+    }
+    return []
 };
 
 export const toggleWireguard =

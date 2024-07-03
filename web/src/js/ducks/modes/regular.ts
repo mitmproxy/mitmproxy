@@ -18,8 +18,11 @@ export const initialState: RegularState = {
 };
 
 export const getMode = (modes) => {
-    const regularMode = modes.regular;
-    return includeModeState("regular", regularMode);
+    const regularMode : RegularState = modes.regular;
+    if(!regularMode.error) {
+        return includeModeState("regular", regularMode);
+    }
+    return []
 };
 
 export const toggleRegular =
