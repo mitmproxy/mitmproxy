@@ -180,7 +180,7 @@ describe("getMode", () => {
                 active: false,
                 listen_host: "localhost",
                 listen_port: 8080,
-                error: "error wireguard mode"
+                error: "error wireguard mode",
             },
         };
         const mode = getMode(modes);

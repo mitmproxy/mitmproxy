@@ -203,11 +203,10 @@ describe("getMode", () => {
                 active: false,
                 listen_host: "localhost",
                 listen_port: 8080,
-                error: "error regular mode"
+                error: "error regular mode",
             },
         };
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
-
 });

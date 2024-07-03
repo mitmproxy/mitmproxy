@@ -206,7 +206,7 @@ describe("getMode", () => {
                 active: false,
                 listen_host: "localhost",
                 listen_port: 8080,
-                error: "error local mode"
+                error: "error local mode",
             },
         };
         const mode = getMode(modes);
