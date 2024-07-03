@@ -37,9 +37,7 @@ export const toggleLocal =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            if (result.error.includes("local")) {
-                dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
-            }
+            dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
         }
     };
 
@@ -54,9 +52,7 @@ export const setApplications =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            if (result.error.includes("local")) {
-                dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
-            }
+            dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
         }
     };
 

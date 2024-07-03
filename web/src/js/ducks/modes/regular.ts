@@ -30,9 +30,7 @@ export const toggleRegular =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            if (result.error.includes("regular")) {
-                dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
-            }
+            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
 
@@ -44,9 +42,7 @@ export const setPort =
         const result = await dispatch(updateModeFunc());
 
         if (!result.success) {
-            if (result.error.includes("regular")) {
-                dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
-            }
+            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
         }
     };
 
