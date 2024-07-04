@@ -4,6 +4,7 @@ import {
 } from "../backendState";
 import { ModeState, updateMode } from "./utils";
 import { includeModeState, getModesOfType } from "./utils";
+import type { ModesState } from "../modes";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
@@ -17,34 +18,29 @@ export const initialState: RegularState = {
     active: true,
 };
 
-export const getMode = (modes) => {
-    const regularMode: RegularState = modes.regular;
-    return includeModeState("regular", regularMode);
+export const getMode = (modes: ModesState): string[] => {
+    return includeModeState("regular", modes.regular);
 };
 
-export const toggleRegular =
-    (updateModeFunc = updateMode) =>
-    async (dispatch) => {
-        dispatch({ type: MODE_REGULAR_TOGGLE });
+export const toggleRegular = () => async (dispatch) => {
+    dispatch({ type: MODE_REGULAR_TOGGLE });
 
-        const result = await dispatch(updateModeFunc());
+    try {
+        await dispatch(updateMode());
+    } catch(e) {
+        dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
+    }
+};
 
-        if (!result.success) {
-            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
-        }
-    };
+export const setPort = (port: number) => async (dispatch) => {
+    dispatch({ type: MODE_REGULAR_SET_PORT, port });
 
-export const setPort =
-    (port: string, updateModeFunc = updateMode) =>
-    async (dispatch) => {
-        dispatch({ type: MODE_REGULAR_SET_PORT, port });
-
-        const result = await dispatch(updateModeFunc());
-
-        if (!result.success) {
-            dispatch({ type: MODE_REGULAR_ERROR, error: result.error });
-        }
-    };
+    try {
+        await dispatch(updateMode());
+    } catch(e) {
+        dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
+    }
+};
 
 const regularReducer = (state = initialState, action): RegularState => {
     switch (action.type) {

@@ -4,6 +4,7 @@ import localReducer, {
     initialState,
     getMode,
 } from "../../../ducks/modes/local";
+import { ModesState } from "../../../ducks/modes";
 import { toggleRegular } from "../../../ducks/modes/regular";
 import * as backendState from "../../../ducks/backendState";
 import { TStore } from "../tutils";
@@ -140,29 +141,23 @@ describe("localReducer", () => {
     });
 
     it("should handle error when toggling local", async () => {
-        const updateModeMock = jest
-            .fn()
-            .mockResolvedValue({ success: false, error: "error local mode" });
+        fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(toggleLocal(() => updateModeMock));
+        await store.dispatch(toggleLocal());
 
-        const state = store.getState().modes.local;
-        expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error local mode");
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.local.error).toBe("invalid spec");
     });
 
     it("should handle error when setting applications", async () => {
-        const updateModeMock = jest
-            .fn()
-            .mockResolvedValue({ success: false, error: "error local mode" });
+        fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setApplications("curl", () => updateModeMock));
+        await store.dispatch(setApplications("invalid,,"));
 
-        const state = store.getState().modes.local;
-        expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error local mode");
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.local.error).toBe("invalid spec");
     });
 });
 
@@ -173,7 +168,7 @@ describe("getMode", () => {
                 active: true,
                 applications: "curl",
             },
-        };
+        } as ModesState;
         const result = getMode(modes);
         expect(result).toEqual(["local:curl"]);
     });
@@ -184,7 +179,7 @@ describe("getMode", () => {
                 active: true,
                 applications: "",
             },
-        };
+        } as ModesState;
         const result = getMode(modes);
         expect(result).toEqual(["local"]);
     });
@@ -195,7 +190,7 @@ describe("getMode", () => {
                 active: false,
                 applications: "curl",
             },
-        };
+        } as ModesState;
         const result = getMode(modes);
         expect(result).toEqual([]);
     });
@@ -208,7 +203,7 @@ describe("getMode", () => {
                 listen_port: 8080,
                 error: "error local mode",
             },
-        };
+        } as ModesState;
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });

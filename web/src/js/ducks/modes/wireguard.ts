@@ -8,6 +8,8 @@ import {
     updateMode,
     getModesOfType,
 } from "./utils";
+import type { ModesState } from "../modes";
+
 
 export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
 export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
@@ -21,18 +23,17 @@ export const initialState: WireguardState = {
     path: "",
 };
 
-export const getMode = (modes) => {
-    const wireguardMode: WireguardState = modes.wireguard;
-    return includeModeState("wireguard", wireguardMode);
+export const getMode = (modes: ModesState): string[] => {
+    return includeModeState("wireguard", modes.wireguard);
 };
 
 export const toggleWireguard = () => async (dispatch) => {
     dispatch({ type: MODE_WIREGUARD_TOGGLE });
 
-    const result = await dispatch(updateMode());
-
-    if (!result.success) {
-        dispatch({ type: MODE_WIREGUARD_ERROR, error: result.error });
+    try {
+        await dispatch(updateMode());
+    } catch(e) {
+        dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
     }
 };
 

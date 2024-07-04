@@ -4,6 +4,7 @@ import regularReducer, {
     initialState,
     setPort,
 } from "./../../../ducks/modes/regular";
+import { ModesState } from "../../../ducks/modes";
 import * as backendState from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
@@ -29,10 +30,10 @@ describe("regularReducer", () => {
         enableFetchMocks();
         const store = TStore();
 
-        await store.dispatch(setPort("8082"));
+        await store.dispatch(setPort(8082));
 
         const state = store.getState().modes.regular;
-        expect(state.listen_port).toEqual("8082");
+        expect(state.listen_port).toBe(8082);
         expect(fetchMock).toHaveBeenCalled();
     });
 
@@ -148,29 +149,23 @@ describe("regularReducer", () => {
     });
 
     it("should handle error when toggling regular", async () => {
-        const updateModeMock = jest
-            .fn()
-            .mockResolvedValue({ success: false, error: "error regular mode" });
+        fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(toggleRegular(() => updateModeMock));
+        await store.dispatch(toggleRegular());
 
-        const state = store.getState().modes.regular;
-        expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error regular mode");
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular.error).toBe("invalid spec");
     });
 
     it("should handle error when setting port", async () => {
-        const updateModeMock = jest
-            .fn()
-            .mockResolvedValue({ success: false, error: "error regular mode" });
+        fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setPort("8082", () => updateModeMock));
+        await store.dispatch(setPort(8082));
 
-        const state = store.getState().modes.regular;
-        expect(updateModeMock).toHaveBeenCalled();
-        expect(state.error).toBe("error regular mode");
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular.error).toBe("invalid spec");
     });
 });
 
@@ -180,7 +175,7 @@ describe("getMode", () => {
             regular: {
                 active: true,
             },
-        };
+        } as ModesState;
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
     });
@@ -192,7 +187,7 @@ describe("getMode", () => {
                 listen_host: "localhost",
                 listen_port: 8080,
             },
-        };
+        } as ModesState;
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });

@@ -1,9 +1,10 @@
-import { ModeState, updateMode } from "./utils";
+import { ModeState, includeModeState, updateMode } from "./utils";
 import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
 import { getModesOfType } from "./utils";
+import type { ModesState } from "../modes";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
 export const MODE_LOCAL_SET_APPLICATIONS = "MODE_LOCAL_SET_APPLICATIONS";
@@ -18,43 +19,33 @@ export const initialState: LocalState = {
     applications: "",
 };
 
-export const getMode = (modes) => {
-    const localMode: LocalState = modes.local;
-    if (localMode.active && !localMode.error) {
-        if (localMode.applications && localMode.applications.length > 0) {
-            return [`local:${localMode.applications}`];
-        }
-        return ["local"];
-    }
-    return [];
+export const getMode = (modes: ModesState): string[] => {
+    let mode = modes.local.applications ? `local:${modes.local.applications}` : "local";
+    return includeModeState(mode, modes.local);
 };
 
-export const toggleLocal =
-    (updateModeFunc = updateMode) =>
-    async (dispatch) => {
-        dispatch({ type: MODE_LOCAL_TOGGLE });
+export const toggleLocal = () => async (dispatch) => {
+    dispatch({ type: MODE_LOCAL_TOGGLE });
 
-        const result = await dispatch(updateModeFunc());
+    try {
+        await dispatch(updateMode());
+    } catch(e) {
+        dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
+    }
+};
 
-        if (!result.success) {
-            dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
-        }
-    };
+export const setApplications = (applications) => async (dispatch) => {
+    dispatch({
+        type: MODE_LOCAL_SET_APPLICATIONS,
+        applications: applications,
+    });
 
-export const setApplications =
-    (applications, updateModeFunc = updateMode) =>
-    async (dispatch) => {
-        dispatch({
-            type: MODE_LOCAL_SET_APPLICATIONS,
-            applications: applications,
-        });
-
-        const result = await dispatch(updateModeFunc());
-
-        if (!result.success) {
-            dispatch({ type: MODE_LOCAL_ERROR, error: result.error });
-        }
-    };
+    try {
+        await dispatch(updateMode());
+    } catch(e) {
+        dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
+    }
+};
 
 const localReducer = (state = initialState, action): LocalState => {
     switch (action.type) {

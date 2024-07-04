@@ -25,7 +25,8 @@ export default function Regular() {
     });
 
     const handlePortChange = (port: string) => {
-        dispatch(setPort(port));
+        // FIXME: We should eventually cast to Number and validate.
+        dispatch(setPort(port as unknown as number));
     };
 
     return (

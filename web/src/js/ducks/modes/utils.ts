@@ -11,43 +11,43 @@ export interface ModeState {
     error?: string;
 }
 
+/**
+ * Update modes based on current UI state.
+ * 
+ * Raises an error if the update is unsuccessful.
+ */
 export const updateMode = () => {
     return async (_, getState) => {
-        try {
-            const modes = getState().modes;
+        const modes = getState().modes;
 
-            const activeModes: string[] = [
-                ...getRegularModeConfig(modes),
-                ...getLocalModeConfig(modes),
-                ...getWireguardModeConfig(modes),
-                //add new modes here
-            ];
-            const response = await fetchApi.put("/options", {
-                mode: activeModes,
-            });
-            if (response.status === 200) {
-                return { success: true };
-            } else {
-                const errorText = await response.text();
-                return { success: false, error: errorText };
-            }
-        } catch (error) {
-            return { success: false, error: error.message };
+        const activeModes: string[] = [
+            ...getRegularModeConfig(modes),
+            ...getLocalModeConfig(modes),
+            ...getWireguardModeConfig(modes),
+            //add new modes here
+        ];
+        const response = await fetchApi.put("/options", {
+            mode: activeModes,
+        });
+        if (response.status === 200) {
+            return;
+        } else {
+            throw new Error(await response.text());
         }
     };
 };
 
-export const includeModeState = (modeName: string, mode: ModeState) => {
-    let stringMode = modeName;
-    if (mode.active && !mode.error) {
-        if (mode.listen_host && mode.listen_port) {
-            stringMode += `@${mode.listen_host}:${mode.listen_port}`;
-        } else if (mode.listen_port) {
-            stringMode += `@${mode.listen_port}`;
-        }
-        return [stringMode];
+export const includeModeState = (modeNameAndData: string, state: ModeState): string[] => {
+    let mode = modeNameAndData;
+    if (!state.active || state.error) {
+        return [];
     }
-    return [];
+    if (state.listen_host && state.listen_port) {
+        mode += `@${state.listen_host}:${state.listen_port}`;
+    } else if (state.listen_port) {
+        mode += `@${state.listen_port}`;
+    }
+    return [mode];
 };
 
 export const parseMode = (spec: string) => {
