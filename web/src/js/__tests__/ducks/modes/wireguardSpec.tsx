@@ -144,7 +144,7 @@ describe("wireguardReducer", () => {
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.wireguard.error).toBe("invalid spec");
-    })
+    });
 });
 
 describe("getMode", () => {

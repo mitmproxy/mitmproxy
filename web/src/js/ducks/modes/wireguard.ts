@@ -10,7 +10,6 @@ import {
 } from "./utils";
 import type { ModesState } from "../modes";
 
-
 export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
 export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
 
@@ -32,7 +31,7 @@ export const toggleWireguard = () => async (dispatch) => {
 
     try {
         await dispatch(updateMode());
-    } catch(e) {
+    } catch (e) {
         dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
     }
 };

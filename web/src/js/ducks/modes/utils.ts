@@ -13,7 +13,7 @@ export interface ModeState {
 
 /**
  * Update modes based on current UI state.
- * 
+ *
  * Raises an error if the update is unsuccessful.
  */
 export const updateMode = () => {
@@ -37,7 +37,10 @@ export const updateMode = () => {
     };
 };
 
-export const includeModeState = (modeNameAndData: string, state: ModeState): string[] => {
+export const includeModeState = (
+    modeNameAndData: string,
+    state: ModeState,
+): string[] => {
     let mode = modeNameAndData;
     if (!state.active || state.error) {
         return [];

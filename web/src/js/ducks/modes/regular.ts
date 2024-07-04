@@ -27,7 +27,7 @@ export const toggleRegular = () => async (dispatch) => {
 
     try {
         await dispatch(updateMode());
-    } catch(e) {
+    } catch (e) {
         dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
     }
 };
@@ -37,7 +37,7 @@ export const setPort = (port: number) => async (dispatch) => {
 
     try {
         await dispatch(updateMode());
-    } catch(e) {
+    } catch (e) {
         dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
     }
 };

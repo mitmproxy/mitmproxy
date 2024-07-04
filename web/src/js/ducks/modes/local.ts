@@ -20,7 +20,9 @@ export const initialState: LocalState = {
 };
 
 export const getMode = (modes: ModesState): string[] => {
-    let mode = modes.local.applications ? `local:${modes.local.applications}` : "local";
+    let mode = modes.local.applications
+        ? `local:${modes.local.applications}`
+        : "local";
     return includeModeState(mode, modes.local);
 };
 
@@ -29,7 +31,7 @@ export const toggleLocal = () => async (dispatch) => {
 
     try {
         await dispatch(updateMode());
-    } catch(e) {
+    } catch (e) {
         dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
     }
 };
@@ -42,7 +44,7 @@ export const setApplications = (applications) => async (dispatch) => {
 
     try {
         await dispatch(updateMode());
-    } catch(e) {
+    } catch (e) {
         dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
     }
 };
