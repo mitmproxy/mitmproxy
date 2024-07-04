@@ -137,7 +137,7 @@ def record_data_can_have_compression(record_type: int) -> bool:
     return False
 
 
-def decompress_record_data(
+def decompress_from_record_data(
     buffer: bytes, offset: int, end_data: int, cached_names: Cache
 ) -> bytes:
     # we decompress compression pointers in RDATA by iterating through each byte and checking

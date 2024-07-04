@@ -358,7 +358,7 @@ class Message(serializable.SerializableDataclass):
                     data = buffer[offset:end_data]
 
                     if domain_names.record_data_can_have_compression(type):
-                        data = domain_names.decompress_record_data(
+                        data = domain_names.decompress_from_record_data(
                             buffer, offset, end_data, cached_names
                         )
 
