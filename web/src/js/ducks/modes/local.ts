@@ -1,12 +1,14 @@
-import { ModeState, updateMode } from "./utils";
+import { ModeState, includeModeState, updateMode } from "./utils";
 import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
 import { getModesOfType } from "./utils";
+import type { ModesState } from "../modes";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
 export const MODE_LOCAL_SET_APPLICATIONS = "MODE_LOCAL_SET_APPLICATIONS";
+export const MODE_LOCAL_ERROR = "MODE_LOCAL_ERROR";
 
 interface LocalState extends ModeState {
     applications?: string;
@@ -17,41 +19,35 @@ export const initialState: LocalState = {
     applications: "",
 };
 
-export const getMode = (modes) => {
-    const localMode = modes.local;
-    if (localMode.active) {
-        if (localMode.applications && localMode.applications.length > 0) {
-            return [`local:${localMode.applications}`];
-        }
-        return ["local"];
-    }
-    return [];
+export const getMode = (modes: ModesState): string[] => {
+    let mode = modes.local.applications
+        ? `local:${modes.local.applications}`
+        : "local";
+    return includeModeState(mode, modes.local);
 };
 
 export const toggleLocal = () => async (dispatch) => {
     dispatch({ type: MODE_LOCAL_TOGGLE });
-    await dispatch(updateMode());
+
+    try {
+        await dispatch(updateMode());
+    } catch (e) {
+        dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
+    }
 };
 
-export const sanitizeInput = (input: string) => {
-    return input.replace(/,$/, ""); // Remove trailing comma
+export const setApplications = (applications) => async (dispatch) => {
+    dispatch({
+        type: MODE_LOCAL_SET_APPLICATIONS,
+        applications: applications,
+    });
+
+    try {
+        await dispatch(updateMode());
+    } catch (e) {
+        dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
+    }
 };
-
-export const setApplications =
-    (applications, updateModeFunc = updateMode) =>
-    async (dispatch) => {
-        const sanitizeApplications = sanitizeInput(applications);
-        dispatch({
-            type: MODE_LOCAL_SET_APPLICATIONS,
-            applications: sanitizeApplications,
-        });
-
-        const result = await dispatch(updateModeFunc());
-
-        if (!result.success) {
-            // TODO: handle error
-        }
-    };
 
 const localReducer = (state = initialState, action): LocalState => {
     switch (action.type) {
@@ -81,10 +77,15 @@ const localReducer = (state = initialState, action): LocalState => {
                     applications: isActive
                         ? currentModeConfig.data
                         : state.applications,
-                    error: undefined,
+                    error: isActive ? undefined : state.error,
                 };
             }
             return state;
+        case MODE_LOCAL_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         default:
             return state;
     }

@@ -3,8 +3,8 @@ import localReducer, {
     setApplications,
     initialState,
     getMode,
-    sanitizeInput,
 } from "../../../ducks/modes/local";
+import { ModesState } from "../../../ducks/modes";
 import { toggleRegular } from "../../../ducks/modes/regular";
 import * as backendState from "../../../ducks/backendState";
 import { TStore } from "../tutils";
@@ -139,6 +139,26 @@ describe("localReducer", () => {
         expect(newState.active).toBe(initialState.active);
         expect(newState.applications).toBe(initialState.applications);
     });
+
+    it("should handle error when toggling local", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(toggleLocal());
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.local.error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting applications", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(setApplications("invalid,,"));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.local.error).toBe("invalid spec");
+    });
 });
 
 describe("getMode", () => {
@@ -148,7 +168,7 @@ describe("getMode", () => {
                 active: true,
                 applications: "curl",
             },
-        };
+        } as ModesState;
         const result = getMode(modes);
         expect(result).toEqual(["local:curl"]);
     });
@@ -159,7 +179,7 @@ describe("getMode", () => {
                 active: true,
                 applications: "",
             },
-        };
+        } as ModesState;
         const result = getMode(modes);
         expect(result).toEqual(["local"]);
     });
@@ -170,34 +190,21 @@ describe("getMode", () => {
                 active: false,
                 applications: "curl",
             },
-        };
+        } as ModesState;
         const result = getMode(modes);
         expect(result).toEqual([]);
     });
-});
 
-describe("sanitizeInput", () => {
-    it("should remove trailing comma", () => {
-        const input = "test,";
-        const result = sanitizeInput(input);
-        expect(result).toBe("test");
-    });
-
-    it("should return the same string if there is no trailing comma", () => {
-        const input = "test";
-        const result = sanitizeInput(input);
-        expect(result).toBe(input);
-    });
-
-    it("should return an empty string if input is empty", () => {
-        const input = "";
-        const result = sanitizeInput(input);
-        expect(result).toBe("");
-    });
-
-    it("should return an empty string if input is just a comma", () => {
-        const input = ",";
-        const result = sanitizeInput(input);
-        expect(result).toBe("");
+    it("should return an empty string when there is a ui error", () => {
+        const modes = {
+            local: {
+                active: false,
+                listen_host: "localhost",
+                listen_port: 8080,
+                error: "error local mode",
+            },
+        } as ModesState;
+        const mode = getMode(modes);
+        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });

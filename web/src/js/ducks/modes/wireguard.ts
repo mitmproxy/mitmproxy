@@ -8,8 +8,10 @@ import {
     updateMode,
     getModesOfType,
 } from "./utils";
+import type { ModesState } from "../modes";
 
 export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
+export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
 
 interface WireguardState extends ModeState {
     path?: string;
@@ -20,21 +22,18 @@ export const initialState: WireguardState = {
     path: "",
 };
 
-export const getMode = (modes) => {
-    const wireguardMode = modes.wireguard;
-    return includeModeState("wireguard", wireguardMode);
+export const getMode = (modes: ModesState): string[] => {
+    return includeModeState("wireguard", modes.wireguard);
 };
 
-export const toggleWireguard = () => {
-    return async (dispatch) => {
-        dispatch({ type: MODE_WIREGUARD_TOGGLE });
+export const toggleWireguard = () => async (dispatch) => {
+    dispatch({ type: MODE_WIREGUARD_TOGGLE });
 
-        const result = await dispatch(updateMode());
-
-        if (!result.success) {
-            //TODO: handle error
-        }
-    };
+    try {
+        await dispatch(updateMode());
+    } catch (e) {
+        dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
+    }
 };
 
 const wireguardReducer = (state = initialState, action): WireguardState => {
@@ -62,9 +61,15 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
                     listen_port: isActive
                         ? (currentModeConfig.listen_port as number)
                         : state.listen_port,
+                    error: isActive ? undefined : state.error,
                 };
             }
             return state;
+        case MODE_WIREGUARD_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         default:
             return state;
     }

@@ -10,4 +10,6 @@ const modes = combineReducers({
     //add new modes here
 });
 
+export type ModesState = ReturnType<typeof modes>;
+
 export default modes;

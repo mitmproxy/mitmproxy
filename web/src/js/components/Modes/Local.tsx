@@ -7,9 +7,22 @@ import ValueEditor from "../editors/ValueEditor";
 export default function Local() {
     const dispatch = useAppDispatch();
 
-    const { active, applications, error } = useAppSelector(
-        (state) => state.modes.local,
-    );
+    const {
+        active,
+        applications,
+        error: ui_error,
+    } = useAppSelector((state) => state.modes.local);
+
+    const backend_error = useAppSelector((state) => {
+        if (state.backendState.servers) {
+            for (const server of state.backendState.servers) {
+                if (server.type === "local") {
+                    return server.last_exception;
+                }
+            }
+        }
+        return "";
+    });
 
     const handleListApplicationsChange = (applications: string) => {
         dispatch(setApplications(applications));
@@ -31,7 +44,11 @@ export default function Local() {
                     }
                 />
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            {(ui_error || backend_error) && (
+                <div className="mode-error text-danger">
+                    {ui_error || backend_error}
+                </div>
+            )}
         </div>
     );
 }

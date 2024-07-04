@@ -6,6 +6,7 @@ import wireguardReducer, {
 } from "../../../ducks/modes/wireguard";
 import { TStore } from "../tutils";
 import * as backendState from "../../../ducks/backendState";
+import { ModesState } from "../../../ducks/modes";
 
 describe("wireguardReducer", () => {
     it("should return the initial state", () => {
@@ -121,6 +122,29 @@ describe("wireguardReducer", () => {
         expect(newState.listen_host).toBe(initialState.listen_host);
         expect(newState.listen_port).toBe(initialState.listen_port);
     });
+
+    it("should handle MODE_WIREGUARD_ERROR action", () => {
+        const initialState = {
+            active: false,
+        };
+        const action = {
+            type: "MODE_WIREGUARD_ERROR",
+            error: "error message",
+        };
+        const newState = wireguardReducer(initialState, action);
+        expect(newState.error).toBe("error message");
+        expect(newState.active).toBe(false);
+    });
+
+    it("should handle error when toggling wireguard", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(toggleWireguard());
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard.error).toBe("invalid spec");
+    });
 });
 
 describe("getMode", () => {
@@ -129,7 +153,7 @@ describe("getMode", () => {
             wireguard: {
                 active: true,
             },
-        };
+        } as ModesState;
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify(["wireguard"]));
     });
@@ -142,7 +166,7 @@ describe("getMode", () => {
                 listen_host: "localhost",
                 listen_port: 8080,
             },
-        };
+        } as ModesState;
         const mode = getMode(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });

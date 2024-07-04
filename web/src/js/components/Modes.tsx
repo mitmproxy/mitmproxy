@@ -14,6 +14,7 @@ export default function Modes() {
                 <Regular />
                 <Local />
                 <Wireguard />
+                <i>Remaining modes are coming soon...</i>
             </div>
         </div>
     );

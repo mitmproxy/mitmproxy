@@ -26,6 +26,20 @@ describe("updateMode action creator", () => {
         expect(actualUrl).toEqual(expectedUrl);
         expect(actualBody).toEqual(expectedBody);
     });
+
+    it("fetch HTTP status != 200 throws", async () => {
+        fetchMock.mockResponseOnce("invalid query", { status: 400 });
+        await expect(TStore().dispatch(updateMode())).rejects.toThrow(
+            "invalid query",
+        );
+    });
+
+    it("fetch error throws", async () => {
+        fetchMock.mockRejectOnce(new Error("network error"));
+        await expect(TStore().dispatch(updateMode())).rejects.toThrow(
+            "network error",
+        );
+    });
 });
 
 describe("includeModeState", () => {
@@ -56,6 +70,17 @@ describe("includeModeState", () => {
         };
         const result = includeModeState("regular", mode);
         expect(result).toEqual(["regular"]);
+    });
+
+    it("should return an empty array if there is a ui_error", () => {
+        const mode = {
+            active: false,
+            listen_host: "localhost",
+            listen_port: 8080,
+            error: "error message",
+        };
+        const result = includeModeState("regular", mode);
+        expect(result).toEqual([]);
     });
 });
 
