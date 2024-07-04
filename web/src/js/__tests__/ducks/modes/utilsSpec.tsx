@@ -26,6 +26,19 @@ describe("updateMode action creator", () => {
         expect(actualUrl).toEqual(expectedUrl);
         expect(actualBody).toEqual(expectedBody);
     });
+
+    it("fetch HTTP status != 200 throws", async () => {
+        fetchMock.mockResponseOnce(
+            "invalid query",
+            { status: 400 },
+        );
+        await expect(TStore().dispatch(updateMode())).rejects.toThrow("invalid query");
+    });
+
+    it("fetch error throws", async () => {
+        fetchMock.mockRejectOnce(new Error("network error"));
+        await expect(TStore().dispatch(updateMode())).rejects.toThrow("network error");
+    });
 });
 
 describe("includeModeState", () => {
