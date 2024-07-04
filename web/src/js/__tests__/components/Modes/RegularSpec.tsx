@@ -2,7 +2,7 @@ import * as React from "react";
 import { render } from "../../test-utils";
 import { TStore } from "../../ducks/tutils";
 import Regular from "../../../components/Modes/Regular";
-import { mockUpdate } from "../../../ducks/backendState";
+import * as backendState from "../../../ducks/backendState";
 
 test("RegularSpec", async () => {
     const store = TStore(),
@@ -11,7 +11,7 @@ test("RegularSpec", async () => {
     expect(asFragment()).toMatchSnapshot();
 
     store.dispatch(
-        mockUpdate({
+        backendState.mockUpdate({
             servers: [
                 {
                     description: "Regular Mode",
