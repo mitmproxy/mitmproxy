@@ -8,9 +8,10 @@ test("RegularSpec", async () => {
     const store = TStore(),
         { asFragment } = render(<Regular />, { store });
 
-        expect(asFragment()).toMatchSnapshot();
+    expect(asFragment()).toMatchSnapshot();
 
-        store.dispatch(mockUpdate({
+    store.dispatch(
+        mockUpdate({
             servers: [
                 {
                     description: "Regular Mode",
@@ -19,9 +20,10 @@ test("RegularSpec", async () => {
                     last_exception: "port already in use",
                     listen_addrs: [],
                     type: "regular",
-                }
-            ] 
-        }))
+                },
+            ],
+        }),
+    );
 
-        expect(asFragment()).toMatchSnapshot();
+    expect(asFragment()).toMatchSnapshot();
 });

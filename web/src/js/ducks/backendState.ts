@@ -34,7 +34,7 @@ export function mockUpdate(newState: Partial<BackendState>) {
     return {
         type: UPDATE,
         data: newState,
-    }
+    };
 }
 
 export default function reducer(state = defaultState, action): BackendState {

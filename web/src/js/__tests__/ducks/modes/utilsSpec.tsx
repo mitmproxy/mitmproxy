@@ -28,16 +28,17 @@ describe("updateMode action creator", () => {
     });
 
     it("fetch HTTP status != 200 throws", async () => {
-        fetchMock.mockResponseOnce(
+        fetchMock.mockResponseOnce("invalid query", { status: 400 });
+        await expect(TStore().dispatch(updateMode())).rejects.toThrow(
             "invalid query",
-            { status: 400 },
         );
-        await expect(TStore().dispatch(updateMode())).rejects.toThrow("invalid query");
     });
 
     it("fetch error throws", async () => {
         fetchMock.mockRejectOnce(new Error("network error"));
-        await expect(TStore().dispatch(updateMode())).rejects.toThrow("network error");
+        await expect(TStore().dispatch(updateMode())).rejects.toThrow(
+            "network error",
+        );
     });
 });
 
