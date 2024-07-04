@@ -136,18 +136,19 @@ describe("wireguardReducer", () => {
     });
 
     it("should handle error when toggling wireguard", async () => {
-        const updateModeMock = jest.fn().mockResolvedValue({
-            success: false,
-            error: "error wireguard mode",
-        });
+        fetchMock.mockResponse(
+            JSON.stringify({ success: false, error: "error wireguard mode" }),
+        );
         const store = TStore();
 
-        await store.dispatch(toggleWireguard(() => updateModeMock));
+        await store.dispatch(toggleWireguard());
+
+        expect(fetchMock).toHaveBeenCalled();
 
         const state = store.getState().modes.wireguard;
-        expect(updateModeMock).toHaveBeenCalled();
+        expect(state.active).toBe(false)
         expect(state.error).toBe("error wireguard mode");
-    });
+    })
 });
 
 describe("getMode", () => {
