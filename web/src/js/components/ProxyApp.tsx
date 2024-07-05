@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-
+import React, { Component, useState } from "react";
 import { onKeyDown } from "../ducks/ui/keyboard";
 import MainView from "./MainView";
 import Header from "./Header";
@@ -9,6 +8,7 @@ import Footer from "./Footer";
 import Modal from "./Modal/Modal";
 import { RootState } from "../ducks";
 import { connect } from "react-redux";
+import { Tab } from "../ducks/ui/tabs";
 
 type ProxyAppMainProps = {
     showEventLog: boolean;
@@ -20,6 +20,11 @@ type ProxyAppMainState = {
     error?: Error;
     errorInfo?: React.ErrorInfo;
 };
+
+export interface Menu {
+    (): JSX.Element;
+    title: string;
+}
 
 class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
     state: ProxyAppMainState = {};

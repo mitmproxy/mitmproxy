@@ -182,3 +182,13 @@ export async function copyToClipboard(
         t.remove();
     }
 }
+
+export function rpartition(str: string, sep: string): [string, string] {
+    const lastIndex = str.lastIndexOf(sep);
+    if (lastIndex === -1) {
+        return ["", str];
+    }
+    const before = str.slice(0, lastIndex);
+    const after = str.slice(lastIndex + sep.length);
+    return [before, after];
+}
