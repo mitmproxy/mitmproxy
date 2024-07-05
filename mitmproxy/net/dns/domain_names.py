@@ -1,6 +1,8 @@
 import struct
 from typing import Optional
 
+from . import types
+
 _LABEL_SIZE = struct.Struct("!B")
 _POINTER_OFFSET = struct.Struct("!H")
 _POINTER_INDICATOR = 0b11000000
@@ -105,3 +107,57 @@ def pack(name: str) -> bytes:
             buffer.extend(label)
     buffer.extend(_LABEL_SIZE.pack(0))
     return bytes(buffer)
+
+
+def record_data_can_have_compression(record_type: int) -> bool:
+    if record_type in (
+        types.CNAME,
+        types.HINFO,
+        types.MB,
+        types.MD,
+        types.MF,
+        types.MG,
+        types.MINFO,
+        types.MR,
+        types.MX,
+        types.NS,
+        types.PTR,
+        types.SOA,
+        types.TXT,
+        types.RP,
+        types.AFSDB,
+        types.RT,
+        types.SIG,
+        types.PX,
+        types.NXT,
+        types.NAPTR,
+        types.SRV,
+    ):
+        return True
+    return False
+
+
+def decompress_from_record_data(
+    buffer: bytes, offset: int, end_data: int, cached_names: Cache
+) -> bytes:
+    # we decompress compression pointers in RDATA by iterating through each byte and checking
+    # if it has a leading 0b11, if so we try to decompress it and update it in the data variable.
+    data = bytearray(buffer[offset:end_data])
+    data_offset = 0
+    decompress_size = 0
+    while data_offset < end_data - offset:
+        if buffer[offset + data_offset] & _POINTER_INDICATOR == _POINTER_INDICATOR:
+            (
+                rr_name,
+                rr_name_len,
+            ) = unpack_from_with_compression(buffer, offset + data_offset, cached_names)
+            data[
+                data_offset + decompress_size : data_offset
+                + decompress_size
+                + rr_name_len
+            ] = pack(rr_name)
+            decompress_size += len(rr_name)
+            data_offset += rr_name_len
+            continue
+        data_offset += 1
+    return bytes(data)
