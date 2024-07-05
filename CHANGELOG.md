@@ -11,6 +11,8 @@
   ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
 * Fix non-linear growth in processing time for large HTTP bodies.
   ([#6952](https://github.com/mitmproxy/mitmproxy/pull/6952), @jackfromeast)
+* Fix a bug where connections would be incorrectly ignored with `allow_hosts`
+  ([#7002](https://github.com/mitmproxy/mitmproxy/pull/7002), @JarLob, @mhils)
 * Fix zstd decompression to read across frames.
   ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`.
