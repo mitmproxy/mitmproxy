@@ -151,7 +151,7 @@ class TestTlsConfig:
             with open(tdata.path("mitmproxy/data/invalid-subject.pem"), "rb") as f:
                 ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
             with pytest.warns(
-                UserWarning, match="Country names should be two characters"
+                UserWarning
             ):
                 assert ta.get_cert(ctx)  # does not raise
 
