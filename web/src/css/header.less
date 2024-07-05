@@ -9,17 +9,13 @@ header {
     padding-top: 6px;
     background-color: white;
     @separator-color: lighten(grey, 15%);
-    > div {
+    > div:not(:empty) {
         display: block;
         margin: 0;
         padding: 0;
         border-bottom: solid @separator-color 1px;
         height: @menu-height;
         overflow: visible; // search help context laps over.
-    }
-    .empty-header {
-        height: 0px !important;
-        border-bottom: none;
     }
 }
 
