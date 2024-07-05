@@ -7,13 +7,12 @@ import CaptureSetup from "./CaptureSetup";
 import Modes from "./Modes";
 import { Tab } from "../ducks/ui/tabs";
 
-
 export default function MainView() {
     const hasSelection = useAppSelector(
         (state) => !!state.flows.byId[state.flows.selected[0]],
     );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
-    const currentTab = useAppSelector(state => state.ui.tabs.current);
+    const currentTab = useAppSelector((state) => state.ui.tabs.current);
 
     return (
         <div className="main-view">

@@ -3,9 +3,7 @@ import { render, screen, fireEvent } from "../test-utils";
 import Header from "../../components/Header";
 
 test("Header", async () => {
-    const { asFragment } = render(
-        <Header/>,
-    );
+    const { asFragment } = render(<Header />);
 
     expect(asFragment()).toMatchSnapshot();
 

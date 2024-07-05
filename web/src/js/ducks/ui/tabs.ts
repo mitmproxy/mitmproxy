@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit";
 
 export enum Tab {
     Capture,
@@ -8,19 +8,19 @@ export enum Tab {
 }
 
 const tabsSlice = createSlice({
-    name: 'ui/tabs',
+    name: "ui/tabs",
     initialState: {
         current: Tab.Capture,
         isInitial: true,
     },
     reducers: {
-      setCurrent(state, action) {
-        state.current = action.payload;
-        state.isInitial = false;
-      },
+        setCurrent(state, action) {
+            state.current = action.payload;
+            state.isInitial = false;
+        },
     },
 });
 
-const { actions, reducer } = tabsSlice
-export const { setCurrent } = actions
-export default reducer
+const { actions, reducer } = tabsSlice;
+export const { setCurrent } = actions;
+export default reducer;

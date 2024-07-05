@@ -17,19 +17,19 @@ const tabs: { [key in Tab]: Menu } = {
     [Tab.FlowList]: FlowListMenu,
     [Tab.Options]: OptionMenu,
     [Tab.Flow]: FlowMenu,
-}
+};
 
 export default function Header() {
     const dispatch = useAppDispatch();
-    const currentTab = useAppSelector(state => state.ui.tabs.current);
+    const currentTab = useAppSelector((state) => state.ui.tabs.current);
     const selectedFlows = useAppSelector(
             (state) =>
                 state.flows.selected.filter((id) => id in state.flows.byId),
             shallowEqual,
         ),
         [wasFlowSelected, setWasFlowSelected] = useState(false);
-    const hasFlows = useAppSelector(state => state.flows.list.length > 0),
-        isInitialTab = useAppSelector(state => state.ui.tabs.isInitial);
+    const hasFlows = useAppSelector((state) => state.flows.list.length > 0),
+        isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);
 
     let entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
     if (selectedFlows.length > 0) {
@@ -38,7 +38,7 @@ export default function Header() {
 
     // Switch to "Flow List" when the first flow appears.
     useEffect(() => {
-        if(hasFlows && isInitialTab) {
+        if (hasFlows && isInitialTab) {
             dispatch(setCurrent(Tab.FlowList));
         }
     }, [hasFlows]);

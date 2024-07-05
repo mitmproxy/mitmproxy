@@ -58,8 +58,8 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
 
         return (
             <div id="container" tabIndex={0}>
-                <Header/>
-                <MainView/>
+                <Header />
+                <MainView />
                 {showCommandBar && <CommandBar key="commandbar" />}
                 {showEventLog && <EventLog key="eventlog" />}
                 <Footer />
