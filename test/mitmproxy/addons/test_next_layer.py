@@ -347,7 +347,11 @@ class TestNextLayer:
             if allow:
                 tctx.configure(nl, allow_hosts=allow)
             ctx = Context(
-                Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080), sni="existing-sni.example"),
+                Client(
+                    peername=("192.168.0.42", 51234),
+                    sockname=("0.0.0.0", 8080),
+                    sni="existing-sni.example",
+                ),
                 tctx.options,
             )
             ctx.client.transport_protocol = transport_protocol
