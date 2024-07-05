@@ -4,23 +4,19 @@ import FlowTable from "./FlowTable";
 import FlowView from "./FlowView";
 import { useAppSelector } from "../ducks";
 import CaptureSetup from "./CaptureSetup";
-import CaptureMenu from "./Header/CaptureMenu";
-import { Menu } from "./ProxyApp";
 import Modes from "./Modes";
+import { Tab } from "../ducks/ui/tabs";
 
-interface MainViewProps {
-    ActiveMenu: Menu;
-}
-
-export default function MainView({ ActiveMenu }: MainViewProps) {
+export default function MainView() {
     const hasSelection = useAppSelector(
         (state) => !!state.flows.byId[state.flows.selected[0]],
     );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
+    const currentTab = useAppSelector((state) => state.ui.tabs.current);
 
     return (
         <div className="main-view">
-            {ActiveMenu === CaptureMenu ? (
+            {currentTab === Tab.Capture ? (
                 <Modes />
             ) : (
                 <>

@@ -8,7 +8,7 @@ import Footer from "./Footer";
 import Modal from "./Modal/Modal";
 import { RootState } from "../ducks";
 import { connect } from "react-redux";
-import CaptureMenu from "./Header/CaptureMenu";
+import { Tab } from "../ducks/ui/tabs";
 
 type ProxyAppMainProps = {
     showEventLog: boolean;
@@ -19,7 +19,6 @@ type ProxyAppMainProps = {
 type ProxyAppMainState = {
     error?: Error;
     errorInfo?: React.ErrorInfo;
-    ActiveMenu: Menu;
 };
 
 export interface Menu {
@@ -28,9 +27,7 @@ export interface Menu {
 }
 
 class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
-    state: ProxyAppMainState = {
-        ActiveMenu: CaptureMenu,
-    };
+    state: ProxyAppMainState = {};
 
     render = () => {
         const { showEventLog, showCommandBar } = this.props;
@@ -61,13 +58,8 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
 
         return (
             <div id="container" tabIndex={0}>
-                <Header
-                    ActiveMenu={this.state.ActiveMenu}
-                    setActiveMenu={(ActiveMenu) => {
-                        this.setState({ ActiveMenu });
-                    }}
-                />
-                <MainView ActiveMenu={this.state.ActiveMenu} />
+                <Header />
+                <MainView />
                 {showCommandBar && <CommandBar key="commandbar" />}
                 {showEventLog && <EventLog key="eventlog" />}
                 <Footer />

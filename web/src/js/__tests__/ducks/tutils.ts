@@ -6,6 +6,7 @@ import { DNSFlow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
+import { Tab } from "../../ducks/ui/tabs";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -66,6 +67,10 @@ export const testState: RootState = {
                 error: "incorrect password",
                 value: "correcthorsebatterystaple",
             },
+        },
+        tabs: {
+            current: Tab.Capture,
+            isInitial: true,
         },
     },
     options: defaultOptions,

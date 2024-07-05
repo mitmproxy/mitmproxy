@@ -1,12 +1,9 @@
 import * as React from "react";
 import { render, screen, fireEvent } from "../test-utils";
 import Header from "../../components/Header";
-import OptionMenu from "../../components/Header/OptionMenu";
 
 test("Header", async () => {
-    const { asFragment } = render(
-        <Header ActiveMenu={OptionMenu} setActiveMenu={jest.fn()} />,
-    );
+    const { asFragment } = render(<Header />);
 
     expect(asFragment()).toMatchSnapshot();
 
