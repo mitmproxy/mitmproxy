@@ -11,14 +11,16 @@ const tabsSlice = createSlice({
     name: 'ui/tabs',
     initialState: {
         current: Tab.Capture,
+        isInitial: true,
     },
     reducers: {
-      setActive(state, action) {
+      setCurrent(state, action) {
         state.current = action.payload;
+        state.isInitial = false;
       },
     },
 });
 
 const { actions, reducer } = tabsSlice
-export const { setActive: setCurrent } = actions
+export const { setCurrent } = actions
 export default reducer

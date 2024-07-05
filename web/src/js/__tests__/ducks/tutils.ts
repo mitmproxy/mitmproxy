@@ -69,7 +69,8 @@ export const testState: RootState = {
             },
         },
         tabs: {
-            current: Tab.FlowList,
+            current: Tab.Capture,
+            isInitial: true,
         },
     },
     options: defaultOptions,

@@ -28,12 +28,22 @@ export default function Header() {
             shallowEqual,
         ),
         [wasFlowSelected, setWasFlowSelected] = useState(false);
+    const hasFlows = useAppSelector(state => state.flows.list.length > 0),
+        isInitialTab = useAppSelector(state => state.ui.tabs.isInitial);
 
     let entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
     if (selectedFlows.length > 0) {
         entries.push(Tab.Flow);
     }
 
+    // Switch to "Flow List" when the first flow appears.
+    useEffect(() => {
+        if(hasFlows && isInitialTab) {
+            dispatch(setCurrent(Tab.FlowList));
+        }
+    }, [hasFlows]);
+
+    // Switch to "Flow" tab if we just selected a new flow.
     useEffect(() => {
         if (selectedFlows.length > 0 && !wasFlowSelected) {
             // User just clicked on a flow without having previously selected one.

@@ -12,7 +12,7 @@ enableFetchMocks();
 test("FlowView", async () => {
     fetchMock.mockReject(new Error("backend missing"));
 
-    const { asFragment, store } = render(<FlowView />);
+    const { asFragment, getByTestId, store } = render(<FlowView />);
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Response"));
@@ -59,10 +59,7 @@ test("FlowView", async () => {
 
     fireEvent.click(screen.getByText("Error"));
     expect(asFragment()).toMatchSnapshot();
-});
 
-test("FlowView close button", async () => {
-    const { getByTestId, store } = render(<MainView/>);
     fireEvent.click(getByTestId("close-button-id"));
     expect(store.getState().flows.selected).toEqual([]);
 });
