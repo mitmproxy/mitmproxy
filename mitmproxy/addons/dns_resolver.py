@@ -14,6 +14,7 @@ IP6_PTR_SUFFIX = ".ip6.arpa"
 
 SYSTEM_DNS_SERVERS = mitmproxy_rs.get_system_dns_servers()
 
+
 class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
 

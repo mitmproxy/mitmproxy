@@ -139,7 +139,7 @@ export const defaultState: OptionsState = {
     mode: ["regular"],
     modify_body: [],
     modify_headers: [],
-    name_servers: ["127.0.0.53"],
+    name_servers: [],
     normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
