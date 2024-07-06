@@ -4,62 +4,80 @@ import FileMenu from "./Header/FileMenu";
 import ConnectionIndicator from "./Header/ConnectionIndicator";
 import HideInStatic from "./common/HideInStatic";
 import CaptureMenu from "./Header/CaptureMenu";
-import { useAppSelector } from "../ducks";
-import StartMenu from "./Header/StartMenu";
+import { useAppDispatch, useAppSelector } from "../ducks";
+import FlowListMenu from "./Header/FlowListMenu";
 import OptionMenu from "./Header/OptionMenu";
 import FlowMenu from "./Header/FlowMenu";
 import { Menu } from "./ProxyApp";
 import { shallowEqual } from "react-redux";
+import { Tab, setCurrent } from "../ducks/ui/tabs";
 
-interface HeaderProps {
-    ActiveMenu: Menu;
-    setActiveMenu: React.Dispatch<Menu>;
-}
+const tabs: { [key in Tab]: Menu } = {
+    [Tab.Capture]: CaptureMenu,
+    [Tab.FlowList]: FlowListMenu,
+    [Tab.Options]: OptionMenu,
+    [Tab.Flow]: FlowMenu,
+};
 
-export default function Header({ ActiveMenu, setActiveMenu }: HeaderProps) {
+export default function Header() {
+    const dispatch = useAppDispatch();
+    const currentTab = useAppSelector((state) => state.ui.tabs.current);
     const selectedFlows = useAppSelector(
             (state) =>
                 state.flows.selected.filter((id) => id in state.flows.byId),
             shallowEqual,
         ),
         [wasFlowSelected, setWasFlowSelected] = useState(false);
+    const hasFlows = useAppSelector((state) => state.flows.list.length > 0),
+        isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);
 
-    let entries: Menu[] = [CaptureMenu, StartMenu, OptionMenu];
+    let entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
     if (selectedFlows.length > 0) {
-        entries.push(FlowMenu);
+        entries.push(Tab.Flow);
     }
 
+    // Switch to "Flow List" when the first flow appears.
+    useEffect(() => {
+        if (hasFlows && isInitialTab) {
+            dispatch(setCurrent(Tab.FlowList));
+        }
+    }, [hasFlows]);
+
+    // Switch to "Flow" tab if we just selected a new flow.
     useEffect(() => {
         if (selectedFlows.length > 0 && !wasFlowSelected) {
-            setActiveMenu(FlowMenu);
+            // User just clicked on a flow without having previously selected one.
+            dispatch(setCurrent(Tab.Flow));
             setWasFlowSelected(true);
         } else if (selectedFlows.length === 0) {
             if (wasFlowSelected) {
                 setWasFlowSelected(false);
             }
-            if (ActiveMenu === FlowMenu) {
-                setActiveMenu(StartMenu);
+            if (currentTab === Tab.Flow) {
+                dispatch(setCurrent(Tab.FlowList));
             }
         }
-    }, [selectedFlows, wasFlowSelected, ActiveMenu, setActiveMenu]);
+    }, [selectedFlows, wasFlowSelected, currentTab]);
 
-    function handleClick(active: Menu, e: React.MouseEvent<HTMLAnchorElement>) {
+    function handleClick(tab: Tab, e: React.MouseEvent<HTMLAnchorElement>) {
         e.preventDefault();
-        setActiveMenu(active);
+        dispatch(setCurrent(tab));
     }
+
+    const ActiveMenu = tabs[currentTab];
 
     return (
         <header>
             <nav className="nav-tabs nav-tabs-lg">
                 <FileMenu />
-                {entries.map((Entry) => (
+                {entries.map((tab) => (
                     <a
-                        key={Entry.title}
+                        key={tab}
                         href="#"
-                        className={classnames({ active: Entry === ActiveMenu })}
-                        onClick={(e) => handleClick(Entry, e)}
+                        className={classnames({ active: tab === currentTab })}
+                        onClick={(e) => handleClick(tab, e)}
                     >
-                        {Entry.title}
+                        {tabs[tab].title}
                     </a>
                 ))}
                 <HideInStatic>

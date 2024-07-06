@@ -17,11 +17,11 @@ filename = here / "../src/js/ducks/_options_gen.ts"
 
 
 def _ts_type(t):
-    if t == bool:
+    if t is bool:
         return "boolean"
-    if t == str:
+    if t is str:
         return "string"
-    if t == int:
+    if t is int:
         return "number"
     if t == Sequence[str]:
         return "string[]"

@@ -1,19 +1,10 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
-import { Provider } from "react-redux";
-import OptionMenu from "../../../components/Header/OptionMenu";
-import { TStore } from "../../ducks/tutils";
 import CaptureMenu from "../../../components/Header/CaptureMenu";
+import { render } from "../../test-utils";
 
 describe("CaptureMenu Component", () => {
     it("should render correctly", () => {
-        let store = TStore(),
-            provider = renderer.create(
-                <Provider store={store}>
-                    <CaptureMenu />
-                </Provider>,
-            ),
-            tree = provider.toJSON();
-        expect(tree).toMatchSnapshot();
+        const { asFragment } = render(<CaptureMenu />);
+        expect(asFragment()).toMatchSnapshot();
     });
 });

@@ -6,9 +6,9 @@ import Button from "../common/Button";
 import { update as updateOptions } from "../../ducks/options";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
-StartMenu.title = "Start";
+FlowListMenu.title = "Flow List";
 
-export default function StartMenu() {
+export default function FlowListMenu() {
     return (
         <div className="main-menu">
             <div className="menu-group">

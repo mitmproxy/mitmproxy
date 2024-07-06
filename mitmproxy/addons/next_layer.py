@@ -225,6 +225,9 @@ class NextLayer:
                 client_hello := self._get_client_hello(context, data_client)
             ) and client_hello.sni:
                 hostnames.append(f"{client_hello.sni}:{port}")
+            if context.client.sni:
+                # Hostname may be allowed, TLS is already established, and we have another next layer decision.
+                hostnames.append(f"{context.client.sni}:{port}")
 
         if not hostnames:
             return False

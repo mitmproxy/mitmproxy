@@ -176,7 +176,7 @@ if __name__ == "__main__":
             time.sleep(30)  # relatively strict rate limits here.
 
     print("➡️ Checking GitHub Releases...")
-    resp = get(f"https://api.github.com/repos/{repo}/releases/tags/{version}")
+    resp = get(f"https://api.github.com/repos/{repo}/releases/tags/{tag_name}")
     assert resp.status == 200
 
     print("➡️ Checking PyPI...")

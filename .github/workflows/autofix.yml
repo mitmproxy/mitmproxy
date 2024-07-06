@@ -19,7 +19,7 @@ jobs:
         with:
           python-version-file: .github/python-version.txt
       - run: pip install -e .[dev]
-      - run: ruff --fix-only .
+      - run: ruff check --fix-only .
       - run: ruff format .
 
       - run: web/gen/all
