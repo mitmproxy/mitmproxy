@@ -39,6 +39,7 @@ export interface OptionsState {
     mode: string[];
     modify_body: string[];
     modify_headers: string[];
+    name_servers: string[];
     normalize_outbound_headers: boolean;
     onboarding: boolean;
     onboarding_host: string;
@@ -82,6 +83,7 @@ export interface OptionsState {
     udp_hosts: string[];
     upstream_auth: string | undefined;
     upstream_cert: boolean;
+    use_hosts_file: boolean;
     validate_inbound_headers: boolean;
     view_filter: string | undefined;
     view_order: string;
@@ -137,6 +139,7 @@ export const defaultState: OptionsState = {
     mode: ["regular"],
     modify_body: [],
     modify_headers: [],
+    name_servers: ["127.0.0.53"],
     normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
@@ -180,6 +183,7 @@ export const defaultState: OptionsState = {
     udp_hosts: [],
     upstream_auth: undefined,
     upstream_cert: true,
+    use_hosts_file: true,
     validate_inbound_headers: true,
     view_filter: undefined,
     view_order: "time",

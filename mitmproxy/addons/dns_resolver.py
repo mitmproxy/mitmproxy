@@ -3,11 +3,11 @@ import socket
 from collections.abc import Iterable
 from collections.abc import Sequence
 
+import mitmproxy_rs
+
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
-import mitmproxy_rs
-
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -41,10 +41,15 @@ class DnsResolver:
             all_ip_lookups = (
                 flow.request.query
                 and flow.request.op_code == dns.op_codes.QUERY
-                and all(q.type in (dns.types.A, dns.types.AAAA) and q.class_ == dns.classes.IN for q in flow.request.questions)
+                and all(
+                    q.type in (dns.types.A, dns.types.AAAA)
+                    and q.class_ == dns.classes.IN
+                    for q in flow.request.questions
+                )
             )
-            # For ip_lookups (A/AAAA only), we check the hosts file first and for other query types we forward it to the specified name server.
-            if all_ip_lookups:
+            # For ip_lookups (A/AAAA only) that need to be looked up in the hosts file first we use
+            # `mitmproxy_rs.DnsResolver`and for other query types we forward it to the specified name server.
+            if all_ip_lookups and ctx.options.use_hosts_file:
                 # TODO: We need to handle overly long responses here.
                 flow.response = await self.resolve_message(flow.request)
             else:
@@ -60,7 +65,9 @@ class DnsResolver:
         else:
             return message.succeed(rrs)
 
-    async def resolve_question(self, question: dns.Question) -> Iterable[dns.ResourceRecord]:
+    async def resolve_question(
+        self, question: dns.Question
+    ) -> Iterable[dns.ResourceRecord]:
         assert question.type in (dns.types.A, dns.types.AAAA)
 
         try:
@@ -92,14 +99,14 @@ class DnsResolver:
             "use_hosts_file",
             bool,
             True,
-            "Use the hosts file for DNS lookups in regular DNS mode."
+            "Use the hosts file for DNS lookups in regular DNS mode/wireguard mode.",
         )
 
         loader.add_option(
             "name_servers",
             Sequence[str],
             mitmproxy_rs.get_system_dns_servers(),
-            "Name servers to use for lookups. Default: operating system's name servers"
+            "Name servers to use for lookups. Default: operating system's name servers",
         )
 
         self.resolver = mitmproxy_rs.DnsResolver(
