@@ -28,16 +28,10 @@ exports[`Header 1`] = `
         class=""
         href="#"
       >
-        Start
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
         Options
       </a>
       <a
-        class=""
+        class="active"
         href="#"
       >
         Flow
@@ -51,7 +45,9 @@ exports[`Header 1`] = `
     <div
       class=""
     >
-      <div>
+      <div
+        class="flow-menu"
+      >
         <div
           class="menu-group"
         >
@@ -60,106 +56,134 @@ exports[`Header 1`] = `
           >
             <button
               class="btn btn-default"
-              title="Open Options"
+              disabled=""
+              title="[r]eplay flow"
             >
               <i
-                class="fa fa-cogs text-primary"
+                class="fa fa-repeat text-primary"
               />
-               Edit Options 
-              <sup>
-                alpha
-              </sup>
+               Replay
+            </button>
+            <button
+              class="btn btn-default"
+              title="[D]uplicate flow"
+            >
+              <i
+                class="fa fa-copy text-info"
+              />
+               Duplicate
+            </button>
+            <button
+              class="btn btn-default"
+              disabled=""
+              title="revert changes to flow [V]"
+            >
+              <i
+                class="fa fa-history text-warning"
+              />
+               Revert
+            </button>
+            <button
+              class="btn btn-default"
+              title="[d]elete flow"
+            >
+              <i
+                class="fa fa-trash text-danger"
+              />
+               Delete
+            </button>
+            <a
+              class=""
+              href="#"
+            >
+              <button
+                class="btn btn-default"
+                title="mark flow"
+              >
+                <i
+                  class="fa fa-paint-brush text-success"
+                />
+                 Mark▾
+              </button>
+            </a>
+          </div>
+          <div
+            class="menu-legend"
+          >
+            Flow Modification
+          </div>
+        </div>
+        <div
+          class="menu-group"
+        >
+          <div
+            class="menu-content"
+          >
+            <a
+              class=""
+              href="#"
+            >
+              <button
+                class="btn btn-default"
+              >
+                <i
+                  class="fa fa-download"
+                />
+                 Download▾
+              </button>
+            </a>
+            <a
+              class=""
+              href="#"
+            >
+              <button
+                class="btn btn-default"
+                title="Export flow."
+              >
+                <i
+                  class="fa fa-clone"
+                />
+                 Export▾
+              </button>
+            </a>
+          </div>
+          <div
+            class="menu-legend"
+          >
+            Export
+          </div>
+        </div>
+        <div
+          class="menu-group"
+        >
+          <div
+            class="menu-content"
+          >
+            <button
+              class="btn btn-default"
+              disabled=""
+              title="[a]ccept intercepted flow"
+            >
+              <i
+                class="fa fa-play text-success"
+              />
+               Resume
+            </button>
+            <button
+              class="btn btn-default"
+              disabled=""
+              title="kill intercepted flow [x]"
+            >
+              <i
+                class="fa fa-times text-danger"
+              />
+               Abort
             </button>
           </div>
           <div
             class="menu-legend"
           >
-            Options Editor
-          </div>
-        </div>
-        <div
-          class="menu-group"
-        >
-          <div
-            class="menu-content"
-          >
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Strip cache headers 
-                <a
-                  href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
-                  target="_blank"
-                >
-                  <i
-                    class="fa fa-question-circle"
-                  />
-                </a>
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Use host header for display
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Don't verify server certificates
-              </label>
-            </div>
-          </div>
-          <div
-            class="menu-legend"
-          >
-            Quick Options
-          </div>
-        </div>
-        <div
-          class="menu-group"
-        >
-          <div
-            class="menu-content"
-          >
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  checked=""
-                  type="checkbox"
-                />
-                Display Event Log
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Display Command Bar
-              </label>
-            </div>
-          </div>
-          <div
-            class="menu-legend"
-          >
-            View Options
+            Interception
           </div>
         </div>
       </div>
@@ -569,168 +593,6 @@ exports[`Header 4`] = `
         File
       </a>
       <a
-        class=""
-        href="#"
-      >
-        Capture
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Start
-      </a>
-      <a
-        class="active"
-        href="#"
-      >
-        Options
-      </a>
-      <a
-        class=""
-        href="#"
-      >
-        Flow
-      </a>
-      <span
-        class="connection-indicator established"
-      >
-        connected
-      </span>
-    </nav>
-    <div
-      class=""
-    >
-      <div>
-        <div
-          class="menu-group"
-        >
-          <div
-            class="menu-content"
-          >
-            <button
-              class="btn btn-default"
-              title="Open Options"
-            >
-              <i
-                class="fa fa-cogs text-primary"
-              />
-               Edit Options 
-              <sup>
-                alpha
-              </sup>
-            </button>
-          </div>
-          <div
-            class="menu-legend"
-          >
-            Options Editor
-          </div>
-        </div>
-        <div
-          class="menu-group"
-        >
-          <div
-            class="menu-content"
-          >
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Strip cache headers 
-                <a
-                  href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
-                  target="_blank"
-                >
-                  <i
-                    class="fa fa-question-circle"
-                  />
-                </a>
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Use host header for display
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Don't verify server certificates
-              </label>
-            </div>
-          </div>
-          <div
-            class="menu-legend"
-          >
-            Quick Options
-          </div>
-        </div>
-        <div
-          class="menu-group"
-        >
-          <div
-            class="menu-content"
-          >
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  checked=""
-                  type="checkbox"
-                />
-                Display Event Log
-              </label>
-            </div>
-            <div
-              class="menu-entry"
-            >
-              <label>
-                <input
-                  type="checkbox"
-                />
-                Display Command Bar
-              </label>
-            </div>
-          </div>
-          <div
-            class="menu-legend"
-          >
-            View Options
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-</DocumentFragment>
-`;
-
-exports[`Header 4`] = `
-<DocumentFragment>
-  <header>
-    <nav
-      class="nav-tabs nav-tabs-lg"
-    >
-      <a
-        class="pull-left special"
-        href="#"
-      >
-        File
-      </a>
-      <a
         class="active"
         href="#"
       >
@@ -760,7 +622,9 @@ exports[`Header 4`] = `
         connected
       </span>
     </nav>
-    <div />
+    <div
+      class="empty-header"
+    />
   </header>
 </DocumentFragment>
 `;
