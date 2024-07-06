@@ -12,6 +12,7 @@ from mitmproxy.proxy import mode_specs
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
 
+SYSTEM_DNS_SERVERS = mitmproxy_rs.get_system_dns_servers()
 
 class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
@@ -47,8 +48,8 @@ class DnsResolver:
                     for q in flow.request.questions
                 )
             )
-            # For ip_lookups (A/AAAA only) that need to be looked up in the hosts file first we use
-            # `mitmproxy_rs.DnsResolver`and for other query types we forward it to the specified name server.
+            # We use `mitmproxy_rs.DnsResolver` if we need to use the hosts file to lookup hostnames(A/AAAA queries only)
+            # For other cases we forward it to the specified name server directly.
             if all_ip_lookups and ctx.options.use_hosts_file:
                 # TODO: We need to handle overly long responses here.
                 flow.response = await self.resolve_message(flow.request)
@@ -105,18 +106,18 @@ class DnsResolver:
         loader.add_option(
             "name_servers",
             Sequence[str],
-            mitmproxy_rs.get_system_dns_servers(),
+            [],
             "Name servers to use for lookups. Default: operating system's name servers",
         )
 
         self.resolver = mitmproxy_rs.DnsResolver(
-            name_servers=ctx.options.name_servers,
+            name_servers=SYSTEM_DNS_SERVERS,
             use_hosts_file=ctx.options.use_hosts_file,
         )
 
     def configure(self, updated):
         if "use_hosts_file" in updated or "name_servers" in updated:
             self.resolver = mitmproxy_rs.DnsResolver(
-                name_servers=ctx.options.name_servers,
+                name_servers=ctx.options.name_servers or SYSTEM_DNS_SERVERS,
                 use_hosts_file=ctx.options.use_hosts_file,
             )
