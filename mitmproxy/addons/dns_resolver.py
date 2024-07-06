@@ -1,12 +1,13 @@
-import asyncio
 import ipaddress
 import socket
-from collections.abc import Callable
 from collections.abc import Iterable
+from collections.abc import Sequence
 
+from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
 import mitmproxy_rs
+
 
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
@@ -16,125 +17,14 @@ class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
 
     def __init__(self, response_code: int) -> None:
-        assert response_code != dns.response_codes.NOERROR
         self.response_code = response_code
 
 
-async def resolve_question_by_name(
-    question: dns.Question,
-    is_ipv6: bool,
-    ip: Callable[[str], ipaddress.IPv4Address | ipaddress.IPv6Address],
-) -> Iterable[dns.ResourceRecord]:
-    try:
-        addrinfos = await mitmproxy_rs.getaddrinfo(question.name, is_ipv6)
-    except Exception:
-        raise ResolveError(dns.response_codes.NXDOMAIN)
-    return map(
-        lambda addrinfo: dns.ResourceRecord(
-            name=question.name,
-            type=question.type,
-            class_=question.class_,
-            ttl=dns.ResourceRecord.DEFAULT_TTL,
-            data=ip(addrinfo).packed,
-        ),
-        addrinfos,
-    )
-
-
-async def resolve_question_by_addr(
-    question: dns.Question,
-    loop: asyncio.AbstractEventLoop,
-    suffix: str,
-    sockaddr: Callable[[list[str]], tuple[str, int] | tuple[str, int, int, int]],
-) -> Iterable[dns.ResourceRecord]:
-    try:
-        addr = sockaddr(question.name[: -len(suffix)].split(".")[::-1])
-    except ValueError:
-        raise ResolveError(dns.response_codes.FORMERR)
-    try:
-        name, _ = await loop.getnameinfo(addr, flags=socket.NI_NAMEREQD)
-    except socket.gaierror as e:
-        raise ResolveError(
-            dns.response_codes.NXDOMAIN
-            if e.errno == socket.EAI_NONAME
-            else dns.response_codes.SERVFAIL
-        )
-    return [
-        dns.ResourceRecord(
-            name=question.name,
-            type=question.type,
-            class_=question.class_,
-            ttl=dns.ResourceRecord.DEFAULT_TTL,
-            data=dns.domain_names.pack(name),
-        )
-    ]
-
-
-async def resolve_question(
-    question: dns.Question, loop: asyncio.AbstractEventLoop
-) -> Iterable[dns.ResourceRecord]:
-    """Resolve the question into resource record(s), throwing ResolveError if an error condition occurs."""
-
-    if question.class_ != dns.classes.IN:
-        raise ResolveError(dns.response_codes.NOTIMP)
-    if question.type == dns.types.A:
-        return await resolve_question_by_name(
-            question, False, ipaddress.IPv4Address
-        )
-    elif question.type == dns.types.AAAA:
-        return await resolve_question_by_name(
-            question, True, ipaddress.IPv6Address
-        )
-    elif question.type == dns.types.PTR:
-        name_lower = question.name.lower()
-        if name_lower.endswith(IP4_PTR_SUFFIX):
-            return await resolve_question_by_addr(
-                question=question,
-                loop=loop,
-                suffix=IP4_PTR_SUFFIX,
-                sockaddr=lambda x: (str(ipaddress.IPv4Address(".".join(x))), 0),
-            )
-        elif name_lower.endswith(IP6_PTR_SUFFIX):
-            return await resolve_question_by_addr(
-                question=question,
-                loop=loop,
-                suffix=IP6_PTR_SUFFIX,
-                sockaddr=lambda x: (
-                    str(ipaddress.IPv6Address(bytes.fromhex("".join(x)))),
-                    0,
-                    0,
-                    0,
-                ),
-            )
-        else:
-            raise ResolveError(dns.response_codes.FORMERR)
-    else:
-        raise ResolveError(dns.response_codes.NOTIMP)
-
-
-async def resolve_message(
-    message: dns.Message, loop: asyncio.AbstractEventLoop
-) -> dns.Message:
-    try:
-        if not message.query:
-            raise ResolveError(
-                dns.response_codes.REFUSED
-            )  # we cannot resolve an answer
-        if message.op_code != dns.op_codes.QUERY:
-            raise ResolveError(
-                dns.response_codes.NOTIMP
-            )  # inverse queries and others are not supported
-        rrs: list[dns.ResourceRecord] = []
-        for question in message.questions:
-            rrs.extend(await resolve_question(question, loop))
-    except ResolveError as e:
-        return message.fail(e.response_code)
-    else:
-        return message.succeed(rrs)
-
-
 class DnsResolver:
+    resolver: mitmproxy_rs.DnsResolver
+
     async def dns_request(self, flow: dns.DNSFlow) -> None:
+        assert flow.request
         should_resolve = (
             (
                 isinstance(flow.client_conn.proxy_mode, mode_specs.DnsMode)
@@ -148,7 +38,78 @@ class DnsResolver:
             and not flow.error
         )
         if should_resolve:
-            # TODO: We need to handle overly long responses here.
-            flow.response = await resolve_message(
-                flow.request, asyncio.get_running_loop()
+            all_ip_lookups = (
+                flow.request.query
+                and flow.request.op_code == dns.op_codes.QUERY
+                and all(q.type in (dns.types.A, dns.types.AAAA) and q.class_ == dns.classes.IN for q in flow.request.questions)
+            )
+            # For ip_lookups (A/AAAA only), we check the hosts file first and for other query types we forward it to the specified name server.
+            if all_ip_lookups:
+                # TODO: We need to handle overly long responses here.
+                flow.response = await self.resolve_message(flow.request)
+            else:
+                flow.server_conn.address = (ctx.options.name_servers[0], 53)
+
+    async def resolve_message(self, message: dns.Message) -> dns.Message:
+        try:
+            rrs: list[dns.ResourceRecord] = []
+            for question in message.questions:
+                rrs.extend(await self.resolve_question(question))
+        except ResolveError as e:
+            return message.fail(e.response_code)
+        else:
+            return message.succeed(rrs)
+
+    async def resolve_question(self, question: dns.Question) -> Iterable[dns.ResourceRecord]:
+        assert question.type in (dns.types.A, dns.types.AAAA)
+
+        try:
+            if question.type == dns.types.A:
+                addrinfos = await self.resolver.lookup_ipv4(question.name)
+            elif question.type == dns.types.AAAA:
+                addrinfos = await self.resolver.lookup_ipv6(question.name)
+        except socket.gaierror as e:
+            if e.args[0] == "NXDOMAIN":
+                raise ResolveError(dns.response_codes.NXDOMAIN)
+            elif e.args[0] == "NOERROR":
+                raise ResolveError(dns.response_codes.NOERROR)
+            else:
+                raise ResolveError(dns.response_codes.SERVFAIL)
+
+        return map(
+            lambda addrinfo: dns.ResourceRecord(
+                name=question.name,
+                type=question.type,
+                class_=question.class_,
+                ttl=dns.ResourceRecord.DEFAULT_TTL,
+                data=ipaddress.ip_address(addrinfo).packed,
+            ),
+            addrinfos,
+        )
+
+    def load(self, loader):
+        loader.add_option(
+            "use_hosts_file",
+            bool,
+            True,
+            "Use the hosts file for DNS lookups in regular DNS mode."
+        )
+
+        loader.add_option(
+            "name_servers",
+            Sequence[str],
+            mitmproxy_rs.get_system_dns_servers(),
+            "Name servers to use for lookups. Default: operating system's name servers"
+        )
+
+        self.resolver = mitmproxy_rs.DnsResolver(
+            name_servers=ctx.options.name_servers,
+            use_hosts_file=ctx.options.use_hosts_file,
+        )
+
+    def configure(self, updated):
+        if "use_hosts_file" in updated or "name_servers" in updated:
+            self.resolver = mitmproxy_rs.DnsResolver(
+                name_servers=ctx.options.name_servers,
+                use_hosts_file=ctx.options.use_hosts_file,
             )
