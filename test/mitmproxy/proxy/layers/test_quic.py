@@ -1207,7 +1207,11 @@ class TestClientQuic:
         )
 
     def test_version_negotiation(self, tctx: context.Context):
-        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, version=0)
+        # To trigger a version negotiation, use one of the reserved 0x?A?A?A?A versions.
+        # https://datatracker.ietf.org/doc/html/rfc9000#section-15
+        playbook, client_layer, tssl_client = make_client_tls_layer(
+            tctx, version=0x1A2A3A4A
+        )
         assert (
             playbook
             >> events.DataReceived(tctx.client, tssl_client.read())

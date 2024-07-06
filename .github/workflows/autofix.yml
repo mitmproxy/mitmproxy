@@ -15,10 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: install-pinned/ruff@f91b0bd5d5680f7ecf60fcd37860121a4b6dadf5
-      - run: ruff --fix-only .
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .github/python-version.txt
+      - run: pip install -e .[dev]
+      - run: ruff check --fix-only .
       - run: ruff format .
 
+      - run: web/gen/all
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/node-version.txt
       - name: Run prettier
         run: |
           npm ci
@@ -27,4 +35,4 @@ jobs:
 
       - uses: mhils/add-pr-ref-in-changelog@main
 
-      - uses: autofix-ci/action@d3e591514b99d0fca6779455ff8338516663f7cc
+      - uses: autofix-ci/action@dd55f44df8f7cdb7a6bf74c78677eb8acd40cd0a

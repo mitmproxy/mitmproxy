@@ -39,8 +39,8 @@ describe("store reducer", () => {
                 state,
                 storeActions.add(c, undefined, (a, b) => {
                     return a.id > b.id ? 1 : -1;
-                })
-            )
+                }),
+            ),
         ).toEqual({
             byId: { ...state.byId, "0": c },
             list: [...state.list, c],
@@ -81,7 +81,7 @@ describe("store reducer", () => {
             state,
             storeActions.update(b, (item) => {
                 return item.id !== "1";
-            })
+            }),
         );
         expect(state).toEqual({
             byId: { "0": a, "1": b },
@@ -95,8 +95,8 @@ describe("store reducer", () => {
                 state,
                 storeActions.update(b, (item) => {
                     return item.id !== "0";
-                })
-            )
+                }),
+            ),
         ).toEqual({
             byId: { "0": a, "1": b },
             list: [a, b],
@@ -115,8 +115,8 @@ describe("store reducer", () => {
                 state,
                 storeActions.update(b, undefined, (a, b) => {
                     return b.id > a.id ? 1 : -1;
-                })
-            )
+                }),
+            ),
         ).toEqual({
             // sort by id in descending order
             byId: { "2": a, "3": b },
@@ -132,8 +132,8 @@ describe("store reducer", () => {
                 state1,
                 storeActions.update(b, undefined, (a, b) => {
                     return a.id > b.id ? 1 : -1;
-                })
-            )
+                }),
+            ),
         ).toEqual({
             // sort by id in ascending order
             byId: { "2": a, "3": b },
@@ -153,8 +153,8 @@ describe("store reducer", () => {
                 state,
                 storeActions.setFilter((item) => {
                     return item.id !== "1";
-                })
-            )
+                }),
+            ),
         ).toEqual({
             byId: { "1": a, "2": b },
             list: [a, b],
@@ -173,8 +173,8 @@ describe("store reducer", () => {
                 state,
                 storeActions.setSort((a, b) => {
                     return b.id > a.id ? 1 : -1;
-                })
-            )
+                }),
+            ),
         ).toEqual({
             byId: { 1: a, 2: b },
             list: [a, b],

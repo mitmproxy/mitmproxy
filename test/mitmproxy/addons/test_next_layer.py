@@ -287,6 +287,24 @@ class TestNextLayer:
                 [],
                 ["example.com"],
                 "tcp",
+                "192.0.2.1",
+                client_hello_with_extensions,
+                False,
+                id="allow: sni",
+            ),
+            pytest.param(
+                [],
+                ["existing-sni.example"],
+                "tcp",
+                "192.0.2.1",
+                b"",
+                False,
+                id="allow: sni from parent layer",
+            ),
+            pytest.param(
+                [],
+                ["example.com"],
+                "tcp",
                 "decoy",
                 client_hello_with_extensions,
                 False,
@@ -329,7 +347,11 @@ class TestNextLayer:
             if allow:
                 tctx.configure(nl, allow_hosts=allow)
             ctx = Context(
-                Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+                Client(
+                    peername=("192.168.0.42", 51234),
+                    sockname=("0.0.0.0", 8080),
+                    sni="existing-sni.example",
+                ),
                 tctx.options,
             )
             ctx.client.transport_protocol = transport_protocol
@@ -674,19 +696,27 @@ transparent_proxy_configs = [
         udp := TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, UDPLayer],
-            server_address=("192.0.2.1", 53),
+            server_address=("192.0.2.1", 553),
             transport_protocol="udp",
             data_client=b"\xff",
         ),
         id="transparent proxy: raw udp",
     ),
     pytest.param(
-        dataclasses.replace(
+        dns := dataclasses.replace(
             udp,
             after=[modes.TransparentProxy, DNSLayer],
             data_client=dns_query,
+            server_address=("192.0.2.1", 53),
         ),
-        id="transparent proxy: dns",
+        id="transparent proxy: dns over udp",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            dns,
+            transport_protocol="tcp",
+        ),
+        id="transparent proxy: dns over tcp",
     ),
     pytest.param(
         dataclasses.replace(

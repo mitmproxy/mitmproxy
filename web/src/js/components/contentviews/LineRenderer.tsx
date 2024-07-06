@@ -37,7 +37,7 @@ const LineRenderer = React.memo(function LineRenderer({
                             </span>
                         ))}
                     </div>
-                )
+                ),
             )}
         </pre>
     );

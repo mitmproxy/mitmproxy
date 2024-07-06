@@ -9,7 +9,7 @@ type ViewSelectorProps = {
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
     const contentViews = useAppSelector(
-        (state) => state.backendState.contentViews || []
+        (state) => state.backendState.contentViews || [],
     );
 
     let inner = (

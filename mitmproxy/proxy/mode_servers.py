@@ -271,7 +271,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     async def listen(
         self, host: str, port: int
     ) -> list[asyncio.Server | mitmproxy_rs.UdpServer]:
-        if self.mode.transport_protocol == "tcp":
+        if self.mode.transport_protocol not in ("tcp", "udp", "both"):
+            raise AssertionError(self.mode.transport_protocol)
+
+        servers: list[asyncio.Server | mitmproxy_rs.UdpServer] = []
+        if self.mode.transport_protocol in ("tcp", "both"):
             # workaround for https://github.com/python/cpython/issues/89856:
             # We want both IPv4 and IPv6 sockets to bind to the same port.
             # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
@@ -280,17 +284,24 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.bind(("", 0))
-                    fixed_port = s.getsockname()[1]
+                    port = s.getsockname()[1]
                     s.close()
-                    return [
-                        await asyncio.start_server(self.handle_stream, host, fixed_port)
-                    ]
+                    servers.append(
+                        await asyncio.start_server(self.handle_stream, host, port)
+                    )
                 except Exception as e:
                     logger.debug(
                         f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                     )
-            return [await asyncio.start_server(self.handle_stream, host, port)]
-        elif self.mode.transport_protocol == "udp":
+                    port = 0
+                    servers.append(
+                        await asyncio.start_server(self.handle_stream, host, port)
+                    )
+            else:
+                servers.append(
+                    await asyncio.start_server(self.handle_stream, host, port)
+                )
+        if self.mode.transport_protocol in ("udp", "both"):
             # we start two servers for dual-stack support.
             # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
             if host == "":
@@ -299,26 +310,26 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     port,
                     self.handle_udp_stream,
                 )
+                servers.append(ipv4)
                 try:
                     ipv6 = await mitmproxy_rs.start_udp_server(
                         "::",
                         ipv4.getsockname()[1],
                         self.handle_udp_stream,
                     )
+                    servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
-                    return [ipv4]
-                else:  # pragma: no cover
-                    return [ipv4, ipv6]
-            return [
-                await mitmproxy_rs.start_udp_server(
-                    host,
-                    port,
-                    self.handle_udp_stream,
+            else:
+                servers.append(
+                    await mitmproxy_rs.start_udp_server(
+                        host,
+                        port,
+                        self.handle_udp_stream,
+                    )
                 )
-            ]
-        else:
-            raise AssertionError(self.mode.transport_protocol)
+
+        return servers
 
 
 class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
@@ -454,10 +465,8 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         if self._instance:
             raise RuntimeError("Cannot spawn more than one local redirector.")
 
-        if self.mode.data.startswith("!"):
-            spec = f"{self.mode.data},{os.getpid()}"
-        elif self.mode.data:
-            spec = self.mode.data
+        if self.mode.data:
+            spec = f"{self.mode.data},!{os.getpid()}"
         else:
             spec = f"!{os.getpid()}"
 

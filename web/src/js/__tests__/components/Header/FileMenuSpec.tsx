@@ -9,7 +9,7 @@ describe("FileMenu Component", () => {
         fileMenu = renderer.create(
             <Provider store={store}>
                 <FileMenu />
-            </Provider>
+            </Provider>,
         ),
         tree = fileMenu.toJSON();
 

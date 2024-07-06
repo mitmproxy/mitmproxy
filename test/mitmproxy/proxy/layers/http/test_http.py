@@ -82,6 +82,8 @@ def test_https_proxy(strategy, tctx):
         playbook >> reply(None)
     (
         playbook
+        << http.HttpConnectedHook(Placeholder())
+        >> reply(None)
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(
             tctx.client, b"GET /foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n"
@@ -299,6 +301,8 @@ def test_disconnect_while_intercept(tctx):
         << http.HttpConnectHook(Placeholder(HTTPFlow))
         >> reply()
         << OpenConnection(server1)
+        >> reply(None)
+        << http.HttpConnectedHook(Placeholder(HTTPFlow))
         >> reply(None)
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -675,12 +679,10 @@ def test_server_unreachable(tctx, connect):
     playbook << OpenConnection(server)
     playbook >> reply("Connection failed")
     if not connect:
-        # Our API isn't ideal here, there is no error hook for CONNECT requests currently.
-        # We could fix this either by having CONNECT request go through all our regular hooks,
-        # or by adding dedicated ok/error hooks.
-        # See also: test_connect_unauthorized
         playbook << http.HttpErrorHook(flow)
-        playbook >> reply()
+    else:
+        playbook << http.HttpConnectErrorHook(flow)
+    playbook >> reply()
     playbook << SendData(
         tctx.client, BytesMatching(b"502 Bad Gateway.+Connection failed")
     )
@@ -688,9 +690,9 @@ def test_server_unreachable(tctx, connect):
         playbook << CloseConnection(tctx.client)
 
     assert playbook
+    assert not flow().live
     if not connect:
         assert flow().error
-        assert not flow().live
 
 
 @pytest.mark.parametrize(
@@ -1196,6 +1198,8 @@ def test_kill_flow(tctx, when):
     assert (
         playbook
         >> reply()
+        << http.HttpConnectedHook(connect_flow)
+        >> reply()
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(
             tctx.client, b"GET /foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n"
@@ -1626,6 +1630,8 @@ def test_connect_more_newlines(tctx):
         >> reply()
         << OpenConnection(server)
         >> reply(None)
+        << http.HttpConnectedHook(Placeholder())
+        >> reply()
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(tctx.client, b"\x16\x03\x03\x00\xb3\x01\x00\x00\xaf\x03\x03")
         << layer.NextLayerHook(nl)
@@ -1648,9 +1654,7 @@ def test_connect_unauthorized(tctx):
         >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
         << http.HttpConnectHook(flow)
         >> reply(side_effect=require_auth)
-        # This isn't ideal - we should probably have a custom CONNECT error hook here.
-        # See also: test_server_unreachable
-        << http.HttpResponseHook(flow)
+        << http.HttpConnectErrorHook(flow)
         >> reply()
         << SendData(
             tctx.client,

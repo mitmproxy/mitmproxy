@@ -1,12 +1,13 @@
 import * as React from "react";
 import renderer from "react-test-renderer";
 import { Options, ChoicesOption } from "../../../components/Modal/Option";
+import { act } from "react-test-renderer";
 
 describe("BooleanOption Component", () => {
     let BooleanOption = Options["bool"],
         onChangeFn = jest.fn(),
         booleanOption = renderer.create(
-            <BooleanOption value={true} onChange={onChangeFn} />
+            <BooleanOption value={true} onChange={onChangeFn} />,
         ),
         tree = booleanOption.toJSON();
 
@@ -26,7 +27,7 @@ describe("StringOption Component", () => {
     let StringOption = Options["str"],
         onChangeFn = jest.fn(),
         stringOption = renderer.create(
-            <StringOption value="foo" onChange={onChangeFn} />
+            <StringOption value="foo" onChange={onChangeFn} />,
         ),
         tree = stringOption.toJSON();
 
@@ -45,7 +46,7 @@ describe("NumberOption Component", () => {
     let NumberOption = Options["int"],
         onChangeFn = jest.fn(),
         numberOption = renderer.create(
-            <NumberOption value={1} onChange={onChangeFn} />
+            <NumberOption value={1} onChange={onChangeFn} />,
         ),
         tree = numberOption.toJSON();
 
@@ -67,7 +68,7 @@ describe("ChoiceOption Component", () => {
                 value="a"
                 choices={["a", "b", "c"]}
                 onChange={onChangeFn}
-            />
+            />,
         ),
         tree = choiceOption.toJSON();
 
@@ -86,7 +87,7 @@ describe("StringOption Component", () => {
     let onChangeFn = jest.fn(),
         StringSequenceOption = Options["sequence of str"],
         stringSequenceOption = renderer.create(
-            <StringSequenceOption value={["a", "b"]} onChange={onChangeFn} />
+            <StringSequenceOption value={["a", "b"]} onChange={onChangeFn} />,
         ),
         tree = stringSequenceOption.toJSON();
 
@@ -96,7 +97,7 @@ describe("StringOption Component", () => {
 
     it("should handle onChange", () => {
         let mockEvent = { target: { value: "a\nb\nc\n" } };
-        tree.props.onChange(mockEvent);
+        act(() => tree.props.onChange(mockEvent));
         expect(onChangeFn).toBeCalledWith(["a", "b", "c"]);
     });
 });

@@ -92,7 +92,7 @@ export default class KeyValueListEditor extends Component<
 
     static getDerivedStateFromProps(
         props: KeyValueListProps,
-        state: KeyValueListState
+        state: KeyValueListState,
     ): KeyValueListState | null {
         if (props.data !== state.initialList)
             return { currentList: props.data || [], initialList: props.data };
@@ -126,7 +126,7 @@ export default class KeyValueListEditor extends Component<
                     onClick={(e) => {
                         e.preventDefault();
                         this.onClickEmptyArea(
-                            this.state.currentList.length - 1
+                            this.state.currentList.length - 1,
                         );
                     }}
                     className="kv-add-row fa fa-plus-square-o"
@@ -155,7 +155,7 @@ export default class KeyValueListEditor extends Component<
         let newList = [...this.state.currentList];
         newList.splice(row + 1, 0, ["", ""]);
         this.setState({ currentList: newList }, () =>
-            this.rowRefs[row + 1]?.nameInput.current?.startEditing()
+            this.rowRefs[row + 1]?.nameInput.current?.startEditing(),
         );
     };
 

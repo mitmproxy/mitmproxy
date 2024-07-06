@@ -63,7 +63,7 @@ export class PureEventLog extends Component {
                                     checked={filters[type]}
                                     onToggle={() => toggleFilter(type)}
                                 />
-                            )
+                            ),
                         )}
                         <i onClick={close} className="fa fa-close"></i>
                     </div>
@@ -82,5 +82,5 @@ export default connect(
     {
         close: toggleVisibility,
         toggleFilter: toggleFilter,
-    }
+    },
 )(PureEventLog);

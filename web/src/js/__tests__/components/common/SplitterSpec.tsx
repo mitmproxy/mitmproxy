@@ -45,7 +45,7 @@ describe.each([
     });
 
     const splitter = TestUtils.renderIntoDocument(
-            <Splitter axis={axisLower} />
+            <Splitter axis={axisLower} />,
         ),
         dom = ReactDOM.findDOMNode(splitter),
         previousElementSibling = {
@@ -88,7 +88,7 @@ describe.each([
         expect(dom.style.transform).toEqual(
             axisLower === "x"
                 ? `translateX(${62 - 13}px)`
-                : `translateY(${21 - 22}px)`
+                : `translateY(${21 - 22}px)`,
         );
     });
 
@@ -103,7 +103,7 @@ describe.each([
         expect(splitter.state.dragPointer).toEqual(0.1);
         expect(dom.style.transform).toEqual("");
         expect(previousElementSibling.style.flex).toEqual(
-            `0 0 ${axisLower === "x" ? 300 + 56 - 13 : 500 + 82 - 22}px`
+            `0 0 ${axisLower === "x" ? 300 + 56 - 13 : 500 + 82 - 22}px`,
         );
         expect(nextElementSibling.style.flex).toEqual("1 1 auto");
     });
@@ -147,7 +147,7 @@ describe.each([
         expect(dom.style.transform).toEqual(
             axisLower === "x"
                 ? `translateX(${74 - 70}px)`
-                : `translateY(${54 - 60}px)`
+                : `translateY(${54 - 60}px)`,
         );
     });
 

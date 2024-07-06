@@ -5,7 +5,7 @@ import { PureOptionDefault } from "../../../components/Modal/OptionModal";
 describe("PureOptionDefault Component", () => {
     it("should return null when the value is default", () => {
         let pureOptionDefault = renderer.create(
-                <PureOptionDefault value="foo" defaultVal="foo" />
+                <PureOptionDefault value="foo" defaultVal="foo" />,
             ),
             tree = pureOptionDefault.toJSON();
         expect(tree).toMatchSnapshot();
@@ -13,7 +13,7 @@ describe("PureOptionDefault Component", () => {
 
     it("should handle boolean type", () => {
         let pureOptionDefault = renderer.create(
-                <PureOptionDefault value={true} defaultVal={false} />
+                <PureOptionDefault value={true} defaultVal={false} />,
             ),
             tree = pureOptionDefault.toJSON();
         expect(tree).toMatchSnapshot();
@@ -24,13 +24,13 @@ describe("PureOptionDefault Component", () => {
             b = [],
             c = ["c"],
             pureOptionDefault = renderer.create(
-                <PureOptionDefault value={a} defaultVal={b} />
+                <PureOptionDefault value={a} defaultVal={b} />,
             ),
             tree = pureOptionDefault.toJSON();
         expect(tree).toMatchSnapshot();
 
         pureOptionDefault = renderer.create(
-            <PureOptionDefault value={a} defaultVal={c} />
+            <PureOptionDefault value={a} defaultVal={c} />,
         );
         tree = pureOptionDefault.toJSON();
         expect(tree).toMatchSnapshot();
@@ -38,7 +38,7 @@ describe("PureOptionDefault Component", () => {
 
     it("should handle string", () => {
         let pureOptionDefault = renderer.create(
-                <PureOptionDefault value="foo" defaultVal="" />
+                <PureOptionDefault value="foo" defaultVal="" />,
             ),
             tree = pureOptionDefault.toJSON();
         expect(tree).toMatchSnapshot();
@@ -46,7 +46,7 @@ describe("PureOptionDefault Component", () => {
 
     it("should handle null value", () => {
         let pureOptionDefault = renderer.create(
-                <PureOptionDefault value="foo" defaultVal={null} />
+                <PureOptionDefault value="foo" defaultVal={null} />,
             ),
             tree = pureOptionDefault.toJSON();
         expect(tree).toMatchSnapshot();

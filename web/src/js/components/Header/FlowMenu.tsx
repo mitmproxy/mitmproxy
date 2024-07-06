@@ -21,7 +21,7 @@ FlowMenu.title = "Flow";
 export default function FlowMenu(): JSX.Element {
     const dispatch = useAppDispatch(),
         flow = useAppSelector(
-            (state) => state.flows.byId[state.flows.selected[0]]
+            (state) => state.flows.byId[state.flows.selected[0]],
         );
 
     if (!flow) return <div />;
@@ -154,7 +154,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                     <MenuItem
                         onClick={() =>
                             openInNewTab(
-                                MessageUtils.getContentURL(flow, flow.request)
+                                MessageUtils.getContentURL(flow, flow.request),
                             )
                         }
                     >
@@ -163,7 +163,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                     <MenuItem
                         onClick={() =>
                             openInNewTab(
-                                MessageUtils.getContentURL(flow, response)
+                                MessageUtils.getContentURL(flow, response),
                             )
                         }
                     >

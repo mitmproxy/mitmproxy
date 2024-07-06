@@ -8,7 +8,7 @@ describe("EventList Component", () => {
             { id: 2, level: "error", message: "bar" },
         ],
         eventLogList = TestUtils.renderIntoDocument(
-            <EventLogList events={mockEventList} />
+            <EventLogList events={mockEventList} />,
         );
 
     it("should render correctly", () => {
@@ -21,7 +21,7 @@ describe("EventList Component", () => {
         eventLogList.componentWillUnmount();
         expect(window.removeEventListener).toBeCalledWith(
             "resize",
-            eventLogList.onViewportUpdate
+            eventLogList.onViewportUpdate,
         );
     });
 });

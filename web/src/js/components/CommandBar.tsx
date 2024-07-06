@@ -39,7 +39,7 @@ type ResultProps = {
 
 function getAvailableCommands(
     commands: AllCommands,
-    input: string = ""
+    input: string = "",
 ): string[] {
     if (!commands) return [];
     let availableCommands: string[] = [];
@@ -64,7 +64,7 @@ export function Results({ results }: ResultProps) {
                         top: target.scrollHeight,
                         behavior: "auto",
                     });
-                }
+                },
             );
         }
     }, []);
@@ -131,7 +131,7 @@ export default function CommandBar() {
     const [originalInput, setOriginalInput] = useState<string>("");
     const [currentCompletion, setCurrentCompletion] = useState<number>(0);
     const [completionCandidate, setCompletionCandidate] = useState<string[]>(
-        []
+        [],
     );
 
     const [availableCommands, setAvailableCommands] = useState<string[]>([]);
@@ -172,12 +172,12 @@ export default function CommandBar() {
         setDescription(allCommands[parts[0]]?.help || "");
 
         setCompletionCandidate(
-            getAvailableCommands(allCommands, originalParts[0])
+            getAvailableCommands(allCommands, originalParts[0]),
         );
         setAvailableCommands(getAvailableCommands(allCommands, parts[0]));
 
         const nextArgs: string[] = allCommands[parts[0]]?.parameters.map(
-            (p) => p.name
+            (p) => p.name,
         );
 
         if (nextArgs) {
@@ -262,7 +262,7 @@ export default function CommandBar() {
         if (e.key === "Tab") {
             setInput(completionCandidate[currentCompletion]);
             setCurrentCompletion(
-                (currentCompletion + 1) % completionCandidate.length
+                (currentCompletion + 1) % completionCandidate.length,
             );
             e.preventDefault();
         }

@@ -31,6 +31,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
                 ref={this.input}
                 tabIndex={0}
                 className={className}
+                // @ts-ignore
                 placeholder={this.props.placeholder}
                 onFocus={this.onFocus}
                 onBlur={this.onBlur}
@@ -121,7 +122,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
                 "mouseUp",
                 this.suppress_events,
                 still_on_elem,
-                has_not_selected_text
+                has_not_selected_text,
             );
 
         if (still_on_elem && has_not_selected_text) {

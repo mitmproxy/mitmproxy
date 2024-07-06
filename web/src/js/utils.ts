@@ -33,7 +33,7 @@ export var formatTimeDelta = function (milliseconds) {
 
 export var formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {}
+    { milliseconds = true } = {},
 ) {
     let utc = new Date(seconds * 1000);
     let ts = utc.toISOString().replace("T", " ").replace("Z", "");
@@ -60,7 +60,7 @@ export function reverseString(s) {
             String,
             _.map(s.split(""), function (c) {
                 return 0xffff - c.charCodeAt(0);
-            })
+            }),
         ) + end
     );
 }
@@ -74,7 +74,7 @@ const xsrf = getCookie("_xsrf");
 
 export function fetchApi(
     url: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
         options.headers = options.headers || {};
@@ -134,4 +134,61 @@ export function getDiff(obj1, obj2) {
             result[key] = getDiff(obj1[key], obj2[key]);
     }
     return result;
+}
+
+/**
+ * `navigator.clipboard.writeText()`, but with an additional fallback for non-secure contexts.
+ *
+ * Never throws unless textPromise is rejected.
+ */
+export async function copyToClipboard(
+    textPromise: Promise<string>,
+): Promise<void> {
+    // Try the new clipboard APIs first. If that fails, use textarea fallback.
+    try {
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                "text/plain": textPromise,
+            }),
+        ]);
+        return;
+    } catch (err) {
+        console.warn(err);
+    }
+
+    let text = await textPromise;
+
+    try {
+        await navigator.clipboard.writeText(text);
+        return;
+    } catch (err) {
+        console.warn(err);
+    }
+
+    let t = document.createElement("textarea");
+    t.value = text;
+    t.style.position = "absolute";
+    t.style.opacity = "0";
+    document.body.appendChild(t);
+    try {
+        t.focus();
+        t.select();
+        if (!document.execCommand("copy")) {
+            throw "failed to copy";
+        }
+    } catch {
+        alert(text);
+    } finally {
+        t.remove();
+    }
+}
+
+export function rpartition(str: string, sep: string): [string, string] {
+    const lastIndex = str.lastIndexOf(sep);
+    if (lastIndex === -1) {
+        return ["", str];
+    }
+    const before = str.slice(0, lastIndex);
+    const after = str.slice(lastIndex + sep.length);
+    return [before, after];
 }

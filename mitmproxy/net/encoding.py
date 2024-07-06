@@ -174,12 +174,7 @@ def decode_zstd(content: bytes) -> bytes:
     if not content:
         return b""
     zstd_ctx = zstd.ZstdDecompressor()
-    try:
-        return zstd_ctx.decompress(content)
-    except zstd.ZstdError:
-        # If the zstd stream is streamed without a size header,
-        # try decoding with a 10MiB output buffer
-        return zstd_ctx.decompress(content, max_output_size=10 * 2**20)
+    return zstd_ctx.stream_reader(BytesIO(content), read_across_frames=True).read()
 
 
 def encode_zstd(content: bytes) -> bytes:

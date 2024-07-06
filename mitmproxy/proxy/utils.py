@@ -34,3 +34,35 @@ def expect(*event_types):
             return f
 
     return decorator
+
+
+class ReceiveBuffer:
+    """
+    A data structure to collect stream contents efficiently in O(n).
+    """
+
+    _chunks: list[bytes]
+    _len: int
+
+    def __init__(self):
+        self._chunks = []
+        self._len = 0
+
+    def __iadd__(self, other: bytes):
+        assert isinstance(other, bytes)
+        self._chunks.append(other)
+        self._len += len(other)
+        return self
+
+    def __len__(self):
+        return self._len
+
+    def __bytes__(self):
+        return b"".join(self._chunks)
+
+    def __bool__(self):
+        return self._len > 0
+
+    def clear(self):
+        self._chunks.clear()
+        self._len = 0

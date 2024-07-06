@@ -19,7 +19,7 @@ describe("event log reducer", () => {
     it("should be possible to toggle filter", () => {
         let state = reduceEventLog(undefined, eventLogActions.add("foo"));
         expect(
-            reduceEventLog(state, eventLogActions.toggleFilter("info"))
+            reduceEventLog(state, eventLogActions.toggleFilter("info")),
         ).toEqual({
             visible: false,
             filters: { ...state.filters, info: false },
@@ -30,7 +30,7 @@ describe("event log reducer", () => {
     it("should be possible to toggle visibility", () => {
         let state = reduceEventLog(undefined, {});
         expect(
-            reduceEventLog(state, eventLogActions.toggleVisibility())
+            reduceEventLog(state, eventLogActions.toggleVisibility()),
         ).toEqual({
             visible: true,
             filters: { ...state.filters },
