@@ -1,6 +1,6 @@
 import * as React from "react";
 import renderer, { act } from "react-test-renderer";
-import { ChoicesOption, Options } from "../../../components/Modal/Option";
+import { ChoicesOption, Options } from "../../../components/Modal/OptionInput";
 
 describe("BooleanOption Component", () => {
     const BooleanOption = Options["bool"];

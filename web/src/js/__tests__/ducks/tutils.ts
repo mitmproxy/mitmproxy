@@ -7,6 +7,7 @@ import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
 import { Tab } from "../../ducks/ui/tabs";
+import { LogLevel } from "../../ducks/eventLog";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -118,8 +119,8 @@ export const testState: RootState = {
             error: true,
         },
         view: [
-            { id: "1", level: "info", message: "foo" },
-            { id: "2", level: "error", message: "bar" },
+            { id: "1", level: LogLevel.info, message: "foo" },
+            { id: "2", level: LogLevel.error, message: "bar" },
         ],
         byId: {}, // TODO: incomplete
         list: [], // TODO: incomplete

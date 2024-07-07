@@ -5,7 +5,13 @@ export const RECEIVE = "EVENTS_RECEIVE";
 export const TOGGLE_VISIBILITY = "EVENTS_TOGGLE_VISIBILITY";
 export const TOGGLE_FILTER = "EVENTS_TOGGLE_FILTER";
 
-type LogLevel = "debug" | "info" | "web" | "warn" | "error";
+export enum LogLevel {
+    debug = "debug",
+    info = "info",
+    web = "web",
+    warn = "warn",
+    error = "error",
+}
 
 export interface EventLogItem extends store.Item {
     message: string;
@@ -56,7 +62,7 @@ export default function reduce(
                     state,
                     store[action.cmd](
                         action.data,
-                        (log) => state.filters[log.level],
+                        (log: EventLogItem) => state.filters[log.level],
                     ),
                 ),
             };
@@ -74,7 +80,7 @@ export function toggleVisibility() {
     return { type: TOGGLE_VISIBILITY };
 }
 
-export function add(message: string, level: LogLevel = "web") {
+export function add(message: string, level: LogLevel = LogLevel.web) {
     const data = {
         id: Math.random().toString(),
         message,

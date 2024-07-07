@@ -1,4 +1,4 @@
-import { OptionsState } from "../_options_gen";
+import { Option, OptionsState } from "../_options_gen";
 import { HIDE_MODAL } from "./modal";
 
 export const OPTION_UPDATE_START = "UI_OPTION_UPDATE_START";
@@ -12,7 +12,7 @@ interface OptionUpdate<T> {
 }
 
 type OptionsEditorState = Partial<{
-    [name in keyof OptionsState]: OptionUpdate<OptionsState[name]>;
+    [name in Option]: OptionUpdate<OptionsState[name]>;
 }>;
 
 const defaultState: OptionsEditorState = {};

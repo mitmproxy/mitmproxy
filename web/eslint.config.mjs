@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
 
 export default [
-    { files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"] },
+    { files: ["**/*.{ts,tsx}"] },
     { languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } } },
     { languageOptions: { globals: globals.browser } },
     pluginJs.configs.recommended,
@@ -31,7 +31,7 @@ export default [
         },
     },
     {
-        files: ["**/*Spec.{ts,tsx}"],
+        files: ["src/**/*Spec.{ts,tsx}"],
         rules: {
             "prefer-const": "off",
         },
@@ -39,5 +39,17 @@ export default [
     {
         files: ["jest.config.js", "gulpfile.js"],
         languageOptions: { globals: globals.node },
+    },
+    {
+        files: ["src/**/*.{js,jsx}"],
+        rules: {
+            "no-restricted-syntax": [
+                "error",
+                {
+                    selector: "*",
+                    message: "Only TypeScript (ts, tsx) files are allowed.",
+                },
+            ],
+        },
     },
 ];

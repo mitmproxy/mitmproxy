@@ -20,6 +20,7 @@
 * Parse compressed domain names in ResourceRecord data
   ([#6954](https://github.com/mitmproxy/mitmproxy/pull/6954), @errorxyz)
 * Fix a bug where mitmweb's flow list would not stay at the bottom.
+  ([#7008](https://github.com/mitmproxy/mitmproxy/pull/7008), @mhils)
 * Add first MVP new Capture Tab in mitmweb
   ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
 

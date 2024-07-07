@@ -1,9 +1,8 @@
 /* eslint-disable react/prop-types */
-import React from "react";
-import PropTypes from "prop-types";
-import { connect } from "react-redux";
-import { update as updateOptions } from "../../ducks/options";
+import React, { ComponentProps } from "react";
+import { Option, update as updateOptions } from "../../ducks/options";
 import classnames from "classnames";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 
 const stopPropagation = (e) => {
     if (e.key !== "Escape") {
@@ -11,12 +10,18 @@ const stopPropagation = (e) => {
     }
 };
 
-BooleanOption.propTypes = {
-    value: PropTypes.bool.isRequired,
-    onChange: PropTypes.func.isRequired,
-};
+interface OptionProps<S>
+    extends Omit<
+        ComponentProps<"input"> &
+            ComponentProps<"select"> &
+            ComponentProps<"textarea">,
+        "value" | "onChange"
+    > {
+    value: S;
+    onChange: (value: S) => any;
+}
 
-function BooleanOption({ value, onChange, ...props }) {
+function BooleanOption({ value, onChange, ...props }: OptionProps<boolean>) {
     return (
         <div className="checkbox">
             <label>
@@ -32,12 +37,7 @@ function BooleanOption({ value, onChange, ...props }) {
     );
 }
 
-StringOption.propTypes = {
-    value: PropTypes.string,
-    onChange: PropTypes.func.isRequired,
-};
-
-function StringOption({ value, onChange, ...props }) {
+function StringOption({ value, onChange, ...props }: OptionProps<string>) {
     return (
         <input
             type="text"
@@ -56,12 +56,7 @@ function Optional(Component) {
     };
 }
 
-NumberOption.propTypes = {
-    value: PropTypes.number.isRequired,
-    onChange: PropTypes.func.isRequired,
-};
-
-function NumberOption({ value, onChange, ...props }) {
+function NumberOption({ value, onChange, ...props }: OptionProps<number>) {
     return (
         <input
             type="number"
@@ -72,12 +67,16 @@ function NumberOption({ value, onChange, ...props }) {
     );
 }
 
-ChoicesOption.propTypes = {
-    value: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
-};
+interface ChoiceOptionProps extends OptionProps<string> {
+    choices: string[];
+}
 
-export function ChoicesOption({ value, onChange, choices, ...props }) {
+export function ChoicesOption({
+    value,
+    onChange,
+    choices,
+    ...props
+}: ChoiceOptionProps) {
     return (
         <select
             onChange={(e) => onChange(e.target.value)}
@@ -93,12 +92,11 @@ export function ChoicesOption({ value, onChange, choices, ...props }) {
     );
 }
 
-StringSequenceOption.propTypes = {
-    value: PropTypes.arrayOf(PropTypes.string).isRequired,
-    onChange: PropTypes.func.isRequired,
-};
-
-function StringSequenceOption({ value, onChange, ...props }) {
+function StringSequenceOption({
+    value,
+    onChange,
+    ...props
+}: OptionProps<string[]>) {
     const height = Math.max(value.length, 1);
 
     const [textAreaValue, setTextAreaValue] = React.useState(value.join("\n"));
@@ -135,8 +133,11 @@ export const Options = {
 };
 
 function PureOption({ choices, type, value, onChange, name, error }) {
-    let Opt,
-        props = {};
+    let Opt;
+    const props: Partial<OptionProps<any> & ChoiceOptionProps> = {
+        onChange,
+        value,
+    };
     if (choices) {
         Opt = ChoicesOption;
         props.choices = choices;
@@ -150,23 +151,33 @@ function PureOption({ choices, type, value, onChange, name, error }) {
 
     return (
         <div className={classnames({ "has-error": error })}>
-            <Opt
-                name={name}
-                value={value}
-                onChange={onChange}
-                onKeyDown={stopPropagation}
-                {...props}
-            />
+            <Opt name={name} onKeyDown={stopPropagation} {...props} />
         </div>
     );
 }
 
-export default connect(
-    (state, { name }) => ({
-        ...state.options_meta[name],
-        ...state.ui.optionsEditor[name],
-    }),
-    (dispatch, { name }) => ({
-        onChange: (value) => dispatch(updateOptions(name, value)),
-    }),
-)(PureOption);
+export default function OptionInput({ name }: { name: Option }) {
+    const dispatch = useAppDispatch();
+    const choices = useAppSelector(
+        (state) => state.options_meta[name]?.choices,
+    );
+    const type = useAppSelector((state) => state.options_meta[name]?.type);
+    const value = useAppSelector((state) => {
+        const editState = state.ui.optionsEditor[name];
+        return editState ? editState.value : state.options_meta[name]?.value;
+    });
+    const error = useAppSelector(
+        (state) => state.ui.optionsEditor[name]?.error,
+    );
+
+    return (
+        <PureOption
+            name={name}
+            choices={choices}
+            type={type}
+            value={value}
+            error={error}
+            onChange={(value) => dispatch(updateOptions(name, value))}
+        />
+    );
+}

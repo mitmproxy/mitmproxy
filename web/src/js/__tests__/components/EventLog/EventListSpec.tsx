@@ -1,12 +1,12 @@
 import * as React from "react";
 import EventLogList from "../../../components/EventLog/EventList";
 import TestUtils from "react-dom/test-utils";
-import { EventLogItem } from "../../../ducks/eventLog";
+import { EventLogItem, LogLevel } from "../../../ducks/eventLog";
 
 describe("EventList Component", () => {
     const mockEventList: EventLogItem[] = [
-        { id: "1", level: "info", message: "foo" },
-        { id: "2", level: "error", message: "bar" },
+        { id: "1", level: LogLevel.info, message: "foo" },
+        { id: "2", level: LogLevel.error, message: "bar" },
     ];
     const eventLogList = TestUtils.renderIntoDocument(
         <EventLogList events={mockEventList} />,

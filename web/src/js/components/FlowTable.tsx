@@ -1,30 +1,42 @@
 import * as React from "react";
-import PropTypes from "prop-types";
 import { connect, shallowEqual } from "react-redux";
 import * as autoscroll from "./helpers/AutoScroll";
-import { calcVScroll } from "./helpers/VirtualScroll";
+import { calcVScroll, VScroll } from "./helpers/VirtualScroll";
 import FlowTableHead from "./FlowTable/FlowTableHead";
 import FlowRow from "./FlowTable/FlowRow";
 import Filt from "../filt/filt";
+import { Flow } from "../flow";
+import { RootState } from "../ducks";
 
-export class PureFlowTable extends React.Component {
-    static propTypes = {
-        flows: PropTypes.array.isRequired,
-        rowHeight: PropTypes.number,
-        highlight: PropTypes.string,
-        selected: PropTypes.object,
-    };
+type FlowTableProps = {
+    flows: Flow[];
+    rowHeight: number;
+    highlight: string;
+    selected: Flow;
+};
 
+type FlowTableState = {
+    vScroll: VScroll;
+    viewportTop: number;
+};
+
+export class PureFlowTable extends React.Component<
+    FlowTableProps,
+    FlowTableState
+> {
     static defaultProps = {
         rowHeight: 32,
     };
+    private viewport = React.createRef<HTMLDivElement>();
+    private head = React.createRef<HTMLTableSectionElement>();
 
     constructor(props, context) {
         super(props, context);
 
-        this.state = { vScroll: calcVScroll() };
-        this.viewport = React.createRef();
-        this.head = React.createRef();
+        this.state = {
+            vScroll: calcVScroll(),
+            viewportTop: 0,
+        };
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
     }
 
@@ -51,7 +63,7 @@ export class PureFlowTable extends React.Component {
             this.props.selected && this.props.selected !== prevProps.selected;
         if (selectedNewFlow) {
             const { rowHeight, flows, selected } = this.props;
-            const viewport = this.viewport.current;
+            const viewport = this.viewport.current!;
             const head = this.head.current;
 
             const headHeight = head ? head.offsetHeight : 0;
@@ -73,7 +85,7 @@ export class PureFlowTable extends React.Component {
     }
 
     onViewportUpdate() {
-        const viewport = this.viewport.current;
+        const viewport = this.viewport.current!;
         const viewportTop = viewport.scrollTop || 0;
 
         const vScroll = calcVScroll({
@@ -90,7 +102,7 @@ export class PureFlowTable extends React.Component {
             // the next rendered state may only have much lower number of rows compared to what the current
             // viewportHeight anticipates. To make sure that we update (almost) at once, we already constrain
             // the maximum viewportTop value. See https://github.com/mitmproxy/mitmproxy/pull/5658 for details.
-            let newViewportTop = Math.min(
+            const newViewportTop = Math.min(
                 viewportTop,
                 vScroll.end * this.props.rowHeight,
             );
@@ -137,7 +149,7 @@ export class PureFlowTable extends React.Component {
     }
 }
 
-export default connect((state) => ({
+export default connect((state: RootState) => ({
     flows: state.flows.view,
     highlight: state.flows.highlight,
     selected: state.flows.byId[state.flows.selected[0]],

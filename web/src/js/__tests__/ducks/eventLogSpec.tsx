@@ -1,4 +1,5 @@
 import reduceEventLog, * as eventLogActions from "../../ducks/eventLog";
+import { LogLevel } from "../../ducks/eventLog";
 import { reduce } from "../../ducks/utils/store";
 
 describe("event log reducer", () => {
@@ -19,7 +20,7 @@ describe("event log reducer", () => {
     it("should be possible to toggle filter", () => {
         const state = reduceEventLog(undefined, eventLogActions.add("foo"));
         expect(
-            reduceEventLog(state, eventLogActions.toggleFilter("info")),
+            reduceEventLog(state, eventLogActions.toggleFilter(LogLevel.info)),
         ).toEqual({
             visible: false,
             filters: { ...state.filters, info: false },
