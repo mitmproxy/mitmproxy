@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
-import shallowEqual from "shallowequal";
 import AutoScroll from "../helpers/AutoScroll";
 import { calcVScroll, VScroll } from "../helpers/VirtualScroll";
 import { EventLogItem } from "../../ducks/eventLog";
+import {shallowEqual} from "react-redux";
 
 type EventLogListProps = {
     events: EventLogItem[];

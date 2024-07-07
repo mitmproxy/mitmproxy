@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import * as modalAction from "../../ducks/ui/modal";
 import * as optionAction from "../../ducks/options";
 import Option from "./Option";
-import _ from "lodash";
+import { isEmpty, compact } from "lodash";
 
 function PureOptionHelp({ help }) {
     return <div className="help-block small">{help}</div>;
@@ -28,8 +28,8 @@ export function PureOptionDefault({ value, defaultVal }) {
             defaultVal = defaultVal ? "true" : "false";
         } else if (Array.isArray(defaultVal)) {
             if (
-                _.isEmpty(_.compact(value)) && // filter the empty string in array
-                _.isEmpty(defaultVal)
+                isEmpty(compact(value)) && // filter the empty string in array
+                isEmpty(defaultVal)
             ) {
                 return null;
             }

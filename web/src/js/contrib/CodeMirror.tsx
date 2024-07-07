@@ -4,7 +4,7 @@
 import * as React from "react";
 import className from "classnames";
 import codemirror from "codemirror";
-import _ from "lodash";
+import { isEqual } from "lodash";
 
 function normalizeLineEndings(str) {
     if (!str) return str;
@@ -118,7 +118,7 @@ export default class CodeMirror extends React.Component<
 
     setOptionIfChanged(optionName, newValue) {
         const oldValue = this.codeMirror.getOption(optionName);
-        if (!_.isEqual(oldValue, newValue)) {
+        if (!isEqual(oldValue, newValue)) {
             this.codeMirror.setOption(optionName, newValue);
         }
     }
