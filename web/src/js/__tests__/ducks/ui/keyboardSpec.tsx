@@ -34,7 +34,7 @@ describe("onKeyDown", () => {
         return store;
     };
 
-    let createKeyEvent = (key, ctrlKey = false) => {
+    const createKeyEvent = (key, ctrlKey = false) => {
         // @ts-ignore
         return onKeyDown({ key, ctrlKey, preventDefault: jest.fn() });
     };

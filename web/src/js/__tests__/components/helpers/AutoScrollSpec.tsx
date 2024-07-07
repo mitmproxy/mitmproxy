@@ -5,7 +5,7 @@ import { calcVScroll } from "../../../components/helpers/VirtualScroll";
 import TestUtils from "react-dom/test-utils";
 
 describe("Autoscroll", () => {
-    let mockFn = jest.fn();
+    const mockFn = jest.fn();
     class tComponent extends React.Component {
         constructor(props, context) {
             super(props, context);
@@ -26,7 +26,7 @@ describe("Autoscroll", () => {
     }
 
     it("should update component", () => {
-        let Foo = AutoScroll(tComponent),
+        const Foo = AutoScroll(tComponent),
             autoScroll = TestUtils.renderIntoDocument(<Foo></Foo>),
             viewport = ReactDOM.findDOMNode(autoScroll);
         viewport.scrollTop = 10;

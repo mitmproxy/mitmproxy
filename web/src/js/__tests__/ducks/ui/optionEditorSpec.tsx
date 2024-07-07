@@ -8,7 +8,7 @@ describe("optionsEditor reducer", () => {
     });
 
     it("should handle option update start", () => {
-        let state = reduceOptionsEditor(
+        const state = reduceOptionsEditor(
             undefined,
             optionsEditorActions.startUpdate("foo", "bar"),
         );

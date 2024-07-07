@@ -13,7 +13,7 @@ export interface ValueEditorProps {
 
 /** "plaintext-only" for browsers which support it, "true" for everyone else */
 const plaintextOnly: string = (() => {
-    let div = document.createElement("div");
+    const div = document.createElement("div");
     div.setAttribute("contenteditable", "PLAINTEXT-ONLY");
     return div.contentEditable === "plaintext-only" ? "plaintext-only" : "true";
 })();
@@ -95,7 +95,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
 
     onPaste = (e: React.ClipboardEvent<HTMLSpanElement>) => {
         e.preventDefault();
-        let content = e.clipboardData.getData("text/plain");
+        const content = e.clipboardData.getData("text/plain");
         document.execCommand("insertHTML", false, content);
     };
 

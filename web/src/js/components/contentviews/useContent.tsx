@@ -17,7 +17,7 @@ export function useContent(url: string, hash?: string): string | undefined {
             abort.abort();
         }
 
-        let controller = new AbortController();
+        const controller = new AbortController();
         fetchApi(url, { signal: controller.signal })
             .then((response) => {
                 if (!response.ok)

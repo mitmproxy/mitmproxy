@@ -18,7 +18,7 @@ test("websocket backend", async () => {
     fetchMock.mockOnceIf("./events", "[]");
     fetchMock.mockOnceIf("./options", "{}");
 
-    let actions: Array<UnknownAction> = [];
+    const actions: Array<UnknownAction> = [];
     const backend = new WebSocketBackend({ dispatch: (e) => actions.push(e) });
 
     backend.onOpen();

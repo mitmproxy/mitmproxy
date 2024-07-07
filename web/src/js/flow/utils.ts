@@ -7,7 +7,7 @@ const defaultPorts = {
 
 export class MessageUtils {
     static getContentType(message: HTTPMessage): string | undefined {
-        var ct = MessageUtils.get_first_header(message, /^Content-Type$/i);
+        const ct = MessageUtils.get_first_header(message, /^Content-Type$/i);
         if (ct) {
             return ct.split(";")[0].trim();
         }
@@ -29,11 +29,11 @@ export class MessageUtils {
                 enumerable: false,
                 writable: false,
             });
-        let regexStr = regex.toString();
+        const regexStr = regex.toString();
         if (!(regexStr in msg._headerLookups)) {
             let header;
             for (let i = 0; i < msg.headers.length; i++) {
-                if (!!msg.headers[i][0].match(regex)) {
+                if (msg.headers[i][0].match(regex)) {
                     header = msg.headers[i];
                     break;
                 }
@@ -44,8 +44,8 @@ export class MessageUtils {
     }
 
     static match_header(message, regex) {
-        var headers = message.headers;
-        var i = headers.length;
+        const headers = message.headers;
+        let i = headers.length;
         while (i--) {
             if (regex.test(headers[i].join(" "))) {
                 return headers[i];
@@ -96,23 +96,23 @@ type ParsedUrl = {
     path?: string;
 };
 
-var parseUrl_regex = /^(?:(https?):\/\/)?([^\/:]+)?(?::(\d+))?(\/.*)?$/i;
+const parseUrl_regex = /^(?:(https?):\/\/)?([^\/:]+)?(?::(\d+))?(\/.*)?$/i;
 export var parseUrl = function (url): ParsedUrl | undefined {
     //there are many correct ways to parse a URL,
     //however, a mitmproxy user may also wish to generate a not-so-correct URL. ;-)
-    var parts = parseUrl_regex.exec(url);
+    const parts = parseUrl_regex.exec(url);
     if (!parts) {
         return undefined;
     }
 
-    var scheme = parts[1],
+    let scheme = parts[1],
         host = parts[2],
         port = parseInt(parts[3]),
         path = parts[4];
     if (scheme) {
         port = port || defaultPorts[scheme];
     }
-    let ret: ParsedUrl = {};
+    const ret: ParsedUrl = {};
     if (scheme) {
         ret.scheme = scheme;
     }
@@ -206,7 +206,7 @@ export const getIcon = (flow: Flow): string => {
         return "resource-icon-plain";
     }
 
-    var contentType = ResponseUtils.getContentType(flow.response) || "";
+    const contentType = ResponseUtils.getContentType(flow.response) || "";
 
     if (flow.response.status_code === 304) {
         return "resource-icon-not-modified";

@@ -159,7 +159,7 @@ const markers = {
 
 export const quickactions: FlowColumn = ({ flow }) => {
     const dispatch = useAppDispatch();
-    let [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false);
 
     let resume_or_replay: ReactElement | null = null;
     if (flow.intercepted) {

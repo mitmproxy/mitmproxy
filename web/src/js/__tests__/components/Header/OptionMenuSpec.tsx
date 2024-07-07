@@ -6,7 +6,7 @@ import { TStore } from "../../ducks/tutils";
 
 describe("OptionMenu Component", () => {
     it("should render correctly", () => {
-        let store = TStore(),
+        const store = TStore(),
             provider = renderer.create(
                 <Provider store={store}>
                     <OptionMenu />

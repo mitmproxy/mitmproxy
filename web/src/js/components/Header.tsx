@@ -31,7 +31,7 @@ export default function Header() {
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0),
         isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);
 
-    let entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
+    const entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
     if (selectedFlows.length > 0) {
         entries.push(Tab.Flow);
     }

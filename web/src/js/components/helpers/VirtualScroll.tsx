@@ -62,7 +62,7 @@ export function calcVScroll(
     } else {
         // We may have removed a lot of rows since the last render,
         // which means viewportTop will move up.
-        let newViewportTop = Math.min(
+        const newViewportTop = Math.min(
             viewportTop,
             Math.max(0, itemCount * rowHeight - viewportHeight),
         );

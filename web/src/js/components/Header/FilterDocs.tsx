@@ -65,6 +65,7 @@ export default class FilterDocs extends Component<
                             <a
                                 href="https://mitmproxy.org/docs/latest/concepts-filters/"
                                 target="_blank"
+                                rel="noreferrer"
                             >
                                 <i className="fa fa-external-link" />
                                 &nbsp; mitmproxy docs

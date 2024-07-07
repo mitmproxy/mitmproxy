@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import { TStore } from "../../ducks/tutils";
 
 describe("FileMenu Component", () => {
-    let store = TStore(),
+    const store = TStore(),
         fileMenu = renderer.create(
             <Provider store={store}>
                 <FileMenu />

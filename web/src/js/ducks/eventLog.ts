@@ -75,7 +75,7 @@ export function toggleVisibility() {
 }
 
 export function add(message: string, level: LogLevel = "web") {
-    let data = {
+    const data = {
         id: Math.random().toString(),
         message,
         level,

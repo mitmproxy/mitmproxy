@@ -4,7 +4,7 @@ import { Options, ChoicesOption } from "../../../components/Modal/Option";
 import { act } from "react-test-renderer";
 
 describe("BooleanOption Component", () => {
-    let BooleanOption = Options["bool"],
+    const BooleanOption = Options["bool"],
         onChangeFn = jest.fn(),
         booleanOption = renderer.create(
             <BooleanOption value={true} onChange={onChangeFn} />,
@@ -16,7 +16,7 @@ describe("BooleanOption Component", () => {
     });
 
     it("should handle onChange", () => {
-        let input = tree.children[0].children[0],
+        const input = tree.children[0].children[0],
             mockEvent = { target: { checked: true } };
         input.props.onChange(mockEvent);
         expect(onChangeFn).toBeCalledWith(mockEvent.target.checked);
@@ -24,7 +24,7 @@ describe("BooleanOption Component", () => {
 });
 
 describe("StringOption Component", () => {
-    let StringOption = Options["str"],
+    const StringOption = Options["str"],
         onChangeFn = jest.fn(),
         stringOption = renderer.create(
             <StringOption value="foo" onChange={onChangeFn} />,
@@ -36,14 +36,14 @@ describe("StringOption Component", () => {
     });
 
     it("should handle onChange", () => {
-        let mockEvent = { target: { value: "bar" } };
+        const mockEvent = { target: { value: "bar" } };
         tree.props.onChange(mockEvent);
         expect(onChangeFn).toBeCalledWith(mockEvent.target.value);
     });
 });
 
 describe("NumberOption Component", () => {
-    let NumberOption = Options["int"],
+    const NumberOption = Options["int"],
         onChangeFn = jest.fn(),
         numberOption = renderer.create(
             <NumberOption value={1} onChange={onChangeFn} />,
@@ -55,14 +55,14 @@ describe("NumberOption Component", () => {
     });
 
     it("should handle onChange", () => {
-        let mockEvent = { target: { value: "2" } };
+        const mockEvent = { target: { value: "2" } };
         tree.props.onChange(mockEvent);
         expect(onChangeFn).toBeCalledWith(2);
     });
 });
 
 describe("ChoiceOption Component", () => {
-    let onChangeFn = jest.fn(),
+    const onChangeFn = jest.fn(),
         choiceOption = renderer.create(
             <ChoicesOption
                 value="a"
@@ -77,14 +77,14 @@ describe("ChoiceOption Component", () => {
     });
 
     it("should handle onChange", () => {
-        let mockEvent = { target: { value: "b" } };
+        const mockEvent = { target: { value: "b" } };
         tree.props.onChange(mockEvent);
         expect(onChangeFn).toBeCalledWith(mockEvent.target.value);
     });
 });
 
 describe("StringOption Component", () => {
-    let onChangeFn = jest.fn(),
+    const onChangeFn = jest.fn(),
         StringSequenceOption = Options["sequence of str"],
         stringSequenceOption = renderer.create(
             <StringSequenceOption value={["a", "b"]} onChange={onChangeFn} />,
@@ -96,7 +96,7 @@ describe("StringOption Component", () => {
     });
 
     it("should handle onChange", () => {
-        let mockEvent = { target: { value: "a\nb\nc\n" } };
+        const mockEvent = { target: { value: "a\nb\nc\n" } };
         act(() => tree.props.onChange(mockEvent));
         expect(onChangeFn).toBeCalledWith(["a", "b", "c"]);
     });

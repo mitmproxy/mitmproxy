@@ -42,7 +42,7 @@ export default function reducer(
         case UPDATE:
         case REMOVE:
         case RECEIVE:
-            let storeAction = store[action.cmd](
+            const storeAction = store[action.cmd](
                 action.data,
                 makeFilter(state.filter),
                 makeSort(state.sort),
@@ -161,9 +161,9 @@ export function setSort(column: string, desc: boolean) {
 }
 
 export function selectRelative(flows, shift) {
-    let currentSelectionIndex = flows.viewIndex[flows.selected[0]];
-    let minIndex = 0;
-    let maxIndex = flows.view.length - 1;
+    const currentSelectionIndex = flows.viewIndex[flows.selected[0]];
+    const minIndex = 0;
+    const maxIndex = flows.view.length - 1;
     let newIndex;
     if (currentSelectionIndex === undefined) {
         newIndex = shift < 0 ? minIndex : maxIndex;
@@ -172,7 +172,7 @@ export function selectRelative(flows, shift) {
         newIndex = window.Math.max(newIndex, minIndex);
         newIndex = window.Math.min(newIndex, maxIndex);
     }
-    let flow = flows.view[newIndex];
+    const flow = flows.view[newIndex];
     return select(flow ? flow.id : undefined);
 }
 

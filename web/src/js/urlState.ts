@@ -57,7 +57,7 @@ export function updateStoreFromUrl(store) {
 
 export function updateUrlFromStore(store) {
     const state = store.getState();
-    let query = {
+    const query = {
         [Query.SEARCH]: state.flows.filter,
         [Query.HIGHLIGHT]: state.flows.highlight,
         [Query.SHOW_EVENTLOG]: state.eventLog.visible,

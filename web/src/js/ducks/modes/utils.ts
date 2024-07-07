@@ -61,7 +61,7 @@ export const parseMode = (spec: string) => {
         listenAt = "";
     }
 
-    let [mode, data] = head.split(":");
+    const [mode, data] = head.split(":");
     let host = "";
     let port: string | number = "";
 

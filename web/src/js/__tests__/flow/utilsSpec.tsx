@@ -5,7 +5,7 @@ import { HTTPFlow } from "../../flow";
 
 describe("MessageUtils", () => {
     it("should be possible to get first header", () => {
-        let tflow = TFlow();
+        const tflow = TFlow();
         expect(
             utils.MessageUtils.get_first_header(tflow.request, /header/),
         ).toEqual("qvalue");
@@ -15,7 +15,7 @@ describe("MessageUtils", () => {
     });
 
     it("should be possible to get Content-Type", () => {
-        let tflow = TFlow();
+        const tflow = TFlow();
         tflow.request.headers = [["Content-Type", "text/html"]];
         expect(utils.MessageUtils.getContentType(tflow.request)).toEqual(
             "text/html",
@@ -23,7 +23,7 @@ describe("MessageUtils", () => {
     });
 
     it("should be possible to match header", () => {
-        let h1 = ["foo", "bar"],
+        const h1 = ["foo", "bar"],
             msg = { headers: [h1] };
         expect(utils.MessageUtils.match_header(msg, /foo/i)).toEqual(h1);
         expect(utils.MessageUtils.match_header(msg, /123/i)).toBeFalsy();
@@ -32,7 +32,7 @@ describe("MessageUtils", () => {
     it("should be possible to get content URL", () => {
         const flow = TFlow();
         // request
-        let view = "bar";
+        const view = "bar";
         expect(
             utils.MessageUtils.getContentURL(flow, flow.request, view),
         ).toEqual(
@@ -54,7 +54,7 @@ describe("MessageUtils", () => {
 
 describe("RequestUtils", () => {
     it("should be possible prettify url", () => {
-        let flow = TFlow();
+        const flow = TFlow();
         expect(utils.RequestUtils.pretty_url(flow.request)).toEqual(
             "http://address:22/path",
         );
@@ -63,7 +63,7 @@ describe("RequestUtils", () => {
 
 describe("parseUrl", () => {
     it("should be possible to parse url", () => {
-        let url = "http://foo:4444/bar";
+        const url = "http://foo:4444/bar";
         expect(utils.parseUrl(url)).toEqual({
             port: 4444,
             scheme: "http",
@@ -90,7 +90,7 @@ it("should be possible to get a start time", () => {
 });
 
 it("should be possible to get an end time", () => {
-    let f: HTTPFlow = THTTPFlow();
+    const f: HTTPFlow = THTTPFlow();
     expect(utils.endTime(f)).toEqual(946681205);
     f.websocket = undefined;
     expect(utils.endTime(f)).toEqual(946681203);

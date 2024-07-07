@@ -7,7 +7,7 @@ import ReactDOM from "react-dom";
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
-        let filterInput = renderer.create(
+        const filterInput = renderer.create(
                 <FilterInput
                     type="foo"
                     color="red"
@@ -20,7 +20,7 @@ describe("FilterInput Component", () => {
         expect(tree).toMatchSnapshot();
     });
 
-    let filterInput = TestUtil.renderIntoDocument(
+    const filterInput = TestUtil.renderIntoDocument(
         <FilterInput
             type="foo"
             color="red"
@@ -54,7 +54,7 @@ describe("FilterInput Component", () => {
     });
 
     it("should handle change", () => {
-        let mockEvent = { target: { value: "~a bar" } };
+        const mockEvent = { target: { value: "~a bar" } };
         filterInput.onChange(mockEvent);
         expect(filterInput.state.value).toEqual("~a bar");
         expect(filterInput.props.onChange).toBeCalledWith("~a bar");
@@ -80,11 +80,11 @@ describe("FilterInput Component", () => {
         expect(filterInput.state.mousefocus).toBeFalsy();
     });
 
-    let input = ReactDOM.findDOMNode(filterInput.refs.input);
+    const input = ReactDOM.findDOMNode(filterInput.refs.input);
 
     it("should handle keyDown", () => {
         input.blur = jest.fn();
-        let mockEvent = {
+        const mockEvent = {
             key: "Escape",
             stopPropagation: jest.fn(),
         };

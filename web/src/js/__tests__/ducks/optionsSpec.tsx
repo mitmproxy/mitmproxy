@@ -14,7 +14,7 @@ describe("option reducer", () => {
     });
 
     it("should handle receive action", () => {
-        let action = {
+        const action = {
             type: optionsActions.RECEIVE,
             data: { id: { value: "foo" } },
         };
@@ -22,7 +22,7 @@ describe("option reducer", () => {
     });
 
     it("should handle update action", () => {
-        let action = {
+        const action = {
             type: optionsActions.UPDATE,
             data: { id: { value: 1 } },
         };
@@ -34,7 +34,7 @@ describe("option reducer", () => {
 });
 
 test("sendUpdate", async () => {
-    let store = TStore();
+    const store = TStore();
 
     fetchMock.mockResponseOnce("fooerror", { status: 404 });
     await store.dispatch(optionsActions.update("intercept", "~~~"));
@@ -55,7 +55,7 @@ test("sendUpdate", async () => {
 
 test("save", async () => {
     fetchMock.mockResponseOnce("");
-    let store = TStore();
+    const store = TStore();
     await store.dispatch(optionsActions.save());
     expect(fetchMock).toBeCalled();
 });
@@ -63,7 +63,7 @@ test("save", async () => {
 test("addInterceptFilter", async () => {
     fetchMock.mockClear();
     fetchMock.mockResponses("", "");
-    let store = TStore();
+    const store = TStore();
     await store.dispatch(optionsActions.addInterceptFilter("~u foo"));
     expect(fetchMock.mock.calls[0][1]?.body).toEqual('{"intercept":"~u foo"}');
 

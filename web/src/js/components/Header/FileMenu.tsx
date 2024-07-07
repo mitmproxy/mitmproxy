@@ -50,7 +50,7 @@ export default React.memo(function FileMenu() {
             <HideInStatic>
                 <Divider />
                 <li>
-                    <a href="http://mitm.it/" target="_blank">
+                    <a href="http://mitm.it/" target="_blank" rel="noreferrer">
                         <i className="fa fa-fw fa-external-link" />
                         &nbsp;Install Certificates...
                     </a>

@@ -17,7 +17,7 @@ enableFetchMocks();
 
 describe("MenuToggle Component", () => {
     it("should render correctly", () => {
-        let changeFn = jest.fn(),
+        const changeFn = jest.fn(),
             menuToggle = renderer.create(
                 <MenuToggle onChange={changeFn} value={true}>
                     <p>foo children</p>

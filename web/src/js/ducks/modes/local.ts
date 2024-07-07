@@ -20,7 +20,7 @@ export const initialState: LocalState = {
 };
 
 export const getMode = (modes: ModesState): string[] => {
-    let mode = modes.local.applications
+    const mode = modes.local.applications
         ? `local:${modes.local.applications}`
         : "local";
     return includeModeState(mode, modes.local);

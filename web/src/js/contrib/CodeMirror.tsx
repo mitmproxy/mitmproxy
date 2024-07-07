@@ -94,7 +94,7 @@ export default class CodeMirror extends React.Component<
                 normalizeLineEndings(nextProps.value)
         ) {
             if (this.props.preserveScrollPosition) {
-                var prevScrollPosition = this.codeMirror.getScrollInfo();
+                const prevScrollPosition = this.codeMirror.getScrollInfo();
                 this.codeMirror.setValue(nextProps.value);
                 this.codeMirror.scrollTo(
                     prevScrollPosition.left,
@@ -105,7 +105,7 @@ export default class CodeMirror extends React.Component<
             }
         }
         if (typeof nextProps.options === "object") {
-            for (let optionName in nextProps.options) {
+            for (const optionName in nextProps.options) {
                 if (nextProps.options.hasOwnProperty(optionName)) {
                     this.setOptionIfChanged(
                         optionName,

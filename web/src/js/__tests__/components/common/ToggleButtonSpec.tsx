@@ -3,10 +3,10 @@ import renderer from "react-test-renderer";
 import ToggleButton from "../../../components/common/ToggleButton";
 
 describe("ToggleButton Component", () => {
-    let mockFunc = jest.fn();
+    const mockFunc = jest.fn();
 
     it("should render correctly", () => {
-        let checkedButton = renderer.create(
+        const checkedButton = renderer.create(
                 <ToggleButton checked={true} onToggle={mockFunc} text="foo" />,
             ),
             tree = checkedButton.toJSON();
@@ -14,7 +14,7 @@ describe("ToggleButton Component", () => {
     });
 
     it("should handle click action", () => {
-        let uncheckButton = renderer.create(
+        const uncheckButton = renderer.create(
                 <ToggleButton checked={false} onToggle={mockFunc} text="foo" />,
             ),
             tree = uncheckButton.toJSON();

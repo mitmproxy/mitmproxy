@@ -4,7 +4,7 @@ import { PureOptionDefault } from "../../../components/Modal/OptionModal";
 
 describe("PureOptionDefault Component", () => {
     it("should return null when the value is default", () => {
-        let pureOptionDefault = renderer.create(
+        const pureOptionDefault = renderer.create(
                 <PureOptionDefault value="foo" defaultVal="foo" />,
             ),
             tree = pureOptionDefault.toJSON();
@@ -12,7 +12,7 @@ describe("PureOptionDefault Component", () => {
     });
 
     it("should handle boolean type", () => {
-        let pureOptionDefault = renderer.create(
+        const pureOptionDefault = renderer.create(
                 <PureOptionDefault value={true} defaultVal={false} />,
             ),
             tree = pureOptionDefault.toJSON();
@@ -37,7 +37,7 @@ describe("PureOptionDefault Component", () => {
     });
 
     it("should handle string", () => {
-        let pureOptionDefault = renderer.create(
+        const pureOptionDefault = renderer.create(
                 <PureOptionDefault value="foo" defaultVal="" />,
             ),
             tree = pureOptionDefault.toJSON();
@@ -45,7 +45,7 @@ describe("PureOptionDefault Component", () => {
     });
 
     it("should handle null value", () => {
-        let pureOptionDefault = renderer.create(
+        const pureOptionDefault = renderer.create(
                 <PureOptionDefault value="foo" defaultVal={null} />,
             ),
             tree = pureOptionDefault.toJSON();

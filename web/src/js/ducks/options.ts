@@ -12,7 +12,7 @@ export { Option, defaultState };
 export default function reducer(state = defaultState, action): OptionsState {
     switch (action.type) {
         case RECEIVE:
-            let s = <OptionsState>{};
+            const s = <OptionsState>{};
             // @ts-ignore
             for (const [name, { value }] of Object.entries(action.data)) {
                 s[name] = value;
@@ -20,7 +20,7 @@ export default function reducer(state = defaultState, action): OptionsState {
             return s;
 
         case UPDATE:
-            let s2 = { ...state };
+            const s2 = { ...state };
             // @ts-ignore
             for (const [name, { value }] of Object.entries(action.data)) {
                 s2[name] = value;
@@ -47,7 +47,7 @@ export async function pureSendUpdate(option: Option, value, dispatch) {
     }
 }
 
-let sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
+const sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
 
 export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {

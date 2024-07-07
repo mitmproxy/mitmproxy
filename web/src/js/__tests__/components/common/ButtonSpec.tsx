@@ -4,7 +4,7 @@ import Button from "../../../components/common/Button";
 
 describe("Button Component", () => {
     it("should render correctly", () => {
-        let button = renderer.create(
+        const button = renderer.create(
                 <Button
                     className="classname"
                     onClick={() => "onclick"}
@@ -19,7 +19,7 @@ describe("Button Component", () => {
     });
 
     it("should be able to be disabled", () => {
-        let button = renderer.create(
+        const button = renderer.create(
                 <Button
                     className="classname"
                     onClick={() => "onclick"}

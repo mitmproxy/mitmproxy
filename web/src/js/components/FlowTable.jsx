@@ -1,7 +1,7 @@
 import * as React from "react";
 import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
-import {connect, shallowEqual} from "react-redux";
+import { connect, shallowEqual } from "react-redux";
 import AutoScroll from "./helpers/AutoScroll";
 import { calcVScroll } from "./helpers/VirtualScroll";
 import FlowTableHead from "./FlowTable/FlowTableHead";

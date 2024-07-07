@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import AutoScroll from "../helpers/AutoScroll";
 import { calcVScroll, VScroll } from "../helpers/VirtualScroll";
 import { EventLogItem } from "../../ducks/eventLog";
-import {shallowEqual} from "react-redux";
+import { shallowEqual } from "react-redux";
 
 type EventLogListProps = {
     events: EventLogItem[];

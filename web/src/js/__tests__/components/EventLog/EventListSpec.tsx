@@ -3,7 +3,7 @@ import EventLogList from "../../../components/EventLog/EventList";
 import TestUtils from "react-dom/test-utils";
 
 describe("EventList Component", () => {
-    let mockEventList = [
+    const mockEventList = [
             { id: 1, level: "info", message: "foo" },
             { id: 2, level: "error", message: "bar" },
         ],

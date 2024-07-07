@@ -8,12 +8,12 @@ import { Provider } from "react-redux";
 window.addEventListener = jest.fn();
 
 describe("FlowTable Component", () => {
-    let selectFn = jest.fn(),
+    const selectFn = jest.fn(),
         tflow = TFlow(),
         store = TStore();
 
     it("should render correctly", () => {
-        let provider = renderer.create(
+        const provider = renderer.create(
                 <Provider store={store}>
                     <FlowTable selectFlow={selectFn} flows={[tflow]} />
                 </Provider>,
@@ -22,7 +22,7 @@ describe("FlowTable Component", () => {
         expect(tree).toMatchSnapshot();
     });
 
-    let provider = renderer.create(
+    const provider = renderer.create(
             <Provider store={store}>
                 <FlowTable selectFlow={selectFn} flows={[tflow]} />
             </Provider>,

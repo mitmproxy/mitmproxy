@@ -96,8 +96,8 @@ export function reduce<S extends Item>(
             list = [...list];
             list[listIndex[action.item.id]] = action.item;
 
-            let hasOldItem = action.item.id in viewIndex;
-            let hasNewItem = action.filter(action.item);
+            const hasOldItem = action.item.id in viewIndex;
+            const hasNewItem = action.filter(action.item);
             if (hasNewItem && !hasOldItem) {
                 ({ view, viewIndex } = sortedInsert(
                     state,
@@ -237,8 +237,8 @@ function sortedUpdate<S extends Item>(
     item: S,
     sort: SortFn<S>,
 ) {
-    let view = [...state.view];
-    let viewIndex = { ...state.viewIndex };
+    const view = [...state.view];
+    const viewIndex = { ...state.viewIndex };
     let index = viewIndex[item.id];
     view[index] = item;
     while (index + 1 < view.length && sort(view[index], view[index + 1]) > 0) {

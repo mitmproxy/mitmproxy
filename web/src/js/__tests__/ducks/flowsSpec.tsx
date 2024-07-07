@@ -8,14 +8,14 @@ jest.mock("../../utils");
 
 describe("flow reducer", () => {
     let s;
-    for (let i of ["1", "2", "3", "4"]) {
+    for (const i of ["1", "2", "3", "4"]) {
         s = reduceFlows(s, {
             type: flowActions.ADD,
             data: { id: i },
             cmd: "add",
         });
     }
-    let state = s;
+    const state = s;
 
     it("should return initial state", () => {
         expect(reduceFlows(undefined, {})).toEqual({
@@ -96,21 +96,21 @@ describe("flow reducer", () => {
     });
 
     it("should be possible to set filter", () => {
-        let filt = "~u 123";
+        const filt = "~u 123";
         expect(
             reduceFlows(undefined, flowActions.setFilter(filt)).filter,
         ).toEqual(filt);
     });
 
     it("should be possible to set highlight", () => {
-        let key = "foo";
+        const key = "foo";
         expect(
             reduceFlows(undefined, flowActions.setHighlight(key)).highlight,
         ).toEqual(key);
     });
 
     it("should be possible to set sort", () => {
-        let sort = { column: "tls", desc: true };
+        const sort = { column: "tls", desc: true };
         expect(
             reduceFlows(undefined, flowActions.setSort(sort.column, sort.desc))
                 .sort,
@@ -119,8 +119,8 @@ describe("flow reducer", () => {
 });
 
 describe("flows actions", () => {
-    let store = TStore();
-    let tflow = TFlow();
+    const store = TStore();
+    const tflow = TFlow();
 
     it("should handle resume action", () => {
         store.dispatch(flowActions.resume(tflow));
@@ -189,7 +189,7 @@ describe("flows actions", () => {
     });
 
     it("should handle uploadContent action", () => {
-        let body = new FormData(),
+        const body = new FormData(),
             file = new window.Blob(["foo"], { type: "plain/text" });
         body.append("file", file);
         store.dispatch(flowActions.uploadContent(tflow, "foo", "foo"));
@@ -210,7 +210,7 @@ describe("flows actions", () => {
     });
 
     it("should handle upload action", () => {
-        let body = new FormData();
+        const body = new FormData();
         body.append("file", "foo");
         store.dispatch(flowActions.upload("foo"));
         expect(fetchApi).toBeCalledWith("/flows/dump", {

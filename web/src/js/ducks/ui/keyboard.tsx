@@ -53,7 +53,7 @@ export function onKeyDown(e: KeyboardEvent) {
 
             case "ArrowLeft": {
                 if (!flow) break;
-                let tabs = tabsForFlow(flow),
+                const tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
                     nextTab =
                         tabs[
@@ -69,7 +69,7 @@ export function onKeyDown(e: KeyboardEvent) {
             case "Tab":
             case "ArrowRight": {
                 if (!flow) break;
-                let tabs = tabsForFlow(flow),
+                const tabs = tabsForFlow(flow),
                     currentTab = getState().ui.flow.tab,
                     nextTab =
                         tabs[
