@@ -132,15 +132,17 @@ export function makeSort({
     desc: boolean;
 }): FlowSortFn {
     if (!column) {
-        return (a, b) => 0;
+        return (_a, _b) => 0;
     }
     const sortKeyFun = sortFunctions[column];
     return (a, b) => {
         const ka = sortKeyFun(a);
         const kb = sortKeyFun(b);
+        // @ts-expect-error undefined is fine
         if (ka > kb) {
             return desc ? -1 : 1;
         }
+        // @ts-expect-error undefined is fine
         if (ka < kb) {
             return desc ? 1 : -1;
         }
@@ -177,50 +179,46 @@ export function selectRelative(flows, shift) {
 }
 
 export function resume(flow: Flow) {
-    return (dispatch) =>
-        fetchApi(`/flows/${flow.id}/resume`, { method: "POST" });
+    return () => fetchApi(`/flows/${flow.id}/resume`, { method: "POST" });
 }
 
 export function resumeAll() {
-    return (dispatch) => fetchApi("/flows/resume", { method: "POST" });
+    return () => fetchApi("/flows/resume", { method: "POST" });
 }
 
 export function kill(flow: Flow) {
-    return (dispatch) => fetchApi(`/flows/${flow.id}/kill`, { method: "POST" });
+    return () => fetchApi(`/flows/${flow.id}/kill`, { method: "POST" });
 }
 
 export function killAll() {
-    return (dispatch) => fetchApi("/flows/kill", { method: "POST" });
+    return () => fetchApi("/flows/kill", { method: "POST" });
 }
 
 export function remove(flow: Flow) {
-    return (dispatch) => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
+    return () => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
 }
 
 export function duplicate(flow: Flow) {
-    return (dispatch) =>
-        fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
+    return () => fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
 }
 
 export function replay(flow: Flow) {
-    return (dispatch) =>
-        fetchApi(`/flows/${flow.id}/replay`, { method: "POST" });
+    return () => fetchApi(`/flows/${flow.id}/replay`, { method: "POST" });
 }
 
 export function revert(flow: Flow) {
-    return (dispatch) =>
-        fetchApi(`/flows/${flow.id}/revert`, { method: "POST" });
+    return () => fetchApi(`/flows/${flow.id}/revert`, { method: "POST" });
 }
 
 export function update(flow: Flow, data) {
-    return (dispatch) => fetchApi.put(`/flows/${flow.id}`, data);
+    return () => fetchApi.put(`/flows/${flow.id}`, data);
 }
 
 export function uploadContent(flow: Flow, file, type) {
     const body = new FormData();
     file = new window.Blob([file], { type: "plain/text" });
     body.append("file", file);
-    return (dispatch) =>
+    return () =>
         fetchApi(`/flows/${flow.id}/${type}/content.data`, {
             method: "POST",
             body,
@@ -228,13 +226,13 @@ export function uploadContent(flow: Flow, file, type) {
 }
 
 export function clear() {
-    return (dispatch) => fetchApi("/clear", { method: "POST" });
+    return () => fetchApi("/clear", { method: "POST" });
 }
 
 export function upload(file) {
     const body = new FormData();
     body.append("file", file);
-    return (dispatch) => fetchApi("/flows/dump", { method: "POST", body });
+    return () => fetchApi("/flows/dump", { method: "POST", body });
 }
 
 export function select(id?: string) {

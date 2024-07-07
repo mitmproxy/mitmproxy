@@ -50,7 +50,7 @@ export default class FilterDocs extends Component<
                     {doc.commands.map((cmd) => (
                         <tr
                             key={cmd[1]}
-                            onClick={(e) =>
+                            onClick={() =>
                                 this.props.selectHandler(
                                     cmd[0].split(" ")[0] + " ",
                                 )

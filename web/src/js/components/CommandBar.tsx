@@ -43,7 +43,7 @@ function getAvailableCommands(
 ): string[] {
     if (!commands) return [];
     const availableCommands: string[] = [];
-    for (const [command, args] of Object.entries(commands)) {
+    for (const command of Object.keys(commands)) {
         if (command.startsWith(input)) {
             availableCommands.push(command);
         }

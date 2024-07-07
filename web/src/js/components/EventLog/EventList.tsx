@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import ReactDOM from "react-dom";
 import * as autoscroll from "../helpers/AutoScroll";
 import { calcVScroll, VScroll } from "../helpers/VirtualScroll";
 import { EventLogItem } from "../../ducks/eventLog";
@@ -49,7 +48,7 @@ export default class EventLogList extends Component<
         window.removeEventListener("resize", this.onViewportUpdate);
     }
 
-    getSnapshotBeforeUpdate(prevProps, prevState) {
+    getSnapshotBeforeUpdate() {
         return autoscroll.isAtBottom(this.viewport);
     }
 

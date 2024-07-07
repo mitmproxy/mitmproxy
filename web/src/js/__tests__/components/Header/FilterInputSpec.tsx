@@ -3,7 +3,6 @@ import renderer from "react-test-renderer";
 import FilterInput from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
 import TestUtil from "react-dom/test-utils";
-import ReactDOM from "react-dom";
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {

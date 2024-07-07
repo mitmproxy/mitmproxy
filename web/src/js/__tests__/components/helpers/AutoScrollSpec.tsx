@@ -6,7 +6,7 @@ describe("Autoscroll", () => {
     class TComponent extends React.Component {
         private viewport = React.createRef<HTMLDivElement>();
 
-        getSnapshotBeforeUpdate(prevProps, prevState) {
+        getSnapshotBeforeUpdate() {
             return autoscroll.isAtBottom(this.viewport);
         }
 

@@ -57,7 +57,7 @@ export function update(name: Option, value: any): AppThunk {
 }
 
 export function save() {
-    return (dispatch) => fetchApi("/options/save", { method: "POST" });
+    return () => fetchApi("/options/save", { method: "POST" });
 }
 
 export function addInterceptFilter(example) {

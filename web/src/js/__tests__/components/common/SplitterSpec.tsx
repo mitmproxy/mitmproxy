@@ -1,5 +1,4 @@
 import * as React from "react";
-import ReactDOM from "react-dom";
 import renderer from "react-test-renderer";
 import Splitter from "../../../components/common/Splitter";
 import TestUtils from "react-dom/test-utils";

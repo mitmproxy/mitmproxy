@@ -29,9 +29,9 @@ jobs:
           node-version-file: .github/node-version.txt
       - run: npm ci
         working-directory: web
-      - run: npx eslint --fix .
+      - run: npm run eslint
         working-directory: web
-      - run: npx prettier --write .
+      - run: npm run prettier
         working-directory: web
 
       - uses: mhils/add-pr-ref-in-changelog@main

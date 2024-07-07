@@ -284,19 +284,19 @@ export const getVersion = (flow: Flow): string => {
 };
 
 export const sortFunctions = {
-    tls: (flow) => flow.type === "http" && flow.request.scheme,
+    tls: (flow: Flow) => flow.type === "http" && flow.request.scheme,
     icon: getIcon,
     path: mainPath,
     method: getMethod,
     version: getVersion,
     status: statusCode,
     size: getTotalSize,
-    time: (flow) => {
+    time: (flow: Flow) => {
         const start = startTime(flow),
             end = endTime(flow);
         return start && end && end - start;
     },
     timestamp: startTime,
-    quickactions: (flow) => 0,
-    comment: (flow) => flow.comment,
+    quickactions: () => 0,
+    comment: (flow: Flow) => flow.comment,
 };

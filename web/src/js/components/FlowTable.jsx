@@ -37,7 +37,7 @@ export class PureFlowTable extends React.Component {
         window.removeEventListener("resize", this.onViewportUpdate);
     }
 
-    getSnapshotBeforeUpdate(prevProps, prevState) {
+    getSnapshotBeforeUpdate() {
         return autoscroll.isAtBottom(this.viewport);
     }
 
