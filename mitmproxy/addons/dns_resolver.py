@@ -40,6 +40,7 @@ class DnsResolver:
     def configure(self, updated):
         if "use_hosts_file" in updated or "name_servers" in updated:
             del self.resolver
+            del self.name_servers
 
     @cached_property
     def resolver(self) -> mitmproxy_rs.DnsResolver:
@@ -47,6 +48,10 @@ class DnsResolver:
             name_servers=ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers(),
             use_hosts_file=ctx.options.use_hosts_file,
         )
+
+    @cached_property
+    def name_servers(self) -> list[str]:
+        return ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers()
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         assert flow.request
@@ -78,7 +83,7 @@ class DnsResolver:
                 # TODO: We need to handle overly long responses here.
                 flow.response = await self.resolve_message(flow.request)
             else:
-                flow.server_conn.address = (ctx.options.name_servers[0], 53)
+                flow.server_conn.address = (self.name_servers[0], 53)
 
     async def resolve_message(self, message: dns.Message) -> dns.Message:
         try:
