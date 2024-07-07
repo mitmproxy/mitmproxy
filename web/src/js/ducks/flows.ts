@@ -61,8 +61,8 @@ export default function reducer(
                         action.data in state.viewIndex &&
                         state.view.length > 1
                     ) {
-                        let currentIndex = state.viewIndex[action.data],
-                            nextSelection;
+                        const currentIndex = state.viewIndex[action.data];
+                        let nextSelection;
                         if (currentIndex === state.view.length - 1) {
                             // last row
                             nextSelection = state.view[currentIndex - 1];

@@ -80,7 +80,7 @@ describe("FilterInput Component", () => {
         expect(filterInput.state.mousefocus).toBeFalsy();
     });
 
-    const input = ReactDOM.findDOMNode(filterInput.refs.input);
+    const input = filterInput.inputRef.current!;
 
     it("should handle keyDown", () => {
         input.blur = jest.fn();

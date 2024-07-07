@@ -13,7 +13,7 @@ export default function reducer(state = defaultState, action): OptionsState {
     switch (action.type) {
         case RECEIVE:
             const s = <OptionsState>{};
-            // @ts-ignore
+            // @ts-expect-error untyped action
             for (const [name, { value }] of Object.entries(action.data)) {
                 s[name] = value;
             }
@@ -21,7 +21,7 @@ export default function reducer(state = defaultState, action): OptionsState {
 
         case UPDATE:
             const s2 = { ...state };
-            // @ts-ignore
+            // @ts-expect-error untyped action
             for (const [name, { value }] of Object.entries(action.data)) {
                 s2[name] = value;
             }

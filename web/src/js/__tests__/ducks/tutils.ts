@@ -144,4 +144,12 @@ export const testState: RootState = {
 };
 
 export const TStore = () =>
-    configureStore({ reducer, preloadedState: testState });
+    configureStore({
+        reducer,
+        preloadedState: testState,
+        middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware({
+                immutableCheck: { warnAfter: 500_000 },
+                serializableCheck: { warnAfter: 500_000 },
+            }),
+    });

@@ -1,3 +1,4 @@
+/* eslint-disable */
 // Adapted from https://www.npmjs.com/package/react-codemirror
 // Copyright (c) 2016 Jed Watson. MIT Licensed.
 

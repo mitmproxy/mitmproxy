@@ -13,9 +13,9 @@ describe("store reducer", () => {
     });
 
     it("should handle add action", () => {
-        let a = { id: "1" },
-            b = { id: "9" },
-            state = reduce(undefined, {});
+        const a = { id: "1" },
+            b = { id: "9" };
+        let state = reduce(undefined, {});
         expect((state = reduce(state, storeActions.add(a)))).toEqual({
             byId: { "1": a },
             listIndex: { "1": 0 },
@@ -74,9 +74,9 @@ describe("store reducer", () => {
     });
 
     it("should handle update action with filter", () => {
-        let a = { id: "0" },
-            b = { id: "1" },
-            state = reduce(undefined, storeActions.receive([a, b]));
+        const a = { id: "0" },
+            b = { id: "1" };
+        let state = reduce(undefined, storeActions.receive([a, b]));
         state = reduce(
             state,
             storeActions.update(b, (item) => {

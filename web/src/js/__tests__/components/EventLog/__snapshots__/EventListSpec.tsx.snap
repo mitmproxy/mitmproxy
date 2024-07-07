@@ -15,12 +15,12 @@ exports[`EventList Component should render correctly 2`] = `
 {
   "events": [
     {
-      "id": 1,
+      "id": "1",
       "level": "info",
       "message": "foo",
     },
     {
-      "id": 2,
+      "id": "2",
       "level": "error",
       "message": "bar",
     },

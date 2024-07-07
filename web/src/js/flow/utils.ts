@@ -1,4 +1,4 @@
-import { Flow, HTTPMessage, HTTPRequest } from "../flow";
+import { Flow, HTTPHeader, HTTPMessage, HTTPRequest } from "../flow";
 
 const defaultPorts = {
     http: 80,
@@ -18,7 +18,7 @@ export class MessageUtils {
         regex: RegExp,
     ): string | undefined {
         //FIXME: Cache Invalidation.
-        // @ts-ignore
+        // @ts-expect-error hidden cache on object
         const msg: HTTPMessage & {
             _headerLookups: { [regex: string]: string | undefined };
         } = message;
@@ -31,7 +31,7 @@ export class MessageUtils {
             });
         const regexStr = regex.toString();
         if (!(regexStr in msg._headerLookups)) {
-            let header;
+            let header: HTTPHeader | undefined = undefined;
             for (let i = 0; i < msg.headers.length; i++) {
                 if (msg.headers[i][0].match(regex)) {
                     header = msg.headers[i];
@@ -96,8 +96,8 @@ type ParsedUrl = {
     path?: string;
 };
 
-const parseUrl_regex = /^(?:(https?):\/\/)?([^\/:]+)?(?::(\d+))?(\/.*)?$/i;
-export var parseUrl = function (url): ParsedUrl | undefined {
+const parseUrl_regex = /^(?:(https?):\/\/)?([^/:]+)?(?::(\d+))?(\/.*)?$/i;
+export const parseUrl = function (url): ParsedUrl | undefined {
     //there are many correct ways to parse a URL,
     //however, a mitmproxy user may also wish to generate a not-so-correct URL. ;-)
     const parts = parseUrl_regex.exec(url);
@@ -105,13 +105,11 @@ export var parseUrl = function (url): ParsedUrl | undefined {
         return undefined;
     }
 
-    let scheme = parts[1],
+    const scheme = parts[1],
         host = parts[2],
-        port = parseInt(parts[3]),
+        optionalPort = parseInt(parts[3]),
         path = parts[4];
-    if (scheme) {
-        port = port || defaultPorts[scheme];
-    }
+    const port = scheme ? optionalPort || defaultPorts[scheme] : optionalPort;
     const ret: ParsedUrl = {};
     if (scheme) {
         ret.scheme = scheme;
@@ -129,7 +127,7 @@ export var parseUrl = function (url): ParsedUrl | undefined {
 };
 
 const isValidHttpVersion_regex = /^HTTP\/\d+(\.\d+)*$/i;
-export var isValidHttpVersion = function (httpVersion: string): boolean {
+export const isValidHttpVersion = function (httpVersion: string): boolean {
     return isValidHttpVersion_regex.test(httpVersion);
 };
 

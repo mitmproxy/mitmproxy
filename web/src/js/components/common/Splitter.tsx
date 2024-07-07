@@ -16,6 +16,8 @@ type SplitterProps = {
 export default class Splitter extends Component<SplitterProps, SplitterState> {
     static defaultProps = { axis: "x" };
 
+    node = React.createRef<HTMLDivElement>();
+
     constructor(props, context) {
         super(props, context);
         this.state = { applied: false, startPos: 0, dragPointer: 0.1 };
@@ -79,13 +81,11 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
             return;
         }
 
-        const node = ReactDOM.findDOMNode(this);
-
-        if (node.previousElementSibling) {
-            node.previousElementSibling.style.flex = "";
+        if (this.node.current?.previousElementSibling instanceof HTMLElement) {
+            this.node.current.previousElementSibling.style.flex = "";
         }
-        if (node.nextElementSibling) {
-            node.nextElementSibling.style.flex = "";
+        if (this.node.current?.nextElementSibling instanceof HTMLElement) {
+            this.node.current.nextElementSibling.style.flex = "";
         }
 
         if (!willUnmount) {
@@ -101,6 +101,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
     render() {
         return (
             <div
+                ref={this.node}
                 className={classnames(
                     "splitter",
                     this.props.axis === "x" ? "splitter-x" : "splitter-y",

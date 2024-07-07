@@ -230,7 +230,7 @@ test("makeSort", () => {
     a.response.status_code = 418;
 
     Object.keys(FlowColumns).forEach((column, i) => {
-        // @ts-ignore
+        // @ts-expect-error jest is funky about type annotations here.
         const sort = flowActions.makeSort({ column, desc: i % 2 == 0 });
         expect(sort(a, b)).toBeDefined();
     });

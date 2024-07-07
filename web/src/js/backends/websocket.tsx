@@ -95,8 +95,8 @@ export default class WebsocketBackend {
         console.error("websocket connection closed", closeEvent);
     }
 
-    onError(error) {
+    onError(...args) {
         // FIXME
-        console.error("websocket connection errored", arguments);
+        console.error("websocket connection errored", args);
     }
 }

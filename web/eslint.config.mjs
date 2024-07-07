@@ -13,11 +13,23 @@ export default [
     {
         rules: {
             "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-unused-vars": "off",
+            "no-case-declarations": "off",
         },
         settings: {
             react: {
                 version: "detect",
             },
         },
+    },
+    {
+        files: ["**/*Spec.{ts,tsx}"],
+        rules: {
+            "prefer-const": "off",
+        },
+    },
+    {
+        files: ["jest.config.js", "gulpfile.js"],
+        languageOptions: { globals: globals.node },
     },
 ];

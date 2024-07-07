@@ -34,12 +34,12 @@ describe("onKeyDown", () => {
     };
 
     const createKeyEvent = (key, ctrlKey = false) => {
-        // @ts-ignore
+        // @ts-expect-error not a real KeyboardEvent
         return onKeyDown({ key, ctrlKey, preventDefault: jest.fn() });
     };
 
     afterEach(() => {
-        // @ts-ignore
+        // @ts-expect-error mocking
         fetchApi.mockClear();
     });
 

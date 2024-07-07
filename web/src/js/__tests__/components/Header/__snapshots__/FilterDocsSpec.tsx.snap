@@ -36,6 +36,7 @@ exports[`FilterDocs Component 2`] = `
         >
           <a
             href="https://mitmproxy.org/docs/latest/concepts-filters/"
+            rel="noreferrer"
             target="_blank"
           >
             <i

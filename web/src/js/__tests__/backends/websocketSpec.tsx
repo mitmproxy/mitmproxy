@@ -7,7 +7,7 @@ import { UnknownAction } from "@reduxjs/toolkit";
 enableFetchMocks();
 
 test("websocket backend", async () => {
-    // @ts-ignore
+    // @ts-expect-error jest mock stuff
     jest.spyOn(global, "WebSocket").mockImplementation(() => ({
         addEventListener: () => 0,
     }));

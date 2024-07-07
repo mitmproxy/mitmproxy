@@ -31,8 +31,8 @@ export function updateStoreFromUrl(store) {
 
     if (query) {
         query.split("&").forEach((x) => {
-            let [key, value] = x.split("=", 2);
-            value = decodeURIComponent(value);
+            const [key, encodedVal] = x.split("=", 2);
+            const value = decodeURIComponent(encodedVal);
             switch (key) {
                 case Query.SEARCH:
                     store.dispatch(setFilter(value));

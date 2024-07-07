@@ -1,142 +1,471 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FlowTable Component should render correctly 1`] = `
-<div
-  className="flow-table"
-  onScroll={[Function]}
->
-  <table>
-    <thead
-      style={
-        {
-          "transform": "translateY(0px)",
-        }
-      }
-    >
-      <tr>
-        <th
-          className="col-tls"
-          onClick={[Function]}
-        >
-          
-        </th>
-        <th
-          className="col-icon"
-          onClick={[Function]}
-        >
-          
-        </th>
-        <th
-          className="col-path sort-desc"
-          onClick={[Function]}
-        >
-          Path
-        </th>
-        <th
-          className="col-method"
-          onClick={[Function]}
-        >
-          Method
-        </th>
-        <th
-          className="col-status"
-          onClick={[Function]}
-        >
-          Status
-        </th>
-        <th
-          className="col-size"
-          onClick={[Function]}
-        >
-          Size
-        </th>
-        <th
-          className="col-time"
-          onClick={[Function]}
-        >
-          Time
-        </th>
-        <th
-          className="col-quickactions"
-          onClick={[Function]}
-        >
-          
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        style={
-          {
-            "height": 0,
-          }
-        }
-      />
-      <tr
-        className="has-request has-response"
-        onClick={[Function]}
+<DocumentFragment>
+  <div
+    class="flow-table"
+  >
+    <table>
+      <thead
+        style="transform: translateY(0px);"
       >
-        <td
-          className="col-tls col-tls-https"
-        />
-        <td
-          className="col-icon"
-        >
-          <div
-            className="resource-icon resource-icon-websocket"
+        <tr>
+          <th
+            class="col-tls"
           />
-        </td>
-        <td
-          className="col-path"
-        >
-          <i
-            className="fa fa-fw fa-exclamation pull-right"
+          <th
+            class="col-icon"
           />
-          <span
-            className="marker pull-right"
+          <th
+            class="col-path sort-desc"
           >
-            
-          </span>
-          http://address:22/path
-        </td>
-        <td
-          className="col-method"
-        >
-          WSS
-        </td>
-        <td
-          className="col-status"
-          style={
-            {
-              "color": "darkgreen",
-            }
-          }
-        >
-          200
-        </td>
-        <td
-          className="col-size"
-        >
-          43b
-        </td>
-        <td
-          className="col-time"
-        >
-          5s
-        </td>
-        <td
-          className="col-quickactions"
-          onClick={[Function]}
+            Path
+          </th>
+          <th
+            class="col-method"
+          >
+            Method
+          </th>
+          <th
+            class="col-status"
+          >
+            Status
+          </th>
+          <th
+            class="col-size"
+          >
+            Size
+          </th>
+          <th
+            class="col-time"
+          >
+            Time
+          </th>
+          <th
+            class="col-quickactions"
+          />
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          style="height: 0px;"
         />
-      </tr>
-      <tr
-        style={
-          {
-            "height": 0,
-          }
-        }
-      />
-    </tbody>
-  </table>
-</div>
+        <tr
+          class="selected has-request has-response"
+        >
+          <td
+            class="col-tls col-tls-https"
+          />
+          <td
+            class="col-icon"
+          >
+            <div
+              class="resource-icon resource-icon-websocket"
+            />
+          </td>
+          <td
+            class="col-path"
+          >
+            <i
+              class="fa fa-fw fa-exclamation pull-right"
+            />
+            <span
+              class="marker pull-right"
+            />
+            http://address:22/second
+          </td>
+          <td
+            class="col-method"
+          >
+            WSS
+          </td>
+          <td
+            class="col-status"
+            style="color: darkgreen;"
+          >
+            200
+          </td>
+          <td
+            class="col-size"
+          >
+            43b
+          </td>
+          <td
+            class="col-time"
+          >
+            5s
+          </td>
+          <td
+            class="col-quickactions"
+          />
+        </tr>
+        <tr
+          class=""
+        >
+          <td
+            class="col-tls col-tls-https"
+          />
+          <td
+            class="col-icon"
+          >
+            <div
+              class="resource-icon resource-icon-tcp"
+            />
+          </td>
+          <td
+            class="col-path"
+          >
+            <i
+              class="fa fa-fw fa-exclamation pull-right"
+            />
+            <span
+              class="marker pull-right"
+            />
+            127.0.0.1:22 ↔ address:22
+          </td>
+          <td
+            class="col-method"
+          >
+            TCP
+          </td>
+          <td
+            class="col-status"
+          />
+          <td
+            class="col-size"
+          >
+            12b
+          </td>
+          <td
+            class="col-time"
+          >
+            5s
+          </td>
+          <td
+            class="col-quickactions"
+          />
+        </tr>
+        <tr
+          style="height: 64px;"
+        />
+      </tbody>
+    </table>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowTable Component should scroll current selection into view 1`] = `
+<DocumentFragment>
+  <div
+    style="height: 32px; overflow: hidden;"
+  >
+    <div
+      class="flow-table"
+    >
+      <table>
+        <thead
+          style="transform: translateY(0px);"
+        >
+          <tr>
+            <th
+              class="col-tls"
+            />
+            <th
+              class="col-icon"
+            />
+            <th
+              class="col-path sort-desc"
+            >
+              Path
+            </th>
+            <th
+              class="col-method"
+            >
+              Method
+            </th>
+            <th
+              class="col-status"
+            >
+              Status
+            </th>
+            <th
+              class="col-size"
+            >
+              Size
+            </th>
+            <th
+              class="col-time"
+            >
+              Time
+            </th>
+            <th
+              class="col-quickactions"
+            />
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            style="height: 0px;"
+          />
+          <tr
+            class="selected has-request has-response"
+          >
+            <td
+              class="col-tls col-tls-https"
+            />
+            <td
+              class="col-icon"
+            >
+              <div
+                class="resource-icon resource-icon-websocket"
+              />
+            </td>
+            <td
+              class="col-path"
+            >
+              <i
+                class="fa fa-fw fa-exclamation pull-right"
+              />
+              <span
+                class="marker pull-right"
+              />
+              http://address:22/second
+            </td>
+            <td
+              class="col-method"
+            >
+              WSS
+            </td>
+            <td
+              class="col-status"
+              style="color: darkgreen;"
+            >
+              200
+            </td>
+            <td
+              class="col-size"
+            >
+              43b
+            </td>
+            <td
+              class="col-time"
+            >
+              5s
+            </td>
+            <td
+              class="col-quickactions"
+            />
+          </tr>
+          <tr
+            class=""
+          >
+            <td
+              class="col-tls col-tls-https"
+            />
+            <td
+              class="col-icon"
+            >
+              <div
+                class="resource-icon resource-icon-tcp"
+              />
+            </td>
+            <td
+              class="col-path"
+            >
+              <i
+                class="fa fa-fw fa-exclamation pull-right"
+              />
+              <span
+                class="marker pull-right"
+              />
+              127.0.0.1:22 ↔ address:22
+            </td>
+            <td
+              class="col-method"
+            >
+              TCP
+            </td>
+            <td
+              class="col-status"
+            />
+            <td
+              class="col-size"
+            >
+              12b
+            </td>
+            <td
+              class="col-time"
+            >
+              5s
+            </td>
+            <td
+              class="col-quickactions"
+            />
+          </tr>
+          <tr
+            style="height: 64px;"
+          />
+        </tbody>
+      </table>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`FlowTable Component should scroll current selection into view 2`] = `
+<DocumentFragment>
+  <div
+    style="height: 32px; overflow: hidden;"
+  >
+    <div
+      class="flow-table"
+    >
+      <table>
+        <thead
+          style="transform: translateY(128px);"
+        >
+          <tr>
+            <th
+              class="col-tls"
+            />
+            <th
+              class="col-icon"
+            />
+            <th
+              class="col-path sort-desc"
+            >
+              Path
+            </th>
+            <th
+              class="col-method"
+            >
+              Method
+            </th>
+            <th
+              class="col-status"
+            >
+              Status
+            </th>
+            <th
+              class="col-size"
+            >
+              Size
+            </th>
+            <th
+              class="col-time"
+            >
+              Time
+            </th>
+            <th
+              class="col-quickactions"
+            />
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            style="height: 64px;"
+          />
+          <tr
+            class=""
+          >
+            <td
+              class="col-tls col-tls-https"
+            />
+            <td
+              class="col-icon"
+            >
+              <div
+                class="resource-icon resource-icon-dns"
+              />
+            </td>
+            <td
+              class="col-path"
+            >
+              <i
+                class="fa fa-fw fa-exclamation pull-right"
+              />
+              <span
+                class="marker pull-right"
+              />
+              dns.google A = 8.8.8.8, 8.8.4.4
+            </td>
+            <td
+              class="col-method"
+            >
+              QUERY
+            </td>
+            <td
+              class="col-status"
+              style="color: darkgreen;"
+            >
+              NOERROR
+            </td>
+            <td
+              class="col-size"
+            >
+              8b
+            </td>
+            <td
+              class="col-time"
+            >
+              1s
+            </td>
+            <td
+              class="col-quickactions"
+            />
+          </tr>
+          <tr
+            class="selected"
+          >
+            <td
+              class="col-tls col-tls-https"
+            />
+            <td
+              class="col-icon"
+            >
+              <div
+                class="resource-icon resource-icon-udp"
+              />
+            </td>
+            <td
+              class="col-path"
+            >
+              <i
+                class="fa fa-fw fa-exclamation pull-right"
+              />
+              <span
+                class="marker pull-right"
+              />
+              127.0.0.1:22 ↔ address:22
+            </td>
+            <td
+              class="col-method"
+            >
+              UDP
+            </td>
+            <td
+              class="col-status"
+            />
+            <td
+              class="col-size"
+            >
+              12b
+            </td>
+            <td
+              class="col-time"
+            >
+              5s
+            </td>
+            <td
+              class="col-quickactions"
+            />
+          </tr>
+          <tr
+            style="height: 0px;"
+          />
+        </tbody>
+      </table>
+    </div>
+  </div>
+</DocumentFragment>
 `;

@@ -5,7 +5,7 @@ import DocsLink from "../../../components/common/DocsLink";
 describe("DocsLink Component", () => {
     it("should be able to be rendered with children nodes", () => {
         const docsLink = renderer.create(
-                <DocsLink children="foo" resource="bar"></DocsLink>,
+                <DocsLink resource="bar">foo</DocsLink>,
             ),
             tree = docsLink.toJSON();
         expect(tree).toMatchSnapshot();

@@ -10,12 +10,12 @@ import StaticBackend from "./backends/static";
 import { store } from "./ducks";
 
 useUrlState(store);
-// @ts-ignore
+// @ts-expect-error custom property on window
 if (window.MITMWEB_STATIC) {
-    // @ts-ignore
+    // @ts-expect-error new property on window for debugging
     window.backend = new StaticBackend(store);
 } else {
-    // @ts-ignore
+    // @ts-expect-error new property on window for debugging
     window.backend = new WebSocketBackend(store);
 }
 

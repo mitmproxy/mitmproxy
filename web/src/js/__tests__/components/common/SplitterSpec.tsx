@@ -47,15 +47,16 @@ describe.each([
     const splitter = TestUtils.renderIntoDocument(
             <Splitter axis={axisLower} />,
         ),
-        dom = ReactDOM.findDOMNode(splitter),
-        previousElementSibling = {
-            offsetWidth: 300,
-            offsetHeight: 500,
-            style: { flex: "" },
-        },
-        nextElementSibling = {
-            style: { flex: "" },
-        };
+        dom = splitter.node.current,
+        previousElementSibling = document.createElement("div"),
+        nextElementSibling = document.createElement("div");
+
+    Object.defineProperties(previousElementSibling, {
+        offsetWidth: { value: 300 },
+        offsetHeight: { value: 500 },
+    });
+    previousElementSibling.style.flex = "";
+    nextElementSibling.style.flex = "";
 
     Object.defineProperties(dom, {
         previousElementSibling: { value: previousElementSibling },

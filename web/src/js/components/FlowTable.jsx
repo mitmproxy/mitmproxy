@@ -1,14 +1,13 @@
 import * as React from "react";
 import PropTypes from "prop-types";
-import ReactDOM from "react-dom";
 import { connect, shallowEqual } from "react-redux";
-import AutoScroll from "./helpers/AutoScroll";
+import * as autoscroll from "./helpers/AutoScroll";
 import { calcVScroll } from "./helpers/VirtualScroll";
 import FlowTableHead from "./FlowTable/FlowTableHead";
 import FlowRow from "./FlowTable/FlowRow";
 import Filt from "../filt/filt";
 
-class FlowTable extends React.Component {
+export class PureFlowTable extends React.Component {
     static propTypes = {
         flows: PropTypes.array.isRequired,
         rowHeight: PropTypes.number,
@@ -24,58 +23,57 @@ class FlowTable extends React.Component {
         super(props, context);
 
         this.state = { vScroll: calcVScroll() };
+        this.viewport = React.createRef();
+        this.head = React.createRef();
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
     }
 
-    UNSAFE_componentWillMount() {
-        window.addEventListener("resize", this.onViewportUpdate);
-    }
-
     componentDidMount() {
+        window.addEventListener("resize", this.onViewportUpdate);
         this.onViewportUpdate();
     }
 
-    UNSAFE_componentWillUnmount() {
+    componentWillUnmount() {
         window.removeEventListener("resize", this.onViewportUpdate);
     }
 
-    componentDidUpdate() {
-        this.onViewportUpdate();
-
-        if (!this.shouldScrollIntoView) {
-            return;
-        }
-
-        this.shouldScrollIntoView = false;
-
-        const { rowHeight, flows, selected } = this.props;
-        const viewport = ReactDOM.findDOMNode(this);
-        const head = ReactDOM.findDOMNode(this.refs.head);
-
-        const headHeight = head ? head.offsetHeight : 0;
-
-        const rowTop = flows.indexOf(selected) * rowHeight + headHeight;
-        const rowBottom = rowTop + rowHeight;
-
-        const viewportTop = viewport.scrollTop;
-        const viewportHeight = viewport.offsetHeight;
-
-        // Account for pinned thead
-        if (rowTop - headHeight < viewportTop) {
-            viewport.scrollTop = rowTop - headHeight;
-        } else if (rowBottom > viewportTop + viewportHeight) {
-            viewport.scrollTop = rowBottom - viewportHeight;
-        }
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        return autoscroll.isAtBottom(this.viewport);
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        if (nextProps.selected && nextProps.selected !== this.props.selected) {
-            this.shouldScrollIntoView = true;
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot) {
+            autoscroll.adjustScrollTop(this.viewport);
+        }
+        this.onViewportUpdate();
+
+        const selectedNewFlow =
+            this.props.selected && this.props.selected !== prevProps.selected;
+        if (selectedNewFlow) {
+            const { rowHeight, flows, selected } = this.props;
+            const viewport = this.viewport.current;
+            const head = this.head.current;
+
+            const headHeight = head ? head.offsetHeight : 0;
+
+            const rowTop = flows.indexOf(selected) * rowHeight + headHeight;
+            const rowBottom = rowTop + rowHeight;
+
+            const viewportTop = viewport.scrollTop;
+            const viewportHeight = viewport.offsetHeight;
+
+            // Account for pinned thead
+            if (rowTop - headHeight < viewportTop) {
+                viewport.scrollTop = rowTop - headHeight;
+            } else if (rowBottom > viewportTop + viewportHeight) {
+                viewport.scrollTop = rowBottom - viewportHeight;
+            }
+            this.onViewportUpdate();
         }
     }
 
     onViewportUpdate() {
-        const viewport = ReactDOM.findDOMNode(this);
+        const viewport = this.viewport.current;
         const viewportTop = viewport.scrollTop || 0;
 
         const vScroll = calcVScroll({
@@ -109,10 +107,14 @@ class FlowTable extends React.Component {
         const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
 
         return (
-            <div className="flow-table" onScroll={this.onViewportUpdate}>
+            <div
+                className="flow-table"
+                onScroll={this.onViewportUpdate}
+                ref={this.viewport}
+            >
                 <table>
                     <thead
-                        ref="head"
+                        ref={this.head}
                         style={{ transform: `translateY(${viewportTop}px)` }}
                     >
                         <FlowTableHead />
@@ -134,8 +136,6 @@ class FlowTable extends React.Component {
         );
     }
 }
-
-export const PureFlowTable = AutoScroll(FlowTable);
 
 export default connect((state) => ({
     flows: state.flows.view,

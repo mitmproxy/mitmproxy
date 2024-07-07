@@ -38,7 +38,7 @@ export default function OptionMenu() {
                             Use host header for display
                         </OptionsToggle>
                         <OptionsToggle name="ssl_insecure">
-                            Don't verify server certificates
+                            Don&apos;t verify server certificates
                         </OptionsToggle>
                     </div>
                     <div className="menu-legend">Quick Options</div>

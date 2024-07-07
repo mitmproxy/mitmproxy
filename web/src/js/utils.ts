@@ -6,7 +6,8 @@ window.React = React;
 export const formatSize = function (bytes) {
     if (bytes === 0) return "0";
     const prefix = ["b", "kb", "mb", "gb", "tb"];
-    for (let i = 0; i < prefix.length; i++) {
+    let i = 0;
+    for (; i < prefix.length; i++) {
         if (Math.pow(1024, i + 1) > bytes) {
             break;
         }

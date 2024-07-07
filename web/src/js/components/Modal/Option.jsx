@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
@@ -48,7 +49,7 @@ function StringOption({ value, onChange, ...props }) {
 }
 
 function Optional(Component) {
-    return function ({ onChange, ...props }) {
+    return function OptionalWrapper({ onChange, ...props }) {
         return (
             <Component onChange={(x) => onChange(x ? x : null)} {...props} />
         );
