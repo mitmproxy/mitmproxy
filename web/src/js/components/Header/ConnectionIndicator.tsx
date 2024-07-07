@@ -3,8 +3,8 @@ import { ConnectionState } from "../../ducks/connection";
 import { useAppSelector } from "../../ducks";
 
 export default React.memo(function ConnectionIndicator() {
-    const connState = useAppSelector((state) => state.connection.state),
-        message = useAppSelector((state) => state.connection.message);
+    const connState = useAppSelector((state) => state.connection.state);
+    const message = useAppSelector((state) => state.connection.message);
 
     switch (connState) {
         case ConnectionState.INIT:

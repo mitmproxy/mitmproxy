@@ -111,11 +111,11 @@ describe("Flowcolumns Components", () => {
     });
 
     it("should render CommentColumn", () => {
-        const tflow = TFlow(),
-            commentColumn = renderer.create(
-                <FlowColumns.comment flow={tflow} />,
-            ),
-            tree = commentColumn.toJSON();
+        const tflow = TFlow();
+        const commentColumn = renderer.create(
+            <FlowColumns.comment flow={tflow} />,
+        );
+        const tree = commentColumn.toJSON();
         expect(tree).toMatchSnapshot();
     });
 });

@@ -23,9 +23,9 @@ describe("Autoscroll", () => {
 
     it("should update component", () => {
         const autoScroll = TestUtils.renderIntoDocument(
-                <TComponent></TComponent>,
-            ),
-            viewport = autoScroll.viewport.current;
+            <TComponent></TComponent>,
+        );
+        const viewport = autoScroll.viewport.current;
 
         expect(autoScroll.getSnapshotBeforeUpdate()).toBe(false);
 

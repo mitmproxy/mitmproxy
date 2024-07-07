@@ -13,13 +13,13 @@ enableFetchMocks();
 
 describe("MenuToggle Component", () => {
     it("should render correctly", () => {
-        const changeFn = jest.fn(),
-            menuToggle = renderer.create(
-                <MenuToggle onChange={changeFn} value={true}>
-                    <p>foo children</p>
-                </MenuToggle>,
-            ),
-            tree = menuToggle.toJSON();
+        const changeFn = jest.fn();
+        const menuToggle = renderer.create(
+            <MenuToggle onChange={changeFn} value={true}>
+                <p>foo children</p>
+            </MenuToggle>,
+        );
+        const tree = menuToggle.toJSON();
         expect(tree).toMatchSnapshot();
     });
 });

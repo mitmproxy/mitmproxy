@@ -10,8 +10,8 @@ describe.each([
 ])("Splitter Component", (axisLower, axisUpper) => {
     if (axisLower === "") {
         it("should render correctly with default (x) axis", () => {
-            const splitter = renderer.create(<Splitter />),
-                tree = splitter.toJSON();
+            const splitter = renderer.create(<Splitter />);
+            const tree = splitter.toJSON();
             expect(tree).toMatchInlineSnapshot(`
 <div
   className="splitter splitter-x"
@@ -28,8 +28,8 @@ describe.each([
     }
 
     it("should render correctly with specified axis", () => {
-        const splitter = renderer.create(<Splitter axis={axisLower} />),
-            tree = splitter.toJSON();
+        const splitter = renderer.create(<Splitter axis={axisLower} />);
+        const tree = splitter.toJSON();
         expect(tree).toMatchInlineSnapshot(`
 <div
   className="splitter splitter-${axisLower}"
@@ -44,11 +44,11 @@ describe.each([
     });
 
     const splitter = TestUtils.renderIntoDocument(
-            <Splitter axis={axisLower} />,
-        ),
-        dom = splitter.node.current,
-        previousElementSibling = document.createElement("div"),
-        nextElementSibling = document.createElement("div");
+        <Splitter axis={axisLower} />,
+    );
+    const dom = splitter.node.current;
+    const previousElementSibling = document.createElement("div");
+    const nextElementSibling = document.createElement("div");
 
     Object.defineProperties(previousElementSibling, {
         offsetWidth: { value: 300 },

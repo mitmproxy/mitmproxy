@@ -7,15 +7,15 @@ import TestUtil from "react-dom/test-utils";
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
         const filterInput = renderer.create(
-                <FilterInput
-                    type="foo"
-                    color="red"
-                    placeholder="bar"
-                    onChange={() => undefined}
-                    value="42"
-                />,
-            ),
-            tree = filterInput.toJSON();
+            <FilterInput
+                type="foo"
+                color="red"
+                placeholder="bar"
+                onChange={() => undefined}
+                value="42"
+            />,
+        );
+        const tree = filterInput.toJSON();
         expect(tree).toMatchSnapshot();
     });
 

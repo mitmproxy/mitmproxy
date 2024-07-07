@@ -31,8 +31,8 @@ export default function FlowListMenu() {
 }
 
 function InterceptInput() {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.options.intercept);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.options.intercept);
     return (
         <FilterInput
             value={value || ""}
@@ -45,8 +45,8 @@ function InterceptInput() {
 }
 
 function FlowFilterInput() {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.flows.filter);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.flows.filter);
     return (
         <FilterInput
             value={value || ""}
@@ -59,8 +59,8 @@ function FlowFilterInput() {
 }
 
 function HighlightInput() {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.flows.highlight);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.flows.highlight);
     return (
         <FilterInput
             value={value || ""}

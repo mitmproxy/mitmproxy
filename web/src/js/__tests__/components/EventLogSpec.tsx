@@ -32,8 +32,8 @@ describe("EventLog Component", () => {
             <EventLog />
         </Provider>,
     );
-    const eventLog = provider.root.findByType(PureEventLog),
-        mockEvent = { preventDefault: jest.fn() };
+    const eventLog = provider.root.findByType(PureEventLog);
+    const mockEvent = { preventDefault: jest.fn() };
 
     it("should handle DragStart", () => {
         eventLog.instance.onDragStart(mockEvent);

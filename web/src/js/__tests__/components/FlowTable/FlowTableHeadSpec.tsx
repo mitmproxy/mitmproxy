@@ -5,16 +5,16 @@ import { TStore } from "../../ducks/tutils";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 test("FlowTableHead Component", async () => {
-    const store = TStore(),
-        { asFragment } = render(
-            <Provider store={store}>
-                <table>
-                    <thead>
-                        <FlowTableHead />
-                    </thead>
-                </table>
-            </Provider>,
-        );
+    const store = TStore();
+    const { asFragment } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead />
+                </thead>
+            </table>
+        </Provider>,
+    );
     expect(asFragment()).toMatchSnapshot();
 
     fireEvent.click(screen.getByText("Size"));

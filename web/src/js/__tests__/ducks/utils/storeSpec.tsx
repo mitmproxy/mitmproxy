@@ -13,8 +13,8 @@ describe("store reducer", () => {
     });
 
     it("should handle add action", () => {
-        const a = { id: "1" },
-            b = { id: "9" };
+        const a = { id: "1" };
+        const b = { id: "9" };
         let state = reduce(undefined, {});
         expect((state = reduce(state, storeActions.add(a)))).toEqual({
             byId: { "1": a },
@@ -51,8 +51,8 @@ describe("store reducer", () => {
     });
 
     it("should not add the item with duplicated id", () => {
-        const a = { id: "1" },
-            state = reduce(undefined, storeActions.add(a));
+        const a = { id: "1" };
+        const state = reduce(undefined, storeActions.add(a));
         expect(reduce(state, storeActions.add(a))).toEqual(state);
     });
 
@@ -61,9 +61,9 @@ describe("store reducer", () => {
             foo: string;
         }
 
-        const a: TItem = { id: "1", foo: "foo" },
-            updated = { ...a, foo: "bar" },
-            state = reduce(undefined, storeActions.add(a));
+        const a: TItem = { id: "1", foo: "foo" };
+        const updated = { ...a, foo: "bar" };
+        const state = reduce(undefined, storeActions.add(a));
         expect(reduce(state, storeActions.update(updated))).toEqual({
             byId: { 1: updated },
             list: [updated],
@@ -74,8 +74,8 @@ describe("store reducer", () => {
     });
 
     it("should handle update action with filter", () => {
-        const a = { id: "0" },
-            b = { id: "1" };
+        const a = { id: "0" };
+        const b = { id: "1" };
         let state = reduce(undefined, storeActions.receive([a, b]));
         state = reduce(
             state,
@@ -107,9 +107,9 @@ describe("store reducer", () => {
     });
 
     it("should handle update action with sort", () => {
-        const a = { id: "2" },
-            b = { id: "3" },
-            state = reduce(undefined, storeActions.receive([a, b]));
+        const a = { id: "2" };
+        const b = { id: "3" };
+        const state = reduce(undefined, storeActions.receive([a, b]));
         expect(
             reduce(
                 state,
@@ -145,9 +145,9 @@ describe("store reducer", () => {
     });
 
     it("should set filter", () => {
-        const a = { id: "1" },
-            b = { id: "2" },
-            state = reduce(undefined, storeActions.receive([a, b]));
+        const a = { id: "1" };
+        const b = { id: "2" };
+        const state = reduce(undefined, storeActions.receive([a, b]));
         expect(
             reduce(
                 state,
@@ -165,9 +165,9 @@ describe("store reducer", () => {
     });
 
     it("should set sort", () => {
-        const a = { id: "1" },
-            b = { id: "2" },
-            state = reduce(undefined, storeActions.receive([a, b]));
+        const a = { id: "1" };
+        const b = { id: "2" };
+        const state = reduce(undefined, storeActions.receive([a, b]));
         expect(
             reduce(
                 state,
@@ -185,9 +185,9 @@ describe("store reducer", () => {
     });
 
     it("should handle remove action", () => {
-        const a = { id: "1" },
-            b = { id: "2" },
-            state = reduce(undefined, storeActions.receive([a, b]));
+        const a = { id: "1" };
+        const b = { id: "2" };
+        const state = reduce(undefined, storeActions.receive([a, b]));
         expect(reduce(state, storeActions.remove("1"))).toEqual({
             byId: { "2": b },
             list: [b],
@@ -200,9 +200,9 @@ describe("store reducer", () => {
     });
 
     it("should handle receive list", () => {
-        const a = { id: "1" },
-            b = { id: "2" },
-            list = [a, b];
+        const a = { id: "1" };
+        const b = { id: "2" };
+        const list = [a, b];
         expect(reduce(undefined, storeActions.receive(list))).toEqual({
             byId: { "1": a, "2": b },
             list: [a, b],

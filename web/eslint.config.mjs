@@ -15,9 +15,14 @@ export default [
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-unused-vars": [
                 "error",
-                { args: "after-used", argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+                {
+                    args: "after-used",
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                },
             ],
             "no-case-declarations": "off",
+            "one-var": ["error", { const: "never", let: "consecutive" }],
         },
         settings: {
             react: {

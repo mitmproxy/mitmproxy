@@ -5,12 +5,12 @@ import { EventLogItem } from "../../../ducks/eventLog";
 
 describe("EventList Component", () => {
     const mockEventList: EventLogItem[] = [
-            { id: "1", level: "info", message: "foo" },
-            { id: "2", level: "error", message: "bar" },
-        ],
-        eventLogList = TestUtils.renderIntoDocument(
-            <EventLogList events={mockEventList} />,
-        );
+        { id: "1", level: "info", message: "foo" },
+        { id: "2", level: "error", message: "bar" },
+    ];
+    const eventLogList = TestUtils.renderIntoDocument(
+        <EventLogList events={mockEventList} />,
+    );
 
     it("should render correctly", () => {
         expect(eventLogList.state).toMatchSnapshot();

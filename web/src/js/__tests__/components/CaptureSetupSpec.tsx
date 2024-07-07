@@ -4,7 +4,7 @@ import CaptureSetup from "../../components/CaptureSetup";
 import { TStore } from "../ducks/tutils";
 
 test("CaptureSetup", async () => {
-    const store = TStore(),
-        { asFragment } = render(<CaptureSetup />, { store });
+    const store = TStore();
+    const { asFragment } = render(<CaptureSetup />, { store });
     expect(asFragment()).toMatchSnapshot();
 });

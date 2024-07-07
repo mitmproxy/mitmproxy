@@ -24,11 +24,10 @@ export function calcVScroll(
         opts;
     const viewportBottom = viewportTop + viewportHeight;
 
-    let start = 0;
-    let end = 0;
-
-    let paddingTop = 0;
-    let paddingBottom = 0;
+    let start = 0,
+        end = 0,
+        paddingTop = 0,
+        paddingBottom = 0;
 
     if (itemHeights) {
         let pos = 0;

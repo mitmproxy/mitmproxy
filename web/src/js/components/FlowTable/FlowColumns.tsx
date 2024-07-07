@@ -127,8 +127,8 @@ export const size: FlowColumn = ({ flow }) => {
 size.headerName = "Size";
 
 export const time: FlowColumn = ({ flow }) => {
-    const start = startTime(flow),
-        end = endTime(flow);
+    const start = startTime(flow);
+    const end = endTime(flow);
     return (
         <td className="col-time">
             {start && end ? formatTimeDelta(1000 * (end - start)) : "..."}

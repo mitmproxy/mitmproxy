@@ -6,8 +6,8 @@ import HideInStatic from "../common/HideInStatic";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
 export default React.memo(function FileMenu() {
-    const dispatch = useAppDispatch(),
-        filter = useAppSelector((state) => state.flows.filter);
+    const dispatch = useAppDispatch();
+    const filter = useAppSelector((state) => state.flows.filter);
     return (
         <Dropdown
             className="pull-left special"

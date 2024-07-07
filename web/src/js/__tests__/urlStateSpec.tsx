@@ -34,8 +34,8 @@ describe("updateStoreFromUrl", () => {
 
     it("should handle show event log", () => {
         window.location.hash = "#/flows?e=true";
-        const initialState = { eventLog: reduceEventLog(undefined, {}) },
-            store = mockStore(initialState);
+        const initialState = { eventLog: reduceEventLog(undefined, {}) };
+        const store = mockStore(initialState);
         updateStoreFromUrl(store);
         expect(store.getActions()).toEqual([
             { type: "EVENTS_TOGGLE_VISIBILITY" },
@@ -84,12 +84,12 @@ describe("updateUrlFromStore", () => {
     });
 
     it("should update url", () => {
-        const flows = reduceFlows(undefined, flowsActions.select("123")),
-            state = {
-                ...initialState,
-                flows: reduceFlows(flows, flowsActions.setFilter("~u foo")),
-            },
-            store = mockStore(state);
+        const flows = reduceFlows(undefined, flowsActions.select("123"));
+        const state = {
+            ...initialState,
+            flows: reduceFlows(flows, flowsActions.setFilter("~u foo")),
+        };
+        const store = mockStore(state);
         updateUrlFromStore(store);
         expect(history.replaceState).toBeCalledWith(
             undefined,

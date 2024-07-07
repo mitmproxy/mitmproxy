@@ -259,8 +259,8 @@ function sortedUpdate<S extends Item>(
 }
 
 function sortedIndex(list, item, sort) {
-    let low = 0;
-    let high = list.length;
+    let low = 0,
+        high = list.length;
 
     while (low < high) {
         const middle = (low + high) >>> 1;

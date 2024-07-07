@@ -23,8 +23,8 @@ describe("MessageUtils", () => {
     });
 
     it("should be possible to match header", () => {
-        const h1 = ["foo", "bar"],
-            msg = { headers: [h1] };
+        const h1 = ["foo", "bar"];
+        const msg = { headers: [h1] };
         expect(utils.MessageUtils.match_header(msg, /foo/i)).toEqual(h1);
         expect(utils.MessageUtils.match_header(msg, /123/i)).toBeFalsy();
     });

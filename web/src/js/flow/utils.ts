@@ -105,10 +105,10 @@ export const parseUrl = function (url): ParsedUrl | undefined {
         return undefined;
     }
 
-    const scheme = parts[1],
-        host = parts[2],
-        optionalPort = parseInt(parts[3]),
-        path = parts[4];
+    const scheme = parts[1];
+    const host = parts[2];
+    const optionalPort = parseInt(parts[3]);
+    const path = parts[4];
     const port = scheme ? optionalPort || defaultPorts[scheme] : optionalPort;
     const ret: ParsedUrl = {};
     if (scheme) {
@@ -292,8 +292,8 @@ export const sortFunctions = {
     status: statusCode,
     size: getTotalSize,
     time: (flow: Flow) => {
-        const start = startTime(flow),
-            end = endTime(flow);
+        const start = startTime(flow);
+        const end = endTime(flow);
         return start && end && end - start;
     },
     timestamp: startTime,

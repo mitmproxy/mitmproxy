@@ -5,8 +5,8 @@ import Regular from "../../../components/Modes/Regular";
 import * as backendState from "../../../ducks/backendState";
 
 test("RegularSpec", async () => {
-    const store = TStore(),
-        { asFragment } = render(<Regular />, { store });
+    const store = TStore();
+    const { asFragment } = render(<Regular />, { store });
 
     expect(asFragment()).toMatchSnapshot();
 

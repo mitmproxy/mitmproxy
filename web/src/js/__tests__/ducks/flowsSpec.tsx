@@ -189,8 +189,8 @@ describe("flows actions", () => {
     });
 
     it("should handle uploadContent action", () => {
-        const body = new FormData(),
-            file = new window.Blob(["foo"], { type: "plain/text" });
+        const body = new FormData();
+        const file = new window.Blob(["foo"], { type: "plain/text" });
         body.append("file", file);
         store.dispatch(flowActions.uploadContent(tflow, "foo", "foo"));
         // window.Blob's lastModified is always the current time,
@@ -221,8 +221,8 @@ describe("flows actions", () => {
 });
 
 test("makeSort", () => {
-    const a = TFlow(),
-        b = TFlow();
+    const a = TFlow();
+    const b = TFlow();
     a.request.scheme = "https";
     a.request.method = "POST";
     a.request.path = "/foo";
