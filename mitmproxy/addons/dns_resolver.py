@@ -2,6 +2,7 @@ import ipaddress
 import socket
 from collections.abc import Iterable
 from collections.abc import Sequence
+from functools import cached_property
 
 import mitmproxy_rs
 
@@ -21,7 +22,31 @@ class ResolveError(Exception):
 
 
 class DnsResolver:
-    resolver: mitmproxy_rs.DnsResolver
+    def load(self, loader):
+        loader.add_option(
+            "use_hosts_file",
+            bool,
+            True,
+            "Use the hosts file for DNS lookups in regular DNS mode/wireguard mode.",
+        )
+
+        loader.add_option(
+            "name_servers",
+            Sequence[str],
+            [],
+            "Name servers to use for lookups. Default: operating system's name servers",
+        )
+
+    def configure(self, updated):
+        if "use_hosts_file" in updated or "name_servers" in updated:
+            del self.resolver
+
+    @cached_property
+    def resolver(self) -> mitmproxy_rs.DnsResolver:
+        return mitmproxy_rs.DnsResolver(
+            name_servers=ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers(),
+            use_hosts_file=ctx.options.use_hosts_file,
+        )
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         assert flow.request
@@ -93,25 +118,3 @@ class DnsResolver:
             ),
             addrinfos,
         )
-
-    def load(self, loader):
-        loader.add_option(
-            "use_hosts_file",
-            bool,
-            True,
-            "Use the hosts file for DNS lookups in regular DNS mode/wireguard mode.",
-        )
-
-        loader.add_option(
-            "name_servers",
-            Sequence[str],
-            [],
-            "Name servers to use for lookups. Default: operating system's name servers",
-        )
-
-    def configure(self, updated):
-        if "use_hosts_file" in updated or "name_servers" in updated:
-            self.resolver = mitmproxy_rs.DnsResolver(
-                name_servers=ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers(),
-                use_hosts_file=ctx.options.use_hosts_file,
-            )
