@@ -1,7 +1,10 @@
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "../tutils";
-import { includeModeState, updateMode } from "../../../ducks/modes/utils";
-import { parseMode } from "../../../ducks/modes/utils";
+import {
+    includeModeState,
+    parseMode,
+    updateMode,
+} from "../../../ducks/modes/utils";
 
 enableFetchMocks();
 

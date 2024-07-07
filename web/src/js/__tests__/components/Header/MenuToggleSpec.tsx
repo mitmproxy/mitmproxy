@@ -5,11 +5,7 @@ import {
     MenuToggle,
     OptionsToggle,
 } from "../../../components/Header/MenuToggle";
-import { Provider } from "react-redux";
-import { TStore } from "../../ducks/tutils";
-import * as optionsEditorActions from "../../../ducks/ui/optionsEditor";
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
-import { fetchApi, runCommand } from "../../../utils";
 
 import { enableFetchMocks } from "jest-fetch-mock";
 

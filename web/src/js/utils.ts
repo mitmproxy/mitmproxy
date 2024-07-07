@@ -1,6 +1,5 @@
-import {isEqual} from "lodash";
+import { isEqual } from "lodash";
 import * as React from "react";
-
 
 window.React = React;
 
@@ -54,7 +53,11 @@ export function formatAddress(address: [string, number]): string {
 const end = String.fromCharCode(0xffff);
 
 export function reverseString(s) {
-    return String.fromCharCode(...s.split("").map(c => 0xffff - c.charCodeAt(0))) + end;
+    return (
+        String.fromCharCode(
+            ...s.split("").map((c) => 0xffff - c.charCodeAt(0)),
+        ) + end
+    );
 }
 
 function getCookie(name) {
@@ -102,7 +105,10 @@ fetchApi.post = (url: string, json: any, options: RequestInit = {}) =>
         ...options,
     });
 
-export async function runCommand(command: string, ...args: string[]): Promise<any> {
+export async function runCommand(
+    command: string,
+    ...args: string[]
+): Promise<any> {
     const response = await fetchApi(`/commands/${command}`, {
         method: "POST",
         headers: {

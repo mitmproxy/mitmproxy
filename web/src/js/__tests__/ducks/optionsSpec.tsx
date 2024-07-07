@@ -1,5 +1,4 @@
 import reduceOptions, * as optionsActions from "../../ducks/options";
-import * as OptionsEditorActions from "../../ducks/ui/optionsEditor";
 import { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "./tutils";
 import { waitFor } from "@testing-library/dom";

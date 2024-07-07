@@ -1,5 +1,4 @@
 import { enableFetchMocks } from "jest-fetch-mock";
-import { TStore } from "../ducks/tutils";
 import WebSocketBackend from "../../backends/websocket";
 import { waitFor } from "../test-utils";
 import * as connectionActions from "../../ducks/connection";

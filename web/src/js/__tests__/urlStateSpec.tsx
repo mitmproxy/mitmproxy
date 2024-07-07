@@ -1,11 +1,12 @@
-import initialize from "../urlState";
-import { updateStoreFromUrl, updateUrlFromStore } from "../urlState";
+import initialize, {
+    updateStoreFromUrl,
+    updateUrlFromStore,
+} from "../urlState";
 
-import reduceFlows from "../ducks/flows";
+import reduceFlows, * as flowsActions from "../ducks/flows";
 import reduceUI from "../ducks/ui/index";
 import reduceEventLog from "../ducks/eventLog";
 import reduceCommandBar from "../ducks/commandBar";
-import * as flowsActions from "../ducks/flows";
 
 import configureStore from "redux-mock-store";
 

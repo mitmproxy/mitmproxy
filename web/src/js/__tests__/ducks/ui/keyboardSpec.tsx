@@ -1,6 +1,5 @@
-import reduceFlows, * as flowsActions from "../../../ducks/flows";
+import * as flowsActions from "../../../ducks/flows";
 import { onKeyDown } from "../../../ducks/ui/keyboard";
-import * as UIActions from "../../../ducks/ui/flow";
 import * as modalActions from "../../../ducks/ui/modal";
 import { fetchApi, runCommand } from "../../../utils";
 import { TStore } from "../tutils";

@@ -3,7 +3,7 @@ import FileChooser from "../common/FileChooser";
 import Dropdown, { Divider, MenuItem } from "../common/Dropdown";
 import * as flowsActions from "../../ducks/flows";
 import HideInStatic from "../common/HideInStatic";
-import { useAppSelector, useAppDispatch } from "../../ducks";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 
 export default React.memo(function FileMenu() {
     const dispatch = useAppDispatch(),

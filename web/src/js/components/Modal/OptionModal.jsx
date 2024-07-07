@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import * as modalAction from "../../ducks/ui/modal";
 import * as optionAction from "../../ducks/options";
 import Option from "./Option";
-import { isEmpty, compact } from "lodash";
+import { compact, isEmpty } from "lodash";
 
 function PureOptionHelp({ help }) {
     return <div className="help-block small">{help}</div>;

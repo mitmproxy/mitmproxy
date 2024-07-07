@@ -1,8 +1,8 @@
 import regularReducer, {
-    toggleRegular,
     getMode,
     initialState,
     setPort,
+    toggleRegular,
 } from "./../../../ducks/modes/regular";
 import { ModesState } from "../../../ducks/modes";
 import * as backendState from "../../../ducks/backendState";

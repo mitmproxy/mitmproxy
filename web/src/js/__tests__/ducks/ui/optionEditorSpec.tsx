@@ -1,6 +1,5 @@
 import reduceOptionsEditor, * as optionsEditorActions from "../../../ducks/ui/optionsEditor";
 import { HIDE_MODAL } from "../../../ducks/ui/modal";
-import { OptionsState } from "../../../ducks/_options_gen";
 
 describe("optionsEditor reducer", () => {
     it("should return initial state", () => {

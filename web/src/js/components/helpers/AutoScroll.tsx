@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom";
 
 const symShouldStick = Symbol("shouldStick") as any;
