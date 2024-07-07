@@ -45,7 +45,8 @@ class DnsResolver:
     @cached_property
     def resolver(self) -> mitmproxy_rs.DnsResolver:
         return mitmproxy_rs.DnsResolver(
-            name_servers=ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers(),
+            name_servers=ctx.options.name_servers
+            or mitmproxy_rs.get_system_dns_servers(),
             use_hosts_file=ctx.options.use_hosts_file,
         )
 
