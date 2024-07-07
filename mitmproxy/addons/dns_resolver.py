@@ -12,8 +12,6 @@ from mitmproxy.proxy import mode_specs
 IP4_PTR_SUFFIX = ".in-addr.arpa"
 IP6_PTR_SUFFIX = ".ip6.arpa"
 
-SYSTEM_DNS_SERVERS = mitmproxy_rs.get_system_dns_servers()
-
 
 class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
@@ -111,14 +109,9 @@ class DnsResolver:
             "Name servers to use for lookups. Default: operating system's name servers",
         )
 
-        self.resolver = mitmproxy_rs.DnsResolver(
-            name_servers=SYSTEM_DNS_SERVERS,
-            use_hosts_file=ctx.options.use_hosts_file,
-        )
-
     def configure(self, updated):
         if "use_hosts_file" in updated or "name_servers" in updated:
             self.resolver = mitmproxy_rs.DnsResolver(
-                name_servers=ctx.options.name_servers or SYSTEM_DNS_SERVERS,
+                name_servers=ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers(),
                 use_hosts_file=ctx.options.use_hosts_file,
             )
