@@ -10,6 +10,7 @@ export const UPDATE = "FLOWS_UPDATE";
 export const REMOVE = "FLOWS_REMOVE";
 export const RECEIVE = "FLOWS_RECEIVE";
 export const SELECT = "FLOWS_SELECT";
+export const MULTI_SELECT = "FLOWS_MULTI_SELECT";
 export const SET_FILTER = "FLOWS_SET_FILTER";
 export const SET_SORT = "FLOWS_SET_SORT";
 export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
@@ -112,6 +113,11 @@ export default function reducer(
                 selected: action.flowIds,
             };
 
+        case MULTI_SELECT:
+            return {
+                ...state,
+                selected: [...state.selected, ...action.flowIds],
+            };
         default:
             return state;
     }
@@ -197,6 +203,15 @@ export function remove(flow: Flow) {
     return (dispatch) => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
 }
 
+export function removeMultiple(flowIds: string[]) {
+    const promises: Promise<Response>[] = [];
+    flowIds.forEach((id) =>
+        promises.push(fetchApi(`/flows/${id}`, { method: "DELETE" }))
+    );
+    return (dispatch) => Promise.all(promises);
+    // return (dispatch) => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
+}
+
 export function duplicate(flow: Flow) {
     return (dispatch) =>
         fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
@@ -240,6 +255,13 @@ export function upload(file) {
 export function select(id?: string) {
     return {
         type: SELECT,
+        flowIds: id ? [id] : [],
+    };
+}
+
+export function multiSelect(id?: string) {
+    return {
+        type: MULTI_SELECT,
         flowIds: id ? [id] : [],
     };
 }
