@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pprint
 import textwrap
+import typing
 from collections.abc import Sequence
 from typing import Optional
 
@@ -207,7 +208,7 @@ class OptionsList(urwid.ListBox):
                             self.master.options.setter(foc.opt.name),
                         )
                     )
-                elif foc.opt.typespec == Sequence[str]:
+                elif foc.opt.typespec in (Sequence[str], typing.Sequence[str]):
                     self.master.overlay(
                         overlay.OptionsOverlay(
                             self.master,

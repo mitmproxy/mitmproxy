@@ -21,6 +21,7 @@
   ([#6954](https://github.com/mitmproxy/mitmproxy/pull/6954), @errorxyz)
 * Add first MVP new Capture Tab in mitmweb
   ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
+* Allow `typing.Sequence[str]` to be an editable option
 
 ## 12 June 2024: mitmproxy 10.3.1
 
