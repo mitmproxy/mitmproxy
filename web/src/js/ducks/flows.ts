@@ -41,7 +41,7 @@ export default function reducer(
         case ADD:
         case UPDATE:
         case REMOVE:
-        case RECEIVE:
+        case RECEIVE: {
             const storeAction = store[action.cmd](
                 action.data,
                 makeFilter(state.filter),
@@ -79,7 +79,7 @@ export default function reducer(
                 selected,
                 ...store.reduce(state, storeAction),
             };
-
+        }
         case SET_FILTER:
             return {
                 ...state,

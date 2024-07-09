@@ -40,7 +40,7 @@ export default function reduce(
                 visible: !state.visible,
             };
 
-        case TOGGLE_FILTER:
+        case TOGGLE_FILTER: {
             const filters = {
                 ...state.filters,
                 [action.filter]: !state.filters[action.filter],
@@ -53,7 +53,7 @@ export default function reduce(
                     store.setFilter<EventLogItem>((log) => filters[log.level]),
                 ),
             };
-
+        }
         case ADD:
         case RECEIVE:
             return {

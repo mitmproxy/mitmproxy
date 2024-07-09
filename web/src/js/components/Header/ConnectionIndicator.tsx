@@ -33,8 +33,9 @@ export default React.memo(function ConnectionIndicator() {
             return (
                 <span className="connection-indicator offline">offline</span>
             );
-        default:
+        default: {
             const _exhaustiveCheck: never = connState;
             throw "unknown connection state";
+        }
     }
 });

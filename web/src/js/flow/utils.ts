@@ -169,7 +169,7 @@ export function endTime(flow: Flow): number | undefined {
 
 export const getTotalSize = (flow: Flow): number => {
     switch (flow.type) {
-        case "http":
+        case "http": {
             let total = flow.request.contentLength || 0;
             if (flow.response) {
                 total += flow.response.contentLength || 0;
@@ -178,6 +178,7 @@ export const getTotalSize = (flow: Flow): number => {
                 total += flow.websocket.messages_meta.contentLength || 0;
             }
             return total;
+        }
         case "tcp":
         case "udp":
             return flow.messages_meta.contentLength || 0;

@@ -11,22 +11,22 @@ export { Option, defaultState };
 
 export default function reducer(state = defaultState, action): OptionsState {
     switch (action.type) {
-        case RECEIVE:
+        case RECEIVE: {
             const s = <OptionsState>{};
             // @ts-expect-error untyped action
             for (const [name, { value }] of Object.entries(action.data)) {
                 s[name] = value;
             }
             return s;
-
-        case UPDATE:
+        }
+        case UPDATE: {
             const s2 = { ...state };
             // @ts-expect-error untyped action
             for (const [name, { value }] of Object.entries(action.data)) {
                 s2[name] = value;
             }
             return s2;
-
+        }
         default:
             return state;
     }

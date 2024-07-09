@@ -91,7 +91,7 @@ export function reduce<S extends Item>(
             }
             break;
 
-        case UPDATE:
+        case UPDATE: {
             byId = { ...byId, [action.item.id]: action.item };
             list = [...list];
             list[listIndex[action.item.id]] = action.item;
@@ -118,7 +118,7 @@ export function reduce<S extends Item>(
                 ));
             }
             break;
-
+        }
         case REMOVE:
             if (!(action.id in byId)) {
                 break;

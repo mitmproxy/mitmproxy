@@ -21,7 +21,6 @@ export default [
                     varsIgnorePattern: "^_",
                 },
             ],
-            "no-case-declarations": "off",
             "one-var": ["error", { const: "never", let: "consecutive" }],
         },
         settings: {
