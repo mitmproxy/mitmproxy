@@ -2,7 +2,7 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleReverse } from "../../ducks/modes/reverse";
+import { setPort, setProtocol, toggleReverse } from "../../ducks/modes/reverse";
 import ValueEditor from "../editors/ValueEditor";
 
 export default function Reverse() {
@@ -24,18 +24,6 @@ export default function Reverse() {
         "dtls",
     ];
 
-    const [currentProtocol, setCurrentProtocol] = React.useState("");
-
-    React.useEffect(() => {
-        setCurrentProtocol("");
-        protocols.map((prot) => {
-            if (prot === protocol) {
-                setCurrentProtocol(protocol);
-                return;
-            }
-        });
-    }, [protocol]);
-
     let inner = (
         <span>
             &nbsp;<b>{protocol === "" ? "Select protocol" : protocol} </b>
@@ -43,14 +31,13 @@ export default function Reverse() {
         </span>
     );
 
-    const handleProtocolChange = (protocolName: string) => {
-        setCurrentProtocol(protocolName);
-        //dispatch(addProtocols(protocolName));
+    const handleProtocolChange = (protocol: string) => {
+        dispatch(setProtocol(protocol));
     };
 
     const handlePortChange = (port: string) => {
         // FIXME: We should eventually cast to Number and validate.
-        //dispatch(setPort(port as unknown as number));
+        dispatch(setPort(port as unknown as number));
     };
 
     return (
@@ -82,7 +69,15 @@ export default function Reverse() {
                         </MenuItem>
                     ))}
                 </Dropdown>{" "}
-                traffic from *.8080 to example.com
+                traffic from{" "}
+                <ValueEditor
+                    className="mode-reverse-input"
+                    content={listen_port?.toString() || ""}
+                    onEditDone={(port) => handlePortChange(port)}
+                    placeholder="port"
+                />
+                {" "}
+                to example.com
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
         </div>
