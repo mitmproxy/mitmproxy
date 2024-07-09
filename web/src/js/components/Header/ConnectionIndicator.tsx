@@ -2,7 +2,7 @@ import * as React from "react";
 import { ConnectionState } from "../../ducks/connection";
 import { useAppSelector } from "../../ducks";
 
-export default React.memo(function ConnectionIndicator() {
+export default React.memo(function ConnectionIndicator(): React.ReactElement {
     const connState = useAppSelector((state) => state.connection.state);
     const message = useAppSelector((state) => state.connection.message);
 
@@ -33,9 +33,5 @@ export default React.memo(function ConnectionIndicator() {
             return (
                 <span className="connection-indicator offline">offline</span>
             );
-        default: {
-            const _exhaustiveCheck: never = connState;
-            throw "unknown connection state";
-        }
     }
 });
