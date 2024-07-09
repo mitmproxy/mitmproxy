@@ -45,8 +45,8 @@ describe.each([
 
     const splitter = TestUtils.renderIntoDocument(
         <Splitter axis={axisLower} />,
-    );
-    const dom = splitter.node.current;
+    ) as unknown as Splitter;
+    const dom = splitter.node.current!;
     const previousElementSibling = document.createElement("div");
     const nextElementSibling = document.createElement("div");
 
@@ -61,14 +61,14 @@ describe.each([
         previousElementSibling: { value: previousElementSibling },
         nextElementSibling: { value: nextElementSibling },
     });
-    dom.firstElementChild.setPointerCapture = jest.fn();
+    dom.firstElementChild!.setPointerCapture = jest.fn();
 
     it("should handle pointerdown", () => {
         const e = {
             pageX: 13,
             pageY: 22,
             pointerId: -4618,
-            target: dom.firstElementChild,
+            target: dom.firstElementChild!,
         };
         expect(splitter.state.dragPointer).toEqual(0.1);
         splitter.onPointerDown(e);

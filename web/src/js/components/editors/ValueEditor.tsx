@@ -31,7 +31,6 @@ export default class ValueEditor extends Component<ValueEditorProps> {
                 ref={this.input}
                 tabIndex={0}
                 className={className}
-                // @ts-expect-error spans can have placeholders
                 placeholder={this.props.placeholder}
                 onFocus={this.onFocus}
                 onBlur={this.onBlur}

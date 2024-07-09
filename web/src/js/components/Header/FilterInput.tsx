@@ -23,7 +23,7 @@ export default class FilterInput extends Component<
     FilterInputProps,
     FilterInputState
 > {
-    private inputRef = React.createRef<HTMLInputElement>();
+    inputRef = React.createRef<HTMLInputElement>();
 
     constructor(props, context) {
         super(props, context);
