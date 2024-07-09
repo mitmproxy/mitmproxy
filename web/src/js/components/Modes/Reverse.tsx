@@ -89,14 +89,14 @@ export default function Reverse() {
                     onEditDone={(config) =>
                         handleListenHostAndPortChange(config)
                     }
-                    placeholder="listen_host:listen_port"
+                    placeholder="*:8080"
                 />{" "}
                 to{" "}
                 <ValueEditor
                     className="mode-reverse-input"
                     content={host?.toString() || ""}
                     onEditDone={(host) => handleHostChange(host)}
-                    placeholder="host"
+                    placeholder="example.com"
                 />
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
