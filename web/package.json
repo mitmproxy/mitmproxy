@@ -25,10 +25,10 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.6.0",
-        "@testing-library/dom": "^8.1.0",
-        "@testing-library/jest-dom": "^5.14.1",
+        "@testing-library/dom": "^10.3.1",
+        "@testing-library/jest-dom": "^6.4.6",
         "@testing-library/react": "^12.0.0",
-        "@testing-library/user-event": "^13.2.1",
+        "@testing-library/user-event": "^14.5.2",
         "@types/jest": "^29.5.12",
         "@types/redux-mock-store": "^1.0.3",
         "esbuild": "^0.12.29",

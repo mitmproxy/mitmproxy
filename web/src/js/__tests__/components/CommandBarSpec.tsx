@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen, userEvent, waitFor } from "../test-utils";
+import { act, render, screen, userEvent, waitFor } from "../test-utils";
 import CommandBar from "../../components/CommandBar";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
@@ -70,29 +70,31 @@ test("CommandBar", async () => {
 
     const input = screen.getByPlaceholderText("Enter command");
 
-    userEvent.type(input, "x");
+    await userEvent.type(input, "x");
     expect(screen.getByText("[]")).toBeInTheDocument();
-    userEvent.type(input, "{backspace}");
+    await userEvent.type(input, "{backspace}");
 
-    userEvent.type(input, "fl");
-    userEvent.tab();
+    await userEvent.type(input, "fl");
+    await userEvent.tab();
     expect(input).toHaveValue("flow.decode");
-    userEvent.tab();
+    await userEvent.tab();
     expect(input).toHaveValue("flow.encode");
 
     fetchMock.mockOnce(JSON.stringify({ value: null }));
-    userEvent.type(input, "{enter}");
+    await act(async () => {
+        await userEvent.type(input, "{enter}");
+    })
     await waitFor(() => screen.getByText("Command Result"));
 
-    userEvent.type(input, "{arrowdown}");
+    await userEvent.type(input, "{arrowdown}");
     expect(input).toHaveValue("");
 
-    userEvent.type(input, "{arrowup}");
+    await userEvent.type(input, "{arrowup}");
     expect(input).toHaveValue("flow.encode");
-    userEvent.type(input, "{arrowup}");
+    await userEvent.type(input, "{arrowup}");
     expect(input).toHaveValue("foo");
-    userEvent.type(input, "{arrowdown}");
+    await userEvent.type(input, "{arrowdown}");
     expect(input).toHaveValue("flow.encode");
-    userEvent.type(input, "{arrowdown}");
+    await userEvent.type(input, "{arrowdown}");
     expect(input).toHaveValue("");
 });
