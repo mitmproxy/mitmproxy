@@ -24,7 +24,14 @@ export const reducer = {
     backendState,
 };
 
-export const store = configureStore({ reducer });
+export const store = configureStore({
+    reducer,
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            immutableCheck: { warnAfter: 500_000 },
+            serializableCheck: { warnAfter: 500_000 },
+        }),
+});
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;

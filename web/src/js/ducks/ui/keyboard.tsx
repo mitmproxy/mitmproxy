@@ -12,8 +12,8 @@ export function onKeyDown(e: KeyboardEvent) {
     const key = e.key;
     e.preventDefault();
     return (dispatch, getState) => {
-        const flows = getState().flows,
-            flow = flows.byId[getState().flows.selected[0]];
+        const flows = getState().flows;
+        const flow = flows.byId[getState().flows.selected[0]];
 
         switch (key) {
             case "k":
@@ -53,15 +53,15 @@ export function onKeyDown(e: KeyboardEvent) {
 
             case "ArrowLeft": {
                 if (!flow) break;
-                let tabs = tabsForFlow(flow),
-                    currentTab = getState().ui.flow.tab,
-                    nextTab =
-                        tabs[
-                            (Math.max(0, tabs.indexOf(currentTab)) -
-                                1 +
-                                tabs.length) %
-                                tabs.length
-                        ];
+                const tabs = tabsForFlow(flow);
+                const currentTab = getState().ui.flow.tab;
+                const nextTab =
+                    tabs[
+                        (Math.max(0, tabs.indexOf(currentTab)) -
+                            1 +
+                            tabs.length) %
+                            tabs.length
+                    ];
                 dispatch(selectTab(nextTab));
                 break;
             }
@@ -69,13 +69,13 @@ export function onKeyDown(e: KeyboardEvent) {
             case "Tab":
             case "ArrowRight": {
                 if (!flow) break;
-                let tabs = tabsForFlow(flow),
-                    currentTab = getState().ui.flow.tab,
-                    nextTab =
-                        tabs[
-                            (Math.max(0, tabs.indexOf(currentTab)) + 1) %
-                                tabs.length
-                        ];
+                const tabs = tabsForFlow(flow);
+                const currentTab = getState().ui.flow.tab;
+                const nextTab =
+                    tabs[
+                        (Math.max(0, tabs.indexOf(currentTab)) + 1) %
+                            tabs.length
+                    ];
                 dispatch(selectTab(nextTab));
                 break;
             }

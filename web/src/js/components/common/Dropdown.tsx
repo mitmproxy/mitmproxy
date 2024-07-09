@@ -103,7 +103,7 @@ export default React.memo(function Dropdown({
         ...options,
     });
 
-    let setOpen = (b: boolean) => {
+    const setOpen = (b: boolean) => {
         _setOpen(b);
         onOpen && onOpen(b);
     };

@@ -48,7 +48,7 @@ export default class WebsocketBackend {
     }
 
     fetchData(resource) {
-        let queue = [];
+        const queue = [];
         this.activeFetches[resource] = queue;
         fetchApi(`./${resource}`)
             .then((res) => res.json())
@@ -66,15 +66,15 @@ export default class WebsocketBackend {
         if (msg.resource in this.activeFetches) {
             this.activeFetches[msg.resource].push(msg);
         } else {
-            let type = `${msg.resource}_${msg.cmd}`.toUpperCase();
+            const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
             this.store.dispatch({ type, ...msg });
         }
     }
 
     receive(resource, data) {
-        let type = `${resource}_RECEIVE`.toUpperCase();
+        const type = `${resource}_RECEIVE`.toUpperCase();
         this.store.dispatch({ type, cmd: "receive", resource, data });
-        let queue = this.activeFetches[resource];
+        const queue = this.activeFetches[resource];
         delete this.activeFetches[resource];
         queue.forEach((msg) => this.onMessage(msg));
 
@@ -95,8 +95,8 @@ export default class WebsocketBackend {
         console.error("websocket connection closed", closeEvent);
     }
 
-    onError(error) {
+    onError(...args) {
         // FIXME
-        console.error("websocket connection errored", arguments);
+        console.error("websocket connection errored", args);
     }
 }

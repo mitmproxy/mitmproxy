@@ -2,10 +2,11 @@
     "name": "mitmproxy",
     "private": true,
     "scripts": {
-        "test": "tsc --noEmit && jest --coverage",
+        "test": "eslint . && tsc --noEmit && jest --coverage",
         "build": "gulp prod",
         "start": "gulp",
-        "prettier": "prettier --write ."
+        "prettier": "prettier --write .",
+        "eslint": "eslint --fix ."
     },
     "dependencies": {
         "@popperjs/core": "^2.11.8",
@@ -20,18 +21,21 @@
         "react-dom": "^17.0.2",
         "react-popper": "^2.2.5",
         "react-redux": "^8.1.3",
-        "shallowequal": "^1.1.0",
         "stable": "^0.1.8"
     },
     "devDependencies": {
+        "@eslint/js": "^9.6.0",
         "@testing-library/dom": "^8.1.0",
         "@testing-library/jest-dom": "^5.14.1",
         "@testing-library/react": "^12.0.0",
         "@testing-library/user-event": "^13.2.1",
         "@types/jest": "^29.5.12",
         "@types/redux-mock-store": "^1.0.3",
-        "esbuild": "^0.12.21",
+        "esbuild": "^0.12.29",
         "esbuild-jest": "^0.5.0",
+        "eslint": "^8.57.0",
+        "eslint-plugin-react": "^7.34.3",
+        "globals": "^15.8.0",
         "gulp": "^4.0.2",
         "gulp-clean-css": "^4.3.0",
         "gulp-esbuild": "^0.12.0",
@@ -49,6 +53,7 @@
         "react-test-renderer": "^17.0.2",
         "redux-mock-store": "^1.5.4",
         "through2": "^4.0.2",
-        "typescript": "^4.3.5"
+        "typescript": "^4.3.5",
+        "typescript-eslint": "^7.15.0"
     }
 }

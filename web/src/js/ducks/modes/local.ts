@@ -1,9 +1,13 @@
-import { ModeState, includeModeState, updateMode } from "./utils";
+import {
+    getModesOfType,
+    includeModeState,
+    ModeState,
+    updateMode,
+} from "./utils";
 import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import { getModesOfType } from "./utils";
 import type { ModesState } from "../modes";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
@@ -20,7 +24,7 @@ export const initialState: LocalState = {
 };
 
 export const getMode = (modes: ModesState): string[] => {
-    let mode = modes.local.applications
+    const mode = modes.local.applications
         ? `local:${modes.local.applications}`
         : "local";
     return includeModeState(mode, modes.local);

@@ -42,8 +42,8 @@ function getAvailableCommands(
     input: string = "",
 ): string[] {
     if (!commands) return [];
-    let availableCommands: string[] = [];
-    for (const [command, args] of Object.entries(commands)) {
+    const availableCommands: string[] = [];
+    for (const command of Object.keys(commands)) {
         if (command.startsWith(input)) {
             availableCommands.push(command);
         }
@@ -90,7 +90,7 @@ export function CommandHelp({
     description,
     availableCommands,
 }: CommandHelpProps) {
-    let argumentSuggestion: JSX.Element[] = [];
+    const argumentSuggestion: JSX.Element[] = [];
     for (let i: number = 0; i < nextArgs.length; i++) {
         if (i == currentArg) {
             argumentSuggestion.push(<mark key={i}>{nextArgs[i]}</mark>);

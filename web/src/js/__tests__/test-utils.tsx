@@ -10,7 +10,7 @@ export { waitFor, fireEvent, act, screen } from "@testing-library/react";
 export { userEvent };
 
 export function render(ui, { store = TStore(), ...renderOptions } = {}) {
-    function Wrapper({ children }) {
+    function Wrapper({ children }: { children: React.ReactNode }) {
         return <Provider store={store}>{children}</Provider>;
     }
 

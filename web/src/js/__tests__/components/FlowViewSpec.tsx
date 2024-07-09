@@ -4,8 +4,6 @@ import FlowView from "../../components/FlowView";
 import * as flowActions from "../../ducks/flows";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { fireEvent } from "@testing-library/react";
-import MainView from "../../components/MainView";
-import FlowListMenu from "../../components/Header/FlowListMenu";
 
 enableFetchMocks();
 

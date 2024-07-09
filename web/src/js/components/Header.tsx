@@ -23,15 +23,14 @@ export default function Header() {
     const dispatch = useAppDispatch();
     const currentTab = useAppSelector((state) => state.ui.tabs.current);
     const selectedFlows = useAppSelector(
-            (state) =>
-                state.flows.selected.filter((id) => id in state.flows.byId),
-            shallowEqual,
-        ),
-        [wasFlowSelected, setWasFlowSelected] = useState(false);
-    const hasFlows = useAppSelector((state) => state.flows.list.length > 0),
-        isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);
+        (state) => state.flows.selected.filter((id) => id in state.flows.byId),
+        shallowEqual,
+    );
+    const [wasFlowSelected, setWasFlowSelected] = useState(false);
+    const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
+    const isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);
 
-    let entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
+    const entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
     if (selectedFlows.length > 0) {
         entries.push(Tab.Flow);
     }

@@ -1,5 +1,4 @@
 import * as React from "react";
-import ReactDOM from "react-dom";
 import renderer from "react-test-renderer";
 import Splitter from "../../../components/common/Splitter";
 import TestUtils from "react-dom/test-utils";
@@ -11,8 +10,8 @@ describe.each([
 ])("Splitter Component", (axisLower, axisUpper) => {
     if (axisLower === "") {
         it("should render correctly with default (x) axis", () => {
-            const splitter = renderer.create(<Splitter />),
-                tree = splitter.toJSON();
+            const splitter = renderer.create(<Splitter />);
+            const tree = splitter.toJSON();
             expect(tree).toMatchInlineSnapshot(`
 <div
   className="splitter splitter-x"
@@ -29,8 +28,8 @@ describe.each([
     }
 
     it("should render correctly with specified axis", () => {
-        const splitter = renderer.create(<Splitter axis={axisLower} />),
-            tree = splitter.toJSON();
+        const splitter = renderer.create(<Splitter axis={axisLower} />);
+        const tree = splitter.toJSON();
         expect(tree).toMatchInlineSnapshot(`
 <div
   className="splitter splitter-${axisLower}"
@@ -45,17 +44,18 @@ describe.each([
     });
 
     const splitter = TestUtils.renderIntoDocument(
-            <Splitter axis={axisLower} />,
-        ),
-        dom = ReactDOM.findDOMNode(splitter),
-        previousElementSibling = {
-            offsetWidth: 300,
-            offsetHeight: 500,
-            style: { flex: "" },
-        },
-        nextElementSibling = {
-            style: { flex: "" },
-        };
+        <Splitter axis={axisLower} />,
+    );
+    const dom = splitter.node.current;
+    const previousElementSibling = document.createElement("div");
+    const nextElementSibling = document.createElement("div");
+
+    Object.defineProperties(previousElementSibling, {
+        offsetWidth: { value: 300 },
+        offsetHeight: { value: 500 },
+    });
+    previousElementSibling.style.flex = "";
+    nextElementSibling.style.flex = "";
 
     Object.defineProperties(dom, {
         previousElementSibling: { value: previousElementSibling },

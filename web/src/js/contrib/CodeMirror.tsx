@@ -1,10 +1,11 @@
+/* eslint-disable */
 // Adapted from https://www.npmjs.com/package/react-codemirror
 // Copyright (c) 2016 Jed Watson. MIT Licensed.
 
 import * as React from "react";
 import className from "classnames";
 import codemirror from "codemirror";
-import _ from "lodash";
+import { isEqual } from "lodash";
 
 function normalizeLineEndings(str) {
     if (!str) return str;
@@ -94,7 +95,7 @@ export default class CodeMirror extends React.Component<
                 normalizeLineEndings(nextProps.value)
         ) {
             if (this.props.preserveScrollPosition) {
-                var prevScrollPosition = this.codeMirror.getScrollInfo();
+                const prevScrollPosition = this.codeMirror.getScrollInfo();
                 this.codeMirror.setValue(nextProps.value);
                 this.codeMirror.scrollTo(
                     prevScrollPosition.left,
@@ -105,7 +106,7 @@ export default class CodeMirror extends React.Component<
             }
         }
         if (typeof nextProps.options === "object") {
-            for (let optionName in nextProps.options) {
+            for (const optionName in nextProps.options) {
                 if (nextProps.options.hasOwnProperty(optionName)) {
                     this.setOptionIfChanged(
                         optionName,
@@ -118,7 +119,7 @@ export default class CodeMirror extends React.Component<
 
     setOptionIfChanged(optionName, newValue) {
         const oldValue = this.codeMirror.getOption(optionName);
-        if (!_.isEqual(oldValue, newValue)) {
+        if (!isEqual(oldValue, newValue)) {
             this.codeMirror.setOption(optionName, newValue);
         }
     }

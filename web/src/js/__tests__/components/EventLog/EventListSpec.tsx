@@ -1,15 +1,16 @@
 import * as React from "react";
 import EventLogList from "../../../components/EventLog/EventList";
 import TestUtils from "react-dom/test-utils";
+import { EventLogItem, LogLevel } from "../../../ducks/eventLog";
 
 describe("EventList Component", () => {
-    let mockEventList = [
-            { id: 1, level: "info", message: "foo" },
-            { id: 2, level: "error", message: "bar" },
-        ],
-        eventLogList = TestUtils.renderIntoDocument(
-            <EventLogList events={mockEventList} />,
-        );
+    const mockEventList: EventLogItem[] = [
+        { id: "1", level: LogLevel.info, message: "foo" },
+        { id: "2", level: LogLevel.error, message: "bar" },
+    ];
+    const eventLogList = TestUtils.renderIntoDocument(
+        <EventLogList events={mockEventList} />,
+    );
 
     it("should render correctly", () => {
         expect(eventLogList.state).toMatchSnapshot();

@@ -27,8 +27,8 @@ type OptionsToggleProps = {
 };
 
 export function OptionsToggle({ name, children }: OptionsToggleProps) {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.options[name]);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.options[name]);
 
     return (
         <MenuToggle
@@ -41,8 +41,8 @@ export function OptionsToggle({ name, children }: OptionsToggleProps) {
 }
 
 export function EventlogToggle() {
-    const dispatch = useAppDispatch(),
-        visible = useAppSelector((state) => state.eventLog.visible);
+    const dispatch = useAppDispatch();
+    const visible = useAppSelector((state) => state.eventLog.visible);
 
     return (
         <MenuToggle
@@ -55,8 +55,8 @@ export function EventlogToggle() {
 }
 
 export function CommandBarToggle() {
-    const dispatch = useAppDispatch(),
-        visible = useAppSelector((state) => state.commandBar.visible);
+    const dispatch = useAppDispatch();
+    const visible = useAppSelector((state) => state.commandBar.visible);
 
     return (
         <MenuToggle
