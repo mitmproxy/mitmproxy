@@ -3,10 +3,10 @@ import {
     UPDATE as UPDATE_STATE,
 } from "../backendState";
 import {
-    ModeState,
-    includeModeState,
-    updateMode,
     getModesOfType,
+    includeModeState,
+    ModeState,
+    updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";
 

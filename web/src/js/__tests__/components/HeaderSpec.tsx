@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen, fireEvent } from "../test-utils";
+import { fireEvent, render, screen } from "../test-utils";
 import Header from "../../components/Header";
 
 test("Header", async () => {

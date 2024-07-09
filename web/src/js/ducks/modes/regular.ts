@@ -2,8 +2,12 @@ import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import { ModeState, updateMode } from "./utils";
-import { includeModeState, getModesOfType } from "./utils";
+import {
+    getModesOfType,
+    includeModeState,
+    ModeState,
+    updateMode,
+} from "./utils";
 import type { ModesState } from "../modes";
 
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";

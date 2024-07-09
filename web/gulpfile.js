@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const gulp = require("gulp");
 const gulpEsbuild = require("gulp-esbuild");
 const less = require("gulp-less");
@@ -99,7 +100,8 @@ function peg() {
         .pipe(
             replace(
                 "module.exports = ",
-                'import * as flowutils from "../flow/utils"\n' +
+                "/* eslint-disable */\n" +
+                    'import * as flowutils from "../flow/utils"\n' +
                     "export default ",
             ),
         )

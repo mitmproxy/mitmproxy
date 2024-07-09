@@ -28,7 +28,7 @@ export default function CaptureSetup() {
                 {configure_action_text}
             </p>
             <ul className="fa-ul">
-                {servers.map((server, i) => (
+                {servers.map((server) => (
                     <li key={server.full_spec}>
                         <ServerDescription {...server} />
                     </li>

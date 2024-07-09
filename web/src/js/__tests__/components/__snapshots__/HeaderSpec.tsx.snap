@@ -275,6 +275,7 @@ exports[`Header 2`] = `
                 Strip cache headers 
                 <a
                   href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+                  rel="noreferrer"
                   target="_blank"
                 >
                   <i
@@ -417,6 +418,7 @@ exports[`Header 3`] = `
         <li>
           <a
             href="http://mitm.it/"
+            rel="noreferrer"
             target="_blank"
           >
             <i
@@ -499,6 +501,7 @@ exports[`Header 3`] = `
                 Strip cache headers 
                 <a
                   href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+                  rel="noreferrer"
                   target="_blank"
                 >
                   <i

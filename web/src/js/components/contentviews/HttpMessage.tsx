@@ -90,7 +90,9 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             </div>
         );
     } else {
-        let desc = contentViewData ? contentViewData.description : "Loading...";
+        const desc = contentViewData
+            ? contentViewData.description
+            : "Loading...";
         return (
             <div className="contentview" key="view">
                 <div className="controls">

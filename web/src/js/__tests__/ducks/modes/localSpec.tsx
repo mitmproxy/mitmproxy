@@ -1,8 +1,8 @@
 import localReducer, {
-    toggleLocal,
-    setApplications,
-    initialState,
     getMode,
+    initialState,
+    setApplications,
+    toggleLocal,
 } from "../../../ducks/modes/local";
 import { ModesState } from "../../../ducks/modes";
 import { toggleRegular } from "../../../ducks/modes/regular";

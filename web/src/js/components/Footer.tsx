@@ -5,7 +5,7 @@ import { useAppSelector } from "../ducks";
 
 export default function Footer() {
     const version = useAppSelector((state) => state.backendState.version);
-    let {
+    const {
         mode,
         intercept,
         showhost,

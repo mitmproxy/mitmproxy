@@ -10,7 +10,7 @@ export enum Tab {
 const tabsSlice = createSlice({
     name: "ui/tabs",
     initialState: {
-        current: Tab.Capture,
+        current: Tab.FlowList,
         isInitial: true,
     },
     reducers: {

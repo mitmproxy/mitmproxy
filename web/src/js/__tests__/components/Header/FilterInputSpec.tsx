@@ -3,24 +3,23 @@ import renderer from "react-test-renderer";
 import FilterInput from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
 import TestUtil from "react-dom/test-utils";
-import ReactDOM from "react-dom";
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
-        let filterInput = renderer.create(
-                <FilterInput
-                    type="foo"
-                    color="red"
-                    placeholder="bar"
-                    onChange={() => undefined}
-                    value="42"
-                />,
-            ),
-            tree = filterInput.toJSON();
+        const filterInput = renderer.create(
+            <FilterInput
+                type="foo"
+                color="red"
+                placeholder="bar"
+                onChange={() => undefined}
+                value="42"
+            />,
+        );
+        const tree = filterInput.toJSON();
         expect(tree).toMatchSnapshot();
     });
 
-    let filterInput = TestUtil.renderIntoDocument(
+    const filterInput = TestUtil.renderIntoDocument(
         <FilterInput
             type="foo"
             color="red"
@@ -54,7 +53,7 @@ describe("FilterInput Component", () => {
     });
 
     it("should handle change", () => {
-        let mockEvent = { target: { value: "~a bar" } };
+        const mockEvent = { target: { value: "~a bar" } };
         filterInput.onChange(mockEvent);
         expect(filterInput.state.value).toEqual("~a bar");
         expect(filterInput.props.onChange).toBeCalledWith("~a bar");
@@ -80,11 +79,11 @@ describe("FilterInput Component", () => {
         expect(filterInput.state.mousefocus).toBeFalsy();
     });
 
-    let input = ReactDOM.findDOMNode(filterInput.refs.input);
+    const input = filterInput.inputRef.current!;
 
     it("should handle keyDown", () => {
         input.blur = jest.fn();
-        let mockEvent = {
+        const mockEvent = {
             key: "Escape",
             stopPropagation: jest.fn(),
         };

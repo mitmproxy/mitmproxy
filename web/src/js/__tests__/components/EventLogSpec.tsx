@@ -23,7 +23,7 @@ describe("EventLog Component", () => {
     });
 
     it("should handle toggleFilter", () => {
-        let debugToggleButton = tree.children[0].children[1].children[0];
+        const debugToggleButton = tree.children[0].children[1].children[0];
         debugToggleButton.props.onClick();
     });
 
@@ -32,8 +32,8 @@ describe("EventLog Component", () => {
             <EventLog />
         </Provider>,
     );
-    let eventLog = provider.root.findByType(PureEventLog),
-        mockEvent = { preventDefault: jest.fn() };
+    const eventLog = provider.root.findByType(PureEventLog);
+    const mockEvent = { preventDefault: jest.fn() };
 
     it("should handle DragStart", () => {
         eventLog.instance.onDragStart(mockEvent);

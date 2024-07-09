@@ -1,5 +1,4 @@
-import reduceConnection from "../../ducks/connection";
-import * as ConnectionActions from "../../ducks/connection";
+import reduceConnection, * as ConnectionActions from "../../ducks/connection";
 import { ConnectionState } from "../../ducks/connection";
 
 describe("connection reducer", () => {

@@ -1,5 +1,4 @@
 import { enableFetchMocks } from "jest-fetch-mock";
-import { TStore } from "../ducks/tutils";
 import WebSocketBackend from "../../backends/websocket";
 import { waitFor } from "../test-utils";
 import * as connectionActions from "../../ducks/connection";
@@ -8,7 +7,7 @@ import { UnknownAction } from "@reduxjs/toolkit";
 enableFetchMocks();
 
 test("websocket backend", async () => {
-    // @ts-ignore
+    // @ts-expect-error jest mock stuff
     jest.spyOn(global, "WebSocket").mockImplementation(() => ({
         addEventListener: () => 0,
     }));
@@ -18,7 +17,7 @@ test("websocket backend", async () => {
     fetchMock.mockOnceIf("./events", "[]");
     fetchMock.mockOnceIf("./options", "{}");
 
-    let actions: Array<UnknownAction> = [];
+    const actions: Array<UnknownAction> = [];
     const backend = new WebSocketBackend({ dispatch: (e) => actions.push(e) });
 
     backend.onOpen();
