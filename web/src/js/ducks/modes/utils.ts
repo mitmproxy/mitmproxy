@@ -64,9 +64,9 @@ export const parseMode = (spec: string) => {
     }
 
     const [mode, ...rest] = head.split(":"); // trick to split on the first occurence of ":"
-    const data = rest.join(":") 
+    const data = rest.join(":");
     let host = "",
-     port: string | number = "";
+        port: string | number = "";
 
     if (listenAt) {
         if (listenAt.includes(":")) {
