@@ -28,7 +28,7 @@ export default function Reverse() {
         "dtls",
     ];
 
-    let inner = (
+    const inner = (
         <span>
             &nbsp;<b>{protocol === "" ? "Select protocol" : protocol} </b>
             <span className="caret" />

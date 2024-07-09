@@ -6,7 +6,6 @@ import {
     ModeState,
     getModesOfType,
     includeModeState,
-    parseMode,
     updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";

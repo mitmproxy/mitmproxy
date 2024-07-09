@@ -1,7 +1,7 @@
 import { getMode as getRegularModeConfig } from "./regular";
 import { getMode as getLocalModeConfig } from "./local";
 import { getMode as getWireguardModeConfig } from "./wireguard";
-import { getMode as getReverseModeConfig, ReverseState } from "./reverse";
+import { getMode as getReverseModeConfig } from "./reverse";
 import { fetchApi, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
 
@@ -63,10 +63,10 @@ export const parseMode = (spec: string) => {
         listenAt = "";
     }
 
-    let [mode, ...rest] = head.split(":"); // trick to split on the first occurence of ":"
-    let data = rest.join(":") 
-    let host = "";
-    let port: string | number = "";
+    const [mode, ...rest] = head.split(":"); // trick to split on the first occurence of ":"
+    const data = rest.join(":") 
+    let host = "",
+     port: string | number = "";
 
     if (listenAt) {
         if (listenAt.includes(":")) {
