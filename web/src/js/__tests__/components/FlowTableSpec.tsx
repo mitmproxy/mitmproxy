@@ -1,7 +1,7 @@
 import * as React from "react";
 import FlowTable, { PureFlowTable } from "../../components/FlowTable";
 
-import { render } from "../test-utils";
+import { act, render } from "../test-utils";
 import { select } from "../../ducks/flows";
 
 window.addEventListener = jest.fn();
@@ -21,7 +21,7 @@ describe("FlowTable Component", () => {
         );
         expect(asFragment()).toMatchSnapshot();
 
-        store.dispatch(select(store.getState().flows.view[3].id));
+        act(() => store.dispatch(select(store.getState().flows.view[3].id)));
         expect(asFragment()).toMatchSnapshot();
     });
 });

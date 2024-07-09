@@ -133,9 +133,7 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
   />
   <span
     className="marker pull-right"
-  >
-    
-  </span>
+  />
   http://address:22/path
 </td>
 `;
@@ -152,9 +150,7 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
   />
   <span
     className="marker pull-right"
-  >
-    
-  </span>
+  />
   http://address:22/path
 </td>
 `;

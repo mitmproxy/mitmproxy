@@ -14,6 +14,6 @@ describe("EventList Component", () => {
             <EventLogList events={mockEventList} />,
         );
         expect(asFragment()).toMatchSnapshot();
-        unmount();  // no errors
+        unmount(); // no errors
     });
 });

@@ -4,7 +4,7 @@ import { fireEvent, render } from "../../test-utils";
 
 describe("Autoscroll", () => {
     interface TComponentProps {
-        height: number
+        height: number;
     }
 
     class TComponent extends React.Component<TComponentProps> {
@@ -35,21 +35,21 @@ describe("Autoscroll", () => {
         }
 
         render() {
-            return <div ref={this.viewport}/>;
+            return <div ref={this.viewport} />;
         }
     }
 
     it("should update component", () => {
-        const { rerender, container } = render(<TComponent height={120}/>);
+        const { rerender, container } = render(<TComponent height={120} />);
         const viewport = container.firstElementChild!;
 
-        fireEvent.scroll(viewport, { target: { scrollTop: 10}});
-        rerender(<TComponent height={140}/>);
+        fireEvent.scroll(viewport, { target: { scrollTop: 10 } });
+        rerender(<TComponent height={140} />);
 
         expect(viewport.scrollTop).toBe(10);
 
-        fireEvent.scroll(viewport, { target: { scrollTop: 40}});
-        rerender(<TComponent height={160}/>);
+        fireEvent.scroll(viewport, { target: { scrollTop: 40 } });
+        rerender(<TComponent height={160} />);
 
         expect(viewport.scrollTop).toBeGreaterThanOrEqual(60);
     });

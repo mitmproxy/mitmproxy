@@ -1,5 +1,5 @@
 import * as React from "react";
-import { act, render, screen, userEvent, waitFor } from "../test-utils";
+import { render, screen, userEvent, waitFor } from "../test-utils";
 import CommandBar from "../../components/CommandBar";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
@@ -81,9 +81,7 @@ test("CommandBar", async () => {
     expect(input).toHaveValue("flow.encode");
 
     fetchMock.mockOnce(JSON.stringify({ value: null }));
-    await act(async () => {
-        await userEvent.type(input, "{enter}");
-    })
+    await userEvent.type(input, "{enter}");
     await waitFor(() => screen.getByText("Command Result"));
 
     await userEvent.type(input, "{arrowdown}");
