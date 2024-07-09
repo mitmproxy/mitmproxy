@@ -1,6 +1,7 @@
 import { getMode as getRegularModeConfig } from "./regular";
 import { getMode as getLocalModeConfig } from "./local";
 import { getMode as getWireguardModeConfig } from "./wireguard";
+import { getMode as getReverseModeConfig, ReverseState } from "./reverse";
 import { fetchApi, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
 
@@ -24,6 +25,7 @@ export const updateMode = () => {
             ...getRegularModeConfig(modes),
             ...getLocalModeConfig(modes),
             ...getWireguardModeConfig(modes),
+            ...getReverseModeConfig(modes),
             //add new modes here
         ];
         const response = await fetchApi.put("/options", {
@@ -61,7 +63,8 @@ export const parseMode = (spec: string) => {
         listenAt = "";
     }
 
-    let [mode, data] = head.split(":");
+    let [mode, ...rest] = head.split(":"); // trick to split on the first occurence of ":"
+    let data = rest.join(":") 
     let host = "";
     let port: string | number = "";
 

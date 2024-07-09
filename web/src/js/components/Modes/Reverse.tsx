@@ -2,15 +2,19 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setPort, setProtocol, toggleReverse } from "../../ducks/modes/reverse";
+import {
+    setHost,
+    setListenConfig,
+    setProtocol,
+    toggleReverse,
+} from "../../ducks/modes/reverse";
 import ValueEditor from "../editors/ValueEditor";
 
 export default function Reverse() {
     const dispatch = useAppDispatch();
 
-    const { active, protocol, error, listen_port } = useAppSelector(
-        (state) => state.modes.reverse,
-    );
+    const { active, protocol, error, listen_port, listen_host, host } =
+        useAppSelector((state) => state.modes.reverse);
 
     const protocols = [
         "http",
@@ -35,9 +39,14 @@ export default function Reverse() {
         dispatch(setProtocol(protocol));
     };
 
-    const handlePortChange = (port: string) => {
+    const handleListenHostAndPortChange = (config: string) => {
+        const [host, port] = config.split(":");
         // FIXME: We should eventually cast to Number and validate.
-        dispatch(setPort(port as unknown as number));
+        dispatch(setListenConfig(port as unknown as number, host));
+    };
+
+    const handleHostChange = (host: string) => {
+        dispatch(setHost(host));
     };
 
     return (
@@ -72,12 +81,23 @@ export default function Reverse() {
                 traffic from{" "}
                 <ValueEditor
                     className="mode-reverse-input"
-                    content={listen_port?.toString() || ""}
-                    onEditDone={(port) => handlePortChange(port)}
-                    placeholder="port"
+                    content={
+                        listen_host && listen_port
+                            ? `${listen_host?.toString()}:${listen_port?.toString()}`
+                            : ""
+                    }
+                    onEditDone={(config) =>
+                        handleListenHostAndPortChange(config)
+                    }
+                    placeholder="listen_host:listen_port"
+                />{" "}
+                to{" "}
+                <ValueEditor
+                    className="mode-reverse-input"
+                    content={host?.toString() || ""}
+                    onEditDone={(host) => handleHostChange(host)}
+                    placeholder="host"
                 />
-                {" "}
-                to example.com
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
         </div>
