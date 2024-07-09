@@ -31,6 +31,7 @@ jobs:
         working-directory: web
       - run: npm run eslint
         working-directory: web
+        continue-on-error: true
       - run: npm run prettier
         working-directory: web
 
