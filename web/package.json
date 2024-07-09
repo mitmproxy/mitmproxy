@@ -36,7 +36,7 @@
         "eslint": "^8.57.0",
         "eslint-plugin-react": "^7.34.3",
         "globals": "^15.8.0",
-        "gulp": "^4.0.2",
+        "gulp": "^5.0.0",
         "gulp-clean-css": "^4.3.0",
         "gulp-esbuild": "^0.12.0",
         "gulp-less": "^5.0.0",
