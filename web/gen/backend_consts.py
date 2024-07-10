@@ -13,7 +13,6 @@ filename = here / "../src/js/backends/consts.ts"
 
 
 async def make() -> str:
-    
     data = {
         "version": version.VERSION,
     }
