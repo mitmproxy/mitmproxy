@@ -18,14 +18,12 @@ export interface ServerInfo {
 
 export interface BackendState {
     available: boolean;
-    version: string;
     contentViews: string[];
     servers: ServerInfo[];
 }
 
 export const defaultState: BackendState = {
     available: false,
-    version: "",
     contentViews: [],
     servers: [],
 };

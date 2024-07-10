@@ -641,7 +641,6 @@ class State(RequestHandler):
     @staticmethod
     def get_json(master: mitmproxy.tools.web.master.WebMaster):
         return {
-            "version": version.VERSION,
             "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
             "servers": [s.to_json() for s in master.proxyserver.servers],
         }

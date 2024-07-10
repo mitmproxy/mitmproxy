@@ -4,7 +4,8 @@ import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
 
 export default function Footer() {
-    const version = useAppSelector((state) => state.backendState.version);
+    //TODO
+    //const version = useAppSelector((state) => state.backendState.version);
     const {
         mode,
         intercept,
@@ -77,7 +78,7 @@ export default function Footer() {
                     )}
                 </HideInStatic>
                 <span className="label label-default" title="Mitmproxy Version">
-                    mitmproxy {version}
+                    mitmproxy {}
                 </span>
             </div>
         </footer>

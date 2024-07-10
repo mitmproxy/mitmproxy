@@ -41,7 +41,6 @@ export function TBackendState(): Required<BackendState> {
                 "listen_addrs": [],
                 "type": "socks5"
             }
-        ],
-        "version": "1.2.3"
+        ]
     }
 }
