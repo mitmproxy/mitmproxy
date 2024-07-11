@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import textwrap
 from pathlib import Path
 
 from mitmproxy import version

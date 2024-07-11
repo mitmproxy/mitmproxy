@@ -5,7 +5,7 @@ import { useAppSelector } from "../ducks";
 import { BACKEND_CONSTS } from "../backends/consts";
 
 export default function Footer() {
-    const version = BACKEND_CONSTS.version
+    const version = BACKEND_CONSTS.version;
     const {
         mode,
         intercept,

@@ -17,7 +17,6 @@ def test_version(capsys):
 
 
 def test_get_version():
-    
     with mock.patch("subprocess.check_output") as m, mock.patch("subprocess.run") as m2:
         m2.return_value = True
 
