@@ -2,10 +2,10 @@ import * as React from "react";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
+import { BACKEND_CONSTS } from "../backends/consts";
 
 export default function Footer() {
-    //TODO
-    //const version = useAppSelector((state) => state.backendState.version);
+    const version = BACKEND_CONSTS.version;
     const {
         mode,
         intercept,
@@ -78,7 +78,7 @@ export default function Footer() {
                     )}
                 </HideInStatic>
                 <span className="label label-default" title="Mitmproxy Version">
-                    mitmproxy {}
+                    mitmproxy {version}
                 </span>
             </div>
         </footer>
