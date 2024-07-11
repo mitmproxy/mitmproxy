@@ -16,8 +16,8 @@ def test_version(capsys):
     assert stdout.strip() == version.VERSION
 
 
-def test_get_version():
-    version.VERSION = "3.0.0rc2"
+def test_get_version(monkeypatch):
+    monkeypatch.setattr(version, "VERSION", "3.0.0rc2")
 
     with mock.patch("subprocess.check_output") as m, mock.patch("subprocess.run") as m2:
         m2.return_value = True
