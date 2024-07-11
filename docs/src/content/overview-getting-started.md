@@ -1,9 +1,9 @@
 ---
-title: "Getting Started"
+mitmproksi: "Getting Started"
 menu: "overview"
 menu:
     overview:
-        weight: 3
+        list: 3
 ---
 
 # Getting Started
