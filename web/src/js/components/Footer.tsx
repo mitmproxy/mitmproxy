@@ -2,10 +2,9 @@ import * as React from "react";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
-import { BACKEND_CONSTS } from "../backends/consts";
 
 export default function Footer() {
-    const version = BACKEND_CONSTS.version;
+    const version = useAppSelector((state) => state.backendState.version);
     const {
         mode,
         intercept,

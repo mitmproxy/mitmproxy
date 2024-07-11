@@ -25,8 +25,6 @@
   ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
 * Allow `typing.Sequence[str]` to be an editable option
   ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
-* Add a separate file to generate backend consts (e.g version) in the frontend
-  ([#7016](https://github.com/mitmproxy/mitmproxy/pull/7016), @lups2000)
 
 ## 12 June 2024: mitmproxy 10.3.1
 

@@ -16,19 +16,21 @@ def test_version(capsys):
     assert stdout.strip() == version.VERSION
 
 
-def test_get_version():
+def test_get_version(monkeypatch):
+    monkeypatch.setattr(version, "VERSION", "3.0.0rc2")
+
     with mock.patch("subprocess.check_output") as m, mock.patch("subprocess.run") as m2:
         m2.return_value = True
 
         m.return_value = b"tag-0-cafecafe"
-        assert version.get_dev_version() == version.VERSION
+        assert version.get_dev_version() == "3.0.0rc2"
 
         sys.frozen = True
-        assert version.get_dev_version() == f"{version.VERSION} binary"
+        assert version.get_dev_version() == f"3.0.0rc2 binary"
         sys.frozen = False
 
         m.return_value = b"tag-2-cafecafe"
-        assert version.get_dev_version() == f"{version.VERSION} (+2, commit cafecaf)"
+        assert version.get_dev_version() == f"3.0.0rc2 (+2, commit cafecaf)"
 
         m.side_effect = subprocess.CalledProcessError(-1, "git describe --tags --long")
-        assert version.get_dev_version() == version.VERSION
+        assert version.get_dev_version() == "3.0.0rc2"
