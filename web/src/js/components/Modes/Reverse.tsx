@@ -3,7 +3,7 @@ import { ModeToggle } from "./ModeToggle";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import {
-    setHost,
+    setDestination,
     setListenConfig,
     setProtocol,
     toggleReverse,
@@ -13,7 +13,7 @@ import ValueEditor from "../editors/ValueEditor";
 export default function Reverse() {
     const dispatch = useAppDispatch();
 
-    const { active, protocol, error, listen_port, listen_host, host } =
+    const { active, protocol, error, listen_port, listen_host, destination } =
         useAppSelector((state) => state.modes.reverse);
 
     const protocols = [
@@ -45,8 +45,8 @@ export default function Reverse() {
         dispatch(setListenConfig(port as unknown as number, host));
     };
 
-    const handleHostChange = (host: string) => {
-        dispatch(setHost(host));
+    const handleDestinationChange = (host: string) => {
+        dispatch(setDestination(host));
     };
 
     return (
@@ -94,8 +94,8 @@ export default function Reverse() {
                 to{" "}
                 <ValueEditor
                     className="mode-reverse-input"
-                    content={host?.toString() || ""}
-                    onEditDone={(host) => handleHostChange(host)}
+                    content={destination?.toString() || ""}
+                    onEditDone={(destination) => handleDestinationChange(destination)}
                     placeholder="example.com"
                 />
             </ModeToggle>

@@ -12,23 +12,23 @@ import type { ModesState } from "../modes";
 
 export const MODE_REVERSE_TOGGLE = "MODE_REVERSE_TOGGLE";
 export const MODE_REVERSE_SET_LISTEN_CONFIG = "MODE_REVERSE_SET_LISTEN_CONFIG";
-export const MODE_REVERSE_SET_HOST = "MODE_REVERSE_SET_HOST";
+export const MODE_REVERSE_SET_DESTINATION = "MODE_REVERSE_SET_DESTINATION";
 export const MODE_REVERSE_SET_PROTOCOL = "MODE_REVERSE_SET_PROTOCOL";
 export const MODE_REVERSE_ERROR = "MODE_REVERSE_ERROR";
 
 export interface ReverseState extends ModeState {
     protocol?: string;
-    host?: string;
+    destination?: string;
 }
 
 export const initialState: ReverseState = {
     active: false,
     protocol: "",
-    host: "",
+    destination: "",
 };
 
 export const getMode = (modes: ModesState): string[] => {
-    const mode = `reverse:${modes.reverse.protocol}://${modes.reverse.host}`;
+    const mode = `reverse:${modes.reverse.protocol}://${modes.reverse.destination}`;
     return includeModeState(mode, modes.reverse);
 };
 
@@ -63,8 +63,8 @@ export const setListenConfig =
         }
     };
 
-export const setHost = (host: string) => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_SET_HOST, host });
+export const setDestination = (destination: string) => async (dispatch) => {
+    dispatch({ type: MODE_REVERSE_SET_DESTINATION, destination });
     try {
         await dispatch(updateMode());
     } catch (e) {
@@ -86,10 +86,10 @@ const reverseReducer = (state = initialState, action): ReverseState => {
                 listen_host: action.host,
                 error: undefined,
             };
-        case MODE_REVERSE_SET_HOST:
+        case MODE_REVERSE_SET_DESTINATION:
             return {
                 ...state,
-                host: action.host,
+                destination: action.destination,
                 error: undefined,
             };
         case MODE_REVERSE_SET_PROTOCOL:
@@ -107,15 +107,16 @@ const reverseReducer = (state = initialState, action): ReverseState => {
                 )[0];
                 const isActive = currentModeConfig !== undefined;
                 let protocol,
-                    host = "";
+                    destination = "";
                 if (isActive) {
-                    [protocol, host] = currentModeConfig.data.split("://");
+                    [protocol, destination] =
+                        currentModeConfig.data.split("://");
                 }
                 return {
                     ...state,
                     active: isActive,
                     protocol: isActive ? protocol : state.protocol,
-                    host: isActive ? host : state.host,
+                    destination: isActive ? destination : state.destination,
                     listen_host: isActive
                         ? currentModeConfig.listen_host
                         : state.listen_host,
