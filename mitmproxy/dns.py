@@ -247,6 +247,8 @@ class Message(serializable.SerializableDataclass):
         )
 
     def fail(self, response_code: int) -> Message:
+        if response_code == response_codes.NOERROR:
+            raise ValueError("response_code must be an error code.")
         return Message(
             timestamp=time.time(),
             id=self.id,

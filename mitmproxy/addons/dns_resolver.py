@@ -5,19 +5,16 @@ from collections.abc import Sequence
 from functools import cached_property
 
 import mitmproxy_rs
-
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
-
-IP4_PTR_SUFFIX = ".in-addr.arpa"
-IP6_PTR_SUFFIX = ".ip6.arpa"
 
 
 class ResolveError(Exception):
     """Exception thrown by different resolve methods."""
 
     def __init__(self, response_code: int) -> None:
+        assert response_code != dns.response_codes.NOERROR
         self.response_code = response_code
 
 
@@ -83,7 +80,7 @@ class DnsResolver:
             if all_ip_lookups and ctx.options.use_hosts_file:
                 # TODO: We need to handle overly long responses here.
                 flow.response = await self.resolve_message(flow.request)
-            else:
+            elif not flow.server_conn.address:
                 flow.server_conn.address = (self.name_servers[0], 53)
 
     async def resolve_message(self, message: dns.Message) -> dns.Message:
@@ -109,9 +106,7 @@ class DnsResolver:
         except socket.gaierror as e:
             if e.args[0] == "NXDOMAIN":
                 raise ResolveError(dns.response_codes.NXDOMAIN)
-            elif e.args[0] == "NOERROR":
-                raise ResolveError(dns.response_codes.NOERROR)
-            else:
+            else: # pragma: no cover
                 raise ResolveError(dns.response_codes.SERVFAIL)
 
         return map(

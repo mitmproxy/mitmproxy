@@ -266,22 +266,10 @@ async def test_shutdown_err(caplog_async) -> None:
         await _wait_for_connection_closes(ps)
 
 
-class DummyResolver:
-    async def dns_request(self, flow: dns.DNSFlow) -> None:
-        flow.response = await dns_resolver.resolve_message(flow.request, self)
-
-    async def getaddrinfo(self, host: str, port: int, *, family: int, type: int):
-        if family == socket.AF_INET and host == "dns.google":
-            return [(socket.AF_INET, type, None, None, ("8.8.8.8", port))]
-        e = socket.gaierror()
-        e.errno = socket.EAI_NONAME
-        raise e
-
-
 async def test_dns(caplog_async) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
-    with taddons.context(ps, DummyResolver()) as tctx:
+    with taddons.context(ps, dns_resolver.DnsResolver()) as tctx:
         tctx.configure(
             ps,
             mode=["dns@127.0.0.1:0"],
