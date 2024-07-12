@@ -95,7 +95,9 @@ export default function Reverse() {
                 <ValueEditor
                     className="mode-reverse-input"
                     content={destination?.toString() || ""}
-                    onEditDone={(destination) => handleDestinationChange(destination)}
+                    onEditDone={(destination) =>
+                        handleDestinationChange(destination)
+                    }
                     placeholder="example.com"
                 />
             </ModeToggle>
