@@ -191,3 +191,13 @@ export function rpartition(str: string, sep: string): [string, string] {
     const after = str.slice(lastIndex + sep.length);
     return [before, after];
 }
+
+export function lpartitionFirstOcc(str: string, sep: string): [string, string] {
+    const index = str.indexOf(sep);
+    if (index === -1) {
+        return [str, ""];
+    }
+    const before = str.slice(0, index);
+    const after = str.slice(index + sep.length);
+    return [before, after];
+}
