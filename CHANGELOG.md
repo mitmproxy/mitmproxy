@@ -31,6 +31,7 @@
   ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
 * Add Host header to CONNECT requests.
   ([#7021](https://github.com/mitmproxy/mitmproxy/pull/7021), @petsneakers)
+* Support all query types in DNS mode
 
 ## 12 June 2024: mitmproxy 10.3.1
 
