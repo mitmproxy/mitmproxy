@@ -64,16 +64,22 @@ def test_http_proxy(tctx):
 
 
 @pytest.mark.parametrize("strategy", ["lazy", "eager"])
-def test_https_proxy(strategy, tctx):
+@pytest.mark.parametrize("http_connect_send_host_header", [True, False])
+def test_https_proxy(strategy, http_connect_send_host_header, tctx):
     """Test a CONNECT request, followed by a HTTP GET /"""
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     tctx.options.connection_strategy = strategy
+    tctx.options.http_connect_send_host_header = http_connect_send_host_header
 
     (
         playbook
-        >> DataReceived(tctx.client, b"CONNECT example.proxy:80 HTTP/1.1\r\n\r\n")
+        >> DataReceived(tctx.client,
+            b"CONNECT example.proxy:80 HTTP/1.1"
+            + (b"\r\nHost: example.com:80" if http_connect_send_host_header else b"")
+            + b"\r\n\r\n",
+        )
         << http.HttpConnectHook(Placeholder())
         >> reply()
     )
@@ -135,7 +141,7 @@ def test_redirect(strategy, https_server, https_client, tctx, monkeypatch):
             flow.request.url = "http://redirected.site/"
 
     if https_client:
-        p >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
+        p >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\nHost: example.com:80\r\n\r\n")
         if strategy == "eager":
             p << OpenConnection(Placeholder())
             p >> reply(None)
@@ -297,7 +303,7 @@ def test_disconnect_while_intercept(tctx):
 
     assert (
         Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
-        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\nHost: example.com:80\r\n\r\n")
         << http.HttpConnectHook(Placeholder(HTTPFlow))
         >> reply()
         << OpenConnection(server1)
@@ -669,7 +675,7 @@ def test_server_unreachable(tctx, connect):
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     if connect:
         playbook >> DataReceived(
-            tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n"
+            tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n"
         )
     else:
         playbook >> DataReceived(
@@ -762,14 +768,14 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
     else:
         assert (
             playbook
-            >> DataReceived(tctx.client, b"CONNECT %s:443 HTTP/1.1\r\n\r\n" % domain)
+            >> DataReceived(tctx.client, b"CONNECT %s:443 HTTP/1.1\r\nHost: %s:443\r\n\r\n" % (domain, domain))
             << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % domain)
             << layer.NextLayerHook(Placeholder())
             >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
             << OpenConnection(server)
             >> reply(None)
-            << SendData(server, b"CONNECT %s:443 HTTP/1.1\r\n\r\n" % domain)
+            << SendData(server, b"CONNECT %s:443 HTTP/1.1\r\nHost: %s:443\r\n\r\n" % (domain, domain))
             >> DataReceived(server, b"HTTP/1.1 200 Connection established\r\n\r\n")
             << SendData(server, b"GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % domain)
         )
@@ -821,13 +827,13 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
     else:
         if redirect == "change-destination":
             playbook << SendData(
-                server2, b"CONNECT %s.test:443 HTTP/1.1\r\n\r\n" % domain
+                server2, b"CONNECT %s.test:443 HTTP/1.1\r\nHost: %s.test:443\r\n\r\n" % (domain, domain)
             )
             playbook >> DataReceived(
                 server2, b"HTTP/1.1 200 Connection established\r\n\r\n"
             )
         elif redirect == "change-proxy":
-            playbook << SendData(server2, b"CONNECT %s:443 HTTP/1.1\r\n\r\n" % domain)
+            playbook << SendData(server2, b"CONNECT %s:443 HTTP/1.1\r\nHost: %s:443\r\n\r\n" % (domain, domain))
             playbook >> DataReceived(
                 server2, b"HTTP/1.1 200 Connection established\r\n\r\n"
             )
@@ -871,7 +877,7 @@ def test_http_proxy_tcp(tctx, mode, close_first):
     playbook = Playbook(toplayer, hooks=False)
     assert (
         playbook
-        >> DataReceived(tctx.client, b"CONNECT example:443 HTTP/1.1\r\n\r\n")
+        >> DataReceived(tctx.client, b"CONNECT example:443 HTTP/1.1\r\nHost: example:443\r\n\r\n")
         << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
         >> DataReceived(tctx.client, b"this is not http")
         << layer.NextLayerHook(Placeholder())
@@ -883,7 +889,7 @@ def test_http_proxy_tcp(tctx, mode, close_first):
 
     playbook >> reply(None)
     if mode == "upstream":
-        playbook << SendData(server, b"CONNECT example:443 HTTP/1.1\r\n\r\n")
+        playbook << SendData(server, b"CONNECT example:443 HTTP/1.1\r\nHost: example:443\r\n\r\n")
         playbook >> DataReceived(server, b"HTTP/1.1 200 Connection established\r\n\r\n")
 
     assert (
@@ -925,13 +931,13 @@ def test_proxy_chain(tctx, strategy):
     tctx.options.connection_strategy = strategy
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
-    playbook >> DataReceived(tctx.client, b"CONNECT proxy:8080 HTTP/1.1\r\n\r\n")
+    playbook >> DataReceived(tctx.client, b"CONNECT proxy:8080 HTTP/1.1\r\nHost: proxy:8080\r\n\r\n")
     if strategy == "eager":
         playbook << OpenConnection(server)
         playbook >> reply(None)
     playbook << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
 
-    playbook >> DataReceived(tctx.client, b"CONNECT second-proxy:8080 HTTP/1.1\r\n\r\n")
+    playbook >> DataReceived(tctx.client, b"CONNECT second-proxy:8080 HTTP/1.1\r\nHost: proxy:8080\r\n\r\n")
     playbook << layer.NextLayerHook(Placeholder())
     playbook >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
     playbook << SendData(
@@ -1190,7 +1196,7 @@ def test_kill_flow(tctx, when):
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     assert (
         playbook
-        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\nHost: example:80\r\n\r\n")
         << http.HttpConnectHook(connect_flow)
     )
     if when == "http_connect":
@@ -1625,7 +1631,7 @@ def test_connect_more_newlines(tctx):
 
     assert (
         playbook
-        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n\r\n")
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\nHost: example.com:80\r\n\r\n\r\n")
         << http.HttpConnectHook(Placeholder())
         >> reply()
         << OpenConnection(server)
@@ -1651,7 +1657,7 @@ def test_connect_unauthorized(tctx):
 
     assert (
         playbook
-        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
+        >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\nHost: example.com:80\r\n\r\n")
         << http.HttpConnectHook(flow)
         >> reply(side_effect=require_auth)
         << http.HttpConnectErrorHook(flow)
@@ -1665,6 +1671,7 @@ def test_connect_unauthorized(tctx):
         >> DataReceived(
             tctx.client,
             b"CONNECT example.com:80 HTTP/1.1\r\n"
+            b"Host: example.com:80\r\n"
             b"Proxy-Authorization: Basic dGVzdDp0ZXN0\r\n\r\n",
         )
         << http.HttpConnectHook(Placeholder(HTTPFlow))

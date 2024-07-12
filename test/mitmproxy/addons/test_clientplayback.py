@@ -126,7 +126,7 @@ async def test_playback(tdata, mode, concurrency):
 async def test_playback_https_upstream():
     async def handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         conn_req = await reader.readuntil(b"\r\n\r\n")
-        assert conn_req == b"CONNECT address:22 HTTP/1.1\r\n\r\n"
+        assert conn_req == b"CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
         writer.write(b"HTTP/1.1 502 Bad Gateway\r\n\r\n")
         await writer.drain()
         assert not await reader.read()

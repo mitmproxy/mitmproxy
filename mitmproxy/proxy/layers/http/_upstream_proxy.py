@@ -53,6 +53,9 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         authority = (
             self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
         )
+        headers = http.Headers()
+        if self.context.options.http_connect_send_host_header:
+            headers.insert(0, b"Host", authority)
         flow.request = http.Request(
             host=self.conn.address[0],
             port=self.conn.address[1],
@@ -61,7 +64,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             authority=authority,
             path=b"",
             http_version=b"HTTP/1.1",
-            headers=http.Headers(),
+            headers=headers,
             content=b"",
             trailers=None,
             timestamp_start=time.time(),
