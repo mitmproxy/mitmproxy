@@ -265,7 +265,13 @@ async def test_shutdown_err(caplog_async) -> None:
         await _wait_for_connection_closes(ps)
 
 
-async def test_dns(caplog_async) -> None:
+async def lookup_ipv4():
+    return await asyncio.sleep(0, ["8.8.8.8"])
+
+
+async def test_dns(caplog_async, monkeypatch) -> None:
+    monkeypatch.setattr(mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, __: lookup_ipv4())
+
     caplog_async.set_level("INFO")
     ps = Proxyserver()
     with taddons.context(ps, dns_resolver.DnsResolver()) as tctx:

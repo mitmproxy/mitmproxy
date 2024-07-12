@@ -1,4 +1,6 @@
+import asyncio
 import mitmproxy_rs
+import socket
 
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
@@ -35,7 +37,15 @@ async def test_resolver():
         assert dr.resolver != res_old
 
 
-async def test_dns_request():
+async def lookup_ipv4(name: str):
+    if name == "not.exists":
+        raise socket.gaierror("NXDOMAIN")
+    return await asyncio.sleep(0, ["8.8.8.8"])
+
+
+async def test_dns_request(monkeypatch):
+    monkeypatch.setattr(mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name))
+
     resolver = dns_resolver.DnsResolver()
     with taddons.context(resolver) as tctx:
 
