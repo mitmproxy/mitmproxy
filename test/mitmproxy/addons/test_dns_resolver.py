@@ -3,7 +3,6 @@ import mitmproxy_rs
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
 from mitmproxy.addons import proxyserver
-from mitmproxy.connection import Address
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -39,6 +38,7 @@ async def test_resolver():
 async def test_dns_request():
     resolver = dns_resolver.DnsResolver()
     with taddons.context(resolver) as tctx:
+
         async def process_questions(questions):
             req = tutils.tdnsreq(questions=questions)
             flow = tflow.tdnsflow(req=req)
@@ -60,16 +60,20 @@ async def test_dns_request():
         await resolver.dns_request(flow)
         assert flow.server_conn.address[0] == resolver.name_servers[0]
 
-        flow = await process_questions([
-            dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
-            dns.Question("dns.google", dns.types.NS, dns.classes.IN),
-        ])
+        flow = await process_questions(
+            [
+                dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
+                dns.Question("dns.google", dns.types.NS, dns.classes.IN),
+            ]
+        )
         assert flow.server_conn.address[0] == resolver.name_servers[0]
 
-        flow = await process_questions([
-            dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
-            dns.Question("dns.google", dns.types.A, dns.classes.IN),
-        ])
+        flow = await process_questions(
+            [
+                dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
+                dns.Question("dns.google", dns.types.A, dns.classes.IN),
+            ]
+        )
         assert flow.server_conn.address is None
         assert flow.response
 
@@ -77,13 +81,17 @@ async def test_dns_request():
         await resolver.dns_request(flow)
         assert flow.server_conn.address == ("address", 22)
 
-        flow = await process_questions([
-            dns.Question("not.exists", dns.types.A, dns.classes.IN),
-        ])
+        flow = await process_questions(
+            [
+                dns.Question("not.exists", dns.types.A, dns.classes.IN),
+            ]
+        )
         assert flow.response.response_code == dns.response_codes.NXDOMAIN
 
         tctx.options.use_hosts_file = False
-        flow = await process_questions([
-            dns.Question("dns.google", dns.types.A, dns.classes.IN),
-        ])
+        flow = await process_questions(
+            [
+                dns.Question("dns.google", dns.types.A, dns.classes.IN),
+            ]
+        )
         assert flow.server_conn.address[0] == resolver.name_servers[0]

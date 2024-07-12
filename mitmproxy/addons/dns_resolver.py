@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from functools import cached_property
 
 import mitmproxy_rs
+
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy.proxy import mode_specs
@@ -106,7 +107,7 @@ class DnsResolver:
         except socket.gaierror as e:
             if e.args[0] == "NXDOMAIN":
                 raise ResolveError(dns.response_codes.NXDOMAIN)
-            else: # pragma: no cover
+            else:  # pragma: no cover
                 raise ResolveError(dns.response_codes.SERVFAIL)
 
         return map(

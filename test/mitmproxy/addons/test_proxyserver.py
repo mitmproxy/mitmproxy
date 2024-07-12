@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import socket
 import ssl
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
