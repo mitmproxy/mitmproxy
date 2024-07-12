@@ -270,7 +270,9 @@ async def lookup_ipv4():
 
 
 async def test_dns(caplog_async, monkeypatch) -> None:
-    monkeypatch.setattr(mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, __: lookup_ipv4())
+    monkeypatch.setattr(
+        mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, __: lookup_ipv4()
+    )
 
     caplog_async.set_level("INFO")
     ps = Proxyserver()

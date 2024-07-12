@@ -1,6 +1,7 @@
 import asyncio
-import mitmproxy_rs
 import socket
+
+import mitmproxy_rs
 
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
@@ -44,7 +45,9 @@ async def lookup_ipv4(name: str):
 
 
 async def test_dns_request(monkeypatch):
-    monkeypatch.setattr(mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name))
+    monkeypatch.setattr(
+        mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name)
+    )
 
     resolver = dns_resolver.DnsResolver()
     with taddons.context(resolver) as tctx:
