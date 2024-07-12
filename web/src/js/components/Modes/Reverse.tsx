@@ -9,6 +9,7 @@ import {
     toggleReverse,
 } from "../../ducks/modes/reverse";
 import ValueEditor from "../editors/ValueEditor";
+import { BACKEND_CONSTS } from "../../backends/consts";
 
 export default function Reverse() {
     const dispatch = useAppDispatch();
@@ -16,17 +17,7 @@ export default function Reverse() {
     const { active, protocol, error, listen_port, listen_host, destination } =
         useAppSelector((state) => state.modes.reverse);
 
-    const protocols = [
-        "http",
-        "https",
-        "dns",
-        "http3",
-        "quic",
-        "tcp",
-        "tls",
-        "udp",
-        "dtls",
-    ];
+    const protocols = BACKEND_CONSTS.protocols;
 
     const inner = (
         <span>
