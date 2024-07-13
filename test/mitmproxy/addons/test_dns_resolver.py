@@ -1,4 +1,3 @@
-import asyncio
 import socket
 
 import mitmproxy_rs
@@ -12,7 +11,7 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
 
-async def test_simple():
+async def test_ignores_reverse_mode():
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr, proxyserver.Proxyserver()):
         f = tflow.tdnsflow()
@@ -30,18 +29,21 @@ async def test_resolver():
     with taddons.context(dr) as tctx:
         assert dr.name_servers == mitmproxy_rs.get_system_dns_servers()
 
-        tctx.options.name_servers = ["1.1.1.1"]
+        tctx.options.dns_name_servers = ["1.1.1.1"]
         assert dr.name_servers == ["1.1.1.1"]
 
         res_old = dr.resolver
-        tctx.options.use_hosts_file = False
+        tctx.options.dns_use_hosts_file = False
         assert dr.resolver != res_old
+
+        tctx.options.dns_name_servers = ["8.8.8.8"]
+        assert dr.name_servers == ["8.8.8.8"]
 
 
 async def lookup_ipv4(name: str):
     if name == "not.exists":
         raise socket.gaierror("NXDOMAIN")
-    return await asyncio.sleep(0, ["8.8.8.8"])
+    return ["8.8.8.8"]
 
 
 async def test_dns_request(monkeypatch):
@@ -101,7 +103,7 @@ async def test_dns_request(monkeypatch):
         )
         assert flow.response.response_code == dns.response_codes.NXDOMAIN
 
-        tctx.options.use_hosts_file = False
+        tctx.options.dns_use_hosts_file = False
         flow = await process_questions(
             [
                 dns.Question("dns.google", dns.types.A, dns.classes.IN),

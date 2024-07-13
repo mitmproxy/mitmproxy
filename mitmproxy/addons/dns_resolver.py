@@ -22,35 +22,34 @@ class ResolveError(Exception):
 class DnsResolver:
     def load(self, loader):
         loader.add_option(
-            "use_hosts_file",
+            "dns_use_hosts_file",
             bool,
             True,
             "Use the hosts file for DNS lookups in regular DNS mode/wireguard mode.",
         )
 
         loader.add_option(
-            "name_servers",
+            "dns_name_servers",
             Sequence[str],
             [],
             "Name servers to use for lookups. Default: operating system's name servers",
         )
 
     def configure(self, updated):
-        if "use_hosts_file" in updated or "name_servers" in updated:
-            del self.resolver
-            del self.name_servers
+        if "dns_use_hosts_file" in updated or "dns_name_servers" in updated:
+            self.__dict__.pop('resolver', None)
+            self.__dict__.pop('name_servers', None)
 
     @cached_property
     def resolver(self) -> mitmproxy_rs.DnsResolver:
         return mitmproxy_rs.DnsResolver(
-            name_servers=ctx.options.name_servers
-            or mitmproxy_rs.get_system_dns_servers(),
-            use_hosts_file=ctx.options.use_hosts_file,
+            name_servers=self.name_servers,
+            use_hosts_file=ctx.options.dns_use_hosts_file,
         )
 
     @cached_property
     def name_servers(self) -> list[str]:
-        return ctx.options.name_servers or mitmproxy_rs.get_system_dns_servers()
+        return ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         assert flow.request
@@ -78,7 +77,7 @@ class DnsResolver:
             )
             # We use `mitmproxy_rs.DnsResolver` if we need to use the hosts file to lookup hostnames(A/AAAA queries only)
             # For other cases we forward it to the specified name server directly.
-            if all_ip_lookups and ctx.options.use_hosts_file:
+            if all_ip_lookups and ctx.options.dns_use_hosts_file:
                 # TODO: We need to handle overly long responses here.
                 flow.response = await self.resolve_message(flow.request)
             elif not flow.server_conn.address:

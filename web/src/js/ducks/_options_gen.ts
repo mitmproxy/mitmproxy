@@ -21,6 +21,8 @@ export interface OptionsState {
     connection_strategy: string;
     console_focus_follow: boolean;
     content_view_lines_cutoff: number;
+    dns_name_servers: string[];
+    dns_use_hosts_file: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
     http2: boolean;
@@ -39,7 +41,6 @@ export interface OptionsState {
     mode: string[];
     modify_body: string[];
     modify_headers: string[];
-    name_servers: string[];
     normalize_outbound_headers: boolean;
     onboarding: boolean;
     onboarding_host: string;
@@ -83,7 +84,6 @@ export interface OptionsState {
     udp_hosts: string[];
     upstream_auth: string | undefined;
     upstream_cert: boolean;
-    use_hosts_file: boolean;
     validate_inbound_headers: boolean;
     view_filter: string | undefined;
     view_order: string;
@@ -121,6 +121,8 @@ export const defaultState: OptionsState = {
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
+    dns_name_servers: [],
+    dns_use_hosts_file: true,
     export_preserve_original_ip: false,
     hardump: "",
     http2: true,
@@ -139,7 +141,6 @@ export const defaultState: OptionsState = {
     mode: ["regular"],
     modify_body: [],
     modify_headers: [],
-    name_servers: [],
     normalize_outbound_headers: true,
     onboarding: true,
     onboarding_host: "mitm.it",
@@ -183,7 +184,6 @@ export const defaultState: OptionsState = {
     udp_hosts: [],
     upstream_auth: undefined,
     upstream_cert: true,
-    use_hosts_file: true,
     validate_inbound_headers: true,
     view_filter: undefined,
     view_order: "time",
