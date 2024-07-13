@@ -43,15 +43,16 @@ export const toggleReverse = () => async (dispatch) => {
     }
 };
 
-export const setProtocol = (protocol: ReverseProxyProtocols) => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_SET_PROTOCOL, protocol: protocol });
+export const setProtocol =
+    (protocol: ReverseProxyProtocols) => async (dispatch) => {
+        dispatch({ type: MODE_REVERSE_SET_PROTOCOL, protocol: protocol });
 
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
-    }
-};
+        try {
+            await dispatch(updateMode());
+        } catch (e) {
+            dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
+        }
+    };
 
 export const setListenConfig =
     (port: number, host: string) => async (dispatch) => {
