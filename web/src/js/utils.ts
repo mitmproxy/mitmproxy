@@ -192,7 +192,8 @@ export function rpartition(str: string, sep: string): [string, string] {
     return [before, after];
 }
 
-export function lpartitionFirstOcc(str: string, sep: string): [string, string] {
+/** A JS equivalent of Python's https://docs.python.org/3/library/stdtypes.html#str.partition */
+export function partition(str: string, sep: string): [string, string] {
     const index = str.indexOf(sep);
     if (index === -1) {
         return [str, ""];
