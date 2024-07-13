@@ -86,6 +86,7 @@ def test_decompress_from_record_data():
         + b"\x00\x07\x08\x00\x00\x00<"
     )
 
+
 def test_record_data_contains_fake_pointer():
     # \xd2\a2 and \xc2\x00 seem like domain name compression pointers but are actually part of some other data type
     buffer = (

@@ -151,7 +151,9 @@ def decompress_from_record_data(
                 (
                     rr_name,
                     rr_name_len,
-                ) = unpack_from_with_compression(buffer, offset + data_offset, cached_names)
+                ) = unpack_from_with_compression(
+                    buffer, offset + data_offset, cached_names
+                )
                 data[
                     data_offset + decompress_size : data_offset
                     + decompress_size
