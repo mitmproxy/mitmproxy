@@ -9,7 +9,7 @@ import {
     toggleReverse,
 } from "../../ducks/modes/reverse";
 import ValueEditor from "../editors/ValueEditor";
-import { BACKEND_CONSTS } from "../../backends/consts";
+import { ReverseProxyProtocols } from "../../backends/consts";
 
 export default function Reverse() {
     const dispatch = useAppDispatch();
@@ -17,17 +17,17 @@ export default function Reverse() {
     const { active, protocol, error, listen_port, listen_host, destination } =
         useAppSelector((state) => state.modes.reverse);
 
-    const protocols = BACKEND_CONSTS.protocols;
+    const protocols = Object.values(ReverseProxyProtocols);
 
     const inner = (
         <span>
-            &nbsp;<b>{protocol === "" ? "Select protocol" : protocol} </b>
+            &nbsp;<b>{protocol} </b>
             <span className="caret" />
         </span>
     );
 
     const handleProtocolChange = (protocol: string) => {
-        dispatch(setProtocol(protocol));
+        dispatch(setProtocol(protocol as ReverseProxyProtocols));
     };
 
     const handleListenHostAndPortChange = (config: string) => {
@@ -49,9 +49,7 @@ export default function Reverse() {
             <ModeToggle
                 value={active}
                 onChange={() => {
-                    if (protocol !== "") {
-                        dispatch(toggleReverse());
-                    }
+                    dispatch(toggleReverse());
                 }}
             >
                 Forward

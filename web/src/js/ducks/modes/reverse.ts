@@ -9,6 +9,7 @@ import {
     updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";
+import { ReverseProxyProtocols } from "../../backends/consts";
 
 export const MODE_REVERSE_TOGGLE = "MODE_REVERSE_TOGGLE";
 export const MODE_REVERSE_SET_LISTEN_CONFIG = "MODE_REVERSE_SET_LISTEN_CONFIG";
@@ -17,13 +18,13 @@ export const MODE_REVERSE_SET_PROTOCOL = "MODE_REVERSE_SET_PROTOCOL";
 export const MODE_REVERSE_ERROR = "MODE_REVERSE_ERROR";
 
 export interface ReverseState extends ModeState {
-    protocol?: string;
+    protocol?: ReverseProxyProtocols;
     destination?: string;
 }
 
 export const initialState: ReverseState = {
     active: false,
-    protocol: "https",
+    protocol: ReverseProxyProtocols.HTTPS,
     destination: "",
 };
 
@@ -42,7 +43,7 @@ export const toggleReverse = () => async (dispatch) => {
     }
 };
 
-export const setProtocol = (protocol: string) => async (dispatch) => {
+export const setProtocol = (protocol: ReverseProxyProtocols) => async (dispatch) => {
     dispatch({ type: MODE_REVERSE_SET_PROTOCOL, protocol: protocol });
 
     try {
