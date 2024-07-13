@@ -1,46 +1,56 @@
 import * as React from "react";
 import * as autoscroll from "../../../components/helpers/AutoScroll";
-import TestUtils from "react-dom/test-utils";
+import { fireEvent, render } from "../../test-utils";
 
 describe("Autoscroll", () => {
-    class TComponent extends React.Component {
+    interface TComponentProps {
+        height: number;
+    }
+
+    class TComponent extends React.Component<TComponentProps> {
         private viewport = React.createRef<HTMLDivElement>();
 
-        getSnapshotBeforeUpdate() {
+        getSnapshotBeforeUpdate(prevProps) {
+            this.fixupJsDom(prevProps.height);
             return autoscroll.isAtBottom(this.viewport);
         }
 
         componentDidUpdate(prevProps, prevState, snapshot) {
+            this.fixupJsDom(this.props.height);
             if (snapshot) {
                 autoscroll.adjustScrollTop(this.viewport);
             }
         }
 
+        fixupJsDom(scrollHeight: number) {
+            // work around jsdom limitations
+            Object.defineProperty(this.viewport.current!, "clientHeight", {
+                value: 100,
+                writable: true,
+            });
+            Object.defineProperty(this.viewport.current!, "scrollHeight", {
+                value: scrollHeight,
+                writable: true,
+            });
+        }
+
         render() {
-            return <div ref={this.viewport}>foo</div>;
+            return <div ref={this.viewport} />;
         }
     }
 
     it("should update component", () => {
-        const autoScroll = TestUtils.renderIntoDocument(
-            <TComponent></TComponent>,
-        );
-        const viewport = autoScroll.viewport.current;
+        const { rerender, container } = render(<TComponent height={120} />);
+        const viewport = container.firstElementChild!;
 
-        expect(autoScroll.getSnapshotBeforeUpdate()).toBe(false);
+        fireEvent.scroll(viewport, { target: { scrollTop: 10 } });
+        rerender(<TComponent height={140} />);
 
-        viewport.scrollTop = 10;
-        Object.defineProperty(viewport, "scrollHeight", {
-            value: 10,
-            writable: true,
-        });
-        expect(autoScroll.getSnapshotBeforeUpdate()).toBe(true);
+        expect(viewport.scrollTop).toBe(10);
 
-        Object.defineProperty(viewport, "scrollHeight", {
-            value: 42,
-            writable: true,
-        });
-        autoScroll.componentDidUpdate({}, {}, true);
-        expect(viewport.scrollTop).toBe(42);
+        fireEvent.scroll(viewport, { target: { scrollTop: 40 } });
+        rerender(<TComponent height={160} />);
+
+        expect(viewport.scrollTop).toBeGreaterThanOrEqual(60);
     });
 });

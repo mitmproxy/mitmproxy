@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
 import ProxyApp from "./components/ProxyApp";
@@ -24,10 +24,11 @@ window.addEventListener("error", (e: ErrorEvent) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    render(
+    const container = document.getElementById("mitmproxy");
+    const root = createRoot(container!);
+    root.render(
         <Provider store={store}>
             <ProxyApp />
         </Provider>,
-        document.getElementById("mitmproxy"),
     );
 });

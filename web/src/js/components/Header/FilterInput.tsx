@@ -8,9 +8,7 @@ type FilterInputProps = {
     color: any;
     placeholder: string;
     value: string;
-    onChange: (
-        value,
-    ) => { type: string; filter?: string; highlight?: string } | void;
+    onChange: (value) => void;
 };
 
 type FilterInputState = {
@@ -23,7 +21,7 @@ export default class FilterInput extends Component<
     FilterInputProps,
     FilterInputState
 > {
-    private inputRef = React.createRef<HTMLInputElement>();
+    inputRef = React.createRef<HTMLInputElement>();
 
     constructor(props, context) {
         super(props, context);
