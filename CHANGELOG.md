@@ -25,6 +25,8 @@
   ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
 * Allow `typing.Sequence[str]` to be an editable option
   ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
+* Add single reverse mode to new Capture Tab in mitmweb
+  ([#7012](https://github.com/mitmproxy/mitmproxy/pull/7012), @lups2000)
 
 ## 12 June 2024: mitmproxy 10.3.1
 
