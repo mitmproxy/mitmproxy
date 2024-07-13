@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio
-import json
 import typing
 from pathlib import Path
 
@@ -16,8 +15,10 @@ async def make() -> str:
     data = {
         "protocols": typing.get_args(typing.get_type_hints(ReverseMode)["scheme"]),
     }
-    
-    protocols = ",\n    ".join(f'{protocol.upper()} = "{protocol.lower()}"' for protocol in data["protocols"])
+
+    protocols = ",\n    ".join(
+        f'{protocol.upper()} = "{protocol.lower()}"' for protocol in data["protocols"]
+    )
 
     # language=TypeScript
     content = (
