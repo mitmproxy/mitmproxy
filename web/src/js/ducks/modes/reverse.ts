@@ -23,7 +23,7 @@ export interface ReverseState extends ModeState {
 
 export const initialState: ReverseState = {
     active: false,
-    protocol: "",
+    protocol: "https",
     destination: "",
 };
 
