@@ -147,17 +147,23 @@ def decompress_from_record_data(
     decompress_size = 0
     while data_offset < end_data - offset:
         if buffer[offset + data_offset] & _POINTER_INDICATOR == _POINTER_INDICATOR:
-            (
-                rr_name,
-                rr_name_len,
-            ) = unpack_from_with_compression(buffer, offset + data_offset, cached_names)
-            data[
-                data_offset + decompress_size : data_offset
-                + decompress_size
-                + rr_name_len
-            ] = pack(rr_name)
-            decompress_size += len(rr_name)
-            data_offset += rr_name_len
-            continue
+            try:
+                (
+                    rr_name,
+                    rr_name_len,
+                ) = unpack_from_with_compression(
+                    buffer, offset + data_offset, cached_names
+                )
+                data[
+                    data_offset + decompress_size : data_offset
+                    + decompress_size
+                    + rr_name_len
+                ] = pack(rr_name)
+                decompress_size += len(rr_name)
+                data_offset += rr_name_len
+                continue
+            except struct.error:
+                # the byte isn't actually a domain name compression pointer but some other data type
+                pass
         data_offset += 1
     return bytes(data)

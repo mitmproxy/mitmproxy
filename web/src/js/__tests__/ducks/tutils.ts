@@ -141,6 +141,9 @@ export const testState: RootState = {
         wireguard: {
             active: false,
         },
+        reverse: {
+            active: false,
+        },
     },
 };
 

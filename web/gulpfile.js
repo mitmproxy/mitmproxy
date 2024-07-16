@@ -78,7 +78,7 @@ const copy_src = [
 
 function copy() {
     return gulp
-        .src(copy_src, { base: "src/" })
+        .src(copy_src, { base: "src/", encoding: false })
         .pipe(gulp.dest("../mitmproxy/tools/web/static"));
 }
 

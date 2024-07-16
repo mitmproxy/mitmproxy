@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Splitter Component should render correctly (x axis) 1`] = `
+<DocumentFragment>
+  <div />
+  <div
+    class="splitter splitter-x"
+  >
+    <div />
+  </div>
+  <div />
+</DocumentFragment>
+`;
+
+exports[`Splitter Component should render correctly (x axis) 2`] = `
+<DocumentFragment>
+  <div
+    style="flex: 0 0 300px;"
+  />
+  <div
+    class="splitter splitter-x"
+    style=""
+  >
+    <div />
+  </div>
+  <div
+    style="flex: 1 1 auto;"
+  />
+</DocumentFragment>
+`;
+
+exports[`Splitter Component should render correctly (y axis) 1`] = `
+<DocumentFragment>
+  <div />
+  <div
+    class="splitter splitter-y"
+  >
+    <div />
+  </div>
+  <div />
+</DocumentFragment>
+`;
+
+exports[`Splitter Component should render correctly (y axis) 2`] = `
+<DocumentFragment>
+  <div
+    style="flex: 0 0 200px;"
+  />
+  <div
+    class="splitter splitter-y"
+    style=""
+  >
+    <div />
+  </div>
+  <div
+    style="flex: 1 1 auto;"
+  />
+</DocumentFragment>
+`;

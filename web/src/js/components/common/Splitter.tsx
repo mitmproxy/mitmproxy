@@ -25,23 +25,24 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         this.onPointerMove = this.onPointerMove.bind(this);
     }
 
-    onPointerDown(e) {
+    onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
         if (this.state.dragPointer !== 0.1) {
             return;
         }
-        e.target.setPointerCapture(e.pointerId);
+        (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
         this.setState({
             startPos: this.props.axis === "x" ? e.pageX : e.pageY,
             dragPointer: e.pointerId,
         });
     }
 
-    onLostPointerCapture(e) {
+    onLostPointerCapture(e: React.PointerEvent<HTMLDivElement>) {
         if (this.state.dragPointer !== e.pointerId) {
             return;
         }
-        const node = e.target.parentNode;
-        const prev = node.previousElementSibling;
+        const node = this.node.current!;
+        const prev = node.previousElementSibling! as HTMLElement;
+        const next = node.nextElementSibling! as HTMLElement;
 
         node.style.transform = "";
         prev.style.flex = `0 0 ${Math.max(
@@ -50,17 +51,17 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
                 ? prev.offsetWidth + e.pageX
                 : prev.offsetHeight + e.pageY) - this.state.startPos,
         )}px`;
-        node.nextElementSibling.style.flex = "1 1 auto";
+        next.style.flex = "1 1 auto";
 
         this.setState({ applied: true, dragPointer: 0.1 });
         this.onResize();
     }
 
-    onPointerMove(e) {
+    onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
         if (this.state.dragPointer !== e.pointerId) {
             return;
         }
-        e.target.parentNode.style.transform =
+        this.node.current!.style.transform =
             this.props.axis === "x"
                 ? `translateX(${e.pageX - this.state.startPos}px)`
                 : `translateY(${e.pageY - this.state.startPos}px)`;
