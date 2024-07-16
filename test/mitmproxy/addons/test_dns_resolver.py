@@ -43,6 +43,8 @@ async def test_resolver():
 async def lookup_ipv4(name: str):
     if name == "not.exists":
         raise socket.gaierror("NXDOMAIN")
+    elif name == "no.records":
+        raise socket.gaierror("NOERROR")
     return ["8.8.8.8"]
 
 
@@ -102,6 +104,14 @@ async def test_dns_request(monkeypatch):
             ]
         )
         assert flow.response.response_code == dns.response_codes.NXDOMAIN
+
+        flow = await process_questions(
+            [
+                dns.Question("no.records", dns.types.A, dns.classes.IN),
+            ]
+        )
+        assert flow.response.response_code == dns.response_codes.NOERROR
+        assert not flow.response.answers
 
         tctx.options.dns_use_hosts_file = False
         flow = await process_questions(

@@ -104,8 +104,12 @@ class DnsResolver:
             elif question.type == dns.types.AAAA:
                 addrinfos = await self.resolver.lookup_ipv6(question.name)
         except socket.gaierror as e:
+            # We aren't exactly following the RFC here
+            # https://datatracker.ietf.org/doc/html/rfc2308#section-2
             if e.args[0] == "NXDOMAIN":
                 raise ResolveError(dns.response_codes.NXDOMAIN)
+            elif e.args[0] == "NOERROR":
+                addrinfos = []
             else:  # pragma: no cover
                 raise ResolveError(dns.response_codes.SERVFAIL)
 
