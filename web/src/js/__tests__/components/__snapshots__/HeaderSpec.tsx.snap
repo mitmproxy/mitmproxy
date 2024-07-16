@@ -16,7 +16,13 @@ exports[`Header 1`] = `
         class=""
         href="#"
       >
-        Start
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Flow List
       </a>
       <a
         class=""
@@ -200,7 +206,13 @@ exports[`Header 2`] = `
         class=""
         href="#"
       >
-        Start
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Flow List
       </a>
       <a
         class="active"
@@ -263,6 +275,7 @@ exports[`Header 2`] = `
                 Strip cache headers 
                 <a
                   href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+                  rel="noreferrer"
                   target="_blank"
                 >
                   <i
@@ -405,6 +418,7 @@ exports[`Header 3`] = `
         <li>
           <a
             href="http://mitm.it/"
+            rel="noreferrer"
             target="_blank"
           >
             <i
@@ -418,7 +432,13 @@ exports[`Header 3`] = `
         class=""
         href="#"
       >
-        Start
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Flow List
       </a>
       <a
         class="active"
@@ -481,6 +501,7 @@ exports[`Header 3`] = `
                 Strip cache headers 
                 <a
                   href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+                  rel="noreferrer"
                   target="_blank"
                 >
                   <i
@@ -552,6 +573,53 @@ exports[`Header 3`] = `
         </div>
       </div>
     </div>
+  </header>
+</DocumentFragment>
+`;
+
+exports[`Header 4`] = `
+<DocumentFragment>
+  <header>
+    <nav
+      class="nav-tabs nav-tabs-lg"
+    >
+      <a
+        class="pull-left special"
+        href="#"
+      >
+        File
+      </a>
+      <a
+        class="active"
+        href="#"
+      >
+        Capture
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Flow List
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Options
+      </a>
+      <a
+        class=""
+        href="#"
+      >
+        Flow
+      </a>
+      <span
+        class="connection-indicator established"
+      >
+        connected
+      </span>
+    </nav>
+    <div />
   </header>
 </DocumentFragment>
 `;

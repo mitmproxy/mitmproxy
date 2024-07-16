@@ -48,6 +48,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
            
           <a
             href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+            rel="noreferrer"
             target="_blank"
           >
             <i

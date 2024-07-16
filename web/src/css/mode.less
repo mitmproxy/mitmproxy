@@ -1,0 +1,83 @@
+@import (reference) "../../node_modules/bootstrap/less/variables.less";
+@import (reference) "../../node_modules/bootstrap/less/mixins/grid.less";
+@import (reference) "../../node_modules/bootstrap/less/mixins/labels.less";
+@import (reference) "../../node_modules/bootstrap/less/labels.less";
+
+.modes {
+    padding: 1em 2em;
+
+    h3 {
+        margin-top: 30px;
+        margin-bottom: 10px;
+    }
+
+    .modes-container {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .mode-title {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .mode-description {
+        color: #b2b2b2;
+        margin-top: -10px;
+    }
+
+    .mode-entry {
+        text-align: left;
+        display: flex;
+        align-items: center;
+        font-size: 1.5rem;
+        font-weight: normal;
+        margin: 0;
+
+        input[type="checkbox"] {
+            margin: 0 10px;
+            vertical-align: middle;
+            width: 1.8rem;
+            height: 1.8rem;
+        }
+
+        p {
+            margin: 0;
+        }
+    }
+
+    .mode-error {
+        margin-left: 10px;
+        margin-top: 5px;
+    }
+
+    .mode-local-input {
+        border: 1px solid #ccc;
+        margin-left: 10px;
+        border-radius: 4px;
+        min-width: 150px;
+        height: 25px;
+    }
+
+    .mode-regular-input {
+        border: 1px solid #ccc;
+        margin-left: 10px;
+        border-radius: 4px;
+        min-width: 70px;
+        height: 25px;
+    }
+
+    .mode-reverse-input {
+        border: 1px solid #ccc;
+        margin-left: 10px;
+        margin-right: 10px;
+        border-radius: 4px;
+        min-width: 70px;
+        height: 25px;
+    }
+
+    .mode-reverse-dropdown {
+        margin: 0 5px;
+    }
+}

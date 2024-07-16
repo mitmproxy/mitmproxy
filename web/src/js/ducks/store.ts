@@ -10,19 +10,28 @@ import commandBar from "./commandBar";
 
 import backendState from "./backendState";
 import options_meta from "./options_meta";
+import modes from "./modes";
 
 export const reducer = {
     commandBar,
     eventLog,
     flows,
     connection,
+    modes,
     ui,
     options,
     options_meta,
     backendState,
 };
 
-export const store = configureStore({ reducer });
+export const store = configureStore({
+    reducer,
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            immutableCheck: { warnAfter: 500_000 },
+            serializableCheck: { warnAfter: 500_000 },
+        }),
+});
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;

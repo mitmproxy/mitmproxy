@@ -26,6 +26,7 @@ export interface OptionsState {
     http2: boolean;
     http2_ping_keepalive: number;
     http3: boolean;
+    http_connect_send_host_header: boolean;
     ignore_hosts: string[];
     intercept: string | undefined;
     intercept_active: boolean;
@@ -123,6 +124,7 @@ export const defaultState: OptionsState = {
     http2: true,
     http2_ping_keepalive: 58,
     http3: true,
+    http_connect_send_host_header: true,
     ignore_hosts: [],
     intercept: undefined,
     intercept_active: false,

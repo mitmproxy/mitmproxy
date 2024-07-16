@@ -11,12 +11,24 @@
   ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
 * Fix non-linear growth in processing time for large HTTP bodies.
   ([#6952](https://github.com/mitmproxy/mitmproxy/pull/6952), @jackfromeast)
+* Fix a bug where connections would be incorrectly ignored with `allow_hosts`
+  ([#7002](https://github.com/mitmproxy/mitmproxy/pull/7002), @JarLob, @mhils)
 * Fix zstd decompression to read across frames.
   ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`.
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
 * Handle certificates we cannot parse more gracefully.
   ([#6994](https://github.com/mitmproxy/mitmproxy/pull/6994), @mhils)
+* Parse compressed domain names in ResourceRecord data
+  ([#6954](https://github.com/mitmproxy/mitmproxy/pull/6954), @errorxyz)
+* Fix a bug where mitmweb's flow list would not stay at the bottom.
+  ([#7008](https://github.com/mitmproxy/mitmproxy/pull/7008), @mhils)
+* Add first MVP new Capture Tab in mitmweb
+  ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
+* Allow `typing.Sequence[str]` to be an editable option
+  ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
+* Add Host header to CONNECT requests.
+  ([#7021](https://github.com/mitmproxy/mitmproxy/pull/7021), @petsneakers)
 
 ## 12 June 2024: mitmproxy 10.3.1
 

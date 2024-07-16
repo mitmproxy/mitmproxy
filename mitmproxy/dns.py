@@ -356,19 +356,12 @@ class Message(serializable.SerializableDataclass):
                             f"unpack requires a data buffer of {len_data} bytes"
                         )
                     data = buffer[offset:end_data]
-                    if 0b11000000 in data:
-                        # the resource record might contains a compressed domain name, if so, uncompressed in advance
-                        try:
-                            (
-                                rr_name,
-                                rr_name_len,
-                            ) = domain_names.unpack_from_with_compression(
-                                buffer, offset, cached_names
-                            )
-                            if rr_name_len == len_data:
-                                data = domain_names.pack(rr_name)
-                        except struct.error:
-                            pass
+
+                    if domain_names.record_data_can_have_compression(type):
+                        data = domain_names.decompress_from_record_data(
+                            buffer, offset, end_data, cached_names
+                        )
+
                     section.append(ResourceRecord(name, type, class_, ttl, data))
                     offset += len_data
                 except struct.error as e:

@@ -1,4 +1,4 @@
-import { OptionsState } from "../_options_gen";
+import { Option, OptionsState } from "../_options_gen";
 import { HIDE_MODAL } from "./modal";
 
 export const OPTION_UPDATE_START = "UI_OPTION_UPDATE_START";
@@ -12,7 +12,7 @@ interface OptionUpdate<T> {
 }
 
 type OptionsEditorState = Partial<{
-    [name in keyof OptionsState]: OptionUpdate<OptionsState[name]>;
+    [name in Option]: OptionUpdate<OptionsState[name]>;
 }>;
 
 const defaultState: OptionsEditorState = {};
@@ -35,7 +35,7 @@ export default function reducer(state = defaultState, action) {
                 [action.option]: undefined,
             };
 
-        case OPTION_UPDATE_ERROR:
+        case OPTION_UPDATE_ERROR: {
             let val = state[action.option].value;
             if (typeof val === "boolean") {
                 // If a boolean option errs, reset it to its previous state to be less confusing.
@@ -50,7 +50,7 @@ export default function reducer(state = defaultState, action) {
                     error: action.error,
                 },
             };
-
+        }
         case HIDE_MODAL:
             return {};
 

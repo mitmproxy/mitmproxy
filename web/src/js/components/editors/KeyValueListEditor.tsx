@@ -138,7 +138,7 @@ export default class KeyValueListEditor extends Component<
     };
 
     onEditDone = (row: number, newItem: Item) => {
-        let newList = [...this.state.currentList];
+        const newList = [...this.state.currentList];
         if (newItem[0]) {
             newList[row] = newItem;
         } else {
@@ -152,7 +152,7 @@ export default class KeyValueListEditor extends Component<
 
     onClickEmptyArea = (row: number) => {
         if (this.justFinishedEditing) return;
-        let newList = [...this.state.currentList];
+        const newList = [...this.state.currentList];
         newList.splice(row + 1, 0, ["", ""]);
         this.setState({ currentList: newList }, () =>
             this.rowRefs[row + 1]?.nameInput.current?.startEditing(),
@@ -165,7 +165,7 @@ export default class KeyValueListEditor extends Component<
         }
     };
 
-    onMouseDown = (e: React.MouseEvent) => {
+    onMouseDown = (_e: React.MouseEvent) => {
         this.justFinishedEditing = this.currentlyEditing;
     };
 }

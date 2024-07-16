@@ -1,6 +1,5 @@
-import reduceFlows, * as flowsActions from "../../../ducks/flows";
+import * as flowsActions from "../../../ducks/flows";
 import { onKeyDown } from "../../../ducks/ui/keyboard";
-import * as UIActions from "../../../ducks/ui/flow";
 import * as modalActions from "../../../ducks/ui/modal";
 import { fetchApi, runCommand } from "../../../utils";
 import { TStore } from "../tutils";
@@ -34,13 +33,13 @@ describe("onKeyDown", () => {
         return store;
     };
 
-    let createKeyEvent = (key, ctrlKey = false) => {
-        // @ts-ignore
+    const createKeyEvent = (key, ctrlKey = false) => {
+        // @ts-expect-error not a real KeyboardEvent
         return onKeyDown({ key, ctrlKey, preventDefault: jest.fn() });
     };
 
     afterEach(() => {
-        // @ts-ignore
+        // @ts-expect-error mocking
         fetchApi.mockClear();
     });
 

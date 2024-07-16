@@ -27,10 +27,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
-      - name: Run prettier
-        run: |
-          npm ci
-          npm run prettier
+      - run: npm ci
+        working-directory: web
+      - run: npm run eslint
+        working-directory: web
+        continue-on-error: true
+      - run: npm run prettier
         working-directory: web
 
       - uses: mhils/add-pr-ref-in-changelog@main

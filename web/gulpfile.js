@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const gulp = require("gulp");
 const gulpEsbuild = require("gulp-esbuild");
 const less = require("gulp-less");
@@ -77,7 +78,7 @@ const copy_src = [
 
 function copy() {
     return gulp
-        .src(copy_src, { base: "src/" })
+        .src(copy_src, { base: "src/", encoding: false })
         .pipe(gulp.dest("../mitmproxy/tools/web/static"));
 }
 
@@ -99,7 +100,8 @@ function peg() {
         .pipe(
             replace(
                 "module.exports = ",
-                'import * as flowutils from "../flow/utils"\n' +
+                "/* eslint-disable */\n" +
+                    'import * as flowutils from "../flow/utils"\n' +
                     "export default ",
             ),
         )

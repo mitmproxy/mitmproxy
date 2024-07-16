@@ -19,10 +19,10 @@ import { Flow } from "../../flow";
 FlowMenu.title = "Flow";
 
 export default function FlowMenu(): JSX.Element {
-    const dispatch = useAppDispatch(),
-        flow = useAppSelector(
-            (state) => state.flows.byId[state.flows.selected[0]],
-        );
+    const dispatch = useAppDispatch();
+    const flow = useAppSelector(
+        (state) => state.flows.byId[state.flows.selected[0]],
+    );
 
     if (!flow) return <div />;
     return (

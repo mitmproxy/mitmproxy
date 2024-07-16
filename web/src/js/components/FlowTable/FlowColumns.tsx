@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from "react";
+import React, { ReactElement } from "react";
 import { useAppDispatch } from "../../ducks";
 import classnames from "classnames";
 import {
@@ -127,8 +127,8 @@ export const size: FlowColumn = ({ flow }) => {
 size.headerName = "Size";
 
 export const time: FlowColumn = ({ flow }) => {
-    const start = startTime(flow),
-        end = endTime(flow);
+    const start = startTime(flow);
+    const end = endTime(flow);
     return (
         <td className="col-time">
             {start && end ? formatTimeDelta(1000 * (end - start)) : "..."}
@@ -147,19 +147,8 @@ export const timestamp: FlowColumn = ({ flow }) => {
 };
 timestamp.headerName = "Start time";
 
-const markers = {
-    ":red_circle:": "🔴",
-    ":orange_circle:": "🟠",
-    ":yellow_circle:": "🟡",
-    ":green_circle:": "🟢",
-    ":large_blue_circle:": "🔵",
-    ":purple_circle:": "🟣",
-    ":brown_circle:": "🟤",
-};
-
 export const quickactions: FlowColumn = ({ flow }) => {
     const dispatch = useAppDispatch();
-    let [open, setOpen] = useState(false);
 
     let resume_or_replay: ReactElement | null = null;
     if (flow.intercepted) {
@@ -185,10 +174,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
     }
 
     return (
-        <td
-            className={classnames("col-quickactions", { hover: open })}
-            onClick={() => 0}
-        >
+        <td className="col-quickactions">
             {resume_or_replay ? <div>{resume_or_replay}</div> : <></>}
         </td>
     );

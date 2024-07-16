@@ -1,6 +1,5 @@
 import reduceOptionsEditor, * as optionsEditorActions from "../../../ducks/ui/optionsEditor";
 import { HIDE_MODAL } from "../../../ducks/ui/modal";
-import { OptionsState } from "../../../ducks/_options_gen";
 
 describe("optionsEditor reducer", () => {
     it("should return initial state", () => {
@@ -8,7 +7,7 @@ describe("optionsEditor reducer", () => {
     });
 
     it("should handle option update start", () => {
-        let state = reduceOptionsEditor(
+        const state = reduceOptionsEditor(
             undefined,
             optionsEditorActions.startUpdate("foo", "bar"),
         );

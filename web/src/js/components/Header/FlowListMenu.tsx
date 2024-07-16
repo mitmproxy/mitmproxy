@@ -6,9 +6,9 @@ import Button from "../common/Button";
 import { update as updateOptions } from "../../ducks/options";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
-StartMenu.title = "Start";
+FlowListMenu.title = "Flow List";
 
-export default function StartMenu() {
+export default function FlowListMenu() {
     return (
         <div className="main-menu">
             <div className="menu-group">
@@ -31,8 +31,8 @@ export default function StartMenu() {
 }
 
 function InterceptInput() {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.options.intercept);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.options.intercept);
     return (
         <FilterInput
             value={value || ""}
@@ -45,8 +45,8 @@ function InterceptInput() {
 }
 
 function FlowFilterInput() {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.flows.filter);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.flows.filter);
     return (
         <FilterInput
             value={value || ""}
@@ -59,8 +59,8 @@ function FlowFilterInput() {
 }
 
 function HighlightInput() {
-    const dispatch = useAppDispatch(),
-        value = useAppSelector((state) => state.flows.highlight);
+    const dispatch = useAppDispatch();
+    const value = useAppSelector((state) => state.flows.highlight);
     return (
         <FilterInput
             value={value || ""}

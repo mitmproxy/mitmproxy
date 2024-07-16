@@ -11,22 +11,22 @@ export { Option, defaultState };
 
 export default function reducer(state = defaultState, action): OptionsState {
     switch (action.type) {
-        case RECEIVE:
-            let s = <OptionsState>{};
-            // @ts-ignore
+        case RECEIVE: {
+            const s = <OptionsState>{};
+            // @ts-expect-error untyped action
             for (const [name, { value }] of Object.entries(action.data)) {
                 s[name] = value;
             }
             return s;
-
-        case UPDATE:
-            let s2 = { ...state };
-            // @ts-ignore
+        }
+        case UPDATE: {
+            const s2 = { ...state };
+            // @ts-expect-error untyped action
             for (const [name, { value }] of Object.entries(action.data)) {
                 s2[name] = value;
             }
             return s2;
-
+        }
         default:
             return state;
     }
@@ -47,7 +47,7 @@ export async function pureSendUpdate(option: Option, value, dispatch) {
     }
 }
 
-let sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
+const sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
 
 export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {
@@ -57,7 +57,7 @@ export function update(name: Option, value: any): AppThunk {
 }
 
 export function save() {
-    return (dispatch) => fetchApi("/options/save", { method: "POST" });
+    return () => fetchApi("/options/save", { method: "POST" });
 }
 
 export function addInterceptFilter(example) {

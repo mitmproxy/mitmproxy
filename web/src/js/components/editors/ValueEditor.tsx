@@ -13,7 +13,7 @@ export interface ValueEditorProps {
 
 /** "plaintext-only" for browsers which support it, "true" for everyone else */
 const plaintextOnly: string = (() => {
-    let div = document.createElement("div");
+    const div = document.createElement("div");
     div.setAttribute("contenteditable", "PLAINTEXT-ONLY");
     return div.contentEditable === "plaintext-only" ? "plaintext-only" : "true";
 })();
@@ -31,7 +31,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
                 ref={this.input}
                 tabIndex={0}
                 className={className}
-                // @ts-ignore
+                // @ts-expect-error placeholder works here.
                 placeholder={this.props.placeholder}
                 onFocus={this.onFocus}
                 onBlur={this.onBlur}
@@ -95,7 +95,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
 
     onPaste = (e: React.ClipboardEvent<HTMLSpanElement>) => {
         e.preventDefault();
-        let content = e.clipboardData.getData("text/plain");
+        const content = e.clipboardData.getData("text/plain");
         document.execCommand("insertHTML", false, content);
     };
 
@@ -107,7 +107,7 @@ export default class ValueEditor extends Component<ValueEditorProps> {
     keyboard navigation.
      */
     private suppress_events = false;
-    onMouseDown = (e: React.MouseEvent) => {
+    onMouseDown = (_e: React.MouseEvent) => {
         EVENT_DEBUG && console.debug("onMouseDown", this.suppress_events);
         this.suppress_events = true;
         window.addEventListener("mouseup", this.onMouseUp, { once: true });
@@ -131,11 +131,11 @@ export default class ValueEditor extends Component<ValueEditorProps> {
         this.suppress_events = false;
     };
 
-    onClick = (e: React.MouseEvent) => {
+    onClick = (_e: React.MouseEvent) => {
         EVENT_DEBUG && console.debug("onClick", this.suppress_events);
     };
 
-    onFocus = (e: React.FocusEvent) => {
+    onFocus = (_e: React.FocusEvent) => {
         EVENT_DEBUG &&
             console.debug("onFocus", this.props.content, this.suppress_events);
         if (!this.input.current) throw "unreachable";
@@ -143,11 +143,11 @@ export default class ValueEditor extends Component<ValueEditorProps> {
         this.startEditing();
     };
 
-    onInput = (e: React.FormEvent) => {
+    onInput = (_e: React.FormEvent) => {
         this.props.onInput?.(this.input.current?.textContent || "");
     };
 
-    onBlur = (e: React.FocusEvent<HTMLSpanElement>) => {
+    onBlur = (_e: React.FocusEvent<HTMLSpanElement>) => {
         EVENT_DEBUG &&
             console.debug("onBlur", this.props.content, this.suppress_events);
         if (this.suppress_events) return;

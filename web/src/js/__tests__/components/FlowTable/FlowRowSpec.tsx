@@ -4,16 +4,16 @@ import { fireEvent, render, screen } from "../../test-utils";
 import { TStore } from "../../ducks/tutils";
 
 test("FlowRow", async () => {
-    const store = TStore(),
-        tflow = store.getState().flows.list[3],
-        { asFragment } = render(
-            <table>
-                <tbody>
-                    <FlowRow flow={tflow} selected highlighted />
-                </tbody>
-            </table>,
-            { store },
-        );
+    const store = TStore();
+    const tflow = store.getState().flows.list[3];
+    const { asFragment } = render(
+        <table>
+            <tbody>
+                <FlowRow flow={tflow} selected highlighted />
+            </tbody>
+        </table>,
+        { store },
+    );
     expect(asFragment()).toMatchSnapshot();
 
     expect(store.getState().flows.selected[0]).not.toBe(tflow.id);
