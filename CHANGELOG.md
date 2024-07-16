@@ -17,6 +17,8 @@
   ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
 * Add `HttpConnectedHook` and `HttpConnectErrorHook`.
   ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
+* Handle certificates we cannot parse more gracefully.
+  ([#6994](https://github.com/mitmproxy/mitmproxy/pull/6994), @mhils)
 * Parse compressed domain names in ResourceRecord data
   ([#6954](https://github.com/mitmproxy/mitmproxy/pull/6954), @errorxyz)
 * Fix a bug where mitmweb's flow list would not stay at the bottom.
