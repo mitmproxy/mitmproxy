@@ -25,6 +25,8 @@
   ([#7008](https://github.com/mitmproxy/mitmproxy/pull/7008), @mhils)
 * Add first MVP new Capture Tab in mitmweb
   ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
+* Skip BOM in HAR loading
+  ([#6897](https://github.com/mitmproxy/mitmproxy/pull/6897), @dstd)
 * Allow `typing.Sequence[str]` to be an editable option
   ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
 * Add Host header to CONNECT requests.
