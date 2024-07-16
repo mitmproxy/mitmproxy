@@ -37,8 +37,8 @@ class DnsResolver:
 
     def configure(self, updated):
         if "dns_use_hosts_file" in updated or "dns_name_servers" in updated:
-            self.__dict__.pop('resolver', None)
-            self.__dict__.pop('name_servers', None)
+            self.__dict__.pop("resolver", None)
+            self.__dict__.pop("name_servers", None)
 
     @cached_property
     def resolver(self) -> mitmproxy_rs.DnsResolver:
