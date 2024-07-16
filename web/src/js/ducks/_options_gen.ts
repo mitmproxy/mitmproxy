@@ -21,6 +21,8 @@ export interface OptionsState {
     connection_strategy: string;
     console_focus_follow: boolean;
     content_view_lines_cutoff: number;
+    dns_name_servers: string[];
+    dns_use_hosts_file: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
     http2: boolean;
@@ -119,6 +121,8 @@ export const defaultState: OptionsState = {
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
+    dns_name_servers: [],
+    dns_use_hosts_file: true,
     export_preserve_original_ip: false,
     hardump: "",
     http2: true,
