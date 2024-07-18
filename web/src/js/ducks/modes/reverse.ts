@@ -1,10 +1,5 @@
 import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
-import {
     ModeState,
-    getModesOfType,
     includeModeState,
     updateMode,
 } from "./utils";
@@ -16,21 +11,34 @@ export const MODE_REVERSE_SET_LISTEN_CONFIG = "MODE_REVERSE_SET_LISTEN_CONFIG";
 export const MODE_REVERSE_SET_DESTINATION = "MODE_REVERSE_SET_DESTINATION";
 export const MODE_REVERSE_SET_PROTOCOL = "MODE_REVERSE_SET_PROTOCOL";
 export const MODE_REVERSE_ERROR = "MODE_REVERSE_ERROR";
+export const MODE_REVERSE_ADD_SERVER_CONFIG = "MODE_REVERSE_ADD_SERVER_CONFIG";
 
 export interface ReverseState extends ModeState {
     protocol?: ReverseProxyProtocols;
     destination?: string;
 }
 
-export const initialState: ReverseState = {
+const defaultServerConfig: ReverseState = {
     active: false,
     protocol: ReverseProxyProtocols.HTTPS,
     destination: "",
 };
 
+export interface ReverseServersState {
+    servers: ReverseState[];
+}
+
+export const initialState: ReverseServersState = {
+    servers: [defaultServerConfig],
+};
+
 export const getMode = (modes: ModesState): string[] => {
-    const mode = `reverse:${modes.reverse.protocol}://${modes.reverse.destination}`;
-    return includeModeState(mode, modes.reverse);
+    const modesConfig: string[] = [];
+    for (const server of modes.reverse.servers) {
+        const mode = `reverse:${server.protocol}://${server.destination}`;
+        modesConfig.push(...includeModeState(mode, server));
+    }
+    return modesConfig;
 };
 
 export const toggleReverse = () => async (dispatch) => {
@@ -74,7 +82,7 @@ export const setDestination = (destination: string) => async (dispatch) => {
     }
 };
 
-const reverseReducer = (state = initialState, action): ReverseState => {
+/*const reverseReducer = (state = initialState, action): ReverseState => {
     switch (action.type) {
         case MODE_REVERSE_TOGGLE:
             return {
@@ -133,6 +141,18 @@ const reverseReducer = (state = initialState, action): ReverseState => {
             return {
                 ...state,
                 error: action.error,
+            };
+        default:
+            return state;
+    }
+};
+*/
+
+const reverseReducer = (state = initialState, action): ReverseServersState => {
+    switch (action.type) {
+        case MODE_REVERSE_ADD_SERVER_CONFIG:
+            return {
+                servers: [...state.servers, defaultServerConfig],
             };
         default:
             return state;

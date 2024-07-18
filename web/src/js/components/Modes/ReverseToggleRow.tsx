@@ -15,7 +15,7 @@ export default function ReverseToggleRow() {
     const dispatch = useAppDispatch();
 
     const { active, protocol, error, listen_port, listen_host, destination } =
-        useAppSelector((state) => state.modes.reverse);
+        useAppSelector((state) => state.modes.reverse.servers[0]);
 
     const protocols = Object.values(ReverseProxyProtocols);
 
