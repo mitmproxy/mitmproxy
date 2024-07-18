@@ -189,7 +189,11 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
             return {
                 servers: state.servers.map((server, index) =>
                     index === action.index
-                        ? { ...server, active: !server.active, error: undefined }
+                        ? {
+                              ...server,
+                              active: !server.active,
+                              error: undefined,
+                          }
                         : server,
                 ),
             };

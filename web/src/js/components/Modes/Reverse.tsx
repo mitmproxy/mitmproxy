@@ -20,7 +20,11 @@ export default function Reverse() {
             </p>
             <div className="mode-reverse-servers">
                 {servers.map((server, index) => (
-                    <ReverseToggleRow key={index} modeIndex={index} server={server}/>
+                    <ReverseToggleRow
+                        key={index}
+                        modeIndex={index}
+                        server={server}
+                    />
                 ))}
             </div>
             <div
