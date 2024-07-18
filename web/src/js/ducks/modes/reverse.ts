@@ -1,8 +1,4 @@
-import {
-    ModeState,
-    includeModeState,
-    updateMode,
-} from "./utils";
+import { ModeState, includeModeState, updateMode } from "./utils";
 import type { ModesState } from "../modes";
 import { ReverseProxyProtocols } from "../../backends/consts";
 
