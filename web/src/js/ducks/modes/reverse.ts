@@ -47,7 +47,11 @@ export const toggleReverse = (modeIndex: number) => async (dispatch) => {
     try {
         await dispatch(updateMode());
     } catch (e) {
-        dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
+        dispatch({
+            type: MODE_REVERSE_ERROR,
+            error: e.message,
+            index: modeIndex,
+        });
     }
 };
 
@@ -63,7 +67,11 @@ export const setProtocol =
         try {
             await dispatch(updateMode());
         } catch (e) {
-            dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
+            dispatch({
+                type: MODE_REVERSE_ERROR,
+                error: e.message,
+                index: modeIndex,
+            });
         }
     };
 
@@ -79,7 +87,11 @@ export const setListenConfig =
         try {
             await dispatch(updateMode());
         } catch (e) {
-            dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
+            dispatch({
+                type: MODE_REVERSE_ERROR,
+                error: e.message,
+                index: modeIndex,
+            });
         }
     };
 
@@ -93,7 +105,11 @@ export const setDestination =
         try {
             await dispatch(updateMode());
         } catch (e) {
-            dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
+            dispatch({
+                type: MODE_REVERSE_ERROR,
+                error: e.message,
+                index: modeIndex,
+            });
         }
     };
 
@@ -173,7 +189,7 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
             return {
                 servers: state.servers.map((server, index) =>
                     index === action.index
-                        ? { ...server, active: !server.active }
+                        ? { ...server, active: !server.active, error: undefined }
                         : server,
                 ),
             };
@@ -210,6 +226,17 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                               ...server,
                               protocol: action.protocol,
                               error: undefined,
+                          }
+                        : server,
+                ),
+            };
+        case MODE_REVERSE_ERROR:
+            return {
+                servers: state.servers.map((server, index) =>
+                    index === action.index
+                        ? {
+                              ...server,
+                              error: action.error,
                           }
                         : server,
                 ),
