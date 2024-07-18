@@ -28,6 +28,10 @@ export const initialState: ReverseServersState = {
     servers: [defaultServerConfig],
 };
 
+export const addReverseServer = () => async (dispatch) => {
+    dispatch({ type: MODE_REVERSE_ADD_SERVER_CONFIG });
+};
+
 export const getMode = (modes: ModesState): string[] => {
     const modesConfig: string[] = [];
     for (const server of modes.reverse.servers) {
@@ -37,8 +41,8 @@ export const getMode = (modes: ModesState): string[] => {
     return modesConfig;
 };
 
-export const toggleReverse = () => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_TOGGLE });
+export const toggleReverse = (modeIndex: number) => async (dispatch) => {
+    dispatch({ type: MODE_REVERSE_TOGGLE, index: modeIndex });
 
     try {
         await dispatch(updateMode());
@@ -48,8 +52,13 @@ export const toggleReverse = () => async (dispatch) => {
 };
 
 export const setProtocol =
-    (protocol: ReverseProxyProtocols) => async (dispatch) => {
-        dispatch({ type: MODE_REVERSE_SET_PROTOCOL, protocol: protocol });
+    (protocol: ReverseProxyProtocols, modeIndex: number) =>
+    async (dispatch) => {
+        dispatch({
+            type: MODE_REVERSE_SET_PROTOCOL,
+            protocol: protocol,
+            index: modeIndex,
+        });
 
         try {
             await dispatch(updateMode());
@@ -59,8 +68,13 @@ export const setProtocol =
     };
 
 export const setListenConfig =
-    (port: number, host: string) => async (dispatch) => {
-        dispatch({ type: MODE_REVERSE_SET_LISTEN_CONFIG, port, host });
+    (port: number, host: string, modeIndex: number) => async (dispatch) => {
+        dispatch({
+            type: MODE_REVERSE_SET_LISTEN_CONFIG,
+            port,
+            host,
+            index: modeIndex,
+        });
 
         try {
             await dispatch(updateMode());
@@ -69,14 +83,19 @@ export const setListenConfig =
         }
     };
 
-export const setDestination = (destination: string) => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_SET_DESTINATION, destination });
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
-    }
-};
+export const setDestination =
+    (destination: string, modeIndex: number) => async (dispatch) => {
+        dispatch({
+            type: MODE_REVERSE_SET_DESTINATION,
+            destination,
+            index: modeIndex,
+        });
+        try {
+            await dispatch(updateMode());
+        } catch (e) {
+            dispatch({ type: MODE_REVERSE_ERROR, error: e.message });
+        }
+    };
 
 /*const reverseReducer = (state = initialState, action): ReverseState => {
     switch (action.type) {
@@ -149,6 +168,51 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
         case MODE_REVERSE_ADD_SERVER_CONFIG:
             return {
                 servers: [...state.servers, defaultServerConfig],
+            };
+        case MODE_REVERSE_TOGGLE:
+            return {
+                servers: state.servers.map((server, index) =>
+                    index === action.index
+                        ? { ...server, active: !server.active }
+                        : server,
+                ),
+            };
+        case MODE_REVERSE_SET_LISTEN_CONFIG:
+            return {
+                servers: state.servers.map((server, index) =>
+                    index === action.index
+                        ? {
+                              ...server,
+                              listen_port: action.port,
+                              listen_host: action.host,
+                              error: undefined,
+                          }
+                        : server,
+                ),
+            };
+        case MODE_REVERSE_SET_DESTINATION:
+            return {
+                servers: state.servers.map((server, index) =>
+                    index === action.index
+                        ? {
+                              ...server,
+                              destination: action.destination,
+                              error: undefined,
+                          }
+                        : server,
+                ),
+            };
+        case MODE_REVERSE_SET_PROTOCOL:
+            return {
+                servers: state.servers.map((server, index) =>
+                    index === action.index
+                        ? {
+                              ...server,
+                              protocol: action.protocol,
+                              error: undefined,
+                          }
+                        : server,
+                ),
             };
         default:
             return state;

@@ -2,8 +2,9 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import ValueEditor from "../editors/ValueEditor";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import { useAppDispatch } from "../../ducks";
 import {
+    ReverseState,
     setDestination,
     setListenConfig,
     setProtocol,
@@ -11,41 +12,46 @@ import {
 } from "../../ducks/modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
 
-export default function ReverseToggleRow() {
-    const dispatch = useAppDispatch();
+interface ReverseToggleRowProps {
+    modeIndex: number;
+    server: ReverseState;
+}
 
-    const { active, protocol, error, listen_port, listen_host, destination } =
-        useAppSelector((state) => state.modes.reverse.servers[0]);
+export default function ReverseToggleRow({
+    modeIndex,
+    server,
+}: ReverseToggleRowProps) {
+    const dispatch = useAppDispatch();
 
     const protocols = Object.values(ReverseProxyProtocols);
 
     const inner = (
         <span>
-            &nbsp;<b>{protocol} </b>
+            &nbsp;<b>{server.protocol} </b>
             <span className="caret" />
         </span>
     );
 
     const handleProtocolChange = (protocol: string) => {
-        dispatch(setProtocol(protocol as ReverseProxyProtocols));
+        dispatch(setProtocol(protocol as ReverseProxyProtocols, modeIndex));
     };
 
     const handleListenHostAndPortChange = (config: string) => {
         const [host, port] = config.split(":");
         // FIXME: We should eventually cast to Number and validate.
-        dispatch(setListenConfig(port as unknown as number, host));
+        dispatch(setListenConfig(port as unknown as number, host, modeIndex));
     };
 
     const handleDestinationChange = (host: string) => {
-        dispatch(setDestination(host));
+        dispatch(setDestination(host, modeIndex));
     };
 
     return (
         <div>
             <ModeToggle
-                value={active}
+                value={server.active}
                 onChange={() => {
-                    dispatch(toggleReverse());
+                    dispatch(toggleReverse(modeIndex));
                 }}
             >
                 Forward
@@ -67,8 +73,8 @@ export default function ReverseToggleRow() {
                 <ValueEditor
                     className="mode-reverse-input"
                     content={
-                        listen_host && listen_port
-                            ? `${listen_host?.toString()}:${listen_port?.toString()}`
+                        server.listen_host && server.listen_port
+                            ? `${server.listen_host?.toString()}:${server.listen_port?.toString()}`
                             : ""
                     }
                     onEditDone={(config) =>
@@ -79,14 +85,16 @@ export default function ReverseToggleRow() {
                 to{" "}
                 <ValueEditor
                     className="mode-reverse-input"
-                    content={destination?.toString() || ""}
+                    content={server.destination?.toString() || ""}
                     onEditDone={(destination) =>
                         handleDestinationChange(destination)
                     }
                     placeholder="example.com"
                 />
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            {server.error && (
+                <div className="mode-error text-danger">{server.error}</div>
+            )}
         </div>
     );
 }

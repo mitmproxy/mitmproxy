@@ -1,22 +1,15 @@
 import * as React from "react";
 import ReverseToggleRow from "./ReverseToggleRow";
-import { ReverseState } from "../../ducks/modes/reverse";
-import { ReverseProxyProtocols } from "../../backends/consts";
+import { useAppDispatch, useAppSelector } from "../../ducks";
+import { addReverseServer } from "../../ducks/modes/reverse";
 
 export default function Reverse() {
-    const defaultServerConfig: ReverseState = {
-        active: false,
-        protocol: ReverseProxyProtocols.HTTPS,
-        destination: "",
-    };
+    const dispatch = useAppDispatch();
 
-    // just to see something in the UI, this will be substituted by the redux state
-    const [servers, setServers] = React.useState<ReverseState[]>([
-        defaultServerConfig,
-    ]);
+    const { servers } = useAppSelector((state) => state.modes.reverse);
 
     const handleAddReverseServer = () => {
-        setServers([...servers, defaultServerConfig]);
+        dispatch(addReverseServer());
     };
 
     return (
@@ -27,7 +20,7 @@ export default function Reverse() {
             </p>
             <div className="mode-reverse-servers">
                 {servers.map((server, index) => (
-                    <ReverseToggleRow key={index} />
+                    <ReverseToggleRow key={index} modeIndex={index} server={server}/>
                 ))}
             </div>
             <div
