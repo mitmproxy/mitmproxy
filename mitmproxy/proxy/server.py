@@ -384,7 +384,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # [reentrancy issues]: https://github.com/mitmproxy/mitmproxy/issues/7027.
         async with self._server_event_lock:
             # No `await` beyond this point.
-            
+
             self.timeout_watchdog.register_activity()
             try:
                 layer_commands = self.layer.handle_event(event)
@@ -396,7 +396,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                             name=f"server connection handler {command.connection.address}",
                             client=self.client.peername,
                         )
-                        self.transports[command.connection] = ConnectionIO(handler=handler)
+                        self.transports[command.connection] = ConnectionIO(
+                            handler=handler
+                        )
                     elif isinstance(command, commands.RequestWakeup):
                         task = asyncio_utils.create_task(
                             self.wakeup(command),
