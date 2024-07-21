@@ -1,6 +1,15 @@
-import { ModeState, includeModeState, updateMode } from "./utils";
+import {
+    ModeState,
+    getModesOfType,
+    includeModeState,
+    updateMode,
+} from "./utils";
 import type { ModesState } from "../modes";
 import { ReverseProxyProtocols } from "../../backends/consts";
+import {
+    RECEIVE as RECEIVE_STATE,
+    UPDATE as UPDATE_STATE,
+} from "../backendState";
 
 export const MODE_REVERSE_TOGGLE = "MODE_REVERSE_TOGGLE";
 export const MODE_REVERSE_SET_LISTEN_CONFIG = "MODE_REVERSE_SET_LISTEN_CONFIG";
@@ -113,71 +122,18 @@ export const setDestination =
         }
     };
 
-/*const reverseReducer = (state = initialState, action): ReverseState => {
-    switch (action.type) {
-        case MODE_REVERSE_TOGGLE:
-            return {
-                ...state,
-                active: !state.active,
-            };
-        case MODE_REVERSE_SET_LISTEN_CONFIG:
-            return {
-                ...state,
-                listen_port: action.port as number,
-                listen_host: action.host,
-                error: undefined,
-            };
-        case MODE_REVERSE_SET_DESTINATION:
-            return {
-                ...state,
-                destination: action.destination,
-                error: undefined,
-            };
-        case MODE_REVERSE_SET_PROTOCOL:
-            return {
-                ...state,
-                protocol: action.protocol,
-                error: undefined,
-            };
-        case UPDATE_STATE:
-        case RECEIVE_STATE:
-            if (action.data && action.data.servers) {
-                const currentModeConfig = getModesOfType(
-                    "reverse",
-                    action.data.servers,
-                )[0];
-                const isActive = currentModeConfig !== undefined;
-                let protocol,
-                    destination = "";
-                if (isActive) {
-                    [protocol, destination] =
-                        currentModeConfig.data.split("://");
-                }
-                return {
-                    ...state,
-                    active: isActive,
-                    protocol: isActive ? protocol : state.protocol,
-                    destination: isActive ? destination : state.destination,
-                    listen_host: isActive
-                        ? currentModeConfig.listen_host
-                        : state.listen_host,
-                    listen_port: isActive
-                        ? (currentModeConfig.listen_port as number)
-                        : state.listen_port,
-                    error: isActive ? undefined : state.error,
-                };
-            }
-            return state;
-        case MODE_REVERSE_ERROR:
-            return {
-                ...state,
-                error: action.error,
-            };
-        default:
-            return state;
+const getFullSpecReverse = (
+    protocol?: ReverseProxyProtocols,
+    destination?: string,
+    listen_host?: string,
+    listen_port?: number,
+) => {
+    if (listen_host && listen_port) {
+        return `reverse:${protocol}://${destination}@${listen_host}:${listen_port}`;
+    } else {
+        return `reverse:${protocol}://${destination}`;
     }
 };
-*/
 
 const reverseReducer = (state = initialState, action): ReverseServersState => {
     switch (action.type) {
@@ -234,6 +190,52 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                         : server,
                 ),
             };
+        case UPDATE_STATE:
+        case RECEIVE_STATE:
+            if (action.data && action.data.servers) {
+                const currentModeConfigs = getModesOfType(
+                    "reverse",
+                    action.data.servers,
+                );
+                const updatedServers = state.servers.map((server) => {
+                    const serverSpec = getFullSpecReverse(
+                        server.protocol,
+                        server.destination,
+                        server.listen_host,
+                        server.listen_port,
+                    );
+
+                    for (const config of currentModeConfigs) {
+                        const configSpec = getFullSpecReverse(
+                            server.protocol,
+                            config.data,
+                            config.listen_host,
+                            config.listen_port as number,
+                        );
+
+                        if (serverSpec === configSpec) {
+                            const [protocol, destination] =
+                                config.data.split("://");
+                            return {
+                                ...server,
+                                active: true,
+                                protocol: protocol as ReverseProxyProtocols,
+                                destination,
+                                listen_host: config.listen_host,
+                                listen_port: Number(config.listen_port),
+                                error: undefined,
+                            };
+                        }
+                    }
+                    return server;
+                });
+
+                return {
+                    servers: updatedServers,
+                };
+            }
+            return state;
+
         case MODE_REVERSE_ERROR:
             return {
                 servers: state.servers.map((server, index) =>
