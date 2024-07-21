@@ -35,7 +35,7 @@ class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         return loop
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def event_loop_policy(request):
     return EagerTaskCreationEventLoopPolicy()
 

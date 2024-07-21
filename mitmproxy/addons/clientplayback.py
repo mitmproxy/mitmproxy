@@ -110,7 +110,7 @@ class ReplayHandler(server.ConnectionHandler):
         self.done = asyncio.Event()
 
     async def replay(self) -> None:
-        self.server_event(events.Start())
+        await self.server_event(events.Start())
         await self.done.wait()
 
     def log(

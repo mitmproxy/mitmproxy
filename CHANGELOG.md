@@ -33,6 +33,7 @@
   ([#7021](https://github.com/mitmproxy/mitmproxy/pull/7021), @petsneakers)
 * Support all query types in DNS mode
   ([#6975](https://github.com/mitmproxy/mitmproxy/pull/6975), @errorxyz)
+* Fix a bug where mitmproxy would crash for pipelined HTTP flows.
 
 ## 12 June 2024: mitmproxy 10.3.1
 
