@@ -90,12 +90,7 @@ async def test_no_reentrancy(capsys):
     class FastHook(commands.StartHook):
         pass
 
-    def fast_hook():
-        # This currently runs before start is completed, but it would be just as fine if it'd run after.
-        print(f"Handling hook...")
-
     handler = MockConnectionHandler()
-    handler.hook_handlers["fast"] = fast_hook
     handler.layer = ReentrancyTestLayer(handler.layer.context)
 
     # This instead would fail: handler._server_event(Start())
@@ -105,7 +100,6 @@ async def test_no_reentrancy(capsys):
     assert capsys.readouterr().out == textwrap.dedent(
         """\
         Starting...
-        Handling hook...
         Start completed.
         Hook completed (must not happen before start is completed).
         """
