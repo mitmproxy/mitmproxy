@@ -35,6 +35,7 @@
   ([#6975](https://github.com/mitmproxy/mitmproxy/pull/6975), @errorxyz)
 * Fix a bug where mitmproxy would crash for pipelined HTTP flows.
   ([#7031](https://github.com/mitmproxy/mitmproxy/pull/7031), @gdiepen, @mhils)
+* Add an optional "Index" column for mitmweb.
 
 ## 12 June 2024: mitmproxy 10.3.1
 

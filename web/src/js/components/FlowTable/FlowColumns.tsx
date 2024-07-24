@@ -1,5 +1,5 @@
 import React, { ReactElement } from "react";
-import { useAppDispatch } from "../../ducks";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 import classnames from "classnames";
 import {
     canReplay,
@@ -40,6 +40,14 @@ export const tls: FlowColumn = ({ flow }) => {
     );
 };
 tls.headerName = "";
+
+export const index: FlowColumn = ({ flow }) => {
+    const index = useAppSelector((state) => state.flows.listIndex[flow.id]);
+    return (
+        <td className="col-index">{ index + 1 }</td>
+    );
+};
+index.headerName = "#";
 
 export const icon: FlowColumn = ({ flow }) => {
     return (
@@ -189,6 +197,7 @@ comment.headerName = "Comment";
 
 const FlowColumns: { [key in keyof typeof sortFunctions]: FlowColumn } = {
     icon,
+    index,
     method,
     version,
     path,
