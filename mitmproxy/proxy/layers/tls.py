@@ -157,7 +157,10 @@ def dtls_parse_client_hello(data: bytes) -> ClientHello | None:
 
 
 HTTP1_ALPNS = (b"http/1.1", b"http/1.0", b"http/0.9")
-HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
+HTTP_ALPNS = (
+    b"h3",
+    b"h2",
+) + HTTP1_ALPNS
 
 
 # We need these classes as hooks can only have one argument at the moment.
