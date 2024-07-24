@@ -39,6 +39,7 @@ from mitmproxy.proxy.layers import ClientTLSLayer
 from mitmproxy.proxy.layers import DNSLayer
 from mitmproxy.proxy.layers import HttpLayer
 from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import QuicStreamLayer
 from mitmproxy.proxy.layers import RawQuicLayer
 from mitmproxy.proxy.layers import ServerQuicLayer
 from mitmproxy.proxy.layers import ServerTLSLayer
@@ -170,7 +171,9 @@ class NextLayer:
 
         # 5b) Do we have a known ALPN negotiation?
         if context.client.alpn in HTTP_ALPNS:
-            return layers.HttpLayer(context, HTTPMode.transparent)
+            is_explicitly_quic_and_not_h3 = s(modes.ReverseProxy, ServerQuicLayer, ClientQuicLayer, RawQuicLayer, QuicStreamLayer)
+            if not is_explicitly_quic_and_not_h3:
+                return layers.HttpLayer(context, HTTPMode.transparent)
 
         # 5c) We have no other specialized layers for UDP, so we fall back to raw forwarding.
         if udp_based:
