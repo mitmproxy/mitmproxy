@@ -23,6 +23,7 @@ export interface OptionsState {
     content_view_lines_cutoff: number;
     dns_name_servers: string[];
     dns_use_hosts_file: boolean;
+    experimental_transparent_http3: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
     http2: boolean;
@@ -123,6 +124,7 @@ export const defaultState: OptionsState = {
     content_view_lines_cutoff: 512,
     dns_name_servers: [],
     dns_use_hosts_file: true,
+    experimental_transparent_http3: false,
     export_preserve_original_ip: false,
     hardump: "",
     http2: true,
