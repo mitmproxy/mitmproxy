@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 25 July 2024: mitmproxy 10.4.0
+
 * Add support for DNS over TCP.
   ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
 * Add first MVP new Capture Tab in mitmweb
