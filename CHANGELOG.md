@@ -25,6 +25,8 @@
   ([#7008](https://github.com/mitmproxy/mitmproxy/pull/7008), @mhils)
 * Add first MVP new Capture Tab in mitmweb
   ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
+* Fix a bug where SSH connections would be incorrectly handled as HTTP.
+  ([#7041](https://github.com/mitmproxy/mitmproxy/pull/7041), @mhils)
 * Skip BOM in HAR loading
   ([#6897](https://github.com/mitmproxy/mitmproxy/pull/6897), @dstd)
 * Allow `typing.Sequence[str]` to be an editable option
@@ -35,6 +37,8 @@
   ([#6975](https://github.com/mitmproxy/mitmproxy/pull/6975), @errorxyz)
 * Fix a bug where mitmproxy would crash for pipelined HTTP flows.
   ([#7031](https://github.com/mitmproxy/mitmproxy/pull/7031), @gdiepen, @mhils)
+* Add an optional "Index" column for mitmweb.
+  ([#7039](https://github.com/mitmproxy/mitmproxy/pull/7039), @mhils)
 
 ## 12 June 2024: mitmproxy 10.3.1
 

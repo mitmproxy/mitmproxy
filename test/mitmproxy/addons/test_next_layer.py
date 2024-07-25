@@ -713,6 +713,15 @@ transparent_proxy_configs = [
         id=f"transparent proxy: http via ALPN",
     ),
     pytest.param(
+        TConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, TCPLayer],
+            server_address=("192.0.2.1", 23),
+            data_client=b"SSH-2.0-OpenSSH_9.7",
+        ),
+        id="transparent proxy: ssh",
+    ),
+    pytest.param(
         dataclasses.replace(
             http,
             tcp_hosts=["192.0.2.1"],
