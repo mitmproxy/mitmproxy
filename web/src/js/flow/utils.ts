@@ -287,6 +287,7 @@ export const getVersion = (flow: Flow): string => {
 export const sortFunctions = {
     tls: (flow: Flow) => flow.type === "http" && flow.request.scheme,
     icon: getIcon,
+    index: () => 0, // this is broken right now - ideally we switch to uuid7s on the backend and use that.
     path: mainPath,
     method: getMethod,
     version: getVersion,

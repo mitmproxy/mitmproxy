@@ -189,6 +189,22 @@ exports[`should render columns: icon 1`] = `
 </DocumentFragment>
 `;
 
+exports[`should render columns: index 1`] = `
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-index"
+        >
+          1
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
+`;
+
 exports[`should render columns: method 1`] = `
 <DocumentFragment>
   <table>
