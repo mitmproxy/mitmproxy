@@ -387,12 +387,14 @@ class TestTlsConfig:
                 assert ctx.server.alpn_offers == expected
 
             assert_alpn(
-                True, proxy_tls.HTTP_ALPNS + (b"foo",), proxy_tls.HTTP_ALPNS + (b"foo",)
+                True,
+                (proxy_tls.HTTP2_ALPN, *proxy_tls.HTTP1_ALPNS, b"foo"),
+                (proxy_tls.HTTP2_ALPN, *proxy_tls.HTTP1_ALPNS, b"foo"),
             )
             assert_alpn(
                 False,
-                proxy_tls.HTTP_ALPNS + (b"foo",),
-                proxy_tls.HTTP1_ALPNS + (b"foo",),
+                (proxy_tls.HTTP2_ALPN, *proxy_tls.HTTP1_ALPNS, b"foo"),
+                (*proxy_tls.HTTP1_ALPNS, b"foo"),
             )
             assert_alpn(True, [], [])
             assert_alpn(False, [], [])

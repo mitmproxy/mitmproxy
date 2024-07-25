@@ -168,12 +168,20 @@ class NextLayer:
         if context.server.address and context.server.address[1] in (53, 5353):
             return layers.DNSLayer(context)
 
-        # 5b) We have no other specialized layers for UDP, so we fall back to raw forwarding.
+        # 5b) Do we have a known ALPN negotiation?
+        if context.client.alpn in HTTP_ALPNS:
+            explicit_quic_proxy = (
+                isinstance(context.client.proxy_mode, modes.ReverseMode)
+                and context.client.proxy_mode.scheme == "quic"
+            )
+            if not explicit_quic_proxy:
+                return layers.HttpLayer(context, HTTPMode.transparent)
+
+        # 5c) We have no other specialized layers for UDP, so we fall back to raw forwarding.
         if udp_based:
             return layers.UDPLayer(context)
-        # 5b) Check for raw tcp mode.
-        very_likely_http = context.client.alpn in HTTP_ALPNS
-        probably_no_http = not very_likely_http and (
+        # 5d) Check for raw tcp mode.
+        probably_no_http = (
             # the first three bytes should be the HTTP verb, so A-Za-z is expected.
             len(data_client) < 3
             or not data_client[:3].isalpha()
