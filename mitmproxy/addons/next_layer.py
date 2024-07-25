@@ -179,6 +179,7 @@ class NextLayer:
             or not data_client[:3].isalpha()
             # a server greeting would be uncharacteristic.
             or data_server
+            or data_client.startswith(b"SSH")
         )
         if ctx.options.rawtcp and probably_no_http:
             return layers.TCPLayer(context)
