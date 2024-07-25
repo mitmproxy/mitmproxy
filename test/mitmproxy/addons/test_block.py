@@ -2,6 +2,7 @@ import pytest
 
 from mitmproxy import connection
 from mitmproxy.addons import block
+from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 
 
@@ -59,3 +60,17 @@ async def test_block_global(block_global, block_private, should_be_killed, addre
         client = connection.Client(peername=address, sockname=("127.0.0.1", 8080))
         ar.client_connected(client)
         assert bool(client.error) == should_be_killed
+
+
+async def test_ignore_local_mode():
+    """At least on macOS, local mode peername may be the client's public IP."""
+    ar = block.Block()
+    with taddons.context(ar) as tctx:
+        tctx.configure(ar, block_private=True)
+        client = connection.Client(
+            peername=("192.168.1.1", 0),
+            sockname=("127.0.0.1", 8080),
+            proxy_mode=ProxyMode.parse("local"),
+        )
+        ar.client_connected(client)
+        assert not client.error

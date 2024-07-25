@@ -2,6 +2,7 @@ import ipaddress
 import logging
 
 from mitmproxy import ctx
+from mitmproxy.proxy import mode_specs
 
 
 class Block:
@@ -31,7 +32,7 @@ class Block:
         if isinstance(address, ipaddress.IPv6Address):
             address = address.ipv4_mapped or address
 
-        if address.is_loopback:
+        if address.is_loopback or isinstance(client.proxy_mode, mode_specs.LocalMode):
             return
 
         if ctx.options.block_private and address.is_private:
