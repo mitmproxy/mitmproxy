@@ -99,8 +99,6 @@ http_get_absolute = b"GET http://example.com/ HTTP/1.1\r\n\r\n"
 
 http_connect = b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n"
 
-http2_preface = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-
 
 class TestNextLayer:
     @pytest.mark.parametrize(
