@@ -328,6 +328,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          provenance: false
       - uses: actions/attest-build-provenance@v1
         with:
           subject-name: ghcr.io/${{ github.repository }}
