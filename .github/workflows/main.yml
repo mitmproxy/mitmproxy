@@ -302,24 +302,20 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tags
-        id: tags
-        run: |
-          echo 'tags<<EOF' >> "$GITHUB_OUTPUT"
-          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-            echo "mitmproxy/mitmproxy:dev" >> "$GITHUB_OUTPUT"
-            echo "ghcr.io/mitmproxy/mitmproxy:dev" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == "refs/heads/citest" ]]; then
-            echo "mitmproxy/mitmproxy:citest" >> "$GITHUB_OUTPUT"
-            echo "ghcr.io/mitmproxy/mitmproxy:citest" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == refs/tags/v* ]]; then
-            version=${GITHUB_REF#refs/tags/v}
-            echo "mitmproxy/mitmproxy:$version" >> "$GITHUB_OUTPUT"
-            echo "ghcr.io/mitmproxy/mitmproxy:$version" >> "$GITHUB_OUTPUT"
-            echo "mitmproxy/mitmproxy:latest" >> "$GITHUB_OUTPUT"
-            echo "ghcr.io/mitmproxy/mitmproxy:latest" >> "$GITHUB_OUTPUT"
-          fi
-          echo EOF >> "$GITHUB_OUTPUT"
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        with:
+          images: |
+            mitmproxy/mitmproxy
+            ghcr.io/mitmproxy/mitmproxy
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=citest,enable=${{ github.ref == 'refs/heads/citest' }}
+
       - name: Build and push
         id: push
         uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
@@ -327,8 +323,10 @@ jobs:
           context: release/docker
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
           provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
       - uses: actions/attest-build-provenance@v1
         with:
           subject-name: ghcr.io/${{ github.repository }}
