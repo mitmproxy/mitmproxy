@@ -104,8 +104,6 @@ jobs:
           - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
             platform: linux
     runs-on: ${{ matrix.image }}
-    env:
-      CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,11 +112,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
-      - if: matrix.platform == 'windows'
-        uses: actions/cache@v4
-        with:
-          path: release/installbuilder/setup
-          key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
@@ -145,16 +138,11 @@ jobs:
       # Windows
       - if: matrix.platform == 'windows'
         run: python -u release/build.py standalone-binaries
-      - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' &&
-            (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
-        run: python -u release/build.py --dirty installbuilder-installer msix-installer
 
       - uses: actions/upload-artifact@v4
         with:
-          # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
           name: binaries.${{ matrix.platform }}
-          path: |
-            release/dist
+          path: release/dist
 
   build-wheel:
     uses: mhils/workflows/.github/workflows/python-build.yml@v7
@@ -162,6 +150,28 @@ jobs:
       python-version-file: .github/python-version.txt
       attest-provenance: false  # done in deploy step
       artifact: binaries.wheel
+
+  build-windows-installer:
+    runs-on: windows-latest
+    if: github.repository == 'mitmproxy/mitmproxy' && (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .github/python-version.txt
+
+      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - run: python -u release/build.py installbuilder-installer msix-installer
+        env:
+          CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries.windows-installer
+          path: release/dist
 
   test-web-ui:
     runs-on: ubuntu-latest
@@ -249,6 +259,7 @@ jobs:
     - test-web-ui
     - build
     - build-wheel
+    - build-windows-installer
     - docs
     uses: mhils/workflows/.github/workflows/alls-green.yml@main
     with:
@@ -262,6 +273,8 @@ jobs:
       || startsWith(github.ref, 'refs/tags/')
       )
     permissions:
+      id-token: write
+      attestations: write
       packages: write
     environment: deploy-docker
     needs: check
@@ -278,12 +291,12 @@ jobs:
       - uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v1.6.0
 
       - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           username: mitmbot
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -292,24 +305,24 @@ jobs:
       - name: Set tags
         id: tags
         run: |
-          echo 'tags<<EOF'
+          echo 'tags<<EOF' >> "$GITHUB_OUTPUT"
           if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-            echo "mitmproxy/mitmproxy:dev"
-            echo "ghcr.io/mitmproxy/mitmproxy:dev"
+            echo "mitmproxy/mitmproxy:dev" >> "$GITHUB_OUTPUT"
+            echo "ghcr.io/mitmproxy/mitmproxy:dev" >> "$GITHUB_OUTPUT"
           elif [[ $GITHUB_REF == "refs/heads/citest" ]]; then
-            echo "mitmproxy/mitmproxy:citest"
-            echo "ghcr.io/mitmproxy/mitmproxy:citest"
+            echo "mitmproxy/mitmproxy:citest" >> "$GITHUB_OUTPUT"
+            echo "ghcr.io/mitmproxy/mitmproxy:citest" >> "$GITHUB_OUTPUT"
           elif [[ $GITHUB_REF == refs/tags/v* ]]; then
             version=${GITHUB_REF#refs/tags/v}
-            echo "mitmproxy/mitmproxy:$version"
-            echo "ghcr.io/mitmproxy/mitmproxy:$version"
-            echo "mitmproxy/mitmproxy:latest"
-            echo "ghcr.io/mitmproxy/mitmproxy:latest"
+            echo "mitmproxy/mitmproxy:$version" >> "$GITHUB_OUTPUT"
+            echo "ghcr.io/mitmproxy/mitmproxy:$version" >> "$GITHUB_OUTPUT"
+            echo "mitmproxy/mitmproxy:latest" >> "$GITHUB_OUTPUT"
+            echo "ghcr.io/mitmproxy/mitmproxy:latest" >> "$GITHUB_OUTPUT"
           fi
-          echo EOF
+          echo EOF >> "$GITHUB_OUTPUT"
       - name: Build and push
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
