@@ -35,7 +35,7 @@ dependencies = [
     "asgiref>=3.2.10,<=3.8.1",
     "Brotli>=1.0,<=1.1.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
-    "cryptography>=42.0,<42.1",  # relaxed upper bound here to get security fixes
+    "cryptography>=42.0,<43.1",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.0.3",
     "h11>=0.11,<=0.14.0",
     "h2>=4.1,<=4.1.0",
