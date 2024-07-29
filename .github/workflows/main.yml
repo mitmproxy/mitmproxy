@@ -153,7 +153,11 @@ jobs:
 
   build-windows-installer:
     runs-on: windows-latest
-    if: github.repository == 'mitmproxy/mitmproxy' && (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
+    if: github.repository == 'mitmproxy/mitmproxy' && (
+        github.ref == 'refs/heads/main' ||
+        github.ref == 'refs/heads/citest' ||
+        startsWith(github.ref, 'refs/tags/')
+      )
     steps:
       - uses: actions/checkout@v4
         with:
@@ -269,9 +273,9 @@ jobs:
   # Separate from everything else because slow.
   deploy-docker:
     if: github.repository == 'mitmproxy/mitmproxy' && (
-      github.ref == 'refs/heads/main'
-      || github.ref == 'refs/heads/citest'
-      || startsWith(github.ref, 'refs/tags/')
+        github.ref == 'refs/heads/main' ||
+        github.ref == 'refs/heads/citest' ||
+        startsWith(github.ref, 'refs/tags/')
       )
     permissions:
       id-token: write
