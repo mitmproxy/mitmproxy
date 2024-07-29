@@ -18,22 +18,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e individual_coverage
 
@@ -104,8 +104,6 @@ jobs:
           - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
             platform: linux
     runs-on: ${{ matrix.image }}
-    env:
-      CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,11 +112,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
-      - if: matrix.platform == 'windows'
-        uses: actions/cache@v4
-        with:
-          path: release/installbuilder/setup
-          key: installbuilder
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
@@ -145,16 +138,40 @@ jobs:
       # Windows
       - if: matrix.platform == 'windows'
         run: python -u release/build.py standalone-binaries
-      - if: matrix.platform == 'windows' && github.repository == 'mitmproxy/mitmproxy' &&
-            (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
-        run: python -u release/build.py --dirty installbuilder-installer msix-installer
 
       - uses: actions/upload-artifact@v4
         with:
-          # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
           name: binaries.${{ matrix.platform }}
-          path: |
-            release/dist
+          path: release/dist
+
+  build-wheel:
+    uses: mhils/workflows/.github/workflows/python-build.yml@v7
+    with:
+      python-version-file: .github/python-version.txt
+      attest-provenance: false  # done in deploy step
+      artifact: binaries.wheel
+
+  build-windows-installer:
+    runs-on: windows-latest
+    if: github.repository == 'mitmproxy/mitmproxy' && (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .github/python-version.txt
+
+      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - run: python -u release/build.py installbuilder-installer msix-installer
+        env:
+          CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries.windows-installer
+          path: release/dist
 
   test-web-ui:
     runs-on: ubuntu-latest
@@ -182,6 +199,22 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./web/coverage/coverage-final.json
+
+  test-docker:
+    runs-on: ubuntu-latest
+    needs: build-wheel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: binaries.wheel
+          path: release/docker
+      - name: Build container
+        run: docker build --tag localtesting release/docker
+      - name: Test container
+        run: docker run --rm -v $PWD/release:/release localtesting mitmdump -s /release/selftest.py
 
   docs:
     runs-on: ubuntu-latest
@@ -221,41 +254,86 @@ jobs:
     - mypy
     - individual-coverage
     - test
+    - test-docker
     - test-old-dependencies
     - test-web-ui
     - build
+    - build-wheel
+    - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@main
+    uses: mhils/workflows/.github/workflows/alls-green.yml@v7
     with:
       jobs: ${{ toJSON(needs) }}
+      allowed-skips: build-windows-installer
 
   # Separate from everything else because slow.
-  build-and-deploy-docker:
+  deploy-docker:
     if: github.repository == 'mitmproxy/mitmproxy' && (
       github.ref == 'refs/heads/main'
       || github.ref == 'refs/heads/citest'
       || startsWith(github.ref, 'refs/tags/')
       )
+    permissions:
+      id-token: write
+      attestations: write
+      packages: write
     environment: deploy-docker
     needs: check
     runs-on: ubuntu-latest
-    env:
-      DOCKER_USERNAME: mitmbot
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version-file: .github/python-version.txt
       - uses: actions/download-artifact@v4
         with:
-          name: binaries.linux
-          path: release/dist
+          name: binaries.wheel
+          path: release/docker
       - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
       - uses: docker/setup-buildx-action@3d68780484996aa9d417bb9016193885cdf1f299 # v1.6.0
-      - run: python release/build-and-deploy-docker.py
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          username: mitmbot
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: index
+        with:
+          images: |
+            mitmproxy/mitmproxy
+            ghcr.io/mitmproxy/mitmproxy
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=citest,enable=${{ github.ref == 'refs/heads/citest' }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
+        with:
+          context: release/docker
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
 
   deploy:
     # This action has access to our AWS keys, so we are extra careful here.
