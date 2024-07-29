@@ -156,6 +156,13 @@ jobs:
           path: |
             release/dist
 
+  build-wheel:
+    uses: mhils/workflows/.github/workflows/python-build.yml@v7
+    with:
+      python-version-file: .github/python-version.txt
+      attest-provenance: false  # done in deploy step
+      artifact: binaries.wheel
+
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
@@ -182,6 +189,23 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./web/coverage/coverage-final.json
+
+  test-docker:
+    runs-on: ubuntu-latest
+    needs: build-wheel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: binaries.wheel
+          path: release/docker
+      - run: |
+          cd release/docker
+          ls -l .  # FIXME
+          docker build --tag localtesting --build-arg MITMPROXY_WHEEL=release/docker/*.whl .
+          docker run --rm -v ..:/release localtesting mitmdump -s /release/selftest.py
 
   docs:
     runs-on: ubuntu-latest
@@ -221,21 +245,25 @@ jobs:
     - mypy
     - individual-coverage
     - test
+    - test-docker
     - test-old-dependencies
     - test-web-ui
     - build
+    - build-wheel
     - docs
     uses: mhils/workflows/.github/workflows/alls-green.yml@main
     with:
       jobs: ${{ toJSON(needs) }}
 
   # Separate from everything else because slow.
-  build-and-deploy-docker:
+  deploy-docker:
     if: github.repository == 'mitmproxy/mitmproxy' && (
       github.ref == 'refs/heads/main'
       || github.ref == 'refs/heads/citest'
       || startsWith(github.ref, 'refs/tags/')
       )
+    permissions:
+      packages: write
     environment: deploy-docker
     needs: check
     runs-on: ubuntu-latest
@@ -243,13 +271,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version-file: .github/python-version.txt
       - uses: actions/download-artifact@v4
         with:
-          name: binaries.linux
-          path: release/dist
+          name: binaries.wheel
+          path: release/docker
       - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
       - uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v1.6.0
       - name: Login to Docker Hub
@@ -263,7 +288,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: python release/build-and-deploy-docker.py
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: release/docker
+          platforms: linux/amd64,linux/arm64
+          push: true
+          # FIXME
+          tags: |
+            mitmproxy/mitmproxy:citest
+            ghcr.io/mitmproxy/mitmproxy:citest
 
   deploy:
     # This action has access to our AWS keys, so we are extra careful here.
