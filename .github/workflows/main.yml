@@ -319,8 +319,8 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=citest,enable=${{ github.ref == 'refs/heads/citest' }}
-          labels: |
-            org.opencontainers.image.description: ${{ steps.readme.outputs.contents }}
+          annotations: |
+            org.opencontainers.image.description=${{ steps.readme.outputs.contents }}
 
       - name: Build and push
         id: push
