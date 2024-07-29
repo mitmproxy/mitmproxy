@@ -27,7 +27,7 @@ PlaybookEntryList = list[PlaybookEntry]
 
 def _eq(a: PlaybookEntry, b: PlaybookEntry) -> bool:
     """Compare two commands/events, and possibly update placeholders."""
-    if type(a) != type(b):
+    if type(a) is not type(b):
         return False
 
     a_dict = a.__dict__
