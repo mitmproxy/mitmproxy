@@ -203,9 +203,9 @@ jobs:
           path: release/docker
       - run: |
           cd release/docker
-          ls -l .  # FIXME
           docker build --tag localtesting --build-arg MITMPROXY_WHEEL=release/docker/*.whl .
-          docker run --rm -v ..:/release localtesting mitmdump -s /release/selftest.py
+          cd ..
+          docker run --rm -v $PWD:/release localtesting mitmdump -s /release/selftest.py
 
   docs:
     runs-on: ubuntu-latest
