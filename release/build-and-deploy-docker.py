@@ -63,43 +63,38 @@ assert "Self-test successful" in r.stdout.decode()
 assert r.returncode == 0
 
 # Now we can deploy.
+if branch == "main":
+    tags = [
+        "mitmproxy/mitmproxy:dev",
+        "ghcr.io/mitmproxy/mitmproxy:dev",
+    ]
+elif branch == "citest":
+    tags = [
+        "mitmproxy/mitmproxy:citest",
+        "ghcr.io/mitmproxy/mitmproxy:citest",
+    ]
+elif tag:
+    tags = [
+        f"mitmproxy/mitmproxy:{tag}",
+        f"ghcr.io/mitmproxy/mitmproxy:{tag}",
+        "mitmproxy/mitmproxy:latest",
+        "ghcr.io/mitmproxy/mitmproxy:latest",
+    ]
+else:
+    raise AssertionError
+
 subprocess.check_call(
     [
         "docker",
-        "login",
-        "-u",
-        os.environ["DOCKER_USERNAME"],
-        "-p",
-        os.environ["DOCKER_PASSWORD"],
-    ]
+        "buildx",
+        "build",
+        *(args for tag in tags for args in ["--tag", tag]),
+        "--push",
+        "--platform",
+        "linux/amd64,linux/arm64",
+        "--build-arg",
+        f"MITMPROXY_WHEEL={whl.name}",
+        ".",
+    ],
+    cwd=docker_build_dir,
 )
-
-
-def _buildx(docker_tag):
-    subprocess.check_call(
-        [
-            "docker",
-            "buildx",
-            "build",
-            "--tag",
-            docker_tag,
-            "--push",
-            "--platform",
-            "linux/amd64,linux/arm64",
-            "--build-arg",
-            f"MITMPROXY_WHEEL={whl.name}",
-            ".",
-        ],
-        cwd=docker_build_dir,
-    )
-
-
-if branch == "main":
-    _buildx("mitmproxy/mitmproxy:dev")
-elif branch == "citest":
-    _buildx("mitmproxy/mitmproxy:citest")
-elif tag:
-    _buildx(f"mitmproxy/mitmproxy:{tag}")
-    _buildx("mitmproxy/mitmproxy:latest")
-else:
-    raise AssertionError

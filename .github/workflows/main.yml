@@ -239,9 +239,6 @@ jobs:
     environment: deploy-docker
     needs: check
     runs-on: ubuntu-latest
-    env:
-      DOCKER_USERNAME: mitmbot
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -255,6 +252,17 @@ jobs:
           path: release/dist
       - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
       - uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v1.6.0
+      - name: Login to Docker Hub
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: mitmbot
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - run: python release/build-and-deploy-docker.py
 
   deploy:
