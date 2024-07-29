@@ -277,7 +277,7 @@ jobs:
       attestations: write
       packages: write
     environment: deploy-docker
-    needs: check
+    needs: build-wheel # FIXME
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -307,6 +307,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: index
         with:
           images: |
             mitmproxy/mitmproxy
@@ -317,7 +319,7 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=citest,enable=${{ github.ref == 'refs/heads/citest' }}
-          annotations: |
+          labels: |
             org.opencontainers.image.description: ${{ steps.readme.outputs.contents }}
 
       - name: Build and push
