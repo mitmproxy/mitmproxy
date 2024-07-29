@@ -302,6 +302,8 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - id: readme
+        run: echo "contents=$(jq -Rs . release/docker/DockerHub-README.md)" >> "$GITHUB_OUTPUT"
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
@@ -315,6 +317,8 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=citest,enable=${{ github.ref == 'refs/heads/citest' }}
+          annotations: |
+            org.opencontainers.image.description: ${{ steps.readme.outputs.contents }}
 
       - name: Build and push
         id: push
