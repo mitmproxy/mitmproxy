@@ -201,11 +201,10 @@ jobs:
         with:
           name: binaries.wheel
           path: release/docker
-      - run: |
-          cd release/docker
-          docker build --tag localtesting --build-arg MITMPROXY_WHEEL=release/docker/*.whl .
-          cd ..
-          docker run --rm -v $PWD:/release localtesting mitmdump -s /release/selftest.py
+      - name: Build container
+        run: docker build --tag localtesting release/docker
+      - name: Test container
+        run: docker run --rm -v $PWD/release:/release localtesting mitmdump -s /release/selftest.py
 
   docs:
     runs-on: ubuntu-latest
