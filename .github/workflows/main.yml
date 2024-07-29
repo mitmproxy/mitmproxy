@@ -303,7 +303,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: readme
-        run: echo "contents=$(jq -Rs . release/docker/DockerHub-README.md)" >> "$GITHUB_OUTPUT"
+        run: echo "contents=$(cat release/docker/DockerHub-README.md | sed 's/"/""/g; s/,/\,/g; s/\n/\\n/g s/#/\#/g')" >> "$GITHUB_OUTPUT"
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
