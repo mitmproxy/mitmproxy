@@ -320,7 +320,7 @@ jobs:
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=citest,enable=${{ github.ref == 'refs/heads/citest' }}
           annotations: |
-            org.opencontainers.image.description=${{ steps.readme.outputs.contents }}
+            org.opencontainers.image.description='${{ steps.readme.outputs.contents }}'
 
       - name: Build and push
         id: push
