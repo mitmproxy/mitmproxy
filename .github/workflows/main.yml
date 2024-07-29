@@ -296,7 +296,7 @@ jobs:
           if [[ $GITHUB_REF == "refs/heads/main" ]]; then
             echo "mitmproxy/mitmproxy:dev"
             echo "ghcr.io/mitmproxy/mitmproxy:dev"
-          if [[ $GITHUB_REF == "refs/heads/citest" ]]; then
+          elif [[ $GITHUB_REF == "refs/heads/citest" ]]; then
             echo "mitmproxy/mitmproxy:citest"
             echo "ghcr.io/mitmproxy/mitmproxy:citest"
           elif [[ $GITHUB_REF == refs/tags/v* ]]; then
