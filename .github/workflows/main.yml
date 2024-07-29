@@ -18,22 +18,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@main
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v7
     with:
       cmd: tox -e individual_coverage
 
@@ -261,9 +261,10 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@main
+    uses: mhils/workflows/.github/workflows/alls-green.yml@v7
     with:
       jobs: ${{ toJSON(needs) }}
+      allowed-skips: build-windows-installer
 
   # Separate from everything else because slow.
   deploy-docker:
