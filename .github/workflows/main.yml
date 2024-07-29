@@ -277,7 +277,7 @@ jobs:
       attestations: write
       packages: write
     environment: deploy-docker
-    needs: build-wheel # FIXME
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -333,7 +333,6 @@ jobs:
         with:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
 
   deploy:
     # This action has access to our AWS keys, so we are extra careful here.
