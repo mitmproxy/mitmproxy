@@ -276,6 +276,7 @@ jobs:
           path: release/docker
       - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
       - uses: docker/setup-buildx-action@aa33708b10e362ff993539393ff100fa93ed6a27 # v1.6.0
+
       - name: Login to Docker Hub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
@@ -287,16 +288,38 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tags
+        id: tags
+        run: |
+          echo 'tags<<EOF'
+          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+            echo "mitmproxy/mitmproxy:dev"
+            echo "ghcr.io/mitmproxy/mitmproxy:dev"
+          if [[ $GITHUB_REF == "refs/heads/citest" ]]; then
+            echo "mitmproxy/mitmproxy:citest"
+            echo "ghcr.io/mitmproxy/mitmproxy:citest"
+          elif [[ $GITHUB_REF == refs/tags/v* ]]; then
+            version=${GITHUB_REF#refs/tags/v}
+            echo "mitmproxy/mitmproxy:$version"
+            echo "ghcr.io/mitmproxy/mitmproxy:$version"
+            echo "mitmproxy/mitmproxy:latest"
+            echo "ghcr.io/mitmproxy/mitmproxy:latest"
+          fi
+          echo EOF
       - name: Build and push
+        id: push
         uses: docker/build-push-action@v6
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
           push: true
-          # FIXME
-          tags: |
-            mitmproxy/mitmproxy:citest
-            ghcr.io/mitmproxy/mitmproxy:citest
+          tags: ${{ steps.tags.outputs.tags }}
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
 
   deploy:
     # This action has access to our AWS keys, so we are extra careful here.
