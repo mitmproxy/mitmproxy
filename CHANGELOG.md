@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 29 July 2024: mitmproxy 10.4.1
+
 - Fix a bug where macOS local mode would not start up on macOS.
   ([#7045](https://github.com/mitmproxy/mitmproxy/pull/7045), @mhils)
 - Fix UDP error handling when we learn that the remote has disconnected.
