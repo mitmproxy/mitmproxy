@@ -284,7 +284,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     connections: ClassVar[set[WebSocketEventBroadcaster]]
     _send_tasks: ClassVar[set[asyncio.Task]] = set()
 
-    def open(self):
+    def open(self, *args, **kwargs):
         self.connections.add(self)
 
     def on_close(self):
