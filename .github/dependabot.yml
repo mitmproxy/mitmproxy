@@ -20,7 +20,7 @@ updates:
         - "hypothesis"
       pyinstaller:
         patterns:
-        - "pyinstaller"
+        - "pyinstaller*"
       mypy:
         patterns:
         - "types-*"
