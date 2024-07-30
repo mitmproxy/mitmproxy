@@ -1,11 +1,12 @@
 # Release Checklist
- 
-1. Make sure that `CHANGELOG.md` is up-to-date with all entries in the "Unreleased" section.
-2. Invoke the [release workflow](https://github.com/mitmproxy/mitmproxy/actions/workflows/release.yml) from the GitHub UI.
-3. The spawned workflow runs will require manual confirmation on GitHub which you need to approve twice: 
+
+1. Check if `mitmproxy-rs` needs a new release.
+2. Make sure that `CHANGELOG.md` is up-to-date with all entries in the "Unreleased" section.
+3. Invoke the [release workflow](https://github.com/mitmproxy/mitmproxy/actions/workflows/release.yml) from the GitHub UI.
+4. The spawned workflow runs will require manual confirmation on GitHub which you need to approve twice: 
    https://github.com/mitmproxy/mitmproxy/actions
-4. Once everything has been deployed, update the website.
-5. Verify that the front-page download links for all platforms are working.
+5. Once everything has been deployed, update the website.
+6. Verify that the front-page download links for all platforms are working.
 
 ### GitHub Releases
 

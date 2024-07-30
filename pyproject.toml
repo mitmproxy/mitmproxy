@@ -31,58 +31,59 @@ classifiers = [
 # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
-    "aioquic<=1.1.0,>=1.1.0",
+    "aioquic>=1.1.0,<=1.2.0",
     "asgiref>=3.2.10,<=3.8.1",
     "Brotli>=1.0,<=1.1.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
-    "cryptography>=42.0,<42.1",  # relaxed upper bound here to get security fixes
+    "cryptography>=42.0,<43.1",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.0.3",
     "h11>=0.11,<=0.14.0",
     "h2>=4.1,<=4.1.0",
     "hyperframe>=6.0,<=6.0.1",
     "kaitaistruct>=0.10,<=0.10",
     "ldap3>=2.8,<=2.9.1",
-    "mitmproxy_rs>=0.6.1,<0.7",  # relaxed upper bound here: we control this
+    "mitmproxy_rs>=0.6.3,<0.7",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.0.8",
     "passlib>=1.6.5,<=1.7.4",
     "protobuf<=5.27.2,>=5.27.2",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
-    "pyOpenSSL>=22.1,<=24.1.0",
+    "pyOpenSSL>=22.1,<=24.2.1",
     "pyparsing>=2.4.2,<=3.1.2",
     "pyperclip<=1.9.0,>=1.9.0",
     "ruamel.yaml>=0.16,<=0.18.6",
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado<=6.4.1,>=6.4.1",
     "typing-extensions>=4.3,<=4.11.0; python_version<'3.11'",
-    "urwid>=2.6.14,<=2.6.14",
+    "urwid>=2.6.14,<=2.6.15",
     "wsproto>=1.0,<=1.2.0",
     "publicsuffix2>=2.20190812,<=2.20191221",
-    "zstandard>=0.15,<=0.22.0",
+    "zstandard>=0.15,<=0.23.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "click>=7.0,<=8.1.7",
-    "hypothesis<=6.104.2,>=6.104.2",
-    "pdoc<=14.5.1,>=14.5.1",
-    "pyinstaller==6.8.0",
-    "pytest-asyncio>=0.23.6,<=0.23.7",
+    "hypothesis>=6.104.2,<=6.108.5",
+    "pdoc>=14.5.1,<=14.6.0",
+    "pyinstaller==6.9.0",
+    "pyinstaller-hooks-contrib==2024.7",
+    "pytest-asyncio>=0.23.6,<=0.23.8",
     "pytest-cov>=5.0.0,<=5.0.0",
     "pytest-timeout>=2.3.1,<=2.3.1",
     "pytest-xdist>=3.5.0,<=3.6.1",
-    "pytest<=8.2.2,>=8.2.2",
+    "pytest>=8.2.2,<=8.3.2",
     "requests>=2.9.1,<=2.32.3",
-    "tox<=4.15.1,>=4.15.1",
+    "tox>=4.15.1,<=4.16.0",
     "wheel>=0.36.2,<=0.43",
     "build>=0.10.0,<=1.2.1",
-    "mypy<=1.10.1,>=1.10.1",
-    "ruff<=0.5.0,>=0.5.0",
+    "mypy>=1.10.1,<=1.11.0",
+    "ruff>=0.5.0,<=0.5.5",
     "types-certifi>=2021.10.8.3,<=2021.10.8.3",
     "types-Flask>=1.1.6,<=1.1.6",
     "types-Werkzeug>=1.0.9,<=1.0.9",
-    "types-requests<=2.32.0.20240622,>=2.32.0.20240622",
+    "types-requests>=2.32.0.20240622,<=2.32.0.20240712",
     "types-cryptography>=3.3.23.2,<=3.3.23.2",
-    "types-pyOpenSSL>=23.3.0.0,<=24.1.0.20240425",
+    "types-pyOpenSSL>=23.3.0.0,<=24.1.0.20240722",
 ]
 
 [project.urls]

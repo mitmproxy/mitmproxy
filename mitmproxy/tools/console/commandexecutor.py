@@ -19,11 +19,11 @@ class CommandExecutor:
                 logging.error(str(e))
             else:
                 if ret is not None:
-                    if type(ret) == Sequence[flow.Flow]:
+                    if type(ret) == Sequence[flow.Flow]:  # noqa: E721
                         signals.status_message.send(
                             message="Command returned %s flows" % len(ret)
                         )
-                    elif type(ret) == flow.Flow:
+                    elif type(ret) is flow.Flow:
                         signals.status_message.send(message="Command returned 1 flow")
                     else:
                         self.master.overlay(
