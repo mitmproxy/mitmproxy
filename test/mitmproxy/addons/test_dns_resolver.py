@@ -1,6 +1,7 @@
 import socket
 
 import mitmproxy_rs
+import pytest
 
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
@@ -24,20 +25,33 @@ async def test_ignores_reverse_mode():
         assert not f.response
 
 
-async def test_resolver():
+def get_system_dns_servers():
+    raise RuntimeError("better luck next time")
+
+
+async def test_resolver(monkeypatch):
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr) as tctx:
-        assert dr.name_servers == mitmproxy_rs.get_system_dns_servers()
+        assert dr.name_servers() == mitmproxy_rs.get_system_dns_servers()
 
         tctx.options.dns_name_servers = ["1.1.1.1"]
-        assert dr.name_servers == ["1.1.1.1"]
+        assert dr.name_servers() == ["1.1.1.1"]
 
-        res_old = dr.resolver
+        res_old = dr.resolver()
         tctx.options.dns_use_hosts_file = False
-        assert dr.resolver != res_old
+        assert dr.resolver() != res_old
 
         tctx.options.dns_name_servers = ["8.8.8.8"]
-        assert dr.name_servers == ["8.8.8.8"]
+        assert dr.name_servers() == ["8.8.8.8"]
+
+        monkeypatch.setattr(
+            mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
+        )
+        tctx.options.dns_name_servers = []
+        with pytest.raises(
+            RuntimeError, match="Must set dns_name_servers option to run DNS mode"
+        ):
+            dr.name_servers()
 
 
 async def lookup_ipv4(name: str):
@@ -68,14 +82,14 @@ async def test_dns_request(monkeypatch):
         flow = tflow.tdnsflow(req=req)
         flow.server_conn.address = None
         await resolver.dns_request(flow)
-        assert flow.server_conn.address[0] == resolver.name_servers[0]
+        assert flow.server_conn.address[0] == resolver.name_servers()[0]
 
         req.query = False
         req.op_code = dns.op_codes.QUERY
         flow = tflow.tdnsflow(req=req)
         flow.server_conn.address = None
         await resolver.dns_request(flow)
-        assert flow.server_conn.address[0] == resolver.name_servers[0]
+        assert flow.server_conn.address[0] == resolver.name_servers()[0]
 
         flow = await process_questions(
             [
@@ -83,7 +97,7 @@ async def test_dns_request(monkeypatch):
                 dns.Question("dns.google", dns.types.NS, dns.classes.IN),
             ]
         )
-        assert flow.server_conn.address[0] == resolver.name_servers[0]
+        assert flow.server_conn.address[0] == resolver.name_servers()[0]
 
         flow = await process_questions(
             [
@@ -119,4 +133,4 @@ async def test_dns_request(monkeypatch):
                 dns.Question("dns.google", dns.types.A, dns.classes.IN),
             ]
         )
-        assert flow.server_conn.address[0] == resolver.name_servers[0]
+        assert flow.server_conn.address[0] == resolver.name_servers()[0]
