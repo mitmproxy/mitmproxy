@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash on startup when mitmproxy is unable to determine the OS' DNS servers
 
 ## 29 July 2024: mitmproxy 10.4.1
 
@@ -16,7 +17,6 @@
   ([#7045](https://github.com/mitmproxy/mitmproxy/pull/7045), @mhils)
 - Container images are now published to both Docker Hub and GitHub Container Registry.
   ([#7061](https://github.com/mitmproxy/mitmproxy/pull/7061), @mhils)
-- Make `DnsResolver.resolver` and `DnsResolver.name_servers` as cached functions instead of cached properties
 
 ## 25 July 2024: mitmproxy 10.4.0
 

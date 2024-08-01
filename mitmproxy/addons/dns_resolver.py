@@ -51,7 +51,7 @@ class DnsResolver:
     def name_servers(self) -> list[str]:
         try:
             return ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
-        except RuntimeError as e:  # pragma: no cover
+        except RuntimeError as e:
             raise RuntimeError(
                 f"Failed to get system dns servers: {e}\nMust set dns_name_servers option to run DNS mode."
             )

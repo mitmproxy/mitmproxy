@@ -1,3 +1,4 @@
+import pytest
 import socket
 
 import mitmproxy_rs
@@ -24,7 +25,11 @@ async def test_ignores_reverse_mode():
         assert not f.response
 
 
-async def test_resolver():
+def get_system_dns_servers():
+    raise RuntimeError("better luck next time")
+
+
+async def test_resolver(monkeypatch):
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr) as tctx:
         assert dr.name_servers() == mitmproxy_rs.get_system_dns_servers()
@@ -38,6 +43,13 @@ async def test_resolver():
 
         tctx.options.dns_name_servers = ["8.8.8.8"]
         assert dr.name_servers() == ["8.8.8.8"]
+
+        monkeypatch.setattr(
+            mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
+        )
+        tctx.options.dns_name_servers = []
+        with pytest.raises(RuntimeError, match="Must set dns_name_servers option to run DNS mode"):
+            dr.name_servers()
 
 
 async def lookup_ipv4(name: str):
