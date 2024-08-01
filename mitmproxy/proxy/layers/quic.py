@@ -8,6 +8,7 @@ from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
+from typing import Optional
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -331,7 +332,7 @@ class QuicClientHello(Exception):
     data: bytes
 
 
-def quic_parse_client_hello(data: bytes) -> ClientHello:
+def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
     """Helper function that parses a client hello packet."""
 
     # ensure the first packet is indeed the initial one
@@ -380,8 +381,7 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
             raise ValueError("Invalid ClientHello data.") from e
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
-    raise ValueError("No ClientHello returned.")
-
+    return None
 
 class QuicStreamNextLayer(layer.NextLayer):
     """`NextLayer` variant that callbacks `QuicStreamLayer` after layer decision."""
@@ -1121,6 +1121,7 @@ class ClientQuicLayer(QuicLayer):
 
     server_tls_available: bool
     """Indicates whether the parent layer is a ServerQuicLayer."""
+    recv_buffer: bytearray
 
     def __init__(
         self, context: context.Context, time: Callable[[], float] | None = None
@@ -1141,6 +1142,7 @@ class ClientQuicLayer(QuicLayer):
         self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
             self.context.layers[-2], ServerQuicLayer
         )
+        self.recv_buffer = bytearray()
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
@@ -1198,11 +1200,15 @@ class ClientQuicLayer(QuicLayer):
                 f"Invalid handshake received, roaming not supported. ({data.hex()})",
             )
 
+        self.recv_buffer.extend(data)
         # extract the client hello
         try:
-            client_hello = quic_parse_client_hello(data)
+            client_hello = quic_parse_client_hello(bytes(self.recv_buffer))
         except ValueError as e:
             return False, f"Cannot parse ClientHello: {str(e)} ({data.hex()})"
+
+        if not client_hello:
+            return False, None
 
         # copy the client hello information
         self.conn.sni = client_hello.sni

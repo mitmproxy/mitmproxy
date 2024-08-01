@@ -426,7 +426,6 @@ class NextLayer:
 
 
 def _starts_like_quic(data_client: bytes) -> bool:
-    # FIXME: handle clienthellos distributed over multiple packets?
     # FIXME: perf
     try:
         quic_parse_client_hello(data_client)
