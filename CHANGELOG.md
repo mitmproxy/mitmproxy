@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Fix a crash on startup when mitmproxy is unable to determine the OS' DNS servers
+  ([#7066](https://github.com/mitmproxy/mitmproxy/pull/7066), @errorxyz)
 
 ## 29 July 2024: mitmproxy 10.4.1
 

@@ -1,7 +1,7 @@
-import pytest
 import socket
 
 import mitmproxy_rs
+import pytest
 
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
@@ -48,7 +48,9 @@ async def test_resolver(monkeypatch):
             mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
         )
         tctx.options.dns_name_servers = []
-        with pytest.raises(RuntimeError, match="Must set dns_name_servers option to run DNS mode"):
+        with pytest.raises(
+            RuntimeError, match="Must set dns_name_servers option to run DNS mode"
+        ):
             dr.name_servers()
 
 
