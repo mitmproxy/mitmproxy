@@ -50,7 +50,7 @@ class DnsResolver:
     @cache
     def name_servers(self) -> list[str]:
         try:
-            ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
+            return ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
         except RuntimeError as e:  # pragma: no cover
             raise RuntimeError(
                 f"Failed to get system dns servers: {e}\nMust set dns_name_servers option to run DNS mode."
