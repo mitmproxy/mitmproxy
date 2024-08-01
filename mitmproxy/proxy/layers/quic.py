@@ -383,6 +383,7 @@ def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
         raise ValueError(e.reason_phrase) from e
     return None
 
+
 class QuicStreamNextLayer(layer.NextLayer):
     """`NextLayer` variant that callbacks `QuicStreamLayer` after layer decision."""
 
