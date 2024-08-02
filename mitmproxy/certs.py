@@ -27,7 +27,6 @@ from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
 
-
 logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
@@ -514,12 +513,16 @@ class CertStore:
         except ValueError as e:
             private_key = self.default_privatekey
             if cert.public_key() != private_key.public_key():
-                raise ValueError(f"Unable to find private key in \"{path.absolute()}\": {e}") from e
+                raise ValueError(
+                    f'Unable to find private key in "{path.absolute()}": {e}'
+                ) from e
         else:
             if cert.public_key() != private_key.public_key():
-                raise ValueError(f"Private and public keys in \"{path.absolute()}\" do not match:\n"
-                                 f"{cert.public_key()=}\n"
-                                 f"{private_key.public_key()=}")
+                raise ValueError(
+                    f'Private and public keys in "{path.absolute()}" do not match:\n'
+                    f"{cert.public_key()=}\n"
+                    f"{private_key.public_key()=}"
+                )
 
         try:
             chain = [Cert(x) for x in x509.load_pem_x509_certificates(raw)]

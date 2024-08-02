@@ -8,7 +8,9 @@
 ## Unreleased: mitmproxy next
 
 - Improve the error message when users specify the `certs` option without a matching private key.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where intermediate certificates would not be transmitted when using QUIC.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 
 ## 02 August 2024: mitmproxy 10.4.2
 

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 from cryptography import x509
-from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import NameOID
 
 from ..conftest import skip_windows
@@ -270,7 +269,9 @@ class TestCert:
         assert c == c2
 
     def test_add_cert_overrides(self, tdata, tstore):
-        certfile = Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem"))
+        certfile = Path(
+            tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")
+        )
         cert = certs.Cert.from_pem(certfile.read_bytes())
         tstore.add_cert_file("example.com", certfile)
         assert cert == tstore.get_cert("example.com", []).cert
@@ -301,27 +302,39 @@ class TestCert:
         with pytest.raises(ValueError, match="Unable to find private key"):
             tstore.add_cert_file(
                 "example.com",
-                Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt")),
+                Path(
+                    tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt")
+                ),
             )
 
     def test_add_cert_private_public_mismatch(self, tdata, tstore):
-        with pytest.raises(ValueError, match='Private and public keys in ".+" do not match'):
+        with pytest.raises(
+            ValueError, match='Private and public keys in ".+" do not match'
+        ):
             tstore.add_cert_file(
                 "example.com",
-                Path(tdata.path("mitmproxy/net/data/verificationcerts/private-public-mismatch.pem")),
+                Path(
+                    tdata.path(
+                        "mitmproxy/net/data/verificationcerts/private-public-mismatch.pem"
+                    )
+                ),
             )
 
     def test_add_cert_chain(self, tdata, tstore):
         tstore.add_cert_file(
             "example.com",
-            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-chain.pem"))
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-chain.pem")),
         )
         assert len(tstore.get_cert("example.com", []).chain_certs) == 2
 
     def test_add_cert_chain_invalid(self, tdata, tstore, caplog):
         tstore.add_cert_file(
             "example.com",
-            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-chain-invalid.pem"))
+            Path(
+                tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-chain-invalid.pem"
+                )
+            ),
         )
         assert "Failed to read certificate chain" in caplog.text
         assert len(tstore.get_cert("example.com", []).chain_certs) == 1
