@@ -311,6 +311,21 @@ class TestCert:
                 Path(tdata.path("mitmproxy/net/data/verificationcerts/private-public-mismatch.pem")),
             )
 
+    def test_add_cert_chain(self, tdata, tstore):
+        tstore.add_cert_file(
+            "example.com",
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-chain.pem"))
+        )
+        assert len(tstore.get_cert("example.com", []).chain_certs) == 2
+
+    def test_add_cert_chain_invalid(self, tdata, tstore, caplog):
+        tstore.add_cert_file(
+            "example.com",
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-chain-invalid.pem"))
+        )
+        assert "Failed to read certificate chain" in caplog.text
+        assert len(tstore.get_cert("example.com", []).chain_certs) == 1
+
     def test_special_character(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_with_comma"), "rb") as f:
             d = f.read()

@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 import ipaddress
+import logging
 import os
 import sys
 import warnings
@@ -25,6 +26,9 @@ from cryptography.x509 import ExtendedKeyUsageOID
 from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
+
+
+logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 CA_EXPIRY = datetime.timedelta(days=10 * 365)
@@ -517,7 +521,13 @@ class CertStore:
                                  f"{cert.public_key()=}\n"
                                  f"{private_key.public_key()=}")
 
-        self.add_cert(CertStoreEntry(cert, private_key, path, [cert]), spec)
+        try:
+            chain = [Cert(x) for x in x509.load_pem_x509_certificates(raw)]
+        except ValueError as e:
+            logger.warning(f"Failed to read certificate chain: {e}")
+            chain = [cert]
+
+        self.add_cert(CertStoreEntry(cert, private_key, path, chain), spec)
 
     def add_cert(self, entry: CertStoreEntry, *names: str) -> None:
         """

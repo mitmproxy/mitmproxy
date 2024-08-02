@@ -95,3 +95,11 @@ shutil.copyfile("trusted-leaf.pem", "example.mitmproxy.org.pem")
 with open(f"trusted-leaf.crt") as crt, open(f"self-signed.key") as key, open(f"private-public-mismatch.pem", "w") as pem:
     pem.write(crt.read())
     pem.write(key.read())
+
+with open(f"trusted-leaf.pem") as crt1, open(f"trusted-root.crt") as crt2, open(f"trusted-chain.pem", "w") as pem:
+    pem.write(crt1.read())
+    pem.write(crt2.read())
+
+with open(f"trusted-leaf.pem") as crt1, open(f"trusted-chain-invalid.pem", "w") as pem:
+    pem.write(crt1.read())
+    pem.write("-----BEGIN CERTIFICATE-----\nnotacert\n-----END CERTIFICATE-----\n")
