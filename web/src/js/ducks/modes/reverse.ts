@@ -21,12 +21,14 @@ export const MODE_REVERSE_ADD_SERVER_CONFIG = "MODE_REVERSE_ADD_SERVER_CONFIG";
 export interface ReverseState extends ModeState {
     protocol?: ReverseProxyProtocols;
     destination?: string;
+    full_spec: string;
 }
 
 const defaultServerConfig: ReverseState = {
     active: false,
     protocol: ReverseProxyProtocols.HTTPS,
     destination: "",
+    full_spec: "",
 };
 
 export interface ReverseServersState {
@@ -123,16 +125,19 @@ export const setDestination =
     };
 
 const getFullSpecReverse = (
-    protocol?: ReverseProxyProtocols,
     destination?: string,
     listen_host?: string,
     listen_port?: number,
+    protocol?: string,
 ) => {
-    if (listen_host && listen_port) {
-        return `reverse:${protocol}://${destination}@${listen_host}:${listen_port}`;
-    } else {
-        return `reverse:${protocol}://${destination}`;
+    let spec = `reverse:${destination}`;
+    if (protocol) {
+        spec = `reverse:${protocol}://${destination}`;
     }
+    if (listen_host && listen_port) {
+        spec = `${spec}@${listen_host}:${listen_port}`;
+    }
+    return spec;
 };
 
 const reverseReducer = (state = initialState, action): ReverseServersState => {
@@ -197,38 +202,73 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                     "reverse",
                     action.data.servers,
                 );
-                const updatedServers = state.servers.map((server) => {
-                    const serverSpec = getFullSpecReverse(
-                        server.protocol,
+
+                const configMap = new Map();
+                for (const config of currentModeConfigs) {
+                    const key = getFullSpecReverse(
+                        config.data,
+                        config.listen_host,
+                        config.listen_port as number,
+                    );
+                    configMap.set(key, config);
+                }
+
+                let filteredServers = state.servers;
+
+                if (currentModeConfigs.length > 0) {
+                    filteredServers = state.servers.filter(
+                        (server) => server !== defaultServerConfig,
+                    );
+                }
+
+                const updatedServers = filteredServers.map((server) => {
+                    const fullSpecConfig = getFullSpecReverse(
                         server.destination,
                         server.listen_host,
-                        server.listen_port,
+                        server.listen_port as number,
+                        server.protocol,
                     );
+                    const config = configMap.get(fullSpecConfig);
 
-                    for (const config of currentModeConfigs) {
-                        const configSpec = getFullSpecReverse(
-                            server.protocol,
-                            config.data,
-                            config.listen_host,
-                            config.listen_port as number,
-                        );
-
-                        if (serverSpec === configSpec) {
-                            const [protocol, destination] =
-                                config.data.split("://");
-                            return {
-                                ...server,
-                                active: true,
-                                protocol: protocol as ReverseProxyProtocols,
-                                destination,
-                                listen_host: config.listen_host,
-                                listen_port: Number(config.listen_port),
-                                error: undefined,
-                            };
-                        }
+                    if (config) {
+                        return {
+                            ...server,
+                            active: true,
+                            protocol: server.protocol,
+                            destination: server.destination,
+                            listen_host: config.listen_host,
+                            listen_port: Number(config.listen_port),
+                            full_spec: fullSpecConfig,
+                            error: undefined,
+                        };
                     }
                     return server;
                 });
+
+                // Add any new configurations that were not in the original state
+                for (const config of currentModeConfigs) {
+                    const [protocol, destination] = config.data.split("://");
+                    const fullSpecConfig = getFullSpecReverse(
+                        config.data,
+                        config.listen_host,
+                        config.listen_port as number,
+                    );
+                    if (
+                        !updatedServers.find(
+                            (server) => server.full_spec === fullSpecConfig,
+                        )
+                    ) {
+                        updatedServers.push({
+                            active: true,
+                            protocol: protocol as ReverseProxyProtocols,
+                            destination,
+                            listen_host: config.listen_host,
+                            listen_port: Number(config.listen_port),
+                            full_spec: fullSpecConfig,
+                            error: undefined,
+                        });
+                    }
+                }
 
                 return {
                     servers: updatedServers,
