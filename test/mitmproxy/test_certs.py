@@ -109,19 +109,6 @@ class TestCertStore:
         assert ("three.com", x509.GeneralNames([])) in tstore.certs
         assert ("four.com", x509.GeneralNames([])) in tstore.certs
 
-    def test_overrides(self, tmp_path):
-        ca1 = certs.CertStore.from_store(tmp_path / "ca1", "test", 2048)
-        ca2 = certs.CertStore.from_store(tmp_path / "ca2", "test", 2048)
-        assert not ca1.default_ca.serial == ca2.default_ca.serial
-
-        dc = ca2.get_cert("foo.com", [x509.DNSName("sans.example.com")])
-        dcp = tmp_path / "dc"
-        dcp.write_bytes(dc.cert.to_pem())
-        ca1.add_cert_file("foo.com", dcp)
-
-        ret = ca1.get_cert("foo.com", [])
-        assert ret.cert.serial == dc.cert.serial
-
     def test_create_dhparams(self, tmp_path):
         filename = tmp_path / "dhparam.pem"
         certs.CertStore.load_dhparam(filename)
@@ -281,6 +268,12 @@ class TestCert:
 
         c2.set_state(a)
         assert c == c2
+
+    def test_add_cert_overrides(self, tdata, tstore):
+        certfile = Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem"))
+        cert = certs.Cert.from_pem(certfile.read_bytes())
+        tstore.add_cert_file("example.com", certfile)
+        assert cert == tstore.get_cert("example.com", []).cert
 
     def test_from_store_with_passphrase(self, tdata, tstore):
         tstore.add_cert_file(
