@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from cryptography import x509
+from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import NameOID
 
 from ..conftest import skip_windows
@@ -203,6 +204,7 @@ class TestCert:
         assert c2.cn == "www.inode.co.nz"
         assert len(c2.altnames) == 2
         assert c2.fingerprint()
+        assert c2.public_key()
         assert c2.notbefore == datetime(
             year=2010,
             month=1,
@@ -300,6 +302,20 @@ class TestCert:
                 "encrypted-no-pass",
                 Path(tdata.path("mitmproxy/data/mitmproxy.pem")),
                 None,
+            )
+
+    def test_add_cert_with_no_private_key(self, tdata, tstore):
+        with pytest.raises(ValueError, match="Unable to find private key"):
+            tstore.add_cert_file(
+                "example.com",
+                Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt")),
+            )
+
+    def test_add_cert_private_public_mismatch(self, tdata, tstore):
+        with pytest.raises(ValueError, match='Private and public keys in ".+" do not match'):
+            tstore.add_cert_file(
+                "example.com",
+                Path(tdata.path("mitmproxy/net/data/verificationcerts/private-public-mismatch.pem")),
             )
 
     def test_special_character(self, tdata):

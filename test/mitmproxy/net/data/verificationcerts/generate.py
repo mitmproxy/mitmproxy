@@ -92,3 +92,6 @@ for x in ["self-signed", "trusted-leaf", "trusted-leaf-ip", "trusted-root"]:
         pem.write(key.read())
 
 shutil.copyfile("trusted-leaf.pem", "example.mitmproxy.org.pem")
+with open(f"trusted-leaf.crt") as crt, open(f"self-signed.key") as key, open(f"private-public-mismatch.pem", "w") as pem:
+    pem.write(crt.read())
+    pem.write(key.read())

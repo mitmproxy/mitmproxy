@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Improve the error message when users specify the `certs` option without a matching private key.
 
 ## 02 August 2024: mitmproxy 10.4.2
 
