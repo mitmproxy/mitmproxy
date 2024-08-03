@@ -355,7 +355,7 @@ class TestCert:
     def test_add_cert_is_ca(self, tdata, tstore, caplog):
         tstore.add_cert_file(
             "example.com",
-            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem"))
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
         )
         assert "is a certificate authority and not a leaf certificate" in caplog.text
 

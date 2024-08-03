@@ -138,7 +138,9 @@ class Cert(serializable.Serializable):
     def is_ca(self) -> bool:
         constraints: x509.BasicConstraints
         try:
-            constraints = self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value
+            constraints = self._cert.extensions.get_extension_for_class(
+                x509.BasicConstraints
+            ).value
             return constraints.ca
         except x509.ExtensionNotFound:
             return False
@@ -541,7 +543,7 @@ class CertStore:
 
         if cert.is_ca:
             logger.warning(
-                f"\"{path.absolute()}\" is a certificate authority and not a leaf certificate. "
+                f'"{path.absolute()}" is a certificate authority and not a leaf certificate. '
                 f"This indicates a misconfiguration, see https://docs.mitmproxy.org/stable/concepts-certificates/."
             )
 
