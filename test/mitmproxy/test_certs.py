@@ -245,6 +245,19 @@ class TestCert:
         c = certs.Cert.from_pem(d)
         assert c.keyinfo == (name, bits)
 
+    @pytest.mark.parametrize(
+        "filename,is_ca",
+        [
+            ("mitmproxy/net/data/verificationcerts/trusted-leaf.crt", False),
+            ("mitmproxy/net/data/verificationcerts/trusted-root.crt", True),
+            ("mitmproxy/data/invalid-subject.pem", False),  # no basic constraints
+        ],
+    )
+    def test_is_ca(self, tdata, filename, is_ca):
+        pem = Path(tdata.path(filename)).read_bytes()
+        cert = certs.Cert.from_pem(pem)
+        assert cert.is_ca == is_ca
+
     def test_err_broken_sans(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_weird1"), "rb") as f:
             d = f.read()
@@ -338,6 +351,13 @@ class TestCert:
         )
         assert "Failed to read certificate chain" in caplog.text
         assert len(tstore.get_cert("example.com", []).chain_certs) == 1
+
+    def test_add_cert_is_ca(self, tdata, tstore, caplog):
+        tstore.add_cert_file(
+            "example.com",
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem"))
+        )
+        assert "is a certificate authority and not a leaf certificate" in caplog.text
 
     def test_special_character(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_with_comma"), "rb") as f:

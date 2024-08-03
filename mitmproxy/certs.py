@@ -135,6 +135,15 @@ class Cert(serializable.Serializable):
         return self._cert.serial_number
 
     @property
+    def is_ca(self) -> bool:
+        constraints: x509.BasicConstraints
+        try:
+            constraints = self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value
+            return constraints.ca
+        except x509.ExtensionNotFound:
+            return False
+
+    @property
     def keyinfo(self) -> tuple[str, int]:
         public_key = self._cert.public_key()
         if isinstance(public_key, rsa.RSAPublicKey):
@@ -529,6 +538,12 @@ class CertStore:
         except ValueError as e:
             logger.warning(f"Failed to read certificate chain: {e}")
             chain = [cert]
+
+        if cert.is_ca:
+            logger.warning(
+                f"\"{path.absolute()}\" is a certificate authority and not a leaf certificate. "
+                f"This indicates a misconfiguration, see https://docs.mitmproxy.org/stable/concepts-certificates/."
+            )
 
         self.add_cert(CertStoreEntry(cert, private_key, path, chain), spec)
 
