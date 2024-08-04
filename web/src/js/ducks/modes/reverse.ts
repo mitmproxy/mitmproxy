@@ -203,16 +203,6 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                     action.data.servers,
                 );
 
-                const configMap = new Map();
-                for (const config of currentModeConfigs) {
-                    const key = getFullSpecReverse(
-                        config.data,
-                        config.listen_host,
-                        config.listen_port as number,
-                    );
-                    configMap.set(key, config);
-                }
-
                 let filteredServers = state.servers;
 
                 if (currentModeConfigs.length > 0) {
@@ -221,31 +211,36 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                     );
                 }
 
-                const updatedServers = filteredServers.map((server) => {
+                const updatedServers: ReverseState[] = [];
+
+                filteredServers.forEach((server) => {
                     const fullSpecConfig = getFullSpecReverse(
                         server.destination,
                         server.listen_host,
                         server.listen_port as number,
                         server.protocol,
                     );
-                    const config = configMap.get(fullSpecConfig);
 
-                    if (config) {
-                        return {
-                            ...server,
-                            active: true,
-                            protocol: server.protocol,
-                            destination: server.destination,
-                            listen_host: config.listen_host,
-                            listen_port: Number(config.listen_port),
-                            full_spec: fullSpecConfig,
-                            error: undefined,
-                        };
-                    }
-                    return server;
+                    const flag = !!currentModeConfigs.find(
+                        (config) =>
+                            getFullSpecReverse(
+                                config.data,
+                                config.listen_host,
+                                config.listen_port as number,
+                            ) === fullSpecConfig,
+                    );
+
+                    updatedServers.push({
+                        active: flag,
+                        protocol: server.protocol,
+                        destination: server.destination,
+                        listen_host: server.listen_host,
+                        listen_port: Number(server.listen_port),
+                        full_spec: fullSpecConfig,
+                        error: undefined,
+                    });
                 });
 
-                // Add any new configurations that were not in the original state
                 for (const config of currentModeConfigs) {
                     const [protocol, destination] = config.data.split("://");
                     const fullSpecConfig = getFullSpecReverse(
