@@ -4,6 +4,7 @@ import Dropdown, { MenuItem } from "../common/Dropdown";
 import ValueEditor from "../editors/ValueEditor";
 import { useAppDispatch } from "../../ducks";
 import {
+    deleteReverse,
     ReverseState,
     setDestination,
     setListenConfig,
@@ -44,6 +45,10 @@ export default function ReverseToggleRow({
 
     const handleDestinationChange = (host: string) => {
         dispatch(setDestination(host, modeIndex));
+    };
+
+    const handleDeletionConfig = (modeIndex: number) => {
+        dispatch(deleteReverse(modeIndex));
     };
 
     return (
@@ -91,6 +96,11 @@ export default function ReverseToggleRow({
                     }
                     placeholder="example.com"
                 />
+                <i
+                    className="fa fa-fw fa-trash fa-lg"
+                    aria-hidden="true"
+                    onClick={() => handleDeletionConfig(modeIndex)}
+                ></i>
             </ModeToggle>
             {server.error && (
                 <div className="mode-error text-danger">{server.error}</div>

@@ -20,6 +20,7 @@ export const MODE_REVERSE_SET_DESTINATION = "MODE_REVERSE_SET_DESTINATION";
 export const MODE_REVERSE_SET_PROTOCOL = "MODE_REVERSE_SET_PROTOCOL";
 export const MODE_REVERSE_ERROR = "MODE_REVERSE_ERROR";
 export const MODE_REVERSE_ADD_SERVER_CONFIG = "MODE_REVERSE_ADD_SERVER_CONFIG";
+export const MODE_REVERSE_DELETE = "MODE_REVERSE_DELETE";
 
 export interface ReverseState extends ModeState {
     protocol: ReverseProxyProtocols;
@@ -53,6 +54,20 @@ export const addReverseServer = () => async (dispatch) => {
 
 export const toggleReverse = (modeIndex: number) => async (dispatch) => {
     dispatch({ type: MODE_REVERSE_TOGGLE, index: modeIndex });
+
+    try {
+        await dispatch(updateMode());
+    } catch (e) {
+        dispatch({
+            type: MODE_REVERSE_ERROR,
+            error: e.message,
+            index: modeIndex,
+        });
+    }
+};
+
+export const deleteReverse = (modeIndex: number) => async (dispatch) => {
+    dispatch({ type: MODE_REVERSE_DELETE, index: modeIndex });
 
     try {
         await dispatch(updateMode());
@@ -137,6 +152,8 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                       }
                     : server,
             );
+        case MODE_REVERSE_DELETE:
+            return state.filter((_, index) => index !== action.index);
         case MODE_REVERSE_SET_LISTEN_CONFIG:
             return state.map((server, index) =>
                 index === action.index
