@@ -1,16 +1,25 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleWireguard } from "../../ducks/modes/wireguard";
+import {
+    setFilePath,
+    setHost,
+    setPort,
+    toggleWireguard,
+} from "../../ducks/modes/wireguard";
 import { Popover } from "./Popover";
 import ValueEditor from "../editors/ValueEditor";
 
 export default function Wireguard() {
     const dispatch = useAppDispatch();
 
-    const { active, error: ui_error } = useAppSelector(
-        (state) => state.modes.wireguard,
-    );
+    const {
+        active,
+        error: ui_error,
+        listen_host,
+        listen_port,
+        file_path,
+    } = useAppSelector((state) => state.modes.wireguard);
 
     const backend_error = useAppSelector((state) => {
         if (state.backendState.servers) {
@@ -22,6 +31,19 @@ export default function Wireguard() {
         }
         return "";
     });
+
+    const handlePortChange = (port: string) => {
+        // FIXME: We should eventually cast to Number and validate.
+        dispatch(setPort(port as unknown as number));
+    };
+
+    const handleHostChange = (host: string) => {
+        dispatch(setHost(host));
+    };
+
+    const handleFilePathChange = (path: string) => {
+        dispatch(setFilePath(path));
+    };
 
     return (
         <div>
@@ -40,24 +62,24 @@ export default function Wireguard() {
                         <p>Listen Host</p>
                         <ValueEditor
                             className="mode-input"
-                            content={""}
-                            onEditDone={(host) => console.log(host)}
+                            content={listen_host || ""}
+                            onEditDone={(host) => handleHostChange(host)}
                         />
                     </div>
                     <div className="mode-popover-item">
                         <p>Listen Port</p>
                         <ValueEditor
                             className="mode-input"
-                            content={""}
-                            onEditDone={(port) => console.log(port)}
+                            content={listen_port?.toString() || ""}
+                            onEditDone={(port) => handlePortChange(port)}
                         />
                     </div>
                     <div className="mode-popover-item">
                         <p>File Path</p>
                         <ValueEditor
                             className="mode-input"
-                            content={""}
-                            onEditDone={(port) => console.log(port)}
+                            content={file_path || ""}
+                            onEditDone={(path) => handleFilePathChange(path)}
                         />
                     </div>
                 </Popover>
