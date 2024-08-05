@@ -18,13 +18,11 @@ export const initialState: LocalState = {
     applications: "",
 };
 
-export const getSpecs = ({local}: ModesState): string[] => {
+export const getSpecs = ({ local }: ModesState): string[] => {
     if (!isActiveMode(local)) {
         return [];
     }
-    const spec = local.applications
-        ? `local:${local.applications}`
-        : "local";
+    const spec = local.applications ? `local:${local.applications}` : "local";
     return [spec];
 };
 

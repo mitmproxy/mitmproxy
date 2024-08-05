@@ -6,7 +6,7 @@ import {
     getModesOfType,
     isActiveMode,
     includeListenAddress,
-    ModeStateWithListenAddress,
+    ModeState,
     updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";
@@ -17,13 +17,13 @@ export const MODE_REGULAR_ERROR = "MODE_REGULAR_ERROR";
 
 export const DEFAULT_PORT = 8080;
 
-interface RegularState extends ModeStateWithListenAddress {}
+interface RegularState extends ModeState {}
 
 export const initialState: RegularState = {
     active: true,
 };
 
-export const getSpecs = ({regular}: ModesState): string[] => {
+export const getSpecs = ({ regular }: ModesState): string[] => {
     if (!isActiveMode(regular)) {
         return [];
     }

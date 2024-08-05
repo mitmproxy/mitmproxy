@@ -8,9 +8,6 @@ import { ServerInfo } from "../backendState";
 export interface ModeState {
     active: boolean;
     error?: string;
-}
-
-export interface ModeStateWithListenAddress extends ModeState {
     listen_port?: number;
     listen_host?: string;
 }
@@ -44,7 +41,7 @@ export const updateMode = () => {
 
 export const includeListenAddress = (
     modeNameAndData: string,
-    state: ModeStateWithListenAddress,
+    state: Pick<ModeState, "listen_host" | "listen_port">,
 ): string => {
     if (state.listen_host && state.listen_port) {
         return `${modeNameAndData}@${state.listen_host}:${state.listen_port}`;
@@ -59,41 +56,53 @@ export const isActiveMode = (state: ModeState): boolean => {
     return state.active && !state.error;
 };
 
-export const parseMode = (spec: string) => {
-    let [head, listenAt] = rpartition(spec, "@");
+export interface DecomposedMode {
+    full_spec: string;
+    name: string;
+    data?: string;
+    listen_host?: string;
+    listen_port?: number;
+}
+
+export const parseMode = (full_spec: string): DecomposedMode => {
+    let [head, listenAt] = rpartition(full_spec, "@");
 
     if (!head) {
         head = listenAt;
         listenAt = "";
     }
 
-    const [mode, data] = partition(head, ":");
-    let host = "",
-        port: string | number = "";
+    const [name, data] = partition(head, ":");
+    let listen_host: string | undefined, listen_port: number | undefined;
 
     if (listenAt) {
+        let port: string;
         if (listenAt.includes(":")) {
-            [host, port] = rpartition(listenAt, ":");
+            [listen_host, port] = rpartition(listenAt, ":");
         } else {
-            host = "";
+            listen_host = "";
             port = listenAt;
         }
         if (port) {
-            port = parseInt(port, 10);
-            if (isNaN(port) || port < 0 || port > 65535) {
+            listen_port = parseInt(port, 10);
+            if (isNaN(listen_port) || listen_port < 0 || listen_port > 65535) {
                 throw new Error(`invalid port: ${port}`);
             }
         }
     }
     return {
-        name: mode,
-        data: data ? data : "",
-        listen_host: host,
-        listen_port: port,
+        full_spec,
+        name,
+        data,
+        listen_host,
+        listen_port,
     };
 };
 
-export const getModesOfType = (currentMode: string, servers: ServerInfo[]) => {
+export const getModesOfType = (
+    currentMode: string,
+    servers: ServerInfo[],
+): DecomposedMode[] => {
     return servers
         .filter((server) => server.type === currentMode)
         .map((server) => parseMode(server.full_spec));

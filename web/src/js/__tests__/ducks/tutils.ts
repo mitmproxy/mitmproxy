@@ -8,6 +8,7 @@ import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
 import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
+import { defaultReverseServerConfig } from "../../ducks/modes/reverse";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -141,9 +142,7 @@ export const testState: RootState = {
         wireguard: {
             active: false,
         },
-        reverse: {
-            active: false,
-        },
+        reverse: [defaultReverseServerConfig],
     },
 };
 

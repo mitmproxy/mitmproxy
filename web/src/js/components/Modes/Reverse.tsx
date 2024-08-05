@@ -6,7 +6,7 @@ import { addReverseServer } from "../../ducks/modes/reverse";
 export default function Reverse() {
     const dispatch = useAppDispatch();
 
-    const { servers } = useAppSelector((state) => state.modes.reverse);
+    const servers = useAppSelector((state) => state.modes.reverse);
 
     const handleAddReverseServer = () => {
         dispatch(addReverseServer());

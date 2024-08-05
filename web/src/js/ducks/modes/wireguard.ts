@@ -6,7 +6,7 @@ import {
     getModesOfType,
     isActiveMode,
     includeListenAddress,
-    ModeStateWithListenAddress,
+    ModeState,
     updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";
@@ -14,7 +14,7 @@ import type { ModesState } from "../modes";
 export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
 export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
 
-interface WireguardState extends ModeStateWithListenAddress {
+interface WireguardState extends ModeState {
     path?: string;
 }
 
@@ -23,7 +23,7 @@ export const initialState: WireguardState = {
     path: "",
 };
 
-export const getSpecs = ({wireguard}: ModesState): string[] => {
+export const getSpecs = ({ wireguard }: ModesState): string[] => {
     if (!isActiveMode(wireguard)) {
         return [];
     }
