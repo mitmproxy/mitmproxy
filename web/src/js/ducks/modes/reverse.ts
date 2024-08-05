@@ -1,7 +1,8 @@
 import {
-    ModeState,
+    ModeStateWithListenAddress,
     getModesOfType,
-    includeModeState,
+    includeListenAddress,
+    isActiveMode,
     updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";
@@ -18,17 +19,15 @@ export const MODE_REVERSE_SET_PROTOCOL = "MODE_REVERSE_SET_PROTOCOL";
 export const MODE_REVERSE_ERROR = "MODE_REVERSE_ERROR";
 export const MODE_REVERSE_ADD_SERVER_CONFIG = "MODE_REVERSE_ADD_SERVER_CONFIG";
 
-export interface ReverseState extends ModeState {
+export interface ReverseState extends ModeStateWithListenAddress {
     protocol?: ReverseProxyProtocols;
     destination?: string;
-    full_spec: string;
 }
 
 const defaultServerConfig: ReverseState = {
     active: false,
     protocol: ReverseProxyProtocols.HTTPS,
     destination: "",
-    full_spec: "",
 };
 
 export interface ReverseServersState {
@@ -43,13 +42,19 @@ export const addReverseServer = () => async (dispatch) => {
     dispatch({ type: MODE_REVERSE_ADD_SERVER_CONFIG });
 };
 
-export const getMode = (modes: ModesState): string[] => {
-    const modesConfig: string[] = [];
-    for (const server of modes.reverse.servers) {
-        const mode = `reverse:${server.protocol}://${server.destination}`;
-        modesConfig.push(...includeModeState(mode, server));
+export const getSpecs = ({reverse}: ModesState): string[] => {
+    const specs: string[] = [];
+    for (const server of reverse.servers) {
+        if (!isActiveMode(server)) {
+            continue;
+        }
+        const spec = includeListenAddress(
+            `reverse:${server.protocol}://${server.destination}`,
+            server
+        );
+        specs.push(spec);
     }
-    return modesConfig;
+    return specs;
 };
 
 export const toggleReverse = (modeIndex: number) => async (dispatch) => {
@@ -236,7 +241,6 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                         destination: server.destination,
                         listen_host: server.listen_host,
                         listen_port: Number(server.listen_port),
-                        full_spec: fullSpecConfig,
                         error: undefined,
                     });
                 });
@@ -259,7 +263,6 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                             destination,
                             listen_host: config.listen_host,
                             listen_port: Number(config.listen_port),
-                            full_spec: fullSpecConfig,
                             error: undefined,
                         });
                     }

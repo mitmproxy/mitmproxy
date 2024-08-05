@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import reverseReducer, {
-    getMode,
+    getSpecs,
     initialState,
     setDestination,
     setListenConfig,
@@ -163,7 +163,7 @@ describe("getMode", () => {
                 destination: "example.com:8085",
             },
         } as ModesState;
-        const result = getMode(modes);
+        const result = getSpecs(modes);
         expect(result).toEqual(["reverse:https://example.com:8085"]);
     });
 
@@ -175,7 +175,7 @@ describe("getMode", () => {
                 destination: "example.com:8085",
             },
         } as ModesState;
-        const result = getMode(modes);
+        const result = getSpecs(modes);
         expect(result).toEqual([]);
     });
 
@@ -188,7 +188,7 @@ describe("getMode", () => {
                 error: "error reverse mode",
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });

@@ -1,15 +1,18 @@
-import { getMode as getRegularModeConfig } from "./regular";
-import { getMode as getLocalModeConfig } from "./local";
-import { getMode as getWireguardModeConfig } from "./wireguard";
-import { getMode as getReverseModeConfig } from "./reverse";
+import { getSpecs as getRegularModeSpecs } from "./regular";
+import { getSpecs as getLocalModeSpecs } from "./local";
+import { getSpecs as getWireguardModeSpecs } from "./wireguard";
+import { getSpecs as getReverseModeSpecs } from "./reverse";
 import { fetchApi, partition, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
 
 export interface ModeState {
     active: boolean;
+    error?: string;
+}
+
+export interface ModeStateWithListenAddress extends ModeState {
     listen_port?: number;
     listen_host?: string;
-    error?: string;
 }
 
 /**
@@ -21,15 +24,15 @@ export const updateMode = () => {
     return async (_, getState) => {
         const modes = getState().modes;
 
-        const activeModes: string[] = [
-            ...getRegularModeConfig(modes),
-            ...getLocalModeConfig(modes),
-            ...getWireguardModeConfig(modes),
-            ...getReverseModeConfig(modes),
+        const modeSpecs: string[] = [
+            ...getRegularModeSpecs(modes),
+            ...getLocalModeSpecs(modes),
+            ...getWireguardModeSpecs(modes),
+            ...getReverseModeSpecs(modes),
             //add new modes here
         ];
         const response = await fetchApi.put("/options", {
-            mode: activeModes,
+            mode: modeSpecs,
         });
         if (response.status === 200) {
             return;
@@ -41,26 +44,19 @@ export const updateMode = () => {
 
 export const includeListenAddress = (
     modeNameAndData: string,
-    state: ModeState,
+    state: ModeStateWithListenAddress,
 ): string => {
     if (state.listen_host && state.listen_port) {
         return `${modeNameAndData}@${state.listen_host}:${state.listen_port}`;
     } else if (state.listen_port) {
         return `${modeNameAndData}@${state.listen_port}`;
     } else {
-        return modeNameAndData
+        return modeNameAndData;
     }
 };
 
-export const includeModeState = (
-    modeNameAndData: string,
-    state: ModeState,
-): string[] => {
-    let mode = modeNameAndData;
-    if (!state.active || state.error) {
-        return [];
-    }
-    return [includeListenAddress(mode, state)];
+export const isActiveMode = (state: ModeState): boolean => {
+    return state.active && !state.error;
 };
 
 export const parseMode = (spec: string) => {

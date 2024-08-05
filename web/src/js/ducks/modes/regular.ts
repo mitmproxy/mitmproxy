@@ -4,8 +4,9 @@ import {
 } from "../backendState";
 import {
     getModesOfType,
-    includeModeState,
-    ModeState,
+    isActiveMode,
+    includeListenAddress,
+    ModeStateWithListenAddress,
     updateMode,
 } from "./utils";
 import type { ModesState } from "../modes";
@@ -16,14 +17,17 @@ export const MODE_REGULAR_ERROR = "MODE_REGULAR_ERROR";
 
 export const DEFAULT_PORT = 8080;
 
-interface RegularState extends ModeState {}
+interface RegularState extends ModeStateWithListenAddress {}
 
 export const initialState: RegularState = {
     active: true,
 };
 
-export const getMode = (modes: ModesState): string[] => {
-    return includeModeState("regular", modes.regular);
+export const getSpecs = ({regular}: ModesState): string[] => {
+    if (!isActiveMode(regular)) {
+        return [];
+    }
+    return [includeListenAddress("regular", regular)];
 };
 
 export const toggleRegular = () => async (dispatch) => {

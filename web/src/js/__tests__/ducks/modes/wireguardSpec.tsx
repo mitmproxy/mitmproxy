@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import wireguardReducer, {
-    getMode,
+    getSpecs,
     initialState,
     toggleWireguard,
 } from "../../../ducks/modes/wireguard";
@@ -154,7 +154,7 @@ describe("getMode", () => {
                 active: true,
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify(["wireguard"]));
     });
 
@@ -167,7 +167,7 @@ describe("getMode", () => {
                 listen_port: 8080,
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });
