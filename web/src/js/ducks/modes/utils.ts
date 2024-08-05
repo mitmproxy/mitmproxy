@@ -39,6 +39,19 @@ export const updateMode = () => {
     };
 };
 
+export const includeListenAddress = (
+    modeNameAndData: string,
+    state: ModeState,
+): string => {
+    if (state.listen_host && state.listen_port) {
+        return `${modeNameAndData}@${state.listen_host}:${state.listen_port}`;
+    } else if (state.listen_port) {
+        return `${modeNameAndData}@${state.listen_port}`;
+    } else {
+        return modeNameAndData
+    }
+};
+
 export const includeModeState = (
     modeNameAndData: string,
     state: ModeState,
@@ -47,12 +60,7 @@ export const includeModeState = (
     if (!state.active || state.error) {
         return [];
     }
-    if (state.listen_host && state.listen_port) {
-        mode += `@${state.listen_host}:${state.listen_port}`;
-    } else if (state.listen_port) {
-        mode += `@${state.listen_port}`;
-    }
-    return [mode];
+    return [includeListenAddress(mode, state)];
 };
 
 export const parseMode = (spec: string) => {
