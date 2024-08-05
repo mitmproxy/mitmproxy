@@ -103,7 +103,6 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
                     action.data.servers,
                 )[0];
                 const isActive = currentModeConfig !== undefined;
-                console.log(currentModeConfig);
                 return {
                     ...state,
                     active: isActive,
