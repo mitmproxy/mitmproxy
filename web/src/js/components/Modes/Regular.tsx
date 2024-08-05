@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setPort, toggleRegular } from "../../ducks/modes/regular";
+import { setHost, setPort, toggleRegular } from "../../ducks/modes/regular";
 import { Popover } from "./Popover";
 import ValueEditor from "../editors/ValueEditor";
 
@@ -12,6 +12,7 @@ export default function Regular() {
         active,
         error: ui_error,
         listen_port,
+        listen_host,
     } = useAppSelector((state) => state.modes.regular);
 
     const backend_error = useAppSelector((state) => {
@@ -30,6 +31,10 @@ export default function Regular() {
         dispatch(setPort(port as unknown as number));
     };
 
+    const handleHostChange = (host: string) => {
+        dispatch(setHost(host));
+    };
+
     return (
         <div>
             <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
@@ -42,18 +47,13 @@ export default function Regular() {
                 onChange={() => dispatch(toggleRegular())}
             >
                 Run HTTP/S Proxy {""}
-                {/*<ValueEditor
-                    className="mode-regular-input"
-                    content={listen_port?.toString() || ""}
-                    onEditDone={(port) => handlePortChange(port)}
-                />*/}
                 <Popover>
                     <div className="mode-popover-item">
                         <p>Listen Host</p>
                         <ValueEditor
                             className="mode-input"
-                            content={""}
-                            onEditDone={(host) => console.log(host)}
+                            content={listen_host || ""}
+                            onEditDone={(host) => handleHostChange(host)}
                         />
                     </div>
                     <div className="mode-popover-item">
