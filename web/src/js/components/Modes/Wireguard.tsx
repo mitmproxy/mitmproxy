@@ -2,6 +2,8 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { toggleWireguard } from "../../ducks/modes/wireguard";
+import { Popover } from "./Popover";
+import ValueEditor from "../editors/ValueEditor";
 
 export default function Wireguard() {
     const dispatch = useAppDispatch();
@@ -32,7 +34,33 @@ export default function Wireguard() {
                 value={active}
                 onChange={() => dispatch(toggleWireguard())}
             >
-                Run WireGuard Server
+                Run WireGuard Server {""}
+                <Popover>
+                    <div className="mode-popover-item">
+                        <p>Listen Host</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={""}
+                            onEditDone={(host) => console.log(host)}
+                        />
+                    </div>
+                    <div className="mode-popover-item">
+                        <p>Listen Port</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={""}
+                            onEditDone={(port) => console.log(port)}
+                        />
+                    </div>
+                    <div className="mode-popover-item">
+                        <p>File Path</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={""}
+                            onEditDone={(port) => console.log(port)}
+                        />
+                    </div>
+                </Popover>
             </ModeToggle>
             {(ui_error || backend_error) && (
                 <div className="mode-error text-danger">

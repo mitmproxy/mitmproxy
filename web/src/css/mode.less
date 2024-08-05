@@ -60,11 +60,11 @@
         height: 25px;
     }
 
-    .mode-regular-input {
+    .mode-input {
         border: 1px solid #ccc;
         margin-left: 10px;
         border-radius: 4px;
-        min-width: 70px;
+        min-width: 100px;
         height: 25px;
     }
 
@@ -79,5 +79,58 @@
 
     .mode-reverse-dropdown {
         margin: 0 5px;
+    }
+
+    .mode-popover-icon {
+        margin-left: 10px;
+        font-size: 2rem;
+        color: #5D5D5D;
+        cursor: pointer;
+    }
+
+    .mode-popover-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        align-content: center;
+    }
+
+    .mode-popover-content {
+        position: absolute;
+        left: 35px;
+        bottom: 0;
+        padding: 10px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        min-width: 250px
+    }
+
+    .mode-popover-header {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .mode-popover-title {
+        font-weight: bold;
+    }
+    
+    .mode-popover-body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .mode-popover-item {
+        p {
+            width: 80px;
+        }
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
     }
 }

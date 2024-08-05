@@ -2,6 +2,7 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setPort, toggleRegular } from "../../ducks/modes/regular";
+import { Popover } from "./Popover";
 import ValueEditor from "../editors/ValueEditor";
 
 export default function Regular() {
@@ -40,13 +41,32 @@ export default function Regular() {
                 value={active}
                 onChange={() => dispatch(toggleRegular())}
             >
-                Run HTTP/S Proxy on port{" "}
-                <ValueEditor
+                Run HTTP/S Proxy {""}
+                {/*<ValueEditor
                     className="mode-regular-input"
                     content={listen_port?.toString() || ""}
                     onEditDone={(port) => handlePortChange(port)}
-                />
+                />*/}
+                <Popover>
+                    <div className="mode-popover-item">
+                        <p>Listen Host</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={""}
+                            onEditDone={(host) => console.log(host)}
+                        />
+                    </div>
+                    <div className="mode-popover-item">
+                        <p>Listen Port</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={listen_port?.toString() || ""}
+                            onEditDone={(port) => handlePortChange(port)}
+                        />
+                    </div>
+                </Popover>
             </ModeToggle>
+
             {(ui_error || backend_error) && (
                 <div className="mode-error text-danger">
                     {ui_error || backend_error}
