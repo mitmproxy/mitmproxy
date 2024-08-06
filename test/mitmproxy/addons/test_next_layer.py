@@ -742,7 +742,7 @@ transparent_proxy_configs = [
         TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, TCPLayer],
-            data_client=tcp_fullalpha
+            data_client=tcp_fullalpha,
         ),
         id="transparent proxy: full alpha tcp",
     ),
