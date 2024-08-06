@@ -94,7 +94,9 @@ quic_client_hello = bytes.fromhex(
 
 dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
 
-tcp_fullalpha = b"AAAAAAAAAAAAAAAAAAAAAA=="
+# Custom protocol with just base64-encoded messages
+# https://github.com/mitmproxy/mitmproxy/pull/7087
+custom_base64_proto = b"AAAAAAAAAAAAAAAAAAAAAA=="
 
 http_get = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
 http_get_absolute = b"GET http://example.com/ HTTP/1.1\r\n\r\n"
