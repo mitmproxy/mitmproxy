@@ -184,6 +184,8 @@ class NextLayer:
         probably_no_http = (
             # the first three bytes should be the HTTP verb, so A-Za-z is expected.
             len(data_client) < 3
+            # limit first word of http request len ex. OPTIONS, CONNECT (full alpha tcp connection)
+            or not len(data_client.split(b" ")[0]) <= 7
             or not data_client[:3].isalpha()
             # a server greeting would be uncharacteristic.
             or data_server
