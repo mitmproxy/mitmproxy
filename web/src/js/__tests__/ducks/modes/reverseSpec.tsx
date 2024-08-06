@@ -76,7 +76,8 @@ describe("reverseReducer", () => {
                     },
                     {
                         type: "reverse",
-                        description: "reverse proxy to https://example.com:8085",
+                        description:
+                            "reverse proxy to https://example.com:8085",
                         full_spec:
                             "reverse:https://example.com:8085@localhost:8082",
                         is_running: true,
@@ -101,7 +102,6 @@ describe("reverseReducer", () => {
         expect(newState[1].destination).toBe("example.com:8085");
         expect(newState[1].listen_host).toBe("localhost");
         expect(newState[1].listen_port).toBe(8082);
-
     });
 
     it("should handle RECEIVE_STATE action and set protocol to HTTPS if destination is missing", () => {
@@ -119,7 +119,7 @@ describe("reverseReducer", () => {
                             ["127.0.0.1", 8080],
                             ["::1", 8080, 0, 0],
                         ],
-                    }
+                    },
                 ],
             },
         };

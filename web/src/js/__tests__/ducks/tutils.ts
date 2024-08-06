@@ -149,7 +149,7 @@ export const testState: RootState = {
                 protocol: ReverseProxyProtocols.HTTPS,
                 destination: "example.com",
                 listen_port: 8080,
-                listen_host: "localhost"
+                listen_host: "localhost",
             },
             defaultReverseServerConfig,
         ],
