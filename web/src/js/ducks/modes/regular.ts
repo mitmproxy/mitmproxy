@@ -13,6 +13,7 @@ import type { ModesState } from "../modes";
 export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
 export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
 export const MODE_REGULAR_ERROR = "MODE_REGULAR_ERROR";
+export const MODE_REGULAR_SET_HOST = "MODE_REGULAR_SET_HOST";
 
 export const DEFAULT_PORT = 8080;
 
@@ -46,6 +47,16 @@ export const setPort = (port: number) => async (dispatch) => {
     }
 };
 
+export const setHost = (host: string) => async (dispatch) => {
+    dispatch({ type: MODE_REGULAR_SET_HOST, host });
+
+    try {
+        await dispatch(updateMode());
+    } catch (e) {
+        dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
+    }
+};
+
 const regularReducer = (state = initialState, action): RegularState => {
     switch (action.type) {
         case MODE_REGULAR_TOGGLE:
@@ -58,6 +69,12 @@ const regularReducer = (state = initialState, action): RegularState => {
             return {
                 ...state,
                 listen_port: action.port as number,
+                error: undefined,
+            };
+        case MODE_REGULAR_SET_HOST:
+            return {
+                ...state,
+                listen_host: action.host,
                 error: undefined,
             };
         case UPDATE_STATE:
