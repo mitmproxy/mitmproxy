@@ -5,7 +5,7 @@ import localReducer, {
     toggleLocal,
 } from "../../../ducks/modes/local";
 import { ModesState } from "../../../ducks/modes";
-import { toggleRegular } from "../../../ducks/modes/regular";
+import { setActive as setRegularActive } from "../../../ducks/modes/regular";
 import * as backendState from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
@@ -43,7 +43,7 @@ describe("localReducer", () => {
 
         await store.dispatch(setApplications("curl"));
 
-        await store.dispatch(toggleRegular());
+        await store.dispatch(setRegularActive(false));
 
         expect(store.getState().modes.local.active).toBe(false);
         expect(store.getState().modes.regular.active).toBe(false);

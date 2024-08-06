@@ -1,9 +1,9 @@
 import regularReducer, {
     getSpecs,
     initialState,
-    setHost,
-    setPort,
-    toggleRegular,
+    setListenHost,
+    setListenPort,
+    setActive,
 } from "./../../../ducks/modes/regular";
 import { ModesState } from "../../../ducks/modes";
 import * as backendState from "../../../ducks/backendState";
@@ -11,18 +11,13 @@ import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 describe("regularReducer", () => {
-    it("should return the initial state", () => {
-        const state = regularReducer(undefined, {});
-        expect(state).toEqual(initialState);
-    });
-
     it("should dispatch MODE_REGULAR_TOGGLE and updateMode", async () => {
         enableFetchMocks();
 
         const store = TStore();
 
         expect(store.getState().modes.regular.active).toBe(true);
-        await store.dispatch(toggleRegular());
+        await store.dispatch(setActive(false));
         expect(store.getState().modes.regular.active).toBe(false);
         expect(fetchMock).toHaveBeenCalled();
     });
@@ -31,7 +26,7 @@ describe("regularReducer", () => {
         enableFetchMocks();
         const store = TStore();
 
-        await store.dispatch(setPort(8082));
+        await store.dispatch(setListenPort(8082));
 
         const state = store.getState().modes.regular;
         expect(state.listen_port).toBe(8082);
@@ -42,7 +37,7 @@ describe("regularReducer", () => {
         enableFetchMocks();
         const store = TStore();
 
-        await store.dispatch(setHost("localhost"));
+        await store.dispatch(setListenHost("localhost"));
 
         const state = store.getState().modes.regular;
         expect(state.listen_host).toBe("localhost");
@@ -101,7 +96,8 @@ describe("regularReducer", () => {
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
         expect(newState.listen_host).toBe(undefined);
-        expect(newState.listen_port).toBe(8080);
+        expect(newState.listen_port).toBe(undefined);
+
     });
 
     it("should handle RECEIVE_STATE action with data.servers containing another mode", () => {
@@ -147,24 +143,11 @@ describe("regularReducer", () => {
         expect(newState.listen_port).toBe(initialState.listen_port);
     });
 
-    it("should handle MODE_REGULAR_ERROR action", () => {
-        const initialState = {
-            active: false,
-        };
-        const action = {
-            type: "MODE_REGULAR_ERROR",
-            error: "error message",
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.error).toBe("error message");
-        expect(newState.active).toBe(false);
-    });
-
     it("should handle error when toggling regular", async () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(toggleRegular());
+        await store.dispatch(setActive(false));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.regular.error).toBe("invalid spec");
@@ -174,7 +157,7 @@ describe("regularReducer", () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setPort(8082));
+        await store.dispatch(setListenPort(8082));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.regular.error).toBe("invalid spec");
@@ -184,7 +167,7 @@ describe("regularReducer", () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setHost("localhost"));
+        await store.dispatch(setListenHost("localhost"));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.regular.error).toBe("invalid spec");

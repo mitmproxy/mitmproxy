@@ -4,6 +4,9 @@ import { getSpecs as getWireguardModeSpecs } from "./wireguard";
 import { getSpecs as getReverseModeSpecs } from "./reverse";
 import { fetchApi, partition, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
+import { ModesState } from "../modes";
+import { ActionReducerMapBuilder, AsyncThunk, Draft } from "@reduxjs/toolkit";
+import { AppAsyncThunkConfig } from "../hooks";
 
 export interface ModeState {
     active: boolean;
@@ -13,31 +16,57 @@ export interface ModeState {
 }
 
 /**
- * Update modes based on current UI state.
- *
- * Raises an error if the update is unsuccessful.
+ * Deprecated: use updateModes with createAppAsyncThunk.
  */
 export const updateMode = () => {
     return async (_, getState) => {
         const modes = getState().modes;
-
-        const modeSpecs: string[] = [
-            ...getRegularModeSpecs(modes),
-            ...getLocalModeSpecs(modes),
-            ...getWireguardModeSpecs(modes),
-            ...getReverseModeSpecs(modes),
-            //add new modes here
-        ];
-        const response = await fetchApi.put("/options", {
-            mode: modeSpecs,
-        });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error(await response.text());
-        }
+        return await updateModeInner(modes);
     };
 };
+
+/**
+ * Async thunk to update modes based on current UI state.
+ */
+export async function updateModes(_, thunkAPI) {
+    const modes = thunkAPI.getState().modes;
+    await updateModeInner(modes);
+};
+
+async function updateModeInner(modes: ModesState) {
+    const activeModes: string[] = [
+        ...getRegularModeSpecs(modes),
+        ...getLocalModeSpecs(modes),
+        ...getWireguardModeSpecs(modes),
+        ...getReverseModeSpecs(modes),
+        //add new modes here
+    ];
+    const response = await fetchApi.put("/options", {
+        mode: activeModes,
+    });
+    if (response.status === 200) {
+        return;
+    } else {
+        throw new Error(await response.text());
+    }
+};
+
+export function addSetter<
+    Type extends ModeState,
+    Key extends keyof Draft<Type>,
+>(
+    builder: ActionReducerMapBuilder<Type>,
+    attribute: Key,
+    setThunk: AsyncThunk<void, Draft<Type>[Key], AppAsyncThunkConfig>,
+) {
+    builder.addCase(setThunk.pending, (state, action) => {
+        state[attribute] = action.meta.arg;
+        state.error = undefined;
+    });
+    builder.addCase(setThunk.rejected, (state, action) => {
+        state.error = action.error.message;
+    });
+}
 
 export const includeListenAddress = (
     modeNameAndData: string,

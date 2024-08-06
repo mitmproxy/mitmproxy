@@ -54,9 +54,7 @@ exports[`RegularSpec 2`] = `
       <span
         class="inline-input mode-regular-input"
         tabindex="0"
-      >
-        8080
-      </span>
+      />
     </div>
     <div
       class="mode-error text-danger"

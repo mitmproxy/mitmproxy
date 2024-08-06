@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setPort, toggleRegular } from "../../ducks/modes/regular";
+import { setListenPort, setActive } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
 
 export default function Regular() {
@@ -26,7 +26,7 @@ export default function Regular() {
 
     const handlePortChange = (port: string) => {
         // FIXME: We should eventually cast to Number and validate.
-        dispatch(setPort(port as unknown as number));
+        dispatch(setListenPort(port as unknown as number));
     };
 
     /*const handleHostChange = (host: string) => {
@@ -42,7 +42,7 @@ export default function Regular() {
             </p>
             <ModeToggle
                 value={active}
-                onChange={() => dispatch(toggleRegular())}
+                onChange={() => dispatch(setActive(!active))}
             >
                 Run HTTP/S Proxy on port{" "}
                 <ValueEditor
