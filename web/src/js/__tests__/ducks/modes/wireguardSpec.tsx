@@ -2,6 +2,9 @@ import { enableFetchMocks } from "jest-fetch-mock";
 import wireguardReducer, {
     getMode,
     initialState,
+    setFilePath,
+    setHost,
+    setPort,
     toggleWireguard,
 } from "../../../ducks/modes/wireguard";
 import { TStore } from "../tutils";
@@ -22,6 +25,39 @@ describe("wireguardReducer", () => {
         expect(store.getState().modes.wireguard.active).toBe(false);
         await store.dispatch(toggleWireguard());
         expect(store.getState().modes.wireguard.active).toBe(true);
+        expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it("should dispatch MODE_WIREGUARD_SET_PORT and updateMode", async () => {
+        enableFetchMocks();
+        const store = TStore();
+
+        await store.dispatch(setPort(8082));
+
+        const state = store.getState().modes.wireguard;
+        expect(state.listen_port).toBe(8082);
+        expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it("should dispatch MODE_WIREGUARD_SET_HOST and updateMode", async () => {
+        enableFetchMocks();
+        const store = TStore();
+
+        await store.dispatch(setHost("localhost"));
+
+        const state = store.getState().modes.wireguard;
+        expect(state.listen_host).toBe("localhost");
+        expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it("should dispatch MODE_WIREGUARD_SET_FILE_PATH and updateMode", async () => {
+        enableFetchMocks();
+        const store = TStore();
+
+        await store.dispatch(setFilePath("/path/to/local/wireguard.conf"));
+
+        const state = store.getState().modes.wireguard;
+        expect(state.file_path).toBe("/path/to/local/wireguard.conf");
         expect(fetchMock).toHaveBeenCalled();
     });
 
@@ -46,7 +82,7 @@ describe("wireguardReducer", () => {
         expect(newState.active).toBe(true);
         expect(newState.listen_host).toBe("localhost");
         expect(newState.listen_port).toBe(8081);
-        expect(newState.path).toBe("/path_example");
+        expect(newState.file_path).toBe("/path_example");
     });
 
     it('should handle RECEIVE_STATE action with data.servers containing just "wireguard"', () => {
@@ -75,7 +111,7 @@ describe("wireguardReducer", () => {
         expect(newState.active).toBe(true);
         expect(newState.listen_host).toBe("");
         expect(newState.listen_port).toBe("");
-        expect(newState.path).toBe("");
+        expect(newState.file_path).toBe("");
     });
 
     it("should handle RECEIVE_STATE action with data.servers containing another mode", () => {
@@ -83,7 +119,7 @@ describe("wireguardReducer", () => {
             active: false,
             listen_host: "localhost",
             listen_port: 8080,
-            path: "/path_example",
+            file_path: "/path_example",
         };
         const action = {
             type: backendState.RECEIVE,
@@ -104,7 +140,7 @@ describe("wireguardReducer", () => {
         expect(newState.active).toBe(false);
         expect(newState.listen_host).toBe(initialState.listen_host);
         expect(newState.listen_port).toBe(initialState.listen_port);
-        expect(newState.path).toBe(initialState.path);
+        expect(newState.file_path).toBe(initialState.file_path);
     });
 
     it("should handle RECEIVE_STATE action without data.servers", () => {
@@ -145,6 +181,36 @@ describe("wireguardReducer", () => {
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.wireguard.error).toBe("invalid spec");
     });
+
+    it("should handle error when setting port", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(setPort(8082));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard.error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting host", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(setHost("localhost"));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard.error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting file_path", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(setFilePath("/path/to/local/wireguard.conf"));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard.error).toBe("invalid spec");
+    });
 });
 
 describe("getMode", () => {
@@ -162,7 +228,7 @@ describe("getMode", () => {
         const modes = {
             wireguard: {
                 active: false,
-                path: "/path_example",
+                file_path: "/path_example",
                 listen_host: "localhost",
                 listen_port: 8080,
             },
