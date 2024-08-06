@@ -6,6 +6,8 @@ from unittest.mock import Mock
 
 import mitmproxy_rs
 import pytest
+import socket
+import errno
 
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
@@ -289,7 +291,25 @@ async def test_udp_start_error():
         await inst.stop()
 
 
-async def test_udp_dual_stack(caplog_async):
+def _system_supports_ipv6() -> bool:
+    if not socket.has_ipv6:
+        return False
+
+    _ADDR_NOT_AVAIL = {errno.EADDRNOTAVAIL, errno.EAFNOSUPPORT}
+    _ADDR_IN_USE = {errno.EADDRINUSE}
+    try:
+        with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as sock:
+            sock.bind(("::1", 0))
+        return True
+    except OSError as e:
+        if e.errno in _ADDR_NOT_AVAIL:
+            return False
+        if e.errno in _ADDR_IN_USE:
+            return True
+        raise e
+
+
+async def test_dual_stack(caplog_async):
     caplog_async.set_level("DEBUG")
     manager = MagicMock()
     manager.connections = {}
@@ -298,21 +318,21 @@ async def test_udp_dual_stack(caplog_async):
         inst = ServerInstance.make("dns@:0", manager)
         await inst.start()
         assert await caplog_async.await_log("server listening")
-
         _, port, *_ = inst.listen_addrs[0]
-        stream = await mitmproxy_rs.open_udp_connection("127.0.0.1", port)
-        stream.write(b"\x00\x00\x01")
-        assert await caplog_async.await_log("sent an invalid message")
-        stream.close()
-        await stream.wait_closed()
 
-        if "listening on IPv4 only" not in caplog_async.caplog.text:
-            caplog_async.clear()
-            stream = await mitmproxy_rs.open_udp_connection("::1", port)
-            stream.write(b"\x00\x00\x01")
-            assert await caplog_async.await_log("sent an invalid message")
-            stream.close()
-            await stream.wait_closed()
+        for addr in ("127.0.0.1", "::1"):
+            if addr == "::1" and not _system_supports_ipv6():
+                    continue
+            for proto in ("tcp", "udp"):
+                caplog_async.clear()
+                if proto == "tcp":
+                    _, stream = asyncio.open_connection(addr, port)
+                else:
+                    stream = mitmproxy_rs.open_udp_connection(addr, port)
+                stream.write(b"\x00\x00\x01")
+                assert await caplog_async.await_log("sent an invalid message")
+                stream.close()
+                await stream.wait_closed()
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")

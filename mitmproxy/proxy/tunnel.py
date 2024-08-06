@@ -30,7 +30,7 @@ class TunnelLayer(layer.Layer):
     conn: connection.Connection
     """
     The 'internal' connection which provides data I/O to inner layers.
-    `tunnel_connection` consumes/feeds tunnel protocol parsed data from/into this connection
+    `tunnel_connection` consumes/feeds tunnel protocol parsed data from/into this connection.
     """
     tunnel_state: TunnelState = TunnelState.INACTIVE
     command_to_reply_to: commands.OpenConnection | None = None
