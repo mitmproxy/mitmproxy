@@ -1,7 +1,5 @@
 import asyncio
-import errno
 import platform
-import socket
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
@@ -16,6 +14,7 @@ from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
+from ...conftest import no_ipv6
 
 
 def test_make():
@@ -291,25 +290,8 @@ async def test_udp_start_error():
         await inst.stop()
 
 
-def _system_supports_ipv6() -> bool:
-    if not socket.has_ipv6:
-        return False
-
-    _ADDR_NOT_AVAIL = {errno.EADDRNOTAVAIL, errno.EAFNOSUPPORT}
-    _ADDR_IN_USE = {errno.EADDRINUSE}
-    try:
-        with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as sock:
-            sock.bind(("::1", 0))
-        return True
-    except OSError as e:
-        if e.errno in _ADDR_NOT_AVAIL:
-            return False
-        if e.errno in _ADDR_IN_USE:
-            return True
-        raise e
-
-
 async def test_dual_stack(caplog_async):
+    """Test that a server bound to "" binds on both IPv4 and IPv6 for both TCP and UDP."""
     caplog_async.set_level("DEBUG")
     manager = MagicMock()
     manager.connections = {}
@@ -321,7 +303,7 @@ async def test_dual_stack(caplog_async):
         _, port, *_ = inst.listen_addrs[0]
 
         for addr in ("127.0.0.1", "::1"):
-            if addr == "::1" and not _system_supports_ipv6():
+            if addr == "::1" and no_ipv6():
                 continue
             for proto in ("tcp", "udp"):
                 caplog_async.clear()
