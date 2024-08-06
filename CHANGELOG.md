@@ -7,7 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
-- Support full alpha tcp connection.
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
   ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
 - Improve the error message when users specify the `certs` option without a matching private key.
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
