@@ -6,9 +6,13 @@ import { toggleWireguard } from "../../ducks/modes/wireguard";
 export default function Wireguard() {
     const dispatch = useAppDispatch();
 
-    const { active, error: ui_error } = useAppSelector(
-        (state) => state.modes.wireguard,
-    );
+    const {
+        active,
+        error: ui_error,
+        //listen_host,
+        //listen_port,
+        //file_path,
+    } = useAppSelector((state) => state.modes.wireguard);
 
     const backend_error = useAppSelector((state) => {
         if (state.backendState.servers) {
@@ -20,6 +24,21 @@ export default function Wireguard() {
         }
         return "";
     });
+
+    /*
+    const handlePortChange = (port: string) => {
+        // FIXME: We should eventually cast to Number and validate.
+        dispatch(setPort(port as unknown as number));
+    };
+
+    const handleHostChange = (host: string) => {
+        dispatch(setHost(host));
+    };
+
+    const handleFilePathChange = (path: string) => {
+        dispatch(setFilePath(path));
+    };
+    */
 
     return (
         <div>
@@ -33,6 +52,7 @@ export default function Wireguard() {
                 onChange={() => dispatch(toggleWireguard())}
             >
                 Run WireGuard Server
+                {/* Popover will be added here in the next PR */}
             </ModeToggle>
             {(ui_error || backend_error) && (
                 <div className="mode-error text-danger">
