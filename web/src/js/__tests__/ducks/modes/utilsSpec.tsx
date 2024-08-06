@@ -3,7 +3,7 @@ import { TStore } from "../tutils";
 import {
     includeListenAddress,
     isActiveMode,
-    parseMode,
+    parseSpec,
     updateMode,
 } from "../../../ducks/modes/utils";
 
@@ -83,7 +83,7 @@ describe("isActiveMode", () => {
 describe("parseMode", () => {
     it("should parse regular mode with host and port", () => {
         const modeConfig = "regular@localhost:8081";
-        const result = parseMode(modeConfig);
+        const result = parseSpec(modeConfig);
         expect(result).toEqual({
             name: "regular",
             full_spec: "regular@localhost:8081",
@@ -95,7 +95,7 @@ describe("parseMode", () => {
 
     it("should parse local mode with data", () => {
         const modeConfig = "local:curl,http";
-        const result = parseMode(modeConfig);
+        const result = parseSpec(modeConfig);
         expect(result).toEqual({
             name: "local",
             data: "curl,http",
@@ -107,6 +107,6 @@ describe("parseMode", () => {
 
     it("should throw an error for invalid port", () => {
         const modeConfig = "regular@99999";
-        expect(() => parseMode(modeConfig)).toThrow("invalid port: 99999");
+        expect(() => parseSpec(modeConfig)).toThrow("invalid port: 99999");
     });
 });

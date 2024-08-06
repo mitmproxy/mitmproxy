@@ -97,7 +97,6 @@ describe("regularReducer", () => {
         expect(newState.active).toBe(true);
         expect(newState.listen_host).toBe(undefined);
         expect(newState.listen_port).toBe(undefined);
-
     });
 
     it("should handle RECEIVE_STATE action with data.servers containing another mode", () => {

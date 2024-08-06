@@ -1,8 +1,8 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import reverseReducer, {
-    addReverseServer,
+    addServer,
     defaultReverseServerConfig,
-    deleteReverse,
+    removeServer,
     getSpecs,
     initialState,
     setDestination,
@@ -40,7 +40,7 @@ describe("reverseReducer", () => {
         const store = TStore();
 
         expect(store.getState().modes.reverse.length).toBe(2);
-        await store.dispatch(addReverseServer());
+        await store.dispatch(addServer());
         expect(store.getState().modes.reverse.length).toBe(3);
         expect(store.getState().modes.reverse[2]).toBe(
             defaultReverseServerConfig,
@@ -53,7 +53,7 @@ describe("reverseReducer", () => {
         const store = TStore();
 
         expect(store.getState().modes.reverse.length).toBe(2);
-        await store.dispatch(deleteReverse(0));
+        await store.dispatch(removeServer(0));
         expect(store.getState().modes.reverse.length).toBe(1);
     });
 
@@ -218,7 +218,7 @@ describe("reverseReducer", () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(deleteReverse(0));
+        await store.dispatch(removeServer(0));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.reverse[0].error).toBe("invalid spec");

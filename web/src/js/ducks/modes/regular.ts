@@ -8,38 +8,38 @@ import {
     getModesOfType,
     isActiveMode,
     includeListenAddress,
-    ModeState,
-    updateModes,
+    ModeState as ModeState,
+    createModeUpdateThunk,
 } from "./utils";
-import { createSlice } from "@reduxjs/toolkit";
-import { createAppAsyncThunk } from "../hooks";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ModesState } from "../modes";
 
-interface RegularState extends ModeState {}
+export interface RegularState extends ModeState {}
 
-export const initialState: RegularState = {
-    active: true,
+export const getSpec = (m: RegularState): string => {
+    return includeListenAddress("regular", m);
 };
 
 export const getSpecs = ({ regular }: ModesState): string[] => {
-    if (!isActiveMode(regular)) {
-        return [];
-    }
-    return [includeListenAddress("regular", regular)];
+    return Object.values(regular).filter(isActiveMode).map(getSpec);
 };
 
-export const setActive = createAppAsyncThunk<void, boolean>(
+export const setActive = createModeUpdateThunk<boolean>(
     "modes/regular/setActive",
-    updateModes,
 );
-export const setListenHost = createAppAsyncThunk<void, string | undefined>(
+export const setListenHost = createModeUpdateThunk<string | undefined>(
     "modes/regular/setListenHost",
-    updateModes,
 );
-export const setListenPort = createAppAsyncThunk<void, number | undefined>(
+export const setListenPort = createModeUpdateThunk<number | undefined>(
     "modes/regular/setListenPort",
-    updateModes,
 );
+
+export const initialState: RegularState[] = [
+    {
+        active: true,
+        ui_id: Math.random(),
+    },
+];
 
 export const regularSlice = createSlice({
     name: "modes/regular",
@@ -50,19 +50,31 @@ export const regularSlice = createSlice({
         addSetter(builder, "listen_host", setListenHost);
         addSetter(builder, "listen_port", setListenPort);
 
-        builder.addCase(UPDATE_STATE, updateState);
         builder.addCase(RECEIVE_STATE, updateState);
-        function updateState(state: RegularState, action: any) {
-            if (action.data && action.data.servers) {
-                const currentModeConfig = getModesOfType(
+        builder.addCase(UPDATE_STATE, updateState);
+        function updateState(
+            state: RegularState[],
+            action: PayloadAction<Partial<BackendState>>,
+        ) {
+            if (action.payload.servers) {
+                const activeRegularModes = getModesOfType(
                     "regular",
-                    action.data.servers,
-                )[0];
-                state.active = currentModeConfig !== undefined;
-                if (state.active) {
-                    state.listen_host = currentModeConfig.listen_host;
-                    state.listen_port = currentModeConfig.listen_port as number;
-                    state.error = undefined;
+                    action.payload.servers,
+                );
+                if (activeRegularModes.length > 0) {
+                    return activeRegularModes.map(
+                        (m) =>
+                            ({
+                                ui_id: Math.random(),
+                                active: true,
+                                listen_host: m.listen_host,
+                                listen_port: m.listen_port,
+                            }) as RegularState,
+                    );
+                } else {
+                    for (const mode of state) {
+                        mode.active = false;
+                    }
                 }
             }
         }

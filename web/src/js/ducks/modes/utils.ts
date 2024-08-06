@@ -6,17 +6,19 @@ import { fetchApi, partition, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
 import { ModesState } from "../modes";
 import { ActionReducerMapBuilder, AsyncThunk, Draft } from "@reduxjs/toolkit";
-import { AppAsyncThunkConfig } from "../hooks";
+import { AppAsyncThunkConfig, createAppAsyncThunk } from "../hooks";
 
 export interface ModeState {
     active: boolean;
     error?: string;
     listen_port?: number;
     listen_host?: string;
+    // The UI ID is used to uniquely identify the server when doing async updates with createModeUpdateThunk
+    ui_id?: number;
 }
 
 /**
- * Deprecated: use updateModes with createAppAsyncThunk.
+ * FIXME: Remove before PR merge. This should be entirely replaced with updateModes.
  */
 export const updateMode = () => {
     return async (_, getState) => {
@@ -28,10 +30,10 @@ export const updateMode = () => {
 /**
  * Async thunk to update modes based on current UI state.
  */
-export async function updateModes(_, thunkAPI) {
+async function updateModes(_, thunkAPI) {
     const modes = thunkAPI.getState().modes;
     await updateModeInner(modes);
-};
+}
 
 async function updateModeInner(modes: ModesState) {
     const activeModes: string[] = [
@@ -49,22 +51,38 @@ async function updateModeInner(modes: ModesState) {
     } else {
         throw new Error(await response.text());
     }
-};
+}
 
-export function addSetter<
-    Type extends ModeState,
-    Key extends keyof Draft<Type>,
->(
-    builder: ActionReducerMapBuilder<Type>,
-    attribute: Key,
-    setThunk: AsyncThunk<void, Draft<Type>[Key], AppAsyncThunkConfig>,
+export function createModeUpdateThunk<T>(type: string) {
+    return createAppAsyncThunk<void, { server: ModeState; value: T }>(
+        type,
+        updateModes,
+    );
+}
+
+export function addSetter<M extends ModeState, Attr extends keyof Draft<M>>(
+    builder: ActionReducerMapBuilder<M[]>,
+    attribute: Attr,
+    setThunk: AsyncThunk<
+        void,
+        { server: ModeState; value: Draft<M>[Attr] },
+        AppAsyncThunkConfig
+    >,
 ) {
     builder.addCase(setThunk.pending, (state, action) => {
-        state[attribute] = action.meta.arg;
-        state.error = undefined;
+        const { server, value } = action.meta.arg;
+        const idx = state.findIndex((m) => m.ui_id === server.ui_id);
+        if (idx >= 0) {
+            state[idx][attribute] = value;
+            state[idx].error = undefined;
+        }
     });
     builder.addCase(setThunk.rejected, (state, action) => {
-        state.error = action.error.message;
+        const { server } = action.meta.arg;
+        const idx = state.findIndex((m) => m.ui_id === server.ui_id);
+        if (idx >= 0) {
+            state[idx].error = action.error.message;
+        }
     });
 }
 
@@ -85,7 +103,7 @@ export const isActiveMode = (state: ModeState): boolean => {
     return state.active && !state.error;
 };
 
-export interface DecomposedMode {
+interface SpecParts {
     full_spec: string;
     name: string;
     data?: string;
@@ -93,7 +111,7 @@ export interface DecomposedMode {
     listen_port?: number;
 }
 
-export const parseMode = (full_spec: string): DecomposedMode => {
+export const parseSpec = (full_spec: string): SpecParts => {
     let [head, listenAt] = rpartition(full_spec, "@");
 
     if (!head) {
@@ -130,9 +148,9 @@ export const parseMode = (full_spec: string): DecomposedMode => {
 
 export const getModesOfType = (
     currentMode: string,
-    servers: ServerInfo[],
-): DecomposedMode[] => {
-    return servers
+    servers: { [key: string]: ServerInfo },
+): SpecParts[] => {
+    return Object.values(servers)
         .filter((server) => server.type === currentMode)
-        .map((server) => parseMode(server.full_spec));
+        .map((server) => parseSpec(server.full_spec));
 };
