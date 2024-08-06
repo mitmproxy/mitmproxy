@@ -1,13 +1,13 @@
 import asyncio
+import errno
 import platform
+import socket
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
 
 import mitmproxy_rs
 import pytest
-import socket
-import errno
 
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
@@ -322,7 +322,7 @@ async def test_dual_stack(caplog_async):
 
         for addr in ("127.0.0.1", "::1"):
             if addr == "::1" and not _system_supports_ipv6():
-                    continue
+                continue
             for proto in ("tcp", "udp"):
                 caplog_async.clear()
                 if proto == "tcp":
