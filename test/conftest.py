@@ -26,6 +26,7 @@ def is_ipv6_not_supported():
     else:
         return False
 
+
 no_ipv6 = is_ipv6_not_supported()
 skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 
