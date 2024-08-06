@@ -85,7 +85,7 @@ describe("reverseReducer", () => {
                 destination: "example.com:8085",
                 listen_host: "localhost",
                 listen_port: 8082,
-            }
+            },
         ];
 
         const newState = reverseReducer(initialState, action);
