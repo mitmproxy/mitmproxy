@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import mitmproxy_rs
 import pytest
 
+from ...conftest import no_ipv6
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
@@ -14,7 +15,6 @@ from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
-from ...conftest import no_ipv6
 
 
 def test_make():

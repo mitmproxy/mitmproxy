@@ -15,6 +15,7 @@ skip_not_windows = pytest.mark.skipif(
     os.name != "nt", reason="Skipping due to not Windows"
 )
 
+
 def no_ipv6():
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -24,6 +25,7 @@ def no_ipv6():
         return True
     else:
         return False
+
 
 skip_no_ipv6 = pytest.mark.skipif(no_ipv6(), reason="Host has no IPv6 support")
 
