@@ -16,7 +16,7 @@ export default function Wireguard() {
 
     const backend_error = useAppSelector((state) => {
         if (state.backendState.servers) {
-            for (const server of state.backendState.servers) {
+            for (const server of Object.values(state.backendState.servers)) {
                 if (server.type === "wireguard") {
                     return server.last_exception;
                 }

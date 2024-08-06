@@ -63,8 +63,8 @@ const localReducer = (state = initialState, action): LocalState => {
                 applications: action.applications,
                 error: undefined,
             };
-        case UPDATE_STATE:
-        case RECEIVE_STATE:
+        case UPDATE_STATE.type:
+        case RECEIVE_STATE.type:
             if (action.data && action.data.servers) {
                 const currentModeConfig = getModesOfType(
                     "local",

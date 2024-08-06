@@ -15,7 +15,7 @@ export default function Local() {
 
     const backend_error = useAppSelector((state) => {
         if (state.backendState.servers) {
-            for (const server of state.backendState.servers) {
+            for (const server of Object.values(state.backendState.servers)) {
                 if (server.type === "local") {
                     return server.last_exception;
                 }

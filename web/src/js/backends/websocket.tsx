@@ -7,6 +7,8 @@ import { fetchApi } from "../utils";
 import * as connectionActions from "../ducks/connection";
 import { Store } from "redux";
 import { RootState } from "../ducks";
+import { PayloadAction } from "@reduxjs/toolkit";
+import { BackendState } from "../ducks/backendState";
 
 const CMD_RESET = "reset";
 
@@ -73,7 +75,15 @@ export default class WebsocketBackend {
 
     receive(resource, data) {
         const type = `${resource}_RECEIVE`.toUpperCase();
-        this.store.dispatch({ type, cmd: "receive", resource, data });
+        if (resource === "state") {
+            this.store.dispatch({
+                type,
+                payload: data,
+            } as PayloadAction<BackendState>);
+        } else {
+            // deprecated: these should be converted to payload actions as well.
+            this.store.dispatch({ type, cmd: "receive", resource, data });
+        }
         const queue = this.activeFetches[resource];
         delete this.activeFetches[resource];
         queue.forEach((msg) => this.onMessage(msg));

@@ -6,7 +6,9 @@ import { formatAddress } from "../utils";
 import QRCode from "qrcode";
 
 export default function CaptureSetup() {
-    const servers = useAppSelector((state) => state.backendState.servers);
+    const servers = Object.values(
+        useAppSelector((state) => state.backendState.servers),
+    );
 
     let configure_action_text;
     if (servers.length === 0) {

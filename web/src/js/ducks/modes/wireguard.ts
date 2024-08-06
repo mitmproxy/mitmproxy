@@ -99,8 +99,8 @@ const wireguardReducer = (state = initialState, action): WireguardState => {
                 file_path: action.path,
                 error: undefined,
             };
-        case UPDATE_STATE:
-        case RECEIVE_STATE:
+        case UPDATE_STATE.type:
+        case RECEIVE_STATE.type:
             if (action.data && action.data.servers) {
                 const currentModeConfig = getModesOfType(
                     "wireguard",
