@@ -184,7 +184,6 @@ class NextLayer:
         probably_no_http = (
             # the first three bytes should be the HTTP verb, so A-Za-z is expected.
             len(data_client) < 3
-            # limit first word of http request len ex. OPTIONS, CONNECT (full alpha tcp connection)
             # HTTP would require whitespace before the first newline
             # if we have neither whitespace nor a newline, it's also unlikely to be HTTP.
             or (data_client.find(b" ") >= data_client.find(b"\n"))
