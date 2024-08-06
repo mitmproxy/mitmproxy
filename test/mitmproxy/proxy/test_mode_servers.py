@@ -326,9 +326,9 @@ async def test_dual_stack(caplog_async):
             for proto in ("tcp", "udp"):
                 caplog_async.clear()
                 if proto == "tcp":
-                    _, stream = asyncio.open_connection(addr, port)
+                    _, stream = await asyncio.open_connection(addr, port)
                 else:
-                    stream = mitmproxy_rs.open_udp_connection(addr, port)
+                    stream = await mitmproxy_rs.open_udp_connection(addr, port)
                 stream.write(b"\x00\x00\x01")
                 assert await caplog_async.await_log("sent an invalid message")
                 stream.close()
