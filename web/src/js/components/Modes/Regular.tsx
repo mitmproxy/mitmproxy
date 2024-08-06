@@ -29,6 +29,10 @@ export default function Regular() {
         dispatch(setPort(port as unknown as number));
     };
 
+    /*const handleHostChange = (host: string) => {
+        dispatch(setHost(host));
+    };*/
+
     return (
         <div>
             <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
