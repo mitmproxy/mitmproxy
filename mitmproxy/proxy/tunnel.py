@@ -26,9 +26,12 @@ class TunnelLayer(layer.Layer):
 
     child_layer: layer.Layer
     tunnel_connection: connection.Connection
-    """The 'outer' connection which provides the tunnel protocol I/O"""
+    """The 'external' connection which provides the tunnel protocol I/O between peer and mitmproxy"""
     conn: connection.Connection
-    """The 'inner' connection which provides data I/O"""
+    """
+    The 'internal' connection which provides data I/O to inner layers.
+    `tunnel_connection` consumes/feeds tunnel protocol parsed data from/into this connection
+    """
     tunnel_state: TunnelState = TunnelState.INACTIVE
     command_to_reply_to: commands.OpenConnection | None = None
     _event_queue: list[events.Event]
