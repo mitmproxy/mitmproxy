@@ -303,7 +303,7 @@ async def test_dual_stack(caplog_async):
         _, port, *_ = inst.listen_addrs[0]
 
         for addr in ("127.0.0.1", "::1"):
-            if addr == "::1" and no_ipv6():
+            if addr == "::1" and no_ipv6:
                 continue
             for proto in ("tcp", "udp"):
                 caplog_async.clear()

@@ -16,7 +16,7 @@ skip_not_windows = pytest.mark.skipif(
 )
 
 
-def no_ipv6():
+def is_ipv6_not_supported():
     try:
         s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         s.bind(("::1", 0))
@@ -26,8 +26,8 @@ def no_ipv6():
     else:
         return False
 
-
-skip_no_ipv6 = pytest.mark.skipif(no_ipv6(), reason="Host has no IPv6 support")
+no_ipv6 = is_ipv6_not_supported()
+skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 
 
 class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
