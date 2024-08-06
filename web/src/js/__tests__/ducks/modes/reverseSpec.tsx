@@ -42,7 +42,7 @@ describe("reverseReducer", () => {
         expect(store.getState().modes.reverse.length).toBe(2);
         await store.dispatch(addReverseServer());
         expect(store.getState().modes.reverse.length).toBe(3);
-        expect(store.getState().modes.reverse[1]).toBe(
+        expect(store.getState().modes.reverse[2]).toBe(
             defaultReverseServerConfig,
         );
     });
@@ -57,7 +57,7 @@ describe("reverseReducer", () => {
         expect(store.getState().modes.reverse.length).toBe(1);
     });
 
-    it('should handle RECEIVE_STATE action with data.servers containing "reverse", an host and a port and a destination"', () => {
+    it('should handle RECEIVE_STATE action with initial UI state and data.servers containing "reverse", an host and a port and a destination"', () => {
         const action = {
             type: backendState.RECEIVE,
             data: {
@@ -74,34 +74,32 @@ describe("reverseReducer", () => {
                             ["::1", 8080, 0, 0],
                         ],
                     },
-                    {
-                        type: "reverse",
-                        description:
-                            "reverse proxy to https://example.com:8085",
-                        full_spec:
-                            "reverse:https://example.com:8085@localhost:8082",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8082],
-                            ["::1", 8082, 0, 0],
-                        ],
-                    },
                 ],
             },
         };
+
+        const initialState = [
+            {
+                active: false,
+                protocol: ReverseProxyProtocols.HTTPS,
+                destination: "example.com:8085",
+                listen_host: "localhost",
+                listen_port: 8082,
+            }
+        ];
+
         const newState = reverseReducer(initialState, action);
-        expect(newState[0].active).toBe(true);
-        expect(newState[0].protocol).toBe("tls");
+        expect(newState[0].active).toBe(false);
+        expect(newState[0].protocol).toBe(ReverseProxyProtocols.HTTPS);
         expect(newState[0].destination).toBe("example.com:8085");
         expect(newState[0].listen_host).toBe("localhost");
-        expect(newState[0].listen_port).toBe(8080);
+        expect(newState[0].listen_port).toBe(8082);
 
         expect(newState[1].active).toBe(true);
-        expect(newState[1].protocol).toBe("https");
+        expect(newState[1].protocol).toBe(ReverseProxyProtocols.TLS);
         expect(newState[1].destination).toBe("example.com:8085");
         expect(newState[1].listen_host).toBe("localhost");
-        expect(newState[1].listen_port).toBe(8082);
+        expect(newState[1].listen_port).toBe(8080);
     });
 
     it("should handle RECEIVE_STATE action and set protocol to HTTPS if destination is missing", () => {
