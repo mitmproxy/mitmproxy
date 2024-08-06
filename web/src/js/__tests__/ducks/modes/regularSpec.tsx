@@ -88,7 +88,7 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("");
+        expect(newState.listen_host).toBe(undefined);
         expect(newState.listen_port).toBe(8080);
     });
 

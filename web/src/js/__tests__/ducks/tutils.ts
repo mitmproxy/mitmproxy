@@ -9,6 +9,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
 import { defaultReverseServerConfig } from "../../ducks/modes/reverse";
+import { ReverseProxyProtocols } from "../../backends/consts";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -142,7 +143,16 @@ export const testState: RootState = {
         wireguard: {
             active: false,
         },
-        reverse: [defaultReverseServerConfig],
+        reverse: [
+            {
+                active: false,
+                protocol: ReverseProxyProtocols.HTTPS,
+                destination: "example.com",
+                listen_port: 8080,
+                listen_host: "localhost"
+            },
+            defaultReverseServerConfig,
+        ],
     },
 };
 

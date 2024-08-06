@@ -50,7 +50,7 @@ describe("includeListenAddress", () => {
     it("should keep mode as-is if not port is specified", () => {
         const mode = {};
         const result = includeListenAddress("regular", mode);
-        expect(result).toEqual(["regular"]);
+        expect(result).toEqual("regular");
     });
 
     it("should return array with mode name and listen_port if mode is active with listen_port", () => {
@@ -58,7 +58,7 @@ describe("includeListenAddress", () => {
             listen_port: 8080,
         };
         const result = includeListenAddress("regular", mode);
-        expect(result).toEqual(["regular@8080"]);
+        expect(result).toEqual("regular@8080");
     });
 
     it("should return array with mode name, listen_host, and listen_port if mode is active with listen_host and listen_port", () => {
@@ -67,7 +67,7 @@ describe("includeListenAddress", () => {
             listen_port: 8080,
         };
         const result = includeListenAddress("regular", mode);
-        expect(result).toEqual(["regular@localhost:8080"]);
+        expect(result).toEqual("regular@localhost:8080");
     });
 });
 
@@ -86,6 +86,7 @@ describe("parseMode", () => {
         const result = parseMode(modeConfig);
         expect(result).toEqual({
             name: "regular",
+            full_spec: "regular@localhost:8081",
             data: "",
             listen_host: "localhost",
             listen_port: 8081,
@@ -98,8 +99,9 @@ describe("parseMode", () => {
         expect(result).toEqual({
             name: "local",
             data: "curl,http",
-            listen_host: "",
-            listen_port: "",
+            full_spec: "local:curl,http",
+            listen_host: undefined,
+            listen_port: undefined,
         });
     });
 
