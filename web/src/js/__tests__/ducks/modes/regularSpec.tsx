@@ -1,6 +1,7 @@
 import regularReducer, {
     getSpecs,
     initialState,
+    setHost,
     setPort,
     toggleRegular,
 } from "./../../../ducks/modes/regular";
@@ -34,6 +35,17 @@ describe("regularReducer", () => {
 
         const state = store.getState().modes.regular;
         expect(state.listen_port).toBe(8082);
+        expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it("should dispatch MODE_REGULAR_SET_HOST and updateMode", async () => {
+        enableFetchMocks();
+        const store = TStore();
+
+        await store.dispatch(setHost("localhost"));
+
+        const state = store.getState().modes.regular;
+        expect(state.listen_host).toBe("localhost");
         expect(fetchMock).toHaveBeenCalled();
     });
 
@@ -163,6 +175,16 @@ describe("regularReducer", () => {
         const store = TStore();
 
         await store.dispatch(setPort(8082));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular.error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting host", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        await store.dispatch(setHost("localhost"));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.regular.error).toBe("invalid spec");

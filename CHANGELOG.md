@@ -7,6 +7,17 @@
 
 ## Unreleased: mitmproxy next
 
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
+  ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
+- Improve the error message when users specify the `certs` option without a matching private key.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+- Fix a bug where intermediate certificates would not be transmitted when using QUIC.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+
+## 02 August 2024: mitmproxy 10.4.2
+
+- Fix a crash on startup when mitmproxy is unable to determine the OS' DNS servers
+  ([#7066](https://github.com/mitmproxy/mitmproxy/pull/7066), @errorxyz)
 
 ## 29 July 2024: mitmproxy 10.4.1
 

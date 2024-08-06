@@ -108,19 +108,6 @@ class TestCertStore:
         assert ("three.com", x509.GeneralNames([])) in tstore.certs
         assert ("four.com", x509.GeneralNames([])) in tstore.certs
 
-    def test_overrides(self, tmp_path):
-        ca1 = certs.CertStore.from_store(tmp_path / "ca1", "test", 2048)
-        ca2 = certs.CertStore.from_store(tmp_path / "ca2", "test", 2048)
-        assert not ca1.default_ca.serial == ca2.default_ca.serial
-
-        dc = ca2.get_cert("foo.com", [x509.DNSName("sans.example.com")])
-        dcp = tmp_path / "dc"
-        dcp.write_bytes(dc.cert.to_pem())
-        ca1.add_cert_file("foo.com", dcp)
-
-        ret = ca1.get_cert("foo.com", [])
-        assert ret.cert.serial == dc.cert.serial
-
     def test_create_dhparams(self, tmp_path):
         filename = tmp_path / "dhparam.pem"
         certs.CertStore.load_dhparam(filename)
@@ -203,6 +190,7 @@ class TestCert:
         assert c2.cn == "www.inode.co.nz"
         assert len(c2.altnames) == 2
         assert c2.fingerprint()
+        assert c2.public_key()
         assert c2.notbefore == datetime(
             year=2010,
             month=1,
@@ -257,6 +245,19 @@ class TestCert:
         c = certs.Cert.from_pem(d)
         assert c.keyinfo == (name, bits)
 
+    @pytest.mark.parametrize(
+        "filename,is_ca",
+        [
+            ("mitmproxy/net/data/verificationcerts/trusted-leaf.crt", False),
+            ("mitmproxy/net/data/verificationcerts/trusted-root.crt", True),
+            ("mitmproxy/data/invalid-subject.pem", False),  # no basic constraints
+        ],
+    )
+    def test_is_ca(self, tdata, filename, is_ca):
+        pem = Path(tdata.path(filename)).read_bytes()
+        cert = certs.Cert.from_pem(pem)
+        assert cert.is_ca == is_ca
+
     def test_err_broken_sans(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_weird1"), "rb") as f:
             d = f.read()
@@ -280,6 +281,14 @@ class TestCert:
         c2.set_state(a)
         assert c == c2
 
+    def test_add_cert_overrides(self, tdata, tstore):
+        certfile = Path(
+            tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")
+        )
+        cert = certs.Cert.from_pem(certfile.read_bytes())
+        tstore.add_cert_file("example.com", certfile)
+        assert cert == tstore.get_cert("example.com", []).cert
+
     def test_from_store_with_passphrase(self, tdata, tstore):
         tstore.add_cert_file(
             "unencrypted-no-pass", Path(tdata.path("mitmproxy/data/testkey.pem")), None
@@ -301,6 +310,54 @@ class TestCert:
                 Path(tdata.path("mitmproxy/data/mitmproxy.pem")),
                 None,
             )
+
+    def test_add_cert_with_no_private_key(self, tdata, tstore):
+        with pytest.raises(ValueError, match="Unable to find private key"):
+            tstore.add_cert_file(
+                "example.com",
+                Path(
+                    tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt")
+                ),
+            )
+
+    def test_add_cert_private_public_mismatch(self, tdata, tstore):
+        with pytest.raises(
+            ValueError, match='Private and public keys in ".+" do not match'
+        ):
+            tstore.add_cert_file(
+                "example.com",
+                Path(
+                    tdata.path(
+                        "mitmproxy/net/data/verificationcerts/private-public-mismatch.pem"
+                    )
+                ),
+            )
+
+    def test_add_cert_chain(self, tdata, tstore):
+        tstore.add_cert_file(
+            "example.com",
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-chain.pem")),
+        )
+        assert len(tstore.get_cert("example.com", []).chain_certs) == 2
+
+    def test_add_cert_chain_invalid(self, tdata, tstore, caplog):
+        tstore.add_cert_file(
+            "example.com",
+            Path(
+                tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-chain-invalid.pem"
+                )
+            ),
+        )
+        assert "Failed to read certificate chain" in caplog.text
+        assert len(tstore.get_cert("example.com", []).chain_certs) == 1
+
+    def test_add_cert_is_ca(self, tdata, tstore, caplog):
+        tstore.add_cert_file(
+            "example.com",
+            Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
+        )
+        assert "is a certificate authority and not a leaf certificate" in caplog.text
 
     def test_special_character(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_with_comma"), "rb") as f:
