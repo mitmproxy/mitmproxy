@@ -4,7 +4,8 @@ import {
 } from "../backendState";
 import {
     getModesOfType,
-    includeModeState,
+    isActiveMode,
+    includeListenAddress,
     ModeState,
     updateMode,
 } from "./utils";
@@ -23,8 +24,11 @@ export const initialState: RegularState = {
     active: true,
 };
 
-export const getMode = (modes: ModesState): string[] => {
-    return includeModeState("regular", modes.regular);
+export const getSpecs = ({ regular }: ModesState): string[] => {
+    if (!isActiveMode(regular)) {
+        return [];
+    }
+    return [includeListenAddress("regular", regular)];
 };
 
 export const toggleRegular = () => async (dispatch) => {

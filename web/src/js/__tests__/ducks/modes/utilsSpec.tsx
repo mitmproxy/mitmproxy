@@ -1,7 +1,8 @@
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "../tutils";
 import {
-    includeModeState,
+    includeListenAddress,
+    isActiveMode,
     parseMode,
     updateMode,
 } from "../../../ducks/modes/utils";
@@ -45,45 +46,37 @@ describe("updateMode action creator", () => {
     });
 });
 
-describe("includeModeState", () => {
+describe("includeListenAddress", () => {
+    it("should keep mode as-is if not port is specified", () => {
+        const mode = {};
+        const result = includeListenAddress("regular", mode);
+        expect(result).toEqual("regular");
+    });
+
     it("should return array with mode name and listen_port if mode is active with listen_port", () => {
         const mode = {
-            active: true,
             listen_port: 8080,
         };
-        const result = includeModeState("regular", mode);
-        expect(result).toEqual(["regular@8080"]);
+        const result = includeListenAddress("regular", mode);
+        expect(result).toEqual("regular@8080");
     });
 
     it("should return array with mode name, listen_host, and listen_port if mode is active with listen_host and listen_port", () => {
         const mode = {
-            active: true,
             listen_host: "localhost",
             listen_port: 8080,
         };
-        const result = includeModeState("regular", mode);
-        expect(result).toEqual(["regular@localhost:8080"]);
+        const result = includeListenAddress("regular", mode);
+        expect(result).toEqual("regular@localhost:8080");
     });
+});
 
-    it("should return array with mode name and listen_host if mode is active with listen_host and no listen_port", () => {
-        const mode = {
-            name: "regular",
-            active: true,
-            listen_host: "localhost",
-        };
-        const result = includeModeState("regular", mode);
-        expect(result).toEqual(["regular"]);
-    });
-
-    it("should return an empty array if there is a ui_error", () => {
-        const mode = {
-            active: false,
-            listen_host: "localhost",
-            listen_port: 8080,
-            error: "error message",
-        };
-        const result = includeModeState("regular", mode);
-        expect(result).toEqual([]);
+describe("isActiveMode", () => {
+    it("should work", () => {
+        expect(isActiveMode({ active: false })).toBe(false);
+        expect(isActiveMode({ active: true })).toBe(true);
+        expect(isActiveMode({ active: true, error: "failed" })).toBe(false);
+        expect(isActiveMode({ active: false, error: "failed" })).toBe(false);
     });
 });
 
@@ -93,6 +86,7 @@ describe("parseMode", () => {
         const result = parseMode(modeConfig);
         expect(result).toEqual({
             name: "regular",
+            full_spec: "regular@localhost:8081",
             data: "",
             listen_host: "localhost",
             listen_port: 8081,
@@ -105,8 +99,9 @@ describe("parseMode", () => {
         expect(result).toEqual({
             name: "local",
             data: "curl,http",
-            listen_host: "",
-            listen_port: "",
+            full_spec: "local:curl,http",
+            listen_host: undefined,
+            listen_port: undefined,
         });
     });
 

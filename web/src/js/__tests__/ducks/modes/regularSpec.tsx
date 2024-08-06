@@ -1,5 +1,5 @@
 import regularReducer, {
-    getMode,
+    getSpecs,
     initialState,
     setHost,
     setPort,
@@ -100,7 +100,7 @@ describe("regularReducer", () => {
         };
         const newState = regularReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("");
+        expect(newState.listen_host).toBe(undefined);
         expect(newState.listen_port).toBe(8080);
     });
 
@@ -198,7 +198,7 @@ describe("getMode", () => {
                 active: true,
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
     });
 
@@ -210,7 +210,7 @@ describe("getMode", () => {
                 listen_port: 8080,
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });

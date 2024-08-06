@@ -1,9 +1,4 @@
-import {
-    getModesOfType,
-    includeModeState,
-    ModeState,
-    updateMode,
-} from "./utils";
+import { getModesOfType, isActiveMode, ModeState, updateMode } from "./utils";
 import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
@@ -23,11 +18,12 @@ export const initialState: LocalState = {
     applications: "",
 };
 
-export const getMode = (modes: ModesState): string[] => {
-    const mode = modes.local.applications
-        ? `local:${modes.local.applications}`
-        : "local";
-    return includeModeState(mode, modes.local);
+export const getSpecs = ({ local }: ModesState): string[] => {
+    if (!isActiveMode(local)) {
+        return [];
+    }
+    const spec = local.applications ? `local:${local.applications}` : "local";
+    return [spec];
 };
 
 export const toggleLocal = () => async (dispatch) => {

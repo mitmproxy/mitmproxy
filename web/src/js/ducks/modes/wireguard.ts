@@ -4,7 +4,8 @@ import {
 } from "../backendState";
 import {
     getModesOfType,
-    includeModeState,
+    isActiveMode,
+    includeListenAddress,
     ModeState,
     updateMode,
 } from "./utils";
@@ -26,8 +27,11 @@ export const initialState: WireguardState = {
     listen_port: 51820,
 };
 
-export const getMode = (modes: ModesState): string[] => {
-    return includeModeState("wireguard", modes.wireguard);
+export const getSpecs = ({ wireguard }: ModesState): string[] => {
+    if (!isActiveMode(wireguard)) {
+        return [];
+    }
+    return [includeListenAddress("wireguard", wireguard)];
 };
 
 export const toggleWireguard = () => async (dispatch) => {

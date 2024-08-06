@@ -1,5 +1,5 @@
 import localReducer, {
-    getMode,
+    getSpecs,
     initialState,
     setApplications,
     toggleLocal,
@@ -169,7 +169,7 @@ describe("getMode", () => {
                 applications: "curl",
             },
         } as ModesState;
-        const result = getMode(modes);
+        const result = getSpecs(modes);
         expect(result).toEqual(["local:curl"]);
     });
 
@@ -180,7 +180,7 @@ describe("getMode", () => {
                 applications: "",
             },
         } as ModesState;
-        const result = getMode(modes);
+        const result = getSpecs(modes);
         expect(result).toEqual(["local"]);
     });
 
@@ -191,7 +191,7 @@ describe("getMode", () => {
                 applications: "curl",
             },
         } as ModesState;
-        const result = getMode(modes);
+        const result = getSpecs(modes);
         expect(result).toEqual([]);
     });
 
@@ -204,7 +204,7 @@ describe("getMode", () => {
                 error: "error local mode",
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });

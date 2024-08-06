@@ -1,6 +1,6 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import wireguardReducer, {
-    getMode,
+    getSpecs,
     initialState,
     setFilePath,
     setHost,
@@ -109,8 +109,8 @@ describe("wireguardReducer", () => {
         };
         const newState = wireguardReducer(initialState, action);
         expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("");
-        expect(newState.listen_port).toBe("");
+        expect(newState.listen_host).toBe(undefined);
+        expect(newState.listen_port).toBe(undefined);
         expect(newState.file_path).toBe("");
     });
 
@@ -220,7 +220,7 @@ describe("getMode", () => {
                 active: true,
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify(["wireguard"]));
     });
 
@@ -233,7 +233,7 @@ describe("getMode", () => {
                 listen_port: 8080,
             },
         } as ModesState;
-        const mode = getMode(modes);
+        const mode = getSpecs(modes);
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });

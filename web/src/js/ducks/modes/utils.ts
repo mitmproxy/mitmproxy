@@ -1,15 +1,15 @@
-import { getMode as getRegularModeConfig } from "./regular";
-import { getMode as getLocalModeConfig } from "./local";
-import { getMode as getWireguardModeConfig } from "./wireguard";
-import { getMode as getReverseModeConfig } from "./reverse";
+import { getSpecs as getRegularModeSpecs } from "./regular";
+import { getSpecs as getLocalModeSpecs } from "./local";
+import { getSpecs as getWireguardModeSpecs } from "./wireguard";
+import { getSpecs as getReverseModeSpecs } from "./reverse";
 import { fetchApi, partition, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
 
 export interface ModeState {
     active: boolean;
+    error?: string;
     listen_port?: number;
     listen_host?: string;
-    error?: string;
 }
 
 /**
@@ -21,15 +21,15 @@ export const updateMode = () => {
     return async (_, getState) => {
         const modes = getState().modes;
 
-        const activeModes: string[] = [
-            ...getRegularModeConfig(modes),
-            ...getLocalModeConfig(modes),
-            ...getWireguardModeConfig(modes),
-            ...getReverseModeConfig(modes),
+        const modeSpecs: string[] = [
+            ...getRegularModeSpecs(modes),
+            ...getLocalModeSpecs(modes),
+            ...getWireguardModeSpecs(modes),
+            ...getReverseModeSpecs(modes),
             //add new modes here
         ];
         const response = await fetchApi.put("/options", {
-            mode: activeModes,
+            mode: modeSpecs,
         });
         if (response.status === 200) {
             return;
@@ -39,57 +39,70 @@ export const updateMode = () => {
     };
 };
 
-export const includeModeState = (
+export const includeListenAddress = (
     modeNameAndData: string,
-    state: ModeState,
-): string[] => {
-    let mode = modeNameAndData;
-    if (!state.active || state.error) {
-        return [];
-    }
+    state: Pick<ModeState, "listen_host" | "listen_port">,
+): string => {
     if (state.listen_host && state.listen_port) {
-        mode += `@${state.listen_host}:${state.listen_port}`;
+        return `${modeNameAndData}@${state.listen_host}:${state.listen_port}`;
     } else if (state.listen_port) {
-        mode += `@${state.listen_port}`;
+        return `${modeNameAndData}@${state.listen_port}`;
+    } else {
+        return modeNameAndData;
     }
-    return [mode];
 };
 
-export const parseMode = (spec: string) => {
-    let [head, listenAt] = rpartition(spec, "@");
+export const isActiveMode = (state: ModeState): boolean => {
+    return state.active && !state.error;
+};
+
+export interface DecomposedMode {
+    full_spec: string;
+    name: string;
+    data?: string;
+    listen_host?: string;
+    listen_port?: number;
+}
+
+export const parseMode = (full_spec: string): DecomposedMode => {
+    let [head, listenAt] = rpartition(full_spec, "@");
 
     if (!head) {
         head = listenAt;
         listenAt = "";
     }
 
-    const [mode, data] = partition(head, ":");
-    let host = "",
-        port: string | number = "";
+    const [name, data] = partition(head, ":");
+    let listen_host: string | undefined, listen_port: number | undefined;
 
     if (listenAt) {
+        let port: string;
         if (listenAt.includes(":")) {
-            [host, port] = rpartition(listenAt, ":");
+            [listen_host, port] = rpartition(listenAt, ":");
         } else {
-            host = "";
+            listen_host = "";
             port = listenAt;
         }
         if (port) {
-            port = parseInt(port, 10);
-            if (isNaN(port) || port < 0 || port > 65535) {
+            listen_port = parseInt(port, 10);
+            if (isNaN(listen_port) || listen_port < 0 || listen_port > 65535) {
                 throw new Error(`invalid port: ${port}`);
             }
         }
     }
     return {
-        name: mode,
-        data: data ? data : "",
-        listen_host: host,
-        listen_port: port,
+        full_spec,
+        name,
+        data,
+        listen_host,
+        listen_port,
     };
 };
 
-export const getModesOfType = (currentMode: string, servers: ServerInfo[]) => {
+export const getModesOfType = (
+    currentMode: string,
+    servers: ServerInfo[],
+): DecomposedMode[] => {
     return servers
         .filter((server) => server.type === currentMode)
         .map((server) => parseMode(server.full_spec));
