@@ -1,12 +1,4 @@
-import {
-    ModeState,
-    createModeUpdateThunk,
-    getModesOfType,
-    includeListenAddress,
-    isActiveMode,
-    addSetter,
-} from "./utils";
-import type { ModesState } from "../modes";
+import { createModeUpdateThunk, getModesOfType, addSetter } from "./utils";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import {
     BackendState,
@@ -16,22 +8,7 @@ import {
 import { partition } from "../../utils";
 import { shallowEqual } from "react-redux";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export interface ReverseState extends ModeState {
-    protocol: ReverseProxyProtocols;
-    destination: string;
-}
-
-const getSpec = (state: ReverseState): string => {
-    return includeListenAddress(
-        `reverse:${state.protocol}://${state.destination}`,
-        state,
-    );
-};
-
-export const getSpecs = ({ reverse }: ModesState): string[] => {
-    return reverse.filter(isActiveMode).map(getSpec);
-};
+import { getSpec, ReverseState } from "../../modes/reverse";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/reverse/setActive",

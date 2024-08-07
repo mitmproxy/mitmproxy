@@ -5,7 +5,6 @@ import ValueEditor from "../editors/ValueEditor";
 import { useAppDispatch } from "../../ducks";
 import {
     removeServer,
-    ReverseState,
     setActive,
     setDestination,
     setListenHost,
@@ -13,6 +12,7 @@ import {
     setProtocol,
 } from "../../ducks/modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
+import { ReverseState } from "../../modes/reverse";
 
 interface ReverseToggleRowProps {
     server: ReverseState;

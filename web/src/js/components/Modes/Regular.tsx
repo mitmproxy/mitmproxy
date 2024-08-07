@@ -1,13 +1,9 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {
-    setListenPort,
-    setActive,
-    getSpec,
-    RegularState,
-} from "../../ducks/modes/regular";
+import { setListenPort, setActive } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
+import { getSpec, RegularState } from "../../modes/regular";
 
 export default function Regular() {
     const serverState = useAppSelector((state) => state.modes.regular);

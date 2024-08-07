@@ -133,9 +133,11 @@ export const testState: RootState = {
         visible: false,
     },
     modes: {
-        regular: [{
-            active: true,
-        }],
+        regular: [
+            {
+                active: true,
+            },
+        ],
         local: {
             active: false,
             applications: "",

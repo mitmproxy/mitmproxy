@@ -1,21 +1,17 @@
-import { getSpecs as getRegularModeSpecs } from "./regular";
-import { getSpecs as getLocalModeSpecs } from "./local";
-import { getSpecs as getWireguardModeSpecs } from "./wireguard";
-import { getSpecs as getReverseModeSpecs } from "./reverse";
+import { getSpec as getRegularSpec } from "../../modes/regular";
+import { getSpec as getLocalSpec } from "../../modes/local";
+import { getSpec as getWireguardSpec } from "../../modes/wireguard";
+import { getSpec as getReverseSpec } from "../../modes/reverse";
 import { fetchApi, partition, rpartition } from "../../utils";
 import { ServerInfo } from "../backendState";
-import { ModesState } from "../modes";
+import type { ModesState } from "../modes";
 import { ActionReducerMapBuilder, AsyncThunk, Draft } from "@reduxjs/toolkit";
 import { AppAsyncThunkConfig, createAppAsyncThunk } from "../hooks";
+import { ModeState } from "../../modes";
 
-export interface ModeState {
-    active: boolean;
-    error?: string;
-    listen_port?: number;
-    listen_host?: string;
-    // The UI ID is used to uniquely identify the server when doing async updates with createModeUpdateThunk
-    ui_id?: number;
-}
+export const isActiveMode = (state: ModeState): boolean => {
+    return state.active && !state.error;
+};
 
 /**
  * FIXME: Remove before PR merge. This should be entirely replaced with updateModes.
@@ -37,10 +33,11 @@ async function updateModes(_, thunkAPI) {
 
 async function updateModeInner(modes: ModesState) {
     const activeModes: string[] = [
-        ...getRegularModeSpecs(modes),
-        ...getLocalModeSpecs(modes),
-        ...getWireguardModeSpecs(modes),
-        ...getReverseModeSpecs(modes),
+        ...modes.regular.filter(isActiveMode).map(getRegularSpec),
+        // FIXME: state should be an array itself
+        ...Array(modes.local).filter(isActiveMode).map(getLocalSpec),
+        ...Array(modes.wireguard).filter(isActiveMode).map(getWireguardSpec),
+        ...modes.reverse.filter(isActiveMode).map(getReverseSpec),
         //add new modes here
     ];
     const response = await fetchApi.put("/options", {
@@ -85,23 +82,6 @@ export function addSetter<M extends ModeState, Attr extends keyof Draft<M>>(
         }
     });
 }
-
-export const includeListenAddress = (
-    modeNameAndData: string,
-    state: Pick<ModeState, "listen_host" | "listen_port">,
-): string => {
-    if (state.listen_host && state.listen_port) {
-        return `${modeNameAndData}@${state.listen_host}:${state.listen_port}`;
-    } else if (state.listen_port) {
-        return `${modeNameAndData}@${state.listen_port}`;
-    } else {
-        return modeNameAndData;
-    }
-};
-
-export const isActiveMode = (state: ModeState): boolean => {
-    return state.active && !state.error;
-};
 
 interface SpecParts {
     full_spec: string;

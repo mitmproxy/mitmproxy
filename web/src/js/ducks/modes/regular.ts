@@ -3,26 +3,9 @@ import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import {
-    addSetter,
-    getModesOfType,
-    isActiveMode,
-    includeListenAddress,
-    ModeState as ModeState,
-    createModeUpdateThunk,
-} from "./utils";
+import { addSetter, getModesOfType, createModeUpdateThunk } from "./utils";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ModesState } from "../modes";
-
-export interface RegularState extends ModeState {}
-
-export const getSpec = (m: RegularState): string => {
-    return includeListenAddress("regular", m);
-};
-
-export const getSpecs = ({ regular }: ModesState): string[] => {
-    return Object.values(regular).filter(isActiveMode).map(getSpec);
-};
+import { RegularState } from "../../modes/regular";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/regular/setActive",

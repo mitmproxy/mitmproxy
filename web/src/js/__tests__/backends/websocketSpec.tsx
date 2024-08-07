@@ -27,9 +27,7 @@ test("websocket backend", async () => {
             connectionActions.startFetching(),
             {
                 type: "STATE_RECEIVE",
-                cmd: "receive",
-                data: {},
-                resource: "state",
+                payload: {},
             },
             {
                 type: "FLOWS_RECEIVE",

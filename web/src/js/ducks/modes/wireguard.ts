@@ -1,15 +1,9 @@
+import { WireguardState } from "../../modes/wireguard";
 import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import {
-    getModesOfType,
-    isActiveMode,
-    includeListenAddress,
-    ModeState,
-    updateMode,
-} from "./utils";
-import type { ModesState } from "../modes";
+import { getModesOfType, updateMode } from "./utils";
 
 export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
 export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
@@ -17,21 +11,10 @@ export const MODE_WIREGUARD_SET_PORT = "MODE_WIREGUARD_SET_PORT";
 export const MODE_WIREGUARD_SET_HOST = "MODE_WIREGUARD_SET_HOST";
 export const MODE_WIREGUARD_SET_FILE_PATH = "MODE_WIREGUARD_SET_FILE_PATH";
 
-interface WireguardState extends ModeState {
-    file_path?: string;
-}
-
 export const initialState: WireguardState = {
     active: false,
     file_path: "",
     listen_port: 51820,
-};
-
-export const getSpecs = ({ wireguard }: ModesState): string[] => {
-    if (!isActiveMode(wireguard)) {
-        return [];
-    }
-    return [includeListenAddress("wireguard", wireguard)];
 };
 
 export const toggleWireguard = () => async (dispatch) => {

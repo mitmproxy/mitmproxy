@@ -1,29 +1,17 @@
-import { getModesOfType, isActiveMode, ModeState, updateMode } from "./utils";
+import { getModesOfType, updateMode } from "./utils";
 import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import type { ModesState } from "../modes";
+import { LocalState } from "../../modes/local";
 
 export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
 export const MODE_LOCAL_SET_APPLICATIONS = "MODE_LOCAL_SET_APPLICATIONS";
 export const MODE_LOCAL_ERROR = "MODE_LOCAL_ERROR";
 
-interface LocalState extends ModeState {
-    applications?: string;
-}
-
 export const initialState: LocalState = {
     active: false,
     applications: "",
-};
-
-export const getSpecs = ({ local }: ModesState): string[] => {
-    if (!isActiveMode(local)) {
-        return [];
-    }
-    const spec = local.applications ? `local:${local.applications}` : "local";
-    return [spec];
 };
 
 export const toggleLocal = () => async (dispatch) => {
