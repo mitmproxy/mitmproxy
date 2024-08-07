@@ -34,7 +34,7 @@ export const defaultState: BackendState = {
 
 export function mockUpdate(newState: Partial<BackendState>) {
     return {
-        type: UPDATE,
+        type: UPDATE.type,
         payload: newState,
     };
 }

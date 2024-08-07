@@ -133,9 +133,9 @@ export const testState: RootState = {
         visible: false,
     },
     modes: {
-        regular: {
+        regular: [{
             active: true,
-        },
+        }],
         local: {
             active: false,
             applications: "",
@@ -150,8 +150,9 @@ export const testState: RootState = {
                 destination: "example.com",
                 listen_port: 8080,
                 listen_host: "localhost",
+                ui_id: Math.random(),
             },
-            defaultReverseServerConfig,
+            defaultReverseServerConfig(),
         ],
     },
 };
