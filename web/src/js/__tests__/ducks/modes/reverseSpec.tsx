@@ -42,9 +42,7 @@ describe("reverseReducer", () => {
         expect(store.getState().modes.reverse.length).toBe(2);
         await store.dispatch(addServer());
         expect(store.getState().modes.reverse.length).toBe(3);
-        expect(store.getState().modes.reverse[2]).toBe(
-            defaultReverseState(),
-        );
+        expect(store.getState().modes.reverse[2]).toBe(defaultReverseState());
     });
 
     it("should dispatch MODE_REVERSE_DELETE and updateMode", async () => {

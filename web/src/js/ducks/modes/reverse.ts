@@ -8,7 +8,11 @@ import {
 import { partition } from "../../utils";
 import { shallowEqual } from "react-redux";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { defaultReverseState, getSpec, ReverseState } from "../../modes/reverse";
+import {
+    defaultReverseState,
+    getSpec,
+    ReverseState,
+} from "../../modes/reverse";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/reverse/setActive",
