@@ -1239,7 +1239,7 @@ class ClientQuicLayer(QuicLayer):
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
             yield from parent_layer.handle_event(
-                events.DataReceived(self.context.client, self.recv_buffer)
+                events.DataReceived(self.context.client, bytes(self.recv_buffer))
             )
             self.recv_buffer.clear()
             return True, None
