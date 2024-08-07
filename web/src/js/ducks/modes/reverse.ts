@@ -8,7 +8,7 @@ import {
 import { partition } from "../../utils";
 import { shallowEqual } from "react-redux";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getSpec, ReverseState } from "../../modes/reverse";
+import { defaultReverseState, getSpec, ReverseState } from "../../modes/reverse";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/reverse/setActive",
@@ -26,21 +26,14 @@ export const setDestination = createModeUpdateThunk<string>(
     "modes/reverse/setDestination",
 );
 
-export const defaultReverseServerConfig = (): ReverseState => ({
-    active: false,
-    protocol: ReverseProxyProtocols.HTTPS,
-    destination: "",
-    ui_id: Math.random(),
-});
-
-export const initialState: ReverseState[] = [defaultReverseServerConfig()];
+export const initialState: ReverseState[] = [defaultReverseState()];
 
 export const reverseSlice = createSlice({
     name: "modes/reverse",
     initialState,
     reducers: {
         addServer: (state) => {
-            state.push(defaultReverseServerConfig());
+            state.push(defaultReverseState());
         },
         removeServer: (state, action: PayloadAction<ReverseState>) => {
             const index = state.findIndex(
@@ -122,7 +115,7 @@ export const reverseSlice = createSlice({
                             ui_id: undefined,
                         } as ReverseState,
                         {
-                            ...defaultReverseServerConfig(),
+                            ...defaultReverseState(),
                             ui_id: undefined,
                         } as ReverseState,
                     )

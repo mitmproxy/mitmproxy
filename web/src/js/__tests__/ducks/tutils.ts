@@ -8,7 +8,7 @@ import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
 import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
-import { defaultReverseServerConfig } from "../../ducks/modes/reverse";
+import { defaultReverseState } from "../../ducks/modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
@@ -154,7 +154,7 @@ export const testState: RootState = {
                 listen_host: "localhost",
                 ui_id: Math.random(),
             },
-            defaultReverseServerConfig(),
+            defaultReverseState(),
         ],
     },
 };

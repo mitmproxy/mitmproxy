@@ -1,7 +1,7 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import reverseReducer, {
     addServer,
-    defaultReverseServerConfig,
+    defaultReverseState,
     removeServer,
     getSpecs,
     initialState,
@@ -43,7 +43,7 @@ describe("reverseReducer", () => {
         await store.dispatch(addServer());
         expect(store.getState().modes.reverse.length).toBe(3);
         expect(store.getState().modes.reverse[2]).toBe(
-            defaultReverseServerConfig,
+            defaultReverseState(),
         );
     });
 
