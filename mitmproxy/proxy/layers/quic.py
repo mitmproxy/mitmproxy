@@ -1269,7 +1269,6 @@ class ClientQuicLayer(QuicLayer):
         self.recv_buffer.clear()
         return ret
 
-
     def start_server_tls(self) -> layer.CommandGenerator[str | None]:
         if not self.server_tls_available:
             return f"No server QUIC available."
