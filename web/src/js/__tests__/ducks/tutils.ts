@@ -8,8 +8,8 @@ import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
 import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
-import { defaultReverseState } from "../../ducks/modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
+import { defaultReverseState } from "../../modes/reverse";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
