@@ -1239,8 +1239,9 @@ class ClientQuicLayer(QuicLayer):
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
             yield from parent_layer.handle_event(
-                events.DataReceived(self.context.client, data)
+                events.DataReceived(self.context.client, self.recv_buffer)
             )
+            self.recv_buffer.clear()
             return True, None
 
         # start the server QUIC connection if demanded and available
@@ -1264,7 +1265,10 @@ class ClientQuicLayer(QuicLayer):
             return False, "connection closed early"
 
         # send the client hello to aioquic
-        return (yield from super().receive_handshake_data(data))
+        ret = yield from super().receive_handshake_data(bytes(self.recv_buffer))
+        self.recv_buffer.clear()
+        return ret
+
 
     def start_server_tls(self) -> layer.CommandGenerator[str | None]:
         if not self.server_tls_available:
