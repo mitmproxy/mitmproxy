@@ -1325,7 +1325,7 @@ class TestClientQuic:
 
     def test_invalid_clienthello(self, tctx: context.Context):
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
-        data = client_hello[0:500] + client_hello [800:] + client_hello[500:800]
+        data = client_hello[0:500] + client_hello[800:] + client_hello[500:800]
         assert (
             playbook
             >> events.DataReceived(tctx.client, data)
