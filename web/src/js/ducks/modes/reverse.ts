@@ -1,18 +1,19 @@
-import { createModeUpdateThunk, getModesOfType, addSetter } from "./utils";
+import { createModeUpdateThunk, addSetter } from "./utils";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import {
     BackendState,
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import { partition } from "../../utils";
 import { shallowEqual } from "react-redux";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
     defaultReverseState,
     getSpec,
+    parseRaw,
     ReverseState,
 } from "../../modes/reverse";
+import { parseSpec } from "../../modes";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/reverse/setActive",
@@ -70,9 +71,9 @@ export const reverseSlice = createSlice({
                 // but we want to keep them in the UI. So we need to merge UI state with what we got from the server.
 
                 const activeServers = Object.fromEntries(
-                    getModesOfType("reverse", action.payload.servers).map(
-                        (x) => [x.full_spec, x],
-                    ),
+                    Object.entries(action.payload.servers)
+                        .filter(([_, info]) => info.type === "reverse")
+                        .map(([spec, _]) => [spec, parseSpec(spec)]),
                 );
 
                 const nextState: ReverseState[] = [];
@@ -89,25 +90,8 @@ export const reverseSlice = createSlice({
                 }
 
                 // add all new specs
-                for (const { data, listen_host, listen_port } of Object.values(
-                    activeServers,
-                )) {
-                    let [protocol, destination] = partition(data!, "://") as [
-                        ReverseProxyProtocols,
-                        string,
-                    ];
-                    if (!destination) {
-                        destination = protocol;
-                        protocol = ReverseProxyProtocols.HTTPS;
-                    }
-                    nextState.push({
-                        active: true,
-                        protocol,
-                        destination,
-                        listen_host,
-                        listen_port,
-                        ui_id: Math.random(),
-                    });
+                for (const x of Object.values(activeServers)) {
+                    nextState.push(parseRaw(x));
                 }
 
                 // remove default config if still present.
