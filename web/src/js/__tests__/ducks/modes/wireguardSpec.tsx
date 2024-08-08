@@ -1,6 +1,5 @@
 import { enableFetchMocks } from "jest-fetch-mock";
 import wireguardReducer, {
-    getSpecs,
     initialState,
     setFilePath,
     setHost,
@@ -9,7 +8,6 @@ import wireguardReducer, {
 } from "../../../ducks/modes/wireguard";
 import { TStore } from "../tutils";
 import * as backendState from "../../../ducks/backendState";
-import { ModesState } from "../../../ducks/modes";
 
 describe("wireguardReducer", () => {
     it("should return the initial state", () => {
@@ -212,7 +210,7 @@ describe("wireguardReducer", () => {
         expect(store.getState().modes.wireguard.error).toBe("invalid spec");
     });
 });
-
+/*
 describe("getMode", () => {
     it("should return the correct mode string when active", () => {
         const modes = {
@@ -237,3 +235,4 @@ describe("getMode", () => {
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });
+*/

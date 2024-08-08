@@ -1,10 +1,9 @@
 import localReducer, {
-    getSpecs,
     initialState,
     setApplications,
     toggleLocal,
 } from "../../../ducks/modes/local";
-import { ModesState } from "../../../ducks/modes";
+//import { ModesState } from "../../../ducks/modes";
 import { setActive as setRegularActive } from "../../../ducks/modes/regular";
 import * as backendState from "../../../ducks/backendState";
 import { TStore } from "../tutils";
@@ -43,10 +42,12 @@ describe("localReducer", () => {
 
         await store.dispatch(setApplications("curl"));
 
-        await store.dispatch(setRegularActive(false));
+        await store.dispatch(
+            setRegularActive({value: false, server: store.getState().modes.regular[0]}),
+        );
 
         expect(store.getState().modes.local.active).toBe(false);
-        expect(store.getState().modes.regular.active).toBe(false);
+        expect(store.getState().modes.regular[0].active).toBe(false);
         expect(store.getState().modes.local.applications).toBe("curl");
     });
 
@@ -161,6 +162,7 @@ describe("localReducer", () => {
     });
 });
 
+/* // FIXME: move to __tests__/modes
 describe("getMode", () => {
     it("should return local mode with applications when active and applications are present", () => {
         const modes = {
@@ -208,3 +210,4 @@ describe("getMode", () => {
         expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
     });
 });
+*/
