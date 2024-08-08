@@ -1212,7 +1212,9 @@ class ClientQuicLayer(QuicLayer):
         try:
             client_hello = quic_parse_client_hello(bytes(self.recv_buffer))
         except ValueError as e:
-            return False, f"Cannot parse ClientHello: {str(e)} ({data.hex()})"
+            msg = f"Cannot parse ClientHello: {str(e)} ({self.recv_buffer.hex()})"
+            self.recv_buffer.clear()
+            return False, msg
 
         if not client_hello:
             return False, None
