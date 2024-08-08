@@ -1,82 +1,64 @@
-import { getModesOfType, updateMode } from "./utils";
 import {
+    BackendState,
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
+import { addSetter, getModesOfType, createModeUpdateThunk } from "./utils";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { LocalState } from "../../modes/local";
 
-export const MODE_LOCAL_TOGGLE = "MODE_LOCAL_TOGGLE";
-export const MODE_LOCAL_SET_APPLICATIONS = "MODE_LOCAL_SET_APPLICATIONS";
-export const MODE_LOCAL_ERROR = "MODE_LOCAL_ERROR";
+export const setActive = createModeUpdateThunk<boolean>(
+    "modes/local/setActive",
+);
+export const setApplications = createModeUpdateThunk<string | undefined>(
+    "modes/local/setApplications",
+);
 
-export const initialState: LocalState = {
-    active: false,
-    applications: "",
-};
+export const initialState: LocalState[] = [
+    {
+        active: false,
+        applications: "",
+        ui_id: Math.random(),
+    },
+];
 
-export const toggleLocal = () => async (dispatch) => {
-    dispatch({ type: MODE_LOCAL_TOGGLE });
+export const localSlice = createSlice({
+    name: "modes/local",
+    initialState,
+    reducers: {},
+    extraReducers: (builder) => {
+        addSetter(builder, "active", setActive);
+        addSetter(builder, "applications", setApplications);
 
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
-    }
-};
-
-export const setApplications = (applications) => async (dispatch) => {
-    dispatch({
-        type: MODE_LOCAL_SET_APPLICATIONS,
-        applications: applications,
-    });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_LOCAL_ERROR, error: e.message });
-    }
-};
-
-const localReducer = (state = initialState, action): LocalState => {
-    switch (action.type) {
-        case MODE_LOCAL_TOGGLE:
-            return {
-                ...state,
-                active: !state.active,
-                error: undefined,
-            };
-        case MODE_LOCAL_SET_APPLICATIONS:
-            return {
-                ...state,
-                applications: action.applications,
-                error: undefined,
-            };
-        case UPDATE_STATE.type:
-        case RECEIVE_STATE.type:
-            if (action.data && action.data.servers) {
-                const currentModeConfig = getModesOfType(
+        builder.addCase(RECEIVE_STATE, updateState);
+        builder.addCase(UPDATE_STATE, updateState);
+        function updateState(
+            state: LocalState[],
+            action: PayloadAction<Partial<BackendState>>,
+        ) {
+            if (action.payload.servers) {
+                const activeLocalModes = getModesOfType(
                     "local",
-                    action.data.servers,
-                )[0];
-                const isActive = currentModeConfig !== undefined;
-                return {
-                    ...state,
-                    active: isActive,
-                    applications: isActive
-                        ? currentModeConfig.data
-                        : state.applications,
-                    error: isActive ? undefined : state.error,
-                };
+                    action.payload.servers,
+                );
+                if (activeLocalModes.length > 0) {
+                    return activeLocalModes.map(
+                        (m) =>
+                            ({
+                                ui_id: Math.random(),
+                                active: true,
+                                applications: m.data,
+                            }) as LocalState,
+                    );
+                } else {
+                    for (const mode of state) {
+                        mode.active = false;
+                    }
+                }
             }
             return state;
-        case MODE_LOCAL_ERROR:
-            return {
-                ...state,
-                error: action.error,
-            };
-        default:
-            return state;
-    }
-};
+        }
+    },
+});
 
-export default localReducer;
+export default localSlice.reducer;

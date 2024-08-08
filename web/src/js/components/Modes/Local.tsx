@@ -1,32 +1,21 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setApplications, toggleLocal } from "../../ducks/modes/local";
+import { setActive, setApplications } from "../../ducks/modes/local";
 import ValueEditor from "../editors/ValueEditor";
+import { getSpec, LocalState } from "../../modes/local";
 
 export default function Local() {
-    const dispatch = useAppDispatch();
+    const serverState = useAppSelector((state) => state.modes.local);
+    const backendState = useAppSelector((state) => state.backendState.servers);
 
-    const {
-        active,
-        applications,
-        error: ui_error,
-    } = useAppSelector((state) => state.modes.local);
-
-    const backend_error = useAppSelector((state) => {
-        if (state.backendState.servers) {
-            for (const server of Object.values(state.backendState.servers)) {
-                if (server.type === "local") {
-                    return server.last_exception;
-                }
-            }
-        }
-        return "";
+    const servers = serverState.map((server) => {
+        const error =
+            server.error ||
+            backendState[getSpec(server)]?.last_exception ||
+            undefined;
+        return <LocalRow key={server.ui_id} server={server} error={error} />;
     });
-
-    const handleListApplicationsChange = (applications: string) => {
-        dispatch(setApplications(applications));
-    };
 
     return (
         <div>
@@ -34,21 +23,34 @@ export default function Local() {
             <p className="mode-description">
                 Transparently Intercept local application(s).
             </p>
-            <ModeToggle value={active} onChange={() => dispatch(toggleLocal())}>
+            {servers}
+        </div>
+    );
+}
+
+function LocalRow({ server, error }: { server: LocalState; error?: string }) {
+    const dispatch = useAppDispatch();
+
+    return (
+        <div>
+            <ModeToggle
+                value={server.active}
+                onChange={() =>
+                    dispatch(setActive({ server, value: !server.active }))
+                }
+            >
                 Intercept traffic for
                 <ValueEditor
                     className="mode-local-input"
-                    content={applications || ""}
+                    content={server.applications || ""}
                     onEditDone={(applications) =>
-                        handleListApplicationsChange(applications)
+                        dispatch(
+                            setApplications({ server, value: applications }),
+                        )
                     }
                 />
             </ModeToggle>
-            {(ui_error || backend_error) && (
-                <div className="mode-error text-danger">
-                    {ui_error || backend_error}
-                </div>
-            )}
+            {error && <div className="mode-error text-danger">{error}</div>}
         </div>
     );
 }

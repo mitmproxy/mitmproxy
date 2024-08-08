@@ -14,16 +14,6 @@ export const isActiveMode = (state: ModeState): boolean => {
 };
 
 /**
- * FIXME: Remove before PR merge. This should be entirely replaced with updateModes.
- */
-export const updateMode = () => {
-    return async (_, getState) => {
-        const modes = getState().modes;
-        return await updateModeInner(modes);
-    };
-};
-
-/**
  * Async thunk to update modes based on current UI state.
  */
 async function updateModes(_, thunkAPI) {
@@ -34,8 +24,7 @@ async function updateModes(_, thunkAPI) {
 async function updateModeInner(modes: ModesState) {
     const activeModes: string[] = [
         ...modes.regular.filter(isActiveMode).map(getRegularSpec),
-        // FIXME: state should be an array itself
-        ...Array(modes.local).filter(isActiveMode).map(getLocalSpec),
+        ...modes.local.filter(isActiveMode).map(getLocalSpec),
         ...modes.wireguard.filter(isActiveMode).map(getWireguardSpec),
         ...modes.reverse.filter(isActiveMode).map(getReverseSpec),
         //add new modes here
