@@ -381,7 +381,13 @@ def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
             raise ValueError("Invalid ClientHello data.") from e
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
-    return None
+
+    # Fragmented Clienthellos seem to produce valid replies whereas invalid Clienthellos don't
+    # We delay sending these replies until we receive the entire client hello
+    if quic.datagrams_to_send(now=0.1):
+        return None
+
+    raise ValueError("No ClientHello returned.")
 
 
 class QuicStreamNextLayer(layer.NextLayer):
