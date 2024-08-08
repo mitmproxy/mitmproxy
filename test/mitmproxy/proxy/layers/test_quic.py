@@ -1124,7 +1124,8 @@ class TestClientQuic:
             << commands.SendData(tctx.client, b"ServerHello")
         )
 
-    def test_fragmented_client_hello(self, tctx: context.Context):
+    @pytest.mark.parametrize("fragments", [[fragmented_client_hello1, fragmented_client_hello2], [fragmented_client_hello2, fragmented_client_hello1]])
+    def test_fragmented_client_hello(self, tctx: context.Context, fragments: list[bytes]):
         client_layer = quic.ClientQuicLayer(tctx, time=time.time)
         playbook = tutils.Playbook(client_layer)
 
@@ -1133,8 +1134,8 @@ class TestClientQuic:
         assert (
             playbook
             >> events.Start()
-            >> events.DataReceived(tctx.client, fragmented_client_hello1)
-            >> events.DataReceived(tctx.client, fragmented_client_hello2)
+            >> events.DataReceived(tctx.client, fragments[0])
+            >> events.DataReceived(tctx.client, fragments[1])
             << tls.TlsClienthelloHook(tutils.Placeholder())
             >> tutils.reply()
             << quic.QuicStartClientHook(tutils.Placeholder())
@@ -1142,23 +1143,6 @@ class TestClientQuic:
 
         assert tctx.client.sni == "localhost"
 
-    def test_out_of_order_fragmented_client_hello(self, tctx: context.Context):
-        client_layer = quic.ClientQuicLayer(tctx, time=time.time)
-        playbook = tutils.Playbook(client_layer)
-
-        assert not tctx.client.sni
-
-        assert (
-            playbook
-            >> events.Start()
-            >> events.DataReceived(tctx.client, fragmented_client_hello2)
-            >> events.DataReceived(tctx.client, fragmented_client_hello1)
-            << tls.TlsClienthelloHook(tutils.Placeholder())
-            >> tutils.reply()
-            << quic.QuicStartClientHook(tutils.Placeholder())
-        )
-
-        assert tctx.client.sni == "localhost"
 
     @pytest.mark.parametrize(
         "data,err",
