@@ -9,7 +9,7 @@ import { includeListenAddress } from "../../../modes";
 import { ModesState } from "../../../ducks/modes";
 import { getSpec as getRegularSpec } from "../../../modes/regular";
 import { getSpec as getReverseSpec } from "../../../modes/reverse";
-import {getSpec as getWireguardSpec} from "../../../modes/wireguard";
+import { getSpec as getWireguardSpec } from "../../../modes/wireguard";
 import { ReverseProxyProtocols } from "../../../backends/consts";
 
 enableFetchMocks();

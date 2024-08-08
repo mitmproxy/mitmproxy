@@ -43,7 +43,10 @@ describe("localReducer", () => {
         await store.dispatch(setApplications("curl"));
 
         await store.dispatch(
-            setRegularActive({value: false, server: store.getState().modes.regular[0]}),
+            setRegularActive({
+                value: false,
+                server: store.getState().modes.regular[0],
+            }),
         );
 
         expect(store.getState().modes.local.active).toBe(false);

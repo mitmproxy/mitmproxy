@@ -153,8 +153,7 @@ describe("reverseSlice", () => {
                 servers: {
                     "reverse:example.com:8085@localhost:8080": {
                         description: "reverse proxy to example.com:8085",
-                        full_spec:
-                            "reverse:example.com:8085@localhost:8080",
+                        full_spec: "reverse:example.com:8085@localhost:8080",
                         is_running: true,
                         last_exception: null,
                         listen_addrs: [
