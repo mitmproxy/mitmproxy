@@ -8,6 +8,7 @@ from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
+from typing import Optional
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -331,7 +332,7 @@ class QuicClientHello(Exception):
     data: bytes
 
 
-def quic_parse_client_hello(data: bytes) -> ClientHello:
+def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
     """Helper function that parses a client hello packet."""
 
     # ensure the first packet is indeed the initial one
@@ -380,7 +381,8 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
             raise ValueError("Invalid ClientHello data.") from e
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
-    raise ValueError("No ClientHello returned.")
+
+    return None
 
 
 class QuicStreamNextLayer(layer.NextLayer):
@@ -1121,6 +1123,7 @@ class ClientQuicLayer(QuicLayer):
 
     server_tls_available: bool
     """Indicates whether the parent layer is a ServerQuicLayer."""
+    recv_buffer: bytearray
 
     def __init__(
         self, context: context.Context, time: Callable[[], float] | None = None
@@ -1141,6 +1144,7 @@ class ClientQuicLayer(QuicLayer):
         self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
             self.context.layers[-2], ServerQuicLayer
         )
+        self.recv_buffer = bytearray()
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
@@ -1198,11 +1202,17 @@ class ClientQuicLayer(QuicLayer):
                 f"Invalid handshake received, roaming not supported. ({data.hex()})",
             )
 
+        self.recv_buffer.extend(data)
         # extract the client hello
         try:
-            client_hello = quic_parse_client_hello(data)
-        except ValueError as e:
-            return False, f"Cannot parse ClientHello: {str(e)} ({data.hex()})"
+            client_hello = quic_parse_client_hello(bytes(self.recv_buffer))
+        except ValueError as e:  # pragma: no cover
+            msg = f"Cannot parse ClientHello: {str(e)} ({self.recv_buffer.hex()})"
+            self.recv_buffer.clear()
+            return False, msg
+
+        if not client_hello:
+            return False, None
 
         # copy the client hello information
         self.conn.sni = client_hello.sni
@@ -1232,8 +1242,9 @@ class ClientQuicLayer(QuicLayer):
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
             yield from parent_layer.handle_event(
-                events.DataReceived(self.context.client, data)
+                events.DataReceived(self.context.client, bytes(self.recv_buffer))
             )
+            self.recv_buffer.clear()
             return True, None
 
         # start the server QUIC connection if demanded and available
@@ -1257,7 +1268,9 @@ class ClientQuicLayer(QuicLayer):
             return False, "connection closed early"
 
         # send the client hello to aioquic
-        return (yield from super().receive_handshake_data(data))
+        ret = yield from super().receive_handshake_data(bytes(self.recv_buffer))
+        self.recv_buffer.clear()
+        return ret
 
     def start_server_tls(self) -> layer.CommandGenerator[str | None]:
         if not self.server_tls_available:
