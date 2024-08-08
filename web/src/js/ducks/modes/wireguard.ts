@@ -1,119 +1,75 @@
 import { WireguardState } from "../../modes/wireguard";
 import {
+    BackendState,
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import { getModesOfType, updateMode } from "./utils";
+import { addSetter, getModesOfType, createModeUpdateThunk } from "./utils";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export const MODE_WIREGUARD_TOGGLE = "MODE_WIREGUARD_TOGGLE";
-export const MODE_WIREGUARD_ERROR = "MODE_WIREGUARD_ERROR";
-export const MODE_WIREGUARD_SET_PORT = "MODE_WIREGUARD_SET_PORT";
-export const MODE_WIREGUARD_SET_HOST = "MODE_WIREGUARD_SET_HOST";
-export const MODE_WIREGUARD_SET_FILE_PATH = "MODE_WIREGUARD_SET_FILE_PATH";
+export const setActive = createModeUpdateThunk<boolean>(
+    "modes/wireguard/setActive",
+);
+export const setListenHost = createModeUpdateThunk<string | undefined>(
+    "modes/wireguard/setListenHost",
+);
+export const setListenPort = createModeUpdateThunk<number | undefined>(
+    "modes/wireguard/setListenPort",
+);
+export const setFilePath = createModeUpdateThunk<string | undefined>(
+    "modes/wireguard/setFilePath",
+);
 
-export const initialState: WireguardState = {
-    active: false,
-    file_path: "",
-    listen_port: 51820,
-};
+export const initialState: WireguardState[] = [
+    {
+        active: false,
+        file_path: "",
+        listen_port: 51820,
+        ui_id: Math.random(),
+    },
+];
 
-export const toggleWireguard = () => async (dispatch) => {
-    dispatch({ type: MODE_WIREGUARD_TOGGLE });
+export const wireguardSlice = createSlice({
+    name: "modes/wireguard",
+    initialState,
+    reducers: {},
+    extraReducers: (builder) => {
+        addSetter(builder, "active", setActive);
+        addSetter(builder, "listen_host", setListenHost);
+        addSetter(builder, "listen_port", setListenPort);
+        addSetter(builder, "file_path", setFilePath);
 
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
-    }
-};
+        builder.addCase(RECEIVE_STATE, updateState);
+        builder.addCase(UPDATE_STATE, updateState);
 
-export const setPort = (port: number) => async (dispatch) => {
-    dispatch({ type: MODE_WIREGUARD_SET_PORT, port });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
-    }
-};
-
-export const setHost = (host: string) => async (dispatch) => {
-    dispatch({ type: MODE_WIREGUARD_SET_HOST, host });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
-    }
-};
-
-export const setFilePath = (path: string) => async (dispatch) => {
-    dispatch({ type: MODE_WIREGUARD_SET_FILE_PATH, path });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_WIREGUARD_ERROR, error: e.message });
-    }
-};
-
-const wireguardReducer = (state = initialState, action): WireguardState => {
-    switch (action.type) {
-        case MODE_WIREGUARD_TOGGLE:
-            return {
-                ...state,
-                active: !state.active,
-            };
-        case MODE_WIREGUARD_SET_PORT:
-            return {
-                ...state,
-                listen_port: action.port as number,
-                error: undefined,
-            };
-        case MODE_WIREGUARD_SET_HOST:
-            return {
-                ...state,
-                listen_host: action.host,
-                error: undefined,
-            };
-        case MODE_WIREGUARD_SET_FILE_PATH:
-            return {
-                ...state,
-                file_path: action.path,
-                error: undefined,
-            };
-        case UPDATE_STATE.type:
-        case RECEIVE_STATE.type:
-            if (action.data && action.data.servers) {
-                const currentModeConfig = getModesOfType(
+        function updateState(
+            state: WireguardState[],
+            action: PayloadAction<Partial<BackendState>>,
+        ) {
+            if (action.payload.servers) {
+                const activeWireguardModes = getModesOfType(
                     "wireguard",
-                    action.data.servers,
-                )[0];
-                const isActive = currentModeConfig !== undefined;
-                return {
-                    ...state,
-                    active: isActive,
-                    listen_host: isActive
-                        ? currentModeConfig.listen_host
-                        : state.listen_host,
-                    listen_port: isActive
-                        ? (currentModeConfig.listen_port as number)
-                        : state.listen_port,
-                    file_path: isActive
-                        ? currentModeConfig.data
-                        : state.file_path,
-                    error: isActive ? undefined : state.error,
-                };
+                    action.payload.servers,
+                );
+                if (activeWireguardModes.length > 0) {
+                    return activeWireguardModes.map(
+                        (m) =>
+                            ({
+                                ui_id: Math.random(),
+                                active: true,
+                                listen_host: m.listen_host,
+                                listen_port: m.listen_port,
+                                file_path: m.data,
+                            }) as WireguardState,
+                    );
+                } else {
+                    for (const mode of state) {
+                        mode.active = false;
+                    }
+                }
             }
-            return state;
-        case MODE_WIREGUARD_ERROR:
-            return {
-                ...state,
-                error: action.error,
-            };
-        default:
-            return state;
-    }
-};
+        }
+    },
+});
 
-export default wireguardReducer;
+export default wireguardSlice.reducer;

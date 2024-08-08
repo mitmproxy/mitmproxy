@@ -1,64 +1,55 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { toggleWireguard } from "../../ducks/modes/wireguard";
+import { getSpec, WireguardState } from "../../modes/wireguard";
+import { setActive } from "../../ducks/modes/wireguard";
 
 export default function Wireguard() {
-    const dispatch = useAppDispatch();
+    const serverState = useAppSelector((state) => state.modes.wireguard);
+    const backendState = useAppSelector((state) => state.backendState.servers);
 
-    const {
-        active,
-        error: ui_error,
-        //listen_host,
-        //listen_port,
-        //file_path,
-    } = useAppSelector((state) => state.modes.wireguard);
-
-    const backend_error = useAppSelector((state) => {
-        if (state.backendState.servers) {
-            for (const server of Object.values(state.backendState.servers)) {
-                if (server.type === "wireguard") {
-                    return server.last_exception;
-                }
-            }
-        }
-        return "";
+    const servers = serverState.map((server) => {
+        const error =
+            server.error ||
+            backendState[getSpec(server)]?.last_exception ||
+            undefined;
+        return (
+            <WireGuardRow key={server.ui_id} server={server} error={error} />
+        );
     });
-
-    /*
-    const handlePortChange = (port: string) => {
-        // FIXME: We should eventually cast to Number and validate.
-        dispatch(setPort(port as unknown as number));
-    };
-
-    const handleHostChange = (host: string) => {
-        dispatch(setHost(host));
-    };
-
-    const handleFilePathChange = (path: string) => {
-        dispatch(setFilePath(path));
-    };
-    */
 
     return (
         <div>
-            <h4 className="mode-title">WireGuard Server</h4>
+            <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
             <p className="mode-description">
-                Start a WireGuard™ server and connect an external device for
-                transparent proxying.
+                You manually configure your client application or device to use
+                an HTTP(S) proxy.
             </p>
+            {servers}
+        </div>
+    );
+}
+
+function WireGuardRow({
+    server,
+    error,
+}: {
+    server: WireguardState;
+    error?: string;
+}) {
+    const dispatch = useAppDispatch();
+
+    return (
+        <div>
             <ModeToggle
-                value={active}
-                onChange={() => dispatch(toggleWireguard())}
+                value={server.active}
+                onChange={() =>
+                    dispatch(setActive({ server, value: !server.active }))
+                }
             >
                 Run WireGuard Server
-                {/* Popover will be added here in the next PR */}
             </ModeToggle>
-            {(ui_error || backend_error) && (
-                <div className="mode-error text-danger">
-                    {ui_error || backend_error}
-                </div>
-            )}
+            {error && <div className="mode-error text-danger">{error}</div>}
         </div>
     );
 }

@@ -36,7 +36,7 @@ async function updateModeInner(modes: ModesState) {
         ...modes.regular.filter(isActiveMode).map(getRegularSpec),
         // FIXME: state should be an array itself
         ...Array(modes.local).filter(isActiveMode).map(getLocalSpec),
-        ...Array(modes.wireguard).filter(isActiveMode).map(getWireguardSpec),
+        ...modes.wireguard.filter(isActiveMode).map(getWireguardSpec),
         ...modes.reverse.filter(isActiveMode).map(getReverseSpec),
         //add new modes here
     ];
