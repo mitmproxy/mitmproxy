@@ -313,7 +313,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 servers.append(ipv4)
                 try:
                     ipv6 = await mitmproxy_rs.start_udp_server(
-                        "::",
+                        "[::]",
                         ipv4.getsockname()[1],
                         self.handle_udp_stream,
                     )

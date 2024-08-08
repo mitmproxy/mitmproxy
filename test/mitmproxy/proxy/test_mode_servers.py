@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import mitmproxy_rs
 import pytest
 
+from ...conftest import no_ipv6
 import mitmproxy.platform
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
@@ -289,7 +290,8 @@ async def test_udp_start_error():
         await inst.stop()
 
 
-async def test_udp_dual_stack(caplog_async):
+async def test_dual_stack(caplog_async):
+    """Test that a server bound to "" binds on both IPv4 and IPv6 for both TCP and UDP."""
     caplog_async.set_level("DEBUG")
     manager = MagicMock()
     manager.connections = {}
@@ -298,21 +300,21 @@ async def test_udp_dual_stack(caplog_async):
         inst = ServerInstance.make("dns@:0", manager)
         await inst.start()
         assert await caplog_async.await_log("server listening")
-
         _, port, *_ = inst.listen_addrs[0]
-        stream = await mitmproxy_rs.open_udp_connection("127.0.0.1", port)
-        stream.write(b"\x00\x00\x01")
-        assert await caplog_async.await_log("sent an invalid message")
-        stream.close()
-        await stream.wait_closed()
 
-        if "listening on IPv4 only" not in caplog_async.caplog.text:
-            caplog_async.clear()
-            stream = await mitmproxy_rs.open_udp_connection("::1", port)
-            stream.write(b"\x00\x00\x01")
-            assert await caplog_async.await_log("sent an invalid message")
-            stream.close()
-            await stream.wait_closed()
+        for addr in ("127.0.0.1", "::1"):
+            if addr == "::1" and no_ipv6:
+                continue
+            for proto in ("tcp", "udp"):
+                caplog_async.clear()
+                if proto == "tcp":
+                    _, stream = await asyncio.open_connection(addr, port)
+                else:
+                    stream = await mitmproxy_rs.open_udp_connection(addr, port)
+                stream.write(b"\x00\x00\x01")
+                assert await caplog_async.await_log("sent an invalid message")
+                stream.close()
+                await stream.wait_closed()
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")
