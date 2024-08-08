@@ -21,7 +21,7 @@ async function updateModes(_, thunkAPI) {
     await updateModeInner(modes);
 }
 
-async function updateModeInner(modes: ModesState) {
+export async function updateModeInner(modes: ModesState) {
     const activeModes: string[] = [
         ...modes.regular.filter(isActiveMode).map(getRegularSpec),
         ...modes.local.filter(isActiveMode).map(getLocalSpec),

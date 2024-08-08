@@ -138,10 +138,12 @@ export const testState: RootState = {
                 active: true,
             },
         ],
-        local: {
-            active: false,
-            applications: "",
-        },
+        local: [
+            {
+                active: false,
+                applications: "",
+            },
+        ],
         wireguard: [
             {
                 active: false,

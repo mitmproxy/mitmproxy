@@ -3,13 +3,14 @@ import { TStore } from "../tutils";
 import {
     isActiveMode,
     parseSpec,
-    updateMode,
+    updateModeInner,
 } from "../../../ducks/modes/utils";
 import { includeListenAddress } from "../../../modes";
 import { ModesState } from "../../../ducks/modes";
 import { getSpec as getRegularSpec } from "../../../modes/regular";
 import { getSpec as getReverseSpec } from "../../../modes/reverse";
 import { getSpec as getWireguardSpec } from "../../../modes/wireguard";
+import { getSpec as getLocalSpec } from "../../../modes/local";
 import { ReverseProxyProtocols } from "../../../backends/consts";
 
 enableFetchMocks();
@@ -23,7 +24,7 @@ describe("updateMode action creator", () => {
         const store = TStore();
         fetchMock.mockResponseOnce(JSON.stringify({ success: true }));
 
-        await store.dispatch(updateMode());
+        await store.dispatch(() => updateModeInner(store.getState().modes));
 
         const expectedUrl = "./options";
         const expectedBody = JSON.stringify({ mode: ["regular"] });
@@ -37,17 +38,19 @@ describe("updateMode action creator", () => {
     });
 
     it("fetch HTTP status != 200 throws", async () => {
+        const store = TStore();
         fetchMock.mockResponseOnce("invalid query", { status: 400 });
-        await expect(TStore().dispatch(updateMode())).rejects.toThrow(
-            "invalid query",
-        );
+        await expect(
+            TStore().dispatch(() => updateModeInner(store.getState().modes)),
+        ).rejects.toThrow("invalid query");
     });
 
     it("fetch error throws", async () => {
+        const store = TStore();
         fetchMock.mockRejectOnce(new Error("network error"));
-        await expect(TStore().dispatch(updateMode())).rejects.toThrow(
-            "network error",
-        );
+        await expect(
+            TStore().dispatch(() => updateModeInner(store.getState().modes)),
+        ).rejects.toThrow("network error");
     });
 });
 
@@ -163,5 +166,20 @@ describe("getSpec wireguard mode", () => {
         } as ModesState;
         const mode = getWireguardSpec(modes.wireguard[0]);
         expect(mode).toBe("wireguard@localhost:8082");
+    });
+});
+
+describe("getSpec local mode", () => {
+    it("should return the correct mode config", () => {
+        const modes = {
+            local: [
+                {
+                    active: true,
+                    applications: "curl,http",
+                },
+            ],
+        } as ModesState;
+        const mode = getLocalSpec(modes.local[0]);
+        expect(mode).toBe("local:curl,http");
     });
 });
