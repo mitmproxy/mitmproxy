@@ -35,6 +35,39 @@ describe("regularSlice", () => {
         expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
+    it("should handle error when setting regular mode", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setActive({ value: false, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting listen port", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setListenPort({ value: 4444, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting listen host", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setListenHost({ value: "localhost", server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular[0].error).toBe("invalid spec");
+    });
+
     it("should handle RECEIVE_STATE with an active regular proxy", () => {
         const action = {
             type: STATE_RECEIVE.type,

@@ -38,6 +38,50 @@ describe("wireguardSlice", () => {
         expect(fetchMock).toHaveBeenCalledTimes(4);
     });
 
+    it("should handle error when setting wireguard mode", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.wireguard[0];
+        await store.dispatch(setActive({ value: true, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting listen port", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.wireguard[0];
+        await store.dispatch(setListenPort({ value: 4444, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting listen host", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.wireguard[0];
+        await store.dispatch(setListenHost({ value: "localhost", server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting file path", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.wireguard[0];
+        await store.dispatch(setFilePath({ value: "/path/example", server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.wireguard[0].error).toBe("invalid spec");
+    });
+
     it("should handle RECEIVE_STATE with an active wireguard proxy", () => {
         const action = {
             type: STATE_RECEIVE.type,

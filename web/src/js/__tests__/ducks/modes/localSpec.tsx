@@ -33,6 +33,28 @@ describe("localSlice", () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
+    it("should handle error when setting local mode", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.local[0];
+        await store.dispatch(setActive({ value: true, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.local[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting applications", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.local[0];
+        await store.dispatch(setApplications({ value: "curl", server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.local[0].error).toBe("invalid spec");
+    });
+
     it("should handle RECEIVE_STATE with an active local proxy", () => {
         const action = {
             type: STATE_RECEIVE.type,
