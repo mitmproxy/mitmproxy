@@ -1,6 +1,6 @@
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "../tutils";
-import { isActiveMode, updateModeInner } from "../../../ducks/modes/utils";
+import { isActiveMode, updateModes } from "../../../ducks/modes/utils";
 
 enableFetchMocks();
 
@@ -13,7 +13,7 @@ describe("updateMode action creator", () => {
         const store = TStore();
         fetchMock.mockResponseOnce(JSON.stringify({ success: true }));
 
-        await store.dispatch(() => updateModeInner(store.getState().modes));
+        await store.dispatch(() => updateModes(null, store));
 
         const expectedUrl = "./options";
         const expectedBody = JSON.stringify({ mode: ["regular"] });
@@ -30,7 +30,7 @@ describe("updateMode action creator", () => {
         const store = TStore();
         fetchMock.mockResponseOnce("invalid query", { status: 400 });
         await expect(
-            TStore().dispatch(() => updateModeInner(store.getState().modes)),
+            store.dispatch(() => updateModes(null, store)),
         ).rejects.toThrow("invalid query");
     });
 
@@ -38,7 +38,7 @@ describe("updateMode action creator", () => {
         const store = TStore();
         fetchMock.mockRejectOnce(new Error("network error"));
         await expect(
-            TStore().dispatch(() => updateModeInner(store.getState().modes)),
+            store.dispatch(() => updateModes(null, store)),
         ).rejects.toThrow("network error");
     });
 });

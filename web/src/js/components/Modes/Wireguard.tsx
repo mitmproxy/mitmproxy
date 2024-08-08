@@ -20,10 +20,10 @@ export default function Wireguard() {
 
     return (
         <div>
-            <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
+            <h4 className="mode-title">WireGuard Server</h4>
             <p className="mode-description">
-                You manually configure your client application or device to use
-                an HTTP(S) proxy.
+                Start a WireGuard™ server and connect an external device for
+                transparent proxying.
             </p>
             {servers}
         </div>

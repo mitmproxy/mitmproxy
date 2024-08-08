@@ -4,7 +4,6 @@ import { getSpec as getWireguardSpec } from "../../modes/wireguard";
 import { getSpec as getReverseSpec } from "../../modes/reverse";
 import { fetchApi } from "../../utils";
 import { BackendState } from "../backendState";
-import type { ModesState } from "../modes";
 import {
     ActionReducerMapBuilder,
     AsyncThunk,
@@ -21,12 +20,8 @@ export const isActiveMode = (state: ModeState): boolean => {
 /**
  * Async thunk to update modes based on current UI state.
  */
-async function updateModes(_, thunkAPI) {
+export async function updateModes(_, thunkAPI) {
     const modes = thunkAPI.getState().modes;
-    await updateModeInner(modes);
-}
-
-export async function updateModeInner(modes: ModesState) {
     const activeModes: string[] = [
         ...modes.regular.filter(isActiveMode).map(getRegularSpec),
         ...modes.local.filter(isActiveMode).map(getLocalSpec),
