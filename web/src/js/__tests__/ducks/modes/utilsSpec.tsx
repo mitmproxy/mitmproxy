@@ -9,6 +9,7 @@ import { includeListenAddress } from "../../../modes";
 import { ModesState } from "../../../ducks/modes";
 import { getSpec as getRegularSpec } from "../../../modes/regular";
 import { getSpec as getReverseSpec } from "../../../modes/reverse";
+import {getSpec as getWireguardSpec} from "../../../modes/wireguard";
 import { ReverseProxyProtocols } from "../../../backends/consts";
 
 enableFetchMocks();
@@ -146,5 +147,21 @@ describe("getSpec reverse mode", () => {
         } as ModesState;
         const mode = getReverseSpec(modes.reverse[0]);
         expect(mode).toBe("reverse:https://example.com:8085@localhost:8082");
+    });
+});
+
+describe("getSpec wireguard mode", () => {
+    it("should return the correct mode config", () => {
+        const modes = {
+            wireguard: [
+                {
+                    active: true,
+                    listen_host: "localhost",
+                    listen_port: 8082,
+                },
+            ],
+        } as ModesState;
+        const mode = getWireguardSpec(modes.wireguard[0]);
+        expect(mode).toBe("wireguard@localhost:8082");
     });
 });
