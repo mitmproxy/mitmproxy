@@ -20,6 +20,7 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
+import aioquic.quic.logger
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
@@ -382,12 +383,7 @@ def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
 
-    # Fragmented Clienthellos seem to produce valid replies whereas invalid Clienthellos don't
-    # We delay sending these replies until we receive the entire client hello
-    if quic.datagrams_to_send(now=0.1):
-        return None
-
-    raise ValueError("No ClientHello returned.")
+    return None
 
 
 class QuicStreamNextLayer(layer.NextLayer):
@@ -1211,7 +1207,7 @@ class ClientQuicLayer(QuicLayer):
         # extract the client hello
         try:
             client_hello = quic_parse_client_hello(bytes(self.recv_buffer))
-        except ValueError as e:
+        except ValueError as e: # pragma: no cover
             msg = f"Cannot parse ClientHello: {str(e)} ({self.recv_buffer.hex()})"
             self.recv_buffer.clear()
             return False, msg

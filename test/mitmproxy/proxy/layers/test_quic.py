@@ -248,12 +248,6 @@ class TestParseClientHello:
         with pytest.raises(ValueError, match="Conn err"):
             quic.quic_parse_client_hello(client_hello)
 
-    def test_no_return(self):
-        with pytest.raises(ValueError, match="No ClientHello"):
-            quic.quic_parse_client_hello(
-                client_hello[0:1200] + b"\x00" + client_hello[1200:]
-            )
-
 
 class TestQuicStreamLayer:
     def test_ignored(self, tctx: context.Context):
@@ -1335,20 +1329,6 @@ class TestClientQuic:
             >> events.DataReceived(tctx.client, data)
             << commands.Log(
                 f"Client QUIC handshake failed. Invalid handshake received, roaming not supported. ({data.hex()})",
-                WARNING,
-            )
-            << tls.TlsFailedClientHook(tutils.Placeholder())
-        )
-        assert client_layer.tunnel_state == tls.tunnel.TunnelState.ESTABLISHING
-
-    def test_invalid_clienthello(self, tctx: context.Context):
-        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
-        data = client_hello[0:1200] + b"\x00" + client_hello[1200:]
-        assert (
-            playbook
-            >> events.DataReceived(tctx.client, data)
-            << commands.Log(
-                f"Client QUIC handshake failed. Cannot parse ClientHello: No ClientHello returned. ({data.hex()})",
                 WARNING,
             )
             << tls.TlsFailedClientHook(tutils.Placeholder())
