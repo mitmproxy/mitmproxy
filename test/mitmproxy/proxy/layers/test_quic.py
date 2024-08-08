@@ -1124,8 +1124,16 @@ class TestClientQuic:
             << commands.SendData(tctx.client, b"ServerHello")
         )
 
-    @pytest.mark.parametrize("fragments", [[fragmented_client_hello1, fragmented_client_hello2], [fragmented_client_hello2, fragmented_client_hello1]])
-    def test_fragmented_client_hello(self, tctx: context.Context, fragments: list[bytes]):
+    @pytest.mark.parametrize(
+        "fragments",
+        [
+            [fragmented_client_hello1, fragmented_client_hello2],
+            [fragmented_client_hello2, fragmented_client_hello1],
+        ],
+    )
+    def test_fragmented_client_hello(
+        self, tctx: context.Context, fragments: list[bytes]
+    ):
         client_layer = quic.ClientQuicLayer(tctx, time=time.time)
         playbook = tutils.Playbook(client_layer)
 
@@ -1142,7 +1150,6 @@ class TestClientQuic:
         )
 
         assert tctx.client.sni == "localhost"
-
 
     @pytest.mark.parametrize(
         "data,err",
