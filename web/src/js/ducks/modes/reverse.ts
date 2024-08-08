@@ -1,201 +1,79 @@
-import {
-    ModeState,
-    getModesOfType,
-    includeListenAddress,
-    isActiveMode,
-    updateMode,
-} from "./utils";
-import type { ModesState } from "../modes";
+import { createModeUpdateThunk, addSetter } from "./utils";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import {
+    BackendState,
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import { partition } from "../../utils";
 import { shallowEqual } from "react-redux";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+    defaultReverseState,
+    getSpec,
+    parseRaw,
+    ReverseState,
+} from "../../modes/reverse";
+import { parseSpec } from "../../modes";
 
-export const MODE_REVERSE_TOGGLE = "MODE_REVERSE_TOGGLE";
-export const MODE_REVERSE_SET_LISTEN_CONFIG = "MODE_REVERSE_SET_LISTEN_CONFIG";
-export const MODE_REVERSE_SET_DESTINATION = "MODE_REVERSE_SET_DESTINATION";
-export const MODE_REVERSE_SET_PROTOCOL = "MODE_REVERSE_SET_PROTOCOL";
-export const MODE_REVERSE_ERROR = "MODE_REVERSE_ERROR";
-export const MODE_REVERSE_ADD_SERVER_CONFIG = "MODE_REVERSE_ADD_SERVER_CONFIG";
-export const MODE_REVERSE_DELETE = "MODE_REVERSE_DELETE";
+export const setActive = createModeUpdateThunk<boolean>(
+    "modes/reverse/setActive",
+);
+export const setListenHost = createModeUpdateThunk<string | undefined>(
+    "modes/reverse/setListenHost",
+);
+export const setListenPort = createModeUpdateThunk<number | undefined>(
+    "modes/reverse/setListenPort",
+);
+export const setProtocol = createModeUpdateThunk<ReverseProxyProtocols>(
+    "modes/reverse/setProtocol",
+);
+export const setDestination = createModeUpdateThunk<string>(
+    "modes/reverse/setDestination",
+);
 
-export interface ReverseState extends ModeState {
-    protocol: ReverseProxyProtocols;
-    destination: string;
-}
+export const initialState: ReverseState[] = [defaultReverseState()];
 
-export const defaultReverseServerConfig: ReverseState = {
-    active: false,
-    protocol: ReverseProxyProtocols.HTTPS,
-    destination: "",
-};
-
-type ReverseServersState = ReverseState[];
-
-export const initialState: ReverseServersState = [defaultReverseServerConfig];
-
-const getSpec = (state: ReverseState): string => {
-    return includeListenAddress(
-        `reverse:${state.protocol}://${state.destination}`,
-        state,
-    );
-};
-
-export const getSpecs = ({ reverse }: ModesState): string[] => {
-    return reverse.filter(isActiveMode).map(getSpec);
-};
-
-export const addReverseServer = () => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_ADD_SERVER_CONFIG });
-};
-
-export const toggleReverse = (modeIndex: number) => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_TOGGLE, index: modeIndex });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({
-            type: MODE_REVERSE_ERROR,
-            error: e.message,
-            index: modeIndex,
-        });
-    }
-};
-
-export const deleteReverse = (modeIndex: number) => async (dispatch) => {
-    dispatch({ type: MODE_REVERSE_DELETE, index: modeIndex });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({
-            type: MODE_REVERSE_ERROR,
-            error: e.message,
-            index: modeIndex,
-        });
-    }
-};
-
-export const setProtocol =
-    (protocol: ReverseProxyProtocols, modeIndex: number) =>
-    async (dispatch) => {
-        dispatch({
-            type: MODE_REVERSE_SET_PROTOCOL,
-            protocol: protocol,
-            index: modeIndex,
-        });
-
-        try {
-            await dispatch(updateMode());
-        } catch (e) {
-            dispatch({
-                type: MODE_REVERSE_ERROR,
-                error: e.message,
-                index: modeIndex,
-            });
-        }
-    };
-
-export const setListenConfig =
-    (port: number, host: string, modeIndex: number) => async (dispatch) => {
-        dispatch({
-            type: MODE_REVERSE_SET_LISTEN_CONFIG,
-            port,
-            host,
-            index: modeIndex,
-        });
-
-        try {
-            await dispatch(updateMode());
-        } catch (e) {
-            dispatch({
-                type: MODE_REVERSE_ERROR,
-                error: e.message,
-                index: modeIndex,
-            });
-        }
-    };
-
-export const setDestination =
-    (destination: string, modeIndex: number) => async (dispatch) => {
-        dispatch({
-            type: MODE_REVERSE_SET_DESTINATION,
-            destination,
-            index: modeIndex,
-        });
-        try {
-            await dispatch(updateMode());
-        } catch (e) {
-            dispatch({
-                type: MODE_REVERSE_ERROR,
-                error: e.message,
-                index: modeIndex,
-            });
-        }
-    };
-
-const reverseReducer = (state = initialState, action): ReverseServersState => {
-    switch (action.type) {
-        case MODE_REVERSE_ADD_SERVER_CONFIG:
-            return [...state, defaultReverseServerConfig];
-        case MODE_REVERSE_TOGGLE:
-            return state.map((server, index) =>
-                index === action.index
-                    ? {
-                          ...server,
-                          active: !server.active,
-                          error: undefined,
-                      }
-                    : server,
+export const reverseSlice = createSlice({
+    name: "modes/reverse",
+    initialState,
+    reducers: {
+        addServer: (state) => {
+            state.push(defaultReverseState());
+        },
+        removeServer: (state, action: PayloadAction<ReverseState>) => {
+            const index = state.findIndex(
+                (m) => m.ui_id === action.payload.ui_id,
             );
-        case MODE_REVERSE_DELETE:
-            return state.filter((_, index) => index !== action.index);
-        case MODE_REVERSE_SET_LISTEN_CONFIG:
-            return state.map((server, index) =>
-                index === action.index
-                    ? {
-                          ...server,
-                          listen_port: action.port,
-                          listen_host: action.host,
-                          error: undefined,
-                      }
-                    : server,
-            );
-        case MODE_REVERSE_SET_DESTINATION:
-            return state.map((server, index) =>
-                index === action.index
-                    ? {
-                          ...server,
-                          destination: action.destination,
-                          error: undefined,
-                      }
-                    : server,
-            );
-        case MODE_REVERSE_SET_PROTOCOL:
-            return state.map((server, index) =>
-                index === action.index
-                    ? {
-                          ...server,
-                          protocol: action.protocol,
-                          error: undefined,
-                      }
-                    : server,
-            );
-        case UPDATE_STATE:
-        case RECEIVE_STATE:
-            if (action.data && action.data.servers) {
+            if (index !== -1) {
+                if (state[index].active)
+                    console.error(
+                        "servers should be deactivated before removal",
+                    );
+                state.splice(index, 1);
+            }
+        },
+    },
+    extraReducers: (builder) => {
+        addSetter(builder, "active", setActive);
+        addSetter(builder, "listen_host", setListenHost);
+        addSetter(builder, "listen_port", setListenPort);
+        addSetter(builder, "protocol", setProtocol);
+        addSetter(builder, "destination", setDestination);
+
+        builder.addCase(RECEIVE_STATE, updateState);
+        builder.addCase(UPDATE_STATE, updateState);
+        function updateState(
+            state: ReverseState[],
+            action: PayloadAction<Partial<BackendState>>,
+        ) {
+            if (action.payload.servers) {
                 // action.data.servers does not include servers that are currently inactive,
                 // but we want to keep them in the UI. So we need to merge UI state with what we got from the server.
 
                 const activeServers = Object.fromEntries(
-                    getModesOfType("reverse", action.data.servers).map((x) => [
-                        x.full_spec,
-                        x,
-                    ]),
+                    Object.entries(action.payload.servers)
+                        .filter(([_, info]) => info.type === "reverse")
+                        .map(([spec, _]) => [spec, parseSpec(spec)]),
                 );
 
                 const nextState: ReverseState[] = [];
@@ -212,50 +90,31 @@ const reverseReducer = (state = initialState, action): ReverseServersState => {
                 }
 
                 // add all new specs
-                for (const { data, listen_host, listen_port } of Object.values(
-                    activeServers,
-                )) {
-                    let [protocol, destination] = partition(data!, "://") as [
-                        ReverseProxyProtocols,
-                        string,
-                    ];
-                    if (!destination) {
-                        destination = protocol;
-                        protocol = ReverseProxyProtocols.HTTPS;
-                    }
-                    nextState.push({
-                        active: true,
-                        protocol,
-                        destination,
-                        listen_host,
-                        listen_port,
-                    });
+                for (const x of Object.values(activeServers)) {
+                    nextState.push(parseRaw(x));
                 }
 
                 // remove default config if still present.
                 if (
                     nextState.length > 1 &&
-                    shallowEqual(nextState[0], defaultReverseServerConfig)
+                    shallowEqual(
+                        {
+                            ...nextState[0],
+                            ui_id: undefined,
+                        } as ReverseState,
+                        {
+                            ...defaultReverseState(),
+                            ui_id: undefined,
+                        } as ReverseState,
+                    )
                 ) {
                     nextState.shift();
                 }
 
                 return nextState;
             }
-            return state;
-
-        case MODE_REVERSE_ERROR:
-            return state.map((server, index) =>
-                index === action.index
-                    ? {
-                          ...server,
-                          error: action.error,
-                      }
-                    : server,
-            );
-        default:
-            return state;
-    }
-};
-
-export default reverseReducer;
+        }
+    },
+});
+export const { addServer, removeServer } = reverseSlice.actions;
+export default reverseSlice.reducer;

@@ -86,7 +86,11 @@ class WebMaster(master.Master):
         app.ClientConnection.broadcast(
             resource="state",
             cmd="update",
-            data={"servers": [s.to_json() for s in self.proxyserver.servers]},
+            payload={
+                "servers": {
+                    s.mode.full_spec: s.to_json() for s in self.proxyserver.servers
+                }
+            },
         )
 
     async def running(self):

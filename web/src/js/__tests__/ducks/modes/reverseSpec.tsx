@@ -1,204 +1,90 @@
-import { enableFetchMocks } from "jest-fetch-mock";
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import reverseReducer, {
-    addReverseServer,
-    defaultReverseServerConfig,
-    deleteReverse,
-    getSpecs,
     initialState,
     setDestination,
-    setListenConfig,
     setProtocol,
-    toggleReverse,
+    setActive,
+    setListenHost,
+    setListenPort,
+    addServer,
+    removeServer,
 } from "../../../ducks/modes/reverse";
+import {
+    RECEIVE as STATE_RECEIVE,
+    BackendState,
+} from "../../../ducks/backendState";
 import { TStore } from "../tutils";
-import * as backendState from "../../../ducks/backendState";
 import { ReverseProxyProtocols } from "../../../backends/consts";
-import { ModesState } from "../../../ducks/modes";
+import { PayloadAction } from "@reduxjs/toolkit";
 
-describe("reverseReducer", () => {
-    it("should return the initial state", () => {
-        const state = reverseReducer(undefined, {});
-        expect(state).toEqual(initialState);
-    });
-
-    it("should dispatch MODE_REVERSE_TOGGLE and updateMode", async () => {
+describe("reverseSlice", () => {
+    it("should have working setters", async () => {
         enableFetchMocks();
-
         const store = TStore();
 
-        expect(store.getState().modes.reverse[0].active).toBe(false);
-        expect(store.getState().modes.reverse[1].active).toBe(false);
-        await store.dispatch(toggleReverse(0));
-        expect(store.getState().modes.reverse[0].active).toBe(true);
-        expect(store.getState().modes.reverse[1].active).toBe(false);
-        expect(fetchMock).toHaveBeenCalled();
-    });
+        expect(store.getState().modes.reverse[0]).toEqual({
+            active: false,
+            protocol: ReverseProxyProtocols.HTTPS,
+            destination: "example.com",
+        });
 
-    it("should dispatch MODE_REVERSE_ADD_SERVER_CONFIG", async () => {
-        enableFetchMocks();
-
-        const store = TStore();
-
-        expect(store.getState().modes.reverse.length).toBe(2);
-        await store.dispatch(addReverseServer());
-        expect(store.getState().modes.reverse.length).toBe(3);
-        expect(store.getState().modes.reverse[2]).toBe(
-            defaultReverseServerConfig,
+        const firstServer = store.getState().modes.reverse[0];
+        await store.dispatch(setActive({ value: true, server: firstServer }));
+        await store.dispatch(
+            setListenHost({ value: "127.0.0.1", server: firstServer }),
         );
+        await store.dispatch(
+            setListenPort({ value: 4444, server: firstServer }),
+        );
+        await store.dispatch(
+            setProtocol({
+                value: ReverseProxyProtocols.HTTPS,
+                server: firstServer,
+            }),
+        );
+        await store.dispatch(
+            setDestination({ value: "example.com:8085", server: firstServer }),
+        );
+
+        expect(store.getState().modes.reverse[0]).toEqual({
+            active: true,
+            listen_host: "127.0.0.1",
+            listen_port: 4444,
+            protocol: ReverseProxyProtocols.HTTPS,
+            destination: "example.com:8085",
+        });
+
+        expect(fetchMock).toHaveBeenCalledTimes(5);
     });
 
-    it("should dispatch MODE_REVERSE_DELETE and updateMode", async () => {
-        enableFetchMocks();
-
-        const store = TStore();
-
-        expect(store.getState().modes.reverse.length).toBe(2);
-        await store.dispatch(deleteReverse(0));
-        expect(store.getState().modes.reverse.length).toBe(1);
-    });
-
-    it('should handle RECEIVE_STATE action with initial UI state and data.servers containing "reverse", an host and a port and a destination"', () => {
-        const action = {
-            type: backendState.RECEIVE,
-            data: {
-                servers: [
-                    {
-                        type: "reverse",
-                        description: "reverse proxy to tls://example.com:8085",
-                        full_spec:
-                            "reverse:tls://example.com:8085@localhost:8080",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8080],
-                            ["::1", 8080, 0, 0],
-                        ],
-                    },
-                ],
-            },
-        };
-
-        const initialState = [
-            {
-                active: false,
-                protocol: ReverseProxyProtocols.HTTPS,
-                destination: "example.com:8085",
-                listen_host: "localhost",
-                listen_port: 8082,
-            },
-        ];
-
-        const newState = reverseReducer(initialState, action);
-        expect(newState[0].active).toBe(false);
-        expect(newState[0].protocol).toBe(ReverseProxyProtocols.HTTPS);
-        expect(newState[0].destination).toBe("example.com:8085");
-        expect(newState[0].listen_host).toBe("localhost");
-        expect(newState[0].listen_port).toBe(8082);
-
-        expect(newState[1].active).toBe(true);
-        expect(newState[1].protocol).toBe(ReverseProxyProtocols.TLS);
-        expect(newState[1].destination).toBe("example.com:8085");
-        expect(newState[1].listen_host).toBe("localhost");
-        expect(newState[1].listen_port).toBe(8080);
-    });
-
-    it("should handle RECEIVE_STATE action and set protocol to HTTPS if destination is missing", () => {
-        const action = {
-            type: backendState.RECEIVE,
-            data: {
-                servers: [
-                    {
-                        type: "reverse",
-                        description: "reverse proxy to example.com:8085",
-                        full_spec: "reverse:example.com:8085@localhost:8080",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8080],
-                            ["::1", 8080, 0, 0],
-                        ],
-                    },
-                ],
-            },
-        };
-        const newState = reverseReducer(initialState, action);
-
-        expect(newState[0].active).toBe(true);
-        expect(newState[0].protocol).toBe(ReverseProxyProtocols.HTTPS);
-        expect(newState[0].destination).toBe("example.com:8085");
-        expect(newState[0].listen_host).toBe("localhost");
-        expect(newState[0].listen_port).toBe(8080);
-    });
-
-    it("should handle RECEIVE_STATE action with data.servers containing another mode", () => {
-        const action = {
-            type: backendState.RECEIVE,
-            data: {
-                servers: [
-                    {
-                        description: "Local redirector",
-                        full_spec: "local",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [],
-                        type: "local",
-                    },
-                ],
-            },
-        };
-        const newState = reverseReducer(initialState, action);
-        expect(newState[0].active).toBe(false);
-        expect(newState[0].listen_host).toBe(initialState[0].listen_host);
-        expect(newState[0].listen_port).toBe(initialState[0].listen_port);
-    });
-
-    it("should handle RECEIVE_STATE action without data.servers", () => {
-        const action = {
-            type: backendState.RECEIVE,
-            data: {},
-        };
-        const newState = reverseReducer(initialState, action);
-        expect(newState[0].active).toBe(initialState[0].active);
-        expect(newState[0].listen_host).toBe(initialState[0].listen_host);
-        expect(newState[0].listen_port).toBe(initialState[0].listen_port);
-    });
-
-    it("should handle MODE_REVERSE_ERROR action", () => {
-        const action = {
-            type: "MODE_REVERSE_ERROR",
-            error: "error message",
-            index: 0,
-        };
-        const newState = reverseReducer(initialState, action);
-        expect(newState[0].error).toBe("error message");
-        expect(newState[0].active).toBe(false);
-    });
-
-    it("should handle error when toggling reverse", async () => {
+    it("should handle error when setting reverse mode", async () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(toggleReverse(0));
+        const server = store.getState().modes.reverse[0];
+        await store.dispatch(setActive({ value: true, server }));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.reverse[0].error).toBe("invalid spec");
     });
 
-    it("should handle error when setting protocol", async () => {
+    it("should handle error when setting listen port", async () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setProtocol(ReverseProxyProtocols.HTTPS, 0));
+        const server = store.getState().modes.reverse[0];
+        await store.dispatch(setListenPort({ value: 4444, server }));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.reverse[0].error).toBe("invalid spec");
     });
 
-    it("should handle error when setting listen config", async () => {
+    it("should handle error when setting listen host", async () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setListenConfig(8082, "localhost", 0));
+        const server = store.getState().modes.reverse[0];
+        await store.dispatch(setListenHost({ value: "localhost", server }));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.reverse[0].error).toBe("invalid spec");
@@ -208,64 +94,131 @@ describe("reverseReducer", () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        await store.dispatch(setDestination("example.com:8085", 0));
+        const server = store.getState().modes.reverse[0];
+        await store.dispatch(setDestination({ value: "example.com", server }));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.reverse[0].error).toBe("invalid spec");
     });
 
-    it("should handle error when deleting single reverse mode", async () => {
-        fetchMock.mockReject(new Error("invalid spec"));
+    it("should handle the addition of a new default reverse server", async () => {
+        enableFetchMocks();
+
         const store = TStore();
 
-        await store.dispatch(deleteReverse(0));
+        expect(store.getState().modes.reverse.length).toBe(2);
 
-        expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.reverse[0].error).toBe("invalid spec");
-    });
-});
+        await store.dispatch(addServer());
 
-describe("getMode", () => {
-    it("should return reverse mode with destination when active and protocol and destination are present", () => {
-        const modes = {
-            reverse: [
-                {
-                    active: true,
-                    protocol: ReverseProxyProtocols.HTTPS,
-                    destination: "example.com:8085",
-                },
-            ],
-        } as ModesState;
-        const result = getSpecs(modes);
-        expect(result).toEqual(["reverse:https://example.com:8085"]);
+        expect(store.getState().modes.reverse.length).toBe(3);
+        expect(store.getState().modes.reverse[2]).toEqual({
+            active: false,
+            protocol: ReverseProxyProtocols.HTTPS,
+            destination: "",
+            ui_id: store.getState().modes.reverse[2].ui_id,
+        });
     });
 
-    it("should return an empty array when reverse mode is not active", () => {
-        const modes = {
-            reverse: [
-                {
-                    active: false,
-                    protocol: ReverseProxyProtocols.HTTPS,
-                    destination: "example.com:8085",
-                },
-            ],
-        } as ModesState;
-        const result = getSpecs(modes);
-        expect(result).toEqual([]);
+    it("should handle the deletion of an active reverse server", async () => {
+        enableFetchMocks();
+
+        const store = TStore();
+
+        expect(store.getState().modes.reverse.length).toBe(2);
+
+        const firstServer = store.getState().modes.reverse[0];
+        await store.dispatch(setActive({ value: true, server: firstServer }));
+
+        const consoleSpy = jest.spyOn(console, "error");
+        await store.dispatch(removeServer(store.getState().modes.reverse[0]));
+
+        expect(store.getState().modes.reverse.length).toBe(1);
+        expect(consoleSpy).toHaveBeenCalledWith(
+            "servers should be deactivated before removal",
+        );
+        consoleSpy.mockRestore();
     });
 
-    it("should return an empty string when there is a ui error", () => {
-        const modes = {
-            reverse: [
-                {
-                    active: false,
-                    protocol: ReverseProxyProtocols.HTTPS,
-                    destination: "example.com:8085",
-                    error: "error reverse mode",
+    it("should handle RECEIVE_STATE with an active reverse proxy", () => {
+        const action = {
+            type: STATE_RECEIVE.type,
+            payload: {
+                servers: {
+                    "reverse:tls://example.com:8085@localhost:8080": {
+                        description: "reverse proxy to tls://example.com:8085",
+                        full_spec:
+                            "reverse:tls://example.com:8085@localhost:8080",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [
+                            ["127.0.0.1", 8080],
+                            ["::1", 8080, 0, 0],
+                        ],
+                        type: "reverse",
+                    },
                 },
-            ],
-        } as ModesState;
-        const mode = getSpecs(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
+            },
+        } as PayloadAction<Partial<BackendState>>;
+        const newState = reverseReducer(initialState, action);
+        expect(newState).toEqual([
+            {
+                active: true,
+                protocol: ReverseProxyProtocols.TLS,
+                destination: "example.com:8085",
+                listen_host: "localhost",
+                listen_port: 8080,
+                ui_id: newState[0].ui_id,
+            },
+        ]);
+    });
+
+    it("should handle RECEIVE_STATE with no active reverse proxy", () => {
+        const action = {
+            type: STATE_RECEIVE.type,
+            payload: {
+                servers: {},
+            },
+        } as PayloadAction<Partial<BackendState>>;
+        const newState = reverseReducer(initialState, action);
+        expect(newState).toEqual([
+            {
+                active: false,
+                ui_id: newState[0].ui_id,
+                destination: "",
+                protocol: ReverseProxyProtocols.HTTPS,
+            },
+        ]);
+    });
+
+    it("should handle RECEIVE_STATE with an active reverse proxy and set protocol to HTTPS if destination is missing", () => {
+        const action = {
+            type: STATE_RECEIVE.type,
+            payload: {
+                servers: {
+                    "reverse:example.com:8085@localhost:8080": {
+                        description: "reverse proxy to example.com:8085",
+                        full_spec: "reverse:example.com:8085@localhost:8080",
+                        is_running: true,
+                        last_exception: null,
+                        listen_addrs: [
+                            ["127.0.0.1", 8080],
+                            ["::1", 8080, 0, 0],
+                        ],
+                        type: "reverse",
+                    },
+                },
+            },
+        } as PayloadAction<Partial<BackendState>>;
+        const newState = reverseReducer(initialState, action);
+        expect(newState).toEqual([
+            {
+                active: true,
+                protocol: ReverseProxyProtocols.HTTPS,
+                destination: "example.com:8085",
+                listen_host: "localhost",
+                listen_port: 8080,
+                ui_id: newState[0].ui_id,
+            },
+        ]);
     });
 });

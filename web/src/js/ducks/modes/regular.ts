@@ -2,115 +2,38 @@ import {
     RECEIVE as RECEIVE_STATE,
     UPDATE as UPDATE_STATE,
 } from "../backendState";
-import {
-    getModesOfType,
-    isActiveMode,
-    includeListenAddress,
-    ModeState,
-    updateMode,
-} from "./utils";
-import type { ModesState } from "../modes";
+import { addSetter, createModeUpdateThunk, updateState } from "./utils";
+import { createSlice } from "@reduxjs/toolkit";
+import { parseRaw, RegularState } from "../../modes/regular";
 
-export const MODE_REGULAR_TOGGLE = "MODE_REGULAR_TOGGLE";
-export const MODE_REGULAR_SET_PORT = "MODE_REGULAR_SET_PORT";
-export const MODE_REGULAR_ERROR = "MODE_REGULAR_ERROR";
-export const MODE_REGULAR_SET_HOST = "MODE_REGULAR_SET_HOST";
+export const setActive = createModeUpdateThunk<boolean>(
+    "modes/regular/setActive",
+);
+export const setListenHost = createModeUpdateThunk<string | undefined>(
+    "modes/regular/setListenHost",
+);
+export const setListenPort = createModeUpdateThunk<number | undefined>(
+    "modes/regular/setListenPort",
+);
 
-export const DEFAULT_PORT = 8080;
+export const initialState: RegularState[] = [
+    {
+        active: true,
+        ui_id: Math.random(),
+    },
+];
 
-interface RegularState extends ModeState {}
+export const regularSlice = createSlice({
+    name: "modes/regular",
+    initialState,
+    reducers: {},
+    extraReducers: (builder) => {
+        addSetter(builder, "active", setActive);
+        addSetter(builder, "listen_host", setListenHost);
+        addSetter(builder, "listen_port", setListenPort);
+        builder.addCase(RECEIVE_STATE, updateState("regular", parseRaw));
+        builder.addCase(UPDATE_STATE, updateState("regular", parseRaw));
+    },
+});
 
-export const initialState: RegularState = {
-    active: true,
-};
-
-export const getSpecs = ({ regular }: ModesState): string[] => {
-    if (!isActiveMode(regular)) {
-        return [];
-    }
-    return [includeListenAddress("regular", regular)];
-};
-
-export const toggleRegular = () => async (dispatch) => {
-    dispatch({ type: MODE_REGULAR_TOGGLE });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
-    }
-};
-
-export const setPort = (port: number) => async (dispatch) => {
-    dispatch({ type: MODE_REGULAR_SET_PORT, port });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
-    }
-};
-
-export const setHost = (host: string) => async (dispatch) => {
-    dispatch({ type: MODE_REGULAR_SET_HOST, host });
-
-    try {
-        await dispatch(updateMode());
-    } catch (e) {
-        dispatch({ type: MODE_REGULAR_ERROR, error: e.message });
-    }
-};
-
-const regularReducer = (state = initialState, action): RegularState => {
-    switch (action.type) {
-        case MODE_REGULAR_TOGGLE:
-            return {
-                ...state,
-                active: !state.active,
-                error: undefined,
-            };
-        case MODE_REGULAR_SET_PORT:
-            return {
-                ...state,
-                listen_port: action.port as number,
-                error: undefined,
-            };
-        case MODE_REGULAR_SET_HOST:
-            return {
-                ...state,
-                listen_host: action.host,
-                error: undefined,
-            };
-        case UPDATE_STATE:
-        case RECEIVE_STATE:
-            if (action.data && action.data.servers) {
-                const currentModeConfig = getModesOfType(
-                    "regular",
-                    action.data.servers,
-                )[0];
-                const isActive = currentModeConfig !== undefined;
-                return {
-                    ...state,
-                    active: isActive,
-                    listen_host: isActive
-                        ? currentModeConfig.listen_host
-                        : state.listen_host,
-                    listen_port: isActive
-                        ? (currentModeConfig.listen_port as number) ||
-                          DEFAULT_PORT
-                        : state.listen_port,
-                    error: isActive ? undefined : state.error,
-                };
-            }
-            return state;
-        case MODE_REGULAR_ERROR:
-            return {
-                ...state,
-                error: action.error,
-            };
-        default:
-            return state;
-    }
-};
-
-export default regularReducer;
+export default regularSlice.reducer;

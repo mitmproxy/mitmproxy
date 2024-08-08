@@ -643,7 +643,9 @@ class State(RequestHandler):
         return {
             "version": version.VERSION,
             "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
-            "servers": [s.to_json() for s in master.proxyserver.servers],
+            "servers": {
+                s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
+            },
         }
 
     def get(self):

@@ -1,37 +1,21 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setPort, toggleRegular } from "../../ducks/modes/regular";
+import { setListenPort, setActive } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
+import { getSpec, RegularState } from "../../modes/regular";
 
 export default function Regular() {
-    const dispatch = useAppDispatch();
+    const serverState = useAppSelector((state) => state.modes.regular);
+    const backendState = useAppSelector((state) => state.backendState.servers);
 
-    const {
-        active,
-        error: ui_error,
-        listen_port,
-    } = useAppSelector((state) => state.modes.regular);
-
-    const backend_error = useAppSelector((state) => {
-        if (state.backendState.servers) {
-            for (const server of state.backendState.servers) {
-                if (server.type === "regular") {
-                    return server.last_exception;
-                }
-            }
-        }
-        return "";
+    const servers = serverState.map((server) => {
+        const error =
+            server.error ||
+            backendState[getSpec(server)]?.last_exception ||
+            undefined;
+        return <RegularRow key={server.ui_id} server={server} error={error} />;
     });
-
-    const handlePortChange = (port: string) => {
-        // FIXME: We should eventually cast to Number and validate.
-        dispatch(setPort(port as unknown as number));
-    };
-
-    /*const handleHostChange = (host: string) => {
-        dispatch(setHost(host));
-    };*/
 
     return (
         <div>
@@ -40,22 +24,46 @@ export default function Regular() {
                 You manually configure your client application or device to use
                 an HTTP(S) proxy.
             </p>
+            {servers}
+        </div>
+    );
+}
+
+function RegularRow({
+    server,
+    error,
+}: {
+    server: RegularState;
+    error?: string;
+}) {
+    const dispatch = useAppDispatch();
+
+    server.listen_host && console.warn("TODO: implement listen_host");
+
+    return (
+        <div>
             <ModeToggle
-                value={active}
-                onChange={() => dispatch(toggleRegular())}
+                value={server.active}
+                onChange={() =>
+                    dispatch(setActive({ server, value: !server.active }))
+                }
             >
                 Run HTTP/S Proxy on port{" "}
                 <ValueEditor
                     className="mode-regular-input"
-                    content={listen_port?.toString() || ""}
-                    onEditDone={(port) => handlePortChange(port)}
+                    content={server.listen_port?.toString() || ""}
+                    placeholder="8080"
+                    onEditDone={(port) =>
+                        dispatch(
+                            setListenPort({
+                                server,
+                                value: port as unknown as number,
+                            }),
+                        )
+                    }
                 />
             </ModeToggle>
-            {(ui_error || backend_error) && (
-                <div className="mode-error text-danger">
-                    {ui_error || backend_error}
-                </div>
-            )}
+            {error && <div className="mode-error text-danger">{error}</div>}
         </div>
     );
 }
