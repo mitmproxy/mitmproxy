@@ -81,30 +81,3 @@ describe("regularSlice", () => {
         ]);
     });
 });
-
-// FIXME: move to __tests__/modes
-/*
-describe("getMode", () => {
-    it("should return the correct mode string when active", () => {
-        const modes = {
-            regular: {
-                active: true,
-            },
-        } as ModesState;
-        const mode = getSpecs(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
-    });
-
-    it("should return an empty string when not active", () => {
-        const modes = {
-            regular: {
-                active: false,
-                listen_host: "localhost",
-                listen_port: 8080,
-            },
-        } as ModesState;
-        const mode = getSpecs(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
-    });
-});
-*/

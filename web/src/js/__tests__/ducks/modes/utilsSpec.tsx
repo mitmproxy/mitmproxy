@@ -6,6 +6,10 @@ import {
     updateMode,
 } from "../../../ducks/modes/utils";
 import { includeListenAddress } from "../../../modes";
+import { ModesState } from "../../../ducks/modes";
+import { getSpec as getRegularSpec } from "../../../modes/regular";
+import { getSpec as getReverseSpec } from "../../../modes/reverse";
+import { ReverseProxyProtocols } from "../../../backends/consts";
 
 enableFetchMocks();
 
@@ -108,5 +112,39 @@ describe("parseMode", () => {
     it("should throw an error for invalid port", () => {
         const modeConfig = "regular@99999";
         expect(() => parseSpec(modeConfig)).toThrow("invalid port: 99999");
+    });
+});
+
+describe("getSpec regular mode", () => {
+    it("should return the correct mode config", () => {
+        const modes = {
+            regular: [
+                {
+                    active: true,
+                    listen_host: "localhost",
+                    listen_port: 8082,
+                },
+            ],
+        } as ModesState;
+        const mode = getRegularSpec(modes.regular[0]);
+        expect(mode).toBe("regular@localhost:8082");
+    });
+});
+
+describe("getSpec reverse mode", () => {
+    it("should return the correct mode config", () => {
+        const modes = {
+            reverse: [
+                {
+                    active: true,
+                    protocol: ReverseProxyProtocols.HTTPS,
+                    destination: "example.com:8085",
+                    listen_host: "localhost",
+                    listen_port: 8082,
+                },
+            ],
+        } as ModesState;
+        const mode = getReverseSpec(modes.reverse[0]);
+        expect(mode).toBe("reverse:https://example.com:8085@localhost:8082");
     });
 });
