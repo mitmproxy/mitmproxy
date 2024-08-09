@@ -22,8 +22,6 @@ export const setFilePath = createModeUpdateThunk<string | undefined>(
 export const initialState: WireguardState[] = [
     {
         active: false,
-        file_path: "",
-        listen_port: 51820,
         ui_id: Math.random(),
     },
 ];

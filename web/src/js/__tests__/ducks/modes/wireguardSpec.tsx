@@ -125,8 +125,6 @@ describe("wireguardSlice", () => {
             {
                 active: false,
                 ui_id: newState[0].ui_id,
-                file_path: "",
-                listen_port: 51820,
             },
         ]);
     });
