@@ -83,6 +83,7 @@ export interface OptionsState {
     tls_version_server_max: string;
     tls_version_server_min: string;
     udp_hosts: string[];
+    update_alt_svc: boolean;
     upstream_auth: string | undefined;
     upstream_cert: boolean;
     validate_inbound_headers: boolean;
@@ -184,6 +185,7 @@ export const defaultState: OptionsState = {
     tls_version_server_max: "UNBOUNDED",
     tls_version_server_min: "TLS1_2",
     udp_hosts: [],
+    update_alt_svc: true,
     upstream_auth: undefined,
     upstream_cert: true,
     validate_inbound_headers: true,

@@ -27,8 +27,8 @@ from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import strip_ech
 from mitmproxy.addons import tlsconfig
-from mitmproxy.addons import upstream_auth
 from mitmproxy.addons import update_alt_svc
+from mitmproxy.addons import upstream_auth
 
 
 def default_addons():
