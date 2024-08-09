@@ -66,6 +66,7 @@ export interface OptionsState {
     server_replay_refresh: boolean;
     server_replay_reuse: boolean;
     server_replay_use_headers: string[];
+    show_ignored_hosts: boolean;
     showhost: boolean;
     ssl_insecure: boolean;
     ssl_verify_upstream_trusted_ca: string | undefined;
@@ -167,6 +168,7 @@ export const defaultState: OptionsState = {
     server_replay_refresh: true,
     server_replay_reuse: false,
     server_replay_use_headers: [],
+    show_ignored_hosts: false,
     showhost: false,
     ssl_insecure: false,
     ssl_verify_upstream_trusted_ca: undefined,
