@@ -8,6 +8,8 @@ import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
 import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
+import { ReverseProxyProtocols } from "../../backends/consts";
+import { defaultReverseState } from "../../modes/reverse";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -131,19 +133,30 @@ export const testState: RootState = {
         visible: false,
     },
     modes: {
-        regular: {
-            active: true,
-        },
-        local: {
-            active: false,
-            applications: "",
-        },
-        wireguard: {
-            active: false,
-        },
-        reverse: {
-            active: false,
-        },
+        regular: [
+            {
+                active: true,
+            },
+        ],
+        local: [
+            {
+                active: false,
+                applications: "",
+            },
+        ],
+        wireguard: [
+            {
+                active: false,
+            },
+        ],
+        reverse: [
+            {
+                active: false,
+                protocol: ReverseProxyProtocols.HTTPS,
+                destination: "example.com",
+            },
+            defaultReverseState(),
+        ],
     },
 };
 

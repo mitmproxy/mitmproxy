@@ -1,48 +1,79 @@
 import regularReducer, {
-    getMode,
     initialState,
-    setPort,
-    toggleRegular,
+    setListenHost,
+    setListenPort,
+    setActive,
 } from "./../../../ducks/modes/regular";
-import { ModesState } from "../../../ducks/modes";
-import * as backendState from "../../../ducks/backendState";
+import {
+    RECEIVE as STATE_RECEIVE,
+    BackendState,
+} from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
+import { PayloadAction } from "@reduxjs/toolkit";
 
-describe("regularReducer", () => {
-    it("should return the initial state", () => {
-        const state = regularReducer(undefined, {});
-        expect(state).toEqual(initialState);
-    });
-
-    it("should dispatch MODE_REGULAR_TOGGLE and updateMode", async () => {
-        enableFetchMocks();
-
-        const store = TStore();
-
-        expect(store.getState().modes.regular.active).toBe(true);
-        await store.dispatch(toggleRegular());
-        expect(store.getState().modes.regular.active).toBe(false);
-        expect(fetchMock).toHaveBeenCalled();
-    });
-
-    it("should dispatch MODE_REGULAR_SET_PORT and updateMode", async () => {
+describe("regularSlice", () => {
+    it("should have working setters", async () => {
         enableFetchMocks();
         const store = TStore();
 
-        await store.dispatch(setPort(8082));
+        expect(store.getState().modes.regular[0]).toEqual({
+            active: true,
+        });
 
-        const state = store.getState().modes.regular;
-        expect(state.listen_port).toBe(8082);
-        expect(fetchMock).toHaveBeenCalled();
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setActive({ value: false, server }));
+        await store.dispatch(setListenHost({ value: "127.0.0.1", server }));
+        await store.dispatch(setListenPort({ value: 4444, server }));
+
+        expect(store.getState().modes.regular[0]).toEqual({
+            active: false,
+            listen_host: "127.0.0.1",
+            listen_port: 4444,
+        });
+
+        expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
-    it('should handle RECEIVE_STATE action with data.servers containing "regular", an host and a port', () => {
+    it("should handle error when setting regular mode", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setActive({ value: false, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting listen port", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setListenPort({ value: 4444, server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular[0].error).toBe("invalid spec");
+    });
+
+    it("should handle error when setting listen host", async () => {
+        fetchMock.mockReject(new Error("invalid spec"));
+        const store = TStore();
+
+        const server = store.getState().modes.regular[0];
+        await store.dispatch(setListenHost({ value: "localhost", server }));
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(store.getState().modes.regular[0].error).toBe("invalid spec");
+    });
+
+    it("should handle RECEIVE_STATE with an active regular proxy", () => {
         const action = {
-            type: backendState.RECEIVE,
-            data: {
-                servers: [
-                    {
+            type: STATE_RECEIVE.type,
+            payload: {
+                servers: {
+                    "regular@localhost:8081": {
                         description: "HTTP(S) proxy",
                         full_spec: "regular@localhost:8081",
                         is_running: true,
@@ -53,142 +84,33 @@ describe("regularReducer", () => {
                         ],
                         type: "regular",
                     },
-                ],
+                },
             },
-        };
+        } as PayloadAction<Partial<BackendState>>;
         const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("localhost");
-        expect(newState.listen_port).toBe(8081);
-    });
-
-    it('should handle RECEIVE_STATE action with data.servers containing just "regular"', () => {
-        const initialState = {
-            active: false,
-            listen_host: "localhost",
-            listen_port: 8080,
-        };
-        const action = {
-            type: backendState.RECEIVE,
-            data: {
-                servers: [
-                    {
-                        description: "HTTP(S) proxy",
-                        full_spec: "regular",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["::", 8080, 0, 0],
-                            ["0.0.0.0", 8080],
-                        ],
-                        type: "regular",
-                    },
-                ],
-            },
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(true);
-        expect(newState.listen_host).toBe("");
-        expect(newState.listen_port).toBe(8080);
-    });
-
-    it("should handle RECEIVE_STATE action with data.servers containing another mode", () => {
-        const initialState = {
-            active: false,
-            listen_host: "localhost",
-            listen_port: 8080,
-        };
-        const action = {
-            type: backendState.RECEIVE,
-            data: {
-                servers: [
-                    {
-                        description: "Local redirector",
-                        full_spec: "local",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [],
-                        type: "local",
-                    },
-                ],
-            },
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(false);
-        expect(newState.listen_host).toBe(initialState.listen_host);
-        expect(newState.listen_port).toBe(initialState.listen_port);
-    });
-
-    it("should handle RECEIVE_STATE action without data.servers", () => {
-        const initialState = {
-            active: false,
-            listen_host: "localhost",
-            listen_port: 8080,
-        };
-        const action = {
-            type: backendState.RECEIVE,
-            data: {},
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.active).toBe(initialState.active);
-        expect(newState.listen_host).toBe(initialState.listen_host);
-        expect(newState.listen_port).toBe(initialState.listen_port);
-    });
-
-    it("should handle MODE_REGULAR_ERROR action", () => {
-        const initialState = {
-            active: false,
-        };
-        const action = {
-            type: "MODE_REGULAR_ERROR",
-            error: "error message",
-        };
-        const newState = regularReducer(initialState, action);
-        expect(newState.error).toBe("error message");
-        expect(newState.active).toBe(false);
-    });
-
-    it("should handle error when toggling regular", async () => {
-        fetchMock.mockReject(new Error("invalid spec"));
-        const store = TStore();
-
-        await store.dispatch(toggleRegular());
-
-        expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.regular.error).toBe("invalid spec");
-    });
-
-    it("should handle error when setting port", async () => {
-        fetchMock.mockReject(new Error("invalid spec"));
-        const store = TStore();
-
-        await store.dispatch(setPort(8082));
-
-        expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.regular.error).toBe("invalid spec");
-    });
-});
-
-describe("getMode", () => {
-    it("should return the correct mode string when active", () => {
-        const modes = {
-            regular: {
+        expect(newState).toEqual([
+            {
                 active: true,
+                listen_host: "localhost",
+                listen_port: 8081,
+                ui_id: newState[0].ui_id,
             },
-        } as ModesState;
-        const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify(["regular"]));
+        ]);
     });
 
-    it("should return an empty string when not active", () => {
-        const modes = {
-            regular: {
-                active: false,
-                listen_host: "localhost",
-                listen_port: 8080,
+    it("should handle RECEIVE_STATE with no active regular proxy", () => {
+        const action = {
+            type: STATE_RECEIVE.type,
+            payload: {
+                servers: {},
             },
-        } as ModesState;
-        const mode = getMode(modes);
-        expect(JSON.stringify(mode)).toBe(JSON.stringify([]));
+        } as PayloadAction<Partial<BackendState>>;
+        const newState = regularReducer(initialState, action);
+        expect(newState).toEqual([
+            {
+                active: false,
+                ui_id: newState[0].ui_id,
+            },
+        ]);
     });
 });

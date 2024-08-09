@@ -13,8 +13,8 @@ test("RegularSpec", async () => {
     act(() =>
         store.dispatch(
             backendState.mockUpdate({
-                servers: [
-                    {
+                servers: {
+                    regular: {
                         description: "Regular Mode",
                         full_spec: "regular",
                         is_running: false,
@@ -22,7 +22,7 @@ test("RegularSpec", async () => {
                         listen_addrs: [],
                         type: "regular",
                     },
-                ],
+                },
             }),
         ),
     );

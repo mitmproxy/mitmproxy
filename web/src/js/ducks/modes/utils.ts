@@ -1,96 +1,96 @@
-import { getMode as getRegularModeConfig } from "./regular";
-import { getMode as getLocalModeConfig } from "./local";
-import { getMode as getWireguardModeConfig } from "./wireguard";
-import { getMode as getReverseModeConfig } from "./reverse";
-import { fetchApi, partition, rpartition } from "../../utils";
-import { ServerInfo } from "../backendState";
+import { getSpec as getRegularSpec } from "../../modes/regular";
+import { getSpec as getLocalSpec } from "../../modes/local";
+import { getSpec as getWireguardSpec } from "../../modes/wireguard";
+import { getSpec as getReverseSpec } from "../../modes/reverse";
+import { fetchApi } from "../../utils";
+import { BackendState } from "../backendState";
+import {
+    ActionReducerMapBuilder,
+    AsyncThunk,
+    Draft,
+    PayloadAction,
+} from "@reduxjs/toolkit";
+import { AppAsyncThunkConfig, createAppAsyncThunk } from "../hooks";
+import { ModeState, parseSpec, RawSpecParts } from "../../modes";
 
-export interface ModeState {
-    active: boolean;
-    listen_port?: number;
-    listen_host?: string;
-    error?: string;
-}
+export const isActiveMode = (state: ModeState): boolean => {
+    return state.active && !state.error;
+};
 
 /**
- * Update modes based on current UI state.
- *
- * Raises an error if the update is unsuccessful.
+ * Async thunk to update modes based on current UI state.
  */
-export const updateMode = () => {
-    return async (_, getState) => {
-        const modes = getState().modes;
+export async function updateModes(_, thunkAPI) {
+    const modes = thunkAPI.getState().modes;
+    const activeModes: string[] = [
+        ...modes.regular.filter(isActiveMode).map(getRegularSpec),
+        ...modes.local.filter(isActiveMode).map(getLocalSpec),
+        ...modes.wireguard.filter(isActiveMode).map(getWireguardSpec),
+        ...modes.reverse.filter(isActiveMode).map(getReverseSpec),
+        //add new modes here
+    ];
+    const response = await fetchApi.put("/options", {
+        mode: activeModes,
+    });
+    if (response.status === 200) {
+        return;
+    } else {
+        throw new Error(await response.text());
+    }
+}
 
-        const activeModes: string[] = [
-            ...getRegularModeConfig(modes),
-            ...getLocalModeConfig(modes),
-            ...getWireguardModeConfig(modes),
-            ...getReverseModeConfig(modes),
-            //add new modes here
-        ];
-        const response = await fetchApi.put("/options", {
-            mode: activeModes,
-        });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error(await response.text());
+export function createModeUpdateThunk<T>(type: string) {
+    return createAppAsyncThunk<void, { server: ModeState; value: T }>(
+        type,
+        updateModes,
+    );
+}
+
+export function addSetter<M extends ModeState, Attr extends keyof Draft<M>>(
+    builder: ActionReducerMapBuilder<M[]>,
+    attribute: Attr,
+    setThunk: AsyncThunk<
+        void,
+        { server: ModeState; value: Draft<M>[Attr] },
+        AppAsyncThunkConfig
+    >,
+) {
+    builder.addCase(setThunk.pending, (state, action) => {
+        const { server, value } = action.meta.arg;
+        const idx = state.findIndex((m) => m.ui_id === server.ui_id);
+        if (idx >= 0) {
+            state[idx][attribute] = value;
+            state[idx].error = undefined;
         }
-    };
-};
-
-export const includeModeState = (
-    modeNameAndData: string,
-    state: ModeState,
-): string[] => {
-    let mode = modeNameAndData;
-    if (!state.active || state.error) {
-        return [];
-    }
-    if (state.listen_host && state.listen_port) {
-        mode += `@${state.listen_host}:${state.listen_port}`;
-    } else if (state.listen_port) {
-        mode += `@${state.listen_port}`;
-    }
-    return [mode];
-};
-
-export const parseMode = (spec: string) => {
-    let [head, listenAt] = rpartition(spec, "@");
-
-    if (!head) {
-        head = listenAt;
-        listenAt = "";
-    }
-
-    const [mode, data] = partition(head, ":");
-    let host = "",
-        port: string | number = "";
-
-    if (listenAt) {
-        if (listenAt.includes(":")) {
-            [host, port] = rpartition(listenAt, ":");
-        } else {
-            host = "";
-            port = listenAt;
+    });
+    builder.addCase(setThunk.rejected, (state, action) => {
+        const { server } = action.meta.arg;
+        const idx = state.findIndex((m) => m.ui_id === server.ui_id);
+        if (idx >= 0) {
+            state[idx].error = action.error.message;
         }
-        if (port) {
-            port = parseInt(port, 10);
-            if (isNaN(port) || port < 0 || port > 65535) {
-                throw new Error(`invalid port: ${port}`);
+    });
+}
+
+export function updateState<M extends ModeState>(
+    type: string,
+    specPartsToState: (p: RawSpecParts) => M,
+) {
+    return function reducer(
+        state: M[],
+        action: PayloadAction<Partial<BackendState>>,
+    ) {
+        if (action.payload.servers) {
+            const activeSpecs = Object.values(action.payload.servers)
+                .filter((server) => server.type === type)
+                .map((server) => parseSpec(server.full_spec));
+            if (activeSpecs.length > 0) {
+                return activeSpecs.map(specPartsToState);
+            } else {
+                for (const mode of state) {
+                    mode.active = false;
+                }
             }
         }
-    }
-    return {
-        name: mode,
-        data: data ? data : "",
-        listen_host: host,
-        listen_port: port,
     };
-};
-
-export const getModesOfType = (currentMode: string, servers: ServerInfo[]) => {
-    return servers
-        .filter((server) => server.type === currentMode)
-        .map((server) => parseMode(server.full_spec));
-};
+}

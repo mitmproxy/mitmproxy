@@ -13,18 +13,21 @@ exports[`RegularSpec 1`] = `
     >
       You manually configure your client application or device to use an HTTP(S) proxy.
     </p>
-    <div
-      class="mode-entry"
-    >
-      <input
-        checked=""
-        type="checkbox"
-      />
-      Run HTTP/S Proxy on port 
-      <span
-        class="inline-input mode-regular-input"
-        tabindex="0"
-      />
+    <div>
+      <div
+        class="mode-entry"
+      >
+        <input
+          checked=""
+          type="checkbox"
+        />
+        Run HTTP/S Proxy on port 
+        <span
+          class="inline-input mode-regular-input"
+          placeholder="8080"
+          tabindex="0"
+        />
+      </div>
     </div>
   </div>
 </DocumentFragment>
@@ -43,25 +46,26 @@ exports[`RegularSpec 2`] = `
     >
       You manually configure your client application or device to use an HTTP(S) proxy.
     </p>
-    <div
-      class="mode-entry"
-    >
-      <input
-        checked=""
-        type="checkbox"
-      />
-      Run HTTP/S Proxy on port 
-      <span
-        class="inline-input mode-regular-input"
-        tabindex="0"
+    <div>
+      <div
+        class="mode-entry"
       >
-        8080
-      </span>
-    </div>
-    <div
-      class="mode-error text-danger"
-    >
-      port already in use
+        <input
+          checked=""
+          type="checkbox"
+        />
+        Run HTTP/S Proxy on port 
+        <span
+          class="inline-input mode-regular-input"
+          placeholder="8080"
+          tabindex="0"
+        />
+      </div>
+      <div
+        class="mode-error text-danger"
+      >
+        port already in use
+      </div>
     </div>
   </div>
 </DocumentFragment>
