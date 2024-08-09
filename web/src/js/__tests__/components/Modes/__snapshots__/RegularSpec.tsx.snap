@@ -21,12 +21,15 @@ exports[`RegularSpec 1`] = `
           checked=""
           type="checkbox"
         />
-        Run HTTP/S Proxy on port 
-        <span
-          class="inline-input mode-regular-input"
-          placeholder="8080"
-          tabindex="0"
-        />
+        Run HTTP/S Proxy
+        <div
+          class="mode-popover-container"
+        >
+          <i
+            aria-hidden="true"
+            class="fa fa-cog mode-popover-icon"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -54,12 +57,15 @@ exports[`RegularSpec 2`] = `
           checked=""
           type="checkbox"
         />
-        Run HTTP/S Proxy on port 
-        <span
-          class="inline-input mode-regular-input"
-          placeholder="8080"
-          tabindex="0"
-        />
+        Run HTTP/S Proxy
+        <div
+          class="mode-popover-container"
+        >
+          <i
+            aria-hidden="true"
+            class="fa fa-cog mode-popover-icon"
+          />
+        </div>
       </div>
       <div
         class="mode-error text-danger"
