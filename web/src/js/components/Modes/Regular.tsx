@@ -1,9 +1,14 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setListenPort, setActive } from "../../ducks/modes/regular";
+import {
+    setListenPort,
+    setActive,
+    setListenHost,
+} from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
 import { getSpec, RegularState } from "../../modes/regular";
+import { Popover } from "./Popover";
 
 export default function Regular() {
     const serverState = useAppSelector((state) => state.modes.regular);
@@ -48,20 +53,38 @@ function RegularRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run HTTP/S Proxy on port{" "}
-                <ValueEditor
-                    className="mode-regular-input"
-                    content={server.listen_port?.toString() || ""}
-                    placeholder="8080"
-                    onEditDone={(port) =>
-                        dispatch(
-                            setListenPort({
-                                server,
-                                value: port as unknown as number,
-                            }),
-                        )
-                    }
-                />
+                Run HTTP/S Proxy
+                <Popover>
+                    <div className="mode-popover-item">
+                        <p>Listen Host</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={server.listen_host || ""}
+                            onEditDone={(host) =>
+                                dispatch(setListenHost({ server, value: host }))
+                            }
+                        />
+                    </div>
+                    <div className="mode-popover-item">
+                        <p>Listen Port</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={
+                                server.listen_port
+                                    ? server.listen_port.toString()
+                                    : ""
+                            }
+                            onEditDone={(port) =>
+                                dispatch(
+                                    setListenPort({
+                                        server,
+                                        value: parseInt(port),
+                                    }),
+                                )
+                            }
+                        />
+                    </div>
+                </Popover>
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
         </div>

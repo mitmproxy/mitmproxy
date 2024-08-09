@@ -2,7 +2,14 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { getSpec, WireguardState } from "../../modes/wireguard";
-import { setActive } from "../../ducks/modes/wireguard";
+import {
+    setActive,
+    setFilePath,
+    setListenHost,
+    setListenPort,
+} from "../../ducks/modes/wireguard";
+import { Popover } from "./Popover";
+import ValueEditor from "../editors/ValueEditor";
 
 export default function Wireguard() {
     const serverState = useAppSelector((state) => state.modes.wireguard);
@@ -48,6 +55,47 @@ function WireGuardRow({
                 }
             >
                 Run WireGuard Server
+                <Popover>
+                    <div className="mode-popover-item">
+                        <p>Listen Host</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={server.listen_host || ""}
+                            onEditDone={(host) =>
+                                dispatch(setListenHost({ server, value: host }))
+                            }
+                        />
+                    </div>
+                    <div className="mode-popover-item">
+                        <p>Listen Port</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={
+                                server.listen_port
+                                    ? server.listen_port.toString()
+                                    : ""
+                            }
+                            onEditDone={(port) =>
+                                dispatch(
+                                    setListenPort({
+                                        server,
+                                        value: parseInt(port),
+                                    }),
+                                )
+                            }
+                        />
+                    </div>
+                    <div className="mode-popover-item">
+                        <p>File Path</p>
+                        <ValueEditor
+                            className="mode-input"
+                            content={server.file_path || ""}
+                            onEditDone={(path) =>
+                                dispatch(setFilePath({ server, value: path }))
+                            }
+                        />
+                    </div>
+                </Popover>
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}
         </div>
