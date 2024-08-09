@@ -28,6 +28,7 @@ from mitmproxy.addons import stickycookie
 from mitmproxy.addons import strip_ech
 from mitmproxy.addons import tlsconfig
 from mitmproxy.addons import upstream_auth
+from mitmproxy.addons import update_alt_svc
 
 
 def default_addons():
@@ -62,4 +63,5 @@ def default_addons():
         savehar.SaveHar(),
         tlsconfig.TlsConfig(),
         upstream_auth.UpstreamAuth(),
+        update_alt_svc.UpdateAltSvc(),
     ]
