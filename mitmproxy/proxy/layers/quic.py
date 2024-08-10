@@ -20,10 +20,10 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
+from aioquic.quic.logger import QuicLogger
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
-from aioquic.quic.logger import QuicLogger
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509
@@ -349,7 +349,7 @@ def quic_parse_client_hello(msgs: list[bytes]) -> Optional[ClientHello]:
         - A ValueError, if the passed ClientHello is invalid
     """
 
-    buffer = QuicBuffer(data=b''.join(msgs))
+    buffer = QuicBuffer(data=b"".join(msgs))
     header = pull_quic_header(buffer, 8)
     if header.packet_type != PACKET_TYPE_INITIAL:
         raise ValueError("Packet is not initial one.")
@@ -399,7 +399,7 @@ def quic_parse_client_hello(msgs: list[bytes]) -> Optional[ClientHello]:
 
     assert quic._quic_logger
     for event in quic._quic_logger._events:
-        if event['name'] == 'transport:packet_dropped':
+        if event["name"] == "transport:packet_dropped":
             raise ValueError(f"Invalid ClientHello packet: {event['data']['trigger']}")
 
     return None
@@ -1227,7 +1227,7 @@ class ClientQuicLayer(QuicLayer):
         try:
             client_hello = quic_parse_client_hello(self.msgs)
         except ValueError as e:
-            msgs = b'\n'.join(self.msgs)
+            msgs = b"\n".join(self.msgs)
             dbg = f"Cannot parse ClientHello: {str(e)} ({msgs.hex()})"
             self.msgs.clear()
             return False, dbg
@@ -1263,7 +1263,9 @@ class ClientQuicLayer(QuicLayer):
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
             for msg in self.msgs:
-                yield from parent_layer.handle_event(events.DataReceived(self.context.client, msg))
+                yield from parent_layer.handle_event(
+                    events.DataReceived(self.context.client, msg)
+                )
             self.msgs.clear()
             return True, None
 

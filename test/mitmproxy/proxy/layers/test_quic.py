@@ -222,13 +222,15 @@ class TestParseClientHello:
     def test_input(self):
         assert quic.quic_parse_client_hello([client_hello]).sni == "example.com"
         with pytest.raises(ValueError):
-            quic.quic_parse_client_hello([
-                client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            ])
+            quic.quic_parse_client_hello(
+                [client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"]
+            )
         with pytest.raises(ValueError, match="not initial"):
-            quic.quic_parse_client_hello([
-                b"\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~"
-            ])
+            quic.quic_parse_client_hello(
+                [
+                    b"\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~"
+                ]
+            )
 
     def test_invalid(self, monkeypatch):
         class InvalidClientHello(Exception):
@@ -249,10 +251,12 @@ class TestParseClientHello:
             quic.quic_parse_client_hello([client_hello])
 
     def test_no_return(self):
-        with pytest.raises(ValueError, match="Invalid ClientHello packet: payload_decrypt_error"):
-            quic.quic_parse_client_hello([
-                client_hello[0:1200] + b"\x00" + client_hello[1200:]
-                ])
+        with pytest.raises(
+            ValueError, match="Invalid ClientHello packet: payload_decrypt_error"
+        ):
+            quic.quic_parse_client_hello(
+                [client_hello[0:1200] + b"\x00" + client_hello[1200:]]
+            )
 
 
 class TestQuicStreamLayer:
@@ -1352,8 +1356,10 @@ class TestClientQuic:
 
         assert not tctx.client.sni
 
-        invalid_frag2 = fragmented_client_hello2[:300] + b'\x00' + fragmented_client_hello2[300:]
-        data = fragmented_client_hello1 + b'\n' + invalid_frag2
+        invalid_frag2 = (
+            fragmented_client_hello2[:300] + b"\x00" + fragmented_client_hello2[300:]
+        )
+        data = fragmented_client_hello1 + b"\n" + invalid_frag2
 
         assert (
             playbook
