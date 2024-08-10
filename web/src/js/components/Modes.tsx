@@ -13,7 +13,7 @@ export default function Modes() {
             <h3>Recommended</h3>
             <div className="modes-container">
                 <Regular />
-                <Local />
+                {!navigator.userAgent.includes("linux") ? <Local /> : undefined}
                 <Wireguard />
                 <Reverse />
                 <i>Remaining modes are coming soon...</i>
