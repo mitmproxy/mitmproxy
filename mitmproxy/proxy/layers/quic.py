@@ -349,7 +349,7 @@ def quic_parse_client_hello(msgs: list[bytes]) -> Optional[ClientHello]:
         - A ValueError, if the passed ClientHello is invalid
     """
 
-    buffer = QuicBuffer(data=b"".join(msgs))
+    buffer = QuicBuffer(data=msgs[0])
     header = pull_quic_header(buffer, 8)
     if header.packet_type != PACKET_TYPE_INITIAL:
         raise ValueError("Packet is not initial one.")
@@ -1293,7 +1293,7 @@ class ClientQuicLayer(QuicLayer):
         ret: tuple[bool, str | None]
         for msg in self.msgs:
             ret = yield from super().receive_handshake_data(msg)
-            if ret[0] == False:
+            if not ret[0]:
                 break
         self.msgs.clear()
         return ret
