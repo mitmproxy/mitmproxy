@@ -220,15 +220,15 @@ def test_secrets_logger(value: str):
 
 class TestParseClientHello:
     def test_input(self):
-        assert quic.quic_parse_client_hello(client_hello).sni == "example.com"
+        assert quic.quic_parse_client_hello([client_hello]).sni == "example.com"
         with pytest.raises(ValueError):
-            quic.quic_parse_client_hello(
+            quic.quic_parse_client_hello([
                 client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            )
+            ])
         with pytest.raises(ValueError, match="not initial"):
-            quic.quic_parse_client_hello(
+            quic.quic_parse_client_hello([
                 b"\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~"
-            )
+            ])
 
     def test_invalid(self, monkeypatch):
         class InvalidClientHello(Exception):
@@ -238,7 +238,7 @@ class TestParseClientHello:
 
         monkeypatch.setattr(quic, "QuicClientHello", InvalidClientHello)
         with pytest.raises(ValueError, match="Invalid ClientHello"):
-            quic.quic_parse_client_hello(client_hello)
+            quic.quic_parse_client_hello([client_hello])
 
     def test_connection_error(self, monkeypatch):
         def raise_conn_err(self, data, addr, now):
@@ -246,7 +246,13 @@ class TestParseClientHello:
 
         monkeypatch.setattr(QuicConnection, "receive_datagram", raise_conn_err)
         with pytest.raises(ValueError, match="Conn err"):
-            quic.quic_parse_client_hello(client_hello)
+            quic.quic_parse_client_hello([client_hello])
+
+    def test_no_return(self):
+        with pytest.raises(ValueError, match="Invalid ClientHello packet: payload_decrypt_error"):
+            quic.quic_parse_client_hello([
+                client_hello[0:1200] + b"\x00" + client_hello[1200:]
+                ])
 
 
 class TestQuicStreamLayer:
@@ -1320,6 +1326,42 @@ class TestClientQuic:
             >> events.DataReceived(tctx.client, data)
             << commands.Log(
                 f"Client QUIC handshake failed. Invalid handshake received, roaming not supported. ({data.hex()})",
+                WARNING,
+            )
+            << tls.TlsFailedClientHook(tutils.Placeholder())
+        )
+        assert client_layer.tunnel_state == tls.tunnel.TunnelState.ESTABLISHING
+
+    def test_invalid_clienthello(self, tctx: context.Context):
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
+        data = client_hello[0:1200] + b"\x00" + client_hello[1200:]
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, data)
+            << commands.Log(
+                f"Client QUIC handshake failed. Cannot parse ClientHello: Invalid ClientHello packet: payload_decrypt_error ({data.hex()})",
+                WARNING,
+            )
+            << tls.TlsFailedClientHook(tutils.Placeholder())
+        )
+        assert client_layer.tunnel_state == tls.tunnel.TunnelState.ESTABLISHING
+
+    def test_invalid_fragmented_clienthello(self, tctx: context.Context):
+        client_layer = quic.ClientQuicLayer(tctx, time=time.time)
+        playbook = tutils.Playbook(client_layer)
+
+        assert not tctx.client.sni
+
+        invalid_frag2 = fragmented_client_hello2[:300] + b'\x00' + fragmented_client_hello2[300:]
+        data = fragmented_client_hello1 + b'\n' + invalid_frag2
+
+        assert (
+            playbook
+            >> events.Start()
+            >> events.DataReceived(tctx.client, fragmented_client_hello1)
+            >> events.DataReceived(tctx.client, invalid_frag2)
+            << commands.Log(
+                f"Client QUIC handshake failed. Cannot parse ClientHello: Invalid ClientHello packet: payload_decrypt_error ({data.hex()})",
                 WARNING,
             )
             << tls.TlsFailedClientHook(tutils.Placeholder())

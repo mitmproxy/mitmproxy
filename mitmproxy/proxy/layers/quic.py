@@ -23,6 +23,7 @@ from aioquic.quic.connection import stream_is_unidirectional
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
+from aioquic.quic.logger import QuicLogger
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509
@@ -332,11 +333,23 @@ class QuicClientHello(Exception):
     data: bytes
 
 
-def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
-    """Helper function that parses a client hello packet."""
+def quic_parse_client_hello(msgs: list[bytes]) -> Optional[ClientHello]:
+    """
+    Check if the supplied bytes contain a full ClientHello message,
+    and if so, parse it.
 
-    # ensure the first packet is indeed the initial one
-    buffer = QuicBuffer(data=data)
+    Args:
+        - msgs: list of ClientHello fragments received from client
+
+    Returns:
+        - A ClientHello object on success
+        - None, if the QUIC record is incomplete
+
+    Raises:
+        - A ValueError, if the passed ClientHello is invalid
+    """
+
+    buffer = QuicBuffer(data=b''.join(msgs))
     header = pull_quic_header(buffer, 8)
     if header.packet_type != PACKET_TYPE_INITIAL:
         raise ValueError("Packet is not initial one.")
@@ -347,6 +360,7 @@ def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
             is_client=False,
             certificate="",
             private_key="",
+            quic_logger=QuicLogger(),
         ),
         original_destination_connection_id=header.destination_cid,
     )
@@ -373,7 +387,8 @@ def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
 
     quic._initialize = initialize_replacement  # type: ignore
     try:
-        quic.receive_datagram(data, ("0.0.0.0", 0), now=0)
+        for msg in msgs:
+            quic.receive_datagram(msg, ("0.0.0.0", 0), now=time.time())
     except QuicClientHello as hello:
         try:
             return ClientHello(hello.data)
@@ -381,6 +396,11 @@ def quic_parse_client_hello(data: bytes) -> Optional[ClientHello]:
             raise ValueError("Invalid ClientHello data.") from e
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
+
+    assert quic._quic_logger
+    for event in quic._quic_logger._events:
+        if event['name'] == 'transport:packet_dropped':
+            raise ValueError(f"Invalid ClientHello packet: {event['data']['trigger']}")
 
     return None
 
@@ -1123,7 +1143,7 @@ class ClientQuicLayer(QuicLayer):
 
     server_tls_available: bool
     """Indicates whether the parent layer is a ServerQuicLayer."""
-    recv_buffer: bytearray
+    msgs: list[bytes]
 
     def __init__(
         self, context: context.Context, time: Callable[[], float] | None = None
@@ -1144,7 +1164,7 @@ class ClientQuicLayer(QuicLayer):
         self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
             self.context.layers[-2], ServerQuicLayer
         )
-        self.recv_buffer = bytearray()
+        self.msgs = []
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
@@ -1202,14 +1222,15 @@ class ClientQuicLayer(QuicLayer):
                 f"Invalid handshake received, roaming not supported. ({data.hex()})",
             )
 
-        self.recv_buffer.extend(data)
+        self.msgs.append(data)
         # extract the client hello
         try:
-            client_hello = quic_parse_client_hello(bytes(self.recv_buffer))
-        except ValueError as e:  # pragma: no cover
-            msg = f"Cannot parse ClientHello: {str(e)} ({self.recv_buffer.hex()})"
-            self.recv_buffer.clear()
-            return False, msg
+            client_hello = quic_parse_client_hello(self.msgs)
+        except ValueError as e:
+            msgs = b'\n'.join(self.msgs)
+            dbg = f"Cannot parse ClientHello: {str(e)} ({msgs.hex()})"
+            self.msgs.clear()
+            return False, dbg
 
         if not client_hello:
             return False, None
@@ -1241,10 +1262,9 @@ class ClientQuicLayer(QuicLayer):
             parent_layer.handle_event = replacement_layer.handle_event  # type: ignore
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
-            yield from parent_layer.handle_event(
-                events.DataReceived(self.context.client, bytes(self.recv_buffer))
-            )
-            self.recv_buffer.clear()
+            for msg in self.msgs:
+                yield from parent_layer.handle_event(events.DataReceived(self.context.client, msg))
+            self.msgs.clear()
             return True, None
 
         # start the server QUIC connection if demanded and available
@@ -1268,8 +1288,12 @@ class ClientQuicLayer(QuicLayer):
             return False, "connection closed early"
 
         # send the client hello to aioquic
-        ret = yield from super().receive_handshake_data(bytes(self.recv_buffer))
-        self.recv_buffer.clear()
+        ret: tuple[bool, str | None]
+        for msg in self.msgs:
+            ret = yield from super().receive_handshake_data(msg)
+            if ret[0] == False:
+                break
+        self.msgs.clear()
         return ret
 
     def start_server_tls(self) -> layer.CommandGenerator[str | None]:

@@ -323,7 +323,7 @@ class NextLayer:
                 return None
             case "udp":
                 try:
-                    return quic_parse_client_hello(data_client)
+                    return quic_parse_client_hello([data_client])
                 except ValueError:
                     pass
 
@@ -428,7 +428,7 @@ class NextLayer:
 def _starts_like_quic(data_client: bytes) -> bool:
     # FIXME: perf
     try:
-        quic_parse_client_hello(data_client)
+        quic_parse_client_hello([data_client])
     except ValueError:
         return False
     else:
