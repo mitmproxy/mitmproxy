@@ -8,16 +8,14 @@ interface PopoverProps {
 export function Popover({ children, mode }: PopoverProps) {
     return (
         <div className="mode-popover-container">
-            <button id={`button-config-${mode}`} popovertarget={`popover-${mode}`} className="mode-popover-icon">
-                <i
-                    className="fa fa-cog"
-                    aria-hidden="true"
-                ></i>
-            </button>
-            <div
-                id={`popover-${mode}`}
-                popover="auto"
+            <button
+                id={`button-config-${mode}`}
+                popovertarget={`popover-${mode}`}
+                className="mode-popover-icon"
             >
+                <i className="fa fa-cog" aria-hidden="true"></i>
+            </button>
+            <div id={`popover-${mode}`} popover="auto">
                 <div className="mode-popover-header">
                     <label className="mode-popover-title">
                         Advanced Configuration
