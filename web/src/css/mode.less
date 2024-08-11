@@ -103,56 +103,86 @@
         gap: 10px;
     }
 
-    .mode-popover-icon {
-        margin-left: 10px;
-        font-size: 2rem;
-        color: #5d5d5d;
-        cursor: pointer;
-    }
-
     .mode-popover-container {
-        position: relative;
         display: flex;
         align-items: center;
         align-content: center;
     }
 
-    .mode-popover-content {
+    #button-config-regular {
+        anchor-name: --anchor-btn-regular;
+    }
+
+    #button-config-wireguard {
+        anchor-name: --anchor-btn-wireguard;
+    }
+
+    #popover-regular {
+        position-anchor: --anchor-btn-regular;
         position: absolute;
-        left: 35px;
-        bottom: 0;
-        padding: 10px;
-        background-color: white;
+        top: anchor(--anchor-btn-regular center);
+        left: anchor(--anchor-btn-regular right);
         border: 1px solid #ccc;
         border-radius: 4px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        min-width: 250px;
+        padding: 10px 15px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-100%);
+    }
+
+    #popover-wireguard {
+        position-anchor: --anchor-btn-wireguard;
+        position: absolute;
+        top: anchor(--anchor-btn-wireguard center);
+        left: anchor(--anchor-btn-wireguard right);
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 10px 15px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-100%);
+    }
+
+    .mode-popover-icon {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        font-size: 2rem;
+    }
+
+    .mode-popover-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px
     }
 
     .mode-popover-header {
-        display: flex;
-        justify-content: flex-start;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 3px;
     }
 
     .mode-popover-title {
         font-weight: bold;
-    }
-
-    .mode-popover-body {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        font-size: 16px;
     }
 
     .mode-popover-item {
-        p {
-            width: 80px;
-        }
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+
+        p {
+            width: 80px;
+        }
     }
+
+    [popover] {
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
 }

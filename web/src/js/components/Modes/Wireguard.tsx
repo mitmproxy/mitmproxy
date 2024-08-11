@@ -55,7 +55,7 @@ function WireGuardRow({
                 }
             >
                 Run WireGuard Server
-                <Popover>
+                <Popover mode="wireguard">
                     <div className="mode-popover-item">
                         <p>Listen Host</p>
                         <ValueEditor

@@ -54,7 +54,7 @@ function RegularRow({
                 }
             >
                 Run HTTP/S Proxy
-                <Popover>
+                <Popover mode="regular">
                     <div className="mode-popover-item">
                         <p>Listen Host</p>
                         <ValueEditor
