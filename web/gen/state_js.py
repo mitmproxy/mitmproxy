@@ -45,6 +45,7 @@ async def make() -> str:
     data.update(available=True)
     data["contentViews"] = ["Auto", "Raw"]
     data["version"] = "1.2.3"
+    data["platform"] = "win32"
 
     # language=TypeScript
     content = (

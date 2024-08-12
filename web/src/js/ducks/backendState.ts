@@ -23,6 +23,7 @@ export interface BackendState {
     version: string;
     contentViews: string[];
     servers: { [key: string]: ServerInfo };
+    platform: string
 }
 
 export const defaultState: BackendState = {
@@ -30,6 +31,7 @@ export const defaultState: BackendState = {
     version: "",
     contentViews: [],
     servers: {},
+    platform: ""
 };
 
 export function mockUpdate(newState: Partial<BackendState>) {

@@ -6,6 +6,7 @@ import json
 import logging
 import os.path
 import re
+import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
@@ -646,6 +647,7 @@ class State(RequestHandler):
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },
+            "platform": sys.platform,
         }
 
     def get(self):
