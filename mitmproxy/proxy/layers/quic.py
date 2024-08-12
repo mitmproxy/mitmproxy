@@ -1302,14 +1302,13 @@ class ClientQuicLayer(QuicLayer):
             return False, "connection closed early"
 
         # send the client hello to aioquic
+        assert self.quic
         for dgm in self.handshake_datagram_buf:
-            (done, err_) = yield from super().receive_handshake_data(dgm)
-
-        # Our handshake isn't completed yet
-        assert not done
+            self.quic.receive_datagram(dgm, self.conn.peername, now=self._time())
         self.handshake_datagram_buf.clear()
 
-        return done, err_
+        # handle events emanating from `self.quic`
+        return (yield from super().receive_handshake_data(b""))
 
     def start_server_tls(self) -> layer.CommandGenerator[str | None]:
         if not self.server_tls_available:
