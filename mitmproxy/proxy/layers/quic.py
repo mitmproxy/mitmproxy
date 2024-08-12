@@ -408,7 +408,9 @@ def quic_parse_client_hello_from_datagrams(
         quic_events = trace.get("events")
         for event in quic_events:
             if event["name"] == "transport:packet_dropped":
-                raise ValueError(f"Invalid ClientHello packet: {event['data']['trigger']}")
+                raise ValueError(
+                    f"Invalid ClientHello packet: {event['data']['trigger']}"
+                )
 
     return None
 
