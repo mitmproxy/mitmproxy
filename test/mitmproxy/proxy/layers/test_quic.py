@@ -220,13 +220,13 @@ def test_secrets_logger(value: str):
 
 class TestParseClientHello:
     def test_input(self):
-        assert quic.quic_parse_client_hello([client_hello]).sni == "example.com"
+        assert quic.quic_parse_client_hello_from_datagrams([client_hello]).sni == "example.com"
         with pytest.raises(ValueError):
-            quic.quic_parse_client_hello(
+            quic.quic_parse_client_hello_from_datagrams(
                 [client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"]
             )
         with pytest.raises(ValueError, match="not initial"):
-            quic.quic_parse_client_hello(
+            quic.quic_parse_client_hello_from_datagrams(
                 [
                     b"\\s\xd8\xd8\xa5dT\x8bc\xd3\xae\x1c\xb2\x8a7-\x1d\x19j\x85\xb0~\x8c\x80\xa5\x8cY\xac\x0ecK\x7fC2f\xbcm\x1b\xac~"
                 ]
@@ -240,7 +240,7 @@ class TestParseClientHello:
 
         monkeypatch.setattr(quic, "QuicClientHello", InvalidClientHello)
         with pytest.raises(ValueError, match="Invalid ClientHello"):
-            quic.quic_parse_client_hello([client_hello])
+            quic.quic_parse_client_hello_from_datagrams([client_hello])
 
     def test_connection_error(self, monkeypatch):
         def raise_conn_err(self, data, addr, now):
@@ -248,13 +248,13 @@ class TestParseClientHello:
 
         monkeypatch.setattr(QuicConnection, "receive_datagram", raise_conn_err)
         with pytest.raises(ValueError, match="Conn err"):
-            quic.quic_parse_client_hello([client_hello])
+            quic.quic_parse_client_hello_from_datagrams([client_hello])
 
     def test_no_return(self):
         with pytest.raises(
             ValueError, match="Invalid ClientHello packet: payload_decrypt_error"
         ):
-            quic.quic_parse_client_hello(
+            quic.quic_parse_client_hello_from_datagrams(
                 [client_hello[0:1200] + b"\x00" + client_hello[1200:]]
             )
 
