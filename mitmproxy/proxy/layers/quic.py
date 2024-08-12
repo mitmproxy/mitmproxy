@@ -333,7 +333,9 @@ class QuicClientHello(Exception):
     data: bytes
 
 
-def quic_parse_client_hello_from_datagrams(datagrams: list[bytes]) -> Optional[ClientHello]:
+def quic_parse_client_hello_from_datagrams(
+    datagrams: list[bytes],
+) -> Optional[ClientHello]:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -349,6 +351,7 @@ def quic_parse_client_hello_from_datagrams(datagrams: list[bytes]) -> Optional[C
         - A ValueError, if the passed ClientHello is invalid
     """
 
+    # ensure the first packet is indeed the initial one
     buffer = QuicBuffer(data=datagrams[0])
     header = pull_quic_header(buffer, 8)
     if header.packet_type != PACKET_TYPE_INITIAL:
@@ -399,12 +402,13 @@ def quic_parse_client_hello_from_datagrams(datagrams: list[bytes]) -> Optional[C
 
     quic_logger = quic._configuration.quic_logger
     assert isinstance(quic_logger, QuicLogger)
-    traces = quic_logger.to_dict().get('traces')
+    traces = quic_logger.to_dict().get("traces")
     assert isinstance(traces, list)
-    quic_events = traces[0].get('events')
-    for event in quic_events:
-        if event["name"] == "transport:packet_dropped":
-            raise ValueError(f"Invalid ClientHello packet: {event['data']['trigger']}")
+    for trace in traces:
+        quic_events = trace.get("events")
+        for event in quic_events:
+            if event["name"] == "transport:packet_dropped":
+                raise ValueError(f"Invalid ClientHello packet: {event['data']['trigger']}")
 
     return None
 
@@ -1229,7 +1233,9 @@ class ClientQuicLayer(QuicLayer):
         self.handshake_datagram_buf.append(data)
         # extract the client hello
         try:
-            client_hello = quic_parse_client_hello_from_datagrams(self.handshake_datagram_buf)
+            client_hello = quic_parse_client_hello_from_datagrams(
+                self.handshake_datagram_buf
+            )
         except ValueError as e:
             msgs = b"\n".join(self.handshake_datagram_buf)
             dbg = f"Cannot parse ClientHello: {str(e)} ({msgs.hex()})"
@@ -1298,7 +1304,7 @@ class ClientQuicLayer(QuicLayer):
             (done, err_) = yield from super().receive_handshake_data(dgm)
 
         # Our handshake isn't completed yet
-        assert done == False
+        assert not done
         self.handshake_datagram_buf.clear()
 
         return done, err_

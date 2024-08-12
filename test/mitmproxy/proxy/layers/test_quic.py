@@ -220,7 +220,10 @@ def test_secrets_logger(value: str):
 
 class TestParseClientHello:
     def test_input(self):
-        assert quic.quic_parse_client_hello_from_datagrams([client_hello]).sni == "example.com"
+        assert (
+            quic.quic_parse_client_hello_from_datagrams([client_hello]).sni
+            == "example.com"
+        )
         with pytest.raises(ValueError):
             quic.quic_parse_client_hello_from_datagrams(
                 [client_hello[:183] + b"\x00\x00\x00\x00\x00\x00\x00\x00\x00"]
