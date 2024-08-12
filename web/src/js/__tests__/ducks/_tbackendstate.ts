@@ -7,6 +7,7 @@ export function TBackendState(): Required<BackendState> {
             "Auto",
             "Raw"
         ],
+        "platform": "win32",
         "servers": {
             "regular": {
                 "description": "HTTP(S) proxy",
