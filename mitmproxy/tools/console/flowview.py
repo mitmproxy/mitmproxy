@@ -201,7 +201,7 @@ class FlowDetails(tabs.Tabs):
                 align="right",
             ),
         ]
-        contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
+        contentview_status_bar = urwid.AttrMap(urwid.Columns(cols), "heading")
         return contentview_status_bar
 
     FROM_CLIENT_MARKER = ("from_client", f"{common.SYMBOL_FROM_CLIENT} ")
@@ -412,7 +412,7 @@ class FlowDetails(tabs.Tabs):
                     align="right",
                 ),
             ]
-            title = urwid.AttrWrap(urwid.Columns(cols), "heading")
+            title = urwid.AttrMap(urwid.Columns(cols), "heading")
 
             txt.append(title)
             txt.extend(body)

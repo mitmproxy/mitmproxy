@@ -231,7 +231,7 @@ class OptionHelp(urwid.Frame):
     def set_active(self, val):
         h = urwid.Text("Option Help")
         style = "heading" if val else "heading_inactive"
-        self.header = urwid.AttrWrap(h, style)
+        self.header = urwid.AttrMap(h, style)
 
     def widget(self, txt):
         cols, _ = self.master.ui.get_cols_rows()

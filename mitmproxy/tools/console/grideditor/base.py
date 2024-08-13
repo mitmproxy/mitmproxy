@@ -99,11 +99,11 @@ class GridRow(urwid.WidgetWrap):
                 w = self.editor.columns[i].Display(v)
                 if focused == i:
                     if i in errors:
-                        w = urwid.AttrWrap(w, "focusfield_error")
+                        w = urwid.AttrMap(w, "focusfield_error")
                     else:
-                        w = urwid.AttrWrap(w, "focusfield")
+                        w = urwid.AttrMap(w, "focusfield")
                 elif i in errors:
-                    w = urwid.AttrWrap(w, "field_error")
+                    w = urwid.AttrMap(w, "field_error")
                 self.fields.append(w)
 
         fspecs = self.fields[:]
@@ -295,7 +295,7 @@ class BaseGridEditor(urwid.WidgetWrap):
                 else:
                     headings.append(c)
             h = urwid.Columns(headings, dividechars=2)
-            h = urwid.AttrWrap(h, "heading")
+            h = urwid.AttrMap(h, "heading")
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)

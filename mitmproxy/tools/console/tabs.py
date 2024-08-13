@@ -8,7 +8,7 @@ class Tab(urwid.WidgetWrap):
         """
         p = urwid.Text(content, align="center")
         p = urwid.Padding(p, align="center", width=("relative", 100))
-        p = urwid.AttrWrap(p, attr)
+        p = urwid.AttrMap(p, attr)
         urwid.WidgetWrap.__init__(self, p)
         self.offset = offset
         self.onclick = onclick
