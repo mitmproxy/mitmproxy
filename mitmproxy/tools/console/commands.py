@@ -15,8 +15,7 @@ command_focus_change = utils_signals.SyncSignal(lambda text: None)
 class CommandItem(urwid.WidgetWrap):
     def __init__(self, walker, cmd: command.Command, focused: bool):
         self.walker, self.cmd, self.focused = walker, cmd, focused
-        super().__init__(None)
-        self._w = self.get_widget()
+        super().__init__(self.get_widget())
 
     def get_widget(self):
         parts = [("focus", ">> " if self.focused else "   "), ("title", self.cmd.name)]
@@ -119,7 +118,7 @@ class CommandHelp(urwid.Frame):
         return urwid.ListBox([urwid.Text(i) for i in textwrap.wrap(txt, cols)])
 
     def sig_mod(self, txt):
-        self.set_body(self.widget(txt))
+        self.body = self.widget(txt)
 
 
 class Commands(urwid.Pile, layoutwidget.LayoutWidget):

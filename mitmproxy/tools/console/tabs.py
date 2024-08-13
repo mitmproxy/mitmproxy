@@ -21,11 +21,10 @@ class Tab(urwid.WidgetWrap):
 
 class Tabs(urwid.WidgetWrap):
     def __init__(self, tabs, tab_offset=0):
-        super().__init__("")
+        super().__init__(urwid.Pile([]))
         self.tab_offset = tab_offset
         self.tabs = tabs
         self.show()
-        self._w = urwid.Pile([])
 
     def change_tab(self, offset):
         self.tab_offset = offset
@@ -56,4 +55,4 @@ class Tabs(urwid.WidgetWrap):
         self._w = urwid.Frame(
             body=self.tabs[self.tab_offset % len(self.tabs)][1](), header=headers
         )
-        self._w.set_focus("body")
+        self._w.focus_position = "body"
