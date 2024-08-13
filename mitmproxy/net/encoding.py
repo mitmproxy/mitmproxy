@@ -147,16 +147,15 @@ def identity(content):
 def decode_gzip(content: bytes) -> bytes:
     if not content:
         return b""
-    gfile = gzip.GzipFile(fileobj=BytesIO(content))
-    return gfile.read()
+    with gzip.GzipFile(fileobj=BytesIO(content)) as f:
+        return f.read()
 
 
 def encode_gzip(content: bytes) -> bytes:
     s = BytesIO()
     # set mtime to 0 so that gzip encoding is deterministic.
-    gf = gzip.GzipFile(fileobj=s, mode="wb", mtime=0)
-    gf.write(content)
-    gf.close()
+    with gzip.GzipFile(fileobj=s, mode="wb", mtime=0) as f:
+        f.write(content)
     return s.getvalue()
 
 
