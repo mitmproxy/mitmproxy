@@ -4,17 +4,21 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setListenPort, setActive } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
 import { getSpec, RegularState } from "../../modes/regular";
+import { ServerInfo } from "../../ducks/backendState";
+import { ServerDescription } from "../CaptureSetup";
 
 export default function Regular() {
     const serverState = useAppSelector((state) => state.modes.regular);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
     const servers = serverState.map((server) => {
-        const error =
-            server.error ||
-            backendState[getSpec(server)]?.last_exception ||
-            undefined;
-        return <RegularRow key={server.ui_id} server={server} error={error} />;
+        return (
+            <RegularRow
+                key={server.ui_id}
+                server={server}
+                backendState={backendState[getSpec(server)]}
+            />
+        );
     });
 
     return (
@@ -31,14 +35,17 @@ export default function Regular() {
 
 function RegularRow({
     server,
-    error,
+    backendState,
 }: {
     server: RegularState;
     error?: string;
+    backendState?: ServerInfo;
 }) {
     const dispatch = useAppDispatch();
 
     server.listen_host && console.warn("TODO: implement listen_host");
+
+    const error = server.error || backendState?.last_exception || undefined;
 
     return (
         <div>
@@ -63,7 +70,13 @@ function RegularRow({
                     }
                 />
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            <div className="mode-status">
+                {error ? (
+                    <div className="text-danger">{error}</div>
+                ) : (
+                    backendState && <ServerDescription {...backendState} />
+                )}
+            </div>
         </div>
     );
 }

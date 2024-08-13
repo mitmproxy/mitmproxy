@@ -3,18 +3,20 @@ import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { getSpec, WireguardState } from "../../modes/wireguard";
 import { setActive } from "../../ducks/modes/wireguard";
+import { ServerDescription } from "../CaptureSetup";
+import { ServerInfo } from "../../ducks/backendState";
 
 export default function Wireguard() {
     const serverState = useAppSelector((state) => state.modes.wireguard);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
     const servers = serverState.map((server) => {
-        const error =
-            server.error ||
-            backendState[getSpec(server)]?.last_exception ||
-            undefined;
         return (
-            <WireGuardRow key={server.ui_id} server={server} error={error} />
+            <WireGuardRow
+                key={server.ui_id}
+                server={server}
+                backendState={backendState[getSpec(server)]}
+            />
         );
     });
 
@@ -32,12 +34,14 @@ export default function Wireguard() {
 
 function WireGuardRow({
     server,
-    error,
+    backendState,
 }: {
     server: WireguardState;
-    error?: string;
+    backendState?: ServerInfo;
 }) {
     const dispatch = useAppDispatch();
+
+    const error = server.error || backendState?.last_exception || undefined;
 
     return (
         <div>
@@ -49,7 +53,13 @@ function WireGuardRow({
             >
                 Run WireGuard Server
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            <div className="mode-status">
+                {error ? (
+                    <div className="text-danger">{error}</div>
+                ) : (
+                    backendState && <ServerDescription {...backendState} />
+                )}
+            </div>
         </div>
     );
 }
