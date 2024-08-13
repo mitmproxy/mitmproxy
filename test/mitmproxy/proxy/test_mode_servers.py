@@ -290,31 +290,37 @@ async def test_udp_start_error():
         await inst.stop()
 
 
-async def test_dual_stack(caplog_async):
+@pytest.mark.parametrize("ip_version", ["v4", "v6"])
+@pytest.mark.parametrize("protocol", ["tcp", "udp"])
+async def test_dual_stack(ip_version, protocol, caplog_async):
     """Test that a server bound to "" binds on both IPv4 and IPv6 for both TCP and UDP."""
+
+    if ip_version == "v6" and no_ipv6:
+        pytest.skip("Skipped because IPv6 is unavailable.")
+
+    if ip_version == "v4":
+        addr = "127.0.0.1"
+    else:
+        addr = "::1"
+
     caplog_async.set_level("DEBUG")
     manager = MagicMock()
     manager.connections = {}
 
     with taddons.context():
-        inst = ServerInstance.make("dns@:0", manager)
+        inst = ServerInstance.make("dns@0", manager)
         await inst.start()
         assert await caplog_async.await_log("server listening")
         _, port, *_ = inst.listen_addrs[0]
 
-        for addr in ("127.0.0.1", "::1"):
-            if addr == "::1" and no_ipv6:
-                continue
-            for proto in ("tcp", "udp"):
-                caplog_async.clear()
-                if proto == "tcp":
-                    _, stream = await asyncio.open_connection(addr, port)
-                else:
-                    stream = await mitmproxy_rs.open_udp_connection(addr, port)
-                stream.write(b"\x00\x00\x01")
-                assert await caplog_async.await_log("sent an invalid message")
-                stream.close()
-                await stream.wait_closed()
+        if protocol == "tcp":
+            _, stream = await asyncio.open_connection(addr, port)
+        else:
+            stream = await mitmproxy_rs.open_udp_connection(addr, port)
+        stream.write(b"\x00\x00\x01")
+        assert await caplog_async.await_log("sent an invalid message")
+        stream.close()
+        await stream.wait_closed()
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")
