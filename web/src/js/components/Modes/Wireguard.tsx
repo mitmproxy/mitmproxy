@@ -3,8 +3,8 @@ import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { getSpec, WireguardState } from "../../modes/wireguard";
 import { setActive } from "../../ducks/modes/wireguard";
-import { ServerDescription } from "../CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
+import { ServerStatus } from "./CaptureSetup";
 
 export default function Wireguard() {
     const serverState = useAppSelector((state) => state.modes.wireguard);
@@ -53,13 +53,7 @@ function WireGuardRow({
             >
                 Run WireGuard Server
             </ModeToggle>
-            <div className="mode-status">
-                {error ? (
-                    <div className="text-danger">{error}</div>
-                ) : (
-                    backendState && <ServerDescription {...backendState} />
-                )}
-            </div>
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }

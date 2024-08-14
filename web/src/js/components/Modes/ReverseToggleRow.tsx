@@ -13,7 +13,7 @@ import {
 } from "../../ducks/modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import { ReverseState } from "../../modes/reverse";
-import { ServerDescription } from "../CaptureSetup";
+import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
 
 interface ReverseToggleRowProps {
@@ -107,13 +107,7 @@ export default function ReverseToggleRow({
                     onClick={deleteServer}
                 ></i>
             </ModeToggle>
-            <div className="mode-status">
-                {error ? (
-                    <div className="text-danger">{error}</div>
-                ) : (
-                    backendState && <ServerDescription {...backendState} />
-                )}
-            </div>
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }

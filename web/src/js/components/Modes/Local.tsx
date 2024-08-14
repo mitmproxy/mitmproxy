@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setActive, setApplications } from "../../ducks/modes/local";
 import ValueEditor from "../editors/ValueEditor";
 import { getSpec, LocalState } from "../../modes/local";
-import { ServerDescription } from "../CaptureSetup";
+import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
 
 export default function Local() {
@@ -62,13 +62,7 @@ function LocalRow({
                     }
                 />
             </ModeToggle>
-            <div className="mode-status">
-                {error ? (
-                    <div className="text-danger">{error}</div>
-                ) : (
-                    backendState && <ServerDescription {...backendState} />
-                )}
-            </div>
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }

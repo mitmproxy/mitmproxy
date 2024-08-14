@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useRef } from "react";
-import { ServerInfo } from "../ducks/backendState";
-import { formatAddress } from "../utils";
+import { ServerInfo } from "../../ducks/backendState";
+import { formatAddress } from "../../utils";
 import QRCode from "qrcode";
 
 export default function CaptureSetup() {
@@ -18,7 +18,7 @@ export default function CaptureSetup() {
     );
 }
 
-export function ServerDescription({
+function ServerDescription({
     description,
     listen_addrs,
     is_running,
@@ -60,9 +60,13 @@ export function ServerDescription({
     } else {
         desc = (
             <>
-                <div className="text-success">
-                    {description} listening at {listen_str}.
-                </div>
+                {full_spec.includes("local") ? (
+                    <div className="text-success">{description} is active.</div>
+                ) : (
+                    <div className="text-success">
+                        {description} listening at {listen_str}.
+                    </div>
+                )}
                 {wireguard_conf && (
                     <div className="wireguard-config">
                         <pre>{wireguard_conf}</pre>
@@ -73,4 +77,22 @@ export function ServerDescription({
         );
     }
     return <div>{desc}</div>;
+}
+
+export function ServerStatus({
+    error,
+    backendState,
+}: {
+    error?: string;
+    backendState?: ServerInfo;
+}) {
+    return (
+        <div className="mode-status">
+            {error ? (
+                <div className="text-danger">{error}</div>
+            ) : (
+                backendState && <ServerDescription {...backendState} />
+            )}
+        </div>
+    );
 }

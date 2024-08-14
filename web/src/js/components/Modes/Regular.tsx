@@ -5,7 +5,7 @@ import { setListenPort, setActive } from "../../ducks/modes/regular";
 import ValueEditor from "../editors/ValueEditor";
 import { getSpec, RegularState } from "../../modes/regular";
 import { ServerInfo } from "../../ducks/backendState";
-import { ServerDescription } from "../CaptureSetup";
+import { ServerStatus } from "./CaptureSetup";
 
 export default function Regular() {
     const serverState = useAppSelector((state) => state.modes.regular);
@@ -70,13 +70,7 @@ function RegularRow({
                     }
                 />
             </ModeToggle>
-            <div className="mode-status">
-                {error ? (
-                    <div className="text-danger">{error}</div>
-                ) : (
-                    backendState && <ServerDescription {...backendState} />
-                )}
-            </div>
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }
