@@ -4,6 +4,7 @@ import localReducer from "./modes/local";
 import wireguardReducer from "./modes/wireguard";
 import reverseReducer from "./modes/reverse";
 import transparentReducer from "./modes/transparent";
+import socksReducer from "./modes/socks";
 
 const modes = combineReducers({
     regular: regularReducer,
@@ -11,6 +12,7 @@ const modes = combineReducers({
     wireguard: wireguardReducer,
     reverse: reverseReducer,
     transparent: transparentReducer,
+    socks: socksReducer,
     //add new modes here
 });
 
