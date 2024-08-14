@@ -219,7 +219,7 @@ def test_quic(tctx: Context, keep_host_header: bool):
             << RequestWakeup(Placeholder(float))
         )
         assert tctx.server.address == ("example.org", 443)
-        assert quic.quic_parse_client_hello(client_hello()).sni == (
+        assert quic.quic_parse_client_hello_from_datagrams([client_hello()]).sni == (
             "other.example.com" if keep_host_header else "example.org"
         )
 

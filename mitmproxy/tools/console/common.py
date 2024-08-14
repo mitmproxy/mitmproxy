@@ -188,7 +188,7 @@ class TruncatedText(urwid.Widget):
             text = text[::-1]
             attr = attr[::-1]
 
-        text_len = urwid.util.calc_width(text, 0, len(text))
+        text_len = urwid.calc_width(text, 0, len(text))
         if size is not None and len(size) > 0:
             width = size[0]
         else:

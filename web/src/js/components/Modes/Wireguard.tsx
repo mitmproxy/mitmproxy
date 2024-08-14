@@ -10,18 +10,20 @@ import {
 } from "../../ducks/modes/wireguard";
 import { Popover } from "./Popover";
 import ValueEditor from "../editors/ValueEditor";
+import { ServerInfo } from "../../ducks/backendState";
+import { ServerStatus } from "./CaptureSetup";
 
 export default function Wireguard() {
     const serverState = useAppSelector((state) => state.modes.wireguard);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
     const servers = serverState.map((server) => {
-        const error =
-            server.error ||
-            backendState[getSpec(server)]?.last_exception ||
-            undefined;
         return (
-            <WireGuardRow key={server.ui_id} server={server} error={error} />
+            <WireGuardRow
+                key={server.ui_id}
+                server={server}
+                backendState={backendState[getSpec(server)]}
+            />
         );
     });
 
@@ -39,12 +41,14 @@ export default function Wireguard() {
 
 function WireGuardRow({
     server,
-    error,
+    backendState,
 }: {
     server: WireguardState;
-    error?: string;
+    backendState?: ServerInfo;
 }) {
     const dispatch = useAppDispatch();
+
+    const error = server.error || backendState?.last_exception || undefined;
 
     return (
         <div>
@@ -94,7 +98,7 @@ function WireGuardRow({
                     />
                 </Popover>
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }

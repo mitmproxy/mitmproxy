@@ -13,6 +13,10 @@
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where intermediate certificates would not be transmitted when using QUIC.
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+- Fix a bug where fragmented QUIC client hellos were not handled properly.
+  ([#7067](https://github.com/mitmproxy/mitmproxy/pull/7067), @errorxyz)
+- mitmproxy now officially supports Python 3.13.
+  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
 
 ## 02 August 2024: mitmproxy 10.4.2
 

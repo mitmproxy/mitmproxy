@@ -45,7 +45,7 @@ from mitmproxy.proxy.layers import ServerTLSLayer
 from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.quic import quic_parse_client_hello
+from mitmproxy.proxy.layers.quic import quic_parse_client_hello_from_datagrams
 from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
 from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
@@ -323,7 +323,7 @@ class NextLayer:
                 return None
             case "udp":
                 try:
-                    return quic_parse_client_hello(data_client)
+                    return quic_parse_client_hello_from_datagrams([data_client])
                 except ValueError:
                     pass
 
@@ -426,10 +426,9 @@ class NextLayer:
 
 
 def _starts_like_quic(data_client: bytes) -> bool:
-    # FIXME: handle clienthellos distributed over multiple packets?
     # FIXME: perf
     try:
-        quic_parse_client_hello(data_client)
+        quic_parse_client_hello_from_datagrams([data_client])
     except ValueError:
         return False
     else:
