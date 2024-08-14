@@ -22,7 +22,6 @@ function ServerDescription({
     description,
     listen_addrs,
     is_running,
-    full_spec,
     wireguard_conf,
     type,
 }: ServerInfo) {
@@ -54,7 +53,7 @@ function ServerDescription({
         desc = (
             <>
                 <div className="text-warning">
-                    {description} ({full_spec})
+                    {description} starting...
                 </div>
             </>
         );
