@@ -10,7 +10,8 @@ export function Popover({ children }: PopoverProps) {
     // Rather annoying workaround to make popover anchors work with current React.
     // Ideally this can go away once browsers have anchor-scope.
     // https://github.com/facebook/react/issues/26839
-    const cssId = "--" + [...id].map(c => c.charCodeAt(0).toString(16)).join("");
+    const cssId =
+        "--" + [...id].map((c) => c.charCodeAt(0).toString(16)).join("");
     const buttonRef = React.useRef<HTMLButtonElement>(null);
     const popoverRef = React.useRef<HTMLDivElement>(null);
     React.useEffect(() => {
