@@ -24,8 +24,8 @@ export default function Socks() {
         <div>
             <h4 className="mode-title">SOCKS Proxy</h4>
             <p className="mode-description">
-                Similar the regular proxy mode, but using SOCKS5 instead of HTTP
-                for connection establishment with the proxy.
+                You manually configure your client application or device to use
+                a SOCKSv5 proxy.
             </p>
 
             {servers}

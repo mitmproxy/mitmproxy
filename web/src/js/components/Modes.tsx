@@ -23,8 +23,8 @@ export default function Modes() {
             </div>
             <h3>Advanced</h3>
             <div className="modes-container">
-                <Transparent />
                 <Socks />
+                {!platform.startsWith("win32") ? <Transparent /> : undefined}
                 <i>Remaining modes are coming soon...</i>
             </div>
         </div>

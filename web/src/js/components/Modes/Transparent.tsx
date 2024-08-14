@@ -24,8 +24,8 @@ export default function Transparent() {
         <div>
             <h4 className="mode-title">Transparent Proxy</h4>
             <p className="mode-description">
-                A transparent proxy routes traffic at the network layer without
-                client configuration.
+                You configure your routing table to send traffic through
+                mitmproxy.
             </p>
 
             {servers}
