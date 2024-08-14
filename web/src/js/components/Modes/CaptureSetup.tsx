@@ -60,7 +60,7 @@ function ServerDescription({
     } else {
         desc = (
             <>
-                {full_spec.includes("local") ? (
+                {full_spec.startsWith("local") ? (
                     <div className="text-success">{description} is active.</div>
                 ) : (
                     <div className="text-success">
