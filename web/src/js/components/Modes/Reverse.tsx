@@ -17,9 +17,10 @@ export default function Reverse() {
                 Requests are forwarded to a preconfigured destination.
             </p>
             <div className="mode-reverse-servers">
-                {servers.map((server) => (
+                {servers.map((server, i) => (
                     <ReverseToggleRow
                         key={server.ui_id}
+                        removable={i > 0}
                         server={server}
                         backendState={backendState[getSpec(server)]}
                     />
