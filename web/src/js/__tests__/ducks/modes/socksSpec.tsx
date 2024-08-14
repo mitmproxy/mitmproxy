@@ -43,9 +43,7 @@ describe("socksSlice", () => {
         await store.dispatch(setActive({ value: false, server }));
 
         expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.socks[0].error).toBe(
-            "invalid spec",
-        );
+        expect(store.getState().modes.socks[0].error).toBe("invalid spec");
     });
 
     it("should handle error when setting listen port", async () => {
@@ -56,9 +54,7 @@ describe("socksSlice", () => {
         await store.dispatch(setListenPort({ value: 4444, server }));
 
         expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.socks[0].error).toBe(
-            "invalid spec",
-        );
+        expect(store.getState().modes.socks[0].error).toBe("invalid spec");
     });
 
     it("should handle error when setting listen host", async () => {
@@ -69,9 +65,7 @@ describe("socksSlice", () => {
         await store.dispatch(setListenHost({ value: "localhost", server }));
 
         expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.socks[0].error).toBe(
-            "invalid spec",
-        );
+        expect(store.getState().modes.socks[0].error).toBe("invalid spec");
     });
 
     it("should handle RECEIVE_STATE with an active socks proxy", () => {

@@ -37,4 +37,3 @@ export const transparentSlice = createSlice({
 });
 
 export default transparentSlice.reducer;
-
