@@ -55,35 +55,33 @@ function RegularRow({
             >
                 Run HTTP/S Proxy
                 <Popover mode="regular">
-                    <div className="mode-popover-item">
-                        <p>Listen Host</p>
-                        <ValueEditor
-                            className="mode-input"
-                            content={server.listen_host || ""}
-                            onEditDone={(host) =>
-                                dispatch(setListenHost({ server, value: host }))
-                            }
-                        />
-                    </div>
-                    <div className="mode-popover-item">
-                        <p>Listen Port</p>
-                        <ValueEditor
-                            className="mode-input"
-                            content={
-                                server.listen_port
-                                    ? server.listen_port.toString()
-                                    : ""
-                            }
-                            onEditDone={(port) =>
-                                dispatch(
-                                    setListenPort({
-                                        server,
-                                        value: parseInt(port),
-                                    }),
-                                )
-                            }
-                        />
-                    </div>
+                    <p>Listen Host</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={server.listen_host || ""}
+                        onEditDone={(host) =>
+                            dispatch(setListenHost({ server, value: host }))
+                        }
+                    />
+
+                    <p>Listen Port</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={
+                            server.listen_port
+                                ? server.listen_port.toString()
+                                : ""
+                        }
+                        placeholder="8080"
+                        onEditDone={(port) =>
+                            dispatch(
+                                setListenPort({
+                                    server,
+                                    value: parseInt(port),
+                                }),
+                            )
+                        }
+                    />
                 </Popover>
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}

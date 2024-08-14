@@ -2,26 +2,30 @@ import * as React from "react";
 
 interface PopoverProps {
     children: React.ReactNode;
-    mode: string;
 }
 
-export function Popover({ children, mode }: PopoverProps) {
+export function Popover({ children }: PopoverProps) {
+    const id = React.useId();
+
+    // Rather annoying workaround to make popover anchors work with current React.
+    // Ideally this can go away once browsers have anchor-scope.
+    // https://github.com/facebook/react/issues/26839
+    const cssId = "--" + [...id].map(c => c.charCodeAt(0).toString(16)).join("");
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+    const popoverRef = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+        buttonRef.current!.style.anchorName = cssId;
+        popoverRef.current!.style.positionAnchor = cssId;
+    }, []);
+
     return (
-        <div className="mode-popover-container">
-            <button
-                id={`button-config-${mode}`}
-                popovertarget={`popover-${mode}`}
-                className="mode-popover-icon"
-            >
+        <div className="mode-popover">
+            <button popovertarget={id} ref={buttonRef}>
                 <i className="fa fa-cog" aria-hidden="true"></i>
             </button>
-            <div id={`popover-${mode}`} popover="auto">
-                <div className="mode-popover-header">
-                    <label className="mode-popover-title">
-                        Advanced Configuration
-                    </label>
-                </div>
-                <div className="mode-popover-content">{children}</div>
+            <div id={id} popover="auto" ref={popoverRef}>
+                <h4>Advanced Configuration</h4>
+                {children}
             </div>
         </div>
     );

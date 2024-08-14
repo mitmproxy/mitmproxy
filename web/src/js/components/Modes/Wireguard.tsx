@@ -55,46 +55,43 @@ function WireGuardRow({
                 }
             >
                 Run WireGuard Server
-                <Popover mode="wireguard">
-                    <div className="mode-popover-item">
-                        <p>Listen Host</p>
-                        <ValueEditor
-                            className="mode-input"
-                            content={server.listen_host || ""}
-                            onEditDone={(host) =>
-                                dispatch(setListenHost({ server, value: host }))
-                            }
-                        />
-                    </div>
-                    <div className="mode-popover-item">
-                        <p>Listen Port</p>
-                        <ValueEditor
-                            className="mode-input"
-                            content={
-                                server.listen_port
-                                    ? server.listen_port.toString()
-                                    : ""
-                            }
-                            onEditDone={(port) =>
-                                dispatch(
-                                    setListenPort({
-                                        server,
-                                        value: parseInt(port),
-                                    }),
-                                )
-                            }
-                        />
-                    </div>
-                    <div className="mode-popover-item">
-                        <p>File Path</p>
-                        <ValueEditor
-                            className="mode-input"
-                            content={server.file_path || ""}
-                            onEditDone={(path) =>
-                                dispatch(setFilePath({ server, value: path }))
-                            }
-                        />
-                    </div>
+                <Popover>
+                    <p>Listen Host</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={server.listen_host || ""}
+                        placeholder="(all interfaces)"
+                        onEditDone={(host) =>
+                            dispatch(setListenHost({ server, value: host }))
+                        }
+                    />
+                    <p>Listen Port</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={
+                            server.listen_port
+                                ? server.listen_port.toString()
+                                : ""
+                        }
+                        placeholder="51820"
+                        onEditDone={(port) =>
+                            dispatch(
+                                setListenPort({
+                                    server,
+                                    value: parseInt(port),
+                                }),
+                            )
+                        }
+                    />
+                    <p>Configuration File</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={server.file_path || ""}
+                        placeholder="~/.mitmproxy/wireguard.conf"
+                        onEditDone={(path) =>
+                            dispatch(setFilePath({ server, value: path }))
+                        }
+                    />
                 </Popover>
             </ModeToggle>
             {error && <div className="mode-error text-danger">{error}</div>}

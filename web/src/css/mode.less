@@ -64,7 +64,7 @@
         border: 1px solid #ccc;
         margin-left: 10px;
         border-radius: 4px;
-        min-width: 100px;
+        min-width: 120px;
         height: 25px;
     }
 
@@ -103,85 +103,48 @@
         gap: 10px;
     }
 
-    .mode-popover-container {
-        display: flex;
-        align-items: center;
-        align-content: center;
-    }
+    .mode-popover {
+        > button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 2rem;
+        }
 
-    #button-config-regular {
-        anchor-name: --anchor-btn-regular;
-    }
+        @supports(anchor-name: --test) {
+            > div {
+                margin: 0;
+                position: absolute;
+                left: calc(anchor(right) + 5px);
+                align-self: anchor-center;
+            }
+        }
 
-    #button-config-wireguard {
-        anchor-name: --anchor-btn-wireguard;
-    }
+        > div {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
-    #popover-regular {
-        position-anchor: --anchor-btn-regular;
-        position: absolute;
-        top: anchor(--anchor-btn-regular center);
-        left: anchor(--anchor-btn-regular right);
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 10px 15px;
-        background-color: #f9f9f9;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transform: translateY(-100%);
-    }
+            &:popover-open {
+                display: grid;
+            }
+            grid-template-columns: 9em 1fr;
+            grid-auto-rows: min-content;
+            gap: .5rem;
+            align-items: center;
 
-    #popover-wireguard {
-        position-anchor: --anchor-btn-wireguard;
-        position: absolute;
-        top: anchor(--anchor-btn-wireguard center);
-        left: anchor(--anchor-btn-wireguard right);
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 10px 15px;
-        background-color: #f9f9f9;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transform: translateY(-100%);
-    }
-
-    .mode-popover-icon {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 8px;
-        font-size: 2rem;
-    }
-
-    .mode-popover-content {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .mode-popover-header {
-        margin-bottom: 15px;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 3px;
-    }
-
-    .mode-popover-title {
-        font-weight: bold;
-        font-size: 16px;
-    }
-
-    .mode-popover-item {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-
-        p {
-            width: 80px;
+            > h4 {
+                text-align: center;
+                grid-column: 1/-1;
+            }
+            > .mode-input {
+                text-align: right;
+                background-color: white;
+                margin: 0;
+            }
         }
     }
 
-    [popover] {
-        margin: 0;
-        padding: 0;
-        border: 0;
-    }
 }
