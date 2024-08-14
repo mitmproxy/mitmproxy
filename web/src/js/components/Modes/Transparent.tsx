@@ -5,6 +5,7 @@ import { ServerInfo } from "../../ducks/backendState";
 import { setActive } from "../../ducks/modes/transparent";
 
 import { ModeToggle } from "./ModeToggle";
+import { ServerStatus } from "./CaptureSetup";
 
 export default function Transparent() {
     const serverState = useAppSelector((state) => state.modes.transparent);
@@ -55,7 +56,7 @@ function TransparentRow({
                 Run Transparent Proxy
                 {/** Add here popover to set listen_host and listen_port */}
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }
