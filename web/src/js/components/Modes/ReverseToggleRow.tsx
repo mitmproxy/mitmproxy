@@ -17,11 +17,13 @@ import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
 
 interface ReverseToggleRowProps {
+    removable: boolean;
     server: ReverseState;
     backendState?: ServerInfo;
 }
 
 export default function ReverseToggleRow({
+    removable,
     server,
     backendState,
 }: ReverseToggleRowProps) {
@@ -101,11 +103,13 @@ export default function ReverseToggleRow({
                     }
                     placeholder="example.com"
                 />
-                <i
-                    className="fa fa-fw fa-trash fa-lg"
-                    aria-hidden="true"
-                    onClick={deleteServer}
-                ></i>
+                {removable && (
+                    <i
+                        className="fa fa-fw fa-trash fa-lg"
+                        aria-hidden="true"
+                        onClick={deleteServer}
+                    ></i>
+                )}
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>
