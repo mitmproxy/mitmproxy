@@ -162,6 +162,11 @@ export const testState: RootState = {
                 active: false,
             },
         ],
+        socks: [
+            {
+                active: false,
+            },
+        ],
     },
 };
 

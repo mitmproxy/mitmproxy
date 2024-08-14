@@ -1,9 +1,9 @@
-import transparentReducer, {
+import socksReducer, {
     initialState,
     setListenHost,
     setListenPort,
     setActive,
-} from "./../../../ducks/modes/transparent";
+} from "./../../../ducks/modes/socks";
 import {
     RECEIVE as STATE_RECEIVE,
     BackendState,
@@ -12,21 +12,21 @@ import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { PayloadAction } from "@reduxjs/toolkit";
 
-describe("transparentSlice", () => {
+describe("socksSlice", () => {
     it("should have working setters", async () => {
         enableFetchMocks();
         const store = TStore();
 
-        expect(store.getState().modes.transparent[0]).toEqual({
+        expect(store.getState().modes.socks[0]).toEqual({
             active: false,
         });
 
-        const server = store.getState().modes.transparent[0];
+        const server = store.getState().modes.socks[0];
         await store.dispatch(setActive({ value: true, server }));
         await store.dispatch(setListenHost({ value: "127.0.0.1", server }));
         await store.dispatch(setListenPort({ value: 4444, server }));
 
-        expect(store.getState().modes.transparent[0]).toEqual({
+        expect(store.getState().modes.socks[0]).toEqual({
             active: true,
             listen_host: "127.0.0.1",
             listen_port: 4444,
@@ -35,15 +35,15 @@ describe("transparentSlice", () => {
         expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
-    it("should handle error when setting transparent mode", async () => {
+    it("should handle error when setting socks mode", async () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        const server = store.getState().modes.transparent[0];
+        const server = store.getState().modes.socks[0];
         await store.dispatch(setActive({ value: false, server }));
 
         expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.transparent[0].error).toBe(
+        expect(store.getState().modes.socks[0].error).toBe(
             "invalid spec",
         );
     });
@@ -52,11 +52,11 @@ describe("transparentSlice", () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        const server = store.getState().modes.transparent[0];
+        const server = store.getState().modes.socks[0];
         await store.dispatch(setListenPort({ value: 4444, server }));
 
         expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.transparent[0].error).toBe(
+        expect(store.getState().modes.socks[0].error).toBe(
             "invalid spec",
         );
     });
@@ -65,35 +65,35 @@ describe("transparentSlice", () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
-        const server = store.getState().modes.transparent[0];
+        const server = store.getState().modes.socks[0];
         await store.dispatch(setListenHost({ value: "localhost", server }));
 
         expect(fetchMock).toHaveBeenCalled();
-        expect(store.getState().modes.transparent[0].error).toBe(
+        expect(store.getState().modes.socks[0].error).toBe(
             "invalid spec",
         );
     });
 
-    it("should handle RECEIVE_STATE with an active transparent proxy", () => {
+    it("should handle RECEIVE_STATE with an active socks proxy", () => {
         const action = {
             type: STATE_RECEIVE.type,
             payload: {
                 servers: {
-                    "transparent@localhost:8081": {
-                        description: "Transparent Proxy",
-                        full_spec: "transparent@localhost:8081",
+                    "socks5@localhost:8081": {
+                        description: "SOCKS v5 proxy",
+                        full_spec: "socks5@localhost:8081",
                         is_running: true,
                         last_exception: null,
                         listen_addrs: [
                             ["127.0.0.1", 8081],
                             ["::1", 8081],
                         ],
-                        type: "transparent",
+                        type: "socks5",
                     },
                 },
             },
         } as PayloadAction<Partial<BackendState>>;
-        const newState = transparentReducer(initialState, action);
+        const newState = socksReducer(initialState, action);
         expect(newState).toEqual([
             {
                 active: true,
@@ -104,14 +104,14 @@ describe("transparentSlice", () => {
         ]);
     });
 
-    it("should handle RECEIVE_STATE with no active transparent proxy", () => {
+    it("should handle RECEIVE_STATE with no active socks proxy", () => {
         const action = {
             type: STATE_RECEIVE.type,
             payload: {
                 servers: {},
             },
         } as PayloadAction<Partial<BackendState>>;
-        const newState = transparentReducer(initialState, action);
+        const newState = socksReducer(initialState, action);
         expect(newState).toEqual([
             {
                 active: false,
