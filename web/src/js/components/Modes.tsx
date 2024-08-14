@@ -4,6 +4,7 @@ import Regular from "./Modes/Regular";
 import Wireguard from "./Modes/Wireguard";
 import Reverse from "./Modes/Reverse";
 import { useAppSelector } from "../ducks";
+import Transparent from "./Modes/Transparent";
 
 export default function Modes() {
     const platform = useAppSelector((state) => state.backendState.platform);
@@ -18,6 +19,10 @@ export default function Modes() {
                 {!platform.startsWith("linux") ? <Local /> : undefined}
                 <Wireguard />
                 <Reverse />
+            </div>
+            <h3>Advanced</h3>
+            <div className="modes-container">
+                <Transparent />
                 <i>Remaining modes are coming soon...</i>
             </div>
         </div>
