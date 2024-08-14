@@ -103,11 +103,13 @@ export default function ReverseToggleRow({
                     }
                     placeholder="example.com"
                 />
-                { removable && <i
-                    className="fa fa-fw fa-trash fa-lg"
-                    aria-hidden="true"
-                    onClick={deleteServer}
-                ></i> }
+                {removable && (
+                    <i
+                        className="fa fa-fw fa-trash fa-lg"
+                        aria-hidden="true"
+                        onClick={deleteServer}
+                    ></i>
+                )}
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>

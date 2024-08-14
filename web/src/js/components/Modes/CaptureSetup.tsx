@@ -52,9 +52,7 @@ function ServerDescription({
     if (!is_running) {
         desc = (
             <>
-                <div className="text-warning">
-                    {description} starting...
-                </div>
+                <div className="text-warning">{description} starting...</div>
             </>
         );
     } else {
