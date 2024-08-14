@@ -11,32 +11,8 @@ exports[`CaptureSetup 1`] = `
     <p>
       No flows have been recorded yet.
       <br />
-      Configure your client to use one of the following proxy servers:
+      To start capturing traffic, please configure your settings in the Capture tab.
     </p>
-    <ul
-      class="fa-ul"
-    >
-      <li>
-        <i
-          class="fa fa-li fa-check text-success"
-        />
-        HTTP(S) proxy listening at 127.0.0.1:8080 and [::1]:8080.
-      </li>
-      <li>
-        <i
-          class="fa fa-li fa-exclamation text-error"
-        />
-        Reverse proxy to example.com (reverse:example.com):
-        <br />
-        I failed somehow.
-      </li>
-      <li>
-        <i
-          class="fa fa-li fa-pause text-warning"
-        />
-        SOCKS v5 proxy (socks5)
-      </li>
-    </ul>
   </div>
 </DocumentFragment>
 `;
