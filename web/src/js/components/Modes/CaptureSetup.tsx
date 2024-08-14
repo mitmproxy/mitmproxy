@@ -24,6 +24,7 @@ function ServerDescription({
     is_running,
     full_spec,
     wireguard_conf,
+    type,
 }: ServerInfo) {
     const qrCode = useRef(null);
     useEffect(() => {
@@ -60,7 +61,7 @@ function ServerDescription({
     } else {
         desc = (
             <>
-                {full_spec.startsWith("local") ? (
+                {type === "local" ? (
                     <div className="text-success">{description} is active.</div>
                 ) : (
                     <div className="text-success">
