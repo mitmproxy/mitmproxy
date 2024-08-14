@@ -14,15 +14,19 @@ export function Popover({ children }: PopoverProps) {
     const buttonRef = React.useRef<HTMLButtonElement>(null);
     const popoverRef = React.useRef<HTMLDivElement>(null);
     React.useEffect(() => {
+        // @ts-expect-error no anchor support yet
         buttonRef.current!.style.anchorName = cssId;
+        // @ts-expect-error no anchor support yet
         popoverRef.current!.style.positionAnchor = cssId;
     }, []);
 
     return (
         <div className="mode-popover">
+            {/* @ts-expect-error no popover support yet */}
             <button popovertarget={id} ref={buttonRef}>
                 <i className="fa fa-cog" aria-hidden="true"></i>
             </button>
+            {/* @ts-expect-error no popover support yet */}
             <div id={id} popover="auto" ref={popoverRef}>
                 <h4>Advanced Configuration</h4>
                 {children}
