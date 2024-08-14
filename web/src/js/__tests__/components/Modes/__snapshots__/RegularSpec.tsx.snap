@@ -28,6 +28,17 @@ exports[`RegularSpec 1`] = `
           tabindex="0"
         />
       </div>
+      <div
+        class="mode-status"
+      >
+        <div>
+          <div
+            class="text-success"
+          >
+            HTTP(S) proxy listening at 127.0.0.1:8080 and [::1]:8080.
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </DocumentFragment>
@@ -62,9 +73,13 @@ exports[`RegularSpec 2`] = `
         />
       </div>
       <div
-        class="mode-error text-danger"
+        class="mode-status"
       >
-        port already in use
+        <div
+          class="text-danger"
+        >
+          port already in use
+        </div>
       </div>
     </div>
   </div>

@@ -13,12 +13,20 @@ import {
 } from "../../ducks/modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import { ReverseState } from "../../modes/reverse";
+import { ServerStatus } from "./CaptureSetup";
+import { ServerInfo } from "../../ducks/backendState";
 
 interface ReverseToggleRowProps {
+    removable: boolean;
     server: ReverseState;
+    backendState?: ServerInfo;
 }
 
-export default function ReverseToggleRow({ server }: ReverseToggleRowProps) {
+export default function ReverseToggleRow({
+    removable,
+    server,
+    backendState,
+}: ReverseToggleRowProps) {
     const dispatch = useAppDispatch();
 
     const protocols = Object.values(ReverseProxyProtocols);
@@ -36,6 +44,8 @@ export default function ReverseToggleRow({ server }: ReverseToggleRowProps) {
         }
         await dispatch(removeServer(server));
     };
+
+    const error = server.error || backendState?.last_exception || undefined;
 
     return (
         <div>
@@ -93,15 +103,15 @@ export default function ReverseToggleRow({ server }: ReverseToggleRowProps) {
                     }
                     placeholder="example.com"
                 />
-                <i
-                    className="fa fa-fw fa-trash fa-lg"
-                    aria-hidden="true"
-                    onClick={deleteServer}
-                ></i>
+                {removable && (
+                    <i
+                        className="fa fa-fw fa-trash fa-lg"
+                        aria-hidden="true"
+                        onClick={deleteServer}
+                    ></i>
+                )}
             </ModeToggle>
-            {server.error && (
-                <div className="mode-error text-danger">{server.error}</div>
-            )}
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }

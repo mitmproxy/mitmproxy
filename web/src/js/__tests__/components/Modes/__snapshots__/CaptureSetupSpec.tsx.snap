@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CaptureSetup 1`] = `
+<DocumentFragment>
+  <div
+    style="padding: 1em 2em;"
+  >
+    <h3>
+      mitmproxy is running.
+    </h3>
+    <p>
+      No flows have been recorded yet.
+      <br />
+      To start capturing traffic, please configure your settings in the Capture tab.
+    </p>
+  </div>
+</DocumentFragment>
+`;

@@ -4,17 +4,21 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setActive, setApplications } from "../../ducks/modes/local";
 import ValueEditor from "../editors/ValueEditor";
 import { getSpec, LocalState } from "../../modes/local";
+import { ServerStatus } from "./CaptureSetup";
+import { ServerInfo } from "../../ducks/backendState";
 
 export default function Local() {
     const serverState = useAppSelector((state) => state.modes.local);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
     const servers = serverState.map((server) => {
-        const error =
-            server.error ||
-            backendState[getSpec(server)]?.last_exception ||
-            undefined;
-        return <LocalRow key={server.ui_id} server={server} error={error} />;
+        return (
+            <LocalRow
+                key={server.ui_id}
+                server={server}
+                backendState={backendState[getSpec(server)]}
+            />
+        );
     });
 
     return (
@@ -28,8 +32,16 @@ export default function Local() {
     );
 }
 
-function LocalRow({ server, error }: { server: LocalState; error?: string }) {
+function LocalRow({
+    server,
+    backendState,
+}: {
+    server: LocalState;
+    backendState?: ServerInfo;
+}) {
     const dispatch = useAppDispatch();
+
+    const error = server.error || backendState?.last_exception || undefined;
 
     return (
         <div>
@@ -50,7 +62,7 @@ function LocalRow({ server, error }: { server: LocalState; error?: string }) {
                     }
                 />
             </ModeToggle>
-            {error && <div className="mode-error text-danger">{error}</div>}
+            <ServerStatus error={error} backendState={backendState} />
         </div>
     );
 }
