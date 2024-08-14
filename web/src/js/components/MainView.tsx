@@ -3,7 +3,7 @@ import Splitter from "./common/Splitter";
 import FlowTable from "./FlowTable";
 import FlowView from "./FlowView";
 import { useAppSelector } from "../ducks";
-import CaptureSetup from "./CaptureSetup";
+import CaptureSetup from "./Modes/CaptureSetup";
 import Modes from "./Modes";
 import { Tab } from "../ducks/ui/tabs";
 

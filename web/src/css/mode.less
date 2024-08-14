@@ -5,6 +5,9 @@
 
 .modes {
     padding: 1em 2em;
+    overflow-y: auto;
+    height: 100%;
+    width: 100vw;
 
     h3 {
         margin-top: 30px;
@@ -47,9 +50,10 @@
         }
     }
 
-    .mode-error {
+    .mode-status {
         margin-left: 10px;
         margin-top: 5px;
+        font-weight: 600;
     }
 
     .mode-local-input {
@@ -81,13 +85,16 @@
         margin: 0 5px;
     }
 
+    .mode-reverse-servers {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
     .mode-reverse-add-server {
         margin-left: 10px;
-        margin-top: 15px;
         display: flex;
         flex-direction: row;
-        align-items: center;
-        justify-content: center;
         cursor: pointer;
         font-weight: 500;
 
@@ -95,11 +102,5 @@
             font-size: 2rem;
             margin-right: 5px;
         }
-    }
-
-    .mode-reverse-servers {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
     }
 }
