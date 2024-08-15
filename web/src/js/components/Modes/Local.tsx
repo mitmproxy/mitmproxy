@@ -55,6 +55,7 @@ function LocalRow({
                 <ValueEditor
                     className="mode-local-input"
                     content={server.applications || ""}
+                    placeholder="curl"
                     onEditDone={(applications) =>
                         dispatch(
                             setApplications({ server, value: applications }),

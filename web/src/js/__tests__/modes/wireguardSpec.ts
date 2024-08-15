@@ -11,10 +11,14 @@ describe("getSpec wireguard mode", () => {
                     listen_host: "localhost",
                     listen_port: 8082,
                 },
+                {
+                    active: true,
+                    file_path: "~/test",
+                },
             ],
         } as ModesState;
-        const mode = getSpec(modes.wireguard[0]);
-        expect(mode).toBe("wireguard@localhost:8082");
+        expect(getSpec(modes.wireguard[0])).toBe("wireguard@localhost:8082");
+        expect(getSpec(modes.wireguard[1])).toBe("wireguard:~/test");
     });
 });
 

@@ -5,7 +5,10 @@ export interface WireguardState extends ModeState {
 }
 
 export const getSpec = (s: WireguardState): string => {
-    return includeListenAddress("wireguard", s);
+    const modeNameAndData = s.file_path
+        ? `wireguard:${s.file_path}`
+        : "wireguard";
+    return includeListenAddress(modeNameAndData, s);
 };
 
 export const parseRaw = ({

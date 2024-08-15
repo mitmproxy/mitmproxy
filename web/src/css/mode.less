@@ -64,11 +64,11 @@
         height: 25px;
     }
 
-    .mode-regular-input {
+    .mode-input {
         border: 1px solid #ccc;
         margin-left: 10px;
         border-radius: 4px;
-        min-width: 70px;
+        min-width: 120px;
         height: 25px;
     }
 
@@ -108,6 +108,50 @@
         i {
             font-size: 2rem;
             margin-right: 5px;
+        }
+    }
+
+    .mode-popover {
+        > button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 2rem;
+        }
+
+        @supports (anchor-name: --test) {
+            > div {
+                margin: 0;
+                position: absolute;
+                left: calc(anchor(right) + 5px);
+                align-self: anchor-center;
+            }
+        }
+
+        > div {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+            &:popover-open {
+                display: grid;
+            }
+            grid-template-columns: 9em 1fr;
+            grid-auto-rows: min-content;
+            gap: 0.5rem;
+            align-items: center;
+
+            > h4 {
+                text-align: center;
+                grid-column: 1/-1;
+            }
+            > .mode-input {
+                text-align: right;
+                background-color: white;
+                margin: 0;
+            }
         }
     }
 }

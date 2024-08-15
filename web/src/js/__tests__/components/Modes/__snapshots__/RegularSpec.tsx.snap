@@ -21,12 +21,42 @@ exports[`RegularSpec 1`] = `
           checked=""
           type="checkbox"
         />
-        Run HTTP/S Proxy on port 
-        <span
-          class="inline-input mode-regular-input"
-          placeholder="8080"
-          tabindex="0"
-        />
+        Run HTTP/S Proxy
+        <div
+          class="mode-popover"
+        >
+          <button
+            popovertarget=":r0:"
+          >
+            <i
+              aria-hidden="true"
+              class="fa fa-cog"
+            />
+          </button>
+          <div
+            id=":r0:"
+            popover="auto"
+          >
+            <h4>
+              Advanced Configuration
+            </h4>
+            <p>
+              Listen Host
+            </p>
+            <span
+              class="inline-input mode-input"
+              tabindex="0"
+            />
+            <p>
+              Listen Port
+            </p>
+            <span
+              class="inline-input mode-input"
+              placeholder="8080"
+              tabindex="0"
+            />
+          </div>
+        </div>
       </div>
       <div
         class="mode-status"
@@ -65,12 +95,42 @@ exports[`RegularSpec 2`] = `
           checked=""
           type="checkbox"
         />
-        Run HTTP/S Proxy on port 
-        <span
-          class="inline-input mode-regular-input"
-          placeholder="8080"
-          tabindex="0"
-        />
+        Run HTTP/S Proxy
+        <div
+          class="mode-popover"
+        >
+          <button
+            popovertarget=":r1:"
+          >
+            <i
+              aria-hidden="true"
+              class="fa fa-cog"
+            />
+          </button>
+          <div
+            id=":r1:"
+            popover="auto"
+          >
+            <h4>
+              Advanced Configuration
+            </h4>
+            <p>
+              Listen Host
+            </p>
+            <span
+              class="inline-input mode-input"
+              tabindex="0"
+            />
+            <p>
+              Listen Port
+            </p>
+            <span
+              class="inline-input mode-input"
+              placeholder="8080"
+              tabindex="0"
+            />
+          </div>
+        </div>
       </div>
       <div
         class="mode-status"
