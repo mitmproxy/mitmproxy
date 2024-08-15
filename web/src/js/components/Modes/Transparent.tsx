@@ -25,8 +25,14 @@ export default function Transparent() {
         <div>
             <h4 className="mode-title">Transparent Proxy</h4>
             <p className="mode-description">
-                You configure your routing table to send traffic through
-                mitmproxy.
+                You{" "}
+                <a
+                    href="https://docs.mitmproxy.org/stable/howto-transparent/"
+                    style={{ textDecoration: "underline", color: "inherit" }}
+                >
+                    configure your routing table
+                </a>{" "}
+                to send traffic through mitmproxy.
             </p>
 
             {servers}
