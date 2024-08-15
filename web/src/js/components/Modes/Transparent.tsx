@@ -2,10 +2,16 @@ import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { getSpec, TransparentState } from "../../modes/transparent";
 import { ServerInfo } from "../../ducks/backendState";
-import { setActive } from "../../ducks/modes/transparent";
+import {
+    setActive,
+    setListenHost,
+    setListenPort,
+} from "../../ducks/modes/transparent";
 
 import { ModeToggle } from "./ModeToggle";
 import { ServerStatus } from "./CaptureSetup";
+import ValueEditor from "../editors/ValueEditor";
+import { Popover } from "./Popover";
 
 export default function Transparent() {
     const serverState = useAppSelector((state) => state.modes.transparent);
@@ -60,7 +66,35 @@ function TransparentRow({
                 }
             >
                 Run Transparent Proxy
-                {/** Add here popover to set listen_host and listen_port */}
+                <Popover>
+                    <p>Listen Host</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={server.listen_host || ""}
+                        onEditDone={(host) =>
+                            dispatch(setListenHost({ server, value: host }))
+                        }
+                    />
+
+                    <p>Listen Port</p>
+                    <ValueEditor
+                        className="mode-input"
+                        content={
+                            server.listen_port
+                                ? server.listen_port.toString()
+                                : ""
+                        }
+                        placeholder="8080"
+                        onEditDone={(port) =>
+                            dispatch(
+                                setListenPort({
+                                    server,
+                                    value: parseInt(port),
+                                }),
+                            )
+                        }
+                    />
+                </Popover>
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>
