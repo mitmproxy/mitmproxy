@@ -157,6 +157,16 @@ export const testState: RootState = {
             },
             defaultReverseState(),
         ],
+        transparent: [
+            {
+                active: false,
+            },
+        ],
+        socks: [
+            {
+                active: false,
+            },
+        ],
     },
 };
 
