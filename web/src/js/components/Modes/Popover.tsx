@@ -5,15 +5,14 @@ interface PopoverProps {
 }
 
 export function Popover({ children }: PopoverProps) {
-
     // Popovers are positioned relatively to an element using `position-anchor: --name-of-anchor`.
-    // As of 2024, Chrome only supports `anchor-name` for the anchor (and not `anchor-scope`), 
-    // which is tree-scoped: Names must be unique across the page. So we do this rather annoying 
-    // workaround here to generate a unique (hexadecimal) ID for each anchor and assign it with 
+    // As of 2024, Chrome only supports `anchor-name` for the anchor (and not `anchor-scope`),
+    // which is tree-scoped: Names must be unique across the page. So we do this rather annoying
+    // workaround here to generate a unique (hexadecimal) ID for each anchor and assign it with
     // useEffect, because React 18 does not support `anchorName` in the style attribute.
-    
+
     const id = React.useId();
-    // ensure id is hexadecimal, 
+    // ensure id is hexadecimal,
     // https://github.com/facebook/react/issues/26839
     // https://drafts.csswg.org/css-syntax-3/#ident-token-diagram
     const cssId =
