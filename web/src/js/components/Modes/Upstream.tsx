@@ -1,69 +1,59 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import {
-    addServer,
-    removeServer,
-    setActive,
+    getSpec,
+    UpstreamProxyProtocols,
+    UpstreamState,
+} from "../../modes/upstream";
+import { ServerInfo } from "../../ducks/backendState";
+import {
+    setProtocol,
     setDestination,
+    setActive,
     setListenHost,
     setListenPort,
-    setProtocol,
-} from "../../ducks/modes/reverse";
-import { getSpec, ReverseState } from "../../modes/reverse";
-import { ReverseProxyProtocols } from "../../backends/consts";
-import { ServerInfo } from "../../ducks/backendState";
+} from "../../ducks/modes/upstream";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
 
-interface ReverseToggleRowProps {
-    removable: boolean;
-    server: ReverseState;
-    backendState?: ServerInfo;
-}
-
-export default function Reverse() {
-    const dispatch = useAppDispatch();
-
-    const servers = useAppSelector((state) => state.modes.reverse);
+export default function Upstream() {
+    const serverState = useAppSelector((state) => state.modes.upstream);
     const backendState = useAppSelector((state) => state.backendState.servers);
+
+    const servers = serverState.map((server) => {
+        return (
+            <UpstreamRow
+                key={server.ui_id}
+                server={server}
+                backendState={backendState[getSpec(server)]}
+            />
+        );
+    });
 
     return (
         <div>
-            <h4 className="mode-title">Reverse Proxy</h4>
+            <h4 className="mode-title">Upstream Proxy</h4>
             <p className="mode-description">
-                Requests are forwarded to a preconfigured destination.
+                All requests are unconditionally transferred to an upstream
+                proxy of your choice.
             </p>
-            <div className="mode-reverse-servers">
-                {servers.map((server, i) => (
-                    <ReverseToggleRow
-                        key={server.ui_id}
-                        removable={i > 0}
-                        server={server}
-                        backendState={backendState[getSpec(server)]}
-                    />
-                ))}
-                <div
-                    className="mode-reverse-add-server"
-                    onClick={() => dispatch(addServer())}
-                >
-                    <i className="fa fa-plus-square-o" aria-hidden="true"></i>
-                    Add additional server
-                </div>
-            </div>
+            {servers}
         </div>
     );
 }
 
-function ReverseToggleRow({
-    removable,
+function UpstreamRow({
     server,
     backendState,
-}: ReverseToggleRowProps) {
+}: {
+    server: UpstreamState;
+    backendState?: ServerInfo;
+}) {
     const dispatch = useAppDispatch();
 
-    const protocols = Object.values(ReverseProxyProtocols);
+    const protocols = Object.values(UpstreamProxyProtocols);
 
     const inner = (
         <span>
@@ -71,13 +61,6 @@ function ReverseToggleRow({
             <span className="caret" />
         </span>
     );
-
-    const deleteServer = async () => {
-        if (server.active) {
-            await dispatch(setActive({ server, value: false })).unwrap();
-        }
-        await dispatch(removeServer(server));
-    };
 
     const error = server.error || backendState?.last_exception || undefined;
 
@@ -89,7 +72,7 @@ function ReverseToggleRow({
                     dispatch(setActive({ server, value: !server.active }));
                 }}
             >
-                Forward
+                Transfer
                 <Dropdown
                     text={inner}
                     className="btn btn-default btn-xs mode-reverse-dropdown"
@@ -137,13 +120,6 @@ function ReverseToggleRow({
                     }
                     placeholder="example.com"
                 />
-                {removable && (
-                    <i
-                        className="fa fa-fw fa-trash fa-lg"
-                        aria-hidden="true"
-                        onClick={deleteServer}
-                    ></i>
-                )}
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>

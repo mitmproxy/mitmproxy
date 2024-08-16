@@ -6,6 +6,7 @@ import Reverse from "./Modes/Reverse";
 import { useAppSelector } from "../ducks";
 import Transparent from "./Modes/Transparent";
 import Socks from "./Modes/Socks";
+import Upstream from "./Modes/Upstream";
 
 export default function Modes() {
     const platform = useAppSelector((state) => state.backendState.platform);
@@ -24,6 +25,7 @@ export default function Modes() {
             <h3>Advanced</h3>
             <div className="modes-container">
                 <Socks />
+                <Upstream />
                 {!platform.startsWith("win32") ? <Transparent /> : undefined}
                 <i>Remaining modes are coming soon...</i>
             </div>
