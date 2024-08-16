@@ -33,6 +33,7 @@ export interface OptionsState {
     ignore_hosts: string[];
     intercept: string | undefined;
     intercept_active: boolean;
+    keep_alt_svc_header: boolean;
     keep_host_header: boolean;
     key_size: number;
     listen_host: string;
@@ -83,7 +84,6 @@ export interface OptionsState {
     tls_version_server_max: string;
     tls_version_server_min: string;
     udp_hosts: string[];
-    update_alt_svc: boolean;
     upstream_auth: string | undefined;
     upstream_cert: boolean;
     validate_inbound_headers: boolean;
@@ -135,6 +135,7 @@ export const defaultState: OptionsState = {
     ignore_hosts: [],
     intercept: undefined,
     intercept_active: false,
+    keep_alt_svc_header: false,
     keep_host_header: false,
     key_size: 2048,
     listen_host: "",
@@ -185,7 +186,6 @@ export const defaultState: OptionsState = {
     tls_version_server_max: "UNBOUNDED",
     tls_version_server_min: "TLS1_2",
     udp_hosts: [],
-    update_alt_svc: true,
     upstream_auth: undefined,
     upstream_cert: true,
     validate_inbound_headers: true,

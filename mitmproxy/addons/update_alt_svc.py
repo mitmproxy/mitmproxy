@@ -5,7 +5,7 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy import mode_specs
 
 ALT_SVC = "alt-svc"
-HOST_PATTERN = r'([a-zA-Z0-9.-]*:\d{1,5})'
+HOST_PATTERN = r"([a-zA-Z0-9.-]*:\d{1,5})"
 
 
 def update_alt_svc_header(header: str, port: int) -> str:
