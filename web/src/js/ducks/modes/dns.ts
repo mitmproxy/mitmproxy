@@ -6,9 +6,7 @@ import {
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
 
-export const setActive = createModeUpdateThunk<boolean>(
-    "modes/dns/setActive",
-);
+export const setActive = createModeUpdateThunk<boolean>("modes/dns/setActive");
 export const setListenHost = createModeUpdateThunk<string | undefined>(
     "modes/dns/setListenHost",
 );
