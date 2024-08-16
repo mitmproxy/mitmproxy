@@ -175,6 +175,11 @@ export const testState: RootState = {
                 destination: "example.com",
             },
         ],
+        dns: [
+            {
+                active: false,
+            },
+        ],
     },
 };
 
