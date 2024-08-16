@@ -10,6 +10,7 @@ import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import { defaultReverseState } from "../../modes/reverse";
+import { UpstreamProxyProtocols } from "../../modes/upstream";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -165,6 +166,13 @@ export const testState: RootState = {
         socks: [
             {
                 active: false,
+            },
+        ],
+        upstream: [
+            {
+                active: false,
+                protocol: UpstreamProxyProtocols.HTTPS,
+                destination: "example.com",
             },
         ],
     },
