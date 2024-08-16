@@ -1,24 +1,20 @@
 import * as React from "react";
-import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {
-    setListenPort,
-    setActive,
-    setListenHost,
-} from "../../ducks/modes/regular";
-import ValueEditor from "../editors/ValueEditor";
-import { getSpec, RegularState } from "../../modes/regular";
-import { Popover } from "./Popover";
 import { ServerInfo } from "../../ducks/backendState";
+import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
+import { ModeToggle } from "./ModeToggle";
+import { Popover } from "./Popover";
+import { setActive, setListenHost, setListenPort } from "../../ducks/modes/dns";
+import { DnsState, getSpec } from "../../modes/dns";
 
-export default function Regular() {
-    const serverState = useAppSelector((state) => state.modes.regular);
+export default function Dns() {
+    const serverState = useAppSelector((state) => state.modes.dns);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
     const servers = serverState.map((server) => {
         return (
-            <RegularRow
+            <DnsRow
                 key={server.ui_id}
                 server={server}
                 backendState={backendState[getSpec(server)]}
@@ -28,22 +24,22 @@ export default function Regular() {
 
     return (
         <div>
-            <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
+            <h4 className="mode-title">Dns Proxy</h4>
             <p className="mode-description">
-                You manually configure your client application or device to use
-                an HTTP(S) proxy.
+                This mode will listen for incoming DNS queries and use the
+                resolve capabilities of your operation system to return an
+                answer.
             </p>
             {servers}
         </div>
     );
 }
 
-function RegularRow({
+function DnsRow({
     server,
     backendState,
 }: {
-    server: RegularState;
-    error?: string;
+    server: DnsState;
     backendState?: ServerInfo;
 }) {
     const dispatch = useAppDispatch();
@@ -58,7 +54,7 @@ function RegularRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run HTTP/S Proxy
+                Run DNS Proxy
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor
