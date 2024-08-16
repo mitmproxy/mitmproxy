@@ -23,13 +23,13 @@ def test_updates_alt_svc_header():
         f = tflow.tflow(resp=resp)
         f.client_conn.sockname = ("", 1234)
 
-        ctx.options.keep_alt_svc_header = True
         upd.responseheaders(f)
         assert (
             f.response.headers["alt-svc"]
             == 'h3="example.com:443"; ma=3600, h2=":443"; ma=3600'
         )
 
+        ctx.options.keep_alt_svc_header = True
         f.client_conn.proxy_mode = ProxyMode.parse("reverse:https://example.com")
         upd.responseheaders(f)
         assert (
