@@ -33,6 +33,7 @@ export interface OptionsState {
     ignore_hosts: string[];
     intercept: string | undefined;
     intercept_active: boolean;
+    keep_alt_svc_header: boolean;
     keep_host_header: boolean;
     key_size: number;
     listen_host: string;
@@ -134,6 +135,7 @@ export const defaultState: OptionsState = {
     ignore_hosts: [],
     intercept: undefined,
     intercept_active: false,
+    keep_alt_svc_header: false,
     keep_host_header: false,
     key_size: 2048,
     listen_host: "",
