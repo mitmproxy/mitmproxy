@@ -18,12 +18,11 @@ class UpdateAltSvc:
             "keep_alt_svc_header",
             bool,
             False,
-            "Keep the original alt-svc header instead of updating as per the reverse proxy target.",
+            "Keep the original alt-svc header instead of updating it based on the reverse proxy target.",
         )
 
     def responseheaders(self, flow: HTTPFlow):
         assert flow.response
-        assert flow.response.headers
         if not ctx.options.keep_alt_svc_header and isinstance(
             flow.client_conn.proxy_mode, mode_specs.ReverseMode
         ):
