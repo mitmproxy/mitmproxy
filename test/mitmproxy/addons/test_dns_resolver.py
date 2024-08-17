@@ -12,7 +12,19 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
 
-async def test_ignores_reverse_mode():
+async def lookup_ipv4(name: str):
+    if name == "not.exists":
+        raise socket.gaierror("NXDOMAIN")
+    elif name == "no.records":
+        raise socket.gaierror("NOERROR")
+    return ["8.8.8.8"]
+
+
+async def test_ignores_reverse_mode(monkeypatch):
+    monkeypatch.setattr(
+        mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name)
+    )
+
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr, proxyserver.Proxyserver()):
         f = tflow.tdnsflow()
@@ -26,10 +38,18 @@ async def test_ignores_reverse_mode():
 
 
 def get_system_dns_servers():
+    return ['1.1.1.1']
+
+
+def get_system_dns_servers_failed():
     raise RuntimeError("better luck next time")
 
 
 async def test_resolver(monkeypatch):
+    monkeypatch.setattr(
+        mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
+    )
+
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr) as tctx:
         assert dr.name_servers() == mitmproxy_rs.get_system_dns_servers()
@@ -45,21 +65,13 @@ async def test_resolver(monkeypatch):
         assert dr.name_servers() == ["8.8.8.8"]
 
         monkeypatch.setattr(
-            mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
+            mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers_failed
         )
         tctx.options.dns_name_servers = []
         with pytest.raises(
             RuntimeError, match="Must set dns_name_servers option to run DNS mode"
         ):
             dr.name_servers()
-
-
-async def lookup_ipv4(name: str):
-    if name == "not.exists":
-        raise socket.gaierror("NXDOMAIN")
-    elif name == "no.records":
-        raise socket.gaierror("NOERROR")
-    return ["8.8.8.8"]
 
 
 async def test_dns_request(monkeypatch):
