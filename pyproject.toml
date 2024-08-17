@@ -294,6 +294,7 @@ commands =
     --cov-report xml \
     --continue-on-collection-errors \
     --cov=mitmproxy --cov=release \
+    --durations=3 \
     {posargs}
 
 [testenv:old-dependencies]
