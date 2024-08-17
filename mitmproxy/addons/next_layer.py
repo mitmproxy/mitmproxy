@@ -350,10 +350,15 @@ class NextLayer:
                     stack /= ClientTLSLayer(context)
                 stack /= HttpLayer(context, HTTPMode.transparent)
             case "https":
-                stack /= ServerTLSLayer(context)
-                if starts_like_tls_record(data_client):
-                    stack /= ClientTLSLayer(context)
-                stack /= HttpLayer(context, HTTPMode.transparent)
+                if _starts_like_quic(data_client):
+                    stack /= ServerQuicLayer(context)
+                    stack /= ClientQuicLayer(context)
+                    stack /= HttpLayer(context, HTTPMode.transparent)
+                else:
+                    stack /= ServerTLSLayer(context)
+                    if starts_like_tls_record(data_client):
+                        stack /= ClientTLSLayer(context)
+                    stack /= HttpLayer(context, HTTPMode.transparent)
 
             case "tcp":
                 if starts_like_tls_record(data_client):
@@ -386,10 +391,6 @@ class NextLayer:
                 #     stack /= ClientTLSLayer(context)
                 stack /= DNSLayer(context)
 
-            case "http3":
-                stack /= ServerQuicLayer(context)
-                stack /= ClientQuicLayer(context)
-                stack /= HttpLayer(context, HTTPMode.transparent)
             case "quic":
                 stack /= ServerQuicLayer(context)
                 stack /= ClientQuicLayer(context)

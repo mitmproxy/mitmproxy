@@ -224,16 +224,16 @@ class ReverseMode(ProxyMode):
     description = "reverse proxy"
     transport_protocol = TCP
     scheme: Literal[
-        "http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"
+        "http", "https", "tls", "dtls", "tcp", "udp", "dns", "quic"
     ]
     address: tuple[str, int]
 
     # noinspection PyDataclass
     def __post_init__(self) -> None:
         self.scheme, self.address = server_spec.parse(self.data, default_scheme="https")
-        if self.scheme in ("http3", "dtls", "udp", "quic"):
+        if self.scheme in ("dtls", "udp", "quic"):
             self.transport_protocol = UDP
-        elif self.scheme == "dns":
+        elif self.scheme in ("dns", "https"):
             self.transport_protocol = BOTH
         self.description = f"{self.description} to {self.data}"
 
