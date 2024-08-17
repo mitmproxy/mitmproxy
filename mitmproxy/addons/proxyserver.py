@@ -12,7 +12,6 @@ from collections.abc import Iterable
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Optional
-from typing import Literal
 
 from wsproto.frame_protocol import Opcode
 
