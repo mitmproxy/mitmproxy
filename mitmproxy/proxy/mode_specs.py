@@ -223,9 +223,7 @@ class ReverseMode(ProxyMode):
 
     description = "reverse proxy"
     transport_protocol = TCP
-    scheme: Literal[
-        "http", "https", "tls", "dtls", "tcp", "udp", "dns", "quic"
-    ]
+    scheme: Literal["http", "https", "tls", "dtls", "tcp", "udp", "dns", "quic"]
     address: tuple[str, int]
 
     # noinspection PyDataclass
