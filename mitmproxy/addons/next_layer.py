@@ -350,7 +350,7 @@ class NextLayer:
                     stack /= ClientTLSLayer(context)
                 stack /= HttpLayer(context, HTTPMode.transparent)
             case "https":
-                if _starts_like_quic(data_client):
+                if context.client.transport_protocol == "udp":
                     stack /= ServerQuicLayer(context)
                     stack /= ClientQuicLayer(context)
                     stack /= HttpLayer(context, HTTPMode.transparent)
@@ -391,6 +391,10 @@ class NextLayer:
                 #     stack /= ClientTLSLayer(context)
                 stack /= DNSLayer(context)
 
+            case "http3":
+                stack /= ServerQuicLayer(context)
+                stack /= ClientQuicLayer(context)
+                stack /= HttpLayer(context, HTTPMode.transparent)
             case "quic":
                 stack /= ServerQuicLayer(context)
                 stack /= ClientQuicLayer(context)

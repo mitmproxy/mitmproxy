@@ -61,6 +61,7 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("transparent")
     assert ProxyMode.parse("upstream:https://proxy")
     assert ProxyMode.parse("reverse:https://host@443")
+    assert ProxyMode.parse("reverse:http3://host@443")
     assert ProxyMode.parse("socks5")
     assert ProxyMode.parse("dns")
     assert ProxyMode.parse("reverse:dns://8.8.8.8")

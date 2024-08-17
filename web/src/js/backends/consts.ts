@@ -2,6 +2,7 @@
 export enum ReverseProxyProtocols {
     HTTP = "http",
     HTTPS = "https",
+    HTTP3 = "http3",
     TLS = "tls",
     DTLS = "dtls",
     TCP = "tcp",

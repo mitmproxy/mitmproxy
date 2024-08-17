@@ -603,14 +603,14 @@ reverse_proxy_configs.extend(
             ),
             id="reverse proxy: dns",
         ),
-        # pytest.param(
-        #     TConf(
-        #         before=[modes.ReverseProxy],
-        #         after=[modes.ReverseProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
-        #         proxy_mode="reverse:http3://example.com",
-        #     ),
-        #     id="reverse proxy: http3",
-        # ),
+        pytest.param(
+            TConf(
+                before=[modes.ReverseProxy],
+                after=[modes.ReverseProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
+                proxy_mode="reverse:http3://example.com",
+            ),
+            id="reverse proxy: http3",
+        ),
         pytest.param(
             TConf(
                 before=[modes.ReverseProxy],

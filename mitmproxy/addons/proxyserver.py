@@ -262,11 +262,10 @@ class Proxyserver(ServerManager):
             # ...and don't listen on the same address.
             listen_addrs = []
             for m in modes:
-                protocols: list[Literal['tcp', 'udp'] | None] = []
-                if m.transport_protocol == "both":
-                    protocols.extend(["tcp", "udp"])
+                if m.transport_protocol != "both":
+                    protocols = [m.transport_protocol]
                 else:
-                    protocols.append(m.transport_protocol)
+                    protocols = ["tcp", "udp"]
                 for proto in protocols:
                     listen_addrs.append(
                         (
