@@ -25,8 +25,7 @@ class UpdateAltSvc:
         assert flow.response
         if not ctx.options.keep_alt_svc_header and isinstance(
             flow.client_conn.proxy_mode, mode_specs.ReverseMode
-        ):
+        ) and ALT_SVC in flow.response.headers:
             _, listen_port, *_ = flow.client_conn.sockname
             headers = flow.response.headers
-            if ALT_SVC in headers:
-                headers[ALT_SVC] = update_alt_svc_header(headers[ALT_SVC], listen_port)
+            headers[ALT_SVC] = update_alt_svc_header(headers[ALT_SVC], listen_port)
