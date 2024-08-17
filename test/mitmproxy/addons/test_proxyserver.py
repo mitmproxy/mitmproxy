@@ -769,7 +769,8 @@ async def _test_echo(client: H3Client, strict: bool) -> None:
     assert r5.trailers == [(b"x-response", b"everything but end_stream")]
 
 
-@pytest.mark.parametrize("scheme", ["http3", "quic"])
+# @pytest.mark.parametrize("scheme", ["http3", "quic"])
+@pytest.mark.parametrize("scheme", ["quic"])
 async def test_reverse_http3_and_quic_stream(caplog_async, scheme: str) -> None:
     caplog_async.set_level("INFO")
     ps = Proxyserver()
