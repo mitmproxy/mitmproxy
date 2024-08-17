@@ -20,9 +20,20 @@ async def lookup_ipv4(name: str):
     return ["8.8.8.8"]
 
 
+def get_system_dns_servers():
+    return ['1.1.1.1']
+
+
+def get_system_dns_servers_failed():
+    raise RuntimeError("better luck next time")
+
+
 async def test_ignores_reverse_mode(monkeypatch):
     monkeypatch.setattr(
         mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name)
+    )
+    monkeypatch.setattr(
+        mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
     )
 
     dr = dns_resolver.DnsResolver()
@@ -35,14 +46,6 @@ async def test_ignores_reverse_mode(monkeypatch):
         f.client_conn.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8")
         await dr.dns_request(f)
         assert not f.response
-
-
-def get_system_dns_servers():
-    return ['1.1.1.1']
-
-
-def get_system_dns_servers_failed():
-    raise RuntimeError("better luck next time")
 
 
 async def test_resolver(monkeypatch):
@@ -77,6 +80,9 @@ async def test_resolver(monkeypatch):
 async def test_dns_request(monkeypatch):
     monkeypatch.setattr(
         mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name)
+    )
+    monkeypatch.setattr(
+        mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
     )
 
     resolver = dns_resolver.DnsResolver()
