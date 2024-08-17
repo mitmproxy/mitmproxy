@@ -21,7 +21,7 @@ async def lookup_ipv4(name: str):
 
 
 def get_system_dns_servers():
-    return ['1.1.1.1']
+    return ["1.1.1.1"]
 
 
 def get_system_dns_servers_failed():
@@ -32,9 +32,7 @@ async def test_ignores_reverse_mode(monkeypatch):
     monkeypatch.setattr(
         mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name)
     )
-    monkeypatch.setattr(
-        mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
-    )
+    monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers)
 
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr, proxyserver.Proxyserver()):
@@ -49,9 +47,7 @@ async def test_ignores_reverse_mode(monkeypatch):
 
 
 async def test_resolver(monkeypatch):
-    monkeypatch.setattr(
-        mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
-    )
+    monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers)
 
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr) as tctx:
@@ -81,9 +77,7 @@ async def test_dns_request(monkeypatch):
     monkeypatch.setattr(
         mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup_ipv4(name)
     )
-    monkeypatch.setattr(
-        mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers
-    )
+    monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", get_system_dns_servers)
 
     resolver = dns_resolver.DnsResolver()
     with taddons.context(resolver) as tctx:
