@@ -18,7 +18,7 @@ class UpdateAltSvc:
             "keep_alt_svc_header",
             bool,
             False,
-            "Keep the original alt-svc header instead of updating it based on the reverse proxy target.",
+            "Reverse Proxy: Keep Alt-Svc headers as-is, even if they do not point to mitmproxy. Enabling this option may cause clients to bypass the proxy.",
         )
 
     def responseheaders(self, flow: HTTPFlow):
