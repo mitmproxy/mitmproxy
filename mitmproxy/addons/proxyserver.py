@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Optional
+from typing import Literal
 
 from wsproto.frame_protocol import Opcode
 
@@ -261,7 +262,7 @@ class Proxyserver(ServerManager):
             # ...and don't listen on the same address.
             listen_addrs = []
             for m in modes:
-                protocols = []
+                protocols: list[Literal['tcp', 'udp'] | None] = []
                 if m.transport_protocol == "both":
                     protocols.extend(["tcp", "udp"])
                 else:
