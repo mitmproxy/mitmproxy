@@ -111,7 +111,6 @@ class FrameFactory:
         self.encoder_placeholder: tutils.Placeholder[bytes] | None = None
         self.peer_stream_id: dict[StreamType, int] = {}
         self.local_stream_id: dict[StreamType, int] = {}
-        self.max_push_id: int | None = None
 
     def get_default_stream_id(self, stream_type: StreamType, for_local: bool) -> int:
         if stream_type == StreamType.CONTROL:
@@ -155,21 +154,6 @@ class FrameFactory:
             connection=self.conn,
             stream_id=stream_id,
             data=encode_uint_var(stream_type),
-            end_stream=False,
-        )
-
-    def send_max_push_id(self) -> quic.SendQuicStreamData:
-        def cb(data: bytes) -> None:
-            buf = Buffer(data=data)
-            assert buf.pull_uint_var() == FrameType.MAX_PUSH_ID
-            buf = Buffer(data=buf.pull_bytes(buf.pull_uint_var()))
-            self.max_push_id = buf.pull_uint_var()
-            assert buf.eof()
-
-        return quic.SendQuicStreamData(
-            connection=self.conn,
-            stream_id=self.peer_stream_id[StreamType.CONTROL],
-            data=CallbackPlaceholder(cb),
             end_stream=False,
         )
 
@@ -354,8 +338,6 @@ class FrameFactory:
     def send_init(self) -> Iterable[quic.SendQuicStreamData]:
         yield self.send_stream_type(StreamType.CONTROL)
         yield self.send_settings()
-        if not self.is_client:
-            yield self.send_max_push_id()
         yield self.send_stream_type(StreamType.QPACK_ENCODER)
         yield self.send_stream_type(StreamType.QPACK_DECODER)
 

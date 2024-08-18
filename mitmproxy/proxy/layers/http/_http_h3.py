@@ -7,7 +7,6 @@ from aioquic.h3.connection import H3Event
 from aioquic.h3.connection import H3Stream
 from aioquic.h3.connection import Headers
 from aioquic.h3.connection import HeadersState
-from aioquic.h3.connection import StreamType
 from aioquic.h3.events import HeadersReceived
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import StreamDataReceived
@@ -40,9 +39,6 @@ class TrailersReceived(H3Event):
     stream_ended: bool
     "Whether the STREAM frame had the FIN bit set."
 
-    push_id: int | None = None
-    "The Push ID or `None` if this is not a push."
-
 
 @dataclass
 class StreamReset(H3Event):
@@ -55,9 +51,6 @@ class StreamReset(H3Event):
 
     error_code: int
     """The error code indicating why the stream was reset."""
-
-    push_id: int | None = None
-    "The Push ID or `None` if this is not a push."
 
 
 class MockQuic:
@@ -124,6 +117,16 @@ class LayeredH3Connection(H3Connection):
         self._mock = MockQuic(conn, is_client)
         super().__init__(self._mock, enable_webtransport)  # type: ignore
 
+    # aioquic's constructor sets and then uses _max_push_id.
+    # This is a hack to forcibly disable it.
+    @property
+    def _max_push_id(self) -> int | None:
+        return None
+
+    @_max_push_id.setter
+    def _max_push_id(self, value):
+        pass
+
     def _after_send(self, stream_id: int, end_stream: bool) -> None:
         # if the stream ended, `QuicConnection` has an assert that no further data is being sent
         # to catch this more early on, we set the header state on the `H3Stream`
@@ -148,7 +151,7 @@ class LayeredH3Connection(H3Connection):
                 == HeadersState.AFTER_TRAILERS
             ):
                 events[index] = TrailersReceived(
-                    event.headers, event.stream_id, event.stream_ended, event.push_id
+                    event.headers, event.stream_id, event.stream_ended
                 )
         return events
 
@@ -176,15 +179,14 @@ class LayeredH3Connection(H3Connection):
 
         return self._quic.get_next_available_stream_id(is_unidirectional)
 
-    def get_open_stream_ids(self, push_id: int | None) -> Iterable[int]:
-        """Iterates over all non-special open streams, optionally for a given push id."""
+    def get_open_stream_ids(self) -> Iterable[int]:
+        """Iterates over all non-special open streams"""
 
         return (
             stream.stream_id
             for stream in self._stream.values()
             if (
-                stream.push_id == push_id
-                and stream.stream_type == (None if push_id is None else StreamType.PUSH)
+                stream.stream_type is None
                 and not (
                     stream.headers_recv_state == HeadersState.AFTER_TRAILERS
                     and stream.headers_send_state == HeadersState.AFTER_TRAILERS
@@ -206,7 +208,7 @@ class LayeredH3Connection(H3Connection):
             stream = self._get_or_create_stream(event.stream_id)
             stream.ended = True
             stream.headers_recv_state = HeadersState.AFTER_TRAILERS
-            return [StreamReset(event.stream_id, event.error_code, stream.push_id)]
+            return [StreamReset(event.stream_id, event.error_code)]
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
