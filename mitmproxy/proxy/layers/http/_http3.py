@@ -133,57 +133,55 @@ class Http3Connection(HttpConnection):
             else:
                 for h3_event in h3_events:
                     if isinstance(h3_event, StreamReset):
-                        if h3_event.push_id is None:
-                            err_str = error_code_to_str(h3_event.error_code)
-                            err_code = {
-                                H3ErrorCode.H3_REQUEST_CANCELLED.value: status_codes.CLIENT_CLOSED_REQUEST,
-                            }.get(h3_event.error_code, self.ReceiveProtocolError.code)
-                            yield ReceiveHttp(
-                                self.ReceiveProtocolError(
-                                    h3_event.stream_id,
-                                    f"stream reset by client ({err_str})",
-                                    code=err_code,
-                                )
+                        err_str = error_code_to_str(h3_event.error_code)
+                        err_code = {
+                            H3ErrorCode.H3_REQUEST_CANCELLED.value: status_codes.CLIENT_CLOSED_REQUEST,
+                        }.get(h3_event.error_code, self.ReceiveProtocolError.code)
+                        yield ReceiveHttp(
+                            self.ReceiveProtocolError(
+                                h3_event.stream_id,
+                                f"stream reset by client ({err_str})",
+                                code=err_code,
                             )
+                        )
                     elif isinstance(h3_event, DataReceived):
-                        if h3_event.push_id is None:
-                            if h3_event.data:
-                                yield ReceiveHttp(
-                                    self.ReceiveData(h3_event.stream_id, h3_event.data)
-                                )
-                            if h3_event.stream_ended:
-                                yield ReceiveHttp(
-                                    self.ReceiveEndOfMessage(h3_event.stream_id)
-                                )
-                    elif isinstance(h3_event, HeadersReceived):
-                        if h3_event.push_id is None:
-                            try:
-                                receive_event = self.parse_headers(h3_event)
-                            except ValueError as e:
-                                self.h3_conn.close_connection(
-                                    error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
-                                    reason_phrase=f"Invalid HTTP/3 request headers: {e}",
-                                )
-                            else:
-                                yield ReceiveHttp(receive_event)
-                                if h3_event.stream_ended:
-                                    yield ReceiveHttp(
-                                        self.ReceiveEndOfMessage(h3_event.stream_id)
-                                    )
-                    elif isinstance(h3_event, TrailersReceived):
-                        if h3_event.push_id is None:
+                        if h3_event.data:
                             yield ReceiveHttp(
-                                self.ReceiveTrailers(
-                                    h3_event.stream_id, http.Headers(h3_event.trailers)
-                                )
+                                self.ReceiveData(h3_event.stream_id, h3_event.data)
                             )
+                        if h3_event.stream_ended:
+                            yield ReceiveHttp(
+                                self.ReceiveEndOfMessage(h3_event.stream_id)
+                            )
+                    elif isinstance(h3_event, HeadersReceived):
+                        try:
+                            receive_event = self.parse_headers(h3_event)
+                        except ValueError as e:
+                            self.h3_conn.close_connection(
+                                error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
+                                reason_phrase=f"Invalid HTTP/3 request headers: {e}",
+                            )
+                        else:
+                            yield ReceiveHttp(receive_event)
                             if h3_event.stream_ended:
                                 yield ReceiveHttp(
                                     self.ReceiveEndOfMessage(h3_event.stream_id)
                                 )
+                    elif isinstance(h3_event, TrailersReceived):
+                        yield ReceiveHttp(
+                            self.ReceiveTrailers(
+                                h3_event.stream_id, http.Headers(h3_event.trailers)
+                            )
+                        )
+                        if h3_event.stream_ended:
+                            yield ReceiveHttp(
+                                self.ReceiveEndOfMessage(h3_event.stream_id)
+                            )
                     elif isinstance(h3_event, PushPromiseReceived):  # pragma: no cover
-                        # we don't support push
-                        pass
+                        self.h3_conn.close_connection(
+                            error_code=H3ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
+                            reason_phrase=f"Received HTTP/3 push promise, even though we signalled no support.",
+                        )
                     else:  # pragma: no cover
                         raise AssertionError(f"Unexpected event: {event!r}")
             yield from self.h3_conn.transmit()
@@ -193,7 +191,7 @@ class Http3Connection(HttpConnection):
             self._handle_event = self.done  # type: ignore
             self.h3_conn.handle_connection_closed(event)
             msg = event.reason_phrase or error_code_to_str(event.error_code)
-            for stream_id in self.h3_conn.get_open_stream_ids(push_id=None):
+            for stream_id in self.h3_conn.get_open_stream_ids():
                 yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
 
         else:  # pragma: no cover
