@@ -198,7 +198,7 @@ class ResetQuicStream(QuicStreamCommand):
         self.error_code = error_code
 
 
-class StopQuicStream(QuicStreamCommand):
+class StopSendingQuicStream(QuicStreamCommand):
     """Request termination of the receiving part of a stream."""
 
     error_code: int
@@ -769,7 +769,7 @@ class RawQuicLayer(layer.Layer):
                         if stream_is_client_initiated(
                             stream_id
                         ) == to_client or not stream_is_unidirectional(stream_id):
-                            yield StopQuicStream(
+                            yield StopSendingQuicStream(
                                 quic_conn, stream_id, QuicErrorCode.NO_ERROR
                             )
                         yield from self.close_stream_layer(child_layer, to_client)
@@ -866,7 +866,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 )
             elif isinstance(command, ResetQuicStream):
                 self.quic.reset_stream(command.stream_id, command.error_code)
-            elif isinstance(command, StopQuicStream):
+            elif isinstance(command, StopSendingQuicStream):
                 # the stream might have already been closed, check before stopping
                 if command.stream_id in self.quic._streams:
                     self.quic.stop_stream(command.stream_id, command.error_code)
