@@ -341,7 +341,7 @@ def open_h3_server_conn():
     return server
 
 
-def start_h3_client(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactory]:
+def start_h3_proxy(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactory]:
     tctx.client.alpn = b"h3"
     tctx.client.transport_protocol = "udp"
     tctx.server.transport_protocol = "udp"
@@ -363,7 +363,7 @@ def make_h3(open_connection: commands.OpenConnection) -> None:
 
 
 def test_ignore_push(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
 
 
 def test_fail_without_header(tctx: context.Context):
@@ -382,7 +382,7 @@ def test_fail_without_header(tctx: context.Context):
 
 
 def test_invalid_header(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     assert (
         playbook
         >> cff.receive_headers(
@@ -413,7 +413,7 @@ def test_invalid_header(tctx: context.Context):
 
 
 def test_simple(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     sff = FrameFactory(server, is_client=False)
@@ -460,7 +460,7 @@ def test_response_trailers(
     open_h3_server_conn: connection.Server,
     stream: str,
 ):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     tctx.server = open_h3_server_conn
     sff = FrameFactory(tctx.server, is_client=False)
 
@@ -534,7 +534,7 @@ def test_request_trailers(
     open_h3_server_conn: connection.Server,
     stream: str,
 ):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     tctx.server = open_h3_server_conn
     sff = FrameFactory(tctx.server, is_client=False)
 
@@ -590,7 +590,7 @@ def test_request_trailers(
 
 
 def test_upstream_error(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     err = tutils.Placeholder(bytes)
@@ -641,7 +641,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
     """
     server = tutils.Placeholder(connection.Server)
     flow = tutils.Placeholder(HTTPFlow)
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
 
     def enable_request_streaming(flow: HTTPFlow):
         flow.request.stream = True
@@ -762,7 +762,7 @@ def test_rst_then_close(tctx):
 
     This is slightly different to H2, as QUIC will close the connection immediately.
     """
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     err = tutils.Placeholder(str)
@@ -806,7 +806,7 @@ def test_cancel_then_server_disconnect(tctx: context.Context):
         - server disconnects
         - error hook completes.
     """
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     assert (
@@ -843,7 +843,7 @@ def test_cancel_during_response_hook(tctx: context.Context):
 
     Given that we have already triggered the response hook, we don't want to trigger the error hook.
     """
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     assert (
@@ -874,7 +874,7 @@ def test_cancel_during_response_hook(tctx: context.Context):
 
 def test_stream_concurrency(tctx: context.Context):
     """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow1 = tutils.Placeholder(HTTPFlow)
     flow2 = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
@@ -914,7 +914,7 @@ def test_stream_concurrency(tctx: context.Context):
 
 def test_stream_concurrent_get_connection(tctx: context.Context):
     """Test that an immediate second request for the same domain does not trigger a second connection attempt."""
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     playbook.hooks = False
     server = tutils.Placeholder(connection.Server)
     sff = FrameFactory(server, is_client=False)
@@ -940,7 +940,7 @@ def test_stream_concurrent_get_connection(tctx: context.Context):
 
 def test_kill_stream(tctx: context.Context):
     """Test that we can kill individual streams."""
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow1 = tutils.Placeholder(HTTPFlow)
     flow2 = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
@@ -1064,7 +1064,7 @@ class TestClient:
 
 
 def test_early_server_data(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     sff = FrameFactory(tctx.server, is_client=False)
 
     tctx.server.address = ("example.com", 80)
