@@ -65,8 +65,6 @@ class TlsEchoLayer(tutils.EchoLayer):
             and event.data == b"close-connection-error"
         ):
             yield quic.CloseQuicConnection(event.connection, 123, None, "error")
-        elif isinstance(event, events.DataReceived) and event.data == b"stop-stream":
-            yield quic.StopSendingQuicStream(event.connection, 24, 123)
         elif (
             isinstance(event, events.DataReceived) and event.data == b"invalid-command"
         ):
@@ -92,6 +90,10 @@ class TlsEchoLayer(tutils.EchoLayer):
             )
         elif isinstance(event, quic.QuicStreamReset):
             yield quic.ResetQuicStream(
+                event.connection, event.stream_id, event.error_code
+            )
+        elif isinstance(event, quic.QuicStreamStopSending):
+            yield quic.StopSendingQuicStream(
                 event.connection, event.stream_id, event.error_code
             )
         else:
@@ -608,7 +610,7 @@ class TestQuicLayer:
 
     def test_stream_stop(self, tctx: context.Context):
         playbook, conn = make_mock_quic(
-            tctx, quic_events.DatagramFrameReceived(b"stop-stream")
+            tctx, quic_events.StopSendingReceived(123, 24)
         )
         assert 24 not in conn._streams
         conn._get_or_create_stream_for_send(24)

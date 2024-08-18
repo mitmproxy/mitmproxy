@@ -15,6 +15,8 @@
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where fragmented QUIC client hellos were not handled properly.
   ([#7067](https://github.com/mitmproxy/mitmproxy/pull/7067), @errorxyz)
+- Fix a bug where mitmproxy would crash when receiving `STOP_SENDING` QUIC frames.
+  ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
 - mitmproxy now officially supports Python 3.13.
   ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
 - Addon to update the hosts in alt-svc header in reverse mode
