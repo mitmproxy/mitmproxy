@@ -1013,7 +1013,9 @@ class TestClient:
             )
             << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
             >> frame_factory.receive_data(b"foo")
-            << quic.StopQuicStream(tctx.server, 0, ErrorCode.H3_REQUEST_CANCELLED)
+            << quic.StopSendingQuicStream(
+                tctx.server, 0, ErrorCode.H3_REQUEST_CANCELLED
+            )
         )  # important: no ResponseData event here!
 
         assert frame_factory.is_done

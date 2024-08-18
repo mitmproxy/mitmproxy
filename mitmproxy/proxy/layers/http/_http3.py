@@ -39,7 +39,7 @@ from mitmproxy.proxy import layer
 from mitmproxy.proxy.layers.quic import error_code_to_str
 from mitmproxy.proxy.layers.quic import QuicConnectionClosed
 from mitmproxy.proxy.layers.quic import QuicStreamEvent
-from mitmproxy.proxy.layers.quic import StopQuicStream
+from mitmproxy.proxy.layers.quic import StopSendingQuicStream
 from mitmproxy.proxy.utils import expect
 
 
@@ -125,7 +125,7 @@ class Http3Connection(HttpConnection):
             if event.stream_id in self._stream_protocol_errors:
                 # we already reset or ended the stream, tell the peer to stop
                 # (this is a noop if the peer already did the same)
-                yield StopQuicStream(
+                yield StopSendingQuicStream(
                     self.conn,
                     event.stream_id,
                     self._stream_protocol_errors[event.stream_id],

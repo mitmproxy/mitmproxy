@@ -66,7 +66,7 @@ class TlsEchoLayer(tutils.EchoLayer):
         ):
             yield quic.CloseQuicConnection(event.connection, 123, None, "error")
         elif isinstance(event, events.DataReceived) and event.data == b"stop-stream":
-            yield quic.StopQuicStream(event.connection, 24, 123)
+            yield quic.StopSendingQuicStream(event.connection, 24, 123)
         elif (
             isinstance(event, events.DataReceived) and event.data == b"invalid-command"
         ):
@@ -455,7 +455,7 @@ class TestRawQuicLayer:
             >> tutils.reply_next_layer(lambda ctx: udp.UDPLayer(ctx, ignore=True))
             << quic.SendQuicStreamData(tctx.server, 0, b"msg1", end_stream=False)
             << quic.SendQuicStreamData(tctx.server, 0, b"", end_stream=True)
-            << quic.StopQuicStream(tctx.server, 0, 0)
+            << quic.StopSendingQuicStream(tctx.server, 0, 0)
         )
 
     def test_open_connection(self, tctx: context.Context):
