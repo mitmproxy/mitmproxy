@@ -90,7 +90,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def transport_protocol(self) -> Literal["tcp", "udp", "both"] | None:
+    def transport_protocol(self) -> Literal["tcp", "udp", "both"]:
         """The transport protocol used by this mode's server."""
 
     @classmethod
@@ -294,7 +294,7 @@ class LocalMode(ProxyMode):
     """OS-level transparent proxy."""
 
     description = "Local redirector"
-    transport_protocol = None
+    transport_protocol = BOTH
 
     def __post_init__(self) -> None:
         # should not raise
@@ -305,7 +305,7 @@ class OsProxyMode(ProxyMode):  # pragma: no cover
     """Deprecated alias for LocalMode"""
 
     description = "Deprecated alias for LocalMode"
-    transport_protocol = None
+    transport_protocol = BOTH
 
     def __post_init__(self) -> None:
         raise ValueError(
