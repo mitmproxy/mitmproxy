@@ -1,4 +1,3 @@
-import collections.abc
 from collections.abc import Callable
 from collections.abc import Iterable
 
@@ -74,26 +73,6 @@ class DelayedPlaceholder(tutils._Placeholder[bytes]):
         if self._obj is None:
             self._obj = self._resolve()
         return super().__call__()
-
-
-class MultiPlaybook(tutils.Playbook):
-    """Playbook that allows multiple events and commands to be registered at once."""
-
-    def __lshift__(self, c):
-        if isinstance(c, collections.abc.Iterable):
-            for c_i in c:
-                super().__lshift__(c_i)
-        else:
-            super().__lshift__(c)
-        return self
-
-    def __rshift__(self, e):
-        if isinstance(e, collections.abc.Iterable):
-            for e_i in e:
-                super().__rshift__(e_i)
-        else:
-            super().__rshift__(e)
-        return self
 
 
 class FrameFactory:
@@ -367,7 +346,7 @@ def start_h3_client(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactor
     tctx.client.transport_protocol = "udp"
     tctx.server.transport_protocol = "udp"
 
-    playbook = MultiPlaybook(layers.HttpLayer(tctx, layers.http.HTTPMode.regular))
+    playbook = tutils.Playbook(layers.HttpLayer(tctx, layers.http.HTTPMode.regular))
     cff = FrameFactory(conn=tctx.client, is_client=True)
     assert (
         playbook
@@ -388,7 +367,7 @@ def test_ignore_push(tctx: context.Context):
 
 
 def test_fail_without_header(tctx: context.Context):
-    playbook = MultiPlaybook(layers.http.Http3Server(tctx))
+    playbook = tutils.Playbook(layers.http.Http3Server(tctx))
     cff = FrameFactory(tctx.client, is_client=True)
     assert (
         playbook
@@ -1005,7 +984,7 @@ def test_kill_stream(tctx: context.Context):
 class TestClient:
     def test_no_data_on_closed_stream(self, tctx: context.Context):
         frame_factory = FrameFactory(tctx.server, is_client=False)
-        playbook = MultiPlaybook(Http3Client(tctx))
+        playbook = tutils.Playbook(Http3Client(tctx))
         req = Request.make("GET", "http://example.com/")
         resp = [(b":status", b"200")]
         assert (
@@ -1041,7 +1020,7 @@ class TestClient:
 
     def test_ignore_wrong_order(self, tctx: context.Context):
         frame_factory = FrameFactory(tctx.server, is_client=False)
-        playbook = MultiPlaybook(Http3Client(tctx))
+        playbook = tutils.Playbook(Http3Client(tctx))
         req = Request.make("GET", "http://example.com/")
         assert (
             playbook
