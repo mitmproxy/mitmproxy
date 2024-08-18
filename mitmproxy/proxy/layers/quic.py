@@ -136,7 +136,7 @@ class QuicStreamDataReceived(QuicStreamEvent):
     """Whether the STREAM frame had the FIN bit set."""
 
     def __repr__(self):
-        target = type(self.connection).__name__.lower()
+        target = repr(self.connection).partition("(")[0].lower()
         end_stream = "[end_stream] " if self.end_stream else ""
         return f"QuicStreamDataReceived({target} on {self.stream_id}, {end_stream}{self.data!r})"
 
@@ -180,7 +180,7 @@ class SendQuicStreamData(QuicStreamCommand):
         self.end_stream = end_stream
 
     def __repr__(self):
-        target = type(self.connection).__name__.lower()
+        target = repr(self.connection).partition("(")[0].lower()
         end_stream = "[end_stream] " if self.end_stream else ""
         return f"SendQuicStreamData({target} on {self.stream_id}, {end_stream}{self.data!r})"
 
