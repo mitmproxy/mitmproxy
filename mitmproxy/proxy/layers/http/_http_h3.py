@@ -20,8 +20,10 @@ from mitmproxy.proxy.layers.quic import QuicConnectionClosed
 from mitmproxy.proxy.layers.quic import QuicStreamDataReceived
 from mitmproxy.proxy.layers.quic import QuicStreamEvent
 from mitmproxy.proxy.layers.quic import QuicStreamReset
+from mitmproxy.proxy.layers.quic import QuicStreamStopSending
 from mitmproxy.proxy.layers.quic import ResetQuicStream
 from mitmproxy.proxy.layers.quic import SendQuicStreamData
+from mitmproxy.proxy.layers.quic import StopSendingQuicStream
 
 
 @dataclass
@@ -41,16 +43,17 @@ class TrailersReceived(H3Event):
 
 
 @dataclass
-class StreamReset(H3Event):
+class StreamClosed(H3Event):
     """
-    The StreamReset event is fired whenever a stream is reset by the peer.
+    The StreamReset event is fired when the peer is sending a CLOSE_STREAM
+    or a STOP_SENDING frame. For HTTP/3, we don't differentiate between the two.
     """
 
     stream_id: int
     "The ID of the stream that was reset."
 
     error_code: int
-    """The error code indicating why the stream was reset."""
+    """The error code indicating why the stream was closed."""
 
 
 class MockQuic:
@@ -94,6 +97,11 @@ class MockQuic:
     def reset_stream(self, stream_id: int, error_code: int) -> None:
         self.pending_commands.append(ResetQuicStream(self.conn, stream_id, error_code))
 
+    def stop_send(self, stream_id: int, error_code: int) -> None:
+        self.pending_commands.append(
+            StopSendingQuicStream(self.conn, stream_id, error_code)
+        )
+
     def send_stream_data(
         self, stream_id: int, data: bytes, end_stream: bool = False
     ) -> None:
@@ -115,6 +123,11 @@ class LayeredH3Connection(H3Connection):
         enable_webtransport: bool = False,
     ) -> None:
         self._mock = MockQuic(conn, is_client)
+        self._closed_streams: set[int] = set()
+        """
+        We keep track of all stream IDs for which we have requested
+        STOP_SENDING to silently discard incoming data.
+        """
         super().__init__(self._mock, enable_webtransport)  # type: ignore
 
     # aioquic's constructor sets and then uses _max_push_id.
@@ -202,17 +215,23 @@ class LayeredH3Connection(H3Connection):
         if self._is_done:
             return []
 
-        # treat reset events similar to data events with end_stream=True
-        # We can receive multiple reset events as long as the final size does not change.
-        elif isinstance(event, QuicStreamReset):
+        elif isinstance(event, (QuicStreamReset, QuicStreamStopSending)):
+            self.close_stream(
+                event.stream_id,
+                event.error_code,
+                stop_send=isinstance(event, QuicStreamStopSending),
+            )
             stream = self._get_or_create_stream(event.stream_id)
             stream.ended = True
             stream.headers_recv_state = HeadersState.AFTER_TRAILERS
-            return [StreamReset(event.stream_id, event.error_code)]
+            return [StreamClosed(event.stream_id, event.error_code)]
 
         # convert data events from the QUIC layer back to aioquic events
         elif isinstance(event, QuicStreamDataReceived):
-            if self._get_or_create_stream(event.stream_id).ended:
+            # Discard contents if we have already sent STOP_SENDING on this stream.
+            if event.stream_id in self._closed_streams:
+                return []
+            elif self._get_or_create_stream(event.stream_id).ended:
                 # aioquic will not send us any data events once a stream has ended.
                 # Instead, it will close the connection. We simulate this here for H3 tests.
                 self.close_connection(
@@ -237,13 +256,24 @@ class LayeredH3Connection(H3Connection):
         except KeyError:
             return False
 
-    def reset_stream(self, stream_id: int, error_code: int) -> None:
-        """Resets a stream that hasn't been ended locally yet."""
+    def close_stream(
+        self, stream_id: int, error_code: int, stop_send: bool = True
+    ) -> None:
+        """Close a stream that hasn't been closed locally yet."""
+        if stream_id not in self._closed_streams:
+            self._closed_streams.add(stream_id)
 
-        # set the header state and queue a reset event
-        stream = self._get_or_create_stream(stream_id)
-        stream.headers_send_state = HeadersState.AFTER_TRAILERS
-        self._quic.reset_stream(stream_id, error_code)
+            stream = self._get_or_create_stream(stream_id)
+            stream.headers_send_state = HeadersState.AFTER_TRAILERS
+            # https://www.rfc-editor.org/rfc/rfc9000.html#section-3.5-8
+            # An endpoint that wishes to terminate both directions of
+            # a bidirectional stream can terminate one direction by
+            # sending a RESET_STREAM frame, and it can encourage prompt
+            # termination in the opposite direction by sending a
+            # STOP_SENDING frame.
+            self._mock.reset_stream(stream_id=stream_id, error_code=error_code)
+            if stop_send:
+                self._mock.stop_send(stream_id=stream_id, error_code=error_code)
 
     def send_data(self, stream_id: int, data: bytes, end_stream: bool = False) -> None:
         """Sends data over the given stream."""
@@ -286,6 +316,6 @@ class LayeredH3Connection(H3Connection):
 
 __all__ = [
     "LayeredH3Connection",
-    "StreamReset",
+    "StreamClosed",
     "TrailersReceived",
 ]

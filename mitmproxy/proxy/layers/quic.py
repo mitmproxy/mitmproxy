@@ -149,6 +149,14 @@ class QuicStreamReset(QuicStreamEvent):
     """The error code that triggered the reset."""
 
 
+@dataclass
+class QuicStreamStopSending(QuicStreamEvent):
+    """Event that is fired when the remote peer sends a STOP_SENDING frame."""
+
+    error_code: int
+    """The application protocol error code."""
+
+
 class QuicStreamCommand(commands.ConnectionCommand):
     """Base class for all QUIC stream commands."""
 
@@ -865,7 +873,15 @@ class QuicLayer(tunnel.TunnelLayer):
                     command.stream_id, command.data, command.end_stream
                 )
             elif isinstance(command, ResetQuicStream):
-                self.quic.reset_stream(command.stream_id, command.error_code)
+                stream = self.quic._get_or_create_stream_for_send(command.stream_id)
+                existing_reset_error_code = stream.sender._reset_error_code
+                if existing_reset_error_code is None:
+                    self.quic.reset_stream(command.stream_id, command.error_code)
+                elif self.debug:  # pragma: no cover
+                    yield commands.Log(
+                        f"{self.debug}[quic] stream {stream.stream_id} already reset ({existing_reset_error_code=}, {command.error_code=})",
+                        DEBUG,
+                    )
             elif isinstance(command, StopSendingQuicStream):
                 # the stream might have already been closed, check before stopping
                 if command.stream_id in self.quic._streams:
@@ -1048,6 +1064,10 @@ class QuicLayer(tunnel.TunnelLayer):
             elif isinstance(event, quic_events.StreamReset):
                 yield from self.event_to_child(
                     QuicStreamReset(self.conn, event.stream_id, event.error_code)
+                )
+            elif isinstance(event, quic_events.StopSendingReceived):
+                yield from self.event_to_child(
+                    QuicStreamStopSending(self.conn, event.stream_id, event.error_code)
                 )
             elif isinstance(
                 event,

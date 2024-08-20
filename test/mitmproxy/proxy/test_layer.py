@@ -73,8 +73,8 @@ class TestLayer:
     def test_debug_shorten(self, tctx):
         t = layer.Layer(tctx)
         t.debug = "  "
-        assert t._Layer__debug("x" * 600).message == "  " + "x" * 512 + "…"
-        assert t._Layer__debug("x" * 600).message == "  " + "x" * 256 + "…"
+        assert t._Layer__debug("x" * 4096).message == "  " + "x" * 2048 + "…"
+        assert t._Layer__debug("x" * 4096).message == "  " + "x" * 256 + "…"
         assert t._Layer__debug("foo").message == "  foo"
 
 
