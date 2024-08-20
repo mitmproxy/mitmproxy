@@ -225,16 +225,18 @@ def parse(data_type: int, data: memoryview) -> TSerializable:
         return d
     raise ValueError(f"unknown type tag: {data_type}")
 
+
 def split(data: memoryview, sep: bytes) -> tuple[int, memoryview]:
     i = 0
     try:
         while data[i] != ord(sep):
             i += 1
         # here i is the position of b":" in the memoryview
-        return int(data[:i]), data[i+1:]
+        return int(data[:i]), data[i + 1 :]
     except (IndexError, ValueError):
-        raise ValueError(f"not a tnetstring: missing or invalid length prefix: {data.tobytes()!r}")
-
+        raise ValueError(
+            f"not a tnetstring: missing or invalid length prefix: {data.tobytes()!r}"
+        )
 
 
 def pop(data: memoryview | bytes) -> tuple[TSerializable, memoryview]:
