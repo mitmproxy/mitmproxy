@@ -609,9 +609,7 @@ class TestQuicLayer:
         assert conn._streams[42].sender._reset_error_code == 123
 
     def test_stream_stop(self, tctx: context.Context):
-        playbook, conn = make_mock_quic(
-            tctx, quic_events.StopSendingReceived(123, 24)
-        )
+        playbook, conn = make_mock_quic(tctx, quic_events.StopSendingReceived(123, 24))
         assert 24 not in conn._streams
         conn._get_or_create_stream_for_send(24)
         assert playbook >> events.DataReceived(tctx.client, b"")
