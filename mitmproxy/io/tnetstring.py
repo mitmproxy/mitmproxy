@@ -237,12 +237,14 @@ def split(data: memoryview, sep: bytes) -> tuple[int, memoryview]:
 
 
 
-def pop(data: memoryview) -> tuple[TSerializable, memoryview]:
+def pop(data: memoryview | bytes) -> tuple[TSerializable, memoryview]:
     """
     This function parses a tnetstring into a python object.
     It returns a tuple giving the parsed object and a string
     containing any unparsed data from the end of the string.
     """
+    if isinstance(data, bytes):
+        data = memoryview(data)
     #  Parse out data length, type and remaining string.
     length, data = split(data, b":")
     try:
