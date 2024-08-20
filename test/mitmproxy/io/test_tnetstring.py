@@ -72,19 +72,19 @@ class Test_Format(unittest.TestCase):
         for data, expect in FORMAT_EXAMPLES.items():
             self.assertEqual(expect, tnetstring.loads(data))
             self.assertEqual(expect, tnetstring.loads(tnetstring.dumps(expect)))
-            self.assertEqual((expect, b""), tnetstring.pop(data))
+            self.assertEqual((expect, b""), tnetstring.pop(memoryview(data)))
 
     def test_roundtrip_format_random(self):
         for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
-            self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
+            self.assertEqual((v, b""), tnetstring.pop(memoryview(tnetstring.dumps(v))))
 
     def test_roundtrip_format_unicode(self):
         for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
-            self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
+            self.assertEqual((v, b""), tnetstring.pop(memoryview(tnetstring.dumps(v))))
 
     def test_roundtrip_big_integer(self):
         # Recent Python versions do not like ints above 4300 digits, https://github.com/python/cpython/issues/95778
