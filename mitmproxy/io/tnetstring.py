@@ -229,7 +229,8 @@ def parse(data_type: int, data: memoryview) -> TSerializable:
 def split(data: memoryview, sep: bytes) -> tuple[int, memoryview]:
     i = 0
     try:
-        while data[i] != ord(sep):
+        ord_sep = ord(sep)
+        while data[i] != ord_sep:
             i += 1
         # here i is the position of b":" in the memoryview
         return int(data[:i]), data[i + 1 :]
