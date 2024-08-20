@@ -136,7 +136,7 @@ class QuicStreamDataReceived(QuicStreamEvent):
     """Whether the STREAM frame had the FIN bit set."""
 
     def __repr__(self):
-        target = type(self.connection).__name__.lower()
+        target = repr(self.connection).partition("(")[0].lower()
         end_stream = "[end_stream] " if self.end_stream else ""
         return f"QuicStreamDataReceived({target} on {self.stream_id}, {end_stream}{self.data!r})"
 
@@ -147,6 +147,14 @@ class QuicStreamReset(QuicStreamEvent):
 
     error_code: int
     """The error code that triggered the reset."""
+
+
+@dataclass
+class QuicStreamStopSending(QuicStreamEvent):
+    """Event that is fired when the remote peer sends a STOP_SENDING frame."""
+
+    error_code: int
+    """The application protocol error code."""
 
 
 class QuicStreamCommand(commands.ConnectionCommand):
@@ -180,7 +188,7 @@ class SendQuicStreamData(QuicStreamCommand):
         self.end_stream = end_stream
 
     def __repr__(self):
-        target = type(self.connection).__name__.lower()
+        target = repr(self.connection).partition("(")[0].lower()
         end_stream = "[end_stream] " if self.end_stream else ""
         return f"SendQuicStreamData({target} on {self.stream_id}, {end_stream}{self.data!r})"
 
@@ -198,7 +206,7 @@ class ResetQuicStream(QuicStreamCommand):
         self.error_code = error_code
 
 
-class StopQuicStream(QuicStreamCommand):
+class StopSendingQuicStream(QuicStreamCommand):
     """Request termination of the receiving part of a stream."""
 
     error_code: int
@@ -769,7 +777,7 @@ class RawQuicLayer(layer.Layer):
                         if stream_is_client_initiated(
                             stream_id
                         ) == to_client or not stream_is_unidirectional(stream_id):
-                            yield StopQuicStream(
+                            yield StopSendingQuicStream(
                                 quic_conn, stream_id, QuicErrorCode.NO_ERROR
                             )
                         yield from self.close_stream_layer(child_layer, to_client)
@@ -865,8 +873,16 @@ class QuicLayer(tunnel.TunnelLayer):
                     command.stream_id, command.data, command.end_stream
                 )
             elif isinstance(command, ResetQuicStream):
-                self.quic.reset_stream(command.stream_id, command.error_code)
-            elif isinstance(command, StopQuicStream):
+                stream = self.quic._get_or_create_stream_for_send(command.stream_id)
+                existing_reset_error_code = stream.sender._reset_error_code
+                if existing_reset_error_code is None:
+                    self.quic.reset_stream(command.stream_id, command.error_code)
+                elif self.debug:  # pragma: no cover
+                    yield commands.Log(
+                        f"{self.debug}[quic] stream {stream.stream_id} already reset ({existing_reset_error_code=}, {command.error_code=})",
+                        DEBUG,
+                    )
+            elif isinstance(command, StopSendingQuicStream):
                 # the stream might have already been closed, check before stopping
                 if command.stream_id in self.quic._streams:
                     self.quic.stop_stream(command.stream_id, command.error_code)
@@ -1048,6 +1064,10 @@ class QuicLayer(tunnel.TunnelLayer):
             elif isinstance(event, quic_events.StreamReset):
                 yield from self.event_to_child(
                     QuicStreamReset(self.conn, event.stream_id, event.error_code)
+                )
+            elif isinstance(event, quic_events.StopSendingReceived):
+                yield from self.event_to_child(
+                    QuicStreamStopSending(self.conn, event.stream_id, event.error_code)
                 )
             elif isinstance(
                 event,
