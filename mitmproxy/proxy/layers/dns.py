@@ -5,6 +5,7 @@ from typing import Literal
 
 from mitmproxy import dns
 from mitmproxy import flow as mflow
+from mitmproxy.net.dns import response_codes
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -73,6 +74,8 @@ class DNSLayer(layer.Layer):
         yield DnsRequestHook(flow)
         if flow.response:
             yield from self.handle_response(flow, flow.response)
+        elif flow.error:
+            yield from self.handle_error(flow, flow.error.msg)
         elif not self.context.server.address:
             yield from self.handle_error(
                 flow, "No hook has set a response and there is no upstream server."
@@ -99,6 +102,11 @@ class DNSLayer(layer.Layer):
     def handle_error(self, flow: dns.DNSFlow, err: str) -> layer.CommandGenerator[None]:
         flow.error = mflow.Error(err)
         yield DnsErrorHook(flow)
+        servfail = flow.request.fail(response_codes.SERVFAIL)
+        yield commands.SendData(
+            self.context.client,
+            pack_message(servfail, flow.client_conn.transport_protocol),
+        )
 
     def unpack_message(self, data: bytes, from_client: bool) -> List[dns.Message]:
         msgs: List[dns.Message] = []
@@ -127,7 +135,6 @@ class DNSLayer(layer.Layer):
                 data = bytes(buf[offset : expected_size + offset])
                 offset += expected_size
                 msgs.append(dns.Message.unpack(data))
-                expected_size = 0
 
             del buf[:offset]
         return msgs

@@ -237,6 +237,14 @@ class Message(serializable.SerializableDataclass):
         return str(self).encode()
 
     @property
+    def question(self) -> Question | None:
+        """DNS practically only supports a single question at the
+        same time, so this is a shorthand for this."""
+        if len(self.questions) == 1:
+            return self.questions[0]
+        return None
+
+    @property
     def size(self) -> int:
         """Returns the cumulative data size of all resource record sections."""
         return sum(
