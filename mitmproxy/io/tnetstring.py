@@ -202,7 +202,7 @@ def parse(data_type: int, data: memoryview) -> TSerializable:
     if data_type == ord(b"!"):
         if data == b"true":
             return True
-        if data == b"false":
+        elif data == b"false":
             return False
         else:
             raise ValueError(f"not a tnetstring: invalid boolean literal: {data!r}")
