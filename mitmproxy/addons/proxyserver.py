@@ -259,14 +259,20 @@ class Proxyserver(ServerManager):
                     )
 
             # ...and don't listen on the same address.
-            listen_addrs = [
-                (
-                    m.listen_host(ctx.options.listen_host),
-                    m.listen_port(ctx.options.listen_port),
-                    m.transport_protocol,
-                )
-                for m in modes
-            ]
+            listen_addrs = []
+            for m in modes:
+                if m.transport_protocol == "both":
+                    protocols = ["tcp", "udp"]
+                else:
+                    protocols = [m.transport_protocol]
+                for proto in protocols:
+                    listen_addrs.append(
+                        (
+                            m.listen_host(ctx.options.listen_host),
+                            m.listen_port(ctx.options.listen_port),
+                            proto,
+                        ),
+                    )
             if len(set(listen_addrs)) != len(listen_addrs):
                 (host, port, _) = collections.Counter(listen_addrs).most_common(1)[0][0]
                 dup_addr = human.format_address((host or "0.0.0.0", port))

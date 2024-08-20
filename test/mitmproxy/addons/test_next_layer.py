@@ -604,12 +604,20 @@ reverse_proxy_configs.extend(
             id="reverse proxy: dns",
         ),
         pytest.param(
-            TConf(
+            http3 := TConf(
                 before=[modes.ReverseProxy],
                 after=[modes.ReverseProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
                 proxy_mode="reverse:http3://example.com",
             ),
             id="reverse proxy: http3",
+        ),
+        pytest.param(
+            dataclasses.replace(
+                http3,
+                proxy_mode="reverse:https://example.com",
+                transport_protocol="udp",
+            ),
+            id="reverse proxy: http3 in https mode",
         ),
         pytest.param(
             TConf(
