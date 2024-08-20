@@ -188,7 +188,7 @@ def parse(data_type: int, data: memoryview) -> TSerializable:
     if data_type == ord(b","):
         return data.tobytes()
     if data_type == ord(b";"):
-        return data.tobytes().decode("utf8")
+        return str(data, "utf8")
     if data_type == ord(b"#"):
         try:
             return int(data)
