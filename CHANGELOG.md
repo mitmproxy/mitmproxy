@@ -25,6 +25,8 @@
   ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
 - Addon to update the hosts in alt-svc header in reverse mode
   ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
+- Fix stuck on signals until visit a web UI on some platforms
+  ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
 
 ## 02 August 2024: mitmproxy 10.4.2
 
