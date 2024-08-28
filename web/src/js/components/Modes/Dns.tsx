@@ -26,7 +26,8 @@ export default function Dns() {
         <div>
             <h4 className="mode-title">DNS Server</h4>
             <p className="mode-description">
-                A recursive DNS resolver using the host's DNS configuration.
+                A recursive DNS resolver using the host&apos;s DNS
+                configuration.
             </p>
             {servers}
         </div>
