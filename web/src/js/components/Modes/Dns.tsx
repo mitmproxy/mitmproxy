@@ -54,7 +54,7 @@ function DnsRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run DNS Proxy
+                Run DNS Server
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor

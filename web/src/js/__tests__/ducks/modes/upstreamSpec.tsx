@@ -2,7 +2,6 @@ import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import upstreamReducer, {
     initialState,
     setDestination,
-    setProtocol,
     setActive,
     setListenHost,
     setListenPort,
@@ -13,16 +12,14 @@ import {
 } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import { PayloadAction } from "@reduxjs/toolkit";
-import { UpstreamProxyProtocols } from "../../../modes/upstream";
 
-describe("upstreanSlice", () => {
+describe("upstreamSlice", () => {
     it("should have working setters", async () => {
         enableFetchMocks();
         const store = TStore();
 
         expect(store.getState().modes.upstream[0]).toEqual({
             active: false,
-            protocol: UpstreamProxyProtocols.HTTPS,
             destination: "example.com",
         });
 
@@ -45,12 +42,6 @@ describe("upstreanSlice", () => {
             }),
         );
         await store.dispatch(
-            setProtocol({
-                value: UpstreamProxyProtocols.HTTPS,
-                server: store.getState().modes.upstream[0],
-            }),
-        );
-        await store.dispatch(
             setDestination({
                 value: "example.com:8085",
                 server: store.getState().modes.upstream[0],
@@ -61,11 +52,10 @@ describe("upstreanSlice", () => {
             active: true,
             listen_host: "127.0.0.1",
             listen_port: 4444,
-            protocol: UpstreamProxyProtocols.HTTPS,
             destination: "example.com:8085",
         });
 
-        expect(fetchMock).toHaveBeenCalledTimes(5);
+        expect(fetchMock).toHaveBeenCalledTimes(4);
     });
 
     it("should handle error when setting upstream mode", async () => {
@@ -136,8 +126,7 @@ describe("upstreanSlice", () => {
         expect(newState).toEqual([
             {
                 active: true,
-                protocol: UpstreamProxyProtocols.HTTPS,
-                destination: "example.com:8085",
+                destination: "https://example.com:8085",
                 listen_host: "localhost",
                 listen_port: 8080,
                 ui_id: newState[0].ui_id,
@@ -158,7 +147,6 @@ describe("upstreanSlice", () => {
                 active: false,
                 ui_id: newState[0].ui_id,
                 destination: "",
-                protocol: UpstreamProxyProtocols.HTTPS,
             },
         ]);
     });

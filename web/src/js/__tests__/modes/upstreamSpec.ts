@@ -1,11 +1,6 @@
 import { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import {
-    getSpec,
-    parseRaw,
-    UpstreamProxyProtocols,
-    UpstreamState,
-} from "../../modes/upstream";
+import { getSpec, parseRaw, UpstreamState } from "../../modes/upstream";
 
 describe("getSpec upstream mode", () => {
     it("should return the correct mode config", () => {
@@ -13,8 +8,7 @@ describe("getSpec upstream mode", () => {
             upstream: [
                 {
                     active: true,
-                    protocol: UpstreamProxyProtocols.HTTPS,
-                    destination: "example.com:8085",
+                    destination: "https://example.com:8085",
                     listen_host: "localhost",
                     listen_port: 8082,
                 },
@@ -33,8 +27,7 @@ describe("parseRaw upstream mode", () => {
         expect(parsed).toEqual({
             active: true,
             ui_id: parsed.ui_id,
-            protocol: UpstreamProxyProtocols.HTTPS,
-            destination: "example.com:8085",
+            destination: "https://example.com:8085",
             listen_host: "localhost",
             listen_port: 8082,
         } as UpstreamState);
