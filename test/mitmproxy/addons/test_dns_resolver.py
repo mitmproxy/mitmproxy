@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import sys
 import typing
 
 import mitmproxy_rs
@@ -123,7 +124,11 @@ async def test_lookup(
             case ["no-network.example.com", _, _]:
                 assert flow.response.response_code == dns.response_codes.SERVFAIL
             case ["no-a-records.example.com", _, _]:
-                assert flow.response.response_code == dns.response_codes.NOERROR, f"gaierror {socket.EAI_NONAME=} {socket.EAI_NODATA=} {socket.EAI_AGAIN=}"
+                if sys.platform == "win32":
+                    # On Windows, EAI_NONAME and EAI_NODATA are the same constant (11001)...
+                    assert flow.response.response_code == dns.response_codes.NXDOMAIN
+                else:
+                    assert flow.response.response_code == dns.response_codes.NOERROR
                 assert not flow.response.answers
             case ["txt.example.com", "nameservers", _]:
                 assert flow.server_conn.address == ("8.8.8.8", 53)
