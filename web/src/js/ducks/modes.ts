@@ -5,6 +5,8 @@ import wireguardReducer from "./modes/wireguard";
 import reverseReducer from "./modes/reverse";
 import transparentReducer from "./modes/transparent";
 import socksReducer from "./modes/socks";
+import upstreamReducer from "./modes/upstream";
+import dnsReducer from "./modes/dns";
 
 const modes = combineReducers({
     regular: regularReducer,
@@ -13,6 +15,8 @@ const modes = combineReducers({
     reverse: reverseReducer,
     transparent: transparentReducer,
     socks: socksReducer,
+    upstream: upstreamReducer,
+    dns: dnsReducer,
     //add new modes here
 });
 
