@@ -44,7 +44,7 @@ function LocalRow({
     const error = server.error || backendState?.last_exception || undefined;
 
     return (
-        <div>
+        <div className="mode-local">
             <ModeToggle
                 value={server.active}
                 onChange={() =>
@@ -62,6 +62,7 @@ function LocalRow({
                         )
                     }
                 />
+                <i className="fa fa-refresh" aria-hidden="true"></i>
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>
