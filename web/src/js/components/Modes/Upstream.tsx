@@ -2,7 +2,12 @@ import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { getSpec, UpstreamState } from "../../modes/upstream";
 import { ServerInfo } from "../../ducks/backendState";
-import { setDestination, setActive, setListenHost, setListenPort } from "../../ducks/modes/upstream";
+import {
+    setDestination,
+    setActive,
+    setListenHost,
+    setListenPort,
+} from "../../ducks/modes/upstream";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
