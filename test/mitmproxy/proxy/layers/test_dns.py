@@ -7,6 +7,7 @@ from hypothesis import HealthCheck
 from hypothesis import settings
 from hypothesis import strategies as st
 
+from mitmproxy.net.dns import response_codes
 from ..tutils import Placeholder
 from ..tutils import Playbook
 from ..tutils import reply
@@ -125,12 +126,14 @@ def test_regular_mode_no_hook(tctx, transport_protocol):
         >> reply(side_effect=no_resolve)
         << dns.DnsErrorHook(f)
         >> reply()
+        << SendData(tctx.client, dns.pack_message(req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol))
         >> ConnectionClosed(tctx.client)
         << None
     )
     assert f().request == req
     assert not f().response
     assert not f().live
+    assert f().error.msg == "No hook has set a response and there is no upstream server."
 
 
 @pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
@@ -227,6 +230,7 @@ def test_reverse_fail_connection(tctx, transport_protocol):
         >> reply("UDP no likey today.")
         << dns.DnsErrorHook(f)
         >> reply()
+        << SendData(tctx.client, dns.pack_message(req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol))
         << None
     )
     assert f().request
