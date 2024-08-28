@@ -47,7 +47,6 @@ async def test_name_servers(caplog, monkeypatch):
         assert "Failed to get system dns servers" in caplog.text
 
 
-
 async def lookup(name: str):
     match name:
         case "ipv4.example.com":
@@ -61,11 +60,9 @@ async def lookup(name: str):
         case _:
             raise socket.gaierror(socket.EAI_NONAME)
 
+
 async def getaddrinfo(host: str, *_, **__):
-    return [
-        [None, None, None, None, [ip]]
-        for ip in await lookup(host)
-    ]
+    return [[None, None, None, None, [ip]] for ip in await lookup(host)]
 
 
 Domain = typing.Literal[
@@ -74,20 +71,27 @@ Domain = typing.Literal[
     "no-network.example.com",
     "txt.example.com",
     "ipv4.example.com",
-    "ipv6.example.com"
+    "ipv6.example.com",
 ]
 # We use literals here instead of bools because that makes the test easier to parse.
 HostsFile = typing.Literal["hosts", "no-hosts"]
 NameServers = typing.Literal["nameservers", "no-nameservers"]
 
+
 @pytest.mark.parametrize("hosts_file", typing.get_args(HostsFile))
 @pytest.mark.parametrize("name_servers", typing.get_args(NameServers))
 @pytest.mark.parametrize("domain", typing.get_args(Domain))
-async def test_lookup(domain: Domain, hosts_file: HostsFile, name_servers: NameServers, monkeypatch):
+async def test_lookup(
+    domain: Domain, hosts_file: HostsFile, name_servers: NameServers, monkeypatch
+):
     if name_servers == "nameservers":
         monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", lambda: ["8.8.8.8"])
-        monkeypatch.setattr(mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup(name))
-        monkeypatch.setattr(mitmproxy_rs.DnsResolver, "lookup_ipv6", lambda _, name: lookup(name))
+        monkeypatch.setattr(
+            mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup(name)
+        )
+        monkeypatch.setattr(
+            mitmproxy_rs.DnsResolver, "lookup_ipv6", lambda _, name: lookup(name)
+        )
     else:
         monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", lambda: [])
         monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", getaddrinfo)
@@ -103,9 +107,11 @@ async def test_lookup(domain: Domain, hosts_file: HostsFile, name_servers: NameS
 
     with taddons.context(dr) as tctx:
         tctx.options.dns_use_hosts_file = hosts_file == "hosts"
-        req = tutils.tdnsreq(questions=[
-            dns.Question(domain, typ, dns.classes.IN),
-        ])
+        req = tutils.tdnsreq(
+            questions=[
+                dns.Question(domain, typ, dns.classes.IN),
+            ]
+        )
         flow = tflow.tdnsflow(req=req)
         await dr.dns_request(flow)
 
@@ -124,12 +130,18 @@ async def test_lookup(domain: Domain, hosts_file: HostsFile, name_servers: NameS
             case ["txt.example.com", "no-nameservers", _]:
                 assert flow.error
             case ["ipv4.example.com", "nameservers", _]:
-                assert flow.response.answers[0].data == b'\x01\x02\x03\x04'
+                assert flow.response.answers[0].data == b"\x01\x02\x03\x04"
             case ["ipv4.example.com", "no-nameservers", "hosts"]:
-                assert flow.response.answers[0].data == b'\x01\x02\x03\x04'
+                assert flow.response.answers[0].data == b"\x01\x02\x03\x04"
             case ["ipv6.example.com", "nameservers", _]:
-                assert flow.response.answers[0].data == b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+                assert (
+                    flow.response.answers[0].data
+                    == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+                )
             case ["ipv6.example.com", "no-nameservers", "hosts"]:
-                assert flow.response.answers[0].data == b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+                assert (
+                    flow.response.answers[0].data
+                    == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+                )
             case other:
                 typing.assert_never(other)

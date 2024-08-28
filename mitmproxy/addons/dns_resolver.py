@@ -14,7 +14,6 @@ from mitmproxy import dns
 from mitmproxy.flow import Error
 from mitmproxy.proxy import mode_specs
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -81,11 +80,15 @@ class DnsResolver:
                 # For A/AAAA records, we try to use our own resolver
                 # (with a fallback to getaddrinfo)
                 if name_servers:
-                    flow.response = await self.resolve(flow.request, self._with_resolver)
+                    flow.response = await self.resolve(
+                        flow.request, self._with_resolver
+                    )
                 elif ctx.options.dns_use_hosts_file:
                     # Fallback to getaddrinfo as hickory's resolver isn't as reliable
                     # as we would like it to be (https://github.com/mitmproxy/mitmproxy/issues/7064).
-                    flow.response = await self.resolve(flow.request, self._with_getaddrinfo)
+                    flow.response = await self.resolve(
+                        flow.request, self._with_getaddrinfo
+                    )
                 else:
                     flow.error = Error("Cannot resolve, dns_name_servers unknown.")
             elif name_servers:
@@ -159,7 +162,4 @@ class DnsResolver:
             family=family,
             type=socket.SOCK_STREAM,
         )
-        return [
-            addrinfo[4][0]
-            for addrinfo in addrinfos
-        ]
+        return [addrinfo[4][0] for addrinfo in addrinfos]
