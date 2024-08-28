@@ -24,11 +24,9 @@ export default function Dns() {
 
     return (
         <div>
-            <h4 className="mode-title">Dns Proxy</h4>
+            <h4 className="mode-title">DNS Server</h4>
             <p className="mode-description">
-                This mode will listen for incoming DNS queries and use the
-                resolve capabilities of your operation system to return an
-                answer.
+                A recursive DNS resolver using the host's DNS configuration.
             </p>
             {servers}
         </div>
