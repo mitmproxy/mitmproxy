@@ -186,12 +186,19 @@ def test_regular_hook_err(tctx):
 
     assert (
         Playbook(dns.DNSLayer(tctx))
-        >> DataReceived(tctx.client, dns.pack_message(req, tctx.client.transport_protocol))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
         << dns.DnsRequestHook(f)
         >> reply(side_effect=err)
         << dns.DnsErrorHook(f)
         >> reply()
-        << SendData(tctx.client, dns.pack_message(req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol))
+        << SendData(
+            tctx.client,
+            dns.pack_message(
+                req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol
+            ),
+        )
         >> ConnectionClosed(tctx.client)
         << None
     )
