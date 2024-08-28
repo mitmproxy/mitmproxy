@@ -116,23 +116,13 @@ def run(
         def _sigterm(*_):
             loop.call_soon_threadsafe(master.shutdown)
 
-        async def _async_sigint():
-            _sigint()
-
-        async def _async_sigterm():
-            _sigterm()
-
         try:
-            # We use loop.add_signal_handler on supported platform to avoid stuck on signal
-            # See: https://github.com/mitmproxy/mitmproxy/issues/7128
-            loop.add_signal_handler(
-                signal.SIGINT, lambda: asyncio.create_task(_async_sigterm())
-            )
-            loop.add_signal_handler(
-                signal.SIGTERM, lambda: asyncio.create_task(_async_sigterm())
-            )
+            # Prefer loop.add_signal_handler where it is available
+            # https://github.com/mitmproxy/mitmproxy/issues/7128
+            loop.add_signal_handler(signal.SIGINT, _sigint)
+            loop.add_signal_handler(signal.SIGTERM, _sigterm)
         except NotImplementedError:
-            # anyway, if platform hasn't got loop.add_signal_handler, use signal.signal
+            # Fall back to `signal.signal` for platforms where that is not available (Windows' Proactorloop)
             signal.signal(signal.SIGINT, _sigint)
             signal.signal(signal.SIGTERM, _sigterm)
 
