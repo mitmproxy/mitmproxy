@@ -11,6 +11,7 @@ from ..tutils import Placeholder
 from ..tutils import Playbook
 from ..tutils import reply
 from mitmproxy.dns import DNSFlow
+from mitmproxy.net.dns import response_codes
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import OpenConnection
@@ -18,8 +19,9 @@ from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import dns
-from mitmproxy.test.tutils import tdnsreq
-from mitmproxy.test.tutils import tdnsresp
+from mitmproxy.test.tflow import tdnsreq
+from mitmproxy.test.tflow import tdnsresp
+from mitmproxy.test.tflow import terr
 
 
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
@@ -125,12 +127,21 @@ def test_regular_mode_no_hook(tctx, transport_protocol):
         >> reply(side_effect=no_resolve)
         << dns.DnsErrorHook(f)
         >> reply()
+        << SendData(
+            tctx.client,
+            dns.pack_message(
+                req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol
+            ),
+        )
         >> ConnectionClosed(tctx.client)
         << None
     )
     assert f().request == req
     assert not f().response
     assert not f().live
+    assert (
+        f().error.msg == "No hook has set a response and there is no upstream server."
+    )
 
 
 @pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
@@ -163,6 +174,36 @@ def test_reverse_premature_close(tctx, transport_protocol):
     assert not f().live
     req.timestamp = f().request.timestamp
     assert f().request == req
+
+
+def test_regular_hook_err(tctx):
+    f = Placeholder(DNSFlow)
+
+    req = tdnsreq()
+
+    def err(flow: DNSFlow):
+        flow.error = terr()
+
+    assert (
+        Playbook(dns.DNSLayer(tctx))
+        >> DataReceived(
+            tctx.client, dns.pack_message(req, tctx.client.transport_protocol)
+        )
+        << dns.DnsRequestHook(f)
+        >> reply(side_effect=err)
+        << dns.DnsErrorHook(f)
+        >> reply()
+        << SendData(
+            tctx.client,
+            dns.pack_message(
+                req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol
+            ),
+        )
+        >> ConnectionClosed(tctx.client)
+        << None
+    )
+    assert f().error
+    assert not f().live
 
 
 @pytest.mark.parametrize("transport_protocol", ["tcp", "udp"])
@@ -227,6 +268,12 @@ def test_reverse_fail_connection(tctx, transport_protocol):
         >> reply("UDP no likey today.")
         << dns.DnsErrorHook(f)
         >> reply()
+        << SendData(
+            tctx.client,
+            dns.pack_message(
+                req.fail(response_codes.SERVFAIL), tctx.client.transport_protocol
+            ),
+        )
         << None
     )
     assert f().request

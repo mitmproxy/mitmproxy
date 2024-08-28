@@ -11,6 +11,9 @@
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
 - Tighten HTTP detection heuristic to better support custom TCP-based protocols.
   ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
+  determine the operating system's name servers.
+  ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
 - Improve the error message when users specify the `certs` option without a matching private key.
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where intermediate certificates would not be transmitted when using QUIC.
