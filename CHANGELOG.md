@@ -28,6 +28,8 @@
   ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
 - Addon to update the hosts in alt-svc header in reverse mode
   ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
+- Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
+  ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
 
 ## 02 August 2024: mitmproxy 10.4.2
 
