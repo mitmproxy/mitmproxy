@@ -6,6 +6,7 @@ import ValueEditor from "../editors/ValueEditor";
 import { getSpec, LocalState } from "../../modes/local";
 import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
+import LocalDropdown from "./LocalDropdown";
 
 export default function Local() {
     const serverState = useAppSelector((state) => state.modes.local);
@@ -52,7 +53,8 @@ function LocalRow({
                 }
             >
                 Intercept traffic for
-                <ValueEditor
+                <LocalDropdown />
+                {/*<ValueEditor
                     className="mode-local-input"
                     content={server.applications || ""}
                     placeholder="curl"
@@ -61,7 +63,7 @@ function LocalRow({
                             setApplications({ server, value: applications }),
                         )
                     }
-                />
+                />*/}
                 <i className="fa fa-refresh" aria-hidden="true"></i>
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
