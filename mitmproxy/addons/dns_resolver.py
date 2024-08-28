@@ -43,7 +43,7 @@ class DnsResolver:
     def name_servers(self) -> list[str]:
         """
         The Operating System name servers,
-        or `None` if they cannot be determined.
+        or `[]` if they cannot be determined.
         """
         try:
             return ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
