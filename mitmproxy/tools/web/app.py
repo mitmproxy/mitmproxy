@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import os.path
+import pathlib
 import re
 import sys
 from collections.abc import Callable
@@ -17,6 +18,7 @@ import tornado.escape
 import tornado.web
 import tornado.websocket
 
+import mitmproxy_rs
 import mitmproxy.flow
 import mitmproxy.tools.web.master
 from mitmproxy import certs
@@ -653,6 +655,43 @@ class State(RequestHandler):
     def get(self):
         self.write(State.get_json(self.master))
 
+class ProcessList(RequestHandler):
+
+    @staticmethod
+    def process_to_dict(process):
+        return {
+            "is_visible": process.is_visible,
+            "executable": process.executable,
+            "is_system": process.is_system,
+            "display_name": process.display_name,
+        }
+
+    @staticmethod
+    def get_json():
+        processes = mitmproxy_rs.active_executables()
+        processes_json = [ProcessList.process_to_dict(process) for process in processes]
+        return {
+            "processes": processes_json
+        }
+    def get(self):
+        self.write(ProcessList.get_json())
+
+class ProcessImage(RequestHandler):
+
+    def get(self):
+        path = self.get_query_argument('path', None)
+
+        if not path:
+            self.set_status(400)
+            self.write({"error": "Missing 'path' parameter."})
+            return
+
+        try:
+            icon_bytes = mitmproxy_rs.executable_icon(pathlib.Path(path))
+            self.set_header("Content-Type", "image/png")
+            self.write(icon_bytes)
+        except Exception as err:
+            raise APIError(400, f"{err}")
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     CONTENT_TYPES = {
@@ -713,5 +752,7 @@ class Application(tornado.web.Application):
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
                 (r"/state(?:\.json)?", State),
+                (r"/processes", ProcessList),
+                (r"/executable-icon", ProcessImage),
             ],
         )
