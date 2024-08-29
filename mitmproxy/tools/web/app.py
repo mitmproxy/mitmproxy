@@ -658,19 +658,17 @@ class State(RequestHandler):
 
 class ProcessList(RequestHandler):
     @staticmethod
-    def process_to_dict(process):
-        return {
-            "is_visible": process.is_visible,
-            "executable": process.executable,
-            "is_system": process.is_system,
-            "display_name": process.display_name,
-        }
-
-    @staticmethod
     def get_json():
         processes = mitmproxy_rs.active_executables()
-        processes_json = [ProcessList.process_to_dict(process) for process in processes]
-        return {"processes": processes_json}
+        return [
+            {
+                "is_visible": process.is_visible,
+                "executable": process.executable,
+                "is_system": process.is_system,
+                "display_name": process.display_name,
+            }
+            for process in processes
+        ]
 
     def get(self):
         self.write(ProcessList.get_json())
@@ -681,12 +679,10 @@ class ProcessImage(RequestHandler):
         path = self.get_query_argument("path", None)
 
         if not path:
-            self.set_status(400)
-            self.write({"error": "Missing 'path' parameter."})
-            return
+            raise APIError(400, "Missing 'path' parameter.")
 
         try:
-            icon_bytes = mitmproxy_rs.executable_icon(pathlib.Path(path))
+            icon_bytes = mitmproxy_rs.executable_icon(path)
             self.set_header("Content-Type", "image/png")
             self.write(icon_bytes)
         except Exception as err:
