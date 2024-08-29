@@ -405,22 +405,44 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2.close()
 
     def test_process_list_get_json(self):
-        mock_process_1 = mock.Mock(is_visible=True, executable="process1", is_system=False, display_name="Process 1")
-        mock_process_2 = mock.Mock(is_visible=False, executable="process2", is_system=True, display_name="Process 2")
-        
-        with mock.patch('mitmproxy_rs.active_executables', return_value=[mock_process_1, mock_process_2]):
+        mock_process_1 = mock.Mock(
+            is_visible=True,
+            executable="process1",
+            is_system=False,
+            display_name="Process 1",
+        )
+        mock_process_2 = mock.Mock(
+            is_visible=False,
+            executable="process2",
+            is_system=True,
+            display_name="Process 2",
+        )
+
+        with mock.patch(
+            "mitmproxy_rs.active_executables",
+            return_value=[mock_process_1, mock_process_2],
+        ):
             result = app.ProcessList.get_json()
 
         expected_result = [
-            {"is_visible": True, "executable": "process1", "is_system": False, "display_name": "Process 1"},
-            {"is_visible": False, "executable": "process2", "is_system": True, "display_name": "Process 2"}
+            {
+                "is_visible": True,
+                "executable": "process1",
+                "is_system": False,
+                "display_name": "Process 1",
+            },
+            {
+                "is_visible": False,
+                "executable": "process2",
+                "is_system": True,
+                "display_name": "Process 2",
+            },
         ]
         self.assertEqual(result, expected_result)
 
-    
     def test_process_image_get_with_path(self):
         mock_icon_bytes = b"icon_data"
-        with mock.patch('mitmproxy_rs.executable_icon', return_value=mock_icon_bytes):
+        with mock.patch("mitmproxy_rs.executable_icon", return_value=mock_icon_bytes):
             request = mock.Mock()
             request.get_query_argument.return_value = "path/to/executable"
             handler = app.ProcessImage()
@@ -442,7 +464,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         self.assertEqual(context.exception.message, "Missing 'path' parameter.")
 
     def test_process_image_get_with_invalid_path(self):
-        with mock.patch('mitmproxy.rs.executable_icon', side_effect=Exception("Invalid path")):
+        with mock.patch(
+            "mitmproxy.rs.executable_icon", side_effect=Exception("Invalid path")
+        ):
             request = mock.Mock()
             request.get_query_argument.return_value = "invalid/path"
             handler = app.ProcessImage()
@@ -452,4 +476,3 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         self.assertEqual(context.exception.status_code, 400)
         self.assertEqual(context.exception.message, "Invalid path")
-    

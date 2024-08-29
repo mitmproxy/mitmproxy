@@ -5,7 +5,6 @@ import hashlib
 import json
 import logging
 import os.path
-import pathlib
 import re
 import sys
 from collections.abc import Callable
