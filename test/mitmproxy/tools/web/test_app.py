@@ -465,7 +465,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_process_image_get_with_invalid_path(self):
         with mock.patch(
-            "mitmproxy.rs.executable_icon", side_effect=Exception("Invalid path")
+            "mitmproxy_rs.executable_icon", side_effect=Exception("Invalid path")
         ):
             request = mock.Mock()
             request.get_query_argument.return_value = "invalid/path"
