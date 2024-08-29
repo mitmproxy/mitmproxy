@@ -14,11 +14,11 @@ from io import BytesIO
 from itertools import islice
 from typing import ClassVar
 
+import mitmproxy_rs
 import tornado.escape
 import tornado.web
 import tornado.websocket
 
-import mitmproxy_rs
 import mitmproxy.flow
 import mitmproxy.tools.web.master
 from mitmproxy import certs
@@ -655,8 +655,8 @@ class State(RequestHandler):
     def get(self):
         self.write(State.get_json(self.master))
 
-class ProcessList(RequestHandler):
 
+class ProcessList(RequestHandler):
     @staticmethod
     def process_to_dict(process):
         return {
@@ -670,16 +670,15 @@ class ProcessList(RequestHandler):
     def get_json():
         processes = mitmproxy_rs.active_executables()
         processes_json = [ProcessList.process_to_dict(process) for process in processes]
-        return {
-            "processes": processes_json
-        }
+        return {"processes": processes_json}
+
     def get(self):
         self.write(ProcessList.get_json())
 
-class ProcessImage(RequestHandler):
 
+class ProcessImage(RequestHandler):
     def get(self):
-        path = self.get_query_argument('path', None)
+        path = self.get_query_argument("path", None)
 
         if not path:
             self.set_status(400)
@@ -692,6 +691,7 @@ class ProcessImage(RequestHandler):
             self.write(icon_bytes)
         except Exception as err:
             raise APIError(400, f"{err}")
+
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     CONTENT_TYPES = {
