@@ -1,4 +1,5 @@
 import ipaddress
+import logging
 import ssl
 import time
 from pathlib import Path
@@ -106,6 +107,23 @@ class TestTlsConfig:
                 ],
             )
             assert ta.certstore.certs
+
+    def test_configure_tls_version(self, caplog):
+        caplog.set_level(logging.INFO)
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            caplog.clear()
+            tctx.configure(ta, tls_version_client_min="SSL3")
+            assert (
+                "tls_version_client_min has been set to SSL3, "
+                "which is not supported by the current OpenSSL build."
+            ) in caplog.text
+            caplog.clear()
+            tctx.configure(ta, tls_version_client_min="UNBOUNDED")
+            assert (
+                "tls_version_client_min has been set to UNBOUNDED. "
+                "Note that your OpenSSL build only supports the following TLS versions"
+            ) in caplog.text
 
     def test_get_cert(self, tdata):
         """Test that we generate a certificate matching the connection's context."""
