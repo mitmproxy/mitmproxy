@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import json
 import logging
@@ -39,8 +40,7 @@ from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
 
-TRANSPARENT_PNG = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\xdac\xf8\xff\xff?\x00\x05\xfe\x02\xfeA\xac\x8f\x00\x00\x00\x00IEND\xaeB`\x82"
-
+TRANSPARENT_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/KhRDWgAAAAASUVORK5CYII="
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
@@ -688,7 +688,7 @@ class ProcessImage(RequestHandler):
             self.write(icon_bytes)
         except Exception:
             self.set_header("Content-Type", "image/png")
-            self.write(TRANSPARENT_PNG)
+            self.write(base64.b64decode(TRANSPARENT_PNG))
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):

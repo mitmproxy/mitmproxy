@@ -19,7 +19,7 @@ from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
 
-TRANSPARENT_PNG = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\xdac\xf8\xff\xff?\x00\x05\xfe\x02\xfeA\xac\x8f\x00\x00\x00\x00IEND\xaeB`\x82"
+TRANSPARENT_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/KhRDWgAAAAASUVORK5CYII="
 
 here = Path(__file__).parent.absolute()
 
@@ -424,4 +424,5 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         resp = self.fetch("/executable-icon?path=invalid_path")
         assert resp.code == 200
         assert resp.headers["Content-Type"] == "image/png"
-        assert base64.b64encode(resp.body) == base64.b64encode(TRANSPARENT_PNG)
+        expected_bytes = base64.b64decode(TRANSPARENT_PNG)
+        assert resp.body == expected_bytes
