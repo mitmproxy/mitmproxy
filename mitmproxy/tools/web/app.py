@@ -686,7 +686,7 @@ class ProcessImage(RequestHandler):
             icon_bytes = mitmproxy_rs.executable_icon(path)
             self.set_header("Content-Type", "image/png")
             self.write(icon_bytes)
-        except:
+        except Exception:
             self.set_header("Content-Type", "image/png")
             self.write(TRANSPARENT_PNG)
 
