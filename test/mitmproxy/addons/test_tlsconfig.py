@@ -112,12 +112,18 @@ class TestTlsConfig:
         caplog.set_level(logging.INFO)
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            caplog.clear()
-            tctx.configure(ta, tls_version_client_min="SSL3")
-            assert (
-                "tls_version_client_min has been set to SSL3, "
-                "which is not supported by the current OpenSSL build."
-            ) in caplog.text
+            for attr in [
+                "tls_version_client_min",
+                "tls_version_client_max",
+                "tls_version_server_min",
+                "tls_version_server_max",
+            ]:
+                caplog.clear()
+                tctx.configure(ta, **{attr: "SSL3"})
+                assert (
+                    f"{attr} has been set to SSL3, "
+                    "which is not supported by the current OpenSSL build."
+                ) in caplog.text
             caplog.clear()
             tctx.configure(ta, tls_version_client_min="UNBOUNDED")
             assert (
