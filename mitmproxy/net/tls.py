@@ -10,7 +10,6 @@ from typing import Any
 from typing import BinaryIO
 
 import certifi
-import pytest
 from OpenSSL import crypto
 from OpenSSL import SSL
 from OpenSSL.crypto import X509
