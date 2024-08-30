@@ -9,6 +9,7 @@ import pytest
 import tornado.testing
 from tornado import httpclient
 from tornado import websocket
+from tornado.web import Application
 
 from mitmproxy import log
 from mitmproxy import options
@@ -404,7 +405,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
-    def test_process_list_get_json(self):
+class TestProcessList(tornado.testing.AsyncHTTPTestCase):
+    def get_app(self):
+        return Application([(r"/processes", app.ProcessList)])
+
+    def test_get_process_list(self):
         mock_process_1 = mock.Mock(
             is_visible=True,
             executable="process1",
@@ -418,61 +423,47 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             display_name="Process 2",
         )
 
-        with mock.patch(
-            "mitmproxy_rs.active_executables",
-            return_value=[mock_process_1, mock_process_2],
-        ):
-            result = app.ProcessList.get_json()
+        with mock.patch("mitmproxy_rs.active_executables", return_value=[mock_process_1, mock_process_2]):
+            response = self.fetch("/processes")
+            assert response.code == 200
 
-        expected_result = [
-            {
-                "is_visible": True,
-                "executable": "process1",
-                "is_system": False,
-                "display_name": "Process 1",
-            },
-            {
-                "is_visible": False,
-                "executable": "process2",
-                "is_system": True,
-                "display_name": "Process 2",
-            },
-        ]
-        self.assertEqual(result, expected_result)
+            expected_result = [
+                {
+                    "is_visible": True,
+                    "executable": "process1",
+                    "is_system": False,
+                    "display_name": "Process 1",
+                },
+                {
+                    "is_visible": False,
+                    "executable": "process2",
+                    "is_system": True,
+                    "display_name": "Process 2",
+                },
+            ]
+            assert json.loads(response.body) == expected_result
+
+class TestProcessImage(tornado.testing.AsyncHTTPTestCase):
+    
+    def get_app(self):
+        return Application([(r"/executable-icon", app.ProcessImage)])
 
     def test_process_image_get_with_path(self):
         mock_icon_bytes = b"icon_data"
-        with mock.patch("mitmproxy_rs.executable_icon", return_value=mock_icon_bytes):
-            request = mock.Mock()
-            request.get_query_argument.return_value = "path/to/executable"
-            handler = app.ProcessImage()
-            handler.get(request)
 
-        self.assertEqual(request.set_header.call_args[0][0], "Content-Type")
-        self.assertEqual(request.set_header.call_args[0][1], "image/png")
-        self.assertEqual(request.write.call_args[0][0], mock_icon_bytes)
+        with mock.patch("mitmproxy_rs.executable_icon", return_value=mock_icon_bytes):
+            response = self.fetch("/executable-icon?path=valid/path/to/executable")
+            assert response.code == 200
+            assert response.headers["Content-Type"] == "image/png"
+            assert response.body == mock_icon_bytes
 
     def test_process_image_get_without_path(self):
-        request = mock.Mock()
-        request.get_query_argument.return_value = None
-        handler = app.ProcessImage()
-
-        with self.assertRaises(app.APIError) as context:
-            handler.get(request)
-
-        self.assertEqual(context.exception.status_code, 400)
-        self.assertEqual(context.exception.message, "Missing 'path' parameter.")
+        response = self.fetch("/executable-icon")
+        assert response.code == 400
+        assert b"Missing 'path' parameter." in response.body
 
     def test_process_image_get_with_invalid_path(self):
-        with mock.patch(
-            "mitmproxy_rs.executable_icon", side_effect=Exception("Invalid path")
-        ):
-            request = mock.Mock()
-            request.get_query_argument.return_value = "invalid/path"
-            handler = app.ProcessImage()
-
-            with self.assertRaises(app.APIError) as context:
-                handler.get(request)
-
-        self.assertEqual(context.exception.status_code, 400)
-        self.assertEqual(context.exception.message, "Invalid path")
+        with mock.patch("mitmproxy_rs.executable_icon", side_effect=Exception("Invalid path")):
+            response = self.fetch("/executable-icon?path=invalid/path")
+            assert response.code == 400
+            assert b"Invalid path" in response.body
