@@ -1,3 +1,4 @@
+import base64
 import gzip
 import importlib
 import json
@@ -423,4 +424,4 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         resp = self.fetch("/executable-icon?path=invalid_path")
         assert resp.code == 200
         assert resp.headers["Content-Type"] == "image/png"
-        assert resp.body.strip() == TRANSPARENT_PNG.strip()
+        assert base64.b64encode(resp.body) == base64.b64encode(TRANSPARENT_PNG)
