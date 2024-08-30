@@ -405,6 +405,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
+
 class TestProcessList(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
         return Application([(r"/processes", app.ProcessList)])
@@ -423,7 +424,10 @@ class TestProcessList(tornado.testing.AsyncHTTPTestCase):
             display_name="Process 2",
         )
 
-        with mock.patch("mitmproxy_rs.active_executables", return_value=[mock_process_1, mock_process_2]):
+        with mock.patch(
+            "mitmproxy_rs.active_executables",
+            return_value=[mock_process_1, mock_process_2],
+        ):
             response = self.fetch("/processes")
             assert response.code == 200
 
@@ -443,8 +447,8 @@ class TestProcessList(tornado.testing.AsyncHTTPTestCase):
             ]
             assert json.loads(response.body) == expected_result
 
+
 class TestProcessImage(tornado.testing.AsyncHTTPTestCase):
-    
     def get_app(self):
         return Application([(r"/executable-icon", app.ProcessImage)])
 
@@ -463,7 +467,9 @@ class TestProcessImage(tornado.testing.AsyncHTTPTestCase):
         assert b"Missing 'path' parameter." in response.body
 
     def test_process_image_get_with_invalid_path(self):
-        with mock.patch("mitmproxy_rs.executable_icon", side_effect=Exception("Invalid path")):
+        with mock.patch(
+            "mitmproxy_rs.executable_icon", side_effect=Exception("Invalid path")
+        ):
             response = self.fetch("/executable-icon?path=invalid/path")
             assert response.code == 400
             assert b"Invalid path" in response.body
