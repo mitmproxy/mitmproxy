@@ -39,6 +39,7 @@ from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
 
+TRANSPARENT_PNG = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\xdac\xf8\xff\xff?\x00\x05\xfe\x02\xfeA\xac\x8f\x00\x00\x00\x00IEND\xaeB`\x82'
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
@@ -684,8 +685,9 @@ class ProcessImage(RequestHandler):
             icon_bytes = mitmproxy_rs.executable_icon(path)
             self.set_header("Content-Type", "image/png")
             self.write(icon_bytes)
-        except Exception as err:
-            raise APIError(400, f"{err}")
+        except:
+            self.set_header("Content-Type", "image/png")
+            self.write(TRANSPARENT_PNG)
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):

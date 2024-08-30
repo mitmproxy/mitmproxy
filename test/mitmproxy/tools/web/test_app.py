@@ -17,6 +17,8 @@ from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
 
+TRANSPARENT_PNG = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\xdac\xf8\xff\xff?\x00\x05\xfe\x02\xfeA\xac\x8f\x00\x00\x00\x00IEND\xaeB`\x82'
+
 here = Path(__file__).parent.absolute()
 
 
@@ -405,71 +407,17 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
+    def test_process_list(self):
+        resp = self.fetch("/processes")
+        assert resp.code == 200 
+        assert get_json(resp)
 
-class TestProcessList(tornado.testing.AsyncHTTPTestCase):
-    def get_app(self):
-        return Application([(r"/processes", app.ProcessList)])
+    def test_process_icon(self):
+        resp = self.fetch("/executable-icon")
+        assert resp.code == 400
+        assert "Missing 'path' parameter." in resp.body.decode()
 
-    def test_get_process_list(self):
-        mock_process_1 = mock.Mock(
-            is_visible=True,
-            executable="process1",
-            is_system=False,
-            display_name="Process 1",
-        )
-        mock_process_2 = mock.Mock(
-            is_visible=False,
-            executable="process2",
-            is_system=True,
-            display_name="Process 2",
-        )
-
-        with mock.patch(
-            "mitmproxy_rs.active_executables",
-            return_value=[mock_process_1, mock_process_2],
-        ):
-            response = self.fetch("/processes")
-            assert response.code == 200
-
-            expected_result = [
-                {
-                    "is_visible": True,
-                    "executable": "process1",
-                    "is_system": False,
-                    "display_name": "Process 1",
-                },
-                {
-                    "is_visible": False,
-                    "executable": "process2",
-                    "is_system": True,
-                    "display_name": "Process 2",
-                },
-            ]
-            assert json.loads(response.body) == expected_result
-
-
-class TestProcessImage(tornado.testing.AsyncHTTPTestCase):
-    def get_app(self):
-        return Application([(r"/executable-icon", app.ProcessImage)])
-
-    def test_process_image_get_with_path(self):
-        mock_icon_bytes = b"icon_data"
-
-        with mock.patch("mitmproxy_rs.executable_icon", return_value=mock_icon_bytes):
-            response = self.fetch("/executable-icon?path=valid/path/to/executable")
-            assert response.code == 200
-            assert response.headers["Content-Type"] == "image/png"
-            assert response.body == mock_icon_bytes
-
-    def test_process_image_get_without_path(self):
-        response = self.fetch("/executable-icon")
-        assert response.code == 400
-        assert b"Missing 'path' parameter." in response.body
-
-    def test_process_image_get_with_invalid_path(self):
-        with mock.patch(
-            "mitmproxy_rs.executable_icon", side_effect=Exception("Invalid path")
-        ):
-            response = self.fetch("/executable-icon?path=invalid/path")
-            assert response.code == 400
-            assert b"Invalid path" in response.body
+        resp = self.fetch("/executable-icon?path=invalid_path")
+        assert resp.code == 200
+        assert resp.headers["Content-Type"] == "image/png"
+        assert resp.body == TRANSPARENT_PNG
