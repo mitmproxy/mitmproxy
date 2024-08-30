@@ -2,10 +2,10 @@ import gzip
 import importlib
 import json
 import logging
-from pathlib import Path
 import sys
-from unittest import mock
 import unittest
+from pathlib import Path
+from unittest import mock
 
 import pytest
 import tornado.testing
@@ -408,13 +408,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
-    @unittest.skipIf(sys.platform.startswith('linux'), "Test is not supported on Linux")
+    @unittest.skipIf(sys.platform.startswith("linux"), "Test is not supported on Linux")
     def test_process_list(self):
         resp = self.fetch("/processes")
         assert resp.code == 200
         assert get_json(resp)
 
-    @unittest.skipIf(sys.platform.startswith('linux'), "Test is not supported on Linux")
+    @unittest.skipIf(sys.platform.startswith("linux"), "Test is not supported on Linux")
     def test_process_icon(self):
         resp = self.fetch("/executable-icon")
         assert resp.code == 400
