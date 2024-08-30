@@ -42,6 +42,7 @@ from mitmproxy.websocket import WebSocketMessage
 
 TRANSPARENT_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/KhRDWgAAAAASUVORK5CYII="
 
+
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
         return None
