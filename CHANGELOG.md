@@ -20,6 +20,9 @@
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where fragmented QUIC client hellos were not handled properly.
   ([#7067](https://github.com/mitmproxy/mitmproxy/pull/7067), @errorxyz)
+- Emit a warning when users configure a TLS version that is not supported by the
+  current OpenSSL build.
+  ([#7139](https://github.com/mitmproxy/mitmproxy/pull/7139), @mhils)
 - Fix a bug where mitmproxy would crash when receiving `STOP_SENDING` QUIC frames.
   ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
 - mitmproxy now officially supports Python 3.13.
