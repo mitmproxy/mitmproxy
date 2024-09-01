@@ -409,7 +409,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         try:
             mitmproxy_rs.active_executables()
         except NotImplementedError:
-            pytest.skip("mitmproxy_rs.active_executables not available on this platform.")
+            pytest.skip(
+                "mitmproxy_rs.active_executables not available on this platform."
+            )
         resp = self.fetch("/processes")
         assert resp.code == 200
         assert get_json(resp)
