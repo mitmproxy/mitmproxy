@@ -18,22 +18,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
     with:
       cmd: tox -e individual_coverage
 
@@ -147,7 +147,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@v8
+    uses: mhils/workflows/.github/workflows/python-build.yml@v10
     with:
       python-version-file: .github/python-version.txt
       attest-provenance: false  # done in deploy step
@@ -267,7 +267,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@v8
+    uses: mhils/workflows/.github/workflows/alls-green.yml@v10
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -327,7 +327,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
