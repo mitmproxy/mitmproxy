@@ -405,20 +405,22 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
-    @pytest.mark.skipif(
-        not hasattr(mitmproxy_rs, "active_executables"),
-        reason="mitmproxy_rs.active_executables not available on this platform.",
-    )
     def test_process_list(self):
+        try:
+            mitmproxy_rs.active_executables()
+        except NotImplementedError:
+            pytest.skip("mitmproxy_rs.active_executables not available on this platform.")
         resp = self.fetch("/processes")
         assert resp.code == 200
         assert get_json(resp)
 
-    @pytest.mark.skipif(
-        not hasattr(mitmproxy_rs, "executable_icon"),
-        reason="mitmproxy_rs.executable_icon not available on this platform.",
-    )
     def test_process_icon(self):
+        try:
+            mitmproxy_rs.executable_icon("invalid")
+        except NotImplementedError:
+            pytest.skip("mitmproxy_rs.executable_icon not available on this platform.")
+        except Exception:
+            pass
         resp = self.fetch("/executable-icon")
         assert resp.code == 400
         assert "Missing 'path' parameter." in resp.body.decode()
