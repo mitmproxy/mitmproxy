@@ -692,6 +692,7 @@ class ProcessImage(RequestHandler):
             icon_bytes = TRANSPARENT_PNG
 
         self.set_header("Content-Type", "image/png")
+        self.set_header("X-Content-Type-Options", "nosniff")
         self.write(icon_bytes)
 
 
