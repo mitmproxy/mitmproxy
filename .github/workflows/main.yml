@@ -150,7 +150,6 @@ jobs:
     uses: mhils/workflows/.github/workflows/python-build.yml@v10
     with:
       python-version-file: .github/python-version.txt
-      attest-provenance: false  # done in deploy step
       artifact: binaries.wheel
 
   build-windows-installer:
