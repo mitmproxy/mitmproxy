@@ -56,18 +56,25 @@
         font-weight: 600;
     }
 
-    .mode-local-input {
-        border: 1px solid #ccc;
-        margin-left: 10px;
-        border-radius: 4px;
-        min-width: 150px;
-        height: 25px;
-    }
-
     .mode-local {
         i {
             font-size: 1.8rem;
             cursor: pointer;
+        }
+        .selected-applications {
+            margin-left: 10px;
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            overflow: hidden;
+            width: 100%;
+        }
+        .selected-application {
+            background-color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 12px;
+            font-size: 12px;
         }
     }
 
@@ -162,81 +169,95 @@
         }
     }
 
-    .multi-select-dropdown {
+    .local-dropdown {
         position: relative;
         width: 200px;
-      }
-      
-      .dropdown-header {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-left: 10px;
-        margin-right: 10px;
-      }
-      
-      .dropdown-list {
-        position: absolute;
-        width: 100%;
-        max-height: 300px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        margin-top: 5px;
-        overflow-y: auto;
-        background-color: white;
-        z-index: 1;
-        list-style: none;
-        padding: 0;
-      }
-      
-      .dropdown-item {
-        padding: 8px 10px;
-        cursor: pointer;
-      }
-      
-      .dropdown-item:hover {
-        background-color: #f0f0f0;
-      }
-      
-      .selected {
-        background-color: #e0e0e0;
-      }
-      
-      .arrow {
-        margin-left: auto;
-        border: solid black;
-        border-width: 0 2px 2px 0;
-        display: inline-block;
-        padding: 3px;
-      }
-      
-      .arrow.down {
-        transform: rotate(45deg);
-      }
-      
-      .arrow.up {
-        transform: rotate(-135deg);
-      }
 
-      .selected-executables {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        overflow: hidden;
-        white-space: nowrap;
-        width: 100%;
-        max-height: 100px;
-        overflow-y: auto;
-      }
-      .selected-executable {
-        background-color: #e0e0e0;
-        padding: 2px 6px;
-        border-radius: 12px;
-        font-size: 12px;
-      }
-      
+        .dropdown-header {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow-y: auto;
+            background-color: white;
+            z-index: 1;
+            list-style: none;
+            padding: 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 4px 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .arrow {
+            margin-left: auto;
+            border: solid black;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 3px;
+        }
+        
+        .arrow.down {
+            transform: rotate(45deg);
+        }
+        
+        .arrow.up {
+            transform: rotate(-135deg);
+        }     
+        
+        .icon-container {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+        }
+        
+    
+        .check-icon {
+            margin-right: 8px;
+            color: #3c763d;
+            line-height: 1;
+            font-size: 1.5rem;
+        }
+        
+        .application-details {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        
+        .application-icon {
+            margin-right: 8px;
+            font-size: 18px;
+            color: #5f6368;
+        }
+        
+        .application-name {
+            font-weight: 500;
+            color: #333;
+        }
+    }
 }

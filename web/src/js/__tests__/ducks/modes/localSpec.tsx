@@ -1,7 +1,7 @@
 import localReducer, {
     initialState,
     setActive,
-    setApplications,
+    setSelectedApplications,
 } from "../../../ducks/modes/local";
 import {
     RECEIVE as STATE_RECEIVE,
@@ -18,16 +18,16 @@ describe("localSlice", () => {
 
         expect(store.getState().modes.local[0]).toEqual({
             active: false,
-            applications: "",
+            selectedApplications: "",
         });
 
         const server = store.getState().modes.local[0];
         await store.dispatch(setActive({ value: true, server }));
-        await store.dispatch(setApplications({ value: "curl", server }));
+        await store.dispatch(setSelectedApplications({ value: "curl", server }));
 
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
-            applications: "curl",
+            selectedApplications: "curl",
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -49,7 +49,7 @@ describe("localSlice", () => {
         const store = TStore();
 
         const server = store.getState().modes.local[0];
-        await store.dispatch(setApplications({ value: "curl", server }));
+        await store.dispatch(setSelectedApplications({ value: "curl", server }));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.local[0].error).toBe("invalid spec");
@@ -75,7 +75,7 @@ describe("localSlice", () => {
         expect(newState).toEqual([
             {
                 active: true,
-                applications: "curl",
+                selectedApplications: "curl",
                 ui_id: newState[0].ui_id,
             },
         ]);
@@ -92,7 +92,7 @@ describe("localSlice", () => {
         expect(newState).toEqual([
             {
                 active: false,
-                applications: "",
+                selectedApplications: "",
                 ui_id: newState[0].ui_id,
             },
         ]);

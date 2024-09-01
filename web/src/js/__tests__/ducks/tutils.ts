@@ -141,7 +141,7 @@ export const testState: RootState = {
         local: [
             {
                 active: false,
-                applications: "",
+                selectedApplications: "",
             },
         ],
         wireguard: [

@@ -8,7 +8,7 @@ describe("getSpec local mode", () => {
             local: [
                 {
                     active: true,
-                    applications: "curl,http",
+                    selectedApplications: "curl,http",
                 },
             ],
         } as ModesState;
@@ -23,7 +23,7 @@ describe("parseRaw local mode", () => {
         expect(parsed).toEqual({
             active: true,
             ui_id: parsed.ui_id,
-            applications: "curl,http",
+            selectedApplications: "curl,http",
         } as LocalState);
     });
 });

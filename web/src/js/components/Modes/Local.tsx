@@ -1,8 +1,7 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setActive, setApplications } from "../../ducks/modes/local";
-import ValueEditor from "../editors/ValueEditor";
+import { setActive } from "../../ducks/modes/local";
 import { getSpec, LocalState } from "../../modes/local";
 import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
@@ -44,6 +43,8 @@ function LocalRow({
 
     const error = server.error || backendState?.last_exception || undefined;
 
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
+
     return (
         <div className="mode-local">
             <ModeToggle
@@ -53,19 +54,24 @@ function LocalRow({
                 }
             >
                 Intercept traffic for
-                <LocalDropdown />
-                {/*<ValueEditor
-                    className="mode-local-input"
-                    content={server.applications || ""}
-                    placeholder="curl"
-                    onEditDone={(applications) =>
-                        dispatch(
-                            setApplications({ server, value: applications }),
-                        )
-                    }
-                />*/}
-                <i className="fa fa-refresh" aria-hidden="true"></i>
+                <LocalDropdown server={server} isRefreshing={isRefreshing} />
+                <i
+                    className="fa fa-refresh"
+                    aria-hidden="true"
+                    onClick={() => setIsRefreshing(!isRefreshing)}
+                ></i>
             </ModeToggle>
+            <div className="selected-applications">
+                {server.selectedApplications
+                    ?.split(", ")
+                    .filter((app) => app.trim() !== "")
+                    .map((app) => (
+                        <div key={app} className="selected-application">
+                            {app}
+                        </div>
+                    ))}
+            </div>
+
             <ServerStatus error={error} backendState={backendState} />
         </div>
     );
