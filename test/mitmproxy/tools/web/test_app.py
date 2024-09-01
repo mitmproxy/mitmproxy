@@ -2,11 +2,10 @@ import gzip
 import importlib
 import json
 import logging
-import sys
-import unittest
 from pathlib import Path
 from unittest import mock
 
+import mitmproxy_rs
 import pytest
 import tornado.testing
 from tornado import httpclient
@@ -406,13 +405,19 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
-    @unittest.skipIf(sys.platform.startswith("linux"), "Test is not supported on Linux")
+    @pytest.mark.skipif(
+        not hasattr(mitmproxy_rs, "active_executables"),
+        reason="mitmproxy_rs.active_executables not available on this platform.",
+    )
     def test_process_list(self):
         resp = self.fetch("/processes")
         assert resp.code == 200
         assert get_json(resp)
 
-    @unittest.skipIf(sys.platform.startswith("linux"), "Test is not supported on Linux")
+    @pytest.mark.skipif(
+        not hasattr(mitmproxy_rs, "executable_icon"),
+        reason="mitmproxy_rs.executable_icon not available on this platform.",
+    )
     def test_process_icon(self):
         resp = self.fetch("/executable-icon")
         assert resp.code == 400
