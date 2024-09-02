@@ -3,6 +3,7 @@ import { LocalState, Process } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setSelectedApplications } from "../../ducks/modes/local";
 import { Popover } from "./Popover";
+import { fetchApi } from "../../utils";
 
 interface LocalDropdownProps {
     server: LocalState;
@@ -63,45 +64,10 @@ export default function LocalDropdown({
     };
 
     React.useEffect(() => {
-        //call the endpoint to extract the list of applications and the icons
-        setCurrentApplications([
-            {
-                is_visible: true,
-                executable: "curl.exe",
-                is_system: "false",
-                display_name: "curl",
-            },
-            {
-                is_visible: true,
-                executable: "chrome.exe",
-                is_system: "false",
-                display_name: "Google Chrome",
-            },
-            {
-                is_visible: false,
-                executable: "svchost.exe",
-                is_system: "true",
-                display_name: "Service Host",
-            },
-            {
-                is_visible: true,
-                executable: "explorer.exe",
-                is_system: "false",
-                display_name: "File Explorer",
-            },
-            {
-                is_visible: true,
-                executable: "cmd.exe",
-                is_system: "false",
-                display_name: "Command Prompt",
-            },
-            {
-                is_visible: false,
-                executable: "winlogon.exe",
-                is_system: "true",
-                display_name: "Windows Logon Application",
-            },
-        ]);
+        fetchApi("/processes")
+            .then((response) => response.json())
+            .then((data) => setCurrentApplications(data))
+            .catch((err) => console.error(err));
     }, [isRefreshing]);
 
     React.useEffect(() => {
@@ -141,6 +107,7 @@ export default function LocalDropdown({
                     classname="local-popover"
                     isVisible={isPopoverVisible}
                 >
+                    <h4>Current Applications running on machine</h4>
                     {filteredApplications.length > 0 ? (
                         <ul className="dropdown-list">
                             {filteredApplications.map((option, index) => (
