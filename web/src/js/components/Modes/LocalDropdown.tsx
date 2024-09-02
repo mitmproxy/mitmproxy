@@ -2,6 +2,7 @@ import * as React from "react";
 import { LocalState, Process } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setSelectedApplications } from "../../ducks/modes/local";
+import { Popover } from "./Popover";
 
 interface LocalDropdownProps {
     server: LocalState;
@@ -24,19 +25,9 @@ export default function LocalDropdown({
         Process[]
     >([]);
 
-    const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
-
     const [currentSearch, setCurrentSearch] = React.useState("");
 
     const dispatch = useAppDispatch();
-
-    const toggleDropdown = () => {
-        if (currentSearch) {
-            setIsDropdownOpen(true);
-        } else {
-            setIsDropdownOpen(!isDropdownOpen);
-        }
-    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCurrentSearch(e.target.value);
@@ -130,50 +121,64 @@ export default function LocalDropdown({
         e.stopPropagation();
     };
 
+    const [isPopoverVisible, setPopoverVisible] = React.useState(false);
+
+    const handleInputFocus = () => {
+        setPopoverVisible(true);
+    };
+
     return (
         <div className="local-dropdown">
             <div className="dropdown-header">
                 <input
                     type="text"
                     className="autocomplete-input"
-                    placeholder="Search Executables"
+                    placeholder="Search Applications"
                     value={currentSearch}
                     onChange={handleInputChange}
-                    onClick={toggleDropdown}
                     onKeyDown={handleInputKeyDown}
+                    onFocus={handleInputFocus}
                 />
-                <span className="arrow down" />
+                <Popover
+                    iconClass="fa fa-chevron-down"
+                    classname="local-popover"
+                    isVisible={isPopoverVisible}
+                >
+                    {filteredApplications.length > 0 ? (
+                        <ul className="dropdown-list">
+                            {filteredApplications.map((option, index) => (
+                                <li
+                                    key={index}
+                                    className="dropdown-item"
+                                    onClick={() =>
+                                        handleApplicationClick(option)
+                                    }
+                                    role="menuitem"
+                                >
+                                    <span className="icon-container">
+                                        {isSelected(option) && (
+                                            <i
+                                                className="fa fa-check check-icon"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                    </span>
+                                    <div className="application-details">
+                                        <span className="application-icon">
+                                            {option.icon}
+                                        </span>
+                                        <span className="application-name">
+                                            {option.display_name}
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <span>No results</span>
+                    )}
+                </Popover>
             </div>
-
-            {isDropdownOpen && filteredApplications.length > 0 && (
-                <ul className="dropdown-list">
-                    {filteredApplications.map((option, index) => (
-                        <li
-                            key={index}
-                            className="dropdown-item"
-                            onClick={() => handleApplicationClick(option)}
-                            role="menuitem"
-                        >
-                            <span className="icon-container">
-                                {isSelected(option) && (
-                                    <i
-                                        className="fa fa-check check-icon"
-                                        aria-hidden="true"
-                                    />
-                                )}
-                            </span>
-                            <div className="application-details">
-                                <span className="application-icon">
-                                    {option.icon}
-                                </span>
-                                <span className="application-name">
-                                    {option.display_name}
-                                </span>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
         </div>
     );
 }

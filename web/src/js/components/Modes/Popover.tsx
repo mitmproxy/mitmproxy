@@ -4,9 +4,15 @@ interface PopoverProps {
     children: React.ReactNode;
     iconClass: string;
     classname?: string;
+    isVisible?: boolean;
 }
 
-export function Popover({ children, iconClass, classname }: PopoverProps) {
+export function Popover({
+    children,
+    iconClass,
+    classname,
+    isVisible,
+}: PopoverProps) {
     // Popovers are positioned relatively to an element using `position-anchor: --name-of-anchor`.
     // As of 2024, Chrome only supports `anchor-name` for the anchor (and not `anchor-scope`),
     // which is tree-scoped: Names must be unique across the page. So we do this rather annoying
@@ -27,6 +33,14 @@ export function Popover({ children, iconClass, classname }: PopoverProps) {
         // @ts-expect-error no anchor support yet
         popoverRef.current!.style.positionAnchor = cssId;
     }, []);
+
+    React.useEffect(() => {
+        if (isVisible) {
+            // Simulate a click to show the popover if visible
+            buttonRef.current?.click();
+            popoverRef.current!.style.display = "inherit";
+        }
+    }, [isVisible]);
 
     return (
         <div className={`mode-popover ${classname}`}>

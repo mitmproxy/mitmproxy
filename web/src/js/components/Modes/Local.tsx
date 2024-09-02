@@ -54,24 +54,39 @@ function LocalRow({
                 }
             >
                 Intercept traffic for
-                <LocalDropdown server={server} isRefreshing={isRefreshing} />
-                <i
-                    className="fa fa-refresh"
-                    aria-hidden="true"
-                    onClick={() => setIsRefreshing(!isRefreshing)}
-                ></i>
-            </ModeToggle>
-            <div className="selected-applications">
-                {server.selectedApplications
-                    ?.split(", ")
-                    .filter((app) => app.trim() !== "")
-                    .map((app) => (
-                        <div key={app} className="selected-application">
-                            {app}
+                <div className="applications-container">
+                    {server.selectedApplications?.length ?? 0 > 0 ? (
+                        <div className="selected-applications">
+                            {server.selectedApplications
+                                ?.split(", ")
+                                .filter((app) => app.trim() !== "")
+                                .map((app) => (
+                                    <div
+                                        key={app}
+                                        className="selected-application"
+                                    >
+                                        {app}
+                                    </div>
+                                ))}
                         </div>
-                    ))}
-            </div>
-
+                    ) : (
+                        <div className="selected-application">
+                            all applications
+                        </div>
+                    )}
+                    <div className="dropdown-container">
+                        <LocalDropdown
+                            server={server}
+                            isRefreshing={isRefreshing}
+                        />
+                        <i
+                            className="fa fa-refresh"
+                            aria-hidden="true"
+                            onClick={() => setIsRefreshing(!isRefreshing)}
+                        ></i>
+                    </div>
+                </div>
+            </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>
     );
