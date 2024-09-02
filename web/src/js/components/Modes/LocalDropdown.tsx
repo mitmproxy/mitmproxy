@@ -20,12 +20,26 @@ export default function LocalDropdown({
         (state) => state.modes.local[0].selectedApplications,
     );
 
+    const [filteredApplications, setFilteredApplications] = React.useState<
+        Process[]
+    >([]);
+
     const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
+    const [currentSearch, setCurrentSearch] = React.useState("");
 
     const dispatch = useAppDispatch();
 
     const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
+        if (currentSearch) {
+            setIsDropdownOpen(true);
+        } else {
+            setIsDropdownOpen(!isDropdownOpen);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCurrentSearch(e.target.value);
     };
 
     const handleApplicationClick = (option: Process) => {
@@ -99,16 +113,41 @@ export default function LocalDropdown({
         ]);
     }, [isRefreshing]);
 
+    React.useEffect(() => {
+        if (currentSearch) {
+            const filtered = currentApplications.filter((option) =>
+                option.display_name
+                    .toLowerCase()
+                    .includes(currentSearch.toLowerCase()),
+            );
+            setFilteredApplications(filtered);
+        } else if (filteredApplications !== currentApplications) {
+            setFilteredApplications(currentApplications);
+        }
+    }, [currentSearch, currentApplications]);
+
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+    };
+
     return (
         <div className="local-dropdown">
-            <div className="dropdown-header" onClick={toggleDropdown}>
-                <div className="selected-executables">Select Executables</div>
-                <span className={`arrow ${isDropdownOpen ? "up" : "down"}`} />
+            <div className="dropdown-header">
+                <input
+                    type="text"
+                    className="autocomplete-input"
+                    placeholder="Search Executables"
+                    value={currentSearch}
+                    onChange={handleInputChange}
+                    onClick={toggleDropdown}
+                    onKeyDown={handleInputKeyDown}
+                />
+                <span className="arrow down" />
             </div>
 
-            {isDropdownOpen && (
+            {isDropdownOpen && filteredApplications.length > 0 && (
                 <ul className="dropdown-list">
-                    {currentApplications.map((option, index) => (
+                    {filteredApplications.map((option, index) => (
                         <li
                             key={index}
                             className="dropdown-item"
