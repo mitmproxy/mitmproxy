@@ -4,7 +4,7 @@ interface PopoverProps {
     children: React.ReactNode;
     iconClass: string;
     classname?: string;
-    isVisible?: boolean;
+    isVisible?: boolean; //used only for local mode
 }
 
 export function Popover({
@@ -34,11 +34,10 @@ export function Popover({
         popoverRef.current!.style.positionAnchor = cssId;
     }, []);
 
+    //trick to open the popover even when clicking on an input field (local mode)
     React.useEffect(() => {
-        if (isVisible) {
-            // Simulate a click to show the popover if visible
-            buttonRef.current?.click();
-            popoverRef.current!.style.display = "inherit";
+        if (isVisible === true) {
+            document.getElementById(id)?.showPopover()
         }
     }, [isVisible]);
 

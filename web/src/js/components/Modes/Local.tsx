@@ -71,7 +71,7 @@ function LocalRow({
                         </div>
                     ) : (
                         <div className="selected-application">
-                            all applications
+                            All applications
                         </div>
                     )}
                     <div className="dropdown-container">

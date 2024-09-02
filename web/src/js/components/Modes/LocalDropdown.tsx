@@ -123,10 +123,6 @@ export default function LocalDropdown({
 
     const [isPopoverVisible, setPopoverVisible] = React.useState(false);
 
-    const handleInputFocus = () => {
-        setPopoverVisible(true);
-    };
-
     return (
         <div className="local-dropdown">
             <div className="dropdown-header">
@@ -137,7 +133,8 @@ export default function LocalDropdown({
                     value={currentSearch}
                     onChange={handleInputChange}
                     onKeyDown={handleInputKeyDown}
-                    onFocus={handleInputFocus}
+                    onClick={() => setPopoverVisible(true)}
+                    onBlur={() => setPopoverVisible(false)}
                 />
                 <Popover
                     iconClass="fa fa-chevron-down"
