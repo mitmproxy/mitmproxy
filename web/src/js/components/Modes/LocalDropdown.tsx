@@ -125,20 +125,12 @@ export default function LocalDropdown({
                             {filteredApplications.map((option, index) => (
                                 <li
                                     key={index}
-                                    className="dropdown-item"
+                                    className={`dropdown-item ${isSelected(option) ? "selected" : ""}`}
                                     onClick={() =>
                                         handleApplicationClick(option)
                                     }
                                     role="menuitem"
                                 >
-                                    <span className="icon-container">
-                                        {isSelected(option) && (
-                                            <i
-                                                className="fa fa-check check-icon"
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                    </span>
                                     <div className="application-details">
                                         <img
                                             className="application-icon"
