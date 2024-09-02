@@ -37,7 +37,7 @@ export function Popover({
     //trick to open the popover even when clicking on an input field (local mode)
     React.useEffect(() => {
         if (isVisible === true) {
-            document.getElementById(id)?.showPopover()
+            document.getElementById(id)?.showPopover();
         }
     }, [isVisible]);
 
