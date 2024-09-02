@@ -1,6 +1,9 @@
+import asyncio
 import ipaddress
+import logging
 import socket
-from collections.abc import Iterable
+from collections.abc import Awaitable
+from collections.abc import Callable
 from collections.abc import Sequence
 from functools import cache
 
@@ -8,15 +11,10 @@ import mitmproxy_rs
 
 from mitmproxy import ctx
 from mitmproxy import dns
+from mitmproxy.flow import Error
 from mitmproxy.proxy import mode_specs
 
-
-class ResolveError(Exception):
-    """Exception thrown by different resolve methods."""
-
-    def __init__(self, response_code: int) -> None:
-        assert response_code != dns.response_codes.NOERROR
-        self.response_code = response_code
+logger = logging.getLogger(__name__)
 
 
 class DnsResolver:
@@ -41,24 +39,68 @@ class DnsResolver:
             self.name_servers.cache_clear()
 
     @cache
-    def resolver(self) -> mitmproxy_rs.DnsResolver:
-        return mitmproxy_rs.DnsResolver(
-            name_servers=self.name_servers(),
-            use_hosts_file=ctx.options.dns_use_hosts_file,
-        )
-
-    @cache
     def name_servers(self) -> list[str]:
+        """
+        The Operating System name servers,
+        or `[]` if they cannot be determined.
+        """
         try:
             return ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
         except RuntimeError as e:
-            raise RuntimeError(
-                f"Failed to get system dns servers: {e}\nMust set dns_name_servers option to run DNS mode."
+            logger.warning(
+                f"Failed to get system dns servers: {e}\n"
+                f"The dns_name_servers option needs to be set manually."
             )
+            return []
+
+    @cache
+    def resolver(self) -> mitmproxy_rs.DnsResolver:
+        """
+        Our mitmproxy_rs DNS resolver.
+        """
+        ns = self.name_servers()
+        assert ns
+        return mitmproxy_rs.DnsResolver(
+            name_servers=ns,
+            use_hosts_file=ctx.options.dns_use_hosts_file,
+        )
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
-        assert flow.request
-        should_resolve = (
+        if self._should_resolve(flow):
+            all_ip_lookups = (
+                flow.request.query
+                and flow.request.op_code == dns.op_codes.QUERY
+                and flow.request.question
+                and flow.request.question.class_ == dns.classes.IN
+                and flow.request.question.type in (dns.types.A, dns.types.AAAA)
+            )
+            name_servers = self.name_servers()
+
+            if all_ip_lookups:
+                # For A/AAAA records, we try to use our own resolver
+                # (with a fallback to getaddrinfo)
+                if name_servers:
+                    flow.response = await self.resolve(
+                        flow.request, self._with_resolver
+                    )
+                elif ctx.options.dns_use_hosts_file:
+                    # Fallback to getaddrinfo as hickory's resolver isn't as reliable
+                    # as we would like it to be (https://github.com/mitmproxy/mitmproxy/issues/7064).
+                    flow.response = await self.resolve(
+                        flow.request, self._with_getaddrinfo
+                    )
+                else:
+                    flow.error = Error("Cannot resolve, dns_name_servers unknown.")
+            elif name_servers:
+                # For other records, the best we can do is to forward the query
+                # to an upstream server.
+                flow.server_conn.address = (name_servers[0], 53)
+            else:
+                flow.error = Error("Cannot resolve, dns_name_servers unknown.")
+
+    @staticmethod
+    def _should_resolve(flow: dns.DNSFlow) -> bool:
+        return (
             (
                 isinstance(flow.client_conn.proxy_mode, mode_specs.DnsMode)
                 or (
@@ -70,61 +112,54 @@ class DnsResolver:
             and not flow.response
             and not flow.error
         )
-        if should_resolve:
-            all_ip_lookups = (
-                flow.request.query
-                and flow.request.op_code == dns.op_codes.QUERY
-                and all(
-                    q.type in (dns.types.A, dns.types.AAAA)
-                    and q.class_ == dns.classes.IN
-                    for q in flow.request.questions
-                )
-            )
-            # We use `mitmproxy_rs.DnsResolver` if we need to use the hosts file to lookup hostnames(A/AAAA queries only)
-            # For other cases we forward it to the specified name server directly.
-            if all_ip_lookups and ctx.options.dns_use_hosts_file:
-                # TODO: We need to handle overly long responses here.
-                flow.response = await self.resolve_message(flow.request)
-            elif not flow.server_conn.address:
-                flow.server_conn.address = (self.name_servers()[0], 53)
 
-    async def resolve_message(self, message: dns.Message) -> dns.Message:
+    async def resolve(
+        self,
+        message: dns.Message,
+        resolve_func: Callable[[dns.Question], Awaitable[list[str]]],
+    ) -> dns.Message:
+        assert message.question
         try:
-            rrs: list[dns.ResourceRecord] = []
-            for question in message.questions:
-                rrs.extend(await self.resolve_question(question))
-        except ResolveError as e:
-            return message.fail(e.response_code)
-        else:
-            return message.succeed(rrs)
-
-    async def resolve_question(
-        self, question: dns.Question
-    ) -> Iterable[dns.ResourceRecord]:
-        assert question.type in (dns.types.A, dns.types.AAAA)
-
-        try:
-            if question.type == dns.types.A:
-                addrinfos = await self.resolver().lookup_ipv4(question.name)
-            elif question.type == dns.types.AAAA:
-                addrinfos = await self.resolver().lookup_ipv6(question.name)
+            ip_addrs = await resolve_func(message.question)
         except socket.gaierror as e:
-            # We aren't exactly following the RFC here
-            # https://datatracker.ietf.org/doc/html/rfc2308#section-2
-            if e.args[0] == "NXDOMAIN":
-                raise ResolveError(dns.response_codes.NXDOMAIN)
-            elif e.args[0] == "NOERROR":
-                addrinfos = []
-            else:  # pragma: no cover
-                raise ResolveError(dns.response_codes.SERVFAIL)
+            match e.args[0]:
+                case socket.EAI_NONAME:
+                    return message.fail(dns.response_codes.NXDOMAIN)
+                case socket.EAI_NODATA:
+                    ip_addrs = []
+                case _:
+                    return message.fail(dns.response_codes.SERVFAIL)
 
-        return map(
-            lambda addrinfo: dns.ResourceRecord(
-                name=question.name,
-                type=question.type,
-                class_=question.class_,
-                ttl=dns.ResourceRecord.DEFAULT_TTL,
-                data=ipaddress.ip_address(addrinfo).packed,
-            ),
-            addrinfos,
+        return message.succeed(
+            [
+                dns.ResourceRecord(
+                    name=message.question.name,
+                    type=message.question.type,
+                    class_=message.question.class_,
+                    ttl=dns.ResourceRecord.DEFAULT_TTL,
+                    data=ipaddress.ip_address(ip).packed,
+                )
+                for ip in ip_addrs
+            ]
         )
+
+    async def _with_resolver(self, question: dns.Question) -> list[str]:
+        """Resolve an A/AAAA question using the mitmproxy_rs DNS resolver."""
+        if question.type == dns.types.A:
+            return await self.resolver().lookup_ipv4(question.name)
+        else:
+            return await self.resolver().lookup_ipv6(question.name)
+
+    async def _with_getaddrinfo(self, question: dns.Question) -> list[str]:
+        """Resolve an A/AAAA question using getaddrinfo."""
+        if question.type == dns.types.A:
+            family = socket.AF_INET
+        else:
+            family = socket.AF_INET6
+        addrinfos = await asyncio.get_running_loop().getaddrinfo(
+            host=question.name,
+            port=None,
+            family=family,
+            type=socket.SOCK_STREAM,
+        )
+        return [addrinfo[4][0] for addrinfo in addrinfos]

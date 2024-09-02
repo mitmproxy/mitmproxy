@@ -1,24 +1,25 @@
 import * as React from "react";
-import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
+import { getSpec, UpstreamState } from "../../modes/upstream";
+import { ServerInfo } from "../../ducks/backendState";
 import {
-    setListenPort,
+    setDestination,
     setActive,
     setListenHost,
-} from "../../ducks/modes/regular";
+    setListenPort,
+} from "../../ducks/modes/upstream";
 import ValueEditor from "../editors/ValueEditor";
-import { getSpec, RegularState } from "../../modes/regular";
-import { Popover } from "./Popover";
-import { ServerInfo } from "../../ducks/backendState";
 import { ServerStatus } from "./CaptureSetup";
+import { ModeToggle } from "./ModeToggle";
+import { Popover } from "./Popover";
 
-export default function Regular() {
-    const serverState = useAppSelector((state) => state.modes.regular);
+export default function Upstream() {
+    const serverState = useAppSelector((state) => state.modes.upstream);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
     const servers = serverState.map((server) => {
         return (
-            <RegularRow
+            <UpstreamRow
                 key={server.ui_id}
                 server={server}
                 backendState={backendState[getSpec(server)]}
@@ -28,22 +29,22 @@ export default function Regular() {
 
     return (
         <div>
-            <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
+            <h4 className="mode-title">
+                Explicit HTTP(S) Proxy (With Upstream Proxy)
+            </h4>
             <p className="mode-description">
-                You manually configure your client application or device to use
-                an HTTP(S) proxy.
+                All requests are forwarded to a second HTTP(S) proxy server.
             </p>
             {servers}
         </div>
     );
 }
 
-function RegularRow({
+function UpstreamRow({
     server,
     backendState,
 }: {
-    server: RegularState;
-    error?: string;
+    server: UpstreamState;
     backendState?: ServerInfo;
 }) {
     const dispatch = useAppDispatch();
@@ -54,11 +55,19 @@ function RegularRow({
         <div>
             <ModeToggle
                 value={server.active}
-                onChange={() =>
-                    dispatch(setActive({ server, value: !server.active }))
-                }
+                onChange={() => {
+                    dispatch(setActive({ server, value: !server.active }));
+                }}
             >
-                Run HTTP/S Proxy
+                Run HTTP/S Proxy and forward requests to
+                <ValueEditor
+                    className="mode-upstream-input"
+                    content={server.destination?.toString() || ""}
+                    onEditDone={(value) =>
+                        dispatch(setDestination({ server, value }))
+                    }
+                    placeholder="http://example.com:8080"
+                />
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor

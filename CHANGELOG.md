@@ -11,12 +11,18 @@
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
 - Tighten HTTP detection heuristic to better support custom TCP-based protocols.
   ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
+  determine the operating system's name servers.
+  ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
 - Improve the error message when users specify the `certs` option without a matching private key.
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where intermediate certificates would not be transmitted when using QUIC.
   ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
 - Fix a bug where fragmented QUIC client hellos were not handled properly.
   ([#7067](https://github.com/mitmproxy/mitmproxy/pull/7067), @errorxyz)
+- Emit a warning when users configure a TLS version that is not supported by the
+  current OpenSSL build.
+  ([#7139](https://github.com/mitmproxy/mitmproxy/pull/7139), @mhils)
 - Fix a bug where mitmproxy would crash when receiving `STOP_SENDING` QUIC frames.
   ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
 - mitmproxy now officially supports Python 3.13.
@@ -25,6 +31,8 @@
   ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
 - Addon to update the hosts in alt-svc header in reverse mode
   ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
+- Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
+  ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
 
 ## 02 August 2024: mitmproxy 10.4.2
 

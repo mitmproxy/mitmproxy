@@ -116,10 +116,16 @@ def run(
         def _sigterm(*_):
             loop.call_soon_threadsafe(master.shutdown)
 
-        # We can't use loop.add_signal_handler because that's not available on Windows' Proactorloop,
-        # but signal.signal just works fine for our purposes.
-        signal.signal(signal.SIGINT, _sigint)
-        signal.signal(signal.SIGTERM, _sigterm)
+        try:
+            # Prefer loop.add_signal_handler where it is available
+            # https://github.com/mitmproxy/mitmproxy/issues/7128
+            loop.add_signal_handler(signal.SIGINT, _sigint)
+            loop.add_signal_handler(signal.SIGTERM, _sigterm)
+        except NotImplementedError:
+            # Fall back to `signal.signal` for platforms where that is not available (Windows' Proactorloop)
+            signal.signal(signal.SIGINT, _sigint)
+            signal.signal(signal.SIGTERM, _sigterm)
+
         # to fix the issue mentioned https://github.com/mitmproxy/mitmproxy/issues/6744
         # by setting SIGPIPE to SIG_IGN, the process will not terminate and continue to run
         if hasattr(signal, "SIGPIPE"):

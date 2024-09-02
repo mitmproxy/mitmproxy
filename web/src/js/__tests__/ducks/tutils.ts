@@ -167,6 +167,17 @@ export const testState: RootState = {
                 active: false,
             },
         ],
+        upstream: [
+            {
+                active: false,
+                destination: "example.com",
+            },
+        ],
+        dns: [
+            {
+                active: false,
+            },
+        ],
     },
 };
 

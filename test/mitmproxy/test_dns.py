@@ -289,3 +289,9 @@ class TestDNSFlow:
     def test_repr(self):
         f = tflow.tdnsflow()
         assert "DNSFlow" in repr(f)
+
+    def test_question(self):
+        r = tflow.tdnsreq()
+        assert r.question
+        r.questions = []
+        assert not r.question

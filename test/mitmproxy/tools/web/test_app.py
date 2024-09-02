@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from unittest import mock
 
+import mitmproxy_rs
 import pytest
 import tornado.testing
 from tornado import httpclient
@@ -403,3 +404,30 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
+
+    def test_process_list(self):
+        try:
+            mitmproxy_rs.active_executables()
+        except NotImplementedError:
+            pytest.skip(
+                "mitmproxy_rs.active_executables not available on this platform."
+            )
+        resp = self.fetch("/processes")
+        assert resp.code == 200
+        assert get_json(resp)
+
+    def test_process_icon(self):
+        try:
+            mitmproxy_rs.executable_icon("invalid")
+        except NotImplementedError:
+            pytest.skip("mitmproxy_rs.executable_icon not available on this platform.")
+        except Exception:
+            pass
+        resp = self.fetch("/executable-icon")
+        assert resp.code == 400
+        assert "Missing 'path' parameter." in resp.body.decode()
+
+        resp = self.fetch("/executable-icon?path=invalid_path")
+        assert resp.code == 200
+        assert resp.headers["Content-Type"] == "image/png"
+        assert resp.body == app.TRANSPARENT_PNG
