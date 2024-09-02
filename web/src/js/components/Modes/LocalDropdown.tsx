@@ -70,21 +70,7 @@ export default function LocalDropdown({
         fetchApi("/processes")
             .then((response) => response.json())
             .then(async (data: Process[]) => {
-                const processesWithIcons = await Promise.all(
-                    data.map(async (process) => {
-                        const iconResponse = await fetchApi(
-                            `/executable-icon?path=${encodeURIComponent(process.executable)}`,
-                        );
-                        const iconBlob: Blob = await iconResponse.blob();
-                        const iconUrl: string = URL.createObjectURL(iconBlob);
-
-                        return {
-                            ...process,
-                            icon: iconUrl,
-                        };
-                    }),
-                );
-                setCurrentApplications(processesWithIcons);
+                setCurrentApplications(data);
                 setIsFetching(false);
             })
             .catch((err) => console.error(err));
@@ -152,7 +138,7 @@ export default function LocalDropdown({
                                     <div className="application-details">
                                         <img
                                             className="application-icon"
-                                            src={option.icon}
+                                            src={`./executable-icon?path=${option.executable}`}
                                         />
                                         <span className="application-name">
                                             {option.display_name}
