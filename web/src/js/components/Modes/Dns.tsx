@@ -55,6 +55,7 @@ function DnsRow({
             >
                 Run DNS Server
                 <Popover>
+                    <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor
                         className="mode-input"

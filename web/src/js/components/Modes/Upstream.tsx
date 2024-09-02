@@ -69,6 +69,7 @@ function UpstreamRow({
                     placeholder="http://example.com:8080"
                 />
                 <Popover>
+                    <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor
                         className="mode-input"
