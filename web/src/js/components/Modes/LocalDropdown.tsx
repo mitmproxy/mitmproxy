@@ -28,6 +28,8 @@ export default function LocalDropdown({
 
     const [currentSearch, setCurrentSearch] = React.useState("");
 
+    const [isFetching, setIsFetching] = React.useState(false);
+
     const dispatch = useAppDispatch();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,9 +66,27 @@ export default function LocalDropdown({
     };
 
     React.useEffect(() => {
+        setIsFetching(true);
         fetchApi("/processes")
             .then((response) => response.json())
-            .then((data) => setCurrentApplications(data))
+            .then(async (data: Process[]) => {
+                const processesWithIcons = await Promise.all(
+                    data.map(async (process) => {
+                        const iconResponse = await fetchApi(
+                            `/executable-icon?path=${encodeURIComponent(process.executable)}`,
+                        );
+                        const iconBlob: Blob = await iconResponse.blob();
+                        const iconUrl: string = URL.createObjectURL(iconBlob);
+
+                        return {
+                            ...process,
+                            icon: iconUrl,
+                        };
+                    }),
+                );
+                setCurrentApplications(processesWithIcons);
+                setIsFetching(false);
+            })
             .catch((err) => console.error(err));
     }, [isRefreshing]);
 
@@ -108,7 +128,9 @@ export default function LocalDropdown({
                     isVisible={isPopoverVisible}
                 >
                     <h4>Current Applications running on machine</h4>
-                    {filteredApplications.length > 0 ? (
+                    {isFetching ? (
+                        <i className="fa fa-spinner" aria-hidden="true"></i>
+                    ) : filteredApplications.length > 0 ? (
                         <ul className="dropdown-list">
                             {filteredApplications.map((option, index) => (
                                 <li
@@ -128,9 +150,10 @@ export default function LocalDropdown({
                                         )}
                                     </span>
                                     <div className="application-details">
-                                        <span className="application-icon">
-                                            {option.icon}
-                                        </span>
+                                        <img
+                                            className="application-icon"
+                                            src={option.icon}
+                                        />
                                         <span className="application-name">
                                             {option.display_name}
                                         </span>
