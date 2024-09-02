@@ -75,6 +75,9 @@
             overflow: hidden;
         }
         .selected-application {
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
             background-color: #e0e0e0;
             padding: 5px;
             border-radius: 4px;
@@ -82,6 +85,12 @@
             font-size: 12px;
             font-weight: 500;
             align-content: center;
+            align-items: center;
+
+            > i {
+                font-size: 15px;
+            }
+
         }
 
         .dropdown-container {

@@ -101,7 +101,11 @@ export default function LocalDropdown({
                 <input
                     type="text"
                     className="autocomplete-input"
-                    placeholder="Search Applications"
+                    placeholder={
+                        selectedApplications && selectedApplications?.length > 0
+                            ? "Add more"
+                            : "(all applications)"
+                    }
                     value={currentSearch}
                     onChange={handleInputChange}
                     onKeyDown={handleInputKeyDown}
