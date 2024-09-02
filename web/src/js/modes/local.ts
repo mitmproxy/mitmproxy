@@ -5,7 +5,6 @@ export interface Process {
     executable: string;
     is_system: string;
     display_name: string;
-    icon?: string;
 }
 
 export interface LocalState extends ModeState {
