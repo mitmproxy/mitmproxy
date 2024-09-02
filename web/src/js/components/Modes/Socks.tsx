@@ -60,7 +60,7 @@ function SocksRow({
                 }
             >
                 Run SOCKS Proxy
-                <Popover>
+                <Popover iconClass="fa fa-cog">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

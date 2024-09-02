@@ -66,7 +66,7 @@ function TransparentRow({
                 }
             >
                 Run Transparent Proxy
-                <Popover>
+                <Popover iconClass="fa fa-cog">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

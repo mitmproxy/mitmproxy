@@ -2,10 +2,11 @@ import * as React from "react";
 
 interface PopoverProps {
     children: React.ReactNode;
+    iconClass: string;
     classname?: string;
 }
 
-export function Popover({ children, classname }: PopoverProps) {
+export function Popover({ children, iconClass, classname }: PopoverProps) {
     // Popovers are positioned relatively to an element using `position-anchor: --name-of-anchor`.
     // As of 2024, Chrome only supports `anchor-name` for the anchor (and not `anchor-scope`),
     // which is tree-scoped: Names must be unique across the page. So we do this rather annoying
@@ -31,7 +32,7 @@ export function Popover({ children, classname }: PopoverProps) {
         <div className={`mode-popover ${classname}`}>
             {/* @ts-expect-error no popover support yet */}
             <button popovertarget={id} ref={buttonRef}>
-                <i className="fa fa-cog" aria-hidden="true"></i>
+                <i className={iconClass} aria-hidden="true"></i>
             </button>
             {/* @ts-expect-error no popover support yet */}
             <div id={id} popover="auto" ref={popoverRef}>

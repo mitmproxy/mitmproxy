@@ -68,7 +68,7 @@ function UpstreamRow({
                     }
                     placeholder="http://example.com:8080"
                 />
-                <Popover>
+                <Popover iconClass="fa fa-cog">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor
