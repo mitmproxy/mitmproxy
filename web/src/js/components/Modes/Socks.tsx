@@ -59,7 +59,13 @@ function SocksRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run SOCKS Proxy
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Run SOCKS Proxy
+                </span>
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor

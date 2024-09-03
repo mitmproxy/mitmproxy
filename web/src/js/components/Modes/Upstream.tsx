@@ -59,7 +59,13 @@ function UpstreamRow({
                     dispatch(setActive({ server, value: !server.active }));
                 }}
             >
-                Run HTTP/S Proxy and forward requests to
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Run HTTP/S Proxy and forward requests to
+                </span>
                 <ValueEditor
                     className="mode-upstream-input"
                     content={server.destination?.toString() || ""}

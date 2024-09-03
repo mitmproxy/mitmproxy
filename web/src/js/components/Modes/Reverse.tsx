@@ -89,7 +89,13 @@ function ReverseToggleRow({
                     dispatch(setActive({ server, value: !server.active }));
                 }}
             >
-                Forward
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Forward
+                </span>
                 <Dropdown
                     text={inner}
                     className="btn btn-default btn-xs mode-reverse-dropdown"
@@ -106,7 +112,13 @@ function ReverseToggleRow({
                         </MenuItem>
                     ))}
                 </Dropdown>{" "}
-                traffic from{" "}
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    traffic from
+                </span>
                 <ValueEditor
                     className="mode-reverse-input"
                     content={server.listen_host || ""}

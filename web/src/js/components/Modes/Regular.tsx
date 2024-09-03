@@ -58,7 +58,13 @@ function RegularRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run HTTP/S Proxy
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Run HTTP/S Proxy
+                </span>
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor

@@ -51,7 +51,13 @@ function LocalRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Intercept traffic for
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Intercept traffic for
+                </span>
                 <ValueEditor
                     className="mode-local-input"
                     content={server.applications || ""}

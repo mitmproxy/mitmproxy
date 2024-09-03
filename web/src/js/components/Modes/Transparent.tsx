@@ -65,7 +65,13 @@ function TransparentRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run Transparent Proxy
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Run Transparent Proxy
+                </span>
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor

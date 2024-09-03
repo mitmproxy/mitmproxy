@@ -21,7 +21,9 @@ exports[`RegularSpec 1`] = `
           checked=""
           type="checkbox"
         />
-        Run HTTP/S Proxy
+        <span>
+          Run HTTP/S Proxy
+        </span>
         <div
           class="mode-popover"
         >
@@ -95,7 +97,9 @@ exports[`RegularSpec 2`] = `
           checked=""
           type="checkbox"
         />
-        Run HTTP/S Proxy
+        <span>
+          Run HTTP/S Proxy
+        </span>
         <div
           class="mode-popover"
         >

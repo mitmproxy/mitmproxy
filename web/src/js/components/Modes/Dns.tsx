@@ -53,7 +53,13 @@ function DnsRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run DNS Server
+                <span
+                    onClick={() => {
+                        dispatch(setActive({ server, value: !server.active }));
+                    }}
+                >
+                    Run DNS Server
+                </span>
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor
