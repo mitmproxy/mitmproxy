@@ -178,6 +178,17 @@
                 font-size: 1.5rem;
             }
 
+            @supports (anchor-name: --test) {
+                > div {
+                    margin: 0;
+                    position: absolute;
+                    left: 0;
+                    top: calc(anchor(bottom) + 10px);
+                    justify-self: anchor-center;
+                    align-self: auto;
+                }
+            }
+
             > div {
                 &:popover-open {
                     display: block;
