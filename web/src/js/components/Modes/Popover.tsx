@@ -42,7 +42,9 @@ export function Popover({
     }, [isVisible]);
 
     return (
-        <div className={`mode-popover ${classname}`}>
+        <div
+            className={classname ? `mode-popover ${classname}` : "mode-popover"}
+        >
             {/* @ts-expect-error no popover support yet */}
             <button popovertarget={id} ref={buttonRef}>
                 <i className={iconClass} aria-hidden="true"></i>
