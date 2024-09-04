@@ -47,11 +47,11 @@ function LocalRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Intercept traffic for"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Intercept traffic for
                 <ValueEditor
                     className="mode-local-input"
                     content={server.applications || ""}

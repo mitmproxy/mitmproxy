@@ -86,11 +86,11 @@ function ReverseToggleRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Forward"
                 onChange={() => {
                     dispatch(setActive({ server, value: !server.active }));
                 }}
             >
-                Forward
                 <Dropdown
                     text={inner}
                     className="btn btn-default btn-xs mode-reverse-dropdown"
@@ -106,7 +106,7 @@ function ReverseToggleRow({
                             {prot}
                         </MenuItem>
                     ))}
-                </Dropdown>{" "}
+                </Dropdown>
                 traffic to
                 <ValueEditor
                     className="mode-reverse-input"
