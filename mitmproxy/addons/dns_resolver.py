@@ -45,7 +45,7 @@ class DnsResolver:
         or `[]` if they cannot be determined.
         """
         try:
-            return ctx.options.dns_name_servers or mitmproxy_rs.get_system_dns_servers()
+            return ctx.options.dns_name_servers or mitmproxy_rs.dns.get_system_dns_servers()
         except RuntimeError as e:
             logger.warning(
                 f"Failed to get system dns servers: {e}\n"
@@ -54,13 +54,13 @@ class DnsResolver:
             return []
 
     @cache
-    def resolver(self) -> mitmproxy_rs.DnsResolver:
+    def resolver(self) -> mitmproxy_rs.dns.DnsResolver:
         """
         Our mitmproxy_rs DNS resolver.
         """
         ns = self.name_servers()
         assert ns
-        return mitmproxy_rs.DnsResolver(
+        return mitmproxy_rs.dns.DnsResolver(
             name_servers=ns,
             use_hosts_file=ctx.options.dns_use_hosts_file,
         )
