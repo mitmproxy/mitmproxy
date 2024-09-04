@@ -298,7 +298,7 @@ class LocalMode(ProxyMode):
 
     def __post_init__(self) -> None:
         # should not raise
-        mitmproxy_rs.LocalRedirector.describe_spec(self.data)
+        mitmproxy_rs.local.LocalRedirector.describe_spec(self.data)
 
 
 class OsProxyMode(ProxyMode):  # pragma: no cover

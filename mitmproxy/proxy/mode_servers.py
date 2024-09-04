@@ -219,7 +219,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: list[asyncio.Server | mitmproxy_rs.UdpServer]
+    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -233,7 +233,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def listen_addrs(self) -> tuple[Address, ...]:
         addrs = []
         for s in self._servers:
-            if isinstance(s, mitmproxy_rs.UdpServer):
+            if isinstance(s, mitmproxy_rs.udp.UdpServer):
                 addrs.append(s.getsockname())
             else:
                 try:
@@ -270,11 +270,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> list[asyncio.Server | mitmproxy_rs.UdpServer]:
+    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer]:
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
-        servers: list[asyncio.Server | mitmproxy_rs.UdpServer] = []
+        servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer] = []
         if self.mode.transport_protocol in ("tcp", "both"):
             # workaround for https://github.com/python/cpython/issues/89856:
             # We want both IPv4 and IPv6 sockets to bind to the same port.
@@ -305,14 +305,14 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             # we start two servers for dual-stack support.
             # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
             if host == "":
-                ipv4 = await mitmproxy_rs.start_udp_server(
+                ipv4 = await mitmproxy_rs.udp.start_udp_server(
                     "0.0.0.0",
                     port,
                     self.handle_udp_stream,
                 )
                 servers.append(ipv4)
                 try:
-                    ipv6 = await mitmproxy_rs.start_udp_server(
+                    ipv6 = await mitmproxy_rs.udp.start_udp_server(
                         "[::]",
                         ipv4.getsockname()[1],
                         self.handle_udp_stream,
@@ -322,7 +322,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
             else:
                 servers.append(
-                    await mitmproxy_rs.start_udp_server(
+                    await mitmproxy_rs.udp.start_udp_server(
                         host,
                         port,
                         self.handle_udp_stream,
@@ -333,7 +333,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
 
 class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
-    _server: mitmproxy_rs.WireGuardServer | None = None
+    _server: mitmproxy_rs.wireguard.WireGuardServer | None = None
 
     server_key: str
     client_key: str
@@ -369,8 +369,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             conf_path.write_text(
                 json.dumps(
                     {
-                        "server_key": mitmproxy_rs.genkey(),
-                        "client_key": mitmproxy_rs.genkey(),
+                        "server_key": mitmproxy_rs.wireguard.genkey(),
+                        "client_key": mitmproxy_rs.wireguard.genkey(),
                     },
                     indent=4,
                 )
@@ -383,10 +383,10 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         except Exception as e:
             raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
         # error early on invalid keys
-        p = mitmproxy_rs.pubkey(self.client_key)
-        _ = mitmproxy_rs.pubkey(self.server_key)
+        p = mitmproxy_rs.wireguard.pubkey(self.client_key)
+        _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
 
-        self._server = await mitmproxy_rs.start_wireguard_server(
+        self._server = await mitmproxy_rs.wireguard.start_wireguard_server(
             host or "0.0.0.0",
             port,
             self.server_key,
@@ -416,7 +416,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             DNS = 10.0.0.53
 
             [Peer]
-            PublicKey = {mitmproxy_rs.pubkey(self.server_key)}
+            PublicKey = {mitmproxy_rs.wireguard.pubkey(self.server_key)}
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
             """
@@ -440,7 +440,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
 
 
 class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
-    _server: ClassVar[mitmproxy_rs.LocalRedirector | None] = None
+    _server: ClassVar[mitmproxy_rs.local.LocalRedirector | None] = None
     """The local redirector daemon. Will be started once and then reused for all future instances."""
     _instance: ClassVar[LocalRedirectorInstance | None] = None
     """The current LocalRedirectorInstance. Will be unset again if an instance is stopped."""
@@ -474,7 +474,7 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         cls._instance = self  # assign before awaiting to avoid races
         if cls._server is None:
             try:
-                cls._server = await mitmproxy_rs.start_local_redirector(
+                cls._server = await mitmproxy_rs.local.start_local_redirector(
                     cls.redirector_handle_stream,
                     cls.redirector_handle_stream,
                 )

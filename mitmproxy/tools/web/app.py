@@ -664,7 +664,7 @@ class State(RequestHandler):
 class ProcessList(RequestHandler):
     @staticmethod
     def get_json():
-        processes = mitmproxy_rs.active_executables()
+        processes = mitmproxy_rs.process_info.active_executables()
         return [
             {
                 "is_visible": process.is_visible,
@@ -687,7 +687,7 @@ class ProcessImage(RequestHandler):
             raise APIError(400, "Missing 'path' parameter.")
 
         try:
-            icon_bytes = mitmproxy_rs.executable_icon(path)
+            icon_bytes = mitmproxy_rs.process_info.executable_icon(path)
         except Exception:
             icon_bytes = TRANSPARENT_PNG
 

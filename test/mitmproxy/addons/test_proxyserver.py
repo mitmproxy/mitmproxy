@@ -271,7 +271,7 @@ async def lookup_ipv4():
 
 async def test_dns(caplog_async, monkeypatch) -> None:
     monkeypatch.setattr(
-        mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, __: lookup_ipv4()
+        mitmproxy_rs.dns.DnsResolver, "lookup_ipv4", lambda _, __: lookup_ipv4()
     )
 
     caplog_async.set_level("INFO")
@@ -286,7 +286,7 @@ async def test_dns(caplog_async, monkeypatch) -> None:
         await caplog_async.await_log("DNS server listening at")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
-        s = await mitmproxy_rs.open_udp_connection(*dns_addr)
+        s = await mitmproxy_rs.udp.open_udp_connection(*dns_addr)
         req = tdnsreq()
         s.write(req.packed)
         resp = dns.Message.unpack(await s.read(65535))
@@ -384,7 +384,7 @@ async def test_udp(caplog_async) -> None:
             )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
-            stream = await mitmproxy_rs.open_udp_connection(*addr)
+            stream = await mitmproxy_rs.udp.open_udp_connection(*addr)
             stream.write(b"\x16")
             assert b"\x01" == await stream.read(65535)
             assert repr(ps) == "Proxyserver(1 active conns)"
@@ -847,7 +847,7 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
     with taddons.context(ps, nl, ta) as tctx:
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
-            orig_open_connection = mitmproxy_rs.open_udp_connection
+            orig_open_connection = mitmproxy_rs.udp.open_udp_connection
 
             async def open_connection_path(
                 host: str, port: int, *args, **kwargs
@@ -858,7 +858,7 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
                 return orig_open_connection(host, port, *args, **kwargs)
 
             monkeypatch.setattr(
-                mitmproxy_rs, "open_udp_connection", open_connection_path
+                mitmproxy_rs.udp, "open_udp_connection", open_connection_path
             )
             mode = f"http3@127.0.0.1:0"
             tctx.configure(

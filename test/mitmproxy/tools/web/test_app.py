@@ -407,10 +407,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_process_list(self):
         try:
-            mitmproxy_rs.active_executables()
+            mitmproxy_rs.process_info.active_executables()
         except NotImplementedError:
             pytest.skip(
-                "mitmproxy_rs.active_executables not available on this platform."
+                "mitmproxy_rs.process_info.active_executables not available on this platform."
             )
         resp = self.fetch("/processes")
         assert resp.code == 200
@@ -418,9 +418,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_process_icon(self):
         try:
-            mitmproxy_rs.executable_icon("invalid")
+            mitmproxy_rs.process_info.executable_icon("invalid")
         except NotImplementedError:
-            pytest.skip("mitmproxy_rs.executable_icon not available on this platform.")
+            pytest.skip(
+                "mitmproxy_rs.process_info.executable_icon not available on this platform."
+            )
         except Exception:
             pass
         resp = self.fetch("/executable-icon")
