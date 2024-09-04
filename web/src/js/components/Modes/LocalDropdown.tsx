@@ -135,6 +135,7 @@ export default function LocalDropdown({
                                         <img
                                             className="application-icon"
                                             src={`./executable-icon?path=${option.executable}`}
+                                            loading="lazy"
                                         />
                                         <span className="application-name">
                                             {option.display_name}
