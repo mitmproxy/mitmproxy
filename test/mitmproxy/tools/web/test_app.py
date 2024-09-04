@@ -420,7 +420,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         try:
             mitmproxy_rs.process_info.executable_icon("invalid")
         except NotImplementedError:
-            pytest.skip("mitmproxy_rs.process_info.executable_icon not available on this platform.")
+            pytest.skip(
+                "mitmproxy_rs.process_info.executable_icon not available on this platform."
+            )
         except Exception:
             pass
         resp = self.fetch("/executable-icon")

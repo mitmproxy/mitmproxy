@@ -86,7 +86,9 @@ async def test_lookup(
     domain: Domain, hosts_file: HostsFile, name_servers: NameServers, monkeypatch
 ):
     if name_servers == "nameservers":
-        monkeypatch.setattr(mitmproxy_rs.dns, "get_system_dns_servers", lambda: ["8.8.8.8"])
+        monkeypatch.setattr(
+            mitmproxy_rs.dns, "get_system_dns_servers", lambda: ["8.8.8.8"]
+        )
         monkeypatch.setattr(
             mitmproxy_rs.dns.DnsResolver, "lookup_ipv4", lambda _, name: lookup(name)
         )

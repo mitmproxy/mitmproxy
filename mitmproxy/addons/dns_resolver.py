@@ -45,7 +45,10 @@ class DnsResolver:
         or `[]` if they cannot be determined.
         """
         try:
-            return ctx.options.dns_name_servers or mitmproxy_rs.dns.get_system_dns_servers()
+            return (
+                ctx.options.dns_name_servers
+                or mitmproxy_rs.dns.get_system_dns_servers()
+            )
         except RuntimeError as e:
             logger.warning(
                 f"Failed to get system dns servers: {e}\n"
