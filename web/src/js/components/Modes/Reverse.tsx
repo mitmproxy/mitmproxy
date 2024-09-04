@@ -16,6 +16,7 @@ import Dropdown, { MenuItem } from "../common/Dropdown";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
+import { Popover } from "./Popover";
 
 interface ReverseToggleRowProps {
     removable: boolean;
@@ -105,36 +106,8 @@ function ReverseToggleRow({
                             {prot}
                         </MenuItem>
                     ))}
-                </Dropdown>{" "}
-                <span
-                    onClick={() => {
-                        dispatch(setActive({ server, value: !server.active }));
-                    }}
-                >
-                    traffic from
-                </span>
-                <ValueEditor
-                    className="mode-reverse-input"
-                    content={server.listen_host || ""}
-                    onEditDone={(value) =>
-                        dispatch(setListenHost({ server, value }))
-                    }
-                    placeholder="*"
-                />
-                <ValueEditor
-                    className="mode-reverse-input"
-                    content={String(server.listen_port || "")}
-                    onEditDone={(value) =>
-                        dispatch(
-                            setListenPort({
-                                server,
-                                value: value as unknown as number,
-                            }),
-                        )
-                    }
-                    placeholder="8080"
-                />{" "}
-                to{" "}
+                </Dropdown>
+                traffic to
                 <ValueEditor
                     className="mode-reverse-input"
                     content={server.destination?.toString() || ""}
@@ -143,6 +116,31 @@ function ReverseToggleRow({
                     }
                     placeholder="example.com"
                 />
+                <Popover>
+                    <p>Listen Host</p>
+                    <ValueEditor
+                        className="mode-reverse-input"
+                        content={server.listen_host || ""}
+                        onEditDone={(value) =>
+                            dispatch(setListenHost({ server, value }))
+                        }
+                        placeholder="*"
+                    />
+                    <p>Listen Port</p>
+                    <ValueEditor
+                        className="mode-reverse-input"
+                        content={String(server.listen_port || "")}
+                        onEditDone={(value) =>
+                            dispatch(
+                                setListenPort({
+                                    server,
+                                    value: value as unknown as number,
+                                }),
+                            )
+                        }
+                        placeholder="8080"
+                    />
+                </Popover>
                 {removable && (
                     <i
                         className="fa fa-fw fa-trash fa-lg"
