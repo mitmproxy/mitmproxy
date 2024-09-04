@@ -54,17 +54,11 @@ function WireGuardRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run WireGuard Server"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <span
-                    onClick={() => {
-                        dispatch(setActive({ server, value: !server.active }));
-                    }}
-                >
-                    Run WireGuard Server
-                </span>
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor

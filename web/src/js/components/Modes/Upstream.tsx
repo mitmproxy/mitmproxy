@@ -55,17 +55,11 @@ function UpstreamRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run HTTP/S Proxy and forward requests to"
                 onChange={() => {
                     dispatch(setActive({ server, value: !server.active }));
                 }}
             >
-                <span
-                    onClick={() => {
-                        dispatch(setActive({ server, value: !server.active }));
-                    }}
-                >
-                    Run HTTP/S Proxy and forward requests to
-                </span>
                 <ValueEditor
                     className="mode-upstream-input"
                     content={server.destination?.toString() || ""}

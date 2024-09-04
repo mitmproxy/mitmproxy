@@ -61,17 +61,11 @@ function TransparentRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run Transparent Proxy"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <span
-                    onClick={() => {
-                        dispatch(setActive({ server, value: !server.active }));
-                    }}
-                >
-                    Run Transparent Proxy
-                </span>
                 <Popover>
                     <p>Listen Host</p>
                     <ValueEditor
