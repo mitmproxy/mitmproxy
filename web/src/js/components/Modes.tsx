@@ -16,19 +16,31 @@ export default function Modes() {
             <h2>Intercept Traffic</h2>
             <p>Configure how you want to intercept traffic with mitmproxy.</p>
 
-            <h3>Recommended</h3>
-            <div className="modes-container">
-                <Regular />
-                {!platform.startsWith("linux") ? <Local /> : undefined}
-                <Wireguard />
-                <Reverse />
+            <div className="modes-parent">
+                <div className="green-bar" />
+                <div className="modes-type">
+                    <h3>Recommended</h3>
+                    <div className="modes-container">
+                        <Regular />
+                        {!platform.startsWith("linux") ? <Local /> : undefined}
+                        <Wireguard />
+                        <Reverse />
+                    </div>
+                </div>
             </div>
-            <h3>Advanced</h3>
-            <div className="modes-container">
-                <Socks />
-                <Upstream />
-                <Dns />
-                {!platform.startsWith("win32") ? <Transparent /> : undefined}
+            <div className="modes-parent" style={{ marginTop: "20px" }}>
+                <div className="gray-bar" />
+                <div className="modes-type">
+                    <h3>Advanced</h3>
+                    <div className="modes-container">
+                        <Socks />
+                        <Upstream />
+                        <Dns />
+                        {!platform.startsWith("win32") ? (
+                            <Transparent />
+                        ) : undefined}
+                    </div>
+                </div>
             </div>
         </div>
     );
