@@ -93,8 +93,8 @@ function ReverseToggleRow({
                                 server,
                                 value: e.target.value as ReverseProxyProtocols,
                             }),
-                        )}
-                    }
+                        );
+                    }}
                 >
                     {protocols.map((prot) => (
                         <option key={prot} value={prot}>
