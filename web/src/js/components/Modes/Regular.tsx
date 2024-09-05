@@ -54,6 +54,7 @@ function RegularRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run HTTP/S Proxy"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }

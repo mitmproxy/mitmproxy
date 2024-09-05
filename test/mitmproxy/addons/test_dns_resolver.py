@@ -37,12 +37,12 @@ def _err():
 async def test_name_servers(caplog, monkeypatch):
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr) as tctx:
-        assert dr.name_servers() == mitmproxy_rs.get_system_dns_servers()
+        assert dr.name_servers() == mitmproxy_rs.dns.get_system_dns_servers()
 
         tctx.options.dns_name_servers = ["1.1.1.1"]
         assert dr.name_servers() == ["1.1.1.1"]
 
-        monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", _err)
+        monkeypatch.setattr(mitmproxy_rs.dns, "get_system_dns_servers", _err)
         tctx.options.dns_name_servers = []
         assert dr.name_servers() == []
         assert "Failed to get system dns servers" in caplog.text
@@ -86,15 +86,17 @@ async def test_lookup(
     domain: Domain, hosts_file: HostsFile, name_servers: NameServers, monkeypatch
 ):
     if name_servers == "nameservers":
-        monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", lambda: ["8.8.8.8"])
         monkeypatch.setattr(
-            mitmproxy_rs.DnsResolver, "lookup_ipv4", lambda _, name: lookup(name)
+            mitmproxy_rs.dns, "get_system_dns_servers", lambda: ["8.8.8.8"]
         )
         monkeypatch.setattr(
-            mitmproxy_rs.DnsResolver, "lookup_ipv6", lambda _, name: lookup(name)
+            mitmproxy_rs.dns.DnsResolver, "lookup_ipv4", lambda _, name: lookup(name)
+        )
+        monkeypatch.setattr(
+            mitmproxy_rs.dns.DnsResolver, "lookup_ipv6", lambda _, name: lookup(name)
         )
     else:
-        monkeypatch.setattr(mitmproxy_rs, "get_system_dns_servers", lambda: [])
+        monkeypatch.setattr(mitmproxy_rs.dns, "get_system_dns_servers", lambda: [])
         monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", getaddrinfo)
 
     dr = dns_resolver.DnsResolver()

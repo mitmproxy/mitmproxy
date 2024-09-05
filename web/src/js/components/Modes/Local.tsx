@@ -63,6 +63,7 @@ function LocalRow({
         <div className="mode-local">
             <ModeToggle
                 value={server.active}
+                label="Intercept traffic for"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }

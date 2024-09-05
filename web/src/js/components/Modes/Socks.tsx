@@ -55,6 +55,7 @@ function SocksRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run SOCKS Proxy"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }

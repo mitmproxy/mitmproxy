@@ -54,6 +54,7 @@ function WireGuardRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run WireGuard Server"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }

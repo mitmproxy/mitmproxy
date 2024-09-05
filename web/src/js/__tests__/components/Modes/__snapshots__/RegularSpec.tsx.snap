@@ -19,14 +19,22 @@ exports[`RegularSpec 1`] = `
       >
         <input
           checked=""
+          id="mode-checkbox-:r0:"
+          name="mode-checkbox-:r0:"
           type="checkbox"
         />
+        <label
+          for="mode-checkbox-:r0:"
+          style="margin-bottom: 0px; font-weight: normal;"
+        >
+          Run HTTP/S Proxy
+        </label>
         Run HTTP/S Proxy
         <div
           class="mode-popover"
         >
           <button
-            popovertarget=":r0:"
+            popovertarget=":r1:"
           >
             <i
               aria-hidden="true"
@@ -34,7 +42,7 @@ exports[`RegularSpec 1`] = `
             />
           </button>
           <div
-            id=":r0:"
+            id=":r1:"
             popover="auto"
           >
             <h4>
@@ -93,14 +101,22 @@ exports[`RegularSpec 2`] = `
       >
         <input
           checked=""
+          id="mode-checkbox-:r2:"
+          name="mode-checkbox-:r2:"
           type="checkbox"
         />
+        <label
+          for="mode-checkbox-:r2:"
+          style="margin-bottom: 0px; font-weight: normal;"
+        >
+          Run HTTP/S Proxy
+        </label>
         Run HTTP/S Proxy
         <div
           class="mode-popover"
         >
           <button
-            popovertarget=":r1:"
+            popovertarget=":r3:"
           >
             <i
               aria-hidden="true"
@@ -108,7 +124,7 @@ exports[`RegularSpec 2`] = `
             />
           </button>
           <div
-            id=":r1:"
+            id=":r3:"
             popover="auto"
           >
             <h4>

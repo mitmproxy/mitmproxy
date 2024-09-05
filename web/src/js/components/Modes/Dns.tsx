@@ -49,6 +49,7 @@ function DnsRow({
         <div>
             <ModeToggle
                 value={server.active}
+                label="Run DNS Server"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
