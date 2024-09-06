@@ -12,7 +12,6 @@ import {
 import { getSpec, ReverseState } from "../../modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import { ServerInfo } from "../../ducks/backendState";
-import Dropdown, { MenuItem } from "../common/Dropdown";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
@@ -66,13 +65,6 @@ function ReverseToggleRow({
 
     const protocols = Object.values(ReverseProxyProtocols);
 
-    const inner = (
-        <span>
-            &nbsp;<b>{server.protocol} </b>
-            <span className="caret" />
-        </span>
-    );
-
     const deleteServer = async () => {
         if (server.active) {
             await dispatch(setActive({ server, value: false })).unwrap();
@@ -91,22 +83,25 @@ function ReverseToggleRow({
                     dispatch(setActive({ server, value: !server.active }));
                 }}
             >
-                <Dropdown
-                    text={inner}
-                    className="btn btn-default btn-xs mode-reverse-dropdown"
-                    options={{ placement: "bottom" }}
+                <select
+                    name="protocols"
+                    className="mode-reverse-dropdown"
+                    value={server.protocol}
+                    onChange={(e) => {
+                        dispatch(
+                            setProtocol({
+                                server,
+                                value: e.target.value as ReverseProxyProtocols,
+                            }),
+                        );
+                    }}
                 >
                     {protocols.map((prot) => (
-                        <MenuItem
-                            key={prot}
-                            onClick={() =>
-                                dispatch(setProtocol({ server, value: prot }))
-                            }
-                        >
+                        <option key={prot} value={prot}>
                             {prot}
-                        </MenuItem>
+                        </option>
                     ))}
-                </Dropdown>
+                </select>
                 traffic to
                 <ValueEditor
                     className="mode-reverse-input"
