@@ -1,4 +1,5 @@
 import localReducer, {
+    fetchProcesses,
     initialState,
     setActive,
     setSelectedApplications,
@@ -12,6 +13,11 @@ import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("localSlice", () => {
+    beforeEach(() => {
+        enableFetchMocks();
+        fetchMock.resetMocks();
+    });
+
     it("should have working setters", async () => {
         enableFetchMocks();
         const store = TStore();
@@ -19,6 +25,21 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: false,
             selectedApplications: "",
+            currentProcesses: [
+                {
+                    is_visible: true,
+                    executable: "curl.exe",
+                    is_system: "false",
+                    display_name: "curl",
+                },
+                {
+                    is_visible: true,
+                    executable: "http.exe",
+                    is_system: "false",
+                    display_name: "http",
+                },
+            ],
+            isLoading: false,
         });
 
         const server = store.getState().modes.local[0];
@@ -30,6 +51,21 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
             selectedApplications: "curl",
+            currentProcesses: [
+                {
+                    is_visible: true,
+                    executable: "curl.exe",
+                    is_system: "false",
+                    display_name: "curl",
+                },
+                {
+                    is_visible: true,
+                    executable: "http.exe",
+                    is_system: "false",
+                    display_name: "http",
+                },
+            ],
+            isLoading: false,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -80,6 +116,8 @@ describe("localSlice", () => {
             {
                 active: true,
                 selectedApplications: "curl",
+                currentProcesses: [],
+                isLoading: false,
                 ui_id: newState[0].ui_id,
             },
         ]);
@@ -97,8 +135,67 @@ describe("localSlice", () => {
             {
                 active: false,
                 selectedApplications: "",
+                currentProcesses: [],
+                isLoading: false,
                 ui_id: newState[0].ui_id,
             },
         ]);
+    });
+
+    it("should handle fetchProcesses pending state", async () => {
+        enableFetchMocks();
+        fetchMock.mockResponseOnce(() => new Promise(() => {}));
+
+        const store = TStore();
+
+        store.dispatch(fetchProcesses());
+        expect(store.getState().modes.local[0].isLoading).toBe(true);
+    });
+
+    it("should handle fetchProcesses fulfilled state", async () => {
+        enableFetchMocks();
+        const mockProcesses = [
+            {
+                is_visible: true,
+                executable: "curl.exe",
+                is_system: "false",
+                display_name: "curl",
+            },
+            {
+                is_visible: true,
+                executable: "http.exe",
+                is_system: "false",
+                display_name: "http",
+            },
+        ];
+
+        fetchMock.mockResponseOnce(JSON.stringify(mockProcesses));
+
+        const store = TStore();
+
+        await store.dispatch(fetchProcesses());
+
+        expect(store.getState().modes.local[0].isLoading).toBe(false);
+        expect(store.getState().modes.local[0].currentProcesses).toEqual(
+            mockProcesses,
+        );
+        expect(fetchMock).toHaveBeenCalledWith("./processes", {
+            credentials: "same-origin",
+        });
+    });
+
+    it("should handle fetchProcesses rejected state", async () => {
+        fetchMock.mockReject(new Error("Failed to fetch processes"));
+        const store = TStore();
+
+        await store.dispatch(fetchProcesses());
+
+        expect(store.getState().modes.local[0].isLoading).toBe(false);
+        expect(store.getState().modes.local[0].error).toBe(
+            "Failed to fetch processes",
+        );
+        expect(fetchMock).toHaveBeenCalledWith("./processes", {
+            credentials: "same-origin",
+        });
     });
 });

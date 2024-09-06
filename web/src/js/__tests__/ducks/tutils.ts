@@ -142,6 +142,21 @@ export const testState: RootState = {
             {
                 active: false,
                 selectedApplications: "",
+                currentProcesses: [
+                    {
+                        is_visible: true,
+                        executable: "curl.exe",
+                        is_system: "false",
+                        display_name: "curl",
+                    },
+                    {
+                        is_visible: true,
+                        executable: "http.exe",
+                        is_system: "false",
+                        display_name: "http",
+                    },
+                ],
+                isLoading: false,
             },
         ],
         wireguard: [

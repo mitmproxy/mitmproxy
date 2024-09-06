@@ -8,6 +8,8 @@ export interface Process {
 }
 
 export interface LocalState extends ModeState {
+    isLoading: boolean;
+    currentProcesses: Process[];
     selectedApplications?: string;
 }
 
@@ -18,5 +20,7 @@ export const getSpec = (m: LocalState): string => {
 export const parseRaw = ({ data }: RawSpecParts): LocalState => ({
     ui_id: Math.random(),
     active: true,
+    isLoading: false,
+    currentProcesses: [],
     selectedApplications: data,
 });

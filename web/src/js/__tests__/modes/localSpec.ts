@@ -23,6 +23,8 @@ describe("parseRaw local mode", () => {
         expect(parsed).toEqual({
             active: true,
             ui_id: parsed.ui_id,
+            isLoading: false,
+            currentProcesses: [],
             selectedApplications: "curl,http",
         } as LocalState);
     });

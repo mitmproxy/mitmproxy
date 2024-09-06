@@ -1,34 +1,25 @@
 import * as React from "react";
 import { LocalState, Process } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setSelectedApplications } from "../../ducks/modes/local";
+import {
+    fetchProcesses,
+    setSelectedApplications,
+} from "../../ducks/modes/local";
 import { Popover } from "./Popover";
-import { fetchApi } from "../../utils";
 
 interface LocalDropdownProps {
     server: LocalState;
-    isRefreshing: boolean;
 }
 
-export default function LocalDropdown({
-    server,
-    isRefreshing,
-}: LocalDropdownProps) {
-    const [currentApplications, setCurrentApplications] = React.useState<
-        Process[]
-    >([]);
-
-    const selectedApplications = useAppSelector(
-        (state) => state.modes.local[0].selectedApplications,
-    );
+export default function LocalDropdown({ server }: LocalDropdownProps) {
+    const { currentProcesses, selectedApplications, isLoading } =
+        useAppSelector((state) => state.modes.local[0]);
 
     const [filteredApplications, setFilteredApplications] = React.useState<
         Process[]
     >([]);
 
     const [currentSearch, setCurrentSearch] = React.useState("");
-
-    const [isFetching, setIsFetching] = React.useState(false);
 
     const dispatch = useAppDispatch();
 
@@ -66,28 +57,21 @@ export default function LocalDropdown({
     };
 
     React.useEffect(() => {
-        setIsFetching(true);
-        fetchApi("/processes")
-            .then((response) => response.json())
-            .then(async (data: Process[]) => {
-                setCurrentApplications(data);
-                setIsFetching(false);
-            })
-            .catch((err) => console.error(err));
-    }, [isRefreshing]);
+        if (currentProcesses.length === 0) dispatch(fetchProcesses());
+    }, []);
 
     React.useEffect(() => {
         if (currentSearch) {
-            const filtered = currentApplications.filter((option) =>
+            const filtered = currentProcesses.filter((option) =>
                 option.display_name
                     .toLowerCase()
                     .includes(currentSearch.toLowerCase()),
             );
             setFilteredApplications(filtered);
-        } else if (filteredApplications !== currentApplications) {
-            setFilteredApplications(currentApplications);
+        } else if (filteredApplications !== currentProcesses) {
+            setFilteredApplications(currentProcesses);
         }
-    }, [currentSearch, currentApplications]);
+    }, [currentSearch, currentProcesses]);
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.stopPropagation();
@@ -118,7 +102,7 @@ export default function LocalDropdown({
                     isVisible={isPopoverVisible}
                 >
                     <h4>Current Applications running on machine</h4>
-                    {isFetching ? (
+                    {isLoading ? (
                         <i className="fa fa-spinner" aria-hidden="true"></i>
                     ) : filteredApplications.length > 0 ? (
                         <ul className="dropdown-list">
