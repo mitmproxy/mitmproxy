@@ -5,6 +5,7 @@ on:
     branches:
       - '**'
       - '!dependabot/**'
+      - '!*-patch-*'
   pull_request:
   merge_group:
   workflow_dispatch:
