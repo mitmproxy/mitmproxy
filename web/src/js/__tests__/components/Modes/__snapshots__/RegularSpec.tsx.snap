@@ -29,7 +29,6 @@ exports[`RegularSpec 1`] = `
         >
           Run HTTP/S Proxy
         </label>
-        Run HTTP/S Proxy
         <div
           class="mode-popover"
         >
@@ -111,7 +110,6 @@ exports[`RegularSpec 2`] = `
         >
           Run HTTP/S Proxy
         </label>
-        Run HTTP/S Proxy
         <div
           class="mode-popover"
         >
