@@ -70,7 +70,6 @@ function LocalRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Intercept traffic for
                 <div className="applications-container">
                     <div className="selected-applications">
                         {server.selectedProcesses

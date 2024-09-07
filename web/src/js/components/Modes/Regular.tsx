@@ -59,7 +59,6 @@ function RegularRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Run HTTP/S Proxy
                 <Popover iconClass="fa fa-cog">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
