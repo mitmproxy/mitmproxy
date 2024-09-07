@@ -44,9 +44,7 @@ describe("localSlice", () => {
 
         const server = store.getState().modes.local[0];
         await store.dispatch(setActive({ value: true, server }));
-        await store.dispatch(
-            setSelectedProcesses({ value: "curl", server }),
-        );
+        await store.dispatch(setSelectedProcesses({ value: "curl", server }));
 
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
@@ -87,9 +85,7 @@ describe("localSlice", () => {
         const store = TStore();
 
         const server = store.getState().modes.local[0];
-        await store.dispatch(
-            setSelectedProcesses({ value: "curl", server }),
-        );
+        await store.dispatch(setSelectedProcesses({ value: "curl", server }));
 
         expect(fetchMock).toHaveBeenCalled();
         expect(store.getState().modes.local[0].error).toBe("invalid spec");
