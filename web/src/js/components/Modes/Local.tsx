@@ -70,13 +70,13 @@ function LocalRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <div className="applications-container">
-                    <div className="selected-applications">
+                <div className="processes-container">
+                    <div className="selected-processes">
                         {server.selectedProcesses
                             ?.split(", ")
                             .filter((p) => p.trim() !== "")
                             .map((p) => (
-                                <div key={p} className="selected-application">
+                                <div key={p} className="selected-process">
                                     {p}
                                     <i
                                         className="fa fa-times"

@@ -111,13 +111,13 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                                     }
                                     role="menuitem"
                                 >
-                                    <div className="application-details">
+                                    <div className="process-details">
                                         <img
-                                            className="application-icon"
+                                            className="process-icon"
                                             src={`./executable-icon?path=${option.executable}`}
                                             loading="lazy"
                                         />
-                                        <span className="application-name">
+                                        <span className="process-name">
                                             {option.display_name}
                                         </span>
                                     </div>
