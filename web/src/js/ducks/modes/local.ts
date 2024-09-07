@@ -10,9 +10,9 @@ import { fetchApi } from "../../utils";
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/local/setActive",
 );
-export const setSelectedApplications = createModeUpdateThunk<
-    string | undefined
->("modes/local/setSelectedApplications");
+export const setSelectedProcesses = createModeUpdateThunk<string | undefined>(
+    "modes/local/setSelectedProcesses",
+);
 
 export const fetchProcesses = createAsyncThunk(
     "modes/local/fetchProcesses",
@@ -31,7 +31,7 @@ export const initialState: LocalState[] = [
         active: false,
         isLoading: false,
         currentProcesses: [],
-        selectedApplications: "",
+        selectedProcesses: "",
         ui_id: Math.random(),
     },
 ];
@@ -42,7 +42,7 @@ export const localSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         addSetter(builder, "active", setActive);
-        addSetter(builder, "selectedApplications", setSelectedApplications);
+        addSetter(builder, "selectedProcesses", setSelectedProcesses);
         builder.addCase(RECEIVE_STATE, updateState("local", parseRaw));
         builder.addCase(UPDATE_STATE, updateState("local", parseRaw));
         builder.addCase(fetchProcesses.pending, (state) => {

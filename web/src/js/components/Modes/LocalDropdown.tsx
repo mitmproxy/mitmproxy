@@ -1,10 +1,7 @@
 import * as React from "react";
 import { LocalState, Process } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {
-    fetchProcesses,
-    setSelectedApplications,
-} from "../../ducks/modes/local";
+import { fetchProcesses, setSelectedProcesses } from "../../ducks/modes/local";
 import { Popover } from "./Popover";
 
 interface LocalDropdownProps {
@@ -12,12 +9,13 @@ interface LocalDropdownProps {
 }
 
 export default function LocalDropdown({ server }: LocalDropdownProps) {
-    const { currentProcesses, selectedApplications, isLoading } =
-        useAppSelector((state) => state.modes.local[0]);
+    const { currentProcesses, selectedProcesses, isLoading } = useAppSelector(
+        (state) => state.modes.local[0],
+    );
 
-    const [filteredApplications, setFilteredApplications] = React.useState<
-        Process[]
-    >([]);
+    const [filteredProcesses, setFilteredProcesses] = React.useState<Process[]>(
+        [],
+    );
 
     const [currentSearch, setCurrentSearch] = React.useState("");
 
@@ -28,32 +26,30 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
     };
 
     const handleApplicationClick = (option: Process) => {
-        if (isSelected(option) && selectedApplications) {
-            const newSelectedApplications = selectedApplications
+        if (isSelected(option) && selectedProcesses) {
+            const newSelectedProcesses = selectedProcesses
                 .split(", ")
                 .filter((app) => app !== option.display_name)
                 .join(", ");
 
             dispatch(
-                setSelectedApplications({
+                setSelectedProcesses({
                     server,
-                    value: newSelectedApplications,
+                    value: newSelectedProcesses,
                 }),
             );
             return;
         }
 
-        const newSelectedApplications = selectedApplications
-            ? `${selectedApplications}, ${option.display_name}`
+        const newSelectedProcesses = selectedProcesses
+            ? `${selectedProcesses}, ${option.display_name}`
             : option.display_name;
 
-        dispatch(
-            setSelectedApplications({ server, value: newSelectedApplications }),
-        );
+        dispatch(setSelectedProcesses({ server, value: newSelectedProcesses }));
     };
 
     const isSelected = (option: Process) => {
-        return selectedApplications?.includes(option.display_name);
+        return selectedProcesses?.includes(option.display_name);
     };
 
     React.useEffect(() => {
@@ -67,9 +63,9 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     .toLowerCase()
                     .includes(currentSearch.toLowerCase()),
             );
-            setFilteredApplications(filtered);
-        } else if (filteredApplications !== currentProcesses) {
-            setFilteredApplications(currentProcesses);
+            setFilteredProcesses(filtered);
+        } else if (filteredProcesses !== currentProcesses) {
+            setFilteredProcesses(currentProcesses);
         }
     }, [currentSearch, currentProcesses]);
 
@@ -86,7 +82,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     type="text"
                     className="autocomplete-input"
                     placeholder={
-                        selectedApplications && selectedApplications?.length > 0
+                        selectedProcesses && selectedProcesses?.length > 0
                             ? "Add more"
                             : "(all applications)"
                     }
@@ -104,9 +100,9 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     <h4>Current Applications running on machine</h4>
                     {isLoading ? (
                         <i className="fa fa-spinner" aria-hidden="true"></i>
-                    ) : filteredApplications.length > 0 ? (
+                    ) : filteredProcesses.length > 0 ? (
                         <ul className="dropdown-list">
-                            {filteredApplications.map((option, index) => (
+                            {filteredProcesses.map((option, index) => (
                                 <li
                                     key={index}
                                     className={`dropdown-item ${isSelected(option) ? "selected" : ""}`}

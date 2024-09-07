@@ -10,11 +10,11 @@ export interface Process {
 export interface LocalState extends ModeState {
     isLoading: boolean;
     currentProcesses: Process[];
-    selectedApplications?: string;
+    selectedProcesses?: string;
 }
 
 export const getSpec = (m: LocalState): string => {
-    return m.selectedApplications ? `local:${m.selectedApplications}` : "local";
+    return m.selectedProcesses ? `local:${m.selectedProcesses}` : "local";
 };
 
 export const parseRaw = ({ data }: RawSpecParts): LocalState => ({
@@ -22,5 +22,5 @@ export const parseRaw = ({ data }: RawSpecParts): LocalState => ({
     active: true,
     isLoading: false,
     currentProcesses: [],
-    selectedApplications: data,
+    selectedProcesses: data,
 });

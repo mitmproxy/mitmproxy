@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import {
     fetchProcesses,
     setActive,
-    setSelectedApplications,
+    setSelectedProcesses,
 } from "../../ducks/modes/local";
 import { getSpec, LocalState } from "../../modes/local";
 import { ServerStatus } from "./CaptureSetup";
@@ -47,16 +47,16 @@ function LocalRow({
 
     const error = server.error || backendState?.last_exception || undefined;
 
-    const handleDeletionApplication = (application: string) => {
-        const newSelectedApplications = server.selectedApplications
+    const handleDeletionProcess = (process: string) => {
+        const newSelectedProcesses = server.selectedProcesses
             ?.split(", ")
-            .filter((app) => app !== application)
+            .filter((p) => p !== process)
             .join(", ");
 
         dispatch(
-            setSelectedApplications({
+            setSelectedProcesses({
                 server,
-                value: newSelectedApplications,
+                value: newSelectedProcesses,
             }),
         );
     };
@@ -73,18 +73,16 @@ function LocalRow({
                 Intercept traffic for
                 <div className="applications-container">
                     <div className="selected-applications">
-                        {server.selectedApplications
+                        {server.selectedProcesses
                             ?.split(", ")
-                            .filter((app) => app.trim() !== "")
-                            .map((app) => (
-                                <div key={app} className="selected-application">
-                                    {app}
+                            .filter((p) => p.trim() !== "")
+                            .map((p) => (
+                                <div key={p} className="selected-application">
+                                    {p}
                                     <i
                                         className="fa fa-times"
                                         aria-hidden="true"
-                                        onClick={() =>
-                                            handleDeletionApplication(app)
-                                        }
+                                        onClick={() => handleDeletionProcess(p)}
                                     ></i>
                                 </div>
                             ))}

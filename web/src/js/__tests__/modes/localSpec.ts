@@ -8,7 +8,7 @@ describe("getSpec local mode", () => {
             local: [
                 {
                     active: true,
-                    selectedApplications: "curl,http",
+                    selectedProcesses: "curl,http",
                 },
             ],
         } as ModesState;
@@ -25,7 +25,7 @@ describe("parseRaw local mode", () => {
             ui_id: parsed.ui_id,
             isLoading: false,
             currentProcesses: [],
-            selectedApplications: "curl,http",
+            selectedProcesses: "curl,http",
         } as LocalState);
     });
 });

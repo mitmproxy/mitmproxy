@@ -2,7 +2,7 @@ import localReducer, {
     fetchProcesses,
     initialState,
     setActive,
-    setSelectedApplications,
+    setSelectedProcesses,
 } from "../../../ducks/modes/local";
 import {
     RECEIVE as STATE_RECEIVE,
@@ -24,7 +24,7 @@ describe("localSlice", () => {
 
         expect(store.getState().modes.local[0]).toEqual({
             active: false,
-            selectedApplications: "",
+            selectedProcesses: "",
             currentProcesses: [
                 {
                     is_visible: true,
@@ -45,12 +45,12 @@ describe("localSlice", () => {
         const server = store.getState().modes.local[0];
         await store.dispatch(setActive({ value: true, server }));
         await store.dispatch(
-            setSelectedApplications({ value: "curl", server }),
+            setSelectedProcesses({ value: "curl", server }),
         );
 
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
-            selectedApplications: "curl",
+            selectedProcesses: "curl",
             currentProcesses: [
                 {
                     is_visible: true,
@@ -82,13 +82,13 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0].error).toBe("invalid spec");
     });
 
-    it("should handle error when setting applications", async () => {
+    it("should handle error when setting processes", async () => {
         fetchMock.mockReject(new Error("invalid spec"));
         const store = TStore();
 
         const server = store.getState().modes.local[0];
         await store.dispatch(
-            setSelectedApplications({ value: "curl", server }),
+            setSelectedProcesses({ value: "curl", server }),
         );
 
         expect(fetchMock).toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe("localSlice", () => {
         expect(newState).toEqual([
             {
                 active: true,
-                selectedApplications: "curl",
+                selectedProcesses: "curl",
                 currentProcesses: [],
                 isLoading: false,
                 ui_id: newState[0].ui_id,
@@ -134,7 +134,7 @@ describe("localSlice", () => {
         expect(newState).toEqual([
             {
                 active: false,
-                selectedApplications: "",
+                selectedProcesses: "",
                 currentProcesses: [],
                 isLoading: false,
                 ui_id: newState[0].ui_id,
