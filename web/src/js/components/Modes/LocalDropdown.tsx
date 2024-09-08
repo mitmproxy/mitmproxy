@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setSelectedProcesses } from "../../ducks/modes/local";
 import { Popover } from "./Popover";
 import { fetchProcesses, Process } from "../../ducks/processes";
+import { rpartition } from "../../utils";
 
 interface LocalDropdownProps {
     server: LocalState;
@@ -26,15 +27,22 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
 
     const dispatch = useAppDispatch();
 
+    const { platform } = useAppSelector((state) => state.backendState);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCurrentSearch(e.target.value);
+    };
+
+    const extractProcessName = (process: Process) => {
+        const separator = platform.startsWith("win32") ? "\\" : "/";
+        return rpartition(process.executable, separator)[1];
     };
 
     const handleApplicationClick = (option: Process) => {
         if (isSelected(option) && selectedProcesses) {
             const newSelectedProcesses = selectedProcesses
                 .split(", ")
-                .filter((app) => app !== option.display_name)
+                .filter((app) => app !== extractProcessName(option))
                 .join(", ");
 
             dispatch(
@@ -47,14 +55,15 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
         }
 
         const newSelectedProcesses = selectedProcesses
-            ? `${selectedProcesses}, ${option.display_name}`
-            : option.display_name;
+            ? `${selectedProcesses}, ${extractProcessName(option)}`
+            : extractProcessName(option);
 
         dispatch(setSelectedProcesses({ server, value: newSelectedProcesses }));
     };
 
     const isSelected = (option: Process) => {
-        return selectedProcesses?.includes(option.display_name);
+        const processName = extractProcessName(option);
+        return selectedProcesses?.includes(processName);
     };
 
     React.useEffect(() => {
@@ -64,7 +73,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
     React.useEffect(() => {
         if (currentSearch) {
             const filtered = currentProcesses.filter((option) =>
-                option.display_name
+                extractProcessName(option)
                     .toLowerCase()
                     .includes(currentSearch.toLowerCase()),
             );
@@ -123,7 +132,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                                             loading="lazy"
                                         />
                                         <span className="process-name">
-                                            {option.display_name}
+                                            {extractProcessName(option)}
                                         </span>
                                     </div>
                                 </li>
