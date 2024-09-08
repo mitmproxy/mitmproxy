@@ -1,5 +1,4 @@
 import localReducer, {
-    fetchProcesses,
     initialState,
     setActive,
     setSelectedProcesses,
@@ -25,21 +24,6 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: false,
             selectedProcesses: "",
-            currentProcesses: [
-                {
-                    is_visible: true,
-                    executable: "curl.exe",
-                    is_system: "false",
-                    display_name: "curl",
-                },
-                {
-                    is_visible: true,
-                    executable: "http.exe",
-                    is_system: "false",
-                    display_name: "http",
-                },
-            ],
-            isLoading: false,
         });
 
         const server = store.getState().modes.local[0];
@@ -49,21 +33,6 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
             selectedProcesses: "curl",
-            currentProcesses: [
-                {
-                    is_visible: true,
-                    executable: "curl.exe",
-                    is_system: "false",
-                    display_name: "curl",
-                },
-                {
-                    is_visible: true,
-                    executable: "http.exe",
-                    is_system: "false",
-                    display_name: "http",
-                },
-            ],
-            isLoading: false,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -112,8 +81,6 @@ describe("localSlice", () => {
             {
                 active: true,
                 selectedProcesses: "curl",
-                currentProcesses: [],
-                isLoading: false,
                 ui_id: newState[0].ui_id,
             },
         ]);
@@ -131,67 +98,8 @@ describe("localSlice", () => {
             {
                 active: false,
                 selectedProcesses: "",
-                currentProcesses: [],
-                isLoading: false,
                 ui_id: newState[0].ui_id,
             },
         ]);
-    });
-
-    it("should handle fetchProcesses pending state", async () => {
-        enableFetchMocks();
-        fetchMock.mockResponseOnce(() => new Promise(() => {}));
-
-        const store = TStore();
-
-        store.dispatch(fetchProcesses());
-        expect(store.getState().modes.local[0].isLoading).toBe(true);
-    });
-
-    it("should handle fetchProcesses fulfilled state", async () => {
-        enableFetchMocks();
-        const mockProcesses = [
-            {
-                is_visible: true,
-                executable: "curl.exe",
-                is_system: "false",
-                display_name: "curl",
-            },
-            {
-                is_visible: true,
-                executable: "http.exe",
-                is_system: "false",
-                display_name: "http",
-            },
-        ];
-
-        fetchMock.mockResponseOnce(JSON.stringify(mockProcesses));
-
-        const store = TStore();
-
-        await store.dispatch(fetchProcesses());
-
-        expect(store.getState().modes.local[0].isLoading).toBe(false);
-        expect(store.getState().modes.local[0].currentProcesses).toEqual(
-            mockProcesses,
-        );
-        expect(fetchMock).toHaveBeenCalledWith("./processes", {
-            credentials: "same-origin",
-        });
-    });
-
-    it("should handle fetchProcesses rejected state", async () => {
-        fetchMock.mockReject(new Error("Failed to fetch processes"));
-        const store = TStore();
-
-        await store.dispatch(fetchProcesses());
-
-        expect(store.getState().modes.local[0].isLoading).toBe(false);
-        expect(store.getState().modes.local[0].error).toBe(
-            "Failed to fetch processes",
-        );
-        expect(fetchMock).toHaveBeenCalledWith("./processes", {
-            credentials: "same-origin",
-        });
     });
 });

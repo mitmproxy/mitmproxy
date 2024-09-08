@@ -11,6 +11,7 @@ import commandBar from "./commandBar";
 import backendState from "./backendState";
 import options_meta from "./options_meta";
 import modes from "./modes";
+import processes from "./processes";
 
 export const reducer = {
     commandBar,
@@ -22,6 +23,7 @@ export const reducer = {
     options,
     options_meta,
     backendState,
+    processes,
 };
 
 export const store = configureStore({

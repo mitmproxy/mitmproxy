@@ -3,9 +3,8 @@ import {
     UPDATE as UPDATE_STATE,
 } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { LocalState, parseRaw, Process } from "../../modes/local";
-import { fetchApi } from "../../utils";
+import { createSlice } from "@reduxjs/toolkit";
+import { LocalState, parseRaw } from "../../modes/local";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/local/setActive",
@@ -14,23 +13,9 @@ export const setSelectedProcesses = createModeUpdateThunk<string | undefined>(
     "modes/local/setSelectedProcesses",
 );
 
-export const fetchProcesses = createAsyncThunk(
-    "modes/local/fetchProcesses",
-    async (_, { rejectWithValue }) => {
-        try {
-            const response = await fetchApi("/processes");
-            return response.json();
-        } catch (error) {
-            return rejectWithValue(error.message);
-        }
-    },
-);
-
 export const initialState: LocalState[] = [
     {
         active: false,
-        isLoading: false,
-        currentProcesses: [],
         selectedProcesses: "",
         ui_id: Math.random(),
     },
@@ -45,18 +30,6 @@ export const localSlice = createSlice({
         addSetter(builder, "selectedProcesses", setSelectedProcesses);
         builder.addCase(RECEIVE_STATE, updateState("local", parseRaw));
         builder.addCase(UPDATE_STATE, updateState("local", parseRaw));
-        builder.addCase(fetchProcesses.pending, (state) => {
-            state[0].isLoading = true;
-            state[0].error = undefined;
-        });
-        builder.addCase(fetchProcesses.fulfilled, (state, action) => {
-            state[0].isLoading = false;
-            state[0].currentProcesses = action.payload as Process[];
-        });
-        builder.addCase(fetchProcesses.rejected, (state, action) => {
-            state[0].isLoading = false;
-            state[0].error = action.payload as string;
-        });
     },
 });
 

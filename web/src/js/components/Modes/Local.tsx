@@ -1,15 +1,12 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {
-    fetchProcesses,
-    setActive,
-    setSelectedProcesses,
-} from "../../ducks/modes/local";
+import { setActive, setSelectedProcesses } from "../../ducks/modes/local";
 import { getSpec, LocalState } from "../../modes/local";
 import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
 import LocalDropdown from "./LocalDropdown";
+import { fetchProcesses } from "../../ducks/processes";
 
 export default function Local() {
     const serverState = useAppSelector((state) => state.modes.local);
@@ -45,7 +42,15 @@ function LocalRow({
 }) {
     const dispatch = useAppDispatch();
 
-    const error = server.error || backendState?.last_exception || undefined;
+    const fetchProcessesError = useAppSelector(
+        (state) => state.processes.error,
+    );
+
+    const error =
+        server.error ||
+        backendState?.last_exception ||
+        fetchProcessesError ||
+        undefined;
 
     const handleDeletionProcess = (process: string) => {
         const newSelectedProcesses = server.selectedProcesses

@@ -1,15 +1,20 @@
 import * as React from "react";
-import { LocalState, Process } from "../../modes/local";
+import { LocalState } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { fetchProcesses, setSelectedProcesses } from "../../ducks/modes/local";
+import { setSelectedProcesses } from "../../ducks/modes/local";
 import { Popover } from "./Popover";
+import { fetchProcesses, Process } from "../../ducks/processes";
 
 interface LocalDropdownProps {
     server: LocalState;
 }
 
 export default function LocalDropdown({ server }: LocalDropdownProps) {
-    const { currentProcesses, selectedProcesses, isLoading } = useAppSelector(
+    const { currentProcesses, isLoading } = useAppSelector(
+        (state) => state.processes,
+    );
+
+    const { selectedProcesses } = useAppSelector(
         (state) => state.modes.local[0],
     );
 
