@@ -34,6 +34,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
     };
 
     const extractProcessName = (process: Process) => {
+        // we cannot use directly the display_name because it is exposed by every executable and it might lead to unexpected results
         const separator = platform.startsWith("win32") ? "\\" : "/";
         return rpartition(process.executable, separator)[1];
     };
