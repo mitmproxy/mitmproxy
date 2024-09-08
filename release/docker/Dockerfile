@@ -15,7 +15,7 @@ RUN pip install --no-index --find-links=/wheels mitmproxy
 RUN rm -rf /wheels
 
 VOLUME /home/mitmproxy/.mitmproxy
-RUN chown mitmproxy /home/mitmproxy/.mitmproxy
+RUN chown mitmproxy .mitmproxy
 
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
