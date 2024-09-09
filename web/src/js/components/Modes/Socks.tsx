@@ -60,7 +60,8 @@ function SocksRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <Popover>
+                <Popover iconClass="fa fa-cog">
+                    <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor
                         className="mode-input"

@@ -67,12 +67,147 @@
         font-weight: 600;
     }
 
-    .mode-local-input {
-        border: 1px solid #ccc;
-        margin-left: 10px;
-        border-radius: 4px;
-        min-width: 150px;
-        height: 25px;
+    .mode-local {
+        i {
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+        .processes-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 5px;
+            margin-left: 5px;
+        }
+        .selected-processes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            overflow: hidden;
+        }
+        .selected-process {
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
+            background-color: #e0e0e0;
+            padding: 5px;
+            border-radius: 4px;
+            height: 30px;
+            font-size: 12px;
+            font-weight: 500;
+            align-content: center;
+            align-items: center;
+
+            > i {
+                font-size: 15px;
+            }
+        }
+
+        .dropdown-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .local-dropdown {
+            position: relative;
+            width: 200px;
+
+            .dropdown-header {
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-right: 10px;
+                height: 30px;
+            }
+
+            input {
+                border: none;
+                flex: 1;
+                outline: none;
+                color: black;
+            }
+
+            .dropdown-list {
+                width: 100%;
+                max-height: 300px;
+                overflow-y: auto;
+                z-index: 1;
+                list-style: none;
+                padding: 0;
+                margin-bottom: 0;
+            }
+
+            .dropdown-item {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 8px 10px;
+                margin: 4px 0;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+            }
+
+            .dropdown-item.selected {
+                background-color: #e0e0e0;
+            }
+
+            .dropdown-item:hover {
+                background-color: #f0f0f0;
+            }
+
+            .process-details {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .process-icon {
+                margin-right: 5px;
+                margin-left: 5px;
+                color: #5f6368;
+                width: 25px;
+                height: 25px;
+            }
+
+            .process-name {
+                font-weight: 500;
+                color: #333;
+            }
+        }
+
+        .local-popover {
+            button {
+                font-size: 1rem;
+            }
+            i {
+                font-size: 1.5rem;
+            }
+
+            @supports (anchor-name: --test) {
+                > div {
+                    margin: 0;
+                    position: absolute;
+                    left: 0;
+                    top: calc(anchor(bottom) + 10px);
+                    justify-self: anchor-center;
+                    align-self: auto;
+                }
+            }
+
+            > div {
+                &:popover-open {
+                    display: block;
+                }
+                gap: 0.5rem;
+                align-items: center;
+            }
+        }
     }
 
     .mode-input {

@@ -2,9 +2,17 @@ import * as React from "react";
 
 interface PopoverProps {
     children: React.ReactNode;
+    iconClass: string;
+    classname?: string;
+    isVisible?: boolean; //used only for local mode
 }
 
-export function Popover({ children }: PopoverProps) {
+export function Popover({
+    children,
+    iconClass,
+    classname,
+    isVisible,
+}: PopoverProps) {
     // Popovers are positioned relatively to an element using `position-anchor: --name-of-anchor`.
     // As of 2024, Chrome only supports `anchor-name` for the anchor (and not `anchor-scope`),
     // which is tree-scoped: Names must be unique across the page. So we do this rather annoying
@@ -26,15 +34,23 @@ export function Popover({ children }: PopoverProps) {
         popoverRef.current!.style.positionAnchor = cssId;
     }, []);
 
+    //trick to open the popover even when clicking on an input field (local mode)
+    React.useEffect(() => {
+        if (isVisible === true) {
+            document.getElementById(id)?.showPopover();
+        }
+    }, [isVisible]);
+
     return (
-        <div className="mode-popover">
+        <div
+            className={classname ? `mode-popover ${classname}` : "mode-popover"}
+        >
             {/* @ts-expect-error no popover support yet */}
             <button popovertarget={id} ref={buttonRef}>
-                <i className="fa fa-cog" aria-hidden="true"></i>
+                <i className={iconClass} aria-hidden="true"></i>
             </button>
             {/* @ts-expect-error no popover support yet */}
             <div id={id} popover="auto" ref={popoverRef}>
-                <h4>Advanced Configuration</h4>
                 {children}
             </div>
         </div>
