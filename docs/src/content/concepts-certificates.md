@@ -45,8 +45,6 @@ For security reasons, the mitmproxy CA is generated uniquely on the first start 
 is not shared between mitmproxy installations on different devices. This makes sure
 that other mitmproxy users cannot intercept your traffic.
 
-
-
 ### Installing the mitmproxy CA certificate manually
 
 Sometimes using the [quick install app](#quick-setup) is not an option and you need to install the CA manually. 
@@ -88,7 +86,6 @@ interception certificate on-the-fly, signed by the mitmproxy CA. Mitmproxy then 
 the handshake with the newly-forged certificate.
 
 Upstream cert sniffing is on by default, and can optionally be disabled by turning the `upstream_cert` option off.
-
 
 ### Certificate Pinning
 
@@ -198,15 +195,76 @@ openssl req -x509 -new -nodes -key ca.key -sha256 -out ca.crt -addext keyUsage=c
 cat ca.key ca.crt > mitmproxy-ca.pem
 ```
 
-## Using a client side certificate
+## Mutual TLS and client certificates
+
+The most common usage of the TLS protocol is for clients to verify the server's
+identity using certificates and the embedded information in it about domain
+names and similar. This is the case for web browsers, email clients, and similar
+use cases.
+
+Mutual TLS (mTLS) provides an additional verification step where, in addition to
+the server identity, also the server gets to verify the clients identity using
+certificates.
+
+mTLS connections are established using the standard TLS handshake with one
+additional handshake message to trigger the mTLS-specific client certificate
+exchange. If the server wants to verify the clients identity using mTLS, the
+server sends a `CertificateRequest` TLS handshake message to the client. The
+client then needs to provide its cert and proof ownership of the private key by
+generating a signature.
+
+Client certificates, just as the more commonly known server certificates, are
+full x509 certs with a public and private key, commonly stored as PEM
+certificate file.
+
+Some internet protocols, such as MQTT used in Internet-of-Things projects, use
+client and server certificates as a form of authentication and authorization
+(instead of username+password). Depending on the client and server
+implementation and configuration, a full mutual exchange of certificates might
+be required to establish the connection. If the client (or server) does not get
+to present their cert, they might fail the connection attempt.
+
+By default, mitmproxy does not send the `CertificateRequest` TLS handshake
+message to connecting clients. This means any device or client that expects to
+send it as part of their protocol implementation might fail the connection
+attempt if they don't get a chance to send their certifcate. This behaviour is
+optional and depends entirely on the implementation and configuration details of
+the software on both sides.
+
+To intercept such connections with required mutual TLS, mitmproxy needs to be
+configured to:
+1. request the client certificate from the connecting client
+   1. use the `--set request_client_cert=True` option to send the
+      `CertificateRequest` TLS handshake message to the client
+   2. mitmproxy will not validate or verify the identity presented in the
+      client certificate
+2. provide a valid client certificate to the upstream server
+   1. use the `--set client_certs=my_certs_folder` option, see below for details
+
+Example usage:
+
+```bash
+mitmproxy --set request_client_cert=True --set client_certs=my_certs_folder
+```
+
+### mTLS between client and mitmproxy
+
+To instruct mitmproxy to request a client certificate from the connecting
+client, you can pass the `--set request_client_cert=True` option. This will
+generate a `CertificateRequest` TLS handshake message and (if successful)
+establish an mTLS connection. This option only requests a certificate from the
+client, it does not validate the presented identity in any way. For the purposes
+of testing and developing client and server software, this is typically not an
+issue. If you operate mitmproxy in an environment where untrusted clients might
+connect, you need to safe guard against them.
+
+### mTLS between mitmproxy and upstream server
 
 You can use a client certificate by passing the `--set client_certs=DIRECTORY|FILE`
 option to mitmproxy. Using a directory allows certs to be selected based on
 hostname, while using a filename allows a single specific certificate to be used
 for all TLS connections. Certificate files must be in the PEM format and should
 contain both the unencrypted private key and the certificate.
-
-### Multiple client certificates
 
 You can specify a directory to `--set client_certs=DIRECTORY`, in which case the matching
 certificate is looked up by filename. So, if you visit example.org, mitmproxy
