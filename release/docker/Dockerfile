@@ -10,6 +10,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gosu nano \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /home/mitmproxy/.mitmproxy \
+    && chown mitmproxy:mitmproxy /home/mitmproxy/.mitmproxy
+
 COPY --from=wheelbuilder /wheels /wheels
 RUN pip install --no-index --find-links=/wheels mitmproxy
 RUN rm -rf /wheels
