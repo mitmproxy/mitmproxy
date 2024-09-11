@@ -26,7 +26,7 @@
             "tls_version": null,
             "timestamp_start": 1680134454.25,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680134468.9160001
+            "timestamp_end": 1680134454.264666
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -147,7 +147,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680134454.25,
-            "timestamp_end": 1680134468.9160001,
+            "timestamp_end": 1680134454.264666,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -199,7 +199,7 @@
             "contentLength": 23866,
             "contentHash": "7fd5f643a86976f5711df86ae2d5f9f8137a47c705dee31ccc550215564a5364",
             "timestamp_start": 1680134454.25,
-            "timestamp_end": 1680134468.9160001
+            "timestamp_end": 1680134454.264666
         }
     },
     {
@@ -229,7 +229,7 @@
             "tls_version": null,
             "timestamp_start": 1689251552.676,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1689251556.795
+            "timestamp_end": 1689251552.680119
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -315,7 +315,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1689251552.676,
-            "timestamp_end": 1689251556.795,
+            "timestamp_end": 1689251552.680119,
             "pretty_host": "www.google.com"
         },
         "response": {
@@ -326,7 +326,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1689251552.676,
-            "timestamp_end": 1689251556.795
+            "timestamp_end": 1689251552.680119
         }
     },
     {
@@ -356,7 +356,7 @@
             "tls_version": null,
             "timestamp_start": 1690289926.182,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1690289984.3869998
+            "timestamp_end": 1690289926.2402048
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -501,7 +501,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1690289926.182,
-            "timestamp_end": 1690289984.3869998,
+            "timestamp_end": 1690289926.2402048,
             "pretty_host": "www.google.com"
         },
         "response": {
@@ -569,7 +569,7 @@
             "contentLength": 7108,
             "contentHash": "d2c8a5c554b741fab4a622552e5f89d8a75b09baa3bc5b37819a4279217d6cec",
             "timestamp_start": 1690289926.182,
-            "timestamp_end": 1690289984.3869998
+            "timestamp_end": 1690289926.2402048
         }
     }
 ]
