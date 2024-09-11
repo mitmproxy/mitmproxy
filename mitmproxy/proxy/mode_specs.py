@@ -238,7 +238,7 @@ class ReverseMode(ProxyMode):
         self.description = f"{self.description} to {self.data}"
 
     @property
-    def default_port(self) -> int:
+    def default_port(self) -> int | None:
         if self.scheme == "dns":
             return 53
         return super().default_port
