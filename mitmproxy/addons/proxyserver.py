@@ -265,14 +265,12 @@ class Proxyserver(ServerManager):
                     protocols = ["tcp", "udp"]
                 else:
                     protocols = [m.transport_protocol]
+                host = m.listen_host(ctx.options.listen_host)
+                port = m.listen_port(ctx.options.listen_port)
+                if port is None:
+                    continue
                 for proto in protocols:
-                    listen_addrs.append(
-                        (
-                            m.listen_host(ctx.options.listen_host),
-                            m.listen_port(ctx.options.listen_port),
-                            proto,
-                        ),
-                    )
+                    listen_addrs.append((host, port, proto))
             if len(set(listen_addrs)) != len(listen_addrs):
                 (host, port, _) = collections.Counter(listen_addrs).most_common(1)[0][0]
                 dup_addr = human.format_address((host or "0.0.0.0", port))
