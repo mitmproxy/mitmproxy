@@ -693,6 +693,7 @@ class ProcessImage(RequestHandler):
 
         self.set_header("Content-Type", "image/png")
         self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("Cache-Control", "max-age=604800")
         self.write(icon_bytes)
 
 
