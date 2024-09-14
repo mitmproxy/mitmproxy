@@ -10,7 +10,8 @@ from pathlib import Path
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools.web import master
-from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS, DEFAULT_COLUMNS
+from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS
+from mitmproxy.tools.web.web_columns import DEFAULT_COLUMNS
 
 here = Path(__file__).parent.absolute()
 

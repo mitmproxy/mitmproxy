@@ -1,8 +1,9 @@
 import logging
 import webbrowser
 from collections.abc import Sequence
-from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS, DEFAULT_COLUMNS
+
 from mitmproxy import ctx
+from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS
 
 
 class WebAddon:
