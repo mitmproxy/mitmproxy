@@ -1,7 +1,7 @@
 import logging
 import webbrowser
 from collections.abc import Sequence
-
+from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS, DEFAULT_COLUMNS
 from mitmproxy import ctx
 
 
@@ -14,7 +14,7 @@ class WebAddon:
         loader.add_option(
             "web_columns",
             Sequence[str],
-            ["tls", "icon", "path", "method", "status", "size", "time"],
+            AVAILABLE_WEB_COLUMNS,
             "Columns to show in the flow list",
         )
 
