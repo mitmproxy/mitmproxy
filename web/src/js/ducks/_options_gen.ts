@@ -192,7 +192,7 @@ export const defaultState: OptionsState = {
     view_filter: undefined,
     view_order: "time",
     view_order_reversed: false,
-    web_columns: ["tls", "icon", "path", "method", "status", "size", "time"],
+    web_columns: ["tls", "icon", "index", "path", "method", "version", "status", "size", "time", "timestamp", "quickactions", "comment"],
     web_debug: false,
     web_host: "127.0.0.1",
     web_open_browser: true,
