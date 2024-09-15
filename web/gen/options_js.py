@@ -10,8 +10,7 @@ from pathlib import Path
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools.web import master
-from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS
-from mitmproxy.tools.web.web_columns import DEFAULT_COLUMNS
+from mitmproxy.tools.web.web_columns import DEFAULT_WEB_COLUMNS
 
 here = Path(__file__).parent.absolute()
 
@@ -52,7 +51,7 @@ async def make() -> str:
         print("export const defaultState: OptionsState = {")
         for _, opt in sorted(m.options.items()):
             if opt.name == "web_columns":
-                print(f"    {opt.name}: {json.dumps(opt.default)},")
+                print(f"    {opt.name}: {json.dumps(DEFAULT_WEB_COLUMNS)},")
             else:
                 print(
                     f"    {opt.name}: {json.dumps(opt.default)},".replace(
@@ -60,13 +59,6 @@ async def make() -> str:
                     )
                 )
         print("};")
-        print("")
-        print(
-            "export const AVAILABLE_WEB_COLUMNS = "
-            + json.dumps(AVAILABLE_WEB_COLUMNS)
-            + ";"
-        )
-        print("export const DEFAULT_WEB_COLUMNS = " + json.dumps(DEFAULT_COLUMNS) + ";")
 
     await m.done()
     return s.getvalue()

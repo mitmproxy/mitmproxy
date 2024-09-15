@@ -1,4 +1,5 @@
 import { Flow, HTTPHeader, HTTPMessage, HTTPRequest } from "../flow";
+import { AVAILABLE_WEB_COLUMNS } from "../backends/consts";
 
 const defaultPorts = {
     http: 80,
@@ -284,7 +285,9 @@ export const getVersion = (flow: Flow): string => {
     }
 };
 
-export const sortFunctions = {
+type SortFunction = (flow:Flow) => string | number | boolean | undefined
+
+export const sortFunctions:Record<typeof AVAILABLE_WEB_COLUMNS[number] , SortFunction> = {
     tls: (flow: Flow) => flow.type === "http" && flow.request.scheme,
     icon: getIcon,
     index: () => 0, // this is broken right now - ideally we switch to uuid7s on the backend and use that.
@@ -302,3 +305,4 @@ export const sortFunctions = {
     quickactions: () => 0,
     comment: (flow: Flow) => flow.comment,
 };
+

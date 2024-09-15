@@ -16,7 +16,7 @@ class WebAddon:
             "web_columns",
             Sequence[str],
             AVAILABLE_WEB_COLUMNS,
-            "Columns to show in the flow list",
+            "all available columns to show in the flow list",
         )
 
     def running(self):
