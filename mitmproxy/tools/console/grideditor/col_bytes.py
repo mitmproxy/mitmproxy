@@ -41,7 +41,7 @@ class Edit(base.Cell):
         super().__init__(w)
 
     def get_data(self) -> bytes:
-        txt = self._w.get_text()[0].strip()
+        txt = self._w.base_widget.get_text()[0].strip()
         try:
             return strutils.escaped_str_to_bytes(txt)
         except ValueError:
