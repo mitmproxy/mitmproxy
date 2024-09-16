@@ -45,7 +45,7 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
     timestamp_start = datetime.fromisoformat(
         request_json["startedDateTime"].replace("Z", "+00:00")
     ).timestamp()
-    timestamp_end = timestamp_start + request_json["time"]
+    timestamp_end = timestamp_start + request_json["time"] / 1000.0
     request_method = request_json["request"]["method"]
     request_url = request_json["request"]["url"]
     server_address = request_json.get("serverIPAddress", None)

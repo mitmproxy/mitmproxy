@@ -26,7 +26,7 @@
             "tls_version": null,
             "timestamp_start": 1689428246.093,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1689428415.889
+            "timestamp_end": 1689428246.262796
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -139,7 +139,7 @@
             "contentLength": 1310,
             "contentHash": "94c0d23b4e9f828b4b9062885ba0b785ce53fc374aef106b01fa62ff9f15c35b",
             "timestamp_start": 1689428246.093,
-            "timestamp_end": 1689428415.889,
+            "timestamp_end": 1689428246.262796,
             "pretty_host": "signal-metrics-collector-beta.s-onetag.com"
         },
         "response": {
@@ -167,7 +167,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1689428246.093,
-            "timestamp_end": 1689428415.889
+            "timestamp_end": 1689428246.262796
         }
     }
 ]

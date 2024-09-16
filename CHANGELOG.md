@@ -33,6 +33,8 @@
   ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
 - Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
   ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
+- Fix of measurement unit in HAR import, duration is in milliseconds
+  ([#7179](https://github.com/mitmproxy/mitmproxy/pull/7179), @dstd)
 
 ## 02 August 2024: mitmproxy 10.4.2
 
