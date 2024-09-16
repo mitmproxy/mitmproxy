@@ -214,6 +214,19 @@ client then provides its certificate and proves ownership of the private key
 with a matching signature. This part works just like server authentication, only
 the other way around.
 
+### mTLS between mitmproxy and upstream server
+
+You can use a client certificate by passing the `--set client_certs=DIRECTORY|FILE`
+option to mitmproxy. Using a directory allows certs to be selected based on
+hostname, while using a filename allows a single specific certificate to be used
+for all TLS connections. Certificate files must be in the PEM format and should
+contain both the unencrypted private key and the certificate.
+
+You can specify a directory to `--set client_certs=DIRECTORY`, in which case the matching
+certificate is looked up by filename. So, if you visit example.org, mitmproxy
+looks for a file named `example.org.pem` in the specified directory and uses
+this as the client cert.
+
 ### mTLS between client and mitmproxy
 
 By default, mitmproxy does not send the `CertificateRequest` TLS handshake
@@ -231,15 +244,8 @@ of testing and developing client and server software, this is typically not an
 issue. If you operate mitmproxy in an environment where untrusted clients might
 connect, you need to safeguard against them.
 
-### mTLS between mitmproxy and upstream server
+The `request_client_cert` option is typically paired with `client_certs` like so:
 
-You can use a client certificate by passing the `--set client_certs=DIRECTORY|FILE`
-option to mitmproxy. Using a directory allows certs to be selected based on
-hostname, while using a filename allows a single specific certificate to be used
-for all TLS connections. Certificate files must be in the PEM format and should
-contain both the unencrypted private key and the certificate.
-
-You can specify a directory to `--set client_certs=DIRECTORY`, in which case the matching
-certificate is looked up by filename. So, if you visit example.org, mitmproxy
-looks for a file named `example.org.pem` in the specified directory and uses
-this as the client cert.
+```bash
+mitmproxy --set request_client_cert=True --set client_certs=client-cert.pem
+```
