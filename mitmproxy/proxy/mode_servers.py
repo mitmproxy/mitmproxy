@@ -246,6 +246,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         assert not self._servers
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
+        assert port is not None
         try:
             self._servers = await self.listen(host, port)
         except OSError as e:
@@ -358,6 +359,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         assert self._server is None
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
+        assert port is not None
 
         if self.mode.data:
             conf_path = Path(self.mode.data).expanduser()

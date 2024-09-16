@@ -82,7 +82,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         """The mode description that will be used in server logs and UI."""
 
     @property
-    def default_port(self) -> int:
+    def default_port(self) -> int | None:
         """
         Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
         """
@@ -147,11 +147,12 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         else:
             return ""
 
-    def listen_port(self, default: int | None = None) -> int:
+    def listen_port(self, default: int | None = None) -> int | None:
         """
         Return the port a server for this mode should listen on. This can be either directly
         specified in the spec, taken from a user-configured global default (`options.listen_port`),
         or from `ProxyMode.default_port`.
+        May be `None` for modes that don't bind to a specific address, e.g. local redirect mode.
         """
         if self.custom_listen_port is not None:
             return self.custom_listen_port
@@ -238,7 +239,7 @@ class ReverseMode(ProxyMode):
         self.description = f"{self.description} to {self.data}"
 
     @property
-    def default_port(self) -> int:
+    def default_port(self) -> int | None:
         if self.scheme == "dns":
             return 53
         return super().default_port
@@ -295,6 +296,7 @@ class LocalMode(ProxyMode):
 
     description = "Local redirector"
     transport_protocol = BOTH
+    default_port = None
 
     def __post_init__(self) -> None:
         # should not raise
@@ -306,6 +308,7 @@ class OsProxyMode(ProxyMode):  # pragma: no cover
 
     description = "Deprecated alias for LocalMode"
     transport_protocol = BOTH
+    default_port = None
 
     def __post_init__(self) -> None:
         raise ValueError(

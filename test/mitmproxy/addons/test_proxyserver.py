@@ -231,7 +231,7 @@ def test_options():
             tctx.configure(ps, mode=["invalid!"])
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, mode=["regular", "reverse:example.com"])
-        tctx.configure(ps, mode=["regular"], server=False)
+        tctx.configure(ps, mode=["regular", "local"], server=False)
 
 
 async def test_startup_err(monkeypatch, caplog) -> None:
