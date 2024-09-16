@@ -1,8 +1,8 @@
 ---
 title: "Certificates"
 menu:
-    concepts:
-        weight: 3
+  concepts:
+    weight: 3
 ---
 
 # About Certificates
@@ -47,7 +47,7 @@ that other mitmproxy users cannot intercept your traffic.
 
 ### Installing the mitmproxy CA certificate manually
 
-Sometimes using the [quick install app](#quick-setup) is not an option and you need to install the CA manually. 
+Sometimes using the [quick install app](#quick-setup) is not an option and you need to install the CA manually.
 Below is a list of pointers to manual certificate installation
 documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
@@ -81,7 +81,7 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 
 When mitmproxy receives a request to establish TLS (in the form of a ClientHello message), it puts the client on hold
 and first makes a connection to the upstream server to "sniff" the contents of its TLS certificate.
-The information gained -- Common Name, Organization, Subject Alternative Names -- is then used to generate a new 
+The information gained -- Common Name, Organization, Subject Alternative Names -- is then used to generate a new
 interception certificate on-the-fly, signed by the mitmproxy CA. Mitmproxy then returns to the client and continues
 the handshake with the newly-forged certificate.
 
@@ -91,7 +91,7 @@ Upstream cert sniffing is on by default, and can optionally be disabled by turni
 
 Some applications employ [Certificate
 Pinning](https://en.wikipedia.org/wiki/HTTP_Public_Key_Pinning) to prevent
-man-in-the-middle attacks. This means that **mitmproxy's** 
+man-in-the-middle attacks. This means that **mitmproxy's**
 certificates will not be accepted by these applications without modifying them.
 If the contents of these connections are not important, it is recommended to use
 the [ignore_hosts]({{< relref "howto-ignoredomains">}}) feature to prevent
@@ -177,9 +177,9 @@ The `mitmproxy-ca.pem` certificate file has to look roughly like this:
     <cert>
     -----END CERTIFICATE-----
 
-When looking at the certificate with 
+When looking at the certificate with
 `openssl x509 -noout -text -in ~/.mitmproxy/mitmproxy-ca.pem`
-it should have at least the following X509v3 extensions so mitmproxy can 
+it should have at least the following X509v3 extensions so mitmproxy can
 use it to generate certificates:
 
     X509v3 extensions:
@@ -195,59 +195,32 @@ openssl req -x509 -new -nodes -key ca.key -sha256 -out ca.crt -addext keyUsage=c
 cat ca.key ca.crt > mitmproxy-ca.pem
 ```
 
-## Mutual TLS and client certificates
+## Mutual TLS (mTLS) and client certificates
 
-The most common usage of the TLS protocol is for clients to verify the server's
-identity using certificates and the embedded information in it about domain
-names and similar. This is the case for web browsers, email clients, and similar
-use cases.
+TLS is typically used in a way where the client verifies the server's identity
+using the server's certificate during the handshake, but the server does not
+verify the client's identity using the TLS protocol. Instead, the client 
+transmits cookies or other access tokens over the established secure channel to
+authenticate itself.
 
-Mutual TLS (mTLS) provides an additional verification step where, in addition to
-the server identity, also the server gets to verify the clients identity using
-certificates.
+Mutual TLS (mTLS) is a mode where the server verifies the client's identity
+not using cookies or access tokens, but using a certificate presented by the
+client during the TLS handshake. With mTLS, both client and server use a 
+certificate to authenticate each other.
 
-mTLS connections are established using the standard TLS handshake with one
-additional handshake message to trigger the mTLS-specific client certificate
-exchange. If the server wants to verify the clients identity using mTLS, the
-server sends a `CertificateRequest` TLS handshake message to the client. The
-client then needs to provide its cert and proof ownership of the private key by
-generating a signature.
-
-Client certificates, just as the more commonly known server certificates, are
-full x509 certs with a public and private key, commonly stored as PEM
-certificate file.
-
-Some internet protocols, such as MQTT used in Internet-of-Things projects, use
-client and server certificates as a form of authentication and authorization
-(instead of username+password). Depending on the client and server
-implementation and configuration, a full mutual exchange of certificates might
-be required to establish the connection. If the client (or server) does not get
-to present their cert, they might fail the connection attempt.
-
-By default, mitmproxy does not send the `CertificateRequest` TLS handshake
-message to connecting clients. This means any device or client that expects to
-send it as part of their protocol implementation might fail the connection
-attempt if they don't get a chance to send their certifcate. This behaviour is
-optional and depends entirely on the implementation and configuration details of
-the software on both sides.
-
-To intercept such connections with required mutual TLS, mitmproxy needs to be
-configured to:
-1. request the client certificate from the connecting client
-   1. use the `--set request_client_cert=True` option to send the
-      `CertificateRequest` TLS handshake message to the client
-   2. mitmproxy will not validate or verify the identity presented in the
-      client certificate
-2. provide a valid client certificate to the upstream server
-   1. use the `--set client_certs=my_certs_folder` option, see below for details
-
-Example usage:
-
-```bash
-mitmproxy --set request_client_cert=True --set client_certs=my_certs_folder
-```
+If a server wants to verify the clients identity using mTLS, it sends an 
+additional `CertificateRequest` message to the client during the handshake. The
+client then provides its certificate and proves ownership of the private key 
+with a matching signature. This part works just like server authentication, only
+the other way around.
 
 ### mTLS between client and mitmproxy
+
+By default, mitmproxy does not send the `CertificateRequest` TLS handshake
+message to connecting clients. This is because it trips up some clients that do
+not expect a certificate request (most famously old Android versions). However,
+there are other clients -- in particular in the MQTT / IoT environment -- that 
+do expect a certificate request and will otherwise fail the TLS handshake.
 
 To instruct mitmproxy to request a client certificate from the connecting
 client, you can pass the `--set request_client_cert=True` option. This will
@@ -256,7 +229,7 @@ establish an mTLS connection. This option only requests a certificate from the
 client, it does not validate the presented identity in any way. For the purposes
 of testing and developing client and server software, this is typically not an
 issue. If you operate mitmproxy in an environment where untrusted clients might
-connect, you need to safe guard against them.
+connect, you need to safeguard against them.
 
 ### mTLS between mitmproxy and upstream server
 
