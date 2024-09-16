@@ -152,6 +152,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         Return the port a server for this mode should listen on. This can be either directly
         specified in the spec, taken from a user-configured global default (`options.listen_port`),
         or from `ProxyMode.default_port`.
+        May be `None` for modes that don't bind to a specific address, e.g. local redirect mode.
         """
         if self.custom_listen_port is not None:
             return self.custom_listen_port
