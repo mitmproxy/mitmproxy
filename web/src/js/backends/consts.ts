@@ -12,27 +12,17 @@ export enum ReverseProxyProtocols {
 }
 
 export const AVAILABLE_WEB_COLUMNS = [
-    "tls",
     "icon",
     "index",
-    "path",
     "method",
     "version",
-    "status",
+    "path",
+    "quickactions",
     "size",
+    "status",
     "time",
     "timestamp",
-    "quickactions",
-    "comment"
-];
-
-export const DEFAULT_WEB_COLUMNS = [
     "tls",
-    "icon",
-    "path",
-    "method",
-    "status",
-    "size",
-    "time"
+    "comment"
 ];
 

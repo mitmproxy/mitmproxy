@@ -194,6 +194,7 @@ export const comment: FlowColumn = ({ flow }) => {
 comment.headerName = "Comment";
 
 const FlowColumns: { [key in keyof typeof sortFunctions]: FlowColumn } = {
+    // parsed by web/gen/web_columns
     icon,
     index,
     method,

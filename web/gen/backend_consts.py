@@ -7,7 +7,6 @@ from pathlib import Path
 
 from mitmproxy.proxy.mode_specs import ReverseMode
 from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS
-from mitmproxy.tools.web.web_columns import DEFAULT_WEB_COLUMNS
 
 here = Path(__file__).parent.absolute()
 
@@ -31,9 +30,6 @@ async def make() -> str:
         "}\n\n"
         "export const AVAILABLE_WEB_COLUMNS = "
         + json.dumps(AVAILABLE_WEB_COLUMNS, indent=4)
-        + ";\n\n"
-        "export const DEFAULT_WEB_COLUMNS = "
-        + json.dumps(DEFAULT_WEB_COLUMNS, indent=4)
         + ";\n\n"
     )
 
