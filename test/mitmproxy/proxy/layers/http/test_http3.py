@@ -13,6 +13,7 @@ from aioquic.h3.connection import Headers as H3Headers
 from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
 from aioquic.h3.connection import StreamType
+from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
 from mitmproxy import version
@@ -806,13 +807,13 @@ def test_rst_then_close(tctx):
         >> cff.receive_data(b"unexpected data frame")
         << quic.CloseQuicConnection(
             tctx.client,
-            error_code=quic.QuicErrorCode.PROTOCOL_VIOLATION.value,
+            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
             frame_type=None,
             reason_phrase=err,
         )
         >> quic.QuicConnectionClosed(
             tctx.client,
-            error_code=quic.QuicErrorCode.PROTOCOL_VIOLATION.value,
+            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
             frame_type=None,
             reason_phrase=err,
         )

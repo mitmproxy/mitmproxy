@@ -18,8 +18,8 @@ from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers import tls as proxy_tls
 from mitmproxy.test import taddons
-from test.mitmproxy.proxy.layers import test_quic
 from test.mitmproxy.proxy.layers import test_tls
+from test.mitmproxy.proxy.layers.quic import test__stream_layers as test_quic
 
 
 def test_alpn_select_callback():
