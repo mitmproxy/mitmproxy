@@ -160,6 +160,12 @@ class TlsConfig:
             help="Use a specific elliptic curve for ECDHE key exchange on server connections. "
             'OpenSSL syntax, for example "prime256v1" (see `openssl ecparam -list_curves`).',
         )
+        loader.add_option(
+            name="request_client_cert",
+            typespec=bool,
+            default=False,
+            help=f"Requests a client certificate (TLS message 'CertificateRequest') to establish a mutual TLS connection between client and mitmproxy (combined with 'client_certs' option for mitmproxy and upstream).",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -199,7 +205,7 @@ class TlsConfig:
             cipher_list=tuple(cipher_list),
             ecdh_curve=ctx.options.tls_ecdh_curve_client,
             chain_file=entry.chain_file,
-            request_client_cert=False,
+            request_client_cert=ctx.options.request_client_cert,
             alpn_select_callback=alpn_select_callback,
             extra_chain_certs=tuple(extra_chain_certs),
             dhparams=self.certstore.dhparams,

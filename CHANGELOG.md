@@ -35,6 +35,8 @@
   ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
 - Fix of measurement unit in HAR import, duration is in milliseconds
   ([#7179](https://github.com/mitmproxy/mitmproxy/pull/7179), @dstd)
+- Add support for full mTLS with client certs between client and mitmproxy.
+  ([#7175](https://github.com/mitmproxy/mitmproxy/pull/7175), @Kriechi)
 
 ## 02 August 2024: mitmproxy 10.4.2
 
