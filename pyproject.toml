@@ -136,6 +136,7 @@ exclude_lines = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = "test"
 addopts = "--capture=no --color=yes"
 filterwarnings = [
@@ -155,19 +156,16 @@ exclude = [
   "mitmproxy/contentviews/__init__.py",
   "mitmproxy/contentviews/base.py",
   "mitmproxy/contentviews/grpc.py",
-  "mitmproxy/contentviews/image/__init__.py",
   "mitmproxy/contrib/*",
   "mitmproxy/ctx.py",
   "mitmproxy/exceptions.py",
   "mitmproxy/flow.py",
-  "mitmproxy/io/__init__.py",
   "mitmproxy/io/io.py",
   "mitmproxy/io/tnetstring.py",
   "mitmproxy/log.py",
   "mitmproxy/master.py",
   "mitmproxy/net/check.py",
   "mitmproxy/net/http/cookies.py",
-  "mitmproxy/net/http/http1/__init__.py",
   "mitmproxy/net/http/multipart.py",
   "mitmproxy/net/tls.py",
   "mitmproxy/platform/__init__.py",
@@ -177,7 +175,6 @@ exclude = [
   "mitmproxy/platform/pf.py",
   "mitmproxy/platform/windows.py",
   "mitmproxy/proxy/__init__.py",
-  "mitmproxy/proxy/layers/__init__.py",
   "mitmproxy/proxy/layers/http/__init__.py",
   "mitmproxy/proxy/layers/http/_base.py",
   "mitmproxy/proxy/layers/http/_events.py",
@@ -190,11 +187,9 @@ exclude = [
   "mitmproxy/proxy/layers/http/_upstream_proxy.py",
   "mitmproxy/proxy/layers/tls.py",
   "mitmproxy/proxy/server.py",
-  "mitmproxy/script/__init__.py",
   "mitmproxy/test/taddons.py",
   "mitmproxy/test/tflow.py",
   "mitmproxy/test/tutils.py",
-  "mitmproxy/tools/console/__init__.py",
   "mitmproxy/tools/console/commander/commander.py",
   "mitmproxy/tools/console/commandexecutor.py",
   "mitmproxy/tools/console/commands.py",
@@ -204,7 +199,6 @@ exclude = [
   "mitmproxy/tools/console/flowdetailview.py",
   "mitmproxy/tools/console/flowlist.py",
   "mitmproxy/tools/console/flowview.py",
-  "mitmproxy/tools/console/grideditor/__init__.py",
   "mitmproxy/tools/console/grideditor/base.py",
   "mitmproxy/tools/console/grideditor/col_bytes.py",
   "mitmproxy/tools/console/grideditor/col_subgrid.py",
@@ -225,7 +219,6 @@ exclude = [
   "mitmproxy/tools/console/tabs.py",
   "mitmproxy/tools/console/window.py",
   "mitmproxy/tools/main.py",
-  "mitmproxy/tools/web/__init__.py",
   "mitmproxy/tools/web/app.py",
   "mitmproxy/tools/web/master.py",
   "mitmproxy/tools/web/webaddons.py",

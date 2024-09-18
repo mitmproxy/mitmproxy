@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import ast
 import asyncio
 import fnmatch
 import os
@@ -27,6 +28,20 @@ async def main():
 
     async def run_tests(f: Path, should_fail: bool) -> None:
         if f.name == "__init__.py":
+            mod = ast.parse(f.read_text())
+            full_cov_on_import = all(
+                isinstance(stmt, (ast.ImportFrom, ast.Import, ast.Assign))
+                for stmt in mod.body
+            )
+            if full_cov_on_import:
+                if should_fail:
+                    raise RuntimeError(
+                        f"Remove {f} from tool.pytest.individual_coverage in pyproject.toml."
+                    )
+                else:
+                    print(f"{f}: skip __init__.py file without logic")
+                    return
+
             test_file = Path("test") / f.parent.with_name(f"test_{f.parent.name}.py")
         else:
             test_file = Path("test") / f.with_name(f"test_{f.name}")
