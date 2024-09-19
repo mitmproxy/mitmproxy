@@ -11,6 +11,5 @@ AVAILABLE_WEB_COLUMNS = [
     "time",
     "timestamp",
     "tls",
-    "comment",
+    "comment"
 ]
-DEFAULT_WEB_COLUMNS = ["tls", "icon", "path", "method", "status", "size", "time"]

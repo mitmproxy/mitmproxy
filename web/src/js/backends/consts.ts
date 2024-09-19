@@ -10,19 +10,3 @@ export enum ReverseProxyProtocols {
     DNS = "dns",
     QUIC = "quic",
 }
-
-export const AVAILABLE_WEB_COLUMNS = [
-    "icon",
-    "index",
-    "method",
-    "version",
-    "path",
-    "quickactions",
-    "size",
-    "status",
-    "time",
-    "timestamp",
-    "tls",
-    "comment"
-];
-
