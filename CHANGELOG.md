@@ -25,6 +25,8 @@
   ([#7139](https://github.com/mitmproxy/mitmproxy/pull/7139), @mhils)
 - Fix a bug where mitmproxy would crash when receiving `STOP_SENDING` QUIC frames.
   ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
+- Fix error when unmarking all flows.
+  ([#7192](https://github.com/mitmproxy/mitmproxy/pull/7192), @bburky)
 - mitmproxy now officially supports Python 3.13.
   ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
 - Add HTTP3 support in HTTPS reverse-proxy mode
