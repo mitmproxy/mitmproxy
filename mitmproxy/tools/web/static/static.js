@@ -1,0 +1,1 @@
+MITMWEB_STATIC = false;
