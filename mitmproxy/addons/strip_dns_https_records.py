@@ -23,7 +23,7 @@ class StripDnsHttpsRecords:
                 if (
                     answer.type == types.HTTPS
                     and answer.https_alpn is not None
-                    and b"h3" in answer.https_alpn
+                    and (b"h3" in answer.https_alpn or a.startswith(b"h3-"))
                 ):
                     alpns = tuple(a for a in answer.https_alpn if a != b"h3" and not a.startswith(b"h3-"))
                     answer.https_alpn = alpns or None
