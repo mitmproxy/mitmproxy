@@ -284,7 +284,7 @@ class HttpStream(layer.Layer):
             self.client_state = self.state_consume_request_body
         self.server_state = self.state_wait_for_response_headers
 
-    def start_request_stream(self, event = None) -> layer.CommandGenerator[None]:
+    def start_request_stream(self, event=None) -> layer.CommandGenerator[None]:
         if self.flow.response:
             raise NotImplementedError(
                 "Can't set a response and enable streaming at the same time."
