@@ -24,6 +24,7 @@ class StripDnsHttpsRecords:
                     answer.type == types.HTTPS
                     and answer.https_alpn is not None
                     and any(
+                        # HTTP/3 or any of the spec drafts (h3-...)?
                         a == b"h3" or a.startswith(b"h3-") for a in answer.https_alpn
                     )
                 ):
