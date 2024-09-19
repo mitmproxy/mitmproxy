@@ -279,12 +279,12 @@ class HttpStream(layer.Layer):
             self.flow.request.headers.pop("expect")
 
         if self.flow.request.stream:
-            yield from self.start_request_stream()
+            yield from self.start_request_stream(event)
         else:
             self.client_state = self.state_consume_request_body
         self.server_state = self.state_wait_for_response_headers
 
-    def start_request_stream(self) -> layer.CommandGenerator[None]:
+    def start_request_stream(self, event = None) -> layer.CommandGenerator[None]:
         if self.flow.response:
             raise NotImplementedError(
                 "Can't set a response and enable streaming at the same time."
@@ -293,8 +293,11 @@ class HttpStream(layer.Layer):
         if not ok:
             self.client_state = self.state_errored
             return
+        end_stream = False
+        if event:
+            end_stream = event.end_stream
         yield SendHttp(
-            RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
+            RequestHeaders(self.stream_id, self.flow.request, end_stream),
             self.context.server,
         )
         yield commands.Log(f"Streaming request to {self.flow.request.host}.")
