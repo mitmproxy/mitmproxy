@@ -20,8 +20,6 @@ jobs:
           python-version-file: .github/python-version.txt
       - run: pip install -e .[dev]
 
-      - run: chmod +x web/gen/*.py
-
       - run: ruff check --fix-only .
       - run: ruff format .
 
