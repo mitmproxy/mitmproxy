@@ -347,7 +347,7 @@ class Dumper:
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
-            if f.client_conn.tls_version == "QUIC":
+            if f.client_conn.tls_version == "QUICv1":
                 if f.type == "tcp":
                     quic_type = "stream"
                 else:

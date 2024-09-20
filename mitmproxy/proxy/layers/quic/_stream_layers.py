@@ -216,7 +216,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 self.conn.certificate_list = [certs.Cert(cert) for cert in all_certs]
                 assert self.quic.tls.key_schedule
                 self.conn.cipher = self.quic.tls.key_schedule.cipher_suite.name
-                self.conn.tls_version = "QUIC"
+                self.conn.tls_version = "QUICv1"
 
                 # log the result and report the success to addons
                 if self.debug:

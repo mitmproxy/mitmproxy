@@ -27,6 +27,18 @@ class ConnectionState(Flag):
 
 TransportProtocol = Literal["tcp", "udp"]
 
+# https://docs.openssl.org/master/man3/SSL_get_version/#return-values
+TlsVersion = Literal[
+    "SSLv3",
+    "TLSv1",
+    "TLSv1.1",
+    "TLSv1.2",
+    "TLSv1.3",
+    "DTLSv0.9",
+    "DTLSv1",
+    "DTLSv1.2",
+    "QUICv1",
+]
 
 # practically speaking we may have IPv6 addresses with flowinfo and scope_id,
 # but type checking isn't good enough to properly handle tuple unions.
@@ -104,7 +116,7 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """The active cipher name as returned by OpenSSL's `SSL_CIPHER_get_name`."""
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
-    tls_version: str | None = None
+    tls_version: TlsVersion | None = None
     """The active TLS version."""
     sni: str | None = None
     """

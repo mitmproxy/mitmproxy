@@ -1,5 +1,6 @@
 import struct
 import time
+import typing
 from collections.abc import Iterator
 from dataclasses import dataclass
 from logging import DEBUG
@@ -11,6 +12,7 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import connection
+from mitmproxy.connection import TlsVersion
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import commands
@@ -377,7 +379,9 @@ class TLSLayer(tunnel.TunnelLayer):
             self.conn.timestamp_tls_setup = time.time()
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
             self.conn.cipher = self.tls.get_cipher_name()
-            self.conn.tls_version = self.tls.get_protocol_version_name()
+            self.conn.tls_version = typing.cast(
+                TlsVersion, self.tls.get_protocol_version_name()
+            )
             if self.debug:
                 yield commands.Log(
                     f"{self.debug}[tls] tls established: {self.conn}", DEBUG
