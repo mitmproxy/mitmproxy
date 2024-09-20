@@ -9,11 +9,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from mitmproxy.addons.next_layer import _starts_like_quic
 from mitmproxy.addons.next_layer import NeedsMoreData
 from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.next_layer import stack_match
 from mitmproxy.connection import Address
 from mitmproxy.connection import Client
+from mitmproxy.connection import TlsVersion
 from mitmproxy.connection import TransportProtocol
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
@@ -22,7 +24,6 @@ from mitmproxy.proxy.layers import ClientTLSLayer
 from mitmproxy.proxy.layers import DNSLayer
 from mitmproxy.proxy.layers import HttpLayer
 from mitmproxy.proxy.layers import modes
-from mitmproxy.proxy.layers import QuicStreamLayer
 from mitmproxy.proxy.layers import RawQuicLayer
 from mitmproxy.proxy.layers import ServerQuicLayer
 from mitmproxy.proxy.layers import ServerTLSLayer
@@ -31,7 +32,6 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http import HttpStream
 from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
-from mitmproxy.proxy.layers.tls import HTTP3_ALPN
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 
@@ -90,6 +90,13 @@ quic_client_hello = bytes.fromhex(
     "a9f32ae535fdb27fff7706540472abb9eab90af12b2bea005da189874b0ca69e6ae1690a6f2adf75be3853c94e"
     "fd8098ed579c20cb37be6885d8d713af4ba52958cee383089b98ed9cb26e11127cf88d1b7d254f15f7903dd7ed"
     "297c0013924e88248684fe8f2098326ce51aa6e5"
+)
+
+quic_short_header_packet = bytes.fromhex(
+    "52e23539dde270bb19f7a8b63b7bcf3cdacf7d3dc68a7e00318bfa2dac3bad12cb7d78112efb5bcb1ee8e0b347"
+    "641cccd2736577d0178b4c4c4e97a8e9e2af1d28502e58c4882223e70c4d5124c4b016855340e982c5c453d61d"
+    "7d0720be075fce3126de3f0d54dc059150e0f80f1a8db5e542eb03240b0a1db44a322fb4fd3c6f2e054b369e14"
+    "5a5ff925db617d187ec65a7f00d77651968e74c1a9ddc3c7fab57e8df821b07e103264244a3a03d17984e29933"
 )
 
 dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
@@ -413,6 +420,7 @@ class TConf:
     after: list[type[Layer]]
     proxy_mode: str = "regular"
     transport_protocol: TransportProtocol = "tcp"
+    tls_version: TlsVersion = None
     data_client: bytes = b""
     data_server: bytes = b""
     ignore_hosts: Sequence[str] = ()
@@ -634,28 +642,6 @@ reverse_proxy_configs.extend(
         ),
         pytest.param(
             TConf(
-                before=[
-                    modes.ReverseProxy,
-                    ServerQuicLayer,
-                    ClientQuicLayer,
-                    RawQuicLayer,
-                    lambda ctx: QuicStreamLayer(ctx, False, 0),
-                ],
-                after=[
-                    modes.ReverseProxy,
-                    ServerQuicLayer,
-                    ClientQuicLayer,
-                    RawQuicLayer,
-                    QuicStreamLayer,
-                    TCPLayer,
-                ],
-                proxy_mode="reverse:quic://example.com",
-                alpn=HTTP3_ALPN,
-            ),
-            id="reverse proxy: quic",
-        ),
-        pytest.param(
-            TConf(
                 before=[modes.ReverseProxy],
                 after=[modes.ReverseProxy, TCPLayer],
                 proxy_mode=f"reverse:http://example.com",
@@ -688,13 +674,21 @@ transparent_proxy_configs = [
         id=f"transparent proxy: dtls",
     ),
     pytest.param(
-        TConf(
+        quic := TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer],
             data_client=quic_client_hello,
             transport_protocol="udp",
+            server_address=("192.0.2.1", 443),
         ),
         id="transparent proxy: quic",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            quic,
+            data_client=quic_short_header_packet,
+        ),
+        id="transparent proxy: existing quic session",
     ),
     pytest.param(
         TConf(
@@ -802,6 +796,21 @@ transparent_proxy_configs = [
         ),
         id="wireguard proxy: dns should not be ignored",
     ),
+    pytest.param(
+        TConf(
+            before=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer],
+            after=[
+                modes.TransparentProxy,
+                ServerQuicLayer,
+                ClientQuicLayer,
+                RawQuicLayer,
+            ],
+            data_client=b"<insert valid quic here>",
+            alpn=b"doq",
+            tls_version="QUICv1",
+        ),
+        id=f"transparent proxy: non-http quic",
+    ),
 ]
 
 
@@ -835,6 +844,7 @@ def test_next_layer(
         )
         ctx.server.address = test_conf.server_address
         ctx.client.transport_protocol = test_conf.transport_protocol
+        ctx.client.tls_version = test_conf.tls_version
         ctx.client.proxy_mode = ProxyMode.parse(test_conf.proxy_mode)
         ctx.layers = [x(ctx) for x in test_conf.before]
         nl._next_layer(
@@ -847,3 +857,19 @@ def test_next_layer(
         last_layer = ctx.layers[-1]
         if isinstance(last_layer, (UDPLayer, TCPLayer)):
             assert bool(last_layer.flow) ^ test_conf.ignore_conn
+
+
+def test_start_likes_quic():
+    assert not _starts_like_quic(b"", ("192.0.2.1", 443))
+    assert not _starts_like_quic(dtls_client_hello_with_extensions, ("192.0.2.1", 443))
+
+    # Long Header - we can get definite answers from version numbers.
+    assert _starts_like_quic(quic_client_hello, None)
+    quic_version_negotation_grease = bytes.fromhex(
+        "ca0a0a0a0a08c0618c84b54541320823fcce946c38d8210044e6a93bbb283593f75ffb6f2696b16cfdcb5b1255"
+    )
+    assert _starts_like_quic(quic_version_negotation_grease, None)
+
+    # Short Header - port-based is the best we can do.
+    assert _starts_like_quic(quic_short_header_packet, ("192.0.2.1", 443))
+    assert not _starts_like_quic(quic_short_header_packet, ("192.0.2.1", 444))

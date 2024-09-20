@@ -66,7 +66,9 @@ class QuicStreamLayer(layer.Layer):
     child_layer: layer.Layer
     """The stream's child layer."""
 
-    def __init__(self, context: context.Context, ignore: bool, stream_id: int) -> None:
+    def __init__(
+        self, context: context.Context, force_raw: bool, stream_id: int
+    ) -> None:
         # we mustn't reuse the client from the QUIC connection, as the state and protocol differs
         self.client = context.client = context.client.copy()
         self.client.transport_protocol = "tcp"
@@ -88,12 +90,9 @@ class QuicStreamLayer(layer.Layer):
         )
         self._server_stream_id: int | None = None
 
-        # ignored connections will be assigned a TCPLayer immediately
         super().__init__(context)
         self.child_layer = (
-            TCPLayer(context, ignore=True)
-            if ignore
-            else QuicStreamNextLayer(context, self)
+            TCPLayer(context) if force_raw else QuicStreamNextLayer(context, self)
         )
         self.refresh_metadata()
 
@@ -150,8 +149,8 @@ class RawQuicLayer(layer.Layer):
     This layer is responsible for de-multiplexing QUIC streams into an individual layer stack per stream.
     """
 
-    ignore: bool
-    """Indicates whether traffic should be routed as-is."""
+    force_raw: bool
+    """Indicates whether traffic should be treated as raw TCP/UDP without further protocol detection."""
     datagram_layer: layer.Layer
     """
   The layer that is handling datagrams over QUIC. It's like a child_layer, but with a forked context.
@@ -170,12 +169,12 @@ class RawQuicLayer(layer.Layer):
     next_stream_id: list[int]
     """List containing the next stream ID for all four is_unidirectional/is_client combinations."""
 
-    def __init__(self, context: context.Context, ignore: bool = False) -> None:
+    def __init__(self, context: context.Context, force_raw: bool = False) -> None:
         super().__init__(context)
-        self.ignore = ignore
+        self.force_raw = force_raw
         self.datagram_layer = (
-            UDPLayer(self.context.fork(), ignore=True)
-            if ignore
+            UDPLayer(self.context.fork())
+            if force_raw
             else layer.NextLayer(self.context.fork())
         )
         self.client_stream_ids = {}
@@ -247,7 +246,9 @@ class RawQuicLayer(layer.Layer):
 
                 # create, register and start the layer
                 stream_layer = QuicStreamLayer(
-                    self.context.fork(), self.ignore, client_stream_id
+                    self.context.fork(),
+                    force_raw=self.force_raw,
+                    stream_id=client_stream_id,
                 )
                 self.client_stream_ids[client_stream_id] = stream_layer
                 if server_stream_id is not None:
