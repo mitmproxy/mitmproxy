@@ -306,7 +306,7 @@ def test_quic():
     d = dumper.Dumper(sio)
     with taddons.context(d):
         f = tflow.ttcpflow()
-        f.client_conn.tls_version = "QUIC"
+        f.client_conn.tls_version = "QUICv1"
         # TODO: This should not be metadata, this should be typed attributes.
         f.metadata["quic_stream_id_client"] = 1
         f.metadata["quic_stream_id_server"] = 1
@@ -314,7 +314,7 @@ def test_quic():
         assert "quic stream 1" in sio.getvalue()
 
         f2 = tflow.tudpflow()
-        f2.client_conn.tls_version = "QUIC"
+        f2.client_conn.tls_version = "QUICv1"
         # TODO: This should not be metadata, this should be typed attributes.
         f2.metadata["quic_stream_id_client"] = 1
         f2.metadata["quic_stream_id_server"] = 1

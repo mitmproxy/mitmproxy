@@ -37,6 +37,8 @@
   ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
 - Fix of measurement unit in HAR import, duration is in milliseconds
   ([#7179](https://github.com/mitmproxy/mitmproxy/pull/7179), @dstd)
+- `Connection.tls_version` now is `QUICv1` instead of `QUIC` for QUIC.
+  ([#7201](https://github.com/mitmproxy/mitmproxy/pull/7201), @mhils)
 - Add support for full mTLS with client certs between client and mitmproxy.
   ([#7175](https://github.com/mitmproxy/mitmproxy/pull/7175), @Kriechi)
 

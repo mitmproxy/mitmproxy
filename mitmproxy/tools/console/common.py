@@ -762,7 +762,7 @@ def format_flow(
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:
             duration = None
-        if f.client_conn.tls_version == "QUIC":
+        if f.client_conn.tls_version == "QUICv1":
             protocol = "quic"
         else:
             protocol = f.type

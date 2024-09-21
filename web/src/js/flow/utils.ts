@@ -193,7 +193,7 @@ export const canReplay = (flow: Flow): boolean => {
 
 export const getIcon = (flow: Flow): string => {
     if (flow.type !== "http") {
-        if (flow.client_conn.tls_version === "QUIC") {
+        if (flow.client_conn.tls_version === "QUICv1") {
             return `resource-icon-quic`;
         }
         return `resource-icon-${flow.type}`;
