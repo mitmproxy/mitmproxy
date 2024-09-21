@@ -859,7 +859,7 @@ def test_next_layer(
             assert bool(last_layer.flow) ^ test_conf.ignore_conn
 
 
-def test_start_likes_quic():
+def test_starts_like_quic():
     assert not _starts_like_quic(b"", ("192.0.2.1", 443))
     assert not _starts_like_quic(dtls_client_hello_with_extensions, ("192.0.2.1", 443))
 

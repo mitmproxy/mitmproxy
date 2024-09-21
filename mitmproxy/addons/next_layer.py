@@ -459,7 +459,7 @@ def _starts_like_quic(data_client: bytes, server_address: Address | None) -> boo
 
     # Long Header Packets
     if data_client[0] & 0x80:
-        version = int.from_bytes(data_client[1:5])
+        version = int.from_bytes(data_client[1:5], "big")
         if version in KNOWN_QUIC_VERSIONS:
             return True
         # https://www.rfc-editor.org/rfc/rfc9000.html#name-versions
