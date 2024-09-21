@@ -33,7 +33,6 @@ from typing import TYPE_CHECKING
 from typing import TypeVar
 
 import mitmproxy_rs
-
 from mitmproxy import ctx
 from mitmproxy import flow
 from mitmproxy import platform

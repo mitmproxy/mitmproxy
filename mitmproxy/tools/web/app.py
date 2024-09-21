@@ -13,13 +13,13 @@ from io import BytesIO
 from itertools import islice
 from typing import ClassVar
 
-import mitmproxy_rs
 import tornado.escape
 import tornado.web
 import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master
+import mitmproxy_rs
 from mitmproxy import certs
 from mitmproxy import command
 from mitmproxy import contentviews

@@ -20,9 +20,9 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Literal
 
-import mitmproxy_rs
 from OpenSSL import SSL
 
+import mitmproxy_rs
 from mitmproxy import http
 from mitmproxy import options as moptions
 from mitmproxy import tls

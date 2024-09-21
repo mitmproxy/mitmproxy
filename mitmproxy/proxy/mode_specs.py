@@ -32,7 +32,6 @@ from typing import ClassVar
 from typing import Literal
 
 import mitmproxy_rs
-
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
 

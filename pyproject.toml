@@ -268,7 +268,7 @@ force-single-line = true
 order-by-type = false
 section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
 no-lines-before = ["first-party"]
-known-first-party = ["test", "mitmproxy"]
+known-first-party = ["test", "mitmproxy", "mitmproxy_rs"]
 
 [tool.tox]
 legacy_tox_ini = """

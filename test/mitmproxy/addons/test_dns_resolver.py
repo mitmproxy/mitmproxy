@@ -3,9 +3,9 @@ import socket
 import sys
 import typing
 
-import mitmproxy_rs
 import pytest
 
+import mitmproxy_rs
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
 from mitmproxy.addons import proxyserver
