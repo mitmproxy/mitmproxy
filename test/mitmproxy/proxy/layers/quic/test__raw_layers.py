@@ -27,10 +27,9 @@ from test.mitmproxy.proxy.layers.quic.test__stream_layers import TlsEchoLayer
 
 
 class TestQuicStreamLayer:
-    def test_ignored(self, tctx: context.Context):
+    def test_force_raw(self, tctx: context.Context):
         quic_layer = QuicStreamLayer(tctx, True, 1)
         assert isinstance(quic_layer.child_layer, layers.TCPLayer)
-        assert not quic_layer.child_layer.flow
         quic_layer.child_layer.flow = TCPFlow(tctx.client, tctx.server)
         quic_layer.refresh_metadata()
         assert quic_layer.child_layer.flow.metadata["quic_is_unidirectional"] is False
@@ -57,9 +56,9 @@ class TestQuicStreamLayer:
 
 
 class TestRawQuicLayer:
-    @pytest.mark.parametrize("ignore", [True, False])
-    def test_error(self, tctx: context.Context, ignore: bool):
-        quic_layer = RawQuicLayer(tctx, ignore=ignore)
+    @pytest.mark.parametrize("force_raw", [True, False])
+    def test_error(self, tctx: context.Context, force_raw: bool):
+        quic_layer = RawQuicLayer(tctx, force_raw=force_raw)
         assert (
             tutils.Playbook(quic_layer)
             << commands.OpenConnection(tctx.server)
@@ -68,10 +67,10 @@ class TestRawQuicLayer:
         )
         assert quic_layer._handle_event == quic_layer.done
 
-    def test_ignored(self, tctx: context.Context):
-        quic_layer = RawQuicLayer(tctx, ignore=True)
+    def test_force_raw(self, tctx: context.Context):
+        quic_layer = RawQuicLayer(tctx, force_raw=True)
         assert (
-            tutils.Playbook(quic_layer)
+            tutils.Playbook(quic_layer, hooks=False)
             << commands.OpenConnection(tctx.server)
             >> tutils.reply(None)
             >> events.DataReceived(tctx.client, b"msg1")

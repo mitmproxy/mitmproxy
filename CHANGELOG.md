@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmproxy now supports transparent HTTP/3 proxying.
+  ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
 - Fix endless tnetstring parsing in case of very large tnetstring
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
 - Tighten HTTP detection heuristic to better support custom TCP-based protocols.

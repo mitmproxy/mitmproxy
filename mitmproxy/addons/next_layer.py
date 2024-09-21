@@ -26,6 +26,7 @@ from typing import Any
 from typing import cast
 
 from mitmproxy import ctx
+from mitmproxy.connection import Address
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import layer
@@ -152,7 +153,7 @@ class NextLayer:
             server_tls.child_layer = ClientTLSLayer(context)
             return server_tls
         # 3b) QUIC
-        if udp_based and _starts_like_quic(data_client):
+        if udp_based and _starts_like_quic(data_client, context.server.address):
             server_quic = ServerQuicLayer(context)
             server_quic.child_layer = ClientQuicLayer(context)
             return server_quic
@@ -164,19 +165,16 @@ class NextLayer:
             return layers.UDPLayer(context)
 
         # 5)  Handle application protocol
-        # 5a) Is it DNS?
+        # 5a) Do we have a known ALPN negotiation?
+        if context.client.alpn:
+            if context.client.alpn in HTTP_ALPNS:
+                return layers.HttpLayer(context, HTTPMode.transparent)
+            elif context.client.tls_version == "QUICv1":
+                # TODO: Once we support more QUIC-based protocols, relax force_raw here.
+                return layers.RawQuicLayer(context, force_raw=True)
+        # 5b) Is it DNS?
         if context.server.address and context.server.address[1] in (53, 5353):
             return layers.DNSLayer(context)
-
-        # 5b) Do we have a known ALPN negotiation?
-        if context.client.alpn in HTTP_ALPNS:
-            explicit_quic_proxy = (
-                isinstance(context.client.proxy_mode, modes.ReverseMode)
-                and context.client.proxy_mode.scheme == "quic"
-            )
-            if not explicit_quic_proxy:
-                return layers.HttpLayer(context, HTTPMode.transparent)
-
         # 5c) We have no other specialized layers for UDP, so we fall back to raw forwarding.
         if udp_based:
             return layers.UDPLayer(context)
@@ -398,7 +396,7 @@ class NextLayer:
             case "quic":
                 stack /= ServerQuicLayer(context)
                 stack /= ClientQuicLayer(context)
-                stack /= RawQuicLayer(context)
+                stack /= RawQuicLayer(context, force_raw=True)
 
             case _:  # pragma: no cover
                 assert_never(spec.scheme)
@@ -430,11 +428,47 @@ class NextLayer:
         )
 
 
-def _starts_like_quic(data_client: bytes) -> bool:
-    # FIXME: perf
-    try:
-        quic_parse_client_hello_from_datagrams([data_client])
-    except ValueError:
+# https://www.iana.org/assignments/quic/quic.xhtml
+KNOWN_QUIC_VERSIONS = {
+    0x00000001,  # QUIC v1
+    0x51303433,  # Google QUIC Q043
+    0x51303436,  # Google QUIC Q046
+    0x51303530,  # Google QUIC Q050
+    0x6B3343CF,  # QUIC v2
+    0x709A50C4,  # QUIC v2 draft codepoint
+}
+
+TYPICAL_QUIC_PORTS = {80, 443, 8443}
+
+
+def _starts_like_quic(data_client: bytes, server_address: Address | None) -> bool:
+    """
+    Make an educated guess on whether this could be QUIC.
+    This turns out to be quite hard in practice as 1-RTT packets are hardly distinguishable from noise.
+
+    Returns:
+        True, if the passed bytes could be the start of a QUIC packet.
+        False, otherwise.
+    """
+    # Minimum size: 1 flag byte + 1+ packet number bytes + 16+ bytes encrypted payload
+    if len(data_client) < 18:
         return False
+    if starts_like_dtls_record(data_client):
+        return False
+    # TODO: Add more checks here to detect true negatives.
+
+    # Long Header Packets
+    if data_client[0] & 0x80:
+        version = int.from_bytes(data_client[1:5], "big")
+        if version in KNOWN_QUIC_VERSIONS:
+            return True
+        # https://www.rfc-editor.org/rfc/rfc9000.html#name-versions
+        # Versions that follow the pattern 0x?a?a?a?a are reserved for use in forcing version negotiation
+        if version & 0x0F0F0F0F == 0x0A0A0A0A:
+            return True
     else:
-        return True
+        # ¯\_(ツ)_/¯
+        # We can't even rely on the QUIC bit, see https://datatracker.ietf.org/doc/rfc9287/.
+        pass
+
+    return bool(server_address and server_address[1] in TYPICAL_QUIC_PORTS)
