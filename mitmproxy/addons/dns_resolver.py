@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import asyncio
 import ipaddress
 import logging
 import socket
-from collections.abc import Awaitable
-from collections.abc import Callable
 from collections.abc import Sequence
 from functools import cache
+from typing import Protocol
 
 import mitmproxy_rs
 from mitmproxy import ctx
@@ -56,16 +57,25 @@ class DnsResolver:
             return []
 
     @cache
-    def resolver(self) -> mitmproxy_rs.dns.DnsResolver:
+    def resolver(self) -> Resolver:
         """
-        Our mitmproxy_rs DNS resolver.
+        Returns:
+            The DNS resolver to use.
+        Raises:
+            MissingNameServers, if name servers are unknown but the host file should be ignored.
         """
-        ns = self.name_servers()
-        assert ns
-        return mitmproxy_rs.dns.DnsResolver(
-            name_servers=ns,
-            use_hosts_file=ctx.options.dns_use_hosts_file,
-        )
+        if ns := self.name_servers():
+            # We always want to use our own resolver if name server info is available.
+            return mitmproxy_rs.dns.DnsResolver(
+                name_servers=ns,
+                use_hosts_file=ctx.options.dns_use_hosts_file,
+            )
+        elif ctx.options.dns_use_hosts_file:
+            # Fallback to getaddrinfo as hickory's resolver isn't as reliable
+            # as we would like it to be (https://github.com/mitmproxy/mitmproxy/issues/7064).
+            return GetaddrinfoFallbackResolver()
+        else:
+            raise MissingNameServers()
 
     async def dns_request(self, flow: dns.DNSFlow) -> None:
         if self._should_resolve(flow):
@@ -76,24 +86,12 @@ class DnsResolver:
                 and flow.request.question.class_ == dns.classes.IN
                 and flow.request.question.type in (dns.types.A, dns.types.AAAA)
             )
-            name_servers = self.name_servers()
-
             if all_ip_lookups:
-                # For A/AAAA records, we try to use our own resolver
-                # (with a fallback to getaddrinfo)
-                if name_servers:
-                    flow.response = await self.resolve(
-                        flow.request, self._with_resolver
-                    )
-                elif ctx.options.dns_use_hosts_file:
-                    # Fallback to getaddrinfo as hickory's resolver isn't as reliable
-                    # as we would like it to be (https://github.com/mitmproxy/mitmproxy/issues/7064).
-                    flow.response = await self.resolve(
-                        flow.request, self._with_getaddrinfo
-                    )
-                else:
+                try:
+                    flow.response = await self.resolve(flow.request)
+                except MissingNameServers:
                     flow.error = Error("Cannot resolve, dns_name_servers unknown.")
-            elif name_servers:
+            elif name_servers := self.name_servers():
                 # For other records, the best we can do is to forward the query
                 # to an upstream server.
                 flow.server_conn.address = (name_servers[0], 53)
@@ -118,11 +116,14 @@ class DnsResolver:
     async def resolve(
         self,
         message: dns.Message,
-        resolve_func: Callable[[dns.Question], Awaitable[list[str]]],
     ) -> dns.Message:
-        assert message.question
+        q = message.question
+        assert q
         try:
-            ip_addrs = await resolve_func(message.question)
+            if q.type == dns.types.A:
+                ip_addrs = await self.resolver().lookup_ipv4(q.name)
+            else:
+                ip_addrs = await self.resolver().lookup_ipv6(q.name)
         except socket.gaierror as e:
             match e.args[0]:
                 case socket.EAI_NONAME:
@@ -135,9 +136,9 @@ class DnsResolver:
         return message.succeed(
             [
                 dns.ResourceRecord(
-                    name=message.question.name,
-                    type=message.question.type,
-                    class_=message.question.class_,
+                    name=q.name,
+                    type=q.type,
+                    class_=q.class_,
                     ttl=dns.ResourceRecord.DEFAULT_TTL,
                     data=ipaddress.ip_address(ip).packed,
                 )
@@ -145,23 +146,37 @@ class DnsResolver:
             ]
         )
 
-    async def _with_resolver(self, question: dns.Question) -> list[str]:
-        """Resolve an A/AAAA question using the mitmproxy_rs DNS resolver."""
-        if question.type == dns.types.A:
-            return await self.resolver().lookup_ipv4(question.name)
-        else:
-            return await self.resolver().lookup_ipv6(question.name)
 
-    async def _with_getaddrinfo(self, question: dns.Question) -> list[str]:
-        """Resolve an A/AAAA question using getaddrinfo."""
-        if question.type == dns.types.A:
-            family = socket.AF_INET
-        else:
-            family = socket.AF_INET6
+class Resolver(Protocol):
+    async def lookup_ip(self, domain: str) -> list[str]:  # pragma: no cover
+        ...
+
+    async def lookup_ipv4(self, domain: str) -> list[str]:  # pragma: no cover
+        ...
+
+    async def lookup_ipv6(self, domain: str) -> list[str]:  # pragma: no cover
+        ...
+
+
+class GetaddrinfoFallbackResolver:
+    async def lookup_ip(self, domain: str) -> list[str]:
+        return await self._lookup(domain, socket.AF_UNSPEC)
+
+    async def lookup_ipv4(self, domain: str) -> list[str]:
+        return await self._lookup(domain, socket.AF_INET)
+
+    async def lookup_ipv6(self, domain: str) -> list[str]:
+        return await self._lookup(domain, socket.AF_INET6)
+
+    async def _lookup(self, domain: str, family: socket.AddressFamily) -> list[str]:
         addrinfos = await asyncio.get_running_loop().getaddrinfo(
-            host=question.name,
+            host=domain,
             port=None,
             family=family,
             type=socket.SOCK_STREAM,
         )
         return [addrinfo[4][0] for addrinfo in addrinfos]
+
+
+class MissingNameServers(RuntimeError):
+    pass
