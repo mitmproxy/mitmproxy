@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Add parameter `--show-ignored-hosts` for showing SNI for ignored hosts.
 - mitmproxy now supports transparent HTTP/3 proxying.
   ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
 - Fix endless tnetstring parsing in case of very large tnetstring
