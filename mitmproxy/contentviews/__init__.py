@@ -141,6 +141,10 @@ def get_message_content_view(
     if isinstance(message, UDPMessage):
         udp_message = message
 
+    websocket_message = None
+    if isinstance(message, WebSocketMessage):
+        websocket_message = message
+
     description, lines, error = get_content_view(
         viewmode,
         content,
@@ -149,6 +153,7 @@ def get_message_content_view(
         http_message=http_message,
         tcp_message=tcp_message,
         udp_message=udp_message,
+        websocket_message=websocket_message,
     )
 
     if enc:
@@ -166,6 +171,7 @@ def get_content_view(
     http_message: http.Message | None = None,
     tcp_message: tcp.TCPMessage | None = None,
     udp_message: udp.UDPMessage | None = None,
+    websocket_message: WebSocketMessage | None = None,
 ):
     """
     Args:
@@ -186,6 +192,7 @@ def get_content_view(
             http_message=http_message,
             tcp_message=tcp_message,
             udp_message=udp_message,
+            websocket_message=websocket_message,
         )
         if ret is None:
             ret = (
@@ -197,6 +204,7 @@ def get_content_view(
                     http_message=http_message,
                     tcp_message=tcp_message,
                     udp_message=udp_message,
+                    websocket_message=websocket_message,
                 )[1],
             )
         desc, content = ret
@@ -213,6 +221,7 @@ def get_content_view(
             http_message=http_message,
             tcp_message=tcp_message,
             udp_message=udp_message,
+            websocket_message=websocket_message,
         )[1]
         error = f"{getattr(viewmode, 'name')} content viewer failed: \n{traceback.format_exc()}"
 
