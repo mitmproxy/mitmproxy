@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from functools import cache
 
 import mitmproxy_rs
-
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy.flow import Error

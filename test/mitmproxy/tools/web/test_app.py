@@ -5,12 +5,12 @@ import logging
 from pathlib import Path
 from unittest import mock
 
-import mitmproxy_rs
 import pytest
 import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
+import mitmproxy_rs
 from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.test import tflow

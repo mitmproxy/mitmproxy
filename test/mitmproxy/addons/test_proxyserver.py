@@ -11,7 +11,6 @@ from typing import ClassVar
 from typing import TypeVar
 from unittest.mock import Mock
 
-import mitmproxy_rs
 import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
@@ -25,6 +24,7 @@ from aioquic.quic.connection import QuicConnectionError
 
 from .test_clientplayback import tcp_server
 import mitmproxy.platform
+import mitmproxy_rs
 from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy.addons import dns_resolver

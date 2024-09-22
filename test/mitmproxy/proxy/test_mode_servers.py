@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
 
-import mitmproxy_rs
 import pytest
 
 from ...conftest import no_ipv6
 import mitmproxy.platform
+import mitmproxy_rs
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.proxy.mode_servers import ServerInstance
