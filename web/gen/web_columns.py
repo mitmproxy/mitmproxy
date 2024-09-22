@@ -5,14 +5,13 @@ import json
 import re
 from pathlib import Path
 
-
 here = Path(__file__).parent.absolute()
 
 input_filename = here / "../src/js/components/FlowTable/FlowColumns.tsx"
 filename = here / "../../mitmproxy/tools/web/web_columns.py"
 
-def extract_columns() -> list:
 
+def extract_columns() -> list:
     # Read the Typescript file content
     input_file_content = input_filename.read_text()
 
@@ -26,8 +25,8 @@ def extract_columns() -> list:
 
     return columns
 
-async def make() -> str:
 
+async def make() -> str:
     available_web_columns = extract_columns()
 
     # language=Python
