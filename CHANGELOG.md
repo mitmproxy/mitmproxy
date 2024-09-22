@@ -44,7 +44,7 @@
 - Add support for full mTLS with client certs between client and mitmproxy.
   ([#7175](https://github.com/mitmproxy/mitmproxy/pull/7175), @Kriechi)
 - Update documentation adding a list of all possibile web_columns
-  ([#7205](https://github.com/mitmproxy/mitmproxy/pull/7205), @lups2000)
+  ([#7205](https://github.com/mitmproxy/mitmproxy/pull/7205), @lups2000, @Abhishek-Bohora)
 
 ## 02 August 2024: mitmproxy 10.4.2
 
