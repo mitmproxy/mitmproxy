@@ -3,7 +3,6 @@ import webbrowser
 from collections.abc import Sequence
 
 from mitmproxy import ctx
-from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS 
 
 
 class WebAddon:
@@ -16,7 +15,7 @@ class WebAddon:
             "web_columns",
             Sequence[str],
             ["tls", "icon", "path", "method", "status", "size", "time"],
-            f"Columns to show in the flow list. Can be one of the following: {', '.join(AVAILABLE_WEB_COLUMNS)}",
+            f"Columns to show in the flow list.",
         )
 
     def running(self):
