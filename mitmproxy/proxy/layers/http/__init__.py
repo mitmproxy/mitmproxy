@@ -278,7 +278,7 @@ class HttpStream(layer.Layer):
             )
             self.flow.request.headers.pop("expect")
 
-        if self.flow.request.stream and not event.end_stream: 
+        if self.flow.request.stream and not event.end_stream:
             yield from self.start_request_stream()
         else:
             self.client_state = self.state_consume_request_body
@@ -406,7 +406,9 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(True)):
             return
 
-        elif self.flow.response.stream and (self.is_websocket() or not event.end_stream):
+        elif self.flow.response.stream and (
+            self.is_websocket() or not event.end_stream
+        ):
             yield from self.start_response_stream()
         else:
             self.server_state = self.state_consume_response_body
@@ -470,7 +472,6 @@ class HttpStream(layer.Layer):
         """We have either consumed the entire response from the server or the response was set by an addon."""
         assert self.flow.response
         self.flow.response.timestamp_end = time.time()
-
 
         if self.is_websocket():
             # We need to set this before calling the response hook
@@ -839,13 +840,14 @@ class HttpStream(layer.Layer):
         yield from ()
 
     def is_websocket(self):
-       return (
+        return (
             self.flow.response.status_code == 101
             and self.flow.response.headers.get("upgrade", "").lower() == "websocket"
             and self.flow.request.headers.get("Sec-WebSocket-Version", "").encode()
             == wsproto.handshake.WEBSOCKET_VERSION
             and self.context.options.websocket
         )
+
 
 class HttpLayer(layer.Layer):
     """
