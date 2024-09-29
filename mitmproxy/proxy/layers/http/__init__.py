@@ -839,7 +839,9 @@ class HttpStream(layer.Layer):
         # silently consume every event.
         yield from ()
 
-    def is_websocket(self):
+    def is_websocket(self) -> bool | None:
+        if self.flow.response is None:
+            return None
         return (
             self.flow.response.status_code == 101
             and self.flow.response.headers.get("upgrade", "").lower() == "websocket"
