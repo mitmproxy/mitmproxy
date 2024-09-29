@@ -278,13 +278,13 @@ class HttpStream(layer.Layer):
             )
             self.flow.request.headers.pop("expect")
 
-        if self.flow.request.stream:
-            yield from self.start_request_stream(event)
+        if self.flow.request.stream and not event.end_stream: 
+            yield from self.start_request_stream()
         else:
             self.client_state = self.state_consume_request_body
         self.server_state = self.state_wait_for_response_headers
 
-    def start_request_stream(self, event=None) -> layer.CommandGenerator[None]:
+    def start_request_stream(self) -> layer.CommandGenerator[None]:
         if self.flow.response:
             raise NotImplementedError(
                 "Can't set a response and enable streaming at the same time."
@@ -293,11 +293,8 @@ class HttpStream(layer.Layer):
         if not ok:
             self.client_state = self.state_errored
             return
-        end_stream = False
-        if event:
-            end_stream = event.end_stream
         yield SendHttp(
-            RequestHeaders(self.stream_id, self.flow.request, end_stream),
+            RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
             self.context.server,
         )
         yield commands.Log(f"Streaming request to {self.flow.request.host}.")
@@ -409,7 +406,7 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(True)):
             return
 
-        elif self.flow.response.stream:
+        elif self.flow.response.stream and (self.is_websocket() or not event.end_stream):
             yield from self.start_response_stream()
         else:
             self.server_state = self.state_consume_response_body
@@ -474,14 +471,8 @@ class HttpStream(layer.Layer):
         assert self.flow.response
         self.flow.response.timestamp_end = time.time()
 
-        is_websocket = (
-            self.flow.response.status_code == 101
-            and self.flow.response.headers.get("upgrade", "").lower() == "websocket"
-            and self.flow.request.headers.get("Sec-WebSocket-Version", "").encode()
-            == wsproto.handshake.WEBSOCKET_VERSION
-            and self.context.options.websocket
-        )
-        if is_websocket:
+
+        if self.is_websocket():
             # We need to set this before calling the response hook
             # so that addons can determine if a WebSocket connection is following up.
             self.flow.websocket = WebSocketData()
@@ -847,6 +838,14 @@ class HttpStream(layer.Layer):
         # silently consume every event.
         yield from ()
 
+    def is_websocket(self):
+       return (
+            self.flow.response.status_code == 101
+            and self.flow.response.headers.get("upgrade", "").lower() == "websocket"
+            and self.flow.request.headers.get("Sec-WebSocket-Version", "").encode()
+            == wsproto.handshake.WEBSOCKET_VERSION
+            and self.context.options.websocket
+        )
 
 class HttpLayer(layer.Layer):
     """
