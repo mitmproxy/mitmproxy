@@ -623,6 +623,60 @@ def test_no_normalization(tctx, normalize):
     assert flow().response.headers.fields == ((b"Same", b"Here"),)
 
 
+@pytest.mark.parametrize("stream", ["stream", ""])
+def test_end_stream_via_headers(tctx, stream):
+    playbook, cff = start_h2_client(tctx)
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    sff = FrameFactory()
+    forwarded_request_frames = Placeholder(bytes)
+    forwarded_response_frames = Placeholder(bytes)
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.request.stream = bool(stream)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, forwarded_request_frames)
+        >> DataReceived(
+            server,
+            sff.build_headers_frame(
+                example_response_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, forwarded_response_frames)
+    )
+
+    frames = decode_frames(forwarded_request_frames())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
+    assert "END_STREAM" in frames[1].flags
+
+    frames = decode_frames(forwarded_response_frames())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.HeadersFrame,
+    ]
+    assert "END_STREAM" in frames[0].flags
+
+
 @pytest.mark.parametrize(
     "input,pseudo,headers",
     [

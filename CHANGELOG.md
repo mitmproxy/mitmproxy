@@ -35,6 +35,8 @@
   ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
 - Addon to update the hosts in alt-svc header in reverse mode
   ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
+- Do not send unnecessary empty data frames when streaming HTTP/2.
+  ([#7196](https://github.com/mitmproxy/mitmproxy/pull/7196), @rubu)
 - Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
   ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
 - Fix of measurement unit in HAR import, duration is in milliseconds
