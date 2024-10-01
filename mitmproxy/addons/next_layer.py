@@ -127,9 +127,9 @@ class NextLayer:
         # 1)  check for --ignore/--allow
         if self._ignore_connection(context, data_client, data_server):
             return (
-                layers.TCPLayer(context, ignore=True)
+                layers.TCPLayer(context, ignore=not ctx.options.show_ignored_hosts)
                 if tcp_based
-                else layers.UDPLayer(context, ignore=True)
+                else layers.UDPLayer(context, ignore=not ctx.options.show_ignored_hosts)
             )
 
         # 2)  Handle proxy modes with well-defined next protocol

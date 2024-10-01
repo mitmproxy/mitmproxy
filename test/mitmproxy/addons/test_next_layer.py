@@ -382,6 +382,27 @@ class TestNextLayer:
             else:
                 assert nl._ignore_connection(ctx, data_client, b"") is result
 
+    def test_show_ignored_hosts(self, monkeypatch):
+        nl = NextLayer()
+
+        with taddons.context(nl) as tctx:
+            m = MagicMock()
+            m.context = Context(
+                Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+                tctx.options,
+            )
+            m.context.layers = [modes.TransparentProxy(m.context)]
+            m.context.server.address = ("example.com", 42)
+            tctx.configure(nl, ignore_hosts=["example.com"])
+
+            # Connection is ignored (not-MITM'ed)
+            assert nl._ignore_connection(m.context, http_get, b"") is True
+            # No flow is being set (i.e. nothing shown in UI)
+            assert nl._next_layer(m.context, http_get, b"").flow is None
+            # ... until `--show-ignored-hosts` is set:
+            tctx.configure(nl, show_ignored_hosts=True)
+            assert nl._next_layer(m.context, http_get, b"").flow is not None
+
     def test_next_layer(self, monkeypatch, caplog):
         caplog.set_level(logging.INFO)
         nl = NextLayer()

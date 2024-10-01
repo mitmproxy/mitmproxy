@@ -21,6 +21,16 @@ class Options(optmanager.OptManager):
             False,
             "Use the Host header to construct URLs for display.",
         )
+        self.add_option(
+            "show_ignored_hosts",
+            bool,
+            False,
+            """
+            Record ignored flows in the UI even if we do not perform TLS interception.
+            This option will keep ignored flows' contents in memory, which can greatly increase memory usage.
+            A future release will fix this issue, record ignored flows by default, and remove this option.
+            """,
+        )
 
         # Proxy options
         self.add_option(
