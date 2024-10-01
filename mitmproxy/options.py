@@ -26,9 +26,9 @@ class Options(optmanager.OptManager):
             bool,
             False,
             """
-            Show ignored (i.e. non-MITM'ed) hosts.
-            This option is useful together with `--ignore-hosts` or `--allow-hosts`.
-            To turn mitmproxy into a regular proxy you can use: `--ignore-hosts '.*' --show-ignored-hosts`
+            Record ignored flows in the UI even if we do not perform TLS interception.
+            This option will keep ignored flows' contents in memory, which can greatly increase memory usage.
+            A future release will fix this issue, record ignored flows by default, and remove this option.
             """,
         )
 

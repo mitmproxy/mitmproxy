@@ -7,7 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
-- Add parameter `--show-ignored-hosts` for showing SNI for ignored hosts.
+- Add `show_ignored_hosts` option to display ignored flows in the UI.
+  This option is implemented as a temporary workaround and will be removed in the future.
   ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
 - mitmproxy now supports transparent HTTP/3 proxying.
   ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
