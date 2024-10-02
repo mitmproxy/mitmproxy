@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 02 October 2024: mitmproxy 11.0.0
+
 - mitmproxy now supports transparent HTTP/3 proxying.
   ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
 - Add HTTP3 support in HTTPS reverse-proxy mode.
