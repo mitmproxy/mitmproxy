@@ -64,7 +64,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "click>=7.0,<=8.1.7",
-    "hypothesis>=6.104.2,<=6.111.2",
+    "hypothesis>=6.104.2,<=6.112.2",
     "pdoc>=14.5.1,<=14.6.1",
     "pyinstaller==6.10.0",
     "pyinstaller-hooks-contrib==2024.8",
@@ -72,7 +72,7 @@ dev = [
     "pytest-cov>=5.0.0,<=5.0.0",
     "pytest-timeout>=2.3.1,<=2.3.1",
     "pytest-xdist>=3.5.0,<=3.6.1",
-    "pytest>=8.2.2,<=8.3.2",
+    "pytest>=8.2.2,<=8.3.3",
     "requests>=2.9.1,<=2.32.3",
     "tox>=4.15.1,<=4.18.0",
     "wheel>=0.36.2,<=0.44.0",
