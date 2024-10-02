@@ -7,15 +7,19 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmproxy now supports transparent HTTP/3 proxying.
+  ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
+- Add HTTP3 support in HTTPS reverse-proxy mode.
+  ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
+- mitmproxy now officially supports Python 3.13.
+  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
+  ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
 - Add `show_ignored_hosts` option to display ignored flows in the UI.
   This option is implemented as a temporary workaround and will be removed in the future.
   ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
-- mitmproxy now supports transparent HTTP/3 proxying.
-  ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
-- Fix endless tnetstring parsing in case of very large tnetstring
+- Fix slow tnetstring parsing in case of very large tnetstring.
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
-- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
-  ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
 - Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
   determine the operating system's name servers.
   ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
@@ -32,23 +36,19 @@
   ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
 - Fix error when unmarking all flows.
   ([#7192](https://github.com/mitmproxy/mitmproxy/pull/7192), @bburky)
-- mitmproxy now officially supports Python 3.13.
-  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
-- Add HTTP3 support in HTTPS reverse-proxy mode
-  ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
-- Addon to update the hosts in alt-svc header in reverse mode
+- Add addon to update the alt-svc header in reverse mode.
   ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
 - Do not send unnecessary empty data frames when streaming HTTP/2.
   ([#7196](https://github.com/mitmproxy/mitmproxy/pull/7196), @rubu)
 - Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
   ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
-- Fix of measurement unit in HAR import, duration is in milliseconds
+- Fix of measurement unit in HAR import, duration is in milliseconds.
   ([#7179](https://github.com/mitmproxy/mitmproxy/pull/7179), @dstd)
 - `Connection.tls_version` now is `QUICv1` instead of `QUIC` for QUIC.
   ([#7201](https://github.com/mitmproxy/mitmproxy/pull/7201), @mhils)
 - Add support for full mTLS with client certs between client and mitmproxy.
   ([#7175](https://github.com/mitmproxy/mitmproxy/pull/7175), @Kriechi)
-- Update documentation adding a list of all possibile web_columns
+- Update documentation adding a list of all possibile web_columns.
   ([#7205](https://github.com/mitmproxy/mitmproxy/pull/7205), @lups2000, @Abhishek-Bohora)
 
 ## 02 August 2024: mitmproxy 10.4.2
