@@ -184,6 +184,8 @@ class NextLayer:
             len(data_client) < 3
             # HTTP would require whitespace before the first newline
             # if we have neither whitespace nor a newline, it's also unlikely to be HTTP.
+            or (data_client.find(b" ") == -1)
+            or (data_client.find(b"\n") == -1)
             or (data_client.find(b" ") >= data_client.find(b"\n"))
             or not data_client[:3].isalpha()
             # a server greeting would be uncharacteristic.
