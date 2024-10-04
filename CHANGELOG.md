@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
 
 ## 02 October 2024: mitmproxy 11.0.0
 
