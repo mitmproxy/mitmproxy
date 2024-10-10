@@ -21,8 +21,6 @@ brew install mitmproxy
 
 Alternatively, you can download standalone binaries on [mitmproxy.org](https://mitmproxy.org/).
 
-NOTE: For Apple Silicon, Rosetta is required.
-
 ## Linux
 
 The recommended way to install mitmproxy on Linux is to download the
