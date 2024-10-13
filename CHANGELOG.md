@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Docker: Update image to Python 3.13 on Debian Bookworm.
 - Tighten HTTP detection heuristic to better support custom TCP-based protocols.
   ([#7228](https://github.com/mitmproxy/mitmproxy/pull/7228), @fatanugraha)
 
