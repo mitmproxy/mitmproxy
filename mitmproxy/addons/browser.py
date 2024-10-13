@@ -108,9 +108,7 @@ class Browser:
             "firefox",
             "mozilla-firefox",
             "mozilla",
-        ) or find_flatpak_cmd(
-            "org.mozilla.firefox"
-        )
+        ) or find_flatpak_cmd("org.mozilla.firefox")
 
         if not cmd:
             logging.log(
@@ -129,7 +127,7 @@ class Browser:
             for service in ("http", "ssl", "socks", "ftp"):
                 prefs += [
                     f'user_pref("network.proxy.{service}", "{host}");',
-                    f'user_pref("network.proxy.{service}_port", {port});'
+                    f'user_pref("network.proxy.{service}_port", {port});',
                 ]
             return prefs
 
