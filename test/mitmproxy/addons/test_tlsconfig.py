@@ -13,6 +13,7 @@ from mitmproxy import connection
 from mitmproxy import options
 from mitmproxy import tls
 from mitmproxy.addons import tlsconfig
+from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import quic
@@ -129,6 +130,35 @@ class TestTlsConfig:
             assert (
                 "tls_version_client_min has been set to UNBOUNDED. "
                 "Note that your OpenSSL build only supports the following TLS versions"
+            ) in caplog.text
+
+    def test_configure_ciphers(self, caplog):
+        caplog.set_level(logging.INFO)
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            tctx.configure(
+                ta,
+                tls_version_client_min="TLS1",
+                ciphers_client="ALL",
+            )
+            assert (
+                "With tls_version_client_min set to TLS1, "
+                'ciphers_client must include "@SECLEVEL=0" for insecure TLS versions to work.'
+            ) in caplog.text
+            caplog.clear()
+
+            tctx.configure(
+                ta,
+                ciphers_server="ALL",
+            )
+            assert not caplog.text
+            tctx.configure(
+                ta,
+                tls_version_server_min="SSL3",
+            )
+            assert (
+                "With tls_version_server_min set to SSL3, "
+                'ciphers_server must include "@SECLEVEL=0" for insecure TLS versions to work.'
             ) in caplog.text
 
     def test_get_cert(self, tdata):
@@ -481,3 +511,17 @@ class TestTlsConfig:
         with taddons.context(ta):
             ta.configure(["confdir"])
             assert "The mitmproxy certificate authority has expired" in caplog.text
+
+
+def test_default_ciphers():
+    assert (
+        tlsconfig._default_ciphers(net_tls.Version.TLS1_3) == tlsconfig._DEFAULT_CIPHERS
+    )
+    assert (
+        tlsconfig._default_ciphers(net_tls.Version.SSL3)
+        == tlsconfig._DEFAULT_CIPHERS_WITH_SECLEVEL_0
+    )
+    assert (
+        tlsconfig._default_ciphers(net_tls.Version.UNBOUNDED)
+        == tlsconfig._DEFAULT_CIPHERS_WITH_SECLEVEL_0
+    )
