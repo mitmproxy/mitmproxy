@@ -116,26 +116,23 @@ class Browser:
             )
             return
 
-        def generate_user_prefs():
-            host = ctx.options.listen_host or "127.0.0.1"
-            port = ctx.options.listen_port or "8080"
-            prefs = [
-                f'user_pref("datareporting.policy.firstRunURL", "");',
-                'user_pref("network.proxy.type", 1);',
-                'user_pref("network.proxy.share_proxy_settings", true);',
+        host = ctx.options.listen_host or "127.0.0.1"
+        port = ctx.options.listen_port or 8080
+        prefs = [
+            'user_pref("datareporting.policy.firstRunURL", "");',
+            'user_pref("network.proxy.type", 1);',
+            'user_pref("network.proxy.share_proxy_settings", true);',
+        ]
+        for service in ("http", "ssl", "socks", "ftp"):
+            prefs += [
+                f'user_pref("network.proxy.{service}", "{host}");',
+                f'user_pref("network.proxy.{service}_port", {port});',
             ]
-            for service in ("http", "ssl", "socks", "ftp"):
-                prefs += [
-                    f'user_pref("network.proxy.{service}", "{host}");',
-                    f'user_pref("network.proxy.{service}_port", {port});',
-                ]
-            return prefs
 
         tdir = tempfile.TemporaryDirectory()
 
-        # Configure proxy via prefs.js
         with open(tdir.name + "/prefs.js", "w") as file:
-            file.writelines(generate_user_prefs())
+            file.writelines(prefs)
 
         self.tdir.append(tdir)
         self.browser.append(
