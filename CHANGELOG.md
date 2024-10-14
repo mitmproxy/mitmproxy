@@ -11,6 +11,9 @@
   ([#7242](https://github.com/mitmproxy/mitmproxy/pull/7242), @mhils)
 - Tighten HTTP detection heuristic to better support custom TCP-based protocols.
   ([#7228](https://github.com/mitmproxy/mitmproxy/pull/7228), @fatanugraha)
+- Fix a bug where mitmproxy would incorrectly report that TLS 1.0 and 1.1 are not supported
+  with the current OpenSSL build.
+  ([#7241](https://github.com/mitmproxy/mitmproxy/pull/7241), @mhils)
 
 ## 02 October 2024: mitmproxy 11.0.0
 
