@@ -105,6 +105,7 @@ class Browser:
         running proxy.
         """
         cmd = find_executable_cmd(
+            "/Applications/Firefox.app/Contents/MacOS/firefox",
             "firefox",
             "mozilla-firefox",
             "mozilla",
