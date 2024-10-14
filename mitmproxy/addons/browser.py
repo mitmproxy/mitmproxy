@@ -2,14 +2,13 @@ import logging
 import shutil
 import subprocess
 import tempfile
-from typing import List
 
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy.log import ALERT
 
 
-def find_executable_cmd(*search_paths) -> List[str] | None:
+def find_executable_cmd(*search_paths) -> list[str] | None:
     for browser in search_paths:
         if shutil.which(browser):
             return [browser]
@@ -17,7 +16,7 @@ def find_executable_cmd(*search_paths) -> List[str] | None:
     return None
 
 
-def find_flatpak_cmd(*search_paths) -> List[str] | None:
+def find_flatpak_cmd(*search_paths) -> list[str] | None:
     if shutil.which("flatpak"):
         for browser in search_paths:
             if (
