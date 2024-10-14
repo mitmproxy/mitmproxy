@@ -8,6 +8,7 @@ import Transparent from "./Modes/Transparent";
 import Socks from "./Modes/Socks";
 import Upstream from "./Modes/Upstream";
 import Dns from "./Modes/Dns";
+import MissingMode from "./Modes/MissingMode";
 
 export default function Modes() {
     const platform = useAppSelector((state) => state.backendState.platform);
@@ -20,7 +21,14 @@ export default function Modes() {
                 <h3>Recommended</h3>
                 <div className="modes-container">
                     <Regular />
-                    {!platform.startsWith("linux") ? <Local /> : undefined}
+                    {!platform.startsWith("linux") ? (
+                        <Local />
+                    ) : (
+                        <MissingMode
+                            title="Local Redirect Mode"
+                            description="This mode is only supported on Windows and MacOS."
+                        />
+                    )}
                     <Wireguard />
                     <Reverse />
                 </div>
@@ -33,7 +41,12 @@ export default function Modes() {
                     <Dns />
                     {!platform.startsWith("win32") ? (
                         <Transparent />
-                    ) : undefined}
+                    ) : (
+                        <MissingMode
+                            title="Transparent Proxy"
+                            description="This mode is only supported on Linux and MacOS."
+                        />
+                    )}
                 </div>
             </div>
         </div>
