@@ -105,6 +105,7 @@ class Browser:
         """
         cmd = find_executable_cmd(
             "/Applications/Firefox.app/Contents/MacOS/firefox",
+            r"C:\Program Files\Mozilla Firefox\firefox.exe",
             "firefox",
             "mozilla-firefox",
             "mozilla",
