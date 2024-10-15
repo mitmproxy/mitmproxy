@@ -102,8 +102,6 @@ class HttpConnectUpstreamHook(commands.StartHook):
 class HttpConnectedHook(commands.StartHook):
     """
     HTTP CONNECT was successful
-
-    .. warning::
     This may fire before an upstream connection has been established
     if `connection_strategy` is set to `lazy` (default)
     """
