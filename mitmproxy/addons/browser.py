@@ -46,7 +46,7 @@ class Browser:
         elif browser == "firefox":
             self.launch_firefox()
 
-    def launch_chrome(self):
+    def launch_chrome(self) -> None:
         """
         Start an isolated instance of Chrome that points to the currently
         running proxy.

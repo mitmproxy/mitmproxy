@@ -72,3 +72,22 @@ async def test_find_flatpak_cmd_no_flatpak():
         which.side_effect = lambda cmd: cmd == "flatpak"
         subprocess_run.return_value = mock.Mock(returncode=1)
         assert browser.find_flatpak_cmd("com.google.Chrome") is None
+
+
+async def test_browser_start_firefox():
+    with (
+        mock.patch("shutil.which") as which,
+        mock.patch("subprocess.Popen") as po,
+        taddons.context(),
+    ):
+        which.return_value = "firefox"
+        browser.Browser().start("firefox")
+        assert po.called
+
+
+async def test_browser_start_firefox_not_found(caplog):
+    caplog.set_level("INFO")
+    with mock.patch("shutil.which") as which:
+        which.return_value = False
+        browser.Browser().start("firefox")
+        assert "platform is not supported" in caplog.text
