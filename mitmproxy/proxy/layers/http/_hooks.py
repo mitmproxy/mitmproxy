@@ -103,7 +103,7 @@ class HttpConnectedHook(commands.StartHook):
     """
     HTTP CONNECT was successful
 
-    > [!warning]
+    > [!WARNING]
     > This may fire before an upstream connection has been established
     > if `connection_strategy` is set to `lazy` (default)
     """
