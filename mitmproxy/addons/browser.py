@@ -45,6 +45,8 @@ class Browser:
             self.launch_chrome()
         elif browser == "firefox":
             self.launch_firefox()
+        else:
+            logging.log(ALERT, "Invalid browser name.")
 
     def launch_chrome(self) -> None:
         """

@@ -19,6 +19,10 @@ def test_browser(caplog):
         b.start()
         assert "Starting additional browser" in caplog.text
         assert len(b.browser) == 2
+
+        b.start("unsupported-browser")
+        assert "Invalid browser name." in caplog.text
+        assert len(b.browser) == 2
         b.done()
         assert not b.browser
 
