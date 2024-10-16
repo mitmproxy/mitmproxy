@@ -126,7 +126,7 @@ class Browser:
             'user_pref("network.proxy.type", 1);',
             'user_pref("network.proxy.share_proxy_settings", true);',
         ]
-        for service in ("http", "ssl", "socks", "ftp"):
+        for service in ("http", "ssl"):
             prefs += [
                 f'user_pref("network.proxy.{service}", "{host}");',
                 f'user_pref("network.proxy.{service}_port", {port});',
