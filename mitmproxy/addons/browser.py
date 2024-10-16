@@ -144,7 +144,6 @@ class Browser:
                     *cmd,
                     "--profile",
                     str(tdir.name),
-                    "--safe-mode",
                     "--new-window",
                     "about:blank",
                 ],
