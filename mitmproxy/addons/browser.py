@@ -2,6 +2,7 @@ import logging
 import shutil
 import subprocess
 import tempfile
+import time
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -125,6 +126,28 @@ class Browser:
             'user_pref("datareporting.policy.firstRunURL", "");',
             'user_pref("network.proxy.type", 1);',
             'user_pref("network.proxy.share_proxy_settings", true);',
+            'user_pref("datareporting.healthreport.uploadEnabled", false);',
+            'user_pref("app.normandy.enabled", false);',
+            'user_pref("app.update.auto", false);',
+            'user_pref("app.update.enabled", false);',
+            'user_pref("app.update.autoInstallEnabled", false);',
+            'user_pref("extensions.blocklist.enabled", false);',
+            'user_pref("browser.safebrowsing.downloads.remote.enabled", false);',
+            'user_pref("browser.region.network.url", "");',
+            'user_pref("browser.region.update.enabled", false);',
+            'user_pref("browser.region.local-geocoding", false);',
+            'user_pref("extensions.pocket.enabled", false);',
+            'user_pref("network.captive-portal-service.enabled", false);',
+            'user_pref("network.connectivity-service.enabled", false);',
+            'user_pref("toolkit.telemetry.server", "");',
+            'user_pref("dom.push.serverURL", "");',
+            'user_pref("services.settings.enabled", false);',
+            'user_pref("browser.newtab.preload", false);',
+            'user_pref("browser.safebrowsing.provider.google4.updateURL", "");',
+            'user_pref("browser.safebrowsing.provider.mozilla.updateURL", "");',
+            'user_pref("browser.newtabpage.activity-stream.feeds.topsites", false);',
+            'user_pref("browser.newtabpage.activity-stream.default.sites", "");',
+            'user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);',
         ]
         for service in ("http", "ssl"):
             prefs += [
