@@ -54,7 +54,7 @@ function LocalRow({
 
     const handleDeletionProcess = (process: string) => {
         const newSelectedProcesses = server.selectedProcesses
-            ?.split(", ")
+            ?.split(/,\s*/)
             .filter((p) => p !== process)
             .join(", ");
 
@@ -78,7 +78,7 @@ function LocalRow({
                 <div className="processes-container">
                     <div className="selected-processes">
                         {server.selectedProcesses
-                            ?.split(", ")
+                            ?.split(/,\s*/)
                             .filter((p) => p.trim() !== "")
                             .map((p) => (
                                 <div key={p} className="selected-process">
