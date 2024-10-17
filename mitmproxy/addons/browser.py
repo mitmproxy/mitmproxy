@@ -2,7 +2,6 @@ import logging
 import shutil
 import subprocess
 import tempfile
-import time
 
 from mitmproxy import command
 from mitmproxy import ctx
