@@ -130,6 +130,7 @@ class Browser:
             'user_pref("app.update.auto", false);',
             'user_pref("app.update.enabled", false);',
             'user_pref("app.update.autoInstallEnabled", false);',
+            'user_pref("app.shield.optoutstudies.enabled", false);'
             'user_pref("extensions.blocklist.enabled", false);',
             'user_pref("browser.safebrowsing.downloads.remote.enabled", false);',
             'user_pref("browser.region.network.url", "");',
