@@ -94,6 +94,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
         e.stopPropagation();
         if (e.key === "Enter") {
             addProcessToSelection(currentSearch);
+            setCurrentSearch("");
         }
     };
 
@@ -149,7 +150,10 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                             ))}
                         </ul>
                     ) : (
-                        <span>No results</span>
+                        <span>
+                            Press <strong>Enter</strong> to capture traffic for
+                            programs matching: <strong>{currentSearch}</strong>
+                        </span>
                     )}
                 </Popover>
             </div>
