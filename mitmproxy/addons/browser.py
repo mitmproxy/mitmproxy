@@ -148,6 +148,8 @@ class Browser:
             'user_pref("browser.newtabpage.activity-stream.feeds.topsites", false);',
             'user_pref("browser.newtabpage.activity-stream.default.sites", "");',
             'user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);',
+            'user_pref("browser.bookmarks.restore_default_bookmarks", false);',
+            'user_pref("browser.bookmarks.file", "");',
         ]
         for service in ("http", "ssl"):
             prefs += [
