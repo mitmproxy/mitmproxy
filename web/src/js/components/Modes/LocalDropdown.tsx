@@ -39,27 +39,33 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
         return rpartition(process.executable, separator)[1];
     };
 
-    const handleApplicationClick = (option: Process) => {
-        if (isSelected(option) && selectedProcesses) {
-            const newSelectedProcesses = selectedProcesses
-                .split(", ")
-                .filter((app) => app !== extractProcessName(option))
-                .join(", ");
-
-            dispatch(
-                setSelectedProcesses({
-                    server,
-                    value: newSelectedProcesses,
-                }),
-            );
-            return;
-        }
+    // This function can take a Process in the case of the dropdown list or a string in the case of the input field when we want to add a process which is not in the list
+    const addProcessToSelection = (option: Process | string) => {
+        const processName =
+            typeof option === "string" ? option : extractProcessName(option);
 
         const newSelectedProcesses = selectedProcesses
-            ? `${selectedProcesses}, ${extractProcessName(option)}`
-            : extractProcessName(option);
+            ? `${selectedProcesses}, ${processName}`
+            : processName;
 
         dispatch(setSelectedProcesses({ server, value: newSelectedProcesses }));
+    };
+
+    const removeProcessFromSelection = (option: Process) => {
+        const newSelectedProcesses = selectedProcesses
+            ?.split(/,\s*/)
+            .filter((app) => app !== extractProcessName(option))
+            .join(", ");
+
+        dispatch(setSelectedProcesses({ server, value: newSelectedProcesses }));
+    };
+
+    const handleApplicationClick = (option: Process) => {
+        if (isSelected(option) && selectedProcesses) {
+            removeProcessFromSelection(option);
+        } else {
+            addProcessToSelection(option);
+        }
     };
 
     const isSelected = (option: Process) => {
@@ -86,6 +92,10 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.stopPropagation();
+        if (e.key === "Enter") {
+            addProcessToSelection(currentSearch);
+            setCurrentSearch("");
+        }
     };
 
     const [isPopoverVisible, setPopoverVisible] = React.useState(false);
@@ -140,7 +150,10 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                             ))}
                         </ul>
                     ) : (
-                        <span>No results</span>
+                        <span>
+                            Press <strong>Enter</strong> to capture traffic for
+                            programs matching: <strong>{currentSearch}</strong>
+                        </span>
                     )}
                 </Popover>
             </div>

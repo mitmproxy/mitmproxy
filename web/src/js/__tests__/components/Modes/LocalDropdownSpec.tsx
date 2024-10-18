@@ -45,9 +45,11 @@ test("LocalDropdown - no matching processes", async () => {
     const input = screen.getByPlaceholderText("(all applications)");
     fireEvent.change(input, { target: { value: "nonexistent" } });
 
-    await waitFor(() =>
-        expect(screen.getByText("No results")).toBeInTheDocument(),
-    );
+    await waitFor(() => {
+        expect(screen.getByText(/Press/i)).toBeInTheDocument();
+        expect(screen.getByText("Enter")).toBeInTheDocument();
+        expect(screen.getByText("nonexistent")).toBeInTheDocument();
+    });
 });
 
 test("LocalDropdown - toggle process selection", async () => {
