@@ -207,7 +207,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 handler.layer.context.client.sockname = original_dst
                 handler.layer.context.server.address = original_dst
         elif isinstance(
-            self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)
+            self.mode,
+            (mode_specs.WireGuardMode, mode_specs.LocalMode, mode_specs.TunMode),
         ):  # pragma: no cover on platforms without wg-test-client
             handler.layer.context.server.address = writer.get_extra_info(
                 "remote_endpoint", handler.layer.context.client.sockname
@@ -516,6 +517,35 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)
+
+
+class TunInstance(ServerInstance[mode_specs.TunMode]):
+    _server: mitmproxy_rs.tun.TunInterface | None = None
+    listen_addrs = ()
+
+    def make_top_layer(self, context: Context) -> Layer:
+        return layers.modes.TransparentProxy(context)
+
+    @property
+    def is_running(self) -> bool:
+        return self._server is not None
+
+    async def _start(self) -> None:
+        assert self._server is None
+        self._server = await mitmproxy_rs.tun.create_tun_interface(
+            self.handle_stream,
+            self.handle_stream,
+            tun_name=self.mode.data or None,
+        )
+        logger.info(f"TUN interface created: {self._server.tun_name()}")
+
+    async def _stop(self) -> None:
+        assert self._server is not None
+        try:
+            self._server.close()
+            await self._server.wait_closed()
+        finally:
+            self._server = None
 
 
 # class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):
