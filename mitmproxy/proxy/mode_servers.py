@@ -184,8 +184,11 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     async def handle_stream(
         self,
         reader: asyncio.StreamReader | mitmproxy_rs.Stream,
-        writer: asyncio.StreamWriter | mitmproxy_rs.Stream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream | None = None,
     ) -> None:
+        if writer is None:
+            assert isinstance(reader, mitmproxy_rs.Stream)
+            writer = reader
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
@@ -212,9 +215,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
         with self.manager.register_connection(handler.layer.context.client.id, handler):
             await handler.handle_client()
-
-    async def handle_udp_stream(self, stream: mitmproxy_rs.Stream) -> None:
-        await self.handle_stream(stream, stream)
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
@@ -308,14 +308,14 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 ipv4 = await mitmproxy_rs.udp.start_udp_server(
                     "0.0.0.0",
                     port,
-                    self.handle_udp_stream,
+                    self.handle_stream,
                 )
                 servers.append(ipv4)
                 try:
                     ipv6 = await mitmproxy_rs.udp.start_udp_server(
                         "[::]",
                         ipv4.getsockname()[1],
-                        self.handle_udp_stream,
+                        self.handle_stream,
                     )
                     servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
@@ -325,7 +325,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     await mitmproxy_rs.udp.start_udp_server(
                         host,
                         port,
-                        self.handle_udp_stream,
+                        self.handle_stream,
                     )
                 )
 
@@ -392,8 +392,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             port,
             self.server_key,
             [p],
-            self.wg_handle_stream,
-            self.wg_handle_stream,
+            self.handle_stream,
+            self.handle_stream,
         )
 
         conf = self.client_conf()
@@ -434,11 +434,6 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         finally:
             self._server = None
 
-    async def wg_handle_stream(
-        self, stream: mitmproxy_rs.Stream
-    ) -> None:  # pragma: no cover on platforms without wg-test-client
-        await self.handle_stream(stream, stream)
-
 
 class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
     _server: ClassVar[mitmproxy_rs.local.LocalRedirector | None] = None
@@ -460,7 +455,7 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         stream: mitmproxy_rs.Stream,
     ) -> None:
         if cls._instance is not None:
-            await cls._instance.handle_stream(stream, stream)
+            await cls._instance.handle_stream(stream)
 
     async def _start(self) -> None:
         if self._instance:
