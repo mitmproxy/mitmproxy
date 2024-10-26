@@ -41,6 +41,15 @@ export function TBackendState(): Required<BackendState> {
                 "last_exception": null,
                 "listen_addrs": [],
                 "type": "socks5"
+            },
+            "tun": {
+                "description": "TUN interface",
+                "full_spec": "tun",
+                "is_running": true,
+                "last_exception": null,
+                "listen_addrs": [],
+                "tun_name": "tun0",
+                "type": "tun"
             }
         },
         "version": "1.2.3"

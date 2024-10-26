@@ -530,6 +530,16 @@ class TunInstance(ServerInstance[mode_specs.TunMode]):
     def is_running(self) -> bool:
         return self._server is not None
 
+    @property
+    def tun_name(self) -> str | None:
+        if self._server:
+            return self._server.tun_name
+        else:
+            return None
+
+    def to_json(self) -> dict:
+        return {"tun_name": self.tun_name, **super().to_json()}
+
     async def _start(self) -> None:
         assert self._server is None
         self._server = await mitmproxy_rs.tun.create_tun_interface(

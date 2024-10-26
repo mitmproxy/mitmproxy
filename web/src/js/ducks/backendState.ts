@@ -16,6 +16,7 @@ export interface ServerInfo {
     listen_addrs: [string, number][];
     type: string;
     wireguard_conf?: string;
+    tun_name?: string;
 }
 
 export interface BackendState {
