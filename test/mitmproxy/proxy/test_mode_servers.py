@@ -7,17 +7,17 @@ from unittest.mock import Mock
 
 import pytest
 
-from mitmproxy.proxy.mode_servers import TunInstance
 from ...conftest import no_ipv6
+from ...conftest import skip_not_linux
 import mitmproxy.platform
 import mitmproxy_rs
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.proxy.mode_servers import ServerInstance
+from mitmproxy.proxy.mode_servers import TunInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
-from ...conftest import skip_not_linux
 
 
 def test_make():
@@ -132,12 +132,14 @@ async def test_transparent(failure, monkeypatch, caplog_async):
         await inst.stop()
         assert await caplog_async.await_log("stopped")
 
+
 async def _echo_server(self: ConnectionHandler):
     t = self.transports[self.client]
     data = await t.reader.read(65535)
     t.writer.write(data.upper())
     await t.writer.drain()
     t.writer.close()
+
 
 async def test_wireguard(tdata, monkeypatch, caplog):
     caplog.set_level("DEBUG")
@@ -353,7 +355,6 @@ async def test_dns_start_stop(caplog_async, transport_protocol):
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")
-
 
 
 @skip_not_linux
