@@ -100,7 +100,7 @@ jobs:
         include:
           - image: macos-14
             platform: macos-arm64
-          - image: macos-12
+          - image: macos-13
             platform: macos-x86_64
           - image: windows-2019
             platform: windows
