@@ -73,7 +73,7 @@ jobs:
           # install dependencies (requires internet connectivity)
           tox -e py --notest  
           # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
-          sudo unshare --map-root-user --net -- sh -c "ip link set lo up; $(which tox) -e py"
+          sudo unshare --map-root-user --net -- sh -c "ip link set lo up; sudo $(which tox) -e py"
         if: matrix.os == 'ubuntu-latest'
       - uses: codecov/codecov-action@v4
         with:

@@ -523,7 +523,7 @@ class TunInstance(ServerInstance[mode_specs.TunMode]):
     _server: mitmproxy_rs.tun.TunInterface | None = None
     listen_addrs = ()
 
-    def make_top_layer(self, context: Context) -> Layer:
+    def make_top_layer(self, context: Context) -> Layer:  # pragma: no cover mocked in tests
         return layers.modes.TransparentProxy(context)
 
     @property
