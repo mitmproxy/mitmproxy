@@ -33,7 +33,7 @@ async def make() -> str:
     si3 = ServerInstance.make("socks5", m.proxyserver)
     si4 = ServerInstance.make("tun", m.proxyserver)
     si4._server = Mock()
-    si4._server.tun_name = "tun0"
+    si4._server.tun_name = lambda: "tun0"
     m.proxyserver.servers._instances.update(
         {
             si1.mode: si1,

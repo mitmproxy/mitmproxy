@@ -533,7 +533,7 @@ class TunInstance(ServerInstance[mode_specs.TunMode]):
     @property
     def tun_name(self) -> str | None:
         if self._server:
-            return self._server.tun_name
+            return self._server.tun_name()
         else:
             return None
 
