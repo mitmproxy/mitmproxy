@@ -391,9 +391,7 @@ async def test_tun_mode_mocked(monkeypatch):
     tun_interface.tun_name = lambda: "tun0"
     tun_interface.wait_closed = AsyncMock()
     create_tun_interface = AsyncMock(return_value=tun_interface)
-    monkeypatch.setattr(
-        mitmproxy_rs.tun, "create_tun_interface", create_tun_interface
-    )
+    monkeypatch.setattr(mitmproxy_rs.tun, "create_tun_interface", create_tun_interface)
 
     inst = TunInstance.make(f"tun", MagicMock())
     assert not inst.is_running
@@ -407,6 +405,7 @@ async def test_tun_mode_mocked(monkeypatch):
     await inst.stop()
     assert not inst.is_running
     assert inst.tun_name is None
+
 
 @pytest.fixture()
 def patched_local_redirector(monkeypatch):
