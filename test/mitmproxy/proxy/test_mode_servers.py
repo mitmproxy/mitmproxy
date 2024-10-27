@@ -358,11 +358,13 @@ async def test_dns_start_stop(caplog_async, transport_protocol):
 
 
 @skip_not_linux
-async def test_tun_mode(monkeypatch):
+async def test_tun_mode(monkeypatch, caplog):
+    caplog.set_level("DEBUG")
     monkeypatch.setattr(ConnectionHandler, "handle_client", _echo_server)
 
     with taddons.context(Proxyserver()):
         inst = TunInstance.make(f"tun", MagicMock())
+        assert inst.tun_name is None
         try:
             await inst.start()
         except RuntimeError as e:
@@ -370,6 +372,8 @@ async def test_tun_mode(monkeypatch):
                 return pytest.skip("tun mode test must be run as root")
             raise
         assert inst.tun_name
+        assert inst.is_running
+        assert "tun_name" in inst.to_json()
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, inst.tun_name.encode())
