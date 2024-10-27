@@ -359,7 +359,6 @@ async def test_dns_start_stop(caplog_async, transport_protocol):
 
 @skip_not_linux
 async def test_tun_mode(monkeypatch, caplog):
-    caplog.set_level("DEBUG")
     monkeypatch.setattr(ConnectionHandler, "handle_client", _echo_server)
 
     with taddons.context(Proxyserver()):
