@@ -381,6 +381,8 @@ async def test_tun_mode(monkeypatch, caplog):
         writer.write(b"hello")
         await writer.drain()
         assert await reader.readexactly(5) == b"HELLO"
+        writer.close()
+        await writer.wait_closed()
         await inst.stop()
 
 
