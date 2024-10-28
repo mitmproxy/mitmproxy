@@ -68,6 +68,9 @@ jobs:
       - run: pip install tox
       - run: tox -e py
         if: matrix.os != 'ubuntu-latest'
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.py == '3.12'
       - name: Run tox -e py (without internet)
         run: |
           # install dependencies (requires internet connectivity)
