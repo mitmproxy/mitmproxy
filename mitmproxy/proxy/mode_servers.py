@@ -184,8 +184,11 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     async def handle_stream(
         self,
         reader: asyncio.StreamReader | mitmproxy_rs.Stream,
-        writer: asyncio.StreamWriter | mitmproxy_rs.Stream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream | None = None,
     ) -> None:
+        if writer is None:
+            assert isinstance(reader, mitmproxy_rs.Stream)
+            writer = reader
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
@@ -204,7 +207,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 handler.layer.context.client.sockname = original_dst
                 handler.layer.context.server.address = original_dst
         elif isinstance(
-            self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)
+            self.mode,
+            (mode_specs.WireGuardMode, mode_specs.LocalMode, mode_specs.TunMode),
         ):  # pragma: no cover on platforms without wg-test-client
             handler.layer.context.server.address = writer.get_extra_info(
                 "remote_endpoint", handler.layer.context.client.sockname
@@ -212,9 +216,6 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
         with self.manager.register_connection(handler.layer.context.client.id, handler):
             await handler.handle_client()
-
-    async def handle_udp_stream(self, stream: mitmproxy_rs.Stream) -> None:
-        await self.handle_stream(stream, stream)
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
@@ -308,14 +309,14 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 ipv4 = await mitmproxy_rs.udp.start_udp_server(
                     "0.0.0.0",
                     port,
-                    self.handle_udp_stream,
+                    self.handle_stream,
                 )
                 servers.append(ipv4)
                 try:
                     ipv6 = await mitmproxy_rs.udp.start_udp_server(
                         "[::]",
                         ipv4.getsockname()[1],
-                        self.handle_udp_stream,
+                        self.handle_stream,
                     )
                     servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
@@ -325,7 +326,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     await mitmproxy_rs.udp.start_udp_server(
                         host,
                         port,
-                        self.handle_udp_stream,
+                        self.handle_stream,
                     )
                 )
 
@@ -392,8 +393,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             port,
             self.server_key,
             [p],
-            self.wg_handle_stream,
-            self.wg_handle_stream,
+            self.handle_stream,
+            self.handle_stream,
         )
 
         conf = self.client_conf()
@@ -434,11 +435,6 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         finally:
             self._server = None
 
-    async def wg_handle_stream(
-        self, stream: mitmproxy_rs.Stream
-    ) -> None:  # pragma: no cover on platforms without wg-test-client
-        await self.handle_stream(stream, stream)
-
 
 class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
     _server: ClassVar[mitmproxy_rs.local.LocalRedirector | None] = None
@@ -460,7 +456,7 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         stream: mitmproxy_rs.Stream,
     ) -> None:
         if cls._instance is not None:
-            await cls._instance.handle_stream(stream, stream)
+            await cls._instance.handle_stream(stream)
 
     async def _start(self) -> None:
         if self._instance:
@@ -521,6 +517,47 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)
+
+
+class TunInstance(ServerInstance[mode_specs.TunMode]):
+    _server: mitmproxy_rs.tun.TunInterface | None = None
+    listen_addrs = ()
+
+    def make_top_layer(
+        self, context: Context
+    ) -> Layer:  # pragma: no cover mocked in tests
+        return layers.modes.TransparentProxy(context)
+
+    @property
+    def is_running(self) -> bool:
+        return self._server is not None
+
+    @property
+    def tun_name(self) -> str | None:
+        if self._server:
+            return self._server.tun_name()
+        else:
+            return None
+
+    def to_json(self) -> dict:
+        return {"tun_name": self.tun_name, **super().to_json()}
+
+    async def _start(self) -> None:
+        assert self._server is None
+        self._server = await mitmproxy_rs.tun.create_tun_interface(
+            self.handle_stream,
+            self.handle_stream,
+            tun_name=self.mode.data or None,
+        )
+        logger.info(f"TUN interface created: {self._server.tun_name()}")
+
+    async def _stop(self) -> None:
+        assert self._server is not None
+        try:
+            self._server.close()
+            await self._server.wait_closed()
+        finally:
+            self._server = None
 
 
 # class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):

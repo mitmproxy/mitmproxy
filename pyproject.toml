@@ -43,7 +43,7 @@ dependencies = [
     "hyperframe>=6.0,<=6.0.1",
     "kaitaistruct>=0.10,<=0.10",
     "ldap3>=2.8,<=2.9.1",
-    "mitmproxy_rs>=0.9.1,<0.10",  # relaxed upper bound here: we control this
+    "mitmproxy_rs>=0.10.7,<0.11",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.0",
     "passlib>=1.6.5,<=1.7.4",
     "protobuf>=5.27.2,<=5.28.2",

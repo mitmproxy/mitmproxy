@@ -1,5 +1,6 @@
 import asyncio
 import platform
+import socket
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
@@ -7,11 +8,13 @@ from unittest.mock import Mock
 import pytest
 
 from ...conftest import no_ipv6
+from ...conftest import skip_not_linux
 import mitmproxy.platform
 import mitmproxy_rs
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.mode_servers import LocalRedirectorInstance
 from mitmproxy.proxy.mode_servers import ServerInstance
+from mitmproxy.proxy.mode_servers import TunInstance
 from mitmproxy.proxy.mode_servers import WireGuardServerInstance
 from mitmproxy.proxy.server import ConnectionHandler
 from mitmproxy.test import taddons
@@ -130,17 +133,18 @@ async def test_transparent(failure, monkeypatch, caplog_async):
         assert await caplog_async.await_log("stopped")
 
 
+async def _echo_server(self: ConnectionHandler):
+    t = self.transports[self.client]
+    data = await t.reader.read(65535)
+    t.writer.write(data.upper())
+    await t.writer.drain()
+    t.writer.close()
+
+
 async def test_wireguard(tdata, monkeypatch, caplog):
     caplog.set_level("DEBUG")
 
-    async def handle_client(self: ConnectionHandler):
-        t = self.transports[self.client]
-        data = await t.reader.read(65535)
-        t.writer.write(data.upper())
-        await t.writer.drain()
-        t.writer.close()
-
-    monkeypatch.setattr(ConnectionHandler, "handle_client", handle_client)
+    monkeypatch.setattr(ConnectionHandler, "handle_client", _echo_server)
 
     system = platform.system()
     if system == "Linux":
@@ -351,6 +355,56 @@ async def test_dns_start_stop(caplog_async, transport_protocol):
 
         await inst.stop()
         assert await caplog_async.await_log("stopped")
+
+
+@skip_not_linux
+async def test_tun_mode(monkeypatch, caplog):
+    monkeypatch.setattr(ConnectionHandler, "handle_client", _echo_server)
+
+    with taddons.context(Proxyserver()):
+        inst = TunInstance.make(f"tun", MagicMock())
+        assert inst.tun_name is None
+        try:
+            await inst.start()
+        except RuntimeError as e:
+            if "Operation not permitted" in str(e):
+                return pytest.skip("tun mode test must be run as root")
+            raise
+        assert inst.tun_name
+        assert inst.is_running
+        assert "tun_name" in inst.to_json()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, inst.tun_name.encode())
+        await asyncio.get_running_loop().sock_connect(s, ("192.0.2.1", 1234))
+        reader, writer = await asyncio.open_connection(sock=s)
+        writer.write(b"hello")
+        await writer.drain()
+        assert await reader.readexactly(5) == b"HELLO"
+        writer.close()
+        await writer.wait_closed()
+        await inst.stop()
+
+
+async def test_tun_mode_mocked(monkeypatch):
+    tun_interface = Mock()
+    tun_interface.tun_name = lambda: "tun0"
+    tun_interface.wait_closed = AsyncMock()
+    create_tun_interface = AsyncMock(return_value=tun_interface)
+    monkeypatch.setattr(mitmproxy_rs.tun, "create_tun_interface", create_tun_interface)
+
+    inst = TunInstance.make(f"tun", MagicMock())
+    assert not inst.is_running
+    assert inst.tun_name is None
+
+    await inst.start()
+    assert inst.is_running
+    assert inst.tun_name == "tun0"
+    assert inst.to_json()["tun_name"] == "tun0"
+
+    await inst.stop()
+    assert not inst.is_running
+    assert inst.tun_name is None
 
 
 @pytest.fixture()

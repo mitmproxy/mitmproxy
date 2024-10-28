@@ -44,11 +44,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.13-dev"
+            py: "3.13"
           - os: windows-latest
-            py: "3.13-dev"
+            py: "3.13"
           - os: macos-latest
-            py: "3.13-dev"
+            py: "3.13"
           - os: ubuntu-latest
             py: "3.12"
           - os: ubuntu-latest
@@ -100,7 +100,7 @@ jobs:
         include:
           - image: macos-14
             platform: macos-arm64
-          - image: macos-12
+          - image: macos-13
             platform: macos-x86_64
           - image: windows-2019
             platform: windows

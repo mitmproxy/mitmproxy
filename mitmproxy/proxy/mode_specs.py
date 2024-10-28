@@ -23,6 +23,8 @@ Examples:
 from __future__ import annotations
 
 import dataclasses
+import platform
+import re
 import sys
 from abc import ABCMeta
 from abc import abstractmethod
@@ -300,6 +302,25 @@ class LocalMode(ProxyMode):
     def __post_init__(self) -> None:
         # should not raise
         mitmproxy_rs.local.LocalRedirector.describe_spec(self.data)
+
+
+class TunMode(ProxyMode):
+    """A Tun interface."""
+
+    description = "TUN interface"
+    default_port = None
+    transport_protocol = BOTH
+
+    def __post_init__(self) -> None:
+        invalid_tun_name = self.data and (
+            # The Rust side is Linux only for the moment, but eventually we may need this.
+            platform.system() == "Darwin" and not re.match(r"^utun\d+$", self.data)
+        )
+        if invalid_tun_name:  # pragma: no cover
+            raise ValueError(
+                f"Invalid tun name: {self.data}. "
+                f"On macOS, the tun name must be the form utunx where x is a number, such as utun3."
+            )
 
 
 class OsProxyMode(ProxyMode):  # pragma: no cover

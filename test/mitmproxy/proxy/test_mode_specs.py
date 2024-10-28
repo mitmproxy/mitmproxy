@@ -70,6 +70,8 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("wireguard")
     assert ProxyMode.parse("wireguard:foo.conf").data == "foo.conf"
     assert ProxyMode.parse("wireguard@51821").listen_port() == 51821
+    assert ProxyMode.parse("tun")
+    assert ProxyMode.parse("tun:utun42")
 
     assert ProxyMode.parse("local")
 
