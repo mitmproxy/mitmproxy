@@ -18,7 +18,9 @@
   ([#7241](https://github.com/mitmproxy/mitmproxy/pull/7241), @mhils)
 - `browser.start` command now supports Firefox.
   ([#7239](https://github.com/mitmproxy/mitmproxy/pull/7239), @sujaldev)
-- Fix interaction of modifyheaders addon with stream_large_bodies option
+- Fix interaction of the `modifyheaders` and `stream_large_bodies` options.
+  This may break users of `modifyheaders` that rely on body filters.
+  We expect this to be uncommon, but please make yourself heard if that's not the case.
   ([#7286](https://github.com/mitmproxy/mitmproxy/pull/7286), @lukant)
 
 ## 02 October 2024: mitmproxy 11.0.0
