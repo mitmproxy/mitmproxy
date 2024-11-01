@@ -49,7 +49,7 @@ dependencies = [
     "protobuf>=5.27.2,<=5.28.3",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
     "pyOpenSSL>=22.1,<=24.2.1",
-    "pyparsing>=2.4.2,<=3.1.4",
+    "pyparsing>=2.4.2,<=3.2.0",
     "pyperclip<=1.9.0,>=1.9.0",
     "ruamel.yaml>=0.16,<=0.18.6",
     "sortedcontainers>=2.3,<=2.4.0",
