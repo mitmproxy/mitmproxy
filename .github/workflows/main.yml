@@ -19,22 +19,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v10
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e individual_coverage
 
@@ -148,7 +148,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@v10
+    uses: mhils/workflows/.github/workflows/python-build.yml@v11
     with:
       python-version-file: .github/python-version.txt
       artifact: binaries.wheel
@@ -267,7 +267,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@v10
+    uses: mhils/workflows/.github/workflows/alls-green.yml@v11
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -295,7 +295,7 @@ jobs:
           name: binaries.wheel
           path: release/docker
       - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
-      - uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v1.6.0
+      - uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v1.6.0
 
       - name: Login to Docker Hub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
