@@ -55,7 +55,7 @@ dependencies = [
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado<=6.4.1,>=6.4.1",
     "typing-extensions>=4.3,<=4.11.0; python_version<'3.11'",
-    "urwid>=2.6.14,<=2.6.15",
+    "urwid>=2.6.14,<=2.6.16",
     "wsproto>=1.0,<=1.2.0",
     "publicsuffix2>=2.20190812,<=2.20191221",
     "zstandard>=0.15,<=0.23.0",
