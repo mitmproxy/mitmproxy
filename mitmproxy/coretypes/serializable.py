@@ -118,7 +118,9 @@ class SerializableDataclass(Serializable):
             )
 
 
-def _process(attr_val: typing.Any, attr_type: typing.Any, attr_name: str, make: bool) -> typing.Any:
+def _process(
+    attr_val: typing.Any, attr_type: typing.Any, attr_name: str, make: bool
+) -> typing.Any:
     origin = typing.get_origin(attr_type)
     if origin is typing.Literal:
         if attr_val not in typing.get_args(attr_type):
