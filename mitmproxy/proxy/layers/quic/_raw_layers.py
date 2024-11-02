@@ -11,6 +11,7 @@ from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
 
+from mitmproxy.connection import Connection
 from ._commands import CloseQuicConnection
 from ._commands import ResetQuicStream
 from ._commands import SendQuicStreamData
@@ -259,7 +260,7 @@ class RawQuicLayer(layer.Layer):
                 yield from self.event_to_child(stream_layer, events.Start())
 
             # forward data and close events
-            conn = stream_layer.client if from_client else stream_layer.server
+            conn: Connection = stream_layer.client if from_client else stream_layer.server
             if isinstance(event, QuicStreamDataReceived):
                 if event.data:
                     yield from self.event_to_child(

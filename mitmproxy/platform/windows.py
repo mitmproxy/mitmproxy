@@ -12,10 +12,10 @@ import socketserver
 import threading
 import time
 from collections.abc import Callable
+from io import BufferedIOBase
 from typing import Any
 from typing import cast
 from typing import ClassVar
-from typing import IO
 
 import pydivert.consts
 
@@ -33,14 +33,14 @@ logger = logging.getLogger(__name__)
 # Resolver
 
 
-def read(rfile: IO[bytes]) -> Any:
+def read(rfile: BufferedIOBase) -> Any:
     x = rfile.readline().strip()
     if not x:
         return None
     return json.loads(x)
 
 
-def write(data, wfile: IO[bytes]) -> None:
+def write(data, wfile: BufferedIOBase) -> None:
     wfile.write(json.dumps(data).encode() + b"\n")
     wfile.flush()
 
@@ -465,7 +465,8 @@ class TransparentProxy:
         # TODO: Make sure that server can be killed cleanly. That's a bit difficult as we don't have access to
         # controller.should_exit when this is called.
         logger.warning(
-            "Transparent mode on Windows is unsupported and flaky. Consider using local redirect mode or WireGuard mode instead."
+            "Transparent mode on Windows is unsupported, flaky, and deprecated. "
+            "Consider using local redirect mode or WireGuard mode instead."
         )
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_unavailable = s.connect_ex((REDIRECT_API_HOST, REDIRECT_API_PORT))
