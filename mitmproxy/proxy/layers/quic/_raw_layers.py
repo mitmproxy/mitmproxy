@@ -20,6 +20,7 @@ from ._events import QuicStreamDataReceived
 from ._events import QuicStreamEvent
 from ._events import QuicStreamReset
 from mitmproxy import connection
+from mitmproxy.connection import Connection
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import context
 from mitmproxy.proxy import events
@@ -259,7 +260,9 @@ class RawQuicLayer(layer.Layer):
                 yield from self.event_to_child(stream_layer, events.Start())
 
             # forward data and close events
-            conn = stream_layer.client if from_client else stream_layer.server
+            conn: Connection = (
+                stream_layer.client if from_client else stream_layer.server
+            )
             if isinstance(event, QuicStreamDataReceived):
                 if event.data:
                     yield from self.event_to_child(
