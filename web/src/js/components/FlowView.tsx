@@ -9,13 +9,14 @@ import Connection from "./FlowView/Connection";
 import Error from "./FlowView/Error";
 import Timing from "./FlowView/Timing";
 import WebSocket from "./FlowView/WebSocket";
-
+import Comment from "./FlowView/Comment";
 import { selectTab } from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
 import { Flow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
+import * as flowsActions from "../ducks/flows";
 
 type TabProps = {
     flow: Flow;
@@ -34,6 +35,7 @@ export const allTabs: {
     udpmessages: UdpMessages,
     dnsrequest: DnsRequest,
     dnsresponse: DnsResponse,
+    comment: Comment,
 };
 
 export function tabsForFlow(flow: Flow): string[] {
@@ -58,17 +60,23 @@ export function tabsForFlow(flow: Flow): string[] {
     if (flow.error) tabs.push("error");
     tabs.push("connection");
     tabs.push("timing");
+    tabs.push("comment");
     return tabs;
 }
 
 export default function FlowView() {
-    const dispatch = useAppDispatch(),
-        flow = useAppSelector(
-            (state) => state.flows.byId[state.flows.selected[0]]
-        ),
-        tabs = tabsForFlow(flow);
-
+    const dispatch = useAppDispatch();
+    const flow = useAppSelector(
+        (state) => state.flows.byId[state.flows.selected[0]],
+    );
     let active = useAppSelector((state) => state.ui.flow.tab);
+
+    if (flow == undefined) {
+        return <></>;
+    }
+
+    const tabs = tabsForFlow(flow);
+
     if (tabs.indexOf(active) < 0) {
         if (active === "response" && flow.error) {
             active = "error";
@@ -83,6 +91,13 @@ export default function FlowView() {
     return (
         <div className="flow-detail">
             <nav className="nav-tabs nav-tabs-sm">
+                <button
+                    data-testid="close-button-id"
+                    className="close-button"
+                    onClick={() => dispatch(flowsActions.select(undefined))}
+                >
+                    <i className="fa fa-times-circle"></i>
+                </button>
                 {tabs.map((tabId) => (
                     <a
                         key={tabId}

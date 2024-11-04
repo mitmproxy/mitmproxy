@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
@@ -9,9 +8,7 @@ type FilterInputProps = {
     color: any;
     placeholder: string;
     value: string;
-    onChange: (
-        value
-    ) => { type: string; filter?: string; highlight?: string } | void;
+    onChange: (value) => void;
 };
 
 type FilterInputState = {
@@ -24,6 +21,8 @@ export default class FilterInput extends Component<
     FilterInputProps,
     FilterInputState
 > {
+    inputRef = React.createRef<HTMLInputElement>();
+
     constructor(props, context) {
         super(props, context);
 
@@ -108,15 +107,15 @@ export default class FilterInput extends Component<
 
     selectFilter(cmd) {
         this.setState({ value: cmd });
-        ReactDOM.findDOMNode(this.refs.input).focus();
+        this.inputRef.current?.focus();
     }
 
     blur() {
-        ReactDOM.findDOMNode(this.refs.input).blur();
+        this.inputRef.current?.blur();
     }
 
     select() {
-        ReactDOM.findDOMNode(this.refs.input).select();
+        this.inputRef.current?.select();
     }
 
     render() {
@@ -133,7 +132,7 @@ export default class FilterInput extends Component<
                 </span>
                 <input
                     type="text"
-                    ref="input"
+                    ref={this.inputRef}
                     placeholder={placeholder}
                     className="form-control"
                     value={value}

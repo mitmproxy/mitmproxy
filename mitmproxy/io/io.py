@@ -45,6 +45,10 @@ class FlowReader:
         Yields Flow objects from the dump.
         """
 
+        if self.peek(4).startswith(
+            b"\xef\xbb\xbf{"
+        ):  # skip BOM, usually added by Fiddler
+            self.fo.read(3)
         if self.peek(1).startswith(b"{"):
             try:
                 har_file = json.loads(self.fo.read().decode("utf-8"))

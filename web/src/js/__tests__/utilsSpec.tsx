@@ -23,10 +23,10 @@ describe("formatTimeDelta", () => {
 describe("formatTimeStamp", () => {
     it("should return formatted time", () => {
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: false })
+            utils.formatTimeStamp(1483228800, { milliseconds: false }),
         ).toEqual("2017-01-01 00:00:00");
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: true })
+            utils.formatTimeStamp(1483228800, { milliseconds: true }),
         ).toEqual("2017-01-01 00:00:00.000");
     });
 });
@@ -34,7 +34,7 @@ describe("formatTimeStamp", () => {
 describe("formatAddress", () => {
     it("should return formatted addresses", () => {
         expect(utils.formatAddress(["127.0.0.1", 8080])).toEqual(
-            "127.0.0.1:8080"
+            "127.0.0.1:8080",
         );
         expect(utils.formatAddress(["::1", 8080])).toEqual("[::1]:8080");
     });
@@ -42,10 +42,10 @@ describe("formatAddress", () => {
 
 describe("reverseString", () => {
     it("should return reversed string", () => {
-        let str1 = "abc",
-            str2 = "xyz";
+        const str1 = "abc";
+        const str2 = "xyz";
         expect(
-            utils.reverseString(str1) > utils.reverseString(str2)
+            utils.reverseString(str1) > utils.reverseString(str2),
         ).toBeTruthy();
     });
 });
@@ -80,8 +80,8 @@ describe("fetchApi", () => {
 
 describe("getDiff", () => {
     it("should return json object including only the changed keys value pairs", () => {
-        let obj1 = { a: 1, b: { foo: 1 }, c: [3] },
-            obj2 = { a: 1, b: { foo: 2 }, c: [4] };
+        const obj1 = { a: 1, b: { foo: 1 }, c: [3] };
+        const obj2 = { a: 1, b: { foo: 2 }, c: [4] };
         expect(utils.getDiff(obj1, obj2)).toEqual({ b: { foo: 2 }, c: [4] });
     });
 });

@@ -14,7 +14,7 @@ describe("EventLog Component", () => {
         provider = renderer.create(
             <Provider store={store}>
                 <EventLog />
-            </Provider>
+            </Provider>,
         ),
         tree = provider.toJSON();
 
@@ -23,32 +23,32 @@ describe("EventLog Component", () => {
     });
 
     it("should handle toggleFilter", () => {
-        let debugToggleButton = tree.children[0].children[1].children[0];
+        const debugToggleButton = tree.children[0].children[1].children[0];
         debugToggleButton.props.onClick();
     });
 
     provider = renderer.create(
         <Provider store={store}>
             <EventLog />
-        </Provider>
+        </Provider>,
     );
-    let eventLog = provider.root.findByType(PureEventLog),
-        mockEvent = { preventDefault: jest.fn() };
+    const eventLog = provider.root.findByType(PureEventLog);
+    const mockEvent = { preventDefault: jest.fn() };
 
     it("should handle DragStart", () => {
         eventLog.instance.onDragStart(mockEvent);
         expect(mockEvent.preventDefault).toBeCalled();
         expect(window.addEventListener).toBeCalledWith(
             "mousemove",
-            eventLog.instance.onDragMove
+            eventLog.instance.onDragMove,
         );
         expect(window.addEventListener).toBeCalledWith(
             "mouseup",
-            eventLog.instance.onDragStop
+            eventLog.instance.onDragStop,
         );
         expect(window.addEventListener).toBeCalledWith(
             "dragend",
-            eventLog.instance.onDragStop
+            eventLog.instance.onDragStop,
         );
         mockEvent.preventDefault.mockClear();
     });
@@ -65,7 +65,7 @@ describe("EventLog Component", () => {
         expect(mockEvent.preventDefault).toBeCalled();
         expect(window.removeEventListener).toBeCalledWith(
             "mousemove",
-            eventLog.instance.onDragMove
+            eventLog.instance.onDragMove,
         );
     });
 });

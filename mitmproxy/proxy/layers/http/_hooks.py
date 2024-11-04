@@ -96,3 +96,27 @@ class HttpConnectUpstreamHook(commands.StartHook):
     """
 
     flow: http.HTTPFlow
+
+
+@dataclass
+class HttpConnectedHook(commands.StartHook):
+    """
+    HTTP CONNECT was successful
+
+    .. warning::
+    This may fire before an upstream connection has been established
+    if `connection_strategy` is set to `lazy` (default)
+    """
+
+    flow: http.HTTPFlow
+
+
+@dataclass
+class HttpConnectErrorHook(commands.StartHook):
+    """
+    HTTP CONNECT has failed.
+    This can happen when the upstream server is unreachable or proxy authentication is required.
+    In contrast to the `error` hook, `flow.error` is not guaranteed to be set.
+    """
+
+    flow: http.HTTPFlow

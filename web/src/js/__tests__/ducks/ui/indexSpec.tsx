@@ -2,7 +2,9 @@ import reduceUI from "../../../ducks/ui/index";
 
 describe("reduceUI in js/ducks/ui/index.js", () => {
     it("should combine flow and header", () => {
-        let state = reduceUI(undefined, { type: "other" });
-        expect(state.hasOwnProperty("flow")).toBeTruthy();
+        const state = reduceUI(undefined, { type: "other" });
+        expect(
+            Object.prototype.hasOwnProperty.call(state, "flow"),
+        ).toBeTruthy();
     });
 });

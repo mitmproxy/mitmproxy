@@ -870,10 +870,10 @@ def test_max_concurrency(tctx):
     (settings_ack,) = decode_frames(settings_ack_bytes())
     (req2,) = decode_frames(req2_bytes())
 
-    assert type(settings) == hyperframe.frame.SettingsFrame
-    assert type(req1) == hyperframe.frame.HeadersFrame
-    assert type(settings_ack) == hyperframe.frame.SettingsFrame
-    assert type(req2) == hyperframe.frame.HeadersFrame
+    assert type(settings) is hyperframe.frame.SettingsFrame
+    assert type(req1) is hyperframe.frame.HeadersFrame
+    assert type(settings_ack) is hyperframe.frame.SettingsFrame
+    assert type(req2) is hyperframe.frame.HeadersFrame
     assert req1.stream_id == 1
     assert req2.stream_id == 3
 

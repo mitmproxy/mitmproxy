@@ -3,8 +3,10 @@
  * e.g. the list of available content views or the current version.
  */
 
-export const RECEIVE = "STATE_RECEIVE";
-export const UPDATE = "STATE_UPDATE";
+import { createAction, PayloadAction } from "@reduxjs/toolkit";
+
+export const RECEIVE = createAction<Partial<BackendState>>("STATE_RECEIVE");
+export const UPDATE = createAction<Partial<BackendState>>("STATE_UPDATE");
 
 export interface ServerInfo {
     description: string;
@@ -20,24 +22,33 @@ export interface BackendState {
     available: boolean;
     version: string;
     contentViews: string[];
-    servers: ServerInfo[];
+    servers: { [key: string]: ServerInfo };
+    platform: string;
 }
 
 export const defaultState: BackendState = {
     available: false,
     version: "",
     contentViews: [],
-    servers: [],
+    servers: {},
+    platform: "",
 };
+
+export function mockUpdate(newState: Partial<BackendState>) {
+    return {
+        type: UPDATE.type,
+        payload: newState,
+    };
+}
 
 export default function reducer(state = defaultState, action): BackendState {
     switch (action.type) {
-        case RECEIVE:
-        case UPDATE:
+        case RECEIVE.type:
+        case UPDATE.type:
             return {
                 ...state,
                 available: true,
-                ...action.data,
+                ...(action as PayloadAction<Partial<BackendState>>).payload,
             };
         default:
             return state;

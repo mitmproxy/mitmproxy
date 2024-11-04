@@ -1,11 +1,11 @@
 import React, { Component } from "react";
-import ReactDOM from "react-dom";
 import classnames from "classnames";
 
 type SplitterState = {
     applied: boolean;
-    startX: number;
-    startY: number;
+    startPos: number;
+    // .dragPointer === 0.1 means not dragging
+    dragPointer: number;
 };
 
 type SplitterProps = {
@@ -15,64 +15,56 @@ type SplitterProps = {
 export default class Splitter extends Component<SplitterProps, SplitterState> {
     static defaultProps = { axis: "x" };
 
+    node = React.createRef<HTMLDivElement>();
+
     constructor(props, context) {
         super(props, context);
-
-        this.state = { applied: false, startX: 0, startY: 0 };
-
-        this.onMouseMove = this.onMouseMove.bind(this);
-        this.onMouseDown = this.onMouseDown.bind(this);
-        this.onMouseUp = this.onMouseUp.bind(this);
-        this.onDragEnd = this.onDragEnd.bind(this);
+        this.state = { applied: false, startPos: 0, dragPointer: 0.1 };
+        this.onLostPointerCapture = this.onLostPointerCapture.bind(this);
+        this.onPointerDown = this.onPointerDown.bind(this);
+        this.onPointerMove = this.onPointerMove.bind(this);
     }
 
-    onMouseDown(e) {
-        this.setState({ startX: e.pageX, startY: e.pageY });
-
-        window.addEventListener("mousemove", this.onMouseMove);
-        window.addEventListener("mouseup", this.onMouseUp);
-        // Occasionally, only a dragEnd event is triggered, but no mouseUp.
-        window.addEventListener("dragend", this.onDragEnd);
-    }
-
-    onDragEnd() {
-        ReactDOM.findDOMNode(this).style.transform = "";
-
-        window.removeEventListener("dragend", this.onDragEnd);
-        window.removeEventListener("mouseup", this.onMouseUp);
-        window.removeEventListener("mousemove", this.onMouseMove);
-    }
-
-    onMouseUp(e) {
-        this.onDragEnd();
-
-        const node = ReactDOM.findDOMNode(this);
-        const prev = node.previousElementSibling;
-
-        let flexBasis = prev.offsetHeight + e.pageY - this.state.startY;
-
-        if (this.props.axis === "x") {
-            flexBasis = prev.offsetWidth + e.pageX - this.state.startX;
+    onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+        if (this.state.dragPointer !== 0.1) {
+            return;
         }
+        (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
+        this.setState({
+            startPos: this.props.axis === "x" ? e.pageX : e.pageY,
+            dragPointer: e.pointerId,
+        });
+    }
 
-        prev.style.flex = `0 0 ${Math.max(0, flexBasis)}px`;
-        node.nextElementSibling.style.flex = "1 1 auto";
+    onLostPointerCapture(e: React.PointerEvent<HTMLDivElement>) {
+        if (this.state.dragPointer !== e.pointerId) {
+            return;
+        }
+        const node = this.node.current!;
+        const prev = node.previousElementSibling! as HTMLElement;
+        const next = node.nextElementSibling! as HTMLElement;
 
-        this.setState({ applied: true });
+        node.style.transform = "";
+        prev.style.flex = `0 0 ${Math.max(
+            0,
+            (this.props.axis === "x"
+                ? prev.offsetWidth + e.pageX
+                : prev.offsetHeight + e.pageY) - this.state.startPos,
+        )}px`;
+        next.style.flex = "1 1 auto";
+
+        this.setState({ applied: true, dragPointer: 0.1 });
         this.onResize();
     }
 
-    onMouseMove(e) {
-        let dX = 0;
-        let dY = 0;
-        if (this.props.axis === "x") {
-            dX = e.pageX - this.state.startX;
-        } else {
-            dY = e.pageY - this.state.startY;
+    onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+        if (this.state.dragPointer !== e.pointerId) {
+            return;
         }
-        ReactDOM.findDOMNode(
-            this
-        ).style.transform = `translate(${dX}px, ${dY}px)`;
+        this.node.current!.style.transform =
+            this.props.axis === "x"
+                ? `translateX(${e.pageX - this.state.startPos}px)`
+                : `translateY(${e.pageY - this.state.startPos}px)`;
     }
 
     onResize() {
@@ -80,7 +72,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         // that their viewport may have changed.
         window.setTimeout(
             () => window.dispatchEvent(new CustomEvent("resize")),
-            1
+            1,
         );
     }
 
@@ -89,13 +81,11 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
             return;
         }
 
-        const node = ReactDOM.findDOMNode(this);
-
-        if (node.previousElementSibling) {
-            node.previousElementSibling.style.flex = "";
+        if (this.node.current?.previousElementSibling instanceof HTMLElement) {
+            this.node.current.previousElementSibling.style.flex = "";
         }
-        if (node.nextElementSibling) {
-            node.nextElementSibling.style.flex = "";
+        if (this.node.current?.nextElementSibling instanceof HTMLElement) {
+            this.node.current.nextElementSibling.style.flex = "";
         }
 
         if (!willUnmount) {
@@ -111,12 +101,17 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
     render() {
         return (
             <div
+                ref={this.node}
                 className={classnames(
                     "splitter",
-                    this.props.axis === "x" ? "splitter-x" : "splitter-y"
+                    this.props.axis === "x" ? "splitter-x" : "splitter-y",
                 )}
             >
-                <div onMouseDown={this.onMouseDown} draggable="true" />
+                <div
+                    onLostPointerCapture={this.onLostPointerCapture}
+                    onPointerDown={this.onPointerDown}
+                    onPointerMove={this.onPointerMove}
+                />
             </div>
         );
     }

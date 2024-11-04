@@ -36,7 +36,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
     const [referenceElement, setReferenceElement] =
         useState<HTMLLIElement | null>(null);
     const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(
-        null
+        null,
     );
     const { styles, attributes } = usePopper(referenceElement, popperElement, {
         placement: "right-start",
@@ -93,17 +93,17 @@ export default React.memo(function Dropdown({
     ...attrs
 }: DropdownProps) {
     const [refElement, setRefElement] = useState<HTMLAnchorElement | null>(
-        null
+        null,
     );
     const [open, _setOpen] = useState(false);
     const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(
-        null
+        null,
     );
     const { styles, attributes } = usePopper(refElement, popperElement, {
         ...options,
     });
 
-    let setOpen = (b: boolean) => {
+    const setOpen = (b: boolean) => {
         _setOpen(b);
         onOpen && onOpen(b);
     };
@@ -125,7 +125,7 @@ export default React.memo(function Dropdown({
                     });
                 }
             },
-            { once: true, capture: true }
+            { once: true, capture: true },
         );
     }, [popperElement]);
 

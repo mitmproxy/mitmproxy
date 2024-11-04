@@ -27,16 +27,10 @@ class TermLog:
         if "termlog_verbosity" in updated:
             self.logger.setLevel(ctx.options.termlog_verbosity.upper())
 
-    def done(self):
-        t = self._teardown()
-        try:
-            # try to delay teardown a bit.
-            self._teardown_task = asyncio.create_task(t)
-        except RuntimeError:
-            # no event loop, we're in a test.
-            asyncio.run(t)
-
-    async def _teardown(self):
+    def uninstall(self) -> None:
+        # uninstall the log dumper.
+        # This happens at the very very end after done() is completed,
+        # because we don't want to uninstall while other addons are still logging.
         self.logger.uninstall()
 
 

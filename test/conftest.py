@@ -3,12 +3,11 @@ from __future__ import annotations
 import asyncio
 import os
 import socket
+import sys
 
 import pytest
 
 from mitmproxy.utils import data
-
-pytest_plugins = ("test.full_coverage_plugin",)
 
 skip_windows = pytest.mark.skipif(os.name == "nt", reason="Skipping due to Windows")
 
@@ -26,6 +25,19 @@ else:
     no_ipv6 = False
 
 skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
+
+
+class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    def new_event_loop(self):
+        loop = super().new_event_loop()
+        if sys.version_info >= (3, 12):
+            loop.set_task_factory(asyncio.eager_task_factory)
+        return loop
+
+
+@pytest.fixture(scope="session")
+def event_loop_policy(request):
+    return EagerTaskCreationEventLoopPolicy()
 
 
 @pytest.fixture()

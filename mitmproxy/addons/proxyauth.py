@@ -25,9 +25,9 @@ class ProxyAuth:
     validator: Validator | None = None
 
     def __init__(self) -> None:
-        self.authenticated: MutableMapping[
-            connection.Client, tuple[str, str]
-        ] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[connection.Client, tuple[str, str]] = (
+            weakref.WeakKeyDictionary()
+        )
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
@@ -76,6 +76,8 @@ class ProxyAuth:
             # Is this connection authenticated by a previous HTTP CONNECT?
             if f.client_conn in self.authenticated:
                 f.metadata["proxyauth"] = self.authenticated[f.client_conn]
+            elif f.is_replay:
+                pass
             else:
                 self.authenticate_http(f)
 

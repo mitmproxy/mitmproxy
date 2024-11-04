@@ -1,29 +1,28 @@
-import _ from "lodash";
+import { isEqual } from "lodash";
 import * as React from "react";
 
-// @ts-ignore
-window._ = _;
 window.React = React;
 
-export var formatSize = function (bytes) {
+export const formatSize = function (bytes) {
     if (bytes === 0) return "0";
-    var prefix = ["b", "kb", "mb", "gb", "tb"];
-    for (var i = 0; i < prefix.length; i++) {
+    const prefix = ["b", "kb", "mb", "gb", "tb"];
+    let i = 0;
+    for (; i < prefix.length; i++) {
         if (Math.pow(1024, i + 1) > bytes) {
             break;
         }
     }
-    var precision;
+    let precision;
     if (bytes % Math.pow(1024, i) === 0) precision = 0;
     else precision = 1;
     return (bytes / Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
 
-export var formatTimeDelta = function (milliseconds) {
-    var time = milliseconds;
-    var prefix = ["ms", "s", "min", "h"];
-    var div = [1000, 60, 60];
-    var i = 0;
+export const formatTimeDelta = function (milliseconds) {
+    let time = milliseconds;
+    const prefix = ["ms", "s", "min", "h"];
+    const div = [1000, 60, 60];
+    let i = 0;
     while (Math.abs(time) >= div[i] && i < div.length) {
         time = time / div[i];
         i++;
@@ -31,11 +30,11 @@ export var formatTimeDelta = function (milliseconds) {
     return Math.round(time) + prefix[i];
 };
 
-export var formatTimeStamp = function (
+export const formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {}
+    { milliseconds = true } = {},
 ) {
-    let utc = new Date(seconds * 1000);
+    const utc = new Date(seconds * 1000);
     let ts = utc.toISOString().replace("T", " ").replace("Z", "");
     if (!milliseconds) ts = ts.slice(0, -4);
     return ts;
@@ -52,21 +51,18 @@ export function formatAddress(address: [string, number]): string {
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.
-var end = String.fromCharCode(0xffff);
+const end = String.fromCharCode(0xffff);
 
 export function reverseString(s) {
     return (
-        String.fromCharCode.apply(
-            String,
-            _.map(s.split(""), function (c) {
-                return 0xffff - c.charCodeAt(0);
-            })
+        String.fromCharCode(
+            ...s.split("").map((c) => 0xffff - c.charCodeAt(0)),
         ) + end
     );
 }
 
 function getCookie(name) {
-    let r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
+    const r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
 
@@ -74,7 +70,7 @@ const xsrf = getCookie("_xsrf");
 
 export function fetchApi(
     url: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
         options.headers = options.headers || {};
@@ -110,8 +106,11 @@ fetchApi.post = (url: string, json: any, options: RequestInit = {}) =>
         ...options,
     });
 
-export async function runCommand(command: string, ...args): Promise<any> {
-    let response = await fetchApi(`/commands/${command}`, {
+export async function runCommand(
+    command: string,
+    ...args: string[]
+): Promise<any> {
+    const response = await fetchApi(`/commands/${command}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -124,9 +123,9 @@ export async function runCommand(command: string, ...args): Promise<any> {
 // deep comparison of two json objects (dicts). arrays are handeled as a single value.
 // return: json object including only the changed keys value pairs.
 export function getDiff(obj1, obj2) {
-    let result = { ...obj2 };
-    for (let key in obj1) {
-        if (_.isEqual(obj2[key], obj1[key])) result[key] = undefined;
+    const result = { ...obj2 };
+    for (const key in obj1) {
+        if (isEqual(obj2[key], obj1[key])) result[key] = undefined;
         else if (
             Object.prototype.toString.call(obj2[key]) === "[object Object]" &&
             Object.prototype.toString.call(obj1[key]) === "[object Object]"
@@ -134,4 +133,72 @@ export function getDiff(obj1, obj2) {
             result[key] = getDiff(obj1[key], obj2[key]);
     }
     return result;
+}
+
+/**
+ * `navigator.clipboard.writeText()`, but with an additional fallback for non-secure contexts.
+ *
+ * Never throws unless textPromise is rejected.
+ */
+export async function copyToClipboard(
+    textPromise: Promise<string>,
+): Promise<void> {
+    // Try the new clipboard APIs first. If that fails, use textarea fallback.
+    try {
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                "text/plain": textPromise,
+            }),
+        ]);
+        return;
+    } catch (err) {
+        console.warn(err);
+    }
+
+    const text = await textPromise;
+
+    try {
+        await navigator.clipboard.writeText(text);
+        return;
+    } catch (err) {
+        console.warn(err);
+    }
+
+    const t = document.createElement("textarea");
+    t.value = text;
+    t.style.position = "absolute";
+    t.style.opacity = "0";
+    document.body.appendChild(t);
+    try {
+        t.focus();
+        t.select();
+        if (!document.execCommand("copy")) {
+            throw "failed to copy";
+        }
+    } catch {
+        alert(text);
+    } finally {
+        t.remove();
+    }
+}
+
+export function rpartition(str: string, sep: string): [string, string] {
+    const lastIndex = str.lastIndexOf(sep);
+    if (lastIndex === -1) {
+        return ["", str];
+    }
+    const before = str.slice(0, lastIndex);
+    const after = str.slice(lastIndex + sep.length);
+    return [before, after];
+}
+
+/** A JS equivalent of Python's https://docs.python.org/3/library/stdtypes.html#str.partition */
+export function partition(str: string, sep: string): [string, string] {
+    const index = str.indexOf(sep);
+    if (index === -1) {
+        return [str, ""];
+    }
+    const before = str.slice(0, index);
+    const after = str.slice(index + sep.length);
+    return [before, after];
 }

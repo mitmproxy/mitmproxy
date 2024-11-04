@@ -1,7 +1,6 @@
-import imghdr
-
 from . import image_parser
 from mitmproxy.contentviews import base
+from mitmproxy.contrib import imghdr
 from mitmproxy.coretypes import multidict
 
 

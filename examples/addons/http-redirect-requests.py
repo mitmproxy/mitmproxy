@@ -1,4 +1,5 @@
 """Redirect HTTP requests to another server."""
+
 from mitmproxy import http
 
 

@@ -10,4 +10,4 @@ def all_markers():
         ctx.master.commands.call(
             "view.flows.create", "get", f"https://example.com/{marker}"
         )
-        ctx.master.commands.call("flow.mark", [ctx.master.view.focus.flow], marker)
+        ctx.master.commands.call("flow.mark", [ctx.master.view[-1]], marker)

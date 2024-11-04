@@ -1,0 +1,87 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RegularSpec 1`] = `
+<DocumentFragment>
+  <div>
+    <h4
+      class="mode-title"
+    >
+      Explicit HTTP(S) Proxy
+    </h4>
+    <p
+      class="mode-description"
+    >
+      You manually configure your client application or device to use an HTTP(S) proxy.
+    </p>
+    <div>
+      <div
+        class="mode-entry"
+      >
+        <input
+          checked=""
+          type="checkbox"
+        />
+        Run HTTP/S Proxy on port 
+        <span
+          class="inline-input mode-regular-input"
+          placeholder="8080"
+          tabindex="0"
+        />
+      </div>
+      <div
+        class="mode-status"
+      >
+        <div>
+          <div
+            class="text-success"
+          >
+            HTTP(S) proxy listening at 127.0.0.1:8080 and [::1]:8080.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`RegularSpec 2`] = `
+<DocumentFragment>
+  <div>
+    <h4
+      class="mode-title"
+    >
+      Explicit HTTP(S) Proxy
+    </h4>
+    <p
+      class="mode-description"
+    >
+      You manually configure your client application or device to use an HTTP(S) proxy.
+    </p>
+    <div>
+      <div
+        class="mode-entry"
+      >
+        <input
+          checked=""
+          type="checkbox"
+        />
+        Run HTTP/S Proxy on port 
+        <span
+          class="inline-input mode-regular-input"
+          placeholder="8080"
+          tabindex="0"
+        />
+      </div>
+      <div
+        class="mode-status"
+      >
+        <div
+          class="text-danger"
+        >
+          port already in use
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

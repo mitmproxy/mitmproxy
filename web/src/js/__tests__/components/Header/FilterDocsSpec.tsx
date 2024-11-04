@@ -13,7 +13,7 @@ test("FilterDocs Component", async () => {
                 ["cmd1", "foo"],
                 ["cmd2", "bar"],
             ],
-        })
+        }),
     );
 
     const { asFragment } = render(<FilterDocs selectHandler={() => 0} />);

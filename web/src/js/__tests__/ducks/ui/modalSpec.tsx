@@ -6,12 +6,15 @@ describe("modal reducer", () => {
     });
 
     it("should handle setActiveModal action", () => {
-        let state = reduceModal(undefined, ModalActions.setActiveModal("foo"));
+        const state = reduceModal(
+            undefined,
+            ModalActions.setActiveModal("foo"),
+        );
         expect(state).toEqual({ activeModal: "foo" });
     });
 
     it("should handle hideModal action", () => {
-        let state = reduceModal(undefined, ModalActions.hideModal());
+        const state = reduceModal(undefined, ModalActions.hideModal());
         expect(state).toEqual({ activeModal: undefined });
     });
 });

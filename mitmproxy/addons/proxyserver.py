@@ -1,6 +1,7 @@
 """
 This addon is responsible for starting/stopping the proxy server sockets/instances specified by the mode option.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -33,6 +34,7 @@ from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.proxy.mode_servers import ProxyConnectionHandler
 from mitmproxy.proxy.mode_servers import ServerInstance
 from mitmproxy.proxy.mode_servers import ServerManager
+from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
 from mitmproxy.utils import signals
 
@@ -74,6 +76,11 @@ class Servers:
                 if spec not in new_instances
             ]
 
+            if not start_tasks and not stop_tasks:
+                return (
+                    True  # nothing to do, so we don't need to trigger `self.changed`.
+                )
+
             self._instances = new_instances
             # Notify listeners about the new not-yet-started servers.
             await self.changed.send()
@@ -114,11 +121,13 @@ class Proxyserver(ServerManager):
     is_running: bool
     _connect_addr: Address | None = None
     _update_task: asyncio.Task | None = None
+    _inject_tasks: set[asyncio.Task]
 
     def __init__(self):
         self.connections = {}
         self.servers = Servers(self)
         self.is_running = False
+        self._inject_tasks = set()
 
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
@@ -150,8 +159,9 @@ class Proxyserver(ServerManager):
             None,
             """
             Stream data to the client if response body exceeds the given
-            threshold. If streamed, the body will not be stored in any way.
-            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            threshold. If streamed, the body will not be stored in any way,
+            and such responses cannot be modified. Understands k/m/g
+            suffixes, i.e. 3m for 3 megabytes.
             """,
         )
         loader.add_option(
@@ -275,7 +285,9 @@ class Proxyserver(ServerManager):
                     )
 
             if self.is_running:
-                self._update_task = asyncio.create_task(self.servers.update(modes))
+                self._update_task = asyncio_utils.create_task(
+                    self.servers.update(modes), name="update servers"
+                )
 
     async def setup_servers(self) -> bool:
         """Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts)."""
@@ -298,7 +310,15 @@ class Proxyserver(ServerManager):
             )
         if connection_id not in self.connections:
             raise ValueError("Flow is not from a live connection.")
-        self.connections[connection_id].server_event(event)
+
+        t = asyncio_utils.create_task(
+            self.connections[connection_id].server_event(event),
+            name=f"inject_event",
+            client=event.flow.client_conn.peername,
+        )
+        # Python 3.11 Use TaskGroup instead.
+        self._inject_tasks.add(t)
+        t.add_done_callback(self._inject_tasks.remove)
 
     @command.command("inject.websocket")
     def inject_websocket(

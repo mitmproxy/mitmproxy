@@ -12,6 +12,7 @@ import pytest
 from mitmproxy.addons.next_layer import NeedsMoreData
 from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.addons.next_layer import stack_match
+from mitmproxy.connection import Address
 from mitmproxy.connection import Client
 from mitmproxy.connection import TransportProtocol
 from mitmproxy.proxy.context import Context
@@ -21,6 +22,7 @@ from mitmproxy.proxy.layers import ClientTLSLayer
 from mitmproxy.proxy.layers import DNSLayer
 from mitmproxy.proxy.layers import HttpLayer
 from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import QuicStreamLayer
 from mitmproxy.proxy.layers import RawQuicLayer
 from mitmproxy.proxy.layers import ServerQuicLayer
 from mitmproxy.proxy.layers import ServerTLSLayer
@@ -28,6 +30,8 @@ from mitmproxy.proxy.layers import TCPLayer
 from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http import HttpStream
+from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
+from mitmproxy.proxy.layers.tls import HTTP3_ALPN
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 
@@ -90,28 +94,83 @@ quic_client_hello = bytes.fromhex(
 
 dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
 
+# Custom protocol with just base64-encoded messages
+# https://github.com/mitmproxy/mitmproxy/pull/7087
+custom_base64_proto = b"AAAAAAAAAAAAAAAAAAAAAA=="
+
+http_get = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
+http_get_absolute = b"GET http://example.com/ HTTP/1.1\r\n\r\n"
+
+http_connect = b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n"
+
 
 class TestNextLayer:
-    def test_configure(self):
-        nl = NextLayer()
-        with taddons.context(nl) as tctx:
-            with pytest.raises(Exception, match="mutually exclusive"):
-                tctx.configure(
-                    nl, allow_hosts=["example.org"], ignore_hosts=["example.com"]
-                )
-
     @pytest.mark.parametrize(
         "ignore, allow, transport_protocol, server_address, data_client, result",
         [
             # ignore
             pytest.param(
-                [], [], "example.com", "tcp", b"", False, id="nothing ignored"
+                [], [], "tcp", "example.com", b"", False, id="nothing ignored"
             ),
             pytest.param(
                 ["example.com"], [], "tcp", "example.com", b"", True, id="address"
             ),
             pytest.param(
-                ["1.2.3.4"], [], "tcp", "example.com", b"", True, id="ip address"
+                ["192.0.2.1"], [], "tcp", "example.com", b"", True, id="ip address"
+            ),
+            pytest.param(
+                ["2001:db8::1"],
+                [],
+                "tcp",
+                "ipv6.example.com",
+                b"",
+                True,
+                id="ipv6 address",
+            ),
+            pytest.param(
+                ["example.com:443"],
+                [],
+                "tcp",
+                "example.com",
+                b"",
+                True,
+                id="port matches",
+            ),
+            pytest.param(
+                ["example.com:123"],
+                [],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="port does not match",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                "192.0.2.1",
+                http_get,
+                True,
+                id="http host header",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                "192.0.2.1",
+                http_get.replace(b"Host", b"X-Host"),
+                False,
+                id="http host header missing",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "tcp",
+                "192.0.2.1",
+                http_get.split(b"\r\n", 1)[0],
+                NeedsMoreData,
+                id="incomplete http host header",
             ),
             pytest.param(
                 ["example.com"],
@@ -123,7 +182,13 @@ class TestNextLayer:
                 id="partial address match",
             ),
             pytest.param(
-                ["example.com"], [], "tcp", None, b"", False, id="no destination info"
+                ["example.com"],
+                [],
+                "tcp",
+                None,
+                b"",
+                False,
+                id="no destination info",
             ),
             pytest.param(
                 ["example.com"],
@@ -138,7 +203,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "tcp",
-                None,
+                "192.0.2.1",
                 client_hello_with_extensions,
                 True,
                 id="sni",
@@ -147,7 +212,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "tcp",
-                None,
+                "192.0.2.1",
                 client_hello_with_extensions[:-5],
                 NeedsMoreData,
                 id="incomplete client hello",
@@ -156,7 +221,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "tcp",
-                None,
+                "192.0.2.1",
                 client_hello_no_extensions[:9] + b"\x00" * 200,
                 False,
                 id="invalid client hello",
@@ -174,7 +239,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 dtls_client_hello_with_extensions,
                 True,
                 id="dtls sni",
@@ -183,7 +248,7 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 dtls_client_hello_with_extensions[:-5],
                 NeedsMoreData,
                 id="incomplete dtls client hello",
@@ -192,20 +257,56 @@ class TestNextLayer:
                 ["example.com"],
                 [],
                 "udp",
-                None,
+                "192.0.2.1",
                 dtls_client_hello_with_extensions[:9] + b"\x00" * 200,
                 False,
                 id="invalid dtls client hello",
             ),
             pytest.param(
-                ["example.com"], [], "udp", None, quic_client_hello, True, id="quic sni"
+                ["example.com"],
+                [],
+                "udp",
+                "192.0.2.1",
+                quic_client_hello,
+                True,
+                id="quic sni",
             ),
             # allow
             pytest.param(
-                [], ["example.com"], "tcp", "example.com", b"", False, id="allow: allow"
+                [],
+                ["example.com"],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="allow: allow",
             ),
             pytest.param(
-                [], ["example.com"], "tcp", "example.org", b"", True, id="allow: ignore"
+                [],
+                ["example.com"],
+                "tcp",
+                "example.org",
+                b"",
+                True,
+                id="allow: ignore",
+            ),
+            pytest.param(
+                [],
+                ["example.com"],
+                "tcp",
+                "192.0.2.1",
+                client_hello_with_extensions,
+                False,
+                id="allow: sni",
+            ),
+            pytest.param(
+                [],
+                ["existing-sni.example"],
+                "tcp",
+                "192.0.2.1",
+                b"",
+                False,
+                id="allow: sni from parent layer",
             ),
             pytest.param(
                 [],
@@ -215,6 +316,25 @@ class TestNextLayer:
                 client_hello_with_extensions,
                 False,
                 id="allow: sni mismatch",
+            ),
+            # allow with ignore
+            pytest.param(
+                ["binary.example.com"],
+                ["example.com"],
+                "tcp",
+                "example.com",
+                b"",
+                False,
+                id="allow+ignore: allowed and not ignored",
+            ),
+            pytest.param(
+                ["binary.example.com"],
+                ["example.com"],
+                "tcp",
+                "binary.example.org",
+                b"",
+                True,
+                id="allow+ignore: allowed but ignored",
             ),
         ],
     )
@@ -233,21 +353,27 @@ class TestNextLayer:
                 tctx.configure(nl, ignore_hosts=ignore)
             if allow:
                 tctx.configure(nl, allow_hosts=allow)
-
             ctx = Context(
-                Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+                Client(
+                    peername=("192.168.0.42", 51234),
+                    sockname=("0.0.0.0", 8080),
+                    sni="existing-sni.example",
+                ),
                 tctx.options,
             )
             ctx.client.transport_protocol = transport_protocol
             if server_address:
                 ctx.server.address = (server_address, 443)
-                ctx.server.peername = ("1.2.3.4", 443)
-
+                ctx.server.peername = (
+                    ("2001:db8::1", 443, 0, 0)
+                    if server_address.startswith("ipv6")
+                    else ("192.0.2.1", 443)
+                )
             if result is NeedsMoreData:
                 with pytest.raises(NeedsMoreData):
-                    nl._ignore_connection(ctx, data_client)
+                    nl._ignore_connection(ctx, data_client, b"")
             else:
-                assert nl._ignore_connection(ctx, data_client) is result
+                assert nl._ignore_connection(ctx, data_client, b"") is result
 
     def test_next_layer(self, monkeypatch, caplog):
         caplog.set_level(logging.INFO)
@@ -268,6 +394,7 @@ class TestNextLayer:
             assert m.layer is preexisting
 
             m.layer = None
+            monkeypatch.setattr(m, "data_client", lambda: http_get)
             nl.next_layer(m)
             assert m.layer
 
@@ -292,6 +419,8 @@ class TConf:
     tcp_hosts: Sequence[str] = ()
     udp_hosts: Sequence[str] = ()
     ignore_conn: bool = False
+    server_address: Address | None = None
+    alpn: bytes | None = None
 
 
 explicit_proxy_configs = [
@@ -299,8 +428,27 @@ explicit_proxy_configs = [
         TConf(
             before=[modes.HttpProxy],
             after=[modes.HttpProxy, HttpLayer],
+            data_client=http_connect,
         ),
-        id=f"explicit proxy: regular http",
+        id=f"explicit proxy: regular http connect",
+    ),
+    pytest.param(
+        TConf(
+            before=[modes.HttpProxy],
+            after=[modes.HttpProxy, HttpLayer],
+            ignore_hosts=[".+"],
+            data_client=http_connect,
+        ),
+        id=f"explicit proxy: regular http connect disregards ignore_hosts",
+    ),
+    pytest.param(
+        TConf(
+            before=[modes.HttpProxy],
+            after=[modes.HttpProxy, HttpLayer],
+            ignore_hosts=[".+"],
+            data_client=http_get_absolute,
+        ),
+        id=f"explicit proxy: HTTP over regular proxy disregards ignore_hosts",
     ),
     pytest.param(
         TConf(
@@ -384,7 +532,7 @@ explicit_proxy_configs = [
                 partial(HttpStream, stream_id=1),
             ],
             after=[modes.HttpProxy, HttpLayer, HttpStream, TCPLayer],
-            data_client=b"\xFF",
+            data_client=b"\xff",
         ),
         id=f"explicit proxy: TCP over regular proxy",
     ),
@@ -476,6 +624,40 @@ reverse_proxy_configs.extend(
             ),
             id="reverse proxy: quic",
         ),
+        pytest.param(
+            TConf(
+                before=[
+                    modes.ReverseProxy,
+                    ServerQuicLayer,
+                    ClientQuicLayer,
+                    RawQuicLayer,
+                    lambda ctx: QuicStreamLayer(ctx, False, 0),
+                ],
+                after=[
+                    modes.ReverseProxy,
+                    ServerQuicLayer,
+                    ClientQuicLayer,
+                    RawQuicLayer,
+                    QuicStreamLayer,
+                    TCPLayer,
+                ],
+                proxy_mode="reverse:quic://example.com",
+                alpn=HTTP3_ALPN,
+            ),
+            id="reverse proxy: quic",
+        ),
+        pytest.param(
+            TConf(
+                before=[modes.ReverseProxy],
+                after=[modes.ReverseProxy, TCPLayer],
+                proxy_mode=f"reverse:http://example.com",
+                ignore_hosts=["example.com"],
+                server_address=("example.com", 80),
+                data_client=http_get,
+                ignore_conn=True,
+            ),
+            id="reverse proxy: ignore_hosts",
+        ),
     ]
 )
 
@@ -518,14 +700,33 @@ transparent_proxy_configs = [
         http := TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, HttpLayer],
-            data_client=b"GET / HTTP/1.1\r\n",
+            server_address=("192.0.2.1", 80),
+            data_client=http_get,
         ),
         id="transparent proxy: http",
     ),
     pytest.param(
+        TConf(
+            before=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer],
+            after=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer, HttpLayer],
+            data_client=b"GO /method-too-short-for-heuristic HTTP/1.1\r\n",
+            alpn=HTTP1_ALPNS[0],
+        ),
+        id=f"transparent proxy: http via ALPN",
+    ),
+    pytest.param(
+        TConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, TCPLayer],
+            server_address=("192.0.2.1", 23),
+            data_client=b"SSH-2.0-OpenSSH_9.7",
+        ),
+        id="transparent proxy: ssh",
+    ),
+    pytest.param(
         dataclasses.replace(
             http,
-            tcp_hosts=["example.com"],
+            tcp_hosts=["192.0.2.1"],
             after=[modes.TransparentProxy, TCPLayer],
         ),
         id="transparent proxy: tcp_hosts",
@@ -533,37 +734,65 @@ transparent_proxy_configs = [
     pytest.param(
         dataclasses.replace(
             http,
-            ignore_hosts=["example.com"],
+            ignore_hosts=["192.0.2.1"],
             after=[modes.TransparentProxy, TCPLayer],
             ignore_conn=True,
         ),
         id="transparent proxy: ignore_hosts",
     ),
     pytest.param(
-        dns := TConf(
-            before=[modes.TransparentProxy],
-            after=[modes.TransparentProxy, DNSLayer],
-            transport_protocol="udp",
-            data_client=dns_query,
-        ),
-        id="transparent proxy: dns",
-    ),
-    pytest.param(
         TConf(
             before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, TCPLayer],
+            data_client=custom_base64_proto,
+        ),
+        id="transparent proxy: full alpha tcp",
+    ),
+    pytest.param(
+        udp := TConf(
+            before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, UDPLayer],
+            server_address=("192.0.2.1", 553),
             transport_protocol="udp",
-            data_client=b"\xFF",
+            data_client=b"\xff",
         ),
         id="transparent proxy: raw udp",
     ),
     pytest.param(
+        dns := dataclasses.replace(
+            udp,
+            after=[modes.TransparentProxy, DNSLayer],
+            data_client=dns_query,
+            server_address=("192.0.2.1", 53),
+        ),
+        id="transparent proxy: dns over udp",
+    ),
+    pytest.param(
         dataclasses.replace(
             dns,
-            udp_hosts=["example.com"],
+            transport_protocol="tcp",
+        ),
+        id="transparent proxy: dns over tcp",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            udp,
+            udp_hosts=["192.0.2.1"],
             after=[modes.TransparentProxy, UDPLayer],
         ),
         id="transparent proxy: udp_hosts",
+    ),
+    pytest.param(
+        TConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, DNSLayer],
+            proxy_mode="wireguard",
+            server_address=("10.0.0.53", 53),
+            ignore_hosts=[".+"],
+            transport_protocol="udp",
+            data_client=dns_query,
+        ),
+        id="wireguard proxy: dns should not be ignored",
     ),
 ]
 
@@ -589,11 +818,14 @@ def test_next_layer(
         )
 
         ctx = Context(
-            Client(peername=("192.168.0.42", 51234), sockname=("0.0.0.0", 8080)),
+            Client(
+                peername=("192.168.0.42", 51234),
+                sockname=("0.0.0.0", 8080),
+                alpn=test_conf.alpn,
+            ),
             tctx.options,
         )
-        ctx.server.address = ("example.com", 42)
-        # these aren't properly set up, but this does not matter here.
+        ctx.server.address = test_conf.server_address
         ctx.client.transport_protocol = test_conf.transport_protocol
         ctx.client.proxy_mode = ProxyMode.parse(test_conf.proxy_mode)
         ctx.layers = [x(ctx) for x in test_conf.before]
@@ -602,7 +834,7 @@ def test_next_layer(
             data_client=test_conf.data_client,
             data_server=test_conf.data_server,
         )
-        assert stack_match(ctx, test_conf.after)
+        assert stack_match(ctx, test_conf.after), f"Unexpected stack: {ctx.layers}"
 
         last_layer = ctx.layers[-1]
         if isinstance(last_layer, (UDPLayer, TCPLayer)):

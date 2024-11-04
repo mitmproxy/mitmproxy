@@ -15,6 +15,13 @@ class TestWebSocketData:
         f2 = http.HTTPFlow.from_state(f.get_state())
         f2.set_state(f.get_state())
 
+    def test_formatting(self):
+        tf = tflow.twebsocketflow().websocket
+        formatted_messages = tf._get_formatted_messages()
+        assert b"[OUTGOING] hello binary" in formatted_messages
+        assert b"[OUTGOING] hello text" in formatted_messages
+        assert b"[INCOMING] it's me" in formatted_messages
+
 
 class TestWebSocketMessage:
     def test_basic(self):
@@ -43,3 +50,14 @@ class TestWebSocketMessage:
             _ = bin.text
         with pytest.raises(AttributeError, match="do not have a 'text' attribute."):
             bin.text = "bar"
+
+    def test_message_formatting(self):
+        incoming_message = websocket.WebSocketMessage(
+            Opcode.BINARY, False, b"Test Incoming"
+        )
+        outgoing_message = websocket.WebSocketMessage(
+            Opcode.BINARY, True, b"Test OutGoing"
+        )
+
+        assert incoming_message._format_ws_message() == b"[INCOMING] Test Incoming"
+        assert outgoing_message._format_ws_message() == b"[OUTGOING] Test OutGoing"

@@ -8,6 +8,7 @@ from logging import DEBUG
 from logging import ERROR
 from logging import WARNING
 from ssl import VerifyMode
+from typing import Optional
 
 from aioquic.buffer import Buffer as QuicBuffer
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
@@ -19,10 +20,10 @@ from aioquic.quic.connection import QuicConnectionState
 from aioquic.quic.connection import QuicErrorCode
 from aioquic.quic.connection import stream_is_client_initiated
 from aioquic.quic.connection import stream_is_unidirectional
+from aioquic.quic.logger import QuicLogger
 from aioquic.quic.packet import encode_quic_version_negotiation
 from aioquic.quic.packet import PACKET_TYPE_INITIAL
 from aioquic.quic.packet import pull_quic_header
-from aioquic.quic.packet import QuicProtocolVersion
 from aioquic.tls import CipherSuite
 from aioquic.tls import HandshakeType
 from cryptography import x509
@@ -51,6 +52,8 @@ from mitmproxy.tls import ClientHello
 from mitmproxy.tls import ClientHelloData
 from mitmproxy.tls import TlsData
 
+SUPPORTED_QUIC_VERSIONS_SERVER = QuicConfiguration(is_client=False).supported_versions
+
 
 @dataclass
 class QuicTlsSettings:
@@ -64,7 +67,9 @@ class QuicTlsSettings:
     """The certificate to use for the connection."""
     certificate_chain: list[x509.Certificate] = field(default_factory=list)
     """A list of additional certificates to send to the peer."""
-    certificate_private_key: dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None = None
+    certificate_private_key: (
+        dsa.DSAPrivateKey | ec.EllipticCurvePrivateKey | rsa.RSAPrivateKey | None
+    ) = None
     """The certificate's private key."""
     cipher_suites: list[CipherSuite] | None = None
     """An optional list of allowed/advertised cipher suites."""
@@ -130,6 +135,11 @@ class QuicStreamDataReceived(QuicStreamEvent):
     end_stream: bool
     """Whether the STREAM frame had the FIN bit set."""
 
+    def __repr__(self):
+        target = type(self.connection).__name__.lower()
+        end_stream = "[end_stream] " if self.end_stream else ""
+        return f"QuicStreamDataReceived({target} on {self.stream_id}, {end_stream}{self.data!r})"
+
 
 @dataclass
 class QuicStreamReset(QuicStreamEvent):
@@ -168,6 +178,11 @@ class SendQuicStreamData(QuicStreamCommand):
         super().__init__(connection, stream_id)
         self.data = data
         self.end_stream = end_stream
+
+    def __repr__(self):
+        target = type(self.connection).__name__.lower()
+        end_stream = "[end_stream] " if self.end_stream else ""
+        return f"SendQuicStreamData({target} on {self.stream_id}, {end_stream}{self.data!r})"
 
 
 class ResetQuicStream(QuicStreamCommand):
@@ -313,16 +328,31 @@ def tls_settings_to_configuration(
 
 @dataclass
 class QuicClientHello(Exception):
-    """Helper error only used in `quic_parse_client_hello`."""
+    """Helper error only used in `quic_parse_client_hello_from_datagrams`."""
 
     data: bytes
 
 
-def quic_parse_client_hello(data: bytes) -> ClientHello:
-    """Helper function that parses a client hello packet."""
+def quic_parse_client_hello_from_datagrams(
+    datagrams: list[bytes],
+) -> Optional[ClientHello]:
+    """
+    Check if the supplied bytes contain a full ClientHello message,
+    and if so, parse it.
+
+    Args:
+        - msgs: list of ClientHello fragments received from client
+
+    Returns:
+        - A ClientHello object on success
+        - None, if the QUIC record is incomplete
+
+    Raises:
+        - A ValueError, if the passed ClientHello is invalid
+    """
 
     # ensure the first packet is indeed the initial one
-    buffer = QuicBuffer(data=data)
+    buffer = QuicBuffer(data=datagrams[0])
     header = pull_quic_header(buffer, 8)
     if header.packet_type != PACKET_TYPE_INITIAL:
         raise ValueError("Packet is not initial one.")
@@ -333,6 +363,7 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
             is_client=False,
             certificate="",
             private_key="",
+            quic_logger=QuicLogger(),
         ),
         original_destination_connection_id=header.destination_cid,
     )
@@ -359,7 +390,8 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
 
     quic._initialize = initialize_replacement  # type: ignore
     try:
-        quic.receive_datagram(data, ("0.0.0.0", 0), now=0)
+        for dgm in datagrams:
+            quic.receive_datagram(dgm, ("0.0.0.0", 0), now=time.time())
     except QuicClientHello as hello:
         try:
             return ClientHello(hello.data)
@@ -367,7 +399,20 @@ def quic_parse_client_hello(data: bytes) -> ClientHello:
             raise ValueError("Invalid ClientHello data.") from e
     except QuicConnectionError as e:
         raise ValueError(e.reason_phrase) from e
-    raise ValueError("No ClientHello returned.")
+
+    quic_logger = quic._configuration.quic_logger
+    assert isinstance(quic_logger, QuicLogger)
+    traces = quic_logger.to_dict().get("traces")
+    assert isinstance(traces, list)
+    for trace in traces:
+        quic_events = trace.get("events")
+        for event in quic_events:
+            if event["name"] == "transport:packet_dropped":
+                raise ValueError(
+                    f"Invalid ClientHello packet: {event['data']['trigger']}"
+                )
+
+    return None
 
 
 class QuicStreamNextLayer(layer.NextLayer):
@@ -471,9 +516,9 @@ class QuicStreamLayer(layer.Layer):
             else:
                 break  # pragma: no cover
         if isinstance(child_layer, (UDPLayer, TCPLayer)) and child_layer.flow:
-            child_layer.flow.metadata[
-                "quic_is_unidirectional"
-            ] = stream_is_unidirectional(self._client_stream_id)
+            child_layer.flow.metadata["quic_is_unidirectional"] = (
+                stream_is_unidirectional(self._client_stream_id)
+            )
             child_layer.flow.metadata["quic_initiator"] = (
                 "client"
                 if stream_is_client_initiated(self._client_stream_id)
@@ -766,7 +811,7 @@ class RawQuicLayer(layer.Layer):
         self.next_stream_id[index] = stream_id + 4
         return stream_id
 
-    def done(self, _) -> layer.CommandGenerator[None]:
+    def done(self, _) -> layer.CommandGenerator[None]:  # pragma: no cover
         yield from ()
 
 
@@ -791,9 +836,11 @@ class QuicLayer(tunnel.TunnelLayer):
             # TunnelLayer has no understanding of wakeups, so we turn this into an empty DataReceived event
             # which TunnelLayer recognizes as belonging to our connection.
             assert self.quic
-            timer = self._wakeup_commands.pop(event.command)
+            scheduled_time = self._wakeup_commands.pop(event.command)
             if self.quic._state is not QuicConnectionState.TERMINATED:
-                self.quic.handle_timer(now=max(timer, self._time()))
+                # weird quirk: asyncio sometimes returns a bit ahead of time.
+                now = max(scheduled_time, self._time())
+                self.quic.handle_timer(now)
                 yield from super()._handle_event(
                     events.DataReceived(self.tunnel_connection, b"")
                 )
@@ -872,18 +919,23 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # send all queued datagrams
         assert self.quic
-        for data, addr in self.quic.datagrams_to_send(now=self._time()):
+        now = self._time()
+
+        for data, addr in self.quic.datagrams_to_send(now=now):
             assert addr == self.conn.peername
             yield commands.SendData(self.tunnel_connection, data)
 
-        # request a new wakeup if all pending requests trigger at a later time
         timer = self.quic.get_timer()
-        if timer is not None and not any(
-            existing <= timer for existing in self._wakeup_commands.values()
-        ):
-            command = commands.RequestWakeup(timer - self._time())
-            self._wakeup_commands[command] = timer
-            yield command
+        if timer is not None:
+            # smooth wakeups a bit.
+            smoothed = timer + 0.002
+            # request a new wakeup if all pending requests trigger at a later time
+            if not any(
+                existing <= smoothed for existing in self._wakeup_commands.values()
+            ):
+                command = commands.RequestWakeup(timer - now)
+                self._wakeup_commands[command] = timer
+                yield command
 
     def receive_handshake_data(
         self, data: bytes
@@ -1101,6 +1153,7 @@ class ClientQuicLayer(QuicLayer):
 
     server_tls_available: bool
     """Indicates whether the parent layer is a ServerQuicLayer."""
+    handshake_datagram_buf: list[bytes]
 
     def __init__(
         self, context: context.Context, time: Callable[[], float] | None = None
@@ -1121,6 +1174,7 @@ class ClientQuicLayer(QuicLayer):
         self.server_tls_available = len(self.context.layers) >= 2 and isinstance(
             self.context.layers[-2], ServerQuicLayer
         )
+        self.handshake_datagram_buf = []
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
@@ -1128,7 +1182,10 @@ class ClientQuicLayer(QuicLayer):
     def receive_handshake_data(
         self, data: bytes
     ) -> layer.CommandGenerator[tuple[bool, str | None]]:
-        if isinstance(self.context.layers[0], TransparentProxy):  # pragma: no cover
+        if (
+            isinstance(self.context.layers[0], TransparentProxy)
+            and not self.context.options.experimental_transparent_http3
+        ):  # pragma: no cover
             yield commands.Log(
                 f"Swallowing QUIC handshake because HTTP/3 does not support transparent mode yet.",
                 DEBUG,
@@ -1154,18 +1211,16 @@ class ClientQuicLayer(QuicLayer):
             return False, f"Cannot parse QUIC header: {e} ({data.hex()})"
 
         # negotiate version, support all versions known to aioquic
-        supported_versions = [
-            version.value
-            for version in QuicProtocolVersion
-            if version is not QuicProtocolVersion.NEGOTIATION
-        ]
-        if header.version is not None and header.version not in supported_versions:
+        if (
+            header.version is not None
+            and header.version not in SUPPORTED_QUIC_VERSIONS_SERVER
+        ):
             yield commands.SendData(
                 self.tunnel_connection,
                 encode_quic_version_negotiation(
                     source_cid=header.destination_cid,
                     destination_cid=header.source_cid,
-                    supported_versions=supported_versions,
+                    supported_versions=SUPPORTED_QUIC_VERSIONS_SERVER,
                 ),
             )
             return False, None
@@ -1177,11 +1232,20 @@ class ClientQuicLayer(QuicLayer):
                 f"Invalid handshake received, roaming not supported. ({data.hex()})",
             )
 
+        self.handshake_datagram_buf.append(data)
         # extract the client hello
         try:
-            client_hello = quic_parse_client_hello(data)
+            client_hello = quic_parse_client_hello_from_datagrams(
+                self.handshake_datagram_buf
+            )
         except ValueError as e:
-            return False, f"Cannot parse ClientHello: {str(e)} ({data.hex()})"
+            msgs = b"\n".join(self.handshake_datagram_buf)
+            dbg = f"Cannot parse ClientHello: {str(e)} ({msgs.hex()})"
+            self.handshake_datagram_buf.clear()
+            return False, dbg
+
+        if not client_hello:
+            return False, None
 
         # copy the client hello information
         self.conn.sni = client_hello.sni
@@ -1210,9 +1274,11 @@ class ClientQuicLayer(QuicLayer):
             parent_layer.handle_event = replacement_layer.handle_event  # type: ignore
             parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
-            yield from parent_layer.handle_event(
-                events.DataReceived(self.context.client, data)
-            )
+            for dgm in self.handshake_datagram_buf:
+                yield from parent_layer.handle_event(
+                    events.DataReceived(self.context.client, dgm)
+                )
+            self.handshake_datagram_buf.clear()
             return True, None
 
         # start the server QUIC connection if demanded and available
@@ -1236,7 +1302,13 @@ class ClientQuicLayer(QuicLayer):
             return False, "connection closed early"
 
         # send the client hello to aioquic
-        return (yield from super().receive_handshake_data(data))
+        assert self.quic
+        for dgm in self.handshake_datagram_buf:
+            self.quic.receive_datagram(dgm, self.conn.peername, now=self._time())
+        self.handshake_datagram_buf.clear()
+
+        # handle events emanating from `self.quic`
+        return (yield from super().receive_handshake_data(b""))
 
     def start_server_tls(self) -> layer.CommandGenerator[str | None]:
         if not self.server_tls_available:

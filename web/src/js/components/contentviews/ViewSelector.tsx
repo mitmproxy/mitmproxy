@@ -9,10 +9,10 @@ type ViewSelectorProps = {
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
     const contentViews = useAppSelector(
-        (state) => state.backendState.contentViews || []
+        (state) => state.backendState.contentViews || [],
     );
 
-    let inner = (
+    const inner = (
         <span>
             <i className="fa fa-fw fa-files-o" />
             &nbsp;<b>View:</b> {value.toLowerCase()} <span className="caret" />
@@ -23,7 +23,7 @@ export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
         <Dropdown
             text={inner}
             className="btn btn-default btn-xs"
-            options={{ placement: "top-start" }}
+            options={{ placement: "top-end" }}
         >
             {contentViews.map((name) => (
                 <MenuItem key={name} onClick={() => onChange(name)}>

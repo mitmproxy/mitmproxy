@@ -4,31 +4,27 @@ import Button from "../../../components/common/Button";
 
 describe("Button Component", () => {
     it("should render correctly", () => {
-        let button = renderer.create(
-                <Button
-                    className="classname"
-                    onClick={() => "onclick"}
-                    title="title"
-                    icon="icon"
-                >
-                    <a>foo</a>
-                </Button>
-            ),
-            tree = button.toJSON();
+        const button = renderer.create(
+            <Button
+                className="classname"
+                onClick={() => "onclick"}
+                title="title"
+                icon="icon"
+            >
+                <a>foo</a>
+            </Button>,
+        );
+        const tree = button.toJSON();
         expect(tree).toMatchSnapshot();
     });
 
     it("should be able to be disabled", () => {
-        let button = renderer.create(
-                <Button
-                    className="classname"
-                    onClick={() => "onclick"}
-                    disabled
-                >
-                    <a>foo</a>
-                </Button>
-            ),
-            tree = button.toJSON();
+        const button = renderer.create(
+            <Button className="classname" onClick={() => "onclick"} disabled>
+                <a>foo</a>
+            </Button>,
+        );
+        const tree = button.toJSON();
         expect(tree).toMatchSnapshot();
     });
 });

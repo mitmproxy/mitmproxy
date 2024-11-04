@@ -51,6 +51,7 @@ class TestSerialize:
         assert f2.get_state() == f.get_state()
         assert f2.request.data == f.request.data
         assert f2.marked
+        assert f2.comment == "test comment"
 
     def test_filter(self):
         sio = io.BytesIO()

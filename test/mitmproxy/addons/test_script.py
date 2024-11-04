@@ -25,7 +25,7 @@ def test_load_script(tmp_path, tdata, caplog):
     assert ns.addons
 
     script.load_script("nonexistent")
-    assert "No such file or directory" in caplog.text
+    assert "FileNotFoundError" in caplog.text
 
     (tmp_path / "error.py").write_text("this is invalid syntax")
     script.load_script(str(tmp_path / "error.py"))
@@ -328,6 +328,7 @@ def test_order(tdata, capsys):
         ]
     )
     time = r"\[[\d:.]+\] "
+    out = capsys.readouterr().out
     assert re.match(
         rf"{time}Loading script.+recorder.py\n"
         rf"{time}\('recorder', 'load', .+\n"
@@ -335,5 +336,5 @@ def test_order(tdata, capsys):
         rf"{time}Loading script.+shutdown.py\n"
         rf"{time}\('recorder', 'running', .+\n"
         rf"{time}\('recorder', 'done', .+\n$",
-        capsys.readouterr().out,
+        out,
     )

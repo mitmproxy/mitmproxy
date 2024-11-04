@@ -26,7 +26,7 @@ export default class FilterDocs extends Component<
     componentDidMount() {
         if (!FilterDocs.xhr) {
             FilterDocs.xhr = fetchApi("/filter-help").then((response) =>
-                response.json()
+                response.json(),
             );
             FilterDocs.xhr.catch(() => {
                 FilterDocs.xhr = null;
@@ -50,9 +50,9 @@ export default class FilterDocs extends Component<
                     {doc.commands.map((cmd) => (
                         <tr
                             key={cmd[1]}
-                            onClick={(e) =>
+                            onClick={() =>
                                 this.props.selectHandler(
-                                    cmd[0].split(" ")[0] + " "
+                                    cmd[0].split(" ")[0] + " ",
                                 )
                             }
                         >
@@ -65,6 +65,7 @@ export default class FilterDocs extends Component<
                             <a
                                 href="https://mitmproxy.org/docs/latest/concepts-filters/"
                                 target="_blank"
+                                rel="noreferrer"
                             >
                                 <i className="fa fa-external-link" />
                                 &nbsp; mitmproxy docs

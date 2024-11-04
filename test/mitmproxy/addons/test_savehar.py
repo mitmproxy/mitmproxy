@@ -141,12 +141,12 @@ def test_tls_setup():
     flow = tflow.twebsocketflow()
     flow.server_conn.timestamp_tls_setup = None
 
-    assert s.flow_entry(flow, servers_seen)["timings"]["ssl"] is None
+    assert s.flow_entry(flow, servers_seen)["timings"]["ssl"] == -1.0
 
 
 def test_binary_content():
     resp_content = SaveHar().make_har(
-        [tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xFF" * 10))]
+        [tflow.tflow(resp=tutils.tresp(content=b"foo" + b"\xff" * 10))]
     )["log"]["entries"][0]["response"]["content"]
     assert resp_content == {
         "compression": 0,
@@ -171,6 +171,18 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
     actual_har = json.loads(Path(tmp_path / "testing_flow.har").read_bytes())
 
     assert actual_har == expected_har
+
+
+def test_flow_entry():
+    """https://github.com/mitmproxy/mitmproxy/issues/6579"""
+    s = SaveHar()
+    req = Request.make("CONNECT", "https://test.test/")
+    flow = tflow.tflow(req=req)
+    servers_seen: set[Server] = set()
+
+    flow_entry = s.flow_entry(flow, servers_seen)
+
+    assert flow_entry["request"]["url"].startswith("https")
 
 
 class TestHardumpOption:

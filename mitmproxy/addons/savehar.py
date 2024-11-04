@@ -1,4 +1,5 @@
 """Write flow objects to a HAR file"""
+
 import base64
 import json
 import logging
@@ -144,11 +145,11 @@ class SaveHar:
                     - flow.server_conn.timestamp_tcp_setup
                 )
             else:
-                ssl_time = None
+                ssl_time = -1.0
             servers_seen.add(flow.server_conn)
         else:
-            connect_time = None
-            ssl_time = None
+            connect_time = -1.0
+            ssl_time = -1.0
 
         if flow.request.timestamp_end:
             send = 1000 * (flow.request.timestamp_end - flow.request.timestamp_start)
@@ -227,6 +228,11 @@ class SaveHar:
             if flow.error:
                 response["_error"] = flow.error.msg
 
+        if flow.request.method == "CONNECT":
+            url = f"https://{flow.request.pretty_url}/"
+        else:
+            url = flow.request.pretty_url
+
         entry: dict[str, Any] = {
             "startedDateTime": datetime.fromtimestamp(
                 flow.request.timestamp_start, timezone.utc
@@ -234,7 +240,7 @@ class SaveHar:
             "time": sum(v for v in timings.values() if v is not None and v >= 0),
             "request": {
                 "method": flow.request.method,
-                "url": flow.request.pretty_url,
+                "url": url,
                 "httpVersion": flow.request.http_version,
                 "cookies": self.format_multidict(flow.request.cookies),
                 "headers": self.format_multidict(flow.request.headers),

@@ -6,12 +6,12 @@ import { setSort } from "../../ducks/flows";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
 export default React.memo(function FlowTableHead() {
-    const dispatch = useAppDispatch(),
-        sortDesc = useAppSelector((state) => state.flows.sort.desc),
-        sortColumn = useAppSelector((state) => state.flows.sort.column),
-        displayColumnNames = useAppSelector(
-            (state) => state.options.web_columns
-        );
+    const dispatch = useAppDispatch();
+    const sortDesc = useAppSelector((state) => state.flows.sort.desc);
+    const sortColumn = useAppSelector((state) => state.flows.sort.column);
+    const displayColumnNames = useAppSelector(
+        (state) => state.options.web_columns,
+    );
 
     const sortType = sortDesc ? "sort-desc" : "sort-asc";
     const displayColumns = displayColumnNames
@@ -25,7 +25,7 @@ export default React.memo(function FlowTableHead() {
                 <th
                     className={classnames(
                         `col-${Column.name}`,
-                        sortColumn === Column.name && sortType
+                        sortColumn === Column.name && sortType,
                     )}
                     key={Column.name}
                     onClick={() =>
@@ -34,8 +34,8 @@ export default React.memo(function FlowTableHead() {
                                 Column.name === sortColumn && sortDesc
                                     ? undefined
                                     : Column.name,
-                                Column.name !== sortColumn ? false : !sortDesc
-                            )
+                                Column.name !== sortColumn ? false : !sortDesc,
+                            ),
                         )
                     }
                 >

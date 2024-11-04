@@ -1,9 +1,11 @@
 import contextlib
 import datetime
 import ipaddress
+import logging
 import os
-import re
 import sys
+import warnings
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -18,11 +20,14 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dsa
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.types import CertificatePublicKeyTypes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import ExtendedKeyUsageOID
 from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
+
+logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 CA_EXPIRY = datetime.timedelta(days=10 * 365)
@@ -59,7 +64,8 @@ class Cert(serializable.Serializable):
         return self.fingerprint() == other.fingerprint()
 
     def __repr__(self):
-        return f"<Cert(cn={self.cn!r}, altnames={self.altnames!r})>"
+        altnames = [str(x.value) for x in self.altnames]
+        return f"<Cert(cn={self.cn!r}, altnames={altnames!r})>"
 
     def __hash__(self):
         return self._cert.__hash__()
@@ -89,6 +95,9 @@ class Cert(serializable.Serializable):
     def to_pyopenssl(self) -> OpenSSL.crypto.X509:
         return OpenSSL.crypto.X509.from_cryptography(self._cert)
 
+    def public_key(self) -> CertificatePublicKeyTypes:
+        return self._cert.public_key()
+
     def fingerprint(self) -> bytes:
         return self._cert.fingerprint(hashes.SHA256())
 
@@ -98,16 +107,24 @@ class Cert(serializable.Serializable):
 
     @property
     def notbefore(self) -> datetime.datetime:
-        # x509.Certificate.not_valid_before is a naive datetime in UTC
-        return self._cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
+        try:
+            # type definitions haven't caught up with new API yet.
+            return self._cert.not_valid_before_utc  # type: ignore
+        except AttributeError:  # pragma: no cover
+            # cryptography < 42.0
+            return self._cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
 
     @property
     def notafter(self) -> datetime.datetime:
-        # x509.Certificate.not_valid_after is a naive datetime in UTC
-        return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
+        try:
+            return self._cert.not_valid_after_utc  # type: ignore
+        except AttributeError:  # pragma: no cover
+            return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
 
     def has_expired(self) -> bool:
-        return datetime.datetime.utcnow() > self._cert.not_valid_after
+        if sys.version_info < (3, 11):  # pragma: no cover
+            return datetime.datetime.now(datetime.timezone.utc) > self.notafter
+        return datetime.datetime.now(datetime.UTC) > self.notafter
 
     @property
     def subject(self) -> list[tuple[str, str]]:
@@ -116,6 +133,17 @@ class Cert(serializable.Serializable):
     @property
     def serial(self) -> int:
         return self._cert.serial_number
+
+    @property
+    def is_ca(self) -> bool:
+        constraints: x509.BasicConstraints
+        try:
+            constraints = self._cert.extensions.get_extension_for_class(
+                x509.BasicConstraints
+            ).value
+            return constraints.ca
+        except x509.ExtensionNotFound:
+            return False
 
     @property
     def keyinfo(self) -> tuple[str, int]:
@@ -148,20 +176,18 @@ class Cert(serializable.Serializable):
         return None
 
     @property
-    def altnames(self) -> list[str]:
+    def altnames(self) -> x509.GeneralNames:
         """
         Get all SubjectAlternativeName DNS altnames.
         """
         try:
-            ext = self._cert.extensions.get_extension_for_class(
+            sans = self._cert.extensions.get_extension_for_class(
                 x509.SubjectAlternativeName
             ).value
         except x509.ExtensionNotFound:
-            return []
+            return x509.GeneralNames([])
         else:
-            return ext.get_values_for_type(x509.DNSName) + [
-                str(x) for x in ext.get_values_for_type(x509.IPAddress)
-            ]
+            return x509.GeneralNames(sans)
 
 
 def _name_to_keyval(name: x509.Name) -> list[tuple[str, str]]:
@@ -225,11 +251,41 @@ def create_ca(
     return private_key, cert
 
 
+def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.GeneralNames:
+    """
+    SANs used to be a list of strings in mitmproxy 10.1 and below, but now they're a list of GeneralNames.
+    This function converts the old format to the new one.
+    """
+    if isinstance(sans, x509.GeneralNames):
+        return sans
+    elif (
+        isinstance(sans, list) and len(sans) > 0 and isinstance(sans[0], str)
+    ):  # pragma: no cover
+        warnings.warn(
+            "Passing SANs as a list of strings is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        ss: list[x509.GeneralName] = []
+        for x in cast(list[str], sans):
+            try:
+                ip = ipaddress.ip_address(x)
+            except ValueError:
+                x = x.encode("idna").decode()
+                ss.append(x509.DNSName(x))
+            else:
+                ss.append(x509.IPAddress(ip))
+        return x509.GeneralNames(ss)
+    else:
+        return x509.GeneralNames(sans)
+
+
 def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
     commonname: str | None,
-    sans: list[str],
+    sans: Iterable[x509.GeneralName],
     organization: str | None = None,
 ) -> Cert:
     """
@@ -265,31 +321,21 @@ def dummy_cert(
     builder = builder.subject_name(x509.Name(subject))
     builder = builder.serial_number(x509.random_serial_number())
 
-    ss: list[x509.GeneralName] = []
-    for x in sans:
-        try:
-            ip = ipaddress.ip_address(x)
-        except ValueError:
-            x = x.encode("idna").decode()
-            ss.append(x509.DNSName(x))
-        else:
-            ss.append(x509.IPAddress(ip))
     # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
     builder = builder.add_extension(
-        x509.SubjectAlternativeName(ss), critical=not is_valid_commonname
+        x509.SubjectAlternativeName(_fix_legacy_sans(sans)),
+        critical=not is_valid_commonname,
     )
 
-    # we just use the same key as the CA for these certs, so put that in the SKI extension
-    builder = builder.add_extension(
-        x509.SubjectKeyIdentifier.from_public_key(privkey.public_key()),
-        critical=False,
-    )
-    # add authority key identifier for the cacert issuing cert for greater acceptance by
-    # client TLS libraries (such as OpenSSL 3.x)
+    # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
     builder = builder.add_extension(
         x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),
         critical=False,
     )
+    # If CA and leaf cert have the same Subject Key Identifier, SChannel breaks in funny ways,
+    # see https://github.com/mitmproxy/mitmproxy/issues/6494.
+    # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2 states
+    # that SKI is optional for the leaf cert, so we skip that.
 
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
@@ -304,7 +350,7 @@ class CertStoreEntry:
 
 
 TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = tuple[Optional[str], tuple[str, ...]]  # (common_name, sans)
+TGeneratedCertId = tuple[Optional[str], x509.GeneralNames]  # (common_name, sans)
 TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 DHParams = NewType("DHParams", bytes)
@@ -330,14 +376,7 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
-            [
-                Cert.from_pem(chunk)
-                for chunk in re.split(
-                    rb"(?=-----BEGIN( [A-Z]+)+-----)",
-                    self.default_chain_file.read_bytes(),
-                )
-                if chunk.startswith(b"-----BEGIN CERTIFICATE-----")
-            ]
+            x509.load_pem_x509_certificates(self.default_chain_file.read_bytes())
             if self.default_chain_file
             else [default_ca]
         )
@@ -397,9 +436,9 @@ class CertStore:
         raw = ca_file.read_bytes()
         key = load_pem_private_key(raw, passphrase)
         dh = cls.load_dhparam(dhparam_file)
-        certs = re.split(rb"(?=-----BEGIN CERTIFICATE-----)", raw)
-        ca = Cert.from_pem(certs[1])
-        if len(certs) > 2:
+        certs = x509.load_pem_x509_certificates(raw)
+        ca = Cert(certs[0])
+        if len(certs) > 1:
             chain_file: Path | None = ca_file
         else:
             chain_file = None
@@ -481,11 +520,34 @@ class CertStore:
         raw = path.read_bytes()
         cert = Cert.from_pem(raw)
         try:
-            key = load_pem_private_key(raw, password=passphrase)
-        except ValueError:
-            key = self.default_privatekey
+            private_key = load_pem_private_key(raw, password=passphrase)
+        except ValueError as e:
+            private_key = self.default_privatekey
+            if cert.public_key() != private_key.public_key():
+                raise ValueError(
+                    f'Unable to find private key in "{path.absolute()}": {e}'
+                ) from e
+        else:
+            if cert.public_key() != private_key.public_key():
+                raise ValueError(
+                    f'Private and public keys in "{path.absolute()}" do not match:\n'
+                    f"{cert.public_key()=}\n"
+                    f"{private_key.public_key()=}"
+                )
 
-        self.add_cert(CertStoreEntry(cert, key, path, [cert]), spec)
+        try:
+            chain = [Cert(x) for x in x509.load_pem_x509_certificates(raw)]
+        except ValueError as e:
+            logger.warning(f"Failed to read certificate chain: {e}")
+            chain = [cert]
+
+        if cert.is_ca:
+            logger.warning(
+                f'"{path.absolute()}" is a certificate authority and not a leaf certificate. '
+                f"This indicates a misconfiguration, see https://docs.mitmproxy.org/stable/concepts-certificates/."
+            )
+
+        self.add_cert(CertStoreEntry(cert, private_key, path, chain), spec)
 
     def add_cert(self, entry: CertStoreEntry, *names: str) -> None:
         """
@@ -495,26 +557,31 @@ class CertStore:
         if entry.cert.cn:
             self.certs[entry.cert.cn] = entry
         for i in entry.cert.altnames:
-            self.certs[i] = entry
+            self.certs[str(i.value)] = entry
         for i in names:
             self.certs[i] = entry
 
     @staticmethod
-    def asterisk_forms(dn: str) -> list[str]:
+    def asterisk_forms(dn: str | x509.GeneralName) -> list[str]:
         """
         Return all asterisk forms for a domain. For example, for www.example.com this will return
         [b"www.example.com", b"*.example.com", b"*.com"]. The single wildcard "*" is omitted.
         """
-        parts = dn.split(".")
-        ret = [dn]
-        for i in range(1, len(parts)):
-            ret.append("*." + ".".join(parts[i:]))
-        return ret
+        if isinstance(dn, str):
+            parts = dn.split(".")
+            ret = [dn]
+            for i in range(1, len(parts)):
+                ret.append("*." + ".".join(parts[i:]))
+            return ret
+        elif isinstance(dn, x509.DNSName):
+            return CertStore.asterisk_forms(dn.value)
+        else:
+            return [str(dn.value)]
 
     def get_cert(
         self,
         commonname: str | None,
-        sans: list[str],
+        sans: Iterable[x509.GeneralName],
         organization: str | None = None,
     ) -> CertStoreEntry:
         """
@@ -525,6 +592,7 @@ class CertStore:
 
         organization: Organization name for the generated certificate.
         """
+        sans = _fix_legacy_sans(sans)
 
         potential_keys: list[TCertId] = []
         if commonname:
@@ -532,7 +600,7 @@ class CertStore:
         for s in sans:
             potential_keys.extend(self.asterisk_forms(s))
         potential_keys.append("*")
-        potential_keys.append((commonname, tuple(sans)))
+        potential_keys.append((commonname, sans))
 
         name = next(filter(lambda key: key in self.certs, potential_keys), None)
         if name:
@@ -550,7 +618,7 @@ class CertStore:
                 chain_file=self.default_chain_file,
                 chain_certs=self.default_chain_certs,
             )
-            self.certs[(commonname, tuple(sans))] = entry
+            self.certs[(commonname, sans)] = entry
             self.expire(entry)
 
         return entry

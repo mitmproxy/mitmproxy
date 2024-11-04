@@ -14,6 +14,7 @@ Example:
     3. curl --proxy http://localhost:8080 https://example.com
     // works again, but mitmproxy does not intercept and we do *not* see the contents
 """
+
 import collections
 import logging
 import random

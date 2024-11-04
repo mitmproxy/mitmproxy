@@ -6,6 +6,7 @@ import json
 import logging
 import os.path
 import re
+import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
@@ -50,7 +51,7 @@ def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
         "serial": str(cert.serial),
         "subject": cert.subject,
         "issuer": cert.issuer,
-        "altnames": cert.altnames,
+        "altnames": [str(x.value) for x in cert.altnames],
     }
 
 
@@ -284,7 +285,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     connections: ClassVar[set[WebSocketEventBroadcaster]]
     _send_tasks: ClassVar[set[asyncio.Task]] = set()
 
-    def open(self):
+    def open(self, *args, **kwargs):
         self.connections.add(self)
 
     def on_close(self):
@@ -308,7 +309,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             "utf8", "surrogateescape"
         )
 
-        for conn in cls.connections:
+        for conn in cls.connections.copy():
             cls.send(conn, message)
 
 
@@ -448,6 +449,8 @@ class FlowHandler(RequestHandler):
                             raise APIError(400, f"Unknown update response.{k}: {v}")
                 elif a == "marked":
                     flow.marked = b
+                elif a == "comment":
+                    flow.comment = b
                 else:
                     raise APIError(400, f"Unknown update {a}: {b}")
         except APIError:
@@ -635,16 +638,20 @@ class DnsRebind(RequestHandler):
 
 
 class State(RequestHandler):
+    # Separate method for testability.
+    @staticmethod
+    def get_json(master: mitmproxy.tools.web.master.WebMaster):
+        return {
+            "version": version.VERSION,
+            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
+            "servers": {
+                s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
+            },
+            "platform": sys.platform,
+        }
+
     def get(self):
-        self.write(
-            {
-                "version": version.VERSION,
-                "contentViews": [
-                    v.name for v in contentviews.views if v.name != "Query"
-                ],
-                "servers": [s.to_json() for s in self.master.proxyserver.servers],
-            }
-        )
+        self.write(State.get_json(self.master))
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):

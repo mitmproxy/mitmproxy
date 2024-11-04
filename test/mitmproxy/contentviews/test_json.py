@@ -12,7 +12,7 @@ def test_parse_json():
     assert json.parse_json(
         b'{"foo" : "\xe4\xb8\x96\xe7\x95\x8c"}'
     )  # utf8 with chinese characters
-    assert json.parse_json(b'{"foo" : "\xFF"}') is json.PARSE_ERROR
+    assert json.parse_json(b'{"foo" : "\xff"}') is json.PARSE_ERROR
 
 
 def test_format_json():
@@ -78,6 +78,22 @@ def test_format_json():
         [("text", "    "), ("text", "]"), ("text", "")],
         [("text", ""), ("text", "}")],
     ]
+    assert list(json.format_json({"list": []})) == [
+        [("text", "{"), ("text", "")],
+        [
+            ("text", "    "),
+            ("Token_Name_Tag", '"list"'),
+            ("text", ": "),
+            ("text", "[]"),
+            ("text", ""),
+        ],
+        [("text", ""), ("text", "}")],
+    ]
+    assert list(json.format_json(None)) == [[("Token_Keyword_Constant", "null")]]
+    assert list(json.format_json(True)) == [[("Token_Keyword_Constant", "true")]]
+    assert list(json.format_json(1)) == [[("Token_Literal_Number", "1")]]
+    assert list(json.format_json("test")) == [[("Token_Literal_String", '"test"')]]
+    assert list(json.format_json([])) == [[("text", "[]")]]
 
 
 def test_view_json():
@@ -88,6 +104,7 @@ def test_view_json():
     assert v(b"[1, 2, 3, 4, 5]")
     assert v(b'{"foo" : 3}')
     assert v(b'{"foo": true, "nullvalue": null}')
+    assert v(b"[]")
 
 
 @given(binary())

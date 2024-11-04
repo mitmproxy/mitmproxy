@@ -1,0 +1,3 @@
+scripts: ['~/abc', 'abc', '../abc', '/abc']
+
+not_scripts: ['~/abc', 'abc', '../abc', '/abc']

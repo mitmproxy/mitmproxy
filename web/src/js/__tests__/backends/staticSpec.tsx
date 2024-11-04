@@ -9,21 +9,9 @@ test("static backend", async () => {
     fetchMock.mockOnceIf("./flows", "[]");
     fetchMock.mockOnceIf("./options", "{}");
     const store = TStore();
-    const backend = new StaticBackend(store);
-    await waitFor(() =>
-        expect(store.getActions()).toEqual([
-            {
-                type: "FLOWS_RECEIVE",
-                cmd: "receive",
-                data: [],
-                resource: "flows",
-            },
-            {
-                type: "OPTIONS_RECEIVE",
-                cmd: "receive",
-                data: {},
-                resource: "options",
-            },
-        ])
-    );
+    new StaticBackend(store);
+    await waitFor(() => {
+        expect(store.getState().flows.list).toEqual([]);
+        expect(store.getState().options).toEqual({});
+    });
 });

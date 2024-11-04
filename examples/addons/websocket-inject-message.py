@@ -3,6 +3,7 @@ Inject a WebSocket message into a running connection.
 
 This example shows how to inject a WebSocket message into a running connection.
 """
+
 import asyncio
 
 from mitmproxy import ctx

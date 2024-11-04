@@ -150,6 +150,18 @@ class Options(optmanager.OptManager):
             "Enable/disable support for QUIC and HTTP/3. Enabled by default.",
         )
         self.add_option(
+            "experimental_transparent_http3",
+            bool,
+            False,
+            "Experimental support for QUIC in transparent mode. This option is for development only and will be removed soon.",
+        )
+        self.add_option(
+            "http_connect_send_host_header",
+            bool,
+            True,
+            "Include host header with CONNECT requests. Enabled by default.",
+        )
+        self.add_option(
             "websocket",
             bool,
             True,

@@ -81,6 +81,7 @@ exports[`Modal Component 2`] = `
                       >
                         <label>
                           <input
+                            checked=""
                             name="anticache"
                             type="checkbox"
                           />

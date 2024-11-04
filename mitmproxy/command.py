@@ -1,6 +1,7 @@
 """
-    This module manages and invokes typed commands.
+This module manages and invokes typed commands.
 """
+
 import functools
 import inspect
 import logging

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pprint
 import textwrap
+import typing
 from collections.abc import Sequence
 from typing import Optional
 
@@ -38,7 +39,7 @@ class OptionItem(urwid.WidgetWrap):
 
     def get_widget(self):
         val = self.opt.current()
-        if self.opt.typespec == bool:
+        if self.opt.typespec is bool:
             displayval = "true" if val else "false"
         elif not val:
             displayval = ""
@@ -190,7 +191,7 @@ class OptionsList(urwid.ListBox):
                 self.walker._modified()
             elif key == "m_select":
                 foc, idx = self.get_focus()
-                if foc.opt.typespec == bool:
+                if foc.opt.typespec is bool:
                     self.master.options.toggler(foc.opt.name)()
                     # Bust the focus widget cache
                     self.set_focus(self.walker.index)
@@ -207,7 +208,7 @@ class OptionsList(urwid.ListBox):
                             self.master.options.setter(foc.opt.name),
                         )
                     )
-                elif foc.opt.typespec == Sequence[str]:
+                elif foc.opt.typespec in (Sequence[str], typing.Sequence[str]):
                     self.master.overlay(
                         overlay.OptionsOverlay(
                             self.master,

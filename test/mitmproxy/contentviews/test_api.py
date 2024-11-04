@@ -81,6 +81,18 @@ def test_get_message_content_view():
     desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert desc == "[cannot decode] Raw"
 
+    del r.headers["content-encoding"]
+    r.headers["content-type"] = "multipart/form-data; boundary=AaB03x"
+    r.content = b"""
+--AaB03x
+Content-Disposition: form-data; name="submit-name"
+
+Larry
+--AaB03x
+        """.strip()
+    desc, lines, err = contentviews.get_message_content_view("multipart form", r, f)
+    assert desc == "Multipart form"
+
     r.content = None
     desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert list(lines) == [[("error", "content missing")]]
