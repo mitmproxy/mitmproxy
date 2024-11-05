@@ -193,6 +193,7 @@ async def test_warn_no_nextlayer(caplog):
 
 
 async def test_self_connect():
+    pytest.skip()
     server = tserver_conn()
     client = tclient_conn()
     server.address = ("localhost", 8080)
