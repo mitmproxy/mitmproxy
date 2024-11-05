@@ -20,7 +20,6 @@ from . import auto
 from . import css
 from . import dns
 from . import graphql
-from . import grpc
 from . import hex
 from . import http3
 from . import image
@@ -29,7 +28,6 @@ from . import json
 from . import mqtt
 from . import msgpack
 from . import multipart
-from . import protobuf
 from . import query
 from . import raw
 from . import urlencoded
@@ -234,9 +232,7 @@ add(urlencoded.ViewURLEncoded())
 add(multipart.ViewMultipart())
 add(image.ViewImage())
 add(query.ViewQuery())
-add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
-add(grpc.ViewGrpcProtobuf())
 add(mqtt.ViewMQTT())
 add(http3.ViewHttp3())
 add(dns.ViewDns())

@@ -45,7 +45,6 @@ dependencies = [
     "mitmproxy_rs>=0.4,<0.5",
     "msgpack>=1.0.0, <1.1.0",
     "passlib>=1.6.5, <1.8",
-    "protobuf>=3.14,<5",
     "pydivert>=2.0.3,<2.2; sys_platform == 'win32'",
     "pyOpenSSL>=22.1,<23.4",
     "pyparsing>=2.4.2,<3.2",
