@@ -62,8 +62,10 @@ describe("updateStoreFromUrl", () => {
                 type: "FLOWS_SELECT",
             },
             {
-                tab: "request",
-                type: "UI_FLOWVIEW_SET_TAB",
+                payload: {
+                    tab: "request",
+                },
+                type: "ui/flow/selectTab",
             },
         ]);
     });

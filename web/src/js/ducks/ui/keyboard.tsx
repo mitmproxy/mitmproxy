@@ -62,7 +62,7 @@ export function onKeyDown(e: KeyboardEvent) {
                             tabs.length) %
                             tabs.length
                     ];
-                dispatch(selectTab(nextTab));
+                dispatch(selectTab({ tab: nextTab }));
                 break;
             }
 
@@ -76,7 +76,7 @@ export function onKeyDown(e: KeyboardEvent) {
                         (Math.max(0, tabs.indexOf(currentTab)) + 1) %
                             tabs.length
                     ];
-                dispatch(selectTab(nextTab));
+                dispatch(selectTab({ tab: nextTab }));
                 break;
             }
 
