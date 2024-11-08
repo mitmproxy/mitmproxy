@@ -18,5 +18,6 @@ const modalSlice = createSlice({
 });
 
 const { actions, reducer } = modalSlice;
+export const HIDE_MODAL = modalSlice.actions.hideModal.type;
 export const { setActiveModal, hideModal } = actions;
 export default reducer;
