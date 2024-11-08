@@ -14,8 +14,8 @@ const flowsSlice = createSlice({
     name: "ui/flow",
     initialState: defaultState,
     reducers: {
-        selectTab(state, action: PayloadAction<{ tab: string }>) {
-            state.tab = action.payload.tab;
+        selectTab(state, action: PayloadAction<string>) {
+            state.tab = action.payload;
         },
         setContentViewFor(
             state,

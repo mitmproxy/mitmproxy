@@ -105,7 +105,7 @@ export default function FlowView() {
                         className={classnames({ active: active === tabId })}
                         onClick={(event) => {
                             event.preventDefault();
-                            dispatch(selectTab({ tab: tabId }));
+                            dispatch(selectTab(tabId));
                         }}
                     >
                         {allTabs[tabId].displayName}

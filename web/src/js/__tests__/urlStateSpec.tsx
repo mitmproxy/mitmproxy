@@ -62,9 +62,7 @@ describe("updateStoreFromUrl", () => {
                 type: "FLOWS_SELECT",
             },
             {
-                payload: {
-                    tab: "request",
-                },
+                payload: "request",
                 type: "ui/flow/selectTab",
             },
         ]);
