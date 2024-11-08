@@ -13,8 +13,8 @@ const modalSlice = createSlice({
         },
         hideModal(state) {
             state.activeModal = undefined;
-        }
-    }
+        },
+    },
 });
 
 const { actions, reducer } = modalSlice;
