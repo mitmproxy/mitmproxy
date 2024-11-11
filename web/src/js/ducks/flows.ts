@@ -247,7 +247,7 @@ export function select(id?: string) {
     };
 }
 
-export function multiSelect(id?: string[]) {
+export function multiSelect(id?: string) {
     return {
         type: MULTI_SELECT,
         flowIds: id ? [id] : [],
