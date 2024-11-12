@@ -37,7 +37,9 @@ export default function FlowMenu(): JSX.Element {
                             title="[r]eplay flow"
                             icon="fa-repeat text-primary"
                             onClick={() => dispatch(replayFlow(flow))}
-                            disabled={!canReplay(flow)}
+                            disabled={
+                                !canReplay(flow) || selectedFlows.length > 1
+                            }
                         >
                             Replay
                         </Button>
@@ -45,11 +47,16 @@ export default function FlowMenu(): JSX.Element {
                             title="[D]uplicate flow"
                             icon="fa-copy text-info"
                             onClick={() => dispatch(duplicateFlow(flow))}
+                            disabled={selectedFlows.length > 1}
                         >
                             Duplicate
                         </Button>
                         <Button
-                            disabled={!flow || !flow.modified}
+                            disabled={
+                                !flow ||
+                                !flow.modified ||
+                                selectedFlows.length > 1
+                            }
                             title="revert changes to flow [V]"
                             icon="fa-history text-warning"
                             onClick={() => dispatch(revertFlow(flow))}
@@ -87,7 +94,11 @@ export default function FlowMenu(): JSX.Element {
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button
-                            disabled={!flow || !flow.intercepted}
+                            disabled={
+                                !flow ||
+                                !flow.intercepted ||
+                                selectedFlows.length > 1
+                            }
                             title="[a]ccept intercepted flow"
                             icon="fa-play text-success"
                             onClick={() => dispatch(resumeFlow(flow))}
@@ -95,7 +106,11 @@ export default function FlowMenu(): JSX.Element {
                             Resume
                         </Button>
                         <Button
-                            disabled={!flow || !flow.intercepted}
+                            disabled={
+                                !flow ||
+                                !flow.intercepted ||
+                                selectedFlows.length > 1
+                            }
                             title="kill intercepted flow [x]"
                             icon="fa-times text-danger"
                             onClick={() => dispatch(killFlow(flow))}
