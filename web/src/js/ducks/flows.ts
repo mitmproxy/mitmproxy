@@ -203,6 +203,15 @@ export function remove(flow: Flow) {
     return () => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
 }
 
+export function removeMultiple(flowIds: string[]) {
+    return () =>
+        Promise.all(
+            flowIds.map((flowId) =>
+                fetchApi(`/flows/${flowId}`, { method: "DELETE" }),
+            ),
+        );
+}
+
 export function duplicate(flow: Flow) {
     return () => fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
 }
