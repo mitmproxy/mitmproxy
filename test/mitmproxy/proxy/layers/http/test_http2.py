@@ -352,11 +352,6 @@ def test_long_response(tctx: Context, trailers):
             server,
             sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
         )
-        << SendData(
-            server,
-            sff.build_window_update_frame(0, 40000).serialize()
-            + sff.build_window_update_frame(1, 40000).serialize(),
-        )
         >> DataReceived(
             server,
             sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
