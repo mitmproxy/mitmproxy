@@ -24,6 +24,7 @@ export interface FlowsState extends store.State<Flow> {
     filter?: string;
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: string[];
+    isMultipleFlowsSelection: boolean;
 }
 
 export const defaultState: FlowsState = {
@@ -31,6 +32,7 @@ export const defaultState: FlowsState = {
     filter: undefined,
     sort: { column: undefined, desc: false },
     selected: [],
+    isMultipleFlowsSelection: false,
     ...store.defaultState,
 };
 
@@ -111,11 +113,13 @@ export default function reducer(
             return {
                 ...state,
                 selected: action.flowIds,
+                isMultipleFlowsSelection: false,
             };
         case MULTI_SELECT:
             return {
                 ...state,
                 selected: [...state.selected, ...action.flowIds],
+                isMultipleFlowsSelection: true,
             };
         default:
             return state;
