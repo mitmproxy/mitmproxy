@@ -87,17 +87,6 @@ class Http2Connection(HttpConnection):
             self.context.options.validate_inbound_headers
         )
         self.h2_conn = BufferedH2Connection(self.h2_conf)
-        self.h2_conn.local_settings = h2.settings.Settings(
-            initial_values={
-                h2.settings.SettingCodes.HEADER_TABLE_SIZE: 4096,
-                h2.settings.SettingCodes.ENABLE_PUSH: 0,
-                h2.settings.SettingCodes.MAX_CONCURRENT_STREAMS: 100,
-                h2.settings.SettingCodes.INITIAL_WINDOW_SIZE: 2**24,
-                h2.settings.SettingCodes.MAX_FRAME_SIZE: 2**14,
-                h2.settings.SettingCodes.MAX_HEADER_LIST_SIZE: self.h2_conn.DEFAULT_MAX_HEADER_LIST_SIZE,
-            },
-            client=True,
-        )
         self.streams = {}
 
     def is_closed(self, stream_id: int) -> bool:

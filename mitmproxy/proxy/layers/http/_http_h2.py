@@ -49,6 +49,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
+        self.local_settings[h2.settings.SettingCodes.INITIAL_WINDOW_SIZE] = 2**24
         self.stream_buffers = collections.defaultdict(collections.deque)
         self.stream_trailers = {}
 
