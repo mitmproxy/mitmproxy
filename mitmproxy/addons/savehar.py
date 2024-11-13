@@ -178,6 +178,10 @@ class SaveHar:
         }
 
         if flow.response:
+            try:
+                flow.response.content
+            except ValueError:
+                flow.response.content = None
             response_body_size = (
                 len(flow.response.raw_content) if flow.response.raw_content else 0
             )
