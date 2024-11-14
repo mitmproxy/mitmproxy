@@ -179,14 +179,14 @@ class SaveHar:
 
         if flow.response:
             try:
-                flow.response.content
+                content = flow.response.content
             except ValueError:
-                flow.response.content = None
+                content = flow.response.raw_content
             response_body_size = (
                 len(flow.response.raw_content) if flow.response.raw_content else 0
             )
             response_body_decoded_size = (
-                len(flow.response.content) if flow.response.content else 0
+                len(content) if content else 0
             )
             response_body_compression = response_body_decoded_size - response_body_size
             response = {
@@ -204,9 +204,9 @@ class SaveHar:
                 "headersSize": len(str(flow.response.headers)),
                 "bodySize": response_body_size,
             }
-            if flow.response.content and strutils.is_mostly_bin(flow.response.content):
+            if content and strutils.is_mostly_bin(content):
                 response["content"]["text"] = base64.b64encode(
-                    flow.response.content
+                    content
                 ).decode()
                 response["content"]["encoding"] = "base64"
             else:
