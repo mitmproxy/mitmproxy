@@ -120,7 +120,6 @@ class Http2Connection(HttpConnection):
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Start):
             self.h2_conn.initiate_connection()
-            self.h2_conn.increment_flow_control_window(2**24)
             yield SendData(self.conn, self.h2_conn.data_to_send())
 
         elif isinstance(event, HttpEvent):
