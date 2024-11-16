@@ -50,6 +50,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
         self.local_settings.initial_window_size = 2**24
+        # hyper-h2 pitfall: we need to acknowledge here, otherwise its sends out the old settings.
         self.local_settings.acknowledge()
         self.stream_buffers = collections.defaultdict(collections.deque)
         self.stream_trailers = {}
