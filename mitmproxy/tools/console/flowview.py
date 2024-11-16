@@ -1,12 +1,11 @@
 import logging
 import math
-import sys
+import typing
 from functools import lru_cache
 
 import urwid
 
 import mitmproxy.flow
-import mitmproxy.tools.console.master
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns
@@ -17,6 +16,7 @@ from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import searchable
+from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
 from mitmproxy.utils import strutils
 
@@ -44,8 +44,41 @@ class FlowViewHeader(urwid.WidgetWrap):
         else:
             self._w = urwid.Pile([])
 
+class _SearchableWithReload(searchable.Searchable):
+    master: 'mitmproxy.tools.console.master.ConsoleMaster'
+    truncated_content_provider: typing.Callable[[], list[urwid.Text]] = None
+    decision: bool = False
+
+    def __init__(self, master, truncated_content_provider, *args, **kwargs):
+        self.master = master
+        self.truncated_content_provider = truncated_content_provider
+        super().__init__(*args, **kwargs)
+
+    def _on_reload_answer(self, resp):
+        if resp == 'n':
+            self.decision = True
+            super().on_not_found()
+        else:
+            self.decision = False
+            self.master.commands.call_strings("view.settings.setval", ["@focus", "fullcontents", "true"])
+
+    def on_not_found(self):
+        if self.truncated_content_provider is None:
+            return True
+        truncated_content = self.truncated_content_provider()
+        for truncated_line in truncated_content:
+            if self.context.search_term in truncated_line.text:
+                signals.status_prompt_onekey.send(
+                    prompt="Searched text found in truncated content, load full contents?",
+                    keys=[("yes", "y"), ("no", "n")],
+                    callback = self._on_reload_answer)
+                return self.decision
+        return True
+
 
 class FlowDetails(tabs.Tabs):
+    view_context: tuple[typing.Any,searchable.SearchableContext] = (None, None)
+
     def __init__(self, master):
         self.master = master
         super().__init__([])
@@ -61,6 +94,16 @@ class FlowDetails(tabs.Tabs):
     @property
     def flow(self) -> mitmproxy.flow.Flow:
         return self.master.view.focus.flow
+
+    def _get_searchable_context(self, context_key):
+        if context_key is not None and self.view_context[0] == context_key:
+            return self.view_context[1]
+
+        new_context = searchable.SearchableContext()
+
+        self.view_context = (context_key, new_context)
+
+        return new_context
 
     def contentview_changed(self, view):
         # this is called when a contentview addon is live-reloaded.
@@ -213,7 +256,7 @@ class FlowDetails(tabs.Tabs):
         assert flow.websocket is not None
 
         if not flow.websocket.messages:
-            return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
+            return searchable.Searchable([urwid.Text(("highlight", "No messages."))], self._get_searchable_context(None))
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
@@ -256,14 +299,14 @@ class FlowDetails(tabs.Tabs):
             0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
         )
 
-        return searchable.Searchable(widget_lines)
+        return searchable.Searchable(widget_lines, self._get_searchable_context((flow.websocket, viewmode)))
 
     def view_message_stream(self) -> urwid.Widget:
         flow = self.flow
         assert isinstance(flow, (tcp.TCPFlow, udp.UDPFlow))
 
         if not flow.messages:
-            return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
+            return searchable.Searchable([urwid.Text(("highlight", "No messages."))], self._get_searchable_context(None))
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
@@ -287,24 +330,26 @@ class FlowDetails(tabs.Tabs):
             0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
         )
 
-        return searchable.Searchable(widget_lines)
+        return searchable.Searchable(widget_lines, self._get_searchable_context((flow, viewmode)))
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
 
-    def content_view(self, viewmode, message):
+    def _get_line_limit(self) -> typing.Optional[int]:
+        full_contents_setting_value = self.master.commands.execute(
+            "view.settings.getval @focus fullcontents false"
+        )
+
+        if full_contents_setting_value == "true":
+            return None
+        else:
+            return ctx.options.content_view_lines_cutoff
+
+    def content_view(self, viewmode, message, line_limit: typing.Optional[int]):
         if message.raw_content is None:
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.master.commands.execute(
-                "view.settings.getval @focus fullcontents false"
-            )
-            if full == "true":
-                limit = sys.maxsize
-            else:
-                limit = ctx.options.content_view_lines_cutoff
-
             flow_modify_cache_invalidation = hash(
                 (
                     message.raw_content,
@@ -315,42 +360,43 @@ class FlowDetails(tabs.Tabs):
             # we need to pass the message off-band because it's not hashable
             self._get_content_view_message = message
             return self._get_content_view(
-                viewmode, limit, flow_modify_cache_invalidation
+                viewmode, line_limit, flow_modify_cache_invalidation
             )
 
     @lru_cache(maxsize=200)
-    def _get_content_view(self, viewmode, max_lines, _):
+    def _get_content_view(self, viewmode, max_lines: typing.Optional[int], _):
         message = self._get_content_view_message
         self._get_content_view_message = None
         description, lines, error = contentviews.get_message_content_view(
             viewmode, message, self.flow
         )
+        #logging.info(f"get_message_content_view returned lines: {len(lines)}")
         if error:
             logging.debug(error)
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.Request):
             description = "No request content"
 
-        # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
+        # If the user has a wide terminal, he gets fewer lines; this should not be an issue.
         chars_per_line = 80
-        max_chars = max_lines * chars_per_line
+        max_chars = max_lines * chars_per_line if max_lines is not None else None
         total_chars = 0
         text_objects = []
         for line in lines:
             txt = []
             for style, text in line:
-                if total_chars + len(text) > max_chars:
+                if max_chars is not None and total_chars + len(text) > max_chars:
                     text = text[: max_chars - total_chars]
                 txt.append((style, text))
                 total_chars += len(text)
-                if total_chars == max_chars:
+                if max_chars is not None and total_chars >= max_chars:
                     break
 
             # round up to the next line.
             total_chars = int(math.ceil(total_chars / chars_per_line) * chars_per_line)
 
             text_objects.append(urwid.Text(txt))
-            if total_chars == max_chars:
+            if max_chars is not None and total_chars == max_chars:
                 text_objects.append(
                     urwid.Text(
                         [
@@ -369,6 +415,7 @@ class FlowDetails(tabs.Tabs):
         return description, text_objects
 
     def conn_text(self, conn):
+        line_limit: typing.Optional[int] = None
         if conn:
             hdrs = []
             for k, v in conn.headers.fields:
@@ -394,7 +441,8 @@ class FlowDetails(tabs.Tabs):
                 hdrs.append((k, v))
             txt = common.format_keyvals(hdrs, key_format="header")
             viewmode = self.master.commands.call("console.flowview.mode")
-            msg, body = self.content_view(viewmode, conn)
+            line_limit = self._get_line_limit()
+            msg, body = self.content_view(viewmode, conn, line_limit)
 
             cols = [
                 urwid.Text(
@@ -416,6 +464,13 @@ class FlowDetails(tabs.Tabs):
 
             txt.append(title)
             txt.extend(body)
+
+            if line_limit is None:
+                return searchable.Searchable(txt, self._get_searchable_context((conn, viewmode)))
+            else:
+                def cut_content_provider():
+                    return self.content_view(viewmode, conn, None)[1][len(txt):]
+                return _SearchableWithReload(self.master, cut_content_provider, txt, self._get_searchable_context((conn, viewmode)))
         else:
             txt = [
                 urwid.Text(""),
@@ -427,7 +482,7 @@ class FlowDetails(tabs.Tabs):
                     ]
                 ),
             ]
-        return searchable.Searchable(txt)
+            return searchable.Searchable(txt, self._get_searchable_context(conn))
 
     def dns_message_text(
         self, type: str, message: dns.Message | None
@@ -472,9 +527,9 @@ class FlowDetails(tabs.Tabs):
             txt.append(urwid.Text(""))
             txt.append(urwid.Text("Addition"))
             txt.extend(map(rr_text, message.additionals))
-            return searchable.Searchable(txt)
+            return searchable.Searchable(txt, self._get_searchable_context(message))
         else:
-            return searchable.Searchable([urwid.Text(("highlight", f"No {type}."))])
+            return searchable.Searchable([urwid.Text(("highlight", f"No {type}."))], self._get_searchable_context(message))
 
 
 class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
