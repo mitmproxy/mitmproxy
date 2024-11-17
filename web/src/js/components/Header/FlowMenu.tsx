@@ -137,6 +137,9 @@ const openInNewTab = (url) => {
 };
 
 function DownloadButton({ flow }: { flow: Flow }) {
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
+    if (selectedFlows.length > 1) return null;
+
     if (flow.type !== "http")
         return (
             <Button icon="fa-download" onClick={() => 0} disabled>
@@ -207,6 +210,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
 }
 
 function ExportButton({ flow }: { flow: Flow }) {
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
     return (
         <Dropdown
             className=""
@@ -215,7 +219,7 @@ function ExportButton({ flow }: { flow: Flow }) {
                     title="Export flow."
                     icon="fa-clone"
                     onClick={() => 1}
-                    disabled={flow.type !== "http"}
+                    disabled={flow.type !== "http" || selectedFlows.length > 1}
                 >
                     Export▾
                 </Button>
