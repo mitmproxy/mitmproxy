@@ -12,6 +12,7 @@ import {
     resume as resumeFlow,
     revert as revertFlow,
     removeMultiple as removeMultipleFlows,
+    select as selectFlow,
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
@@ -67,15 +68,19 @@ export default function FlowMenu(): JSX.Element {
                             title="[d]elete flow"
                             icon="fa-trash text-danger"
                             onClick={() => {
-                                selectedFlows.length > 1
-                                    ? dispatch(
-                                          removeMultipleFlows(selectedFlows),
-                                      )
-                                    : dispatch(removeFlow(flow));
+                                if (selectedFlows.length > 1) {
+                                    dispatch(
+                                        removeMultipleFlows(selectedFlows),
+                                    );
+                                    dispatch(selectFlow(undefined)); // clear flow selection
+                                } else {
+                                    dispatch(removeFlow(flow));
+                                }
                             }}
                         >
                             Delete
                         </Button>
+
                         <MarkButton flow={flow} />
                     </div>
                     <div className="menu-legend">Flow Modification</div>
