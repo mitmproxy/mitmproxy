@@ -115,6 +115,7 @@ export default function reducer(
                 selected: action.flowIds,
                 isMultipleFlowsSelection: false,
             };
+
         case MULTI_SELECT:
             return {
                 ...state,
@@ -260,9 +261,9 @@ export function select(id?: string) {
     };
 }
 
-export function multiSelect(id?: string) {
+export function multiSelect(id: string) {
     return {
         type: MULTI_SELECT,
-        flowIds: id ? [id] : [],
+        flowIds: [id],
     };
 }
