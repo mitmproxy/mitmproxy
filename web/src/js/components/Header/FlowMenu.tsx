@@ -251,6 +251,7 @@ const markers = {
 
 function MarkButton({ flow }: { flow: Flow }) {
     const dispatch = useAppDispatch();
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
     return (
         <Dropdown
             className=""
@@ -259,6 +260,7 @@ function MarkButton({ flow }: { flow: Flow }) {
                     title="mark flow"
                     icon="fa-paint-brush text-success"
                     onClick={() => 1}
+                    disabled={selectedFlows.length > 1}
                 >
                     Mark▾
                 </Button>
