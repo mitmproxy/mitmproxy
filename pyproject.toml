@@ -46,7 +46,6 @@ dependencies = [
     "mitmproxy_rs>=0.10.7,<0.11",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.0",
     "passlib>=1.6.5,<=1.7.4",
-    "protobuf>=5.27.2,<=5.28.3",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
     "pyOpenSSL>=22.1,<=24.2.1",
     "pyparsing>=2.4.2,<=3.2.0",

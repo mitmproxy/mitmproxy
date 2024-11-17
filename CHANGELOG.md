@@ -24,6 +24,7 @@
   ([#7286](https://github.com/mitmproxy/mitmproxy/pull/7286), @lukant)
 - Fix a crash when handling corrupted compressed body in savehar addon and its tests.
   ([#7320](https://github.com/mitmproxy/mitmproxy/pull/7320), @8192bytes)
+- Remove dependency on `protobuf` library as it was no longer being used.
 
 ## 02 October 2024: mitmproxy 11.0.0
 
