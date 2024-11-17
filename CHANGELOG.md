@@ -22,6 +22,8 @@
   This may break users of `modify_headers` that rely on filters referencing the message body.
   We expect this to be uncommon, but please make yourself heard if that's not the case.
   ([#7286](https://github.com/mitmproxy/mitmproxy/pull/7286), @lukant)
+- Add multiple flows selection to mitmweb.
+  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000)
 
 ## 02 October 2024: mitmproxy 11.0.0
 
