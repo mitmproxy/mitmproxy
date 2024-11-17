@@ -10,6 +10,7 @@ export const UPDATE = "FLOWS_UPDATE";
 export const REMOVE = "FLOWS_REMOVE";
 export const RECEIVE = "FLOWS_RECEIVE";
 export const SELECT = "FLOWS_SELECT";
+export const MULTI_SELECT = "FLOWS_MULTI_SELECT";
 export const SET_FILTER = "FLOWS_SET_FILTER";
 export const SET_SORT = "FLOWS_SET_SORT";
 export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
@@ -23,6 +24,7 @@ export interface FlowsState extends store.State<Flow> {
     filter?: string;
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: string[];
+    isMultipleFlowsSelection: boolean;
 }
 
 export const defaultState: FlowsState = {
@@ -30,6 +32,7 @@ export const defaultState: FlowsState = {
     filter: undefined,
     sort: { column: undefined, desc: false },
     selected: [],
+    isMultipleFlowsSelection: false,
     ...store.defaultState,
 };
 
@@ -110,8 +113,15 @@ export default function reducer(
             return {
                 ...state,
                 selected: action.flowIds,
+                isMultipleFlowsSelection: false,
             };
 
+        case MULTI_SELECT:
+            return {
+                ...state,
+                selected: [...state.selected, ...action.flowIds],
+                isMultipleFlowsSelection: true,
+            };
         default:
             return state;
     }
@@ -198,6 +208,15 @@ export function remove(flow: Flow) {
     return () => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
 }
 
+export function removeMultiple(flowIds: string[]) {
+    return () =>
+        Promise.all(
+            flowIds.map((flowId) =>
+                fetchApi(`/flows/${flowId}`, { method: "DELETE" }),
+            ),
+        );
+}
+
 export function duplicate(flow: Flow) {
     return () => fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
 }
@@ -239,5 +258,12 @@ export function select(id?: string) {
     return {
         type: SELECT,
         flowIds: id ? [id] : [],
+    };
+}
+
+export function multiSelect(id: string) {
+    return {
+        type: MULTI_SELECT,
+        flowIds: [id],
     };
 }

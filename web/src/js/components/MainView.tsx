@@ -11,6 +11,9 @@ export default function MainView() {
     const hasSelection = useAppSelector(
         (state) => !!state.flows.byId[state.flows.selected[0]],
     );
+    const isMultipleFlowsSelection = useAppSelector(
+        (state) => state.flows.isMultipleFlowsSelection,
+    );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
     const currentTab = useAppSelector((state) => state.ui.tabs.current);
 
@@ -22,7 +25,9 @@ export default function MainView() {
                 <>
                     {hasFlows ? <FlowTable /> : <CaptureSetup />}
                     {hasSelection && <Splitter key="splitter" />}
-                    {hasSelection && <FlowView key="flowDetails" />}
+                    {hasSelection && !isMultipleFlowsSelection && (
+                        <FlowView key="flowDetails" />
+                    )}
                 </>
             )}
         </div>
