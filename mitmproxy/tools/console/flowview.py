@@ -79,7 +79,9 @@ class _SearchableWithReload(searchable.Searchable):
 
 
 class FlowDetails(tabs.Tabs):
-    view_context: tuple[typing.Optional[typing.Any], typing.Optional[searchable.SearchableContext]] = (None, None)
+    view_context: tuple[
+        typing.Optional[typing.Any], typing.Optional[searchable.SearchableContext]
+    ] = (None, None)
 
     def __init__(self, master):
         self.master = master

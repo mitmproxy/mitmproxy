@@ -178,6 +178,7 @@ async def test_flowview_searched_backwards_data_truncated_user_offered_to_load_d
     assert _ABOVE_FIRST_SEARCHED_TEXT not in console.screen_contents()
     assert _ABOVE_SECOND_SEARCHED_TEXT in console.screen_contents()
 
+
 async def test_flowview_searched_data_truncated_user_rejects_to_load_data(
     console,
 ):
@@ -256,50 +257,51 @@ async def test_flowview_udpflow_without_messages(console):
 
     assert "No messages." in console.screen_contents()
 
+
 async def test_flowview_searched_text_removed_from_flow(console):
-        assert "Flows" in console.screen_contents()
-        flow = tflow.tflow()
+    assert "Flows" in console.screen_contents()
+    flow = tflow.tflow()
 
-        flow.request.headers["content-type"] = "text/plain"
-        flow.request.raw_content = (
-                (_line(_NOT_IMPORTANT_LINE) * 4)
-                + _line(_ABOVE_FIRST_SEARCHED_TEXT)
-                + _line(_SEARCHED_TEXT)
-                + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE * 2))
-                + _line(_ABOVE_SECOND_SEARCHED_TEXT)
-                + _line(_SEARCHED_TEXT)
-                + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
-        )
+    flow.request.headers["content-type"] = "text/plain"
+    flow.request.raw_content = (
+        (_line(_NOT_IMPORTANT_LINE) * 4)
+        + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+        + _line(_SEARCHED_TEXT)
+        + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE * 2))
+        + _line(_ABOVE_SECOND_SEARCHED_TEXT)
+        + _line(_SEARCHED_TEXT)
+        + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
+    )
 
-        await console.load_flow(flow)
+    await console.load_flow(flow)
 
-        assert ">>" in console.screen_contents()
+    assert ">>" in console.screen_contents()
 
-        console.type("<enter>")
+    console.type("<enter>")
 
-        assert "Flow Details" in console.screen_contents()
-        console.type("/searched_text<enter>")
+    assert "Flow Details" in console.screen_contents()
+    console.type("/searched_text<enter>")
 
-        assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
-        assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()
+    assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()
 
-        console.type("ny")
+    console.type("ny")
 
-        assert _ABOVE_FIRST_SEARCHED_TEXT not in console.screen_contents()
-        assert _ABOVE_SECOND_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_FIRST_SEARCHED_TEXT not in console.screen_contents()
+    assert _ABOVE_SECOND_SEARCHED_TEXT in console.screen_contents()
 
-        console.type("q")
+    console.type("q")
 
-        flow.request.raw_content = (
-                (_line(_NOT_IMPORTANT_LINE) * 4)
-                + _line(_ABOVE_FIRST_SEARCHED_TEXT)
-                + _line(_SEARCHED_TEXT)
-                + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE))
-        )
+    flow.request.raw_content = (
+        (_line(_NOT_IMPORTANT_LINE) * 4)
+        + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+        + _line(_SEARCHED_TEXT)
+        + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE))
+    )
 
-        console.type("<enter>")
+    console.type("<enter>")
 
-        assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
 
 
 async def test_flowview_empty_search_should_quit_previous_searching(console):
@@ -308,10 +310,10 @@ async def test_flowview_empty_search_should_quit_previous_searching(console):
 
     flow.request.headers["content-type"] = "text/plain"
     flow.request.raw_content = (
-            (_line(_NOT_IMPORTANT_LINE) * 4)
-            + _line(_ABOVE_FIRST_SEARCHED_TEXT)
-            + _line(_SEARCHED_TEXT)
-            + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
+        (_line(_NOT_IMPORTANT_LINE) * 4)
+        + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+        + _line(_SEARCHED_TEXT)
+        + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
     )
 
     await console.load_flow(flow)
