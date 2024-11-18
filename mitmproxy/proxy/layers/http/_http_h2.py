@@ -61,7 +61,9 @@ class BufferedH2Connection(h2.connection.H2Connection):
         super().initiate_connection()
         # We increase the flow-control window for new streams with a setting,
         # but we need to increase the overall connection flow-control window as well.
-        self.increment_flow_control_window(2**31 - 1 - 65535)  # maximum - default
+        self.increment_flow_control_window(
+            2**31 - 1 - self.inbound_flow_control_window
+        )  # maximum - default
 
     def send_data(
         self,
