@@ -44,8 +44,9 @@ class FlowViewHeader(urwid.WidgetWrap):
         else:
             self._w = urwid.Pile([])
 
+
 class _SearchableWithReload(searchable.Searchable):
-    master: 'mitmproxy.tools.console.master.ConsoleMaster'
+    master: "mitmproxy.tools.console.master.ConsoleMaster"
     truncated_content_provider: typing.Callable[[], list[urwid.Text]] = None
     decision: bool = False
 
@@ -55,12 +56,14 @@ class _SearchableWithReload(searchable.Searchable):
         super().__init__(*args, **kwargs)
 
     def _on_reload_answer(self, resp):
-        if resp == 'n':
+        if resp == "n":
             self.decision = True
             super().on_not_found()
         else:
             self.decision = False
-            self.master.commands.call_strings("view.settings.setval", ["@focus", "fullcontents", "true"])
+            self.master.commands.call_strings(
+                "view.settings.setval", ["@focus", "fullcontents", "true"]
+            )
 
     def on_not_found(self):
         if self.truncated_content_provider is None:
@@ -71,13 +74,14 @@ class _SearchableWithReload(searchable.Searchable):
                 signals.status_prompt_onekey.send(
                     prompt="Searched text found in truncated content, load full contents?",
                     keys=[("yes", "y"), ("no", "n")],
-                    callback = self._on_reload_answer)
+                    callback=self._on_reload_answer,
+                )
                 return self.decision
         return True
 
 
 class FlowDetails(tabs.Tabs):
-    view_context: tuple[typing.Any,searchable.SearchableContext] = (None, None)
+    view_context: tuple[typing.Any, searchable.SearchableContext] = (None, None)
 
     def __init__(self, master):
         self.master = master
@@ -256,7 +260,10 @@ class FlowDetails(tabs.Tabs):
         assert flow.websocket is not None
 
         if not flow.websocket.messages:
-            return searchable.Searchable([urwid.Text(("highlight", "No messages."))], self._get_searchable_context(None))
+            return searchable.Searchable(
+                [urwid.Text(("highlight", "No messages."))],
+                self._get_searchable_context(None),
+            )
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
@@ -299,14 +306,19 @@ class FlowDetails(tabs.Tabs):
             0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
         )
 
-        return searchable.Searchable(widget_lines, self._get_searchable_context((flow.websocket, viewmode)))
+        return searchable.Searchable(
+            widget_lines, self._get_searchable_context((flow.websocket, viewmode))
+        )
 
     def view_message_stream(self) -> urwid.Widget:
         flow = self.flow
         assert isinstance(flow, (tcp.TCPFlow, udp.UDPFlow))
 
         if not flow.messages:
-            return searchable.Searchable([urwid.Text(("highlight", "No messages."))], self._get_searchable_context(None))
+            return searchable.Searchable(
+                [urwid.Text(("highlight", "No messages."))],
+                self._get_searchable_context(None),
+            )
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
@@ -330,7 +342,9 @@ class FlowDetails(tabs.Tabs):
             0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
         )
 
-        return searchable.Searchable(widget_lines, self._get_searchable_context((flow, viewmode)))
+        return searchable.Searchable(
+            widget_lines, self._get_searchable_context((flow, viewmode))
+        )
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
@@ -370,7 +384,7 @@ class FlowDetails(tabs.Tabs):
         description, lines, error = contentviews.get_message_content_view(
             viewmode, message, self.flow
         )
-        #logging.info(f"get_message_content_view returned lines: {len(lines)}")
+        # logging.info(f"get_message_content_view returned lines: {len(lines)}")
         if error:
             logging.debug(error)
         # Give hint that you have to tab for the response.
@@ -466,11 +480,20 @@ class FlowDetails(tabs.Tabs):
             txt.extend(body)
 
             if line_limit is None:
-                return searchable.Searchable(txt, self._get_searchable_context((conn, viewmode)))
+                return searchable.Searchable(
+                    txt, self._get_searchable_context((conn, viewmode))
+                )
             else:
+
                 def cut_content_provider():
-                    return self.content_view(viewmode, conn, None)[1][len(txt):]
-                return _SearchableWithReload(self.master, cut_content_provider, txt, self._get_searchable_context((conn, viewmode)))
+                    return self.content_view(viewmode, conn, None)[1][len(txt) :]
+
+                return _SearchableWithReload(
+                    self.master,
+                    cut_content_provider,
+                    txt,
+                    self._get_searchable_context((conn, viewmode)),
+                )
         else:
             txt = [
                 urwid.Text(""),
@@ -529,7 +552,10 @@ class FlowDetails(tabs.Tabs):
             txt.extend(map(rr_text, message.additionals))
             return searchable.Searchable(txt, self._get_searchable_context(message))
         else:
-            return searchable.Searchable([urwid.Text(("highlight", f"No {type}."))], self._get_searchable_context(message))
+            return searchable.Searchable(
+                [urwid.Text(("highlight", f"No {type}."))],
+                self._get_searchable_context(message),
+            )
 
 
 class FlowView(urwid.Frame, layoutwidget.LayoutWidget):

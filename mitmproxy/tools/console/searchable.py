@@ -16,6 +16,7 @@ class Highlight(urwid.AttrMap):
         )
         self.backup = t
 
+
 @dataclass
 class SearchableContext:
     current_highlight: Optional[int] = None
@@ -35,7 +36,9 @@ class Searchable(urwid.ListBox):
         self.last_search = None
         if self.context.current_highlight is not None:
             if len(self.body) > self.context.current_highlight:
-                self.body[self.context.current_highlight] = Highlight(self.body[self.context.current_highlight])
+                self.body[self.context.current_highlight] = Highlight(
+                    self.body[self.context.current_highlight]
+                )
             else:
                 self.context.current_highlight = None
         try:
@@ -99,14 +102,16 @@ class Searchable(urwid.ListBox):
             return None
 
     def on_not_found(self):
-        """ Called when search process reached end of loaded document and will check
+        """Called when search process reached end of loaded document and will check
         from the beginning or end (in case it is backward search).
         It is intended to be overloaded, return True if search should continue, False otherwise
         """
         return True
 
     def find_next(self, backwards: bool):
-        logging.info(f"find_next called {self.context.search_term} {self.context.last_search}")
+        logging.info(
+            f"find_next called {self.context.search_term} {self.context.last_search}"
+        )
         if not self.context.search_term:
             if self.context.last_search:
                 self.context.search_term = self.context.last_search
