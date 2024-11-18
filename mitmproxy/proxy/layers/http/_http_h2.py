@@ -59,7 +59,8 @@ class BufferedH2Connection(h2.connection.H2Connection):
 
     def initiate_connection(self):
         super().initiate_connection()
-        # The connection flow-control window can only be changed using WINDOW_UPDATE frames.
+        # We increase the flow-control window for new streams with a setting,
+        # but we need to increase the overall connection flow-control window as well.
         self.increment_flow_control_window(2**24)
 
     def send_data(
