@@ -177,3 +177,156 @@ async def test_flowview_searched_backwards_data_truncated_user_offered_to_load_d
 
     assert _ABOVE_FIRST_SEARCHED_TEXT not in console.screen_contents()
     assert _ABOVE_SECOND_SEARCHED_TEXT in console.screen_contents()
+
+async def test_flowview_searched_data_truncated_user_rejects_to_load_data(
+    console,
+):
+    assert "Flows" in console.screen_contents()
+    flow = tflow.tflow()
+
+    flow.request.headers["content-type"] = "text/plain"
+    flow.request.raw_content = (
+        (_line(_NOT_IMPORTANT_LINE) * 4)
+        + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+        + _line(_SEARCHED_TEXT)
+        + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE * 2))
+        + _line(_ABOVE_SECOND_SEARCHED_TEXT)
+        + _line(_SEARCHED_TEXT)
+        + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
+    )
+
+    await console.load_flow(flow)
+
+    assert ">>" in console.screen_contents()
+
+    console.type("<enter>")
+
+    assert "Flow Details" in console.screen_contents()
+
+    console.type("/searched_text<enter>")
+
+    assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()
+
+    console.type("n")
+
+    assert (
+        "Searched text found in truncated content, load full contents?"
+        in console.screen_contents()
+    )
+
+    console.type("n")
+
+    assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()
+
+
+async def test_flowview_websocket_flow_without_messages(console):
+    assert "Flows" in console.screen_contents()
+    flow = tflow.twebsocketflow()
+
+    flow.websocket.messages.clear()
+
+    await console.load_flow(flow)
+
+    assert ">>" in console.screen_contents()
+
+    console.type("<enter>")
+
+    assert "Flow Details" in console.screen_contents()
+
+    console.type("<right>")
+    console.type("<right>")
+
+    assert "No messages." in console.screen_contents()
+
+
+async def test_flowview_udpflow_without_messages(console):
+    assert "Flows" in console.screen_contents()
+    flow = tflow.tudpflow()
+    flow.messages.clear()
+
+    await console.load_flow(flow)
+
+    assert ">>" in console.screen_contents()
+
+    console.type("<enter>")
+
+    assert "Flow Details" in console.screen_contents()
+
+    assert "No messages." in console.screen_contents()
+
+async def test_flowview_searched_text_removed_from_flow(console):
+        assert "Flows" in console.screen_contents()
+        flow = tflow.tflow()
+
+        flow.request.headers["content-type"] = "text/plain"
+        flow.request.raw_content = (
+                (_line(_NOT_IMPORTANT_LINE) * 4)
+                + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+                + _line(_SEARCHED_TEXT)
+                + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE * 2))
+                + _line(_ABOVE_SECOND_SEARCHED_TEXT)
+                + _line(_SEARCHED_TEXT)
+                + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
+        )
+
+        await console.load_flow(flow)
+
+        assert ">>" in console.screen_contents()
+
+        console.type("<enter>")
+
+        assert "Flow Details" in console.screen_contents()
+        console.type("/searched_text<enter>")
+
+        assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+        assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()
+
+        console.type("ny")
+
+        assert _ABOVE_FIRST_SEARCHED_TEXT not in console.screen_contents()
+        assert _ABOVE_SECOND_SEARCHED_TEXT in console.screen_contents()
+
+        console.type("q")
+
+        flow.request.raw_content = (
+                (_line(_NOT_IMPORTANT_LINE) * 4)
+                + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+                + _line(_SEARCHED_TEXT)
+                + (_line(_NOT_IMPORTANT_LINE) * (_NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE))
+        )
+
+        console.type("<enter>")
+
+        assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+
+
+async def test_flowview_empty_search_should_quit_previous_searching(console):
+    assert "Flows" in console.screen_contents()
+    flow = tflow.tflow()
+
+    flow.request.headers["content-type"] = "text/plain"
+    flow.request.raw_content = (
+            (_line(_NOT_IMPORTANT_LINE) * 4)
+            + _line(_ABOVE_FIRST_SEARCHED_TEXT)
+            + _line(_SEARCHED_TEXT)
+            + (_line(_NOT_IMPORTANT_LINE) * _NUMBER_OF_LINES_LOADED_IN_TRUNCATED_MODE)
+    )
+
+    await console.load_flow(flow)
+
+    assert ">>" in console.screen_contents()
+
+    console.type("<enter>")
+
+    assert "Flow Details" in console.screen_contents()
+    console.type("/searched_text<enter>")
+
+    assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()
+
+    console.type("/<enter>")
+
+    assert _ABOVE_FIRST_SEARCHED_TEXT in console.screen_contents()
+    assert _ABOVE_SECOND_SEARCHED_TEXT not in console.screen_contents()

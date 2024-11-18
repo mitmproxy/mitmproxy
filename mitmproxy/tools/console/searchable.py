@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from typing import Optional
 
@@ -109,9 +108,6 @@ class Searchable(urwid.ListBox):
         return True
 
     def find_next(self, backwards: bool):
-        logging.info(
-            f"find_next called {self.context.search_term} {self.context.last_search}"
-        )
         if not self.context.search_term:
             if self.context.last_search:
                 self.context.search_term = self.context.last_search

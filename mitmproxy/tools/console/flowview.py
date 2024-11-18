@@ -47,7 +47,7 @@ class FlowViewHeader(urwid.WidgetWrap):
 
 class _SearchableWithReload(searchable.Searchable):
     master: "mitmproxy.tools.console.master.ConsoleMaster"
-    truncated_content_provider: typing.Callable[[], list[urwid.Text]] = None
+    truncated_content_provider: typing.Callable[[], list[urwid.Text]]
     decision: bool = False
 
     def __init__(self, master, truncated_content_provider, *args, **kwargs):
@@ -66,8 +66,6 @@ class _SearchableWithReload(searchable.Searchable):
             )
 
     def on_not_found(self):
-        if self.truncated_content_provider is None:
-            return True
         truncated_content = self.truncated_content_provider()
         for truncated_line in truncated_content:
             if self.context.search_term in truncated_line.text:
@@ -81,7 +79,7 @@ class _SearchableWithReload(searchable.Searchable):
 
 
 class FlowDetails(tabs.Tabs):
-    view_context: tuple[typing.Any, searchable.SearchableContext] = (None, None)
+    view_context: tuple[typing.Optional[typing.Any], typing.Optional[searchable.SearchableContext]] = (None, None)
 
     def __init__(self, master):
         self.master = master
@@ -417,7 +415,7 @@ class FlowDetails(tabs.Tabs):
                             (
                                 "highlight",
                                 "Stopped displaying data after %d lines. Press "
-                                % max_lines,
+                                % (0 if max_lines is None else max_lines),
                             ),
                             ("key", "f"),
                             ("highlight", " to load all data."),
