@@ -110,7 +110,7 @@ class NextLayer:
             )
         except NeedsMoreData:
             logger.info(
-                f"Deferring layer decision, not enough data: {nextlayer.data_client().hex()}"
+                f"Deferring layer decision, not enough data: {nextlayer.data_client().hex()!r}"
             )
 
     def _next_layer(
