@@ -9,14 +9,14 @@ import { LocalState, parseRaw } from "../../modes/local";
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/local/setActive",
 );
-export const setApplications = createModeUpdateThunk<string | undefined>(
-    "modes/local/setApplications",
+export const setSelectedProcesses = createModeUpdateThunk<string | undefined>(
+    "modes/local/setSelectedProcesses",
 );
 
 export const initialState: LocalState[] = [
     {
         active: false,
-        applications: "",
+        selectedProcesses: "",
         ui_id: Math.random(),
     },
 ];
@@ -27,7 +27,7 @@ export const localSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         addSetter(builder, "active", setActive);
-        addSetter(builder, "applications", setApplications);
+        addSetter(builder, "selectedProcesses", setSelectedProcesses);
         builder.addCase(RECEIVE_STATE, updateState("local", parseRaw));
         builder.addCase(UPDATE_STATE, updateState("local", parseRaw));
     },

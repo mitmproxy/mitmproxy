@@ -278,7 +278,7 @@ class HttpStream(layer.Layer):
             )
             self.flow.request.headers.pop("expect")
 
-        if self.flow.request.stream:
+        if self.flow.request.stream and not event.end_stream:
             yield from self.start_request_stream()
         else:
             self.client_state = self.state_consume_request_body
@@ -406,7 +406,7 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(True)):
             return
 
-        elif self.flow.response.stream:
+        elif self.flow.response.stream and not event.end_stream:
             yield from self.start_response_stream()
         else:
             self.server_state = self.state_consume_response_body

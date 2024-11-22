@@ -31,11 +31,15 @@ async def make() -> str:
     si2 = ServerInstance.make("reverse:example.com", m.proxyserver)
     si2.last_exception = RuntimeError("I failed somehow.")
     si3 = ServerInstance.make("socks5", m.proxyserver)
+    si4 = ServerInstance.make("tun", m.proxyserver)
+    si4._server = Mock()
+    si4._server.tun_name = lambda: "tun0"
     m.proxyserver.servers._instances.update(
         {
             si1.mode: si1,
             si2.mode: si2,
             si3.mode: si3,
+            si4.mode: si4,
         }
     )
 
@@ -45,7 +49,7 @@ async def make() -> str:
     data.update(available=True)
     data["contentViews"] = ["Auto", "Raw"]
     data["version"] = "1.2.3"
-    data["platform"] = "win32"
+    data["platform"] = "darwin"
 
     # language=TypeScript
     content = (

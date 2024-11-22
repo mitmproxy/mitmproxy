@@ -1,10 +1,18 @@
 from pathlib import Path
 
+import pytest
 from OpenSSL import crypto
 from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy.net import tls
+
+
+@pytest.mark.parametrize("version", [tls.Version.UNBOUNDED, tls.Version.SSL3])
+def test_supported(version):
+    # wild assumption: test environments should not do SSLv3 by default.
+    expected_support = version is tls.Version.UNBOUNDED
+    assert tls.is_supported_version(version) == expected_support
 
 
 def test_make_master_secret_logger():

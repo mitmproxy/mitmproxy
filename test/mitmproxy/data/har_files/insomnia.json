@@ -26,7 +26,7 @@
             "tls_version": null,
             "timestamp_start": 1680151158.981,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680151229.383
+            "timestamp_end": 1680151159.0514019
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -60,7 +60,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680151158.981,
-            "timestamp_end": 1680151229.383,
+            "timestamp_end": 1680151159.0514019,
             "pretty_host": "mitm.it"
         },
         "response": {
@@ -132,7 +132,7 @@
             "contentLength": 250,
             "contentHash": "ad5724ee351ebc53212702f448c0136f3892e52036fb9e5918192a130bde38bd",
             "timestamp_start": 1680151158.981,
-            "timestamp_end": 1680151229.383
+            "timestamp_end": 1680151159.0514019
         }
     }
 ]

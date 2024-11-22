@@ -79,6 +79,11 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
+
+    def test_https_record_ech(self):
+        rr = dns.ResourceRecord(
+            "test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b""
+        )
         params = {3: b"\x01\xbb"}
         record = dns.https_records.HTTPSRecord(1, "example.org", params)
         rr.data = dns.https_records.pack(record)
@@ -87,6 +92,24 @@ class TestResourceRecord:
         assert rr.https_ech == "dGVzdHN0cmluZwo="
         rr.https_ech = None
         assert rr.https_ech is None
+
+    def test_https_record_alpn(self):
+        rr = dns.ResourceRecord(
+            "test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b""
+        )
+        record = dns.https_records.HTTPSRecord(1, "example.org", {})
+        rr.data = dns.https_records.pack(record)
+
+        assert rr.https_alpn is None
+        assert rr.data == b"\x00\x01\x07example\x03org\x00"
+
+        rr.https_alpn = [b"h2", b"h3"]
+        assert rr.https_alpn == (b"h2", b"h3")
+        assert rr.data == b"\x00\x01\x07example\x03org\x00\x00\x01\x00\x06\x02h2\x02h3"
+
+        rr.https_alpn = None
+        assert rr.https_alpn is None
+        assert rr.data == b"\x00\x01\x07example\x03org\x00"
 
 
 class TestMessage:
@@ -289,3 +312,9 @@ class TestDNSFlow:
     def test_repr(self):
         f = tflow.tdnsflow()
         assert "DNSFlow" in repr(f)
+
+    def test_question(self):
+        r = tflow.tdnsreq()
+        assert r.question
+        r.questions = []
+        assert not r.question

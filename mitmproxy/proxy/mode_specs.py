@@ -23,6 +23,8 @@ Examples:
 from __future__ import annotations
 
 import dataclasses
+import platform
+import re
 import sys
 from abc import ABCMeta
 from abc import abstractmethod
@@ -32,7 +34,6 @@ from typing import ClassVar
 from typing import Literal
 
 import mitmproxy_rs
-
 from mitmproxy.coretypes.serializable import Serializable
 from mitmproxy.net import server_spec
 
@@ -82,7 +83,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         """The mode description that will be used in server logs and UI."""
 
     @property
-    def default_port(self) -> int:
+    def default_port(self) -> int | None:
         """
         Default listen port of servers for this mode, see `ProxyMode.listen_port()`.
         """
@@ -90,7 +91,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def transport_protocol(self) -> Literal["tcp", "udp", "both"] | None:
+    def transport_protocol(self) -> Literal["tcp", "udp", "both"]:
         """The transport protocol used by this mode's server."""
 
     @classmethod
@@ -147,11 +148,12 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         else:
             return ""
 
-    def listen_port(self, default: int | None = None) -> int:
+    def listen_port(self, default: int | None = None) -> int | None:
         """
         Return the port a server for this mode should listen on. This can be either directly
         specified in the spec, taken from a user-configured global default (`options.listen_port`),
         or from `ProxyMode.default_port`.
+        May be `None` for modes that don't bind to a specific address, e.g. local redirect mode.
         """
         if self.custom_listen_port is not None:
             return self.custom_listen_port
@@ -233,12 +235,12 @@ class ReverseMode(ProxyMode):
         self.scheme, self.address = server_spec.parse(self.data, default_scheme="https")
         if self.scheme in ("http3", "dtls", "udp", "quic"):
             self.transport_protocol = UDP
-        elif self.scheme == "dns":
+        elif self.scheme in ("dns", "https"):
             self.transport_protocol = BOTH
         self.description = f"{self.description} to {self.data}"
 
     @property
-    def default_port(self) -> int:
+    def default_port(self) -> int | None:
         if self.scheme == "dns":
             return 53
         return super().default_port
@@ -294,18 +296,39 @@ class LocalMode(ProxyMode):
     """OS-level transparent proxy."""
 
     description = "Local redirector"
-    transport_protocol = None
+    transport_protocol = BOTH
+    default_port = None
 
     def __post_init__(self) -> None:
         # should not raise
-        mitmproxy_rs.LocalRedirector.describe_spec(self.data)
+        mitmproxy_rs.local.LocalRedirector.describe_spec(self.data)
+
+
+class TunMode(ProxyMode):
+    """A Tun interface."""
+
+    description = "TUN interface"
+    default_port = None
+    transport_protocol = BOTH
+
+    def __post_init__(self) -> None:
+        invalid_tun_name = self.data and (
+            # The Rust side is Linux only for the moment, but eventually we may need this.
+            platform.system() == "Darwin" and not re.match(r"^utun\d+$", self.data)
+        )
+        if invalid_tun_name:  # pragma: no cover
+            raise ValueError(
+                f"Invalid tun name: {self.data}. "
+                f"On macOS, the tun name must be the form utunx where x is a number, such as utun3."
+            )
 
 
 class OsProxyMode(ProxyMode):  # pragma: no cover
     """Deprecated alias for LocalMode"""
 
     description = "Deprecated alias for LocalMode"
-    transport_protocol = None
+    transport_protocol = BOTH
+    default_port = None
 
     def __post_init__(self) -> None:
         raise ValueError(

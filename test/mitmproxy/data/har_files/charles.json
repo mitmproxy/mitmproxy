@@ -26,7 +26,7 @@
             "tls_version": null,
             "timestamp_start": 1680136662.482,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1680136769.482
+            "timestamp_end": 1680136662.5890002
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -71,7 +71,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1680136662.482,
-            "timestamp_end": 1680136769.482,
+            "timestamp_end": 1680136662.5890002,
             "pretty_host": "mitmproxy.org"
         },
         "response": {
@@ -139,7 +139,7 @@
             "contentLength": 23866,
             "contentHash": "7fd5f643a86976f5711df86ae2d5f9f8137a47c705dee31ccc550215564a5364",
             "timestamp_start": 1680136662.482,
-            "timestamp_end": 1680136769.482
+            "timestamp_end": 1680136662.5890002
         }
     }
 ]

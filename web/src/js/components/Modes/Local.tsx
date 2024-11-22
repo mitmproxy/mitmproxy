@@ -1,11 +1,12 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setActive, setApplications } from "../../ducks/modes/local";
-import ValueEditor from "../editors/ValueEditor";
+import { setActive, setSelectedProcesses } from "../../ducks/modes/local";
 import { getSpec, LocalState } from "../../modes/local";
 import { ServerStatus } from "./CaptureSetup";
 import { ServerInfo } from "../../ducks/backendState";
+import LocalDropdown from "./LocalDropdown";
+import { fetchProcesses } from "../../ducks/processes";
 
 export default function Local() {
     const serverState = useAppSelector((state) => state.modes.local);
@@ -41,26 +42,64 @@ function LocalRow({
 }) {
     const dispatch = useAppDispatch();
 
-    const error = server.error || backendState?.last_exception || undefined;
+    const fetchProcessesError = useAppSelector(
+        (state) => state.processes.error,
+    );
+
+    const error =
+        server.error ||
+        backendState?.last_exception ||
+        fetchProcessesError ||
+        undefined;
+
+    const handleDeletionProcess = (process: string) => {
+        const newSelectedProcesses = server.selectedProcesses
+            ?.split(/,\s*/)
+            .filter((p) => p !== process)
+            .join(", ");
+
+        dispatch(
+            setSelectedProcesses({
+                server,
+                value: newSelectedProcesses,
+            }),
+        );
+    };
 
     return (
-        <div>
+        <div className="mode-local">
             <ModeToggle
                 value={server.active}
+                label="Intercept traffic for"
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                Intercept traffic for
-                <ValueEditor
-                    className="mode-local-input"
-                    content={server.applications || ""}
-                    onEditDone={(applications) =>
-                        dispatch(
-                            setApplications({ server, value: applications }),
-                        )
-                    }
-                />
+                <div className="processes-container">
+                    <div className="selected-processes">
+                        {server.selectedProcesses
+                            ?.split(/,\s*/)
+                            .filter((p) => p.trim() !== "")
+                            .map((p) => (
+                                <div key={p} className="selected-process">
+                                    {p}
+                                    <i
+                                        className="fa fa-times"
+                                        aria-hidden="true"
+                                        onClick={() => handleDeletionProcess(p)}
+                                    ></i>
+                                </div>
+                            ))}
+                    </div>
+                    <div className="dropdown-container">
+                        <LocalDropdown server={server} />
+                        <i
+                            className="fa fa-refresh"
+                            aria-hidden="true"
+                            onClick={() => dispatch(fetchProcesses())}
+                        ></i>
+                    </div>
+                </div>
             </ModeToggle>
             <ServerStatus error={error} backendState={backendState} />
         </div>

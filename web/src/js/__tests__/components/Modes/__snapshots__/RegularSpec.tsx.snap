@@ -19,14 +19,51 @@ exports[`RegularSpec 1`] = `
       >
         <input
           checked=""
+          id="mode-checkbox-:r0:"
+          name="mode-checkbox-:r0:"
           type="checkbox"
         />
-        Run HTTP/S Proxy on port 
-        <span
-          class="inline-input mode-regular-input"
-          placeholder="8080"
-          tabindex="0"
-        />
+        <label
+          for="mode-checkbox-:r0:"
+          style="margin-bottom: 0px; font-weight: normal;"
+        >
+          Run HTTP/S Proxy
+        </label>
+        <div
+          class="mode-popover"
+        >
+          <button
+            popovertarget=":r1:"
+          >
+            <i
+              aria-hidden="true"
+              class="fa fa-cog"
+            />
+          </button>
+          <div
+            id=":r1:"
+            popover="auto"
+          >
+            <h4>
+              Advanced Configuration
+            </h4>
+            <p>
+              Listen Host
+            </p>
+            <span
+              class="inline-input mode-input"
+              tabindex="0"
+            />
+            <p>
+              Listen Port
+            </p>
+            <span
+              class="inline-input mode-input"
+              placeholder="8080"
+              tabindex="0"
+            />
+          </div>
+        </div>
       </div>
       <div
         class="mode-status"
@@ -63,14 +100,51 @@ exports[`RegularSpec 2`] = `
       >
         <input
           checked=""
+          id="mode-checkbox-:r2:"
+          name="mode-checkbox-:r2:"
           type="checkbox"
         />
-        Run HTTP/S Proxy on port 
-        <span
-          class="inline-input mode-regular-input"
-          placeholder="8080"
-          tabindex="0"
-        />
+        <label
+          for="mode-checkbox-:r2:"
+          style="margin-bottom: 0px; font-weight: normal;"
+        >
+          Run HTTP/S Proxy
+        </label>
+        <div
+          class="mode-popover"
+        >
+          <button
+            popovertarget=":r3:"
+          >
+            <i
+              aria-hidden="true"
+              class="fa fa-cog"
+            />
+          </button>
+          <div
+            id=":r3:"
+            popover="auto"
+          >
+            <h4>
+              Advanced Configuration
+            </h4>
+            <p>
+              Listen Host
+            </p>
+            <span
+              class="inline-input mode-input"
+              tabindex="0"
+            />
+            <p>
+              Listen Port
+            </p>
+            <span
+              class="inline-input mode-input"
+              placeholder="8080"
+              tabindex="0"
+            />
+          </div>
+        </div>
       </div>
       <div
         class="mode-status"

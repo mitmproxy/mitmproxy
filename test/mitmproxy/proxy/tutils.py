@@ -159,6 +159,10 @@ class Playbook:
 
     def __rshift__(self, e):
         """Add an event to send"""
+        if isinstance(e, collections.abc.Iterable):
+            for ev in e:
+                self.__rshift__(ev)
+            return self
         assert isinstance(e, events.Event)
         self.expected.append(e)
         return self
@@ -166,6 +170,10 @@ class Playbook:
     def __lshift__(self, c):
         """Add an expected command"""
         if c is None:
+            return self
+        if isinstance(c, collections.abc.Iterable):
+            for cmd in c:
+                self.__lshift__(cmd)
             return self
         assert isinstance(c, commands.Command)
 

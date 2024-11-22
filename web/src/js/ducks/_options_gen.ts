@@ -23,7 +23,6 @@ export interface OptionsState {
     content_view_lines_cutoff: number;
     dns_name_servers: string[];
     dns_use_hosts_file: boolean;
-    experimental_transparent_http3: boolean;
     export_preserve_original_ip: boolean;
     hardump: string;
     http2: boolean;
@@ -33,6 +32,7 @@ export interface OptionsState {
     ignore_hosts: string[];
     intercept: string | undefined;
     intercept_active: boolean;
+    keep_alt_svc_header: boolean;
     keep_host_header: boolean;
     key_size: number;
     listen_host: string;
@@ -49,6 +49,7 @@ export interface OptionsState {
     proxyauth: string | undefined;
     rawtcp: boolean;
     readfile_filter: string | undefined;
+    request_client_cert: boolean;
     rfile: string | undefined;
     save_stream_file: string | undefined;
     save_stream_filter: string | undefined;
@@ -66,6 +67,7 @@ export interface OptionsState {
     server_replay_refresh: boolean;
     server_replay_reuse: boolean;
     server_replay_use_headers: string[];
+    show_ignored_hosts: boolean;
     showhost: boolean;
     ssl_insecure: boolean;
     ssl_verify_upstream_trusted_ca: string | undefined;
@@ -124,7 +126,6 @@ export const defaultState: OptionsState = {
     content_view_lines_cutoff: 512,
     dns_name_servers: [],
     dns_use_hosts_file: true,
-    experimental_transparent_http3: false,
     export_preserve_original_ip: false,
     hardump: "",
     http2: true,
@@ -134,6 +135,7 @@ export const defaultState: OptionsState = {
     ignore_hosts: [],
     intercept: undefined,
     intercept_active: false,
+    keep_alt_svc_header: false,
     keep_host_header: false,
     key_size: 2048,
     listen_host: "",
@@ -150,6 +152,7 @@ export const defaultState: OptionsState = {
     proxyauth: undefined,
     rawtcp: true,
     readfile_filter: undefined,
+    request_client_cert: false,
     rfile: undefined,
     save_stream_file: undefined,
     save_stream_filter: undefined,
@@ -167,6 +170,7 @@ export const defaultState: OptionsState = {
     server_replay_refresh: true,
     server_replay_reuse: false,
     server_replay_use_headers: [],
+    show_ignored_hosts: false,
     showhost: false,
     ssl_insecure: false,
     ssl_verify_upstream_trusted_ca: undefined,

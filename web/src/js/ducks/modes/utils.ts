@@ -2,6 +2,10 @@ import { getSpec as getRegularSpec } from "../../modes/regular";
 import { getSpec as getLocalSpec } from "../../modes/local";
 import { getSpec as getWireguardSpec } from "../../modes/wireguard";
 import { getSpec as getReverseSpec } from "../../modes/reverse";
+import { getSpec as getTransparentSpec } from "../../modes/transparent";
+import { getSpec as getSocksSpec } from "../../modes/socks";
+import { getSpec as getUpstreamSpec } from "../../modes/upstream";
+import { getSpec as getDnsSpec } from "../../modes/dns";
 import { fetchApi } from "../../utils";
 import { BackendState } from "../backendState";
 import {
@@ -27,6 +31,10 @@ export async function updateModes(_, thunkAPI) {
         ...modes.local.filter(isActiveMode).map(getLocalSpec),
         ...modes.wireguard.filter(isActiveMode).map(getWireguardSpec),
         ...modes.reverse.filter(isActiveMode).map(getReverseSpec),
+        ...modes.transparent.filter(isActiveMode).map(getTransparentSpec),
+        ...modes.socks.filter(isActiveMode).map(getSocksSpec),
+        ...modes.upstream.filter(isActiveMode).map(getUpstreamSpec),
+        ...modes.dns.filter(isActiveMode).map(getDnsSpec),
         //add new modes here
     ];
     const response = await fetchApi.put("/options", {

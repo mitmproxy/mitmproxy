@@ -25,8 +25,9 @@ from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
-from mitmproxy.addons import strip_ech
+from mitmproxy.addons import strip_dns_https_records
 from mitmproxy.addons import tlsconfig
+from mitmproxy.addons import update_alt_svc
 from mitmproxy.addons import upstream_auth
 
 
@@ -35,7 +36,7 @@ def default_addons():
         core.Core(),
         browser.Browser(),
         block.Block(),
-        strip_ech.StripECH(),
+        strip_dns_https_records.StripDnsHttpsRecords(),
         blocklist.BlockList(),
         anticache.AntiCache(),
         anticomp.AntiComp(),
@@ -62,4 +63,5 @@ def default_addons():
         savehar.SaveHar(),
         tlsconfig.TlsConfig(),
         upstream_auth.UpstreamAuth(),
+        update_alt_svc.UpdateAltSvc(),
     ]

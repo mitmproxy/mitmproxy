@@ -10,6 +10,7 @@ import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
+import mitmproxy_rs
 from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.test import tflow
@@ -403,3 +404,32 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
+
+    def test_process_list(self):
+        try:
+            mitmproxy_rs.process_info.active_executables()
+        except NotImplementedError:
+            pytest.skip(
+                "mitmproxy_rs.process_info.active_executables not available on this platform."
+            )
+        resp = self.fetch("/processes")
+        assert resp.code == 200
+        assert get_json(resp)
+
+    def test_process_icon(self):
+        try:
+            mitmproxy_rs.process_info.executable_icon("invalid")
+        except NotImplementedError:
+            pytest.skip(
+                "mitmproxy_rs.process_info.executable_icon not available on this platform."
+            )
+        except Exception:
+            pass
+        resp = self.fetch("/executable-icon")
+        assert resp.code == 400
+        assert "Missing 'path' parameter." in resp.body.decode()
+
+        resp = self.fetch("/executable-icon?path=invalid_path")
+        assert resp.code == 200
+        assert resp.headers["Content-Type"] == "image/png"
+        assert resp.body == app.TRANSPARENT_PNG

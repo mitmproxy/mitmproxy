@@ -19,6 +19,7 @@ import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master
+import mitmproxy_rs
 from mitmproxy import certs
 from mitmproxy import command
 from mitmproxy import contentviews
@@ -37,6 +38,12 @@ from mitmproxy.udp import UDPMessage
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
+
+TRANSPARENT_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08"
+    b"\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc\xff\x07"
+    b"\x00\x02\x00\x01\xfc\xa8Q\rh\x00\x00\x00\x00IEND\xaeB`\x82"
+)
 
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
@@ -654,6 +661,42 @@ class State(RequestHandler):
         self.write(State.get_json(self.master))
 
 
+class ProcessList(RequestHandler):
+    @staticmethod
+    def get_json():
+        processes = mitmproxy_rs.process_info.active_executables()
+        return [
+            {
+                "is_visible": process.is_visible,
+                "executable": process.executable,
+                "is_system": process.is_system,
+                "display_name": process.display_name,
+            }
+            for process in processes
+        ]
+
+    def get(self):
+        self.write(ProcessList.get_json())
+
+
+class ProcessImage(RequestHandler):
+    def get(self):
+        path = self.get_query_argument("path", None)
+
+        if not path:
+            raise APIError(400, "Missing 'path' parameter.")
+
+        try:
+            icon_bytes = mitmproxy_rs.process_info.executable_icon(path)
+        except Exception:
+            icon_bytes = TRANSPARENT_PNG
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("Cache-Control", "max-age=604800")
+        self.write(icon_bytes)
+
+
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     CONTENT_TYPES = {
         "application/octet-stream",
@@ -713,5 +756,7 @@ class Application(tornado.web.Application):
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
                 (r"/state(?:\.json)?", State),
+                (r"/processes", ProcessList),
+                (r"/executable-icon", ProcessImage),
             ],
         )

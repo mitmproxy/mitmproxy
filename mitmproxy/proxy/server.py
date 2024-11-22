@@ -20,9 +20,9 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Literal
 
-import mitmproxy_rs
 from OpenSSL import SSL
 
+import mitmproxy_rs
 from mitmproxy import http
 from mitmproxy import options as moptions
 from mitmproxy import tls
@@ -215,7 +215,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
-                    reader = writer = await mitmproxy_rs.open_udp_connection(
+                    reader = writer = await mitmproxy_rs.udp.open_udp_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
                     )

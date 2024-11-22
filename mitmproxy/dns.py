@@ -5,6 +5,7 @@ import itertools
 import random
 import struct
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from ipaddress import IPv4Address
 from ipaddress import IPv6Address
@@ -105,6 +106,31 @@ class ResourceRecord(serializable.SerializableDataclass):
     @domain_name.setter
     def domain_name(self, name: str) -> None:
         self.data = domain_names.pack(name)
+
+    @property
+    def https_alpn(self) -> tuple[bytes, ...] | None:
+        record = https_records.unpack(self.data)
+        alpn_bytes = record.params.get(SVCParamKeys.ALPN.value, None)
+        if alpn_bytes is not None:
+            i = 0
+            ret = []
+            while i < len(alpn_bytes):
+                token_len = alpn_bytes[i]
+                ret.append(alpn_bytes[i + 1 : i + 1 + token_len])
+                i += token_len + 1
+            return tuple(ret)
+        else:
+            return None
+
+    @https_alpn.setter
+    def https_alpn(self, alpn: Iterable[bytes] | None) -> None:
+        record = https_records.unpack(self.data)
+        if alpn is None:
+            record.params.pop(SVCParamKeys.ALPN.value, None)
+        else:
+            alpn_bytes = b"".join(bytes([len(a)]) + a for a in alpn)
+            record.params[SVCParamKeys.ALPN.value] = alpn_bytes
+        self.data = https_records.pack(record)
 
     @property
     def https_ech(self) -> str | None:
@@ -235,6 +261,14 @@ class Message(serializable.SerializableDataclass):
     def content(self) -> bytes:
         """Returns the user-friendly content of all parts as encoded bytes."""
         return str(self).encode()
+
+    @property
+    def question(self) -> Question | None:
+        """DNS practically only supports a single question at the
+        same time, so this is a shorthand for this."""
+        if len(self.questions) == 1:
+            return self.questions[0]
+        return None
 
     @property
     def size(self) -> int:

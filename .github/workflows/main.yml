@@ -5,6 +5,7 @@ on:
     branches:
       - '**'
       - '!dependabot/**'
+      - '!*-patch-*'
   pull_request:
   merge_group:
   workflow_dispatch:
@@ -18,22 +19,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v8
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
       cmd: tox -e individual_coverage
 
@@ -43,11 +44,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.13-dev"
+            py: "3.13"
           - os: windows-latest
-            py: "3.13-dev"
+            py: "3.13"
           - os: macos-latest
-            py: "3.13-dev"
+            py: "3.13"
           - os: ubuntu-latest
             py: "3.12"
           - os: ubuntu-latest
@@ -99,7 +100,7 @@ jobs:
         include:
           - image: macos-14
             platform: macos-arm64
-          - image: macos-12
+          - image: macos-13
             platform: macos-x86_64
           - image: windows-2019
             platform: windows
@@ -147,10 +148,9 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@v8
+    uses: mhils/workflows/.github/workflows/python-build.yml@v11
     with:
       python-version-file: .github/python-version.txt
-      attest-provenance: false  # done in deploy step
       artifact: binaries.wheel
 
   build-windows-installer:
@@ -267,7 +267,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@v8
+    uses: mhils/workflows/.github/workflows/alls-green.yml@v11
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -295,7 +295,7 @@ jobs:
           name: binaries.wheel
           path: release/docker
       - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
-      - uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v1.6.0
+      - uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v1.6.0
 
       - name: Login to Docker Hub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -327,7 +327,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64

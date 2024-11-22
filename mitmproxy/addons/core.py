@@ -68,7 +68,7 @@ class Core:
         Mark flows.
         """
         updated = []
-        if marker not in emoji.emoji:
+        if not (marker == "" or marker in emoji.emoji):
             raise exceptions.CommandError(f"invalid marker value")
 
         for i in flows:

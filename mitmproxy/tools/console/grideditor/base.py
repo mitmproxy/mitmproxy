@@ -99,11 +99,11 @@ class GridRow(urwid.WidgetWrap):
                 w = self.editor.columns[i].Display(v)
                 if focused == i:
                     if i in errors:
-                        w = urwid.AttrWrap(w, "focusfield_error")
+                        w = urwid.AttrMap(w, "focusfield_error")
                     else:
-                        w = urwid.AttrWrap(w, "focusfield")
+                        w = urwid.AttrMap(w, "focusfield")
                 elif i in errors:
-                    w = urwid.AttrWrap(w, "field_error")
+                    w = urwid.AttrMap(w, "field_error")
                 self.fields.append(w)
 
         fspecs = self.fields[:]
@@ -111,7 +111,7 @@ class GridRow(urwid.WidgetWrap):
             fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
         w = urwid.Columns(fspecs, dividechars=2)
         if focused is not None:
-            w.set_focus_column(focused)
+            w.focus_position = focused
         super().__init__(w)
 
     def keypress(self, s, k):
@@ -295,7 +295,7 @@ class BaseGridEditor(urwid.WidgetWrap):
                 else:
                     headings.append(c)
             h = urwid.Columns(headings, dividechars=2)
-            h = urwid.AttrWrap(h, "heading")
+            h = urwid.AttrMap(h, "heading")
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
@@ -313,16 +313,14 @@ class BaseGridEditor(urwid.WidgetWrap):
 
     def show_empty_msg(self):
         if self.walker.lst:
-            self._w.set_footer(None)
+            self._w.footer = None
         else:
-            self._w.set_footer(
-                urwid.Text(
-                    [
-                        ("highlight", "No values - you should add some. Press "),
-                        ("key", "?"),
-                        ("highlight", " for help."),
-                    ]
-                )
+            self._w.footer = urwid.Text(
+                [
+                    ("highlight", "No values - you should add some. Press "),
+                    ("key", "?"),
+                    ("highlight", " for help."),
+                ]
             )
 
     def set_subeditor_value(self, val, focus, focus_col):
