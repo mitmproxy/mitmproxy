@@ -98,6 +98,14 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 <div className="controls">
                     <h5>{desc}</h5>
                     <Button
+                        onClick={() => console.log("copy content")}
+                        icon="fa-clipboard"
+                        className="btn-xs"
+                    >
+                        Copy
+                    </Button>
+                    &nbsp;
+                    <Button
                         onClick={() => setEdit(true)}
                         icon="fa-edit"
                         className="btn-xs"
