@@ -11,6 +11,7 @@ import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import LineRenderer from "./LineRenderer";
 import ViewSelector from "./ViewSelector";
+import { copyViewContentDataToClipboard } from "../../utils";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -98,7 +99,10 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 <div className="controls">
                     <h5>{desc}</h5>
                     <Button
-                        onClick={() => console.log("copy content")}
+                        onClick={() => {
+                            console.log(contentViewData);
+                            copyViewContentDataToClipboard(contentViewData);
+                        }}
                         icon="fa-clipboard"
                         className="btn-xs"
                     >
