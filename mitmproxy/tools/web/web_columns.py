@@ -11,5 +11,5 @@ AVAILABLE_WEB_COLUMNS = [
     "time",
     "timestamp",
     "tls",
-    "comment"
+    "comment",
 ]
