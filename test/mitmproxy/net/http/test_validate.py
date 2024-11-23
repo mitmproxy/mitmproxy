@@ -1,11 +1,10 @@
 import pytest
 
 from mitmproxy.http import Headers
-from mitmproxy.net.http.validate import (
-    validate_headers,
-    parse_content_length,
-    parse_transfer_encoding,
-)
+from mitmproxy.http import Response
+from mitmproxy.net.http.validate import parse_content_length
+from mitmproxy.net.http.validate import parse_transfer_encoding
+from mitmproxy.net.http.validate import validate_headers
 
 
 def test_parse_content_length_ok():
@@ -40,6 +39,7 @@ def test_parse_transfer_encoding_ok():
         "chunked,gzip",
         "",
         "chunKed",
+        "chun ked",
     ],
 )
 def test_parse_transfer_encoding_invalid(te):
@@ -51,7 +51,7 @@ def test_parse_transfer_encoding_invalid(te):
 
 def test_validate_headers_ok():
     validate_headers(
-        Headers(content_length="42"),
+        Response.make(headers=Headers(content_length="42")),
     )
 
 
@@ -61,9 +61,11 @@ def test_validate_headers_ok():
         pytest.param(
             Headers(transfer_encoding="chunked", content_length="42"), id="cl.te"
         ),
-        pytest.param(Headers([(b"content-length ", b"42")]), id="whitespace"),
-        pytest.param(Headers(content_length="-42"), id="invalid-cl"),
-        pytest.param(Headers(transfer_encoding="unknown"), id="invalid-te"),
+        pytest.param(Headers([(b"content-length ", b"42")]), id="whitespace-key"),
+        pytest.param(Headers([(b"content-length", b"42 ")]), id="whitespace-value"),
+        pytest.param(Headers(content_length="-42"), id="negative-cl"),
+        pytest.param(Headers(content_length="042"), id="zero-prefixed-cl"),
+        pytest.param(Headers(transfer_encoding="unknown"), id="unknown-te"),
         pytest.param(
             Headers([(b"content-length", b"42"), (b"content-length", b"43")]),
             id="multi-cl",
@@ -75,6 +77,24 @@ def test_validate_headers_ok():
     ],
 )
 def test_validate_headers_invalid(headers: Headers):
-    # both content-length and chunked (possible request smuggling)
+    resp = Response.make()
+    resp.headers = (
+        headers  # update manually as Response.make() fixes content-length headers.
+    )
     with pytest.raises(ValueError):
-        validate_headers(headers)
+        validate_headers(resp)
+
+
+def test_validate_headers_te_forbidden():
+    te_headers = Headers(transfer_encoding="chunked")
+    resp = Response.make(headers=te_headers)
+    resp.headers = te_headers
+    resp.http_version = "HTTP/1.0"
+
+    with pytest.raises(ValueError):
+        validate_headers(resp)
+
+    resp = Response.make(status_code=204)
+    resp.headers = te_headers
+    with pytest.raises(ValueError):
+        validate_headers(Response.make(headers=te_headers, status_code=204))

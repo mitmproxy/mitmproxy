@@ -50,8 +50,8 @@ from mitmproxy.connection import TransportProtocol
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 from mitmproxy.net.http import url
-from mitmproxy.net.http.validate import validate_headers
 from mitmproxy.net.http.http1 import expected_http_body_size
+from mitmproxy.net.http.validate import validate_headers
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -85,7 +85,7 @@ def validate_request(
         )
     if validate_inbound_headers:
         try:
-            validate_headers(request.headers)
+            validate_headers(request)
         except ValueError as e:
             return (
                 f"Received {e} from client, refusing to prevent request smuggling attacks. "
@@ -644,7 +644,7 @@ class HttpStream(layer.Layer):
         elif self.context.options.validate_inbound_headers:
             assert self.flow.response is not None
             try:
-                validate_headers(self.flow.response.headers)
+                validate_headers(self.flow.response)
             except ValueError as e:
                 err = (
                     f"Received {e} from server, refusing to prevent request smuggling attacks. "

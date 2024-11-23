@@ -6,7 +6,8 @@ from collections.abc import Iterable
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
-from mitmproxy.net.http import url, validate
+from mitmproxy.net.http import url
+from mitmproxy.net.http import validate
 
 
 def get_header_tokens(headers, key):
@@ -116,7 +117,7 @@ def expected_http_body_size(
                     raise ValueError(
                         "Invalid request transfer encoding, message body cannot be determined reliably."
                     )
-            case other:
+            case other:  # pragma: no cover
                 typing.assert_never(other)
 
     #    4.  If a message is received without Transfer-Encoding and with
