@@ -33,7 +33,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         [maxLines],
     );
     const [edit, setEdit] = useState<boolean>(false);
-    let url;
+    let url: string;
     if (edit) {
         url = MessageUtils.getContentURL(flow, message);
     } else {
