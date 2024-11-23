@@ -969,12 +969,11 @@ def test_proxy_chain(tctx, strategy):
     playbook >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
     playbook << SendData(
         tctx.client,
-        b"HTTP/1.1 502 Bad Gateway\r\n"
-        b"content-length: 198\r\n"
-        b"\r\n"
-        b"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
-        b"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details.",
+        BytesMatching(
+            b"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode."
+        ),
     )
+    playbook << CloseConnection(tctx.client)
 
     assert playbook
 
@@ -1518,9 +1517,7 @@ def test_request_smuggling(tctx):
         )
         << SendData(
             tctx.client,
-            BytesMatching(
-                b"Received both a Transfer-Encoding and a Content-Length header"
-            ),
+            BytesMatching(b"both transfer-encoding and content-length headers"),
         )
         << CloseConnection(tctx.client)
     )
@@ -1536,7 +1533,7 @@ def test_request_smuggling_whitespace(tctx):
             b"Host: example.com\r\n"
             b"Content-Length : 42\r\n\r\n",
         )
-        << SendData(tctx.client, BytesMatching(b"Received an invalid header name"))
+        << SendData(tctx.client, BytesMatching(b"invalid header name"))
         << CloseConnection(tctx.client)
     )
 
@@ -1573,12 +1570,13 @@ def test_request_smuggling_te_te(tctx):
                 "Transfer-Encoding: chunKed\r\n\r\n"
             ).encode(),
         )  # note the non-standard "K"
-        << SendData(tctx.client, BytesMatching(b"Invalid transfer encoding"))
+        << SendData(tctx.client, BytesMatching(b"invalid transfer-encoding header"))
         << CloseConnection(tctx.client)
     )
 
 
-def test_invalid_content_length(tctx):
+@pytest.mark.parametrize("cl", [b"NaN", b"-1"])
+def test_invalid_content_length(tctx, cl):
     """Test that we still trigger flow hooks for requests with semantic errors"""
     flow = Placeholder(HTTPFlow)
     assert (
@@ -1588,10 +1586,10 @@ def test_invalid_content_length(tctx):
             (
                 b"GET http://example.com/ HTTP/1.1\r\n"
                 b"Host: example.com\r\n"
-                b"Content-Length: NaN\r\n\r\n"
+                b"Content-Length: " + cl + b"\r\n\r\n"
             ),
         )
-        << SendData(tctx.client, BytesMatching(b"Invalid Content-Length header"))
+        << SendData(tctx.client, BytesMatching(b"invalid content-length header"))
         << CloseConnection(tctx.client)
         << http.HttpRequestHeadersHook(flow)
         >> reply()
