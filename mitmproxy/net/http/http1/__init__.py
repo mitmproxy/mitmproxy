@@ -7,14 +7,12 @@ from .read import connection_close
 from .read import expected_http_body_size
 from .read import read_request_head
 from .read import read_response_head
-from .read import validate_headers
 
 __all__ = [
     "read_request_head",
     "read_response_head",
     "connection_close",
     "expected_http_body_size",
-    "validate_headers",
     "assemble_request",
     "assemble_request_head",
     "assemble_response",

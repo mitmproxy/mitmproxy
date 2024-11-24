@@ -1,11 +1,13 @@
 import re
 import time
+import typing
 from collections.abc import Iterable
 
 from mitmproxy.http import Headers
 from mitmproxy.http import Request
 from mitmproxy.http import Response
 from mitmproxy.net.http import url
+from mitmproxy.net.http import validate
 
 
 def get_header_tokens(headers, key):
@@ -42,40 +44,6 @@ def connection_close(http_version, headers):
     )
 
 
-# https://datatracker.ietf.org/doc/html/rfc7230#section-3.2: Header fields are tokens.
-# "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." /  "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
-_valid_header_name = re.compile(rb"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$")
-
-
-def validate_headers(headers: Headers) -> None:
-    """
-    Validate headers to avoid request smuggling attacks. Raises a ValueError if they are malformed.
-    """
-
-    te_found = False
-    cl_found = False
-
-    for name, value in headers.fields:
-        if not _valid_header_name.match(name):
-            raise ValueError(
-                f"Received an invalid header name: {name!r}. Invalid header names may introduce "
-                f"request smuggling vulnerabilities. Disable the validate_inbound_headers option "
-                f"to skip this security check."
-            )
-
-        name_lower = name.lower()
-        te_found = te_found or name_lower == b"transfer-encoding"
-        cl_found = cl_found or name_lower == b"content-length"
-
-    if te_found and cl_found:
-        raise ValueError(
-            "Received both a Transfer-Encoding and a Content-Length header, "
-            "refusing as recommended in RFC 7230 Section 3.3.3. "
-            "See https://github.com/mitmproxy/mitmproxy/issues/4799 for details. "
-            "Disable the validate_inbound_headers option to skip this security check."
-        )
-
-
 def expected_http_body_size(
     request: Request, response: Response | None = None
 ) -> int | None:
@@ -87,7 +55,7 @@ def expected_http_body_size(
         - -1, if all data should be read until end of stream.
 
     Raises:
-        ValueError, if the content length header is invalid
+        ValueError, if the content-length or transfer-encoding header is invalid
     """
     # Determine response size according to http://tools.ietf.org/html/rfc7230#section-3.3, which is inlined below.
     if not response:
@@ -137,39 +105,20 @@ def expected_http_body_size(
     #        remove the received Content-Length field prior to forwarding such
     #        a message downstream.
     #
-    if "transfer-encoding" in headers:
-        # we should make sure that there isn't also a content-length header.
-        # this is already handled in validate_headers.
-
-        te: str = headers["transfer-encoding"]
-        if not te.isascii():
-            # guard against .lower() transforming non-ascii to ascii
-            raise ValueError(f"Invalid transfer encoding: {te!r}")
-        te = te.lower().strip("\t ")
-        te = re.sub(r"[\t ]*,[\t ]*", ",", te)
-        if te in (
-            "chunked",
-            "compress,chunked",
-            "deflate,chunked",
-            "gzip,chunked",
-        ):
-            return None
-        elif te in (
-            "compress",
-            "deflate",
-            "gzip",
-            "identity",
-        ):
-            if response:
-                return -1
-            else:
-                raise ValueError(
-                    f"Invalid request transfer encoding, message body cannot be determined reliably."
-                )
-        else:
-            raise ValueError(
-                f"Unknown transfer encoding: {headers['transfer-encoding']!r}"
-            )
+    if te_str := headers.get("transfer-encoding"):
+        te = validate.parse_transfer_encoding(te_str)
+        match te:
+            case "chunked" | "compress,chunked" | "deflate,chunked" | "gzip,chunked":
+                return None
+            case "compress" | "deflate" | "gzip" | "identity":
+                if response:
+                    return -1
+                else:
+                    raise ValueError(
+                        "Invalid request transfer encoding, message body cannot be determined reliably."
+                    )
+            case other:  # pragma: no cover
+                typing.assert_never(other)
 
     #    4.  If a message is received without Transfer-Encoding and with
     #        either multiple Content-Length header fields having differing
@@ -190,19 +139,8 @@ def expected_http_body_size(
     #        the recipient times out before the indicated number of octets are
     #        received, the recipient MUST consider the message to be
     #        incomplete and close the connection.
-    if "content-length" in headers:
-        sizes = headers.get_all("content-length")
-        different_content_length_headers = any(x != sizes[0] for x in sizes)
-        if different_content_length_headers:
-            raise ValueError(f"Conflicting Content-Length headers: {sizes!r}")
-        try:
-            size = int(sizes[0])
-        except ValueError:
-            raise ValueError(f"Invalid Content-Length header: {sizes[0]!r}")
-        if size < 0:
-            raise ValueError(f"Negative Content-Length header: {sizes[0]!r}")
-        return size
-
+    if cl := headers.get("content-length"):
+        return validate.parse_content_length(cl)
     #    6.  If this is a request message and none of the above are true, then
     #        the message body length is zero (no message body is present).
     if not response:

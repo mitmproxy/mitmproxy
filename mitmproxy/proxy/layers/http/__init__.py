@@ -51,6 +51,7 @@ from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 from mitmproxy.net.http import url
 from mitmproxy.net.http.http1 import expected_http_body_size
+from mitmproxy.net.http.validate import validate_headers
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -72,7 +73,9 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-def validate_request(mode: HTTPMode, request: http.Request) -> str | None:
+def validate_request(
+    mode: HTTPMode, request: http.Request, validate_inbound_headers: bool
+) -> str | None:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent and request.method == "CONNECT":
@@ -80,6 +83,14 @@ def validate_request(mode: HTTPMode, request: http.Request) -> str | None:
             f"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
             f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
         )
+    if validate_inbound_headers:
+        try:
+            validate_headers(request)
+        except ValueError as e:
+            return (
+                f"Received {e} from client, refusing to prevent request smuggling attacks. "
+                "Disable the validate_inbound_headers option to skip this security check."
+            )
     return None
 
 
@@ -204,10 +215,8 @@ class HttpStream(layer.Layer):
         self.flow.request = event.request
         self.flow.live = True
 
-        if err := validate_request(self.mode, self.flow.request):
-            self.flow.response = http.Response.make(502, str(err))
-            self.client_state = self.state_errored
-            return (yield from self.send_response())
+        if (yield from self.check_invalid(True)):
+            return
 
         if self.flow.request.method == "CONNECT":
             return (yield from self.handle_connect())
@@ -400,6 +409,8 @@ class HttpStream(layer.Layer):
         self.flow.response = event.response
 
         if not event.end_stream and (yield from self.check_body_size(False)):
+            return
+        if (yield from self.check_invalid(False)):
             return
 
         yield HttpResponseHeadersHook(self.flow)
@@ -621,6 +632,48 @@ class HttpStream(layer.Layer):
                     yield from self.start_response_stream()
                     yield from self.handle_event(ResponseData(self.stream_id, body_buf))
         return False
+
+    def check_invalid(self, request: bool) -> layer.CommandGenerator[bool]:
+        err: str | None = None
+        if request:
+            err = validate_request(
+                self.mode,
+                self.flow.request,
+                self.context.options.validate_inbound_headers,
+            )
+        elif self.context.options.validate_inbound_headers:
+            assert self.flow.response is not None
+            try:
+                validate_headers(self.flow.response)
+            except ValueError as e:
+                err = (
+                    f"Received {e} from server, refusing to prevent request smuggling attacks. "
+                    "Disable the validate_inbound_headers option to skip this security check."
+                )
+
+        if err:
+            self.flow.error = flow.Error(err)
+
+            if request:
+                # flow has not been seen yet, register it.
+                yield HttpRequestHeadersHook(self.flow)
+            else:
+                # immediately kill of server connection
+                yield commands.CloseConnection(self.flow.server_conn)
+            yield HttpErrorHook(self.flow)
+            yield SendHttp(
+                ResponseProtocolError(
+                    self.stream_id,
+                    err,
+                    status_codes.BAD_REQUEST if request else status_codes.BAD_GATEWAY,
+                ),
+                self.context.client,
+            )
+            self.flow.live = False
+            self.client_state = self.server_state = self.state_errored
+            return True
+        else:
+            return False
 
     def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
         killed_by_us = (
