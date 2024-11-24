@@ -7,25 +7,25 @@
 
 ## Unreleased: mitmproxy next
 
-- Docker: Update image to Python 3.13 on Debian Bookworm.
-  ([#7242](https://github.com/mitmproxy/mitmproxy/pull/7242), @mhils)
 - Tighten HTTP detection heuristic to better support custom TCP-based protocols.
   ([#7228](https://github.com/mitmproxy/mitmproxy/pull/7228), @fatanugraha)
-- Add a `tun` proxy mode that creates a virtual network device on Linux for transparent proxying.
-  ([#7278](https://github.com/mitmproxy/mitmproxy/pull/7278), @mhils)
 - Implement stricter validation of HTTP headers to harden against request smuggling attacks.
   ([#7345](https://github.com/mitmproxy/mitmproxy/issues/7345), @mhils)
+- Increase HTTP/2 default flow control window size, fixing performance issues.
+  ([#7317](https://github.com/mitmproxy/mitmproxy/pull/7317), @sujaldev)
 - Fix a bug where mitmproxy would incorrectly report that TLS 1.0 and 1.1 are not supported
   with the current OpenSSL build.
   ([#7241](https://github.com/mitmproxy/mitmproxy/pull/7241), @mhils)
+- Docker: Update image to Python 3.13 on Debian Bookworm.
+  ([#7242](https://github.com/mitmproxy/mitmproxy/pull/7242), @mhils)
+- Add a `tun` proxy mode that creates a virtual network device on Linux for transparent proxying.
+  ([#7278](https://github.com/mitmproxy/mitmproxy/pull/7278), @mhils)
 - `browser.start` command now supports Firefox.
   ([#7239](https://github.com/mitmproxy/mitmproxy/pull/7239), @sujaldev)
 - Fix interaction of the `modify_headers` and `stream_large_bodies` options.
   This may break users of `modify_headers` that rely on filters referencing the message body.
   We expect this to be uncommon, but please make yourself heard if that's not the case.
   ([#7286](https://github.com/mitmproxy/mitmproxy/pull/7286), @lukant)
-- Increase HTTP/2 default flow control window size.
-  ([#7317](https://github.com/mitmproxy/mitmproxy/pull/7317), @sujaldev)
 - Fix a crash when handling corrupted compressed body in savehar addon and its tests.
   ([#7320](https://github.com/mitmproxy/mitmproxy/pull/7320), @8192bytes)
 - Remove dependency on `protobuf` library as it was no longer being used.
