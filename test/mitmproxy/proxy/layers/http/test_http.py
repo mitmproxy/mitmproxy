@@ -1517,7 +1517,9 @@ def test_request_smuggling(tctx):
         )
         << SendData(
             tctx.client,
-            BytesMatching(b"both transfer-encoding and content-length headers"),
+            BytesMatching(
+                b"Disable the validate_inbound_headers option to skip this security check"
+            ),
         )
         << CloseConnection(tctx.client)
     )
@@ -1534,6 +1536,33 @@ def test_request_smuggling_whitespace(tctx):
             b"Content-Length : 42\r\n\r\n",
         )
         << SendData(tctx.client, BytesMatching(b"invalid header name"))
+        << CloseConnection(tctx.client)
+    )
+
+
+def test_request_smuggling_response(tctx):
+    """Test that we reject response smuggling"""
+    server = Placeholder(Server)
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Length: 42\r\n\r\n",
+        )
+        << CloseConnection(server)
+        << SendData(
+            tctx.client,
+            BytesMatching(
+                b"Disable the validate_inbound_headers option to skip this security check"
+            ),
+        )
         << CloseConnection(tctx.client)
     )
 

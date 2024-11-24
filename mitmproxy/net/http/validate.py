@@ -111,7 +111,7 @@ def validate_headers(message: Message) -> None:
         )
         if te_disallowed:
             raise ValueError(
-                f"Unexpected HTTP version for transfer-encoding: {message.http_version!r}"
+                f"Unexpected HTTP transfer encoding: {message.http_version!r}"
             )
         parse_transfer_encoding(te[0])
     elif cl:

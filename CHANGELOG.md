@@ -13,9 +13,8 @@
   ([#7228](https://github.com/mitmproxy/mitmproxy/pull/7228), @fatanugraha)
 - Add a `tun` proxy mode that creates a virtual network device on Linux for transparent proxying.
   ([#7278](https://github.com/mitmproxy/mitmproxy/pull/7278), @mhils)
-- Implement stricter validation of Content-Length and Transfer-Encoding headers to harden against
-  request smuggling attacks.
-  ([#7343](https://github.com/mitmproxy/mitmproxy/pull/7343), @mhils)
+- Implement stricter validation of HTTP headers to harden against request smuggling attacks.
+  ([#7345](https://github.com/mitmproxy/mitmproxy/issues/7345), @mhils)
 - Fix a bug where mitmproxy would incorrectly report that TLS 1.0 and 1.1 are not supported
   with the current OpenSSL build.
   ([#7241](https://github.com/mitmproxy/mitmproxy/pull/7241), @mhils)
