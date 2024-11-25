@@ -11,7 +11,7 @@ import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import LineRenderer from "./LineRenderer";
 import ViewSelector from "./ViewSelector";
-import { copyViewContentDataToClipboard } from "../../utils";
+import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -61,6 +61,26 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         }
     }, [content]);
 
+    const handleClickCopyButton = () => {
+        const url = MessageUtils.getContentURL(flow, message, contentView); //without the 'maxLines' parameter, so we can get the full content of the content view
+
+        fetchApi(url)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(
+                        `${response.status} ${response.statusText}`.trim(),
+                    );
+                }
+                return response.json();
+            })
+            .then((data: ContentViewData) => {
+                copyViewContentDataToClipboard(data);
+            })
+            .catch((e) => {
+                console.error(e);
+            });
+    };
+
     if (edit) {
         const save = async () => {
             const content = editorRef.current?.getContent();
@@ -99,10 +119,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 <div className="controls">
                     <h5>{desc}</h5>
                     <Button
-                        onClick={() => {
-                            console.log(contentViewData);
-                            copyViewContentDataToClipboard(contentViewData);
-                        }}
+                        onClick={handleClickCopyButton}
                         icon="fa-clipboard"
                         className="btn-xs"
                     >
