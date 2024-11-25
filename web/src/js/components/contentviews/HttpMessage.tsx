@@ -33,6 +33,8 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         [maxLines],
     );
     const [edit, setEdit] = useState<boolean>(false);
+    const [isCopied, setIsCopied] = useState<boolean>(false);
+
     let url: string;
     if (edit) {
         url = MessageUtils.getContentURL(flow, message);
@@ -74,7 +76,9 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 return response.json();
             })
             .then((data: ContentViewData) => {
+                setIsCopied(true);
                 copyViewContentDataToClipboard(data);
+                setTimeout(() => setIsCopied(false), 10000);
             })
             .catch((e) => {
                 console.error(e);
@@ -122,8 +126,9 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                         onClick={handleClickCopyButton}
                         icon="fa-clipboard"
                         className="btn-xs"
+                        disabled={isCopied}
                     >
-                        Copy
+                        {isCopied ? "Copied!" : "Copy"}
                     </Button>
                     &nbsp;
                     <Button
