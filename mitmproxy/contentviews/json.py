@@ -18,7 +18,7 @@ def parse_json(s: bytes) -> Any:
 
 
 def format_json(data: Any) -> Iterator[base.TViewLine]:
-    encoder = json.JSONEncoder(indent=4, sort_keys=True, ensure_ascii=False)
+    encoder = json.JSONEncoder(indent=4, ensure_ascii=False)
     current_line: base.TViewLine = []
     for chunk in encoder.iterencode(data):
         if "\n" in chunk:
