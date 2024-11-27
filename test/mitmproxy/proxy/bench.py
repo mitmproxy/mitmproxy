@@ -6,10 +6,13 @@ Usage:
 See also:
   - https://github.com/mitmproxy/proxybench
 """
+
 import copy
 
-from .layers import test_tcp, test_tls
-from .layers.http import test_http, test_http2
+from .layers import test_tcp
+from .layers import test_tls
+from .layers.http import test_http
+from .layers.http import test_http2
 
 
 def test_bench_http_roundtrip(tctx, benchmark):

@@ -1,8 +1,9 @@
 """
 This module is reponsible for drawing the quick key help at the bottom of mitmproxy.
 """
+
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Union
 
 import urwid
 
@@ -21,6 +22,7 @@ from mitmproxy.tools.console.options import Options
 @dataclass
 class BasicKeyHelp:
     """Quick help for urwid-builtin keybindings (i.e. those keys that do not appear in the keymap)"""
+
     key: str
 
 
@@ -49,7 +51,7 @@ class QuickHelp:
 
 def make(
     widget: type[urwid.Widget],
-    focused_flow: Optional[flow.Flow],
+    focused_flow: flow.Flow | None,
     is_root_widget: bool,
 ) -> QuickHelp:
     top_label = ""
@@ -67,10 +69,12 @@ def make(
                 "Export": "Export this flow to file",
                 "Delete": "Delete flow from view",
             }
-            if focused_flow.marked:
-                top_items["Unmark"] = "Toggle mark on this flow"
-            else:
-                top_items["Mark"] = "Toggle mark on this flow"
+            if widget == FlowListBox:
+                if focused_flow.marked:
+                    top_items["Unmark"] = "Toggle mark on this flow"
+                else:
+                    top_items["Mark"] = "Toggle mark on this flow"
+                top_items["Edit"] = "Edit a flow component"
             if focused_flow.intercepted:
                 top_items["Resume"] = "Resume this intercepted flow"
             if focused_flow.modified():
@@ -166,7 +170,7 @@ def _make_row(label: str, items: HelpItems, keymap: Keymap) -> urwid.Columns:
     cols = [
         (len(label), urwid.Text(label)),
     ]
-    for (short, long) in items.items():
+    for short, long in items.items():
         if isinstance(long, BasicKeyHelp):
             key_short = long.key
         else:
@@ -180,7 +184,7 @@ def _make_row(label: str, items: HelpItems, keymap: Keymap) -> urwid.Columns:
                 " ",
                 short,
             ],
-            wrap="clip"
+            wrap="clip",
         )
         cols.append((14, txt))
 

@@ -1,8 +1,8 @@
-import re
 import json
+import re
 from collections.abc import Iterator
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 from mitmproxy.contentviews import base
 
@@ -18,7 +18,7 @@ def parse_json(s: bytes) -> Any:
 
 
 def format_json(data: Any) -> Iterator[base.TViewLine]:
-    encoder = json.JSONEncoder(indent=4, sort_keys=True, ensure_ascii=False)
+    encoder = json.JSONEncoder(indent=4, ensure_ascii=False)
     current_line: base.TViewLine = []
     for chunk in encoder.iterencode(data):
         if "\n" in chunk:
@@ -28,7 +28,11 @@ def format_json(data: Any) -> Iterator[base.TViewLine]:
             yield current_line
             current_line = []
         if re.match(r'\s*"', chunk):
-            if len(current_line) == 1 and current_line[0][0] == "text" and current_line[0][1].isspace():
+            if (
+                len(current_line) == 1
+                and current_line[0][0] == "text"
+                and current_line[0][1].isspace()
+            ):
                 current_line.append(("Token_Name_Tag", chunk))
             else:
                 current_line.append(("Token_Literal_String", chunk))
@@ -50,7 +54,7 @@ class ViewJSON(base.View):
             return "JSON", format_json(data)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         if not data:
             return 0

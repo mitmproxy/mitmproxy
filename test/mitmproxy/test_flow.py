@@ -8,8 +8,10 @@ from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.io import tnetstring
-from mitmproxy.proxy import server_hooks, layers
-from mitmproxy.test import taddons, tflow
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import server_hooks
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class State:
@@ -42,13 +44,14 @@ class TestSerialize:
 
         sio.seek(0)
         r = mitmproxy.io.FlowReader(sio)
-        l = list(r.stream())
-        assert len(l) == 1
+        lst = list(r.stream())
+        assert len(lst) == 1
 
-        f2 = l[0]
+        f2 = lst[0]
         assert f2.get_state() == f.get_state()
         assert f2.request.data == f.request.data
         assert f2.marked
+        assert f2.comment == "test comment"
 
     def test_filter(self):
         sio = io.BytesIO()

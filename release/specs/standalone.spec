@@ -7,6 +7,11 @@ for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
     if tool != "mitmproxy":
         excludes.append("mitmproxy.tools.console")
 
+    options = []
+    if tool == "mitmdump":
+        # https://github.com/mitmproxy/mitmproxy/issues/6757
+        options.append(("unbuffered", None, "OPTION"))
+
     a = Analysis(
         [tool],
         excludes=excludes,
@@ -19,8 +24,8 @@ for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
         a.binaries,
         a.zipfiles,
         a.datas,
-        [],
+        options,
         name=tool,
         console=True,
-        icon='icon.ico',
+        icon="icon.ico",
     )

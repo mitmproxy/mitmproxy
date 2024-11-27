@@ -11,49 +11,47 @@ Thus, the View API is very minimalistic. The only arguments are `data` and
 metadata depend on the protocol in use. Known attributes can be found in
 `base.View`.
 """
+
 import traceback
-from typing import Union
-from typing import Optional
 
-from mitmproxy import flow, tcp, udp
-from mitmproxy import http
-from mitmproxy.utils import signals, strutils
-from . import (
-    auto,
-    raw,
-    hex,
-    json,
-    xml_html,
-    wbxml,
-    javascript,
-    css,
-    urlencoded,
-    multipart,
-    image,
-    query,
-    protobuf,
-    msgpack,
-    graphql,
-    grpc,
-    mqtt,
-)
-
-try:
-    from . import http3
-except ImportError:
-    # FIXME: Remove once QUIC is merged.
-    http3 = None  # type: ignore
-from .base import View, KEY_MAX, format_text, format_dict, TViewResult
-from ..http import HTTPFlow
-from ..tcp import TCPMessage, TCPFlow
-from ..udp import UDPMessage, UDPFlow
+from ..tcp import TCPMessage
+from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
+from . import auto
+from . import css
+from . import dns
+from . import graphql
+from . import grpc
+from . import hex
+from . import http3
+from . import image
+from . import javascript
+from . import json
+from . import mqtt
+from . import msgpack
+from . import multipart
+from . import protobuf
+from . import query
+from . import raw
+from . import urlencoded
+from . import wbxml
+from . import xml_html
+from .base import format_dict
+from .base import format_text
+from .base import KEY_MAX
+from .base import TViewResult
+from .base import View
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import udp
+from mitmproxy.utils import signals
+from mitmproxy.utils import strutils
 
 views: list[View] = []
 
 
-def _update(view: View) -> None:
-    ...
+def _update(view: View) -> None: ...
 
 
 on_add = signals.SyncSignal(_update)
@@ -62,7 +60,7 @@ on_remove = signals.SyncSignal(_update)
 """A contentview has been removed."""
 
 
-def get(name: str) -> Optional[View]:
+def get(name: str) -> View | None:
     for i in views:
         if i.name.lower() == name.lower():
             return i
@@ -90,7 +88,7 @@ def safe_to_print(lines, encoding="utf8"):
     """
     for line in lines:
         clean_line = []
-        for (style, text) in line:
+        for style, text in line:
             if isinstance(text, bytes):
                 text = text.decode(encoding, "replace")
             text = strutils.escape_control_characters(text)
@@ -100,8 +98,8 @@ def safe_to_print(lines, encoding="utf8"):
 
 def get_message_content_view(
     viewname: str,
-    message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
-    flow: Union[HTTPFlow, TCPFlow, UDPFlow],
+    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    flow: flow.Flow,
 ):
     """
     Like get_content_view, but also handles message encoding.
@@ -111,7 +109,7 @@ def get_message_content_view(
         viewmode = get("auto")
     assert viewmode
 
-    content: Optional[bytes]
+    content: bytes | None
     try:
         content = message.content
     except ValueError:
@@ -143,6 +141,10 @@ def get_message_content_view(
     if isinstance(message, UDPMessage):
         udp_message = message
 
+    websocket_message = None
+    if isinstance(message, WebSocketMessage):
+        websocket_message = message
+
     description, lines, error = get_content_view(
         viewmode,
         content,
@@ -151,6 +153,7 @@ def get_message_content_view(
         http_message=http_message,
         tcp_message=tcp_message,
         udp_message=udp_message,
+        websocket_message=websocket_message,
     )
 
     if enc:
@@ -163,11 +166,12 @@ def get_content_view(
     viewmode: View,
     data: bytes,
     *,
-    content_type: Optional[str] = None,
-    flow: Optional[flow.Flow] = None,
-    http_message: Optional[http.Message] = None,
-    tcp_message: Optional[tcp.TCPMessage] = None,
-    udp_message: Optional[udp.UDPMessage] = None,
+    content_type: str | None = None,
+    flow: flow.Flow | None = None,
+    http_message: http.Message | None = None,
+    tcp_message: tcp.TCPMessage | None = None,
+    udp_message: udp.UDPMessage | None = None,
+    websocket_message: WebSocketMessage | None = None,
 ):
     """
     Args:
@@ -188,6 +192,7 @@ def get_content_view(
             http_message=http_message,
             tcp_message=tcp_message,
             udp_message=udp_message,
+            websocket_message=websocket_message,
         )
         if ret is None:
             ret = (
@@ -199,6 +204,7 @@ def get_content_view(
                     http_message=http_message,
                     tcp_message=tcp_message,
                     udp_message=udp_message,
+                    websocket_message=websocket_message,
                 )[1],
             )
         desc, content = ret
@@ -215,6 +221,7 @@ def get_content_view(
             http_message=http_message,
             tcp_message=tcp_message,
             udp_message=udp_message,
+            websocket_message=websocket_message,
         )[1]
         error = f"{getattr(viewmode, 'name')} content viewer failed: \n{traceback.format_exc()}"
 
@@ -224,7 +231,8 @@ def get_content_view(
 # The order in which ContentViews are added is important!
 add(auto.ViewAuto())
 add(raw.ViewRaw())
-add(hex.ViewHex())
+add(hex.ViewHexStream())
+add(hex.ViewHexDump())
 add(graphql.ViewGraphQL())
 add(json.ViewJSON())
 add(xml_html.ViewXmlHtml())
@@ -239,8 +247,8 @@ add(protobuf.ViewProtobuf())
 add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
 add(mqtt.ViewMQTT())
-if http3 is not None:
-    add(http3.ViewHttp3())
+add(http3.ViewHttp3())
+add(dns.ViewDns())
 
 __all__ = [
     "View",

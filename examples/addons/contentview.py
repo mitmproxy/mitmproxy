@@ -5,10 +5,11 @@ This example shows how one can add a custom contentview to mitmproxy,
 which is used to pretty-print HTTP bodies for example.
 The content view API is explained in the mitmproxy.contentviews module.
 """
-from typing import Optional
 
-from mitmproxy import contentviews, flow
+from mitmproxy import contentviews
+from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy.addonmanager import Loader
 
 
 class ViewSwapCase(contentviews.View):
@@ -18,9 +19,9 @@ class ViewSwapCase(contentviews.View):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> contentviews.TViewResult:
         return "case-swapped text", contentviews.format_text(data.swapcase())
@@ -29,9 +30,9 @@ class ViewSwapCase(contentviews.View):
         self,
         data: bytes,
         *,
-        content_type: Optional[str] = None,
-        flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.Message] = None,
+        content_type: str | None = None,
+        flow: flow.Flow | None = None,
+        http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> float:
         if content_type == "text/plain":
@@ -43,7 +44,7 @@ class ViewSwapCase(contentviews.View):
 view = ViewSwapCase()
 
 
-def load(l):
+def load(loader: Loader):
     contentviews.add(view)
 
 

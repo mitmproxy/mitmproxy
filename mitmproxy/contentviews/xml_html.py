@@ -1,10 +1,11 @@
 import io
 import re
 import textwrap
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 from mitmproxy.contentviews import base
-from mitmproxy.utils import sliding_window, strutils
+from mitmproxy.utils import sliding_window
+from mitmproxy.utils import strutils
 
 """
 A custom XML/HTML prettifier. Compared to other prettifiers, its main features are:
@@ -46,7 +47,7 @@ class Token:
         self.data = data
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, self.data)
+        return f"{type(self).__name__}({self.data})"
 
 
 class Text(Token):
@@ -138,7 +139,7 @@ def indent_text(data: str, prefix: str) -> str:
     return textwrap.indent(dedented, prefix[:32])
 
 
-def is_inline_text(a: Optional[Token], b: Optional[Token], c: Optional[Token]) -> bool:
+def is_inline_text(a: Token | None, b: Token | None, c: Token | None) -> bool:
     if isinstance(a, Tag) and isinstance(b, Text) and isinstance(c, Tag):
         if a.is_opening and "\n" not in b.data and c.is_closing and a.tag == c.tag:
             return True
@@ -146,11 +147,11 @@ def is_inline_text(a: Optional[Token], b: Optional[Token], c: Optional[Token]) -
 
 
 def is_inline(
-    prev2: Optional[Token],
-    prev1: Optional[Token],
-    t: Optional[Token],
-    next1: Optional[Token],
-    next2: Optional[Token],
+    prev2: Token | None,
+    prev1: Token | None,
+    t: Token | None,
+    next1: Token | None,
+    next2: Token | None,
 ) -> bool:
     if isinstance(t, Text):
         return is_inline_text(prev1, t, next1)
@@ -265,7 +266,7 @@ class ViewXmlHtml(base.View):
         return t, pretty
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         if not data:
             return 0

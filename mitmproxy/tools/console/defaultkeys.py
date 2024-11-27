@@ -17,6 +17,7 @@ def map(km: Keymap) -> None:
     km.add("E", "console.view.eventlog", ["commonkey", "global"], "View event log")
     km.add("Q", "console.exit", ["global"], "Exit immediately")
     km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current view")
+    km.add("esc", "console.view.pop", ["commonkey", "global"], "Exit the current view")
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl left", "console.panes.prev", ["global"], "Focus previous layout pane")
@@ -73,7 +74,7 @@ def map(km: Keymap) -> None:
         "D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow"
     )
     km.add(
-        "e",
+        "x",
         """
         console.choose.cmd Format export.formats
         console.command export.file {choice} @focus
@@ -82,7 +83,12 @@ def map(km: Keymap) -> None:
         "Export this flow to file",
     )
     km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
-    km.add("F", "set console_focus_follow toggle", ["flowlist"], "Set focus follow")
+    km.add(
+        "F",
+        "set console_focus_follow toggle",
+        ["flowlist", "flowview"],
+        "Set focus follow",
+    )
     km.add(
         "ctrl l",
         "console.command cut.clip ",
@@ -150,7 +156,7 @@ def map(km: Keymap) -> None:
         console.choose.cmd Part console.edit.focus.options
         console.edit.focus {choice}
         """,
-        ["flowview"],
+        ["flowlist", "flowview"],
         "Edit a flow component",
     )
     km.add(

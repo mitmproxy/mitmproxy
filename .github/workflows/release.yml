@@ -22,13 +22,13 @@ jobs:
     environment: deploy-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PUSH_TOKEN }}  # this token works to push to the protected main branch.
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version-file: .github/python-version.txt
       - run: ./release/release.py ${{ inputs.version }} ${{ inputs.skip-branch-status-check }}

@@ -58,6 +58,27 @@ def test_server_playback():
         assert not sp.flowmap
 
 
+def test_add_flows():
+    sp = serverplayback.ServerPlayback()
+    with taddons.context(sp) as tctx:
+        tctx.configure(sp)
+        f1 = tflow.tflow(resp=True)
+        f2 = tflow.tflow(resp=True)
+
+        sp.load_flows([f1])
+        sp.add_flows([f2])
+
+        assert sp.next_flow(f1)
+        assert sp.flowmap
+        assert sp.next_flow(f2)
+        assert not sp.flowmap
+
+        sp.add_flows([f1])
+        assert sp.flowmap
+        assert sp.next_flow(f1)
+        assert not sp.flowmap
+
+
 def test_ignore_host():
     sp = serverplayback.ServerPlayback()
     with taddons.context(sp) as tctx:
@@ -211,10 +232,10 @@ def test_load():
         assert not s.next_flow(r)
 
 
-def test_load_with_server_replay_nopop():
+def test_load_with_server_replay_reuse():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
-        tctx.configure(s, server_replay_nopop=True)
+        tctx.configure(s, server_replay_reuse=True)
 
         r = tflow.tflow(resp=True)
         r.request.headers["key"] = "one"
@@ -304,6 +325,24 @@ def test_ignore_payload_params():
     thash(r, r2, multipart_setter)
 
 
+def test_runtime_modify_params():
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        r = tflow.tflow(resp=True)
+        r.request.path = "/test?param1=1"
+        r2 = tflow.tflow(resp=True)
+        r2.request.path = "/test"
+
+        s.load_flows([r])
+        hash = next(iter(s.flowmap.keys()))
+
+        tctx.configure(s, server_replay_ignore_params=["param1"])
+        hash_mod = next(iter(s.flowmap.keys()))
+
+        assert hash != hash_mod
+        assert hash_mod == s._hash(r2)
+
+
 def test_server_playback_full():
     s = serverplayback.ServerPlayback()
     with taddons.context(s) as tctx:
@@ -341,6 +380,45 @@ async def test_server_playback_kill():
         f.request.host = "nonexistent"
         await tctx.cycle(s, f)
         assert f.error
+
+
+async def test_server_playback_kill_new_option():
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra="kill")
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        await tctx.cycle(s, f)
+        assert f.error
+
+
+@pytest.mark.parametrize(
+    "option,status",
+    [
+        ("204", 204),
+        ("400", 400),
+        ("404", 404),
+        ("500", 500),
+    ],
+)
+async def test_server_playback_404(option, status):
+    s = serverplayback.ServerPlayback()
+    with taddons.context(s) as tctx:
+        tctx.configure(s, server_replay_refresh=True, server_replay_extra=option)
+
+        f = tflow.tflow()
+        f.response = mitmproxy.test.tutils.tresp(content=f.request.content)
+        s.load_flows([f])
+
+        f = tflow.tflow()
+        f.request.host = "nonexistent"
+        s.request(f)
+        assert f.response.status_code == status
 
 
 def test_server_playback_response_deleted():

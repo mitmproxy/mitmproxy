@@ -6,12 +6,15 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
+
 import logging
 import warnings
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing import Union
 
 import mitmproxy.hooks
-from mitmproxy.connection import Connection, Server
+from mitmproxy.connection import Connection
+from mitmproxy.connection import Server
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer
@@ -76,7 +79,7 @@ class SendData(ConnectionCommand):
 
     def __repr__(self):
         target = str(self.connection).split("(", 1)[0].lower()
-        return f"SendData({target}, {self.data})"
+        return f"SendData({target}, {self.data!r})"
 
 
 class OpenConnection(ConnectionCommand):
@@ -94,6 +97,8 @@ class CloseConnection(ConnectionCommand):
     all other connections will ultimately be closed during cleanup.
     """
 
+
+class CloseTcpConnection(CloseConnection):
     half_close: bool
     """
     If True, only close our half of the connection by sending a FIN packet.
@@ -131,6 +136,7 @@ class Log(Command):
     This could also be implemented with some more playbook magic in the future,
     but for now we keep the current approach as the fully sans-io one.
     """
+
     message: str
     level: int
 
@@ -142,7 +148,8 @@ class Log(Command):
         if isinstance(level, str):  # pragma: no cover
             warnings.warn(
                 "commands.Log() now expects an integer log level, not a string.",
-                DeprecationWarning, stacklevel=2
+                DeprecationWarning,
+                stacklevel=2,
             )
             level = getattr(logging, level.upper())
         self.message = message

@@ -1,5 +1,6 @@
 import uuid
-from typing import Optional, Union
+
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy import connection
 from mitmproxy import dns
@@ -8,10 +9,12 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy import websocket
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.mode_specs import ProxyMode
-from mitmproxy.test.tutils import tdnsreq, tdnsresp
-from mitmproxy.test.tutils import treq, tresp
-from wsproto.frame_protocol import Opcode
+from mitmproxy.test.tutils import tdnsreq
+from mitmproxy.test.tutils import tdnsresp
+from mitmproxy.test.tutils import treq
+from mitmproxy.test.tutils import tresp
 
 
 def ttcpflow(
@@ -118,11 +121,11 @@ def twebsocketflow(
 
 def tdnsflow(
     *,
-    client_conn: Optional[connection.Client] = None,
-    server_conn: Optional[connection.Server] = None,
-    req: Optional[dns.Message] = None,
-    resp: Union[bool, dns.Message] = False,
-    err: Union[bool, flow.Error] = False,
+    client_conn: connection.Client | None = None,
+    server_conn: connection.Server | None = None,
+    req: dns.Message | None = None,
+    resp: bool | dns.Message = False,
+    err: bool | flow.Error = False,
     live: bool = True,
 ) -> dns.DNSFlow:
     """Create a DNS flow for testing."""
@@ -155,12 +158,12 @@ def tdnsflow(
 
 def tflow(
     *,
-    client_conn: Optional[connection.Client] = None,
-    server_conn: Optional[connection.Server] = None,
-    req: Optional[http.Request] = None,
-    resp: Union[bool, http.Response] = False,
-    err: Union[bool, flow.Error] = False,
-    ws: Union[bool, websocket.WebSocketData] = False,
+    client_conn: connection.Client | None = None,
+    server_conn: connection.Server | None = None,
+    req: http.Request | None = None,
+    resp: bool | http.Response = False,
+    err: bool | flow.Error = False,
+    ws: bool | websocket.WebSocketData = False,
     live: bool = True,
 ) -> http.HTTPFlow:
     """Create a flow for testing."""
@@ -211,58 +214,50 @@ def tdummyflow(client_conn=True, server_conn=True, err=None) -> DummyFlow:
 
 
 def tclient_conn() -> connection.Client:
-    c = connection.Client.from_state(
-        dict(
-            id=str(uuid.uuid4()),
-            address=("127.0.0.1", 22),
-            mitmcert=None,
-            tls_established=True,
-            timestamp_start=946681200,
-            timestamp_tls_setup=946681201,
-            timestamp_end=946681206,
-            sni="address",
-            cipher_name="cipher",
-            alpn=b"http/1.1",
-            tls_version="TLSv1.2",
-            tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
-            state=0,
-            sockname=("", 0),
-            error=None,
-            tls=False,
-            certificate_list=[],
-            alpn_offers=[],
-            cipher_list=[],
-            proxy_mode="regular",
-        )
+    c = connection.Client(
+        id=str(uuid.uuid4()),
+        peername=("127.0.0.1", 22),
+        sockname=("", 0),
+        mitmcert=None,
+        timestamp_start=946681200,
+        timestamp_tls_setup=946681201,
+        timestamp_end=946681206,
+        sni="address",
+        cipher="cipher",
+        alpn=b"http/1.1",
+        tls_version="TLSv1.2",
+        state=ConnectionState.OPEN,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_list=[],
+        proxy_mode=ProxyMode.parse("regular"),
     )
     return c
 
 
 def tserver_conn() -> connection.Server:
-    c = connection.Server.from_state(
-        dict(
-            id=str(uuid.uuid4()),
-            address=("address", 22),
-            source_address=("address", 22),
-            ip_address=("192.168.0.1", 22),
-            timestamp_start=946681202,
-            timestamp_tcp_setup=946681203,
-            timestamp_tls_setup=946681204,
-            timestamp_end=946681205,
-            tls_established=True,
-            sni="address",
-            alpn=None,
-            tls_version="TLSv1.2",
-            via=None,
-            state=0,
-            error=None,
-            tls=False,
-            certificate_list=[],
-            alpn_offers=[],
-            cipher_name=None,
-            cipher_list=[],
-            via2=None,
-        )
+    c = connection.Server(
+        id=str(uuid.uuid4()),
+        address=("address", 22),
+        peername=("192.168.0.1", 22),
+        sockname=("address", 22),
+        timestamp_start=946681202,
+        timestamp_tcp_setup=946681203,
+        timestamp_tls_setup=946681204,
+        timestamp_end=946681205,
+        sni="address",
+        alpn=None,
+        tls_version="TLSv1.2",
+        via=None,
+        state=ConnectionState.CLOSED,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher=None,
+        cipher_list=[],
     )
     return c
 

@@ -1,24 +1,29 @@
 """
-    This module manages and invokes typed commands.
+This module manages and invokes typed commands.
 """
+
 import functools
 import inspect
 import logging
-
-import pyparsing
 import sys
 import textwrap
 import types
-from collections.abc import Sequence, Callable, Iterable
-from typing import Any, NamedTuple, Optional
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Sequence
+from typing import Any
+from typing import NamedTuple
+
+import pyparsing
 
 import mitmproxy.types
-from mitmproxy import exceptions, command_lexer
+from mitmproxy import command_lexer
+from mitmproxy import exceptions
 from mitmproxy.command_lexer import unquote
 
 
 def verify_arg_signature(f: Callable, args: Iterable[Any], kwargs: dict) -> None:
-    sig = inspect.signature(f)
+    sig = inspect.signature(f, eval_str=True)
     try:
         sig.bind(*args, **kwargs)
     except TypeError as v:
@@ -61,13 +66,13 @@ class Command:
     name: str
     manager: "CommandManager"
     signature: inspect.Signature
-    help: Optional[str]
+    help: str | None
 
     def __init__(self, manager: "CommandManager", name: str, func: Callable) -> None:
         self.name = name
         self.manager = manager
         self.func = func
-        self.signature = inspect.signature(self.func)
+        self.signature = inspect.signature(self.func, eval_str=True)
 
         if func.__doc__:
             txt = func.__doc__.strip()
@@ -90,7 +95,7 @@ class Command:
             )
 
     @property
-    def return_type(self) -> Optional[type]:
+    def return_type(self) -> type | None:
         return _empty_as_none(self.signature.return_annotation)
 
     @property
@@ -195,14 +200,16 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: pyparsing.ParseResults = command_lexer.expr.parseString(cmdstr, parseAll=True)
+        parts: pyparsing.ParseResults = command_lexer.expr.parseString(
+            cmdstr, parseAll=True
+        )
 
         parsed: list[ParseResult] = []
         next_params: list[CommandParameter] = [
             CommandParameter("", mitmproxy.types.Cmd),
             CommandParameter("", mitmproxy.types.CmdArgs),
         ]
-        expected: Optional[CommandParameter] = None
+        expected: CommandParameter | None = None
         for part in parts:
             if part.isspace():
                 parsed.append(
@@ -307,7 +314,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> Any:
         raise exceptions.CommandError(str(e)) from e
 
 
-def command(name: Optional[str] = None):
+def command(name: str | None = None):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):

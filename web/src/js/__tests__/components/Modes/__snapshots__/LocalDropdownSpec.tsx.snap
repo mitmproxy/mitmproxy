@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LocalDropdown - initial render and filtering 1`] = `
+<DocumentFragment>
+  <div
+    class="local-dropdown"
+  >
+    <div
+      class="dropdown-header"
+    >
+      <input
+        class="autocomplete-input"
+        placeholder="(all applications)"
+        type="text"
+        value=""
+      />
+      <div
+        class="mode-popover local-popover"
+      >
+        <button
+          popovertarget=":r0:"
+        >
+          <i
+            aria-hidden="true"
+            class="fa fa-chevron-down"
+          />
+        </button>
+        <div
+          id=":r0:"
+          popover="auto"
+        >
+          <h4>
+            Current Applications running on machine
+          </h4>
+          <ul
+            class="dropdown-list"
+          >
+            <li
+              class="dropdown-item "
+              role="menuitem"
+            >
+              <div
+                class="process-details"
+              >
+                <img
+                  class="process-icon"
+                  loading="lazy"
+                  src="./executable-icon?path=curl.exe"
+                />
+                <span
+                  class="process-name"
+                >
+                  curl.exe
+                </span>
+              </div>
+            </li>
+            <li
+              class="dropdown-item "
+              role="menuitem"
+            >
+              <div
+                class="process-details"
+              >
+                <img
+                  class="process-icon"
+                  loading="lazy"
+                  src="./executable-icon?path=http.exe"
+                />
+                <span
+                  class="process-name"
+                >
+                  http.exe
+                </span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

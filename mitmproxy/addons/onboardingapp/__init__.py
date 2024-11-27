@@ -1,8 +1,10 @@
 import os
 
-from flask import Flask, render_template
+from flask import Flask
+from flask import render_template
 
-from mitmproxy.options import CONF_BASENAME, CONF_DIR
+from mitmproxy.options import CONF_BASENAME
+from mitmproxy.options import CONF_DIR
 from mitmproxy.utils.magisk import write_magisk_module
 
 app = Flask(__name__)

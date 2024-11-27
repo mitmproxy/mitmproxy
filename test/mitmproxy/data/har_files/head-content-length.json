@@ -1,0 +1,193 @@
+[
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1702398196.067544,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1702398196.169108
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": [
+                "199.232.96.223",
+                443
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "HEAD",
+            "scheme": "https",
+            "host": "files.pythonhosted.org",
+            "port": 443,
+            "path": "/packages/00/e5/f12a80907d0884e6dff9c16d0c0114d81b8cd07dc3ae54c5e962cc83037e/tqdm-4.66.1-py3-none-any.whl",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    "accept",
+                    "*/*"
+                ],
+                [
+                    "user-agent",
+                    "puffin"
+                ],
+                [
+                    "accept-encoding",
+                    "gzip, br"
+                ],
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1702398196.067544,
+            "timestamp_end": 1702398196.169108,
+            "pretty_host": "files.pythonhosted.org"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "last-modified",
+                    "Thu, 10 Aug 2023 11:39:00 GMT"
+                ],
+                [
+                    "etag",
+                    "\"a296c6e224c118b0d08cd77e8c08f4b1\""
+                ],
+                [
+                    "x-amz-request-id",
+                    "aeb4d3335548af85"
+                ],
+                [
+                    "x-amz-id-2",
+                    "aN65jxTFgNrlm8zEJMNdk7mYLYwUwTzh0"
+                ],
+                [
+                    "x-amz-version-id",
+                    "4_z179c51e67f11a0ad8f6c0018_f10789ff3151435c8_d20230810_m113900_c005_v0501001_t0045_u01691667540984"
+                ],
+                [
+                    "content-type",
+                    "application/octet-stream"
+                ],
+                [
+                    "cache-control",
+                    "max-age=365000000, immutable, public"
+                ],
+                [
+                    "accept-ranges",
+                    "bytes"
+                ],
+                [
+                    "date",
+                    "Tue, 12 Dec 2023 16:23:16 GMT"
+                ],
+                [
+                    "age",
+                    "2335275"
+                ],
+                [
+                    "x-served-by",
+                    "cache-iad-kcgs7200038-IAD, cache-lck10926-LCK"
+                ],
+                [
+                    "x-cache",
+                    "HIT, HIT"
+                ],
+                [
+                    "x-cache-hits",
+                    "21459, 139679"
+                ],
+                [
+                    "x-timer",
+                    "S1702398196.107663,VS0,VE0"
+                ],
+                [
+                    "strict-transport-security",
+                    "max-age=31536000; includeSubDomains; preload"
+                ],
+                [
+                    "x-frame-options",
+                    "deny"
+                ],
+                [
+                    "x-xss-protection",
+                    "1; mode=block"
+                ],
+                [
+                    "x-content-type-options",
+                    "nosniff"
+                ],
+                [
+                    "x-permitted-cross-domain-policies",
+                    "none"
+                ],
+                [
+                    "x-robots-header",
+                    "noindex"
+                ],
+                [
+                    "x-pypi-file-python-version",
+                    "py3"
+                ],
+                [
+                    "x-pypi-file-version",
+                    "4.66.1"
+                ],
+                [
+                    "x-pypi-file-package-type",
+                    "bdist_wheel"
+                ],
+                [
+                    "x-pypi-file-project",
+                    "tqdm"
+                ],
+                [
+                    "content-length",
+                    "78258"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1702398196.067544,
+            "timestamp_end": 1702398196.169108
+        }
+    }
+]

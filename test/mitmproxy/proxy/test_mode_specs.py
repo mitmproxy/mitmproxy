@@ -1,6 +1,9 @@
+import dataclasses
+
 import pytest
 
-from mitmproxy.proxy.mode_specs import ProxyMode, Socks5Mode
+from mitmproxy.proxy.mode_specs import ProxyMode
+from mitmproxy.proxy.mode_specs import Socks5Mode
 
 
 def test_parse():
@@ -24,7 +27,7 @@ def test_parse():
         ProxyMode.parse("regular@99999")
 
     m.set_state(m.get_state())
-    with pytest.raises(RuntimeError, match="Proxy modes are frozen"):
+    with pytest.raises(dataclasses.FrozenInstanceError):
         m.set_state("regular")
 
 
@@ -39,11 +42,15 @@ def test_listen_addr():
     assert ProxyMode.parse("regular@1234").listen_port() == 1234
     assert ProxyMode.parse("regular").listen_port(default=4424) == 4424
     assert ProxyMode.parse("regular@1234").listen_port(default=4424) == 1234
+    assert ProxyMode.parse("local").listen_port() is None
 
     assert ProxyMode.parse("regular").listen_host() == ""
     assert ProxyMode.parse("regular@127.0.0.2:8080").listen_host() == "127.0.0.2"
     assert ProxyMode.parse("regular").listen_host(default="127.0.0.3") == "127.0.0.3"
-    assert ProxyMode.parse("regular@127.0.0.2:8080").listen_host(default="127.0.0.3") == "127.0.0.2"
+    assert (
+        ProxyMode.parse("regular@127.0.0.2:8080").listen_host(default="127.0.0.3")
+        == "127.0.0.2"
+    )
 
     assert ProxyMode.parse("reverse:https://1.2.3.4").listen_port() == 8080
     assert ProxyMode.parse("reverse:dns://8.8.8.8").listen_port() == 53
@@ -51,9 +58,11 @@ def test_listen_addr():
 
 def test_parse_specific_modes():
     assert ProxyMode.parse("regular")
+    # assert ProxyMode.parse("http3")
     assert ProxyMode.parse("transparent")
     assert ProxyMode.parse("upstream:https://proxy")
     assert ProxyMode.parse("reverse:https://host@443")
+    assert ProxyMode.parse("reverse:http3://host@443")
     assert ProxyMode.parse("socks5")
     assert ProxyMode.parse("dns")
     assert ProxyMode.parse("reverse:dns://8.8.8.8")
@@ -61,12 +70,19 @@ def test_parse_specific_modes():
     assert ProxyMode.parse("wireguard")
     assert ProxyMode.parse("wireguard:foo.conf").data == "foo.conf"
     assert ProxyMode.parse("wireguard@51821").listen_port() == 51821
+    assert ProxyMode.parse("tun")
+    assert ProxyMode.parse("tun:utun42")
+
+    assert ProxyMode.parse("local")
 
     with pytest.raises(ValueError, match="invalid port"):
         ProxyMode.parse("regular@invalid-port")
 
     with pytest.raises(ValueError, match="takes no arguments"):
         ProxyMode.parse("regular:configuration")
+
+    # with pytest.raises(ValueError, match="takes no arguments"):
+    #     ProxyMode.parse("http3:configuration")
 
     with pytest.raises(ValueError, match="invalid upstream proxy scheme"):
         ProxyMode.parse("upstream:dns://example.com")
@@ -76,3 +92,6 @@ def test_parse_specific_modes():
 
     with pytest.raises(ValueError, match="Port specification missing."):
         ProxyMode.parse("reverse:dtls://127.0.0.1")
+
+    with pytest.raises(ValueError, match="invalid intercept spec"):
+        ProxyMode.parse("local:,,,")

@@ -1,6 +1,6 @@
 import os
-from unittest.mock import patch
 from pathlib import Path
+from unittest.mock import patch
 
 from mitmproxy.addons import command_history
 from mitmproxy.test import taddons

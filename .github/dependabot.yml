@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      "github actions":
+        patterns:
+          - "*"
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 10
+    groups:
+      pytest:
+        patterns:
+        - "pytest*"
+        - "hypothesis"
+      pyinstaller:
+        patterns:
+        - "pyinstaller*"
+      mypy:
+        patterns:
+        - "types-*"
+        - "mypy"
+      openssl:
+        patterns:
+        - "pyopenssl"
+        - "cryptography"

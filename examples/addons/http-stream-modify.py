@@ -7,10 +7,11 @@ Modifying streamed responses is tricky and brittle:
     - If you want to replace all occurrences of "foobar", make sure to catch the cases
       where one chunk ends with [...]foo" and the next starts with "bar[...].
 """
-from typing import Iterable, Union
+
+from collections.abc import Iterable
 
 
-def modify(data: bytes) -> Union[bytes, Iterable[bytes]]:
+def modify(data: bytes) -> bytes | Iterable[bytes]:
     """
     This function will be called for each chunk of request/response body data that arrives at the proxy,
     and once at the end of the message with an empty bytes argument (b"").

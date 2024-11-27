@@ -1,0 +1,138 @@
+[
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1680151158.981,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1680151159.0514019
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": null,
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "http",
+            "host": "mitm.it",
+            "port": 80,
+            "path": "/",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1680151158.981,
+            "timestamp_end": 1680151159.0514019,
+            "pretty_host": "mitm.it"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "Content-Type",
+                    "text/html"
+                ],
+                [
+                    "Content-Length",
+                    "250"
+                ],
+                [
+                    "Connection",
+                    "keep-alive"
+                ],
+                [
+                    "Last-Modified",
+                    "Mon, 26 Dec 2016 20:04:24 GMT"
+                ],
+                [
+                    "Accept-Ranges",
+                    "bytes"
+                ],
+                [
+                    "Server",
+                    "AmazonS3"
+                ],
+                [
+                    "Date",
+                    "Thu, 30 Mar 2023 04:36:02 GMT"
+                ],
+                [
+                    "Etag",
+                    "\"b17c505e5c0969bb21b89e6116530dde\""
+                ],
+                [
+                    "Vary",
+                    "Accept-Encoding"
+                ],
+                [
+                    "Via",
+                    "1.1 6354bde44a975facce9c0ed03828827e.cloudfront.net (CloudFront)"
+                ],
+                [
+                    "Age",
+                    "45929"
+                ],
+                [
+                    "Cache-Control",
+                    "no-store, must-revalidate"
+                ],
+                [
+                    "X-Cache",
+                    "Hit from cloudfront"
+                ],
+                [
+                    "X-Amz-Cf-Pop",
+                    "SFO53-P1"
+                ],
+                [
+                    "X-Amz-Cf-Id",
+                    "uGf_zmZcmVZRcJ8PJQvKXtwrdSIzIupupc51RIAQMdov8FQh755mSQ=="
+                ]
+            ],
+            "contentLength": 250,
+            "contentHash": "ad5724ee351ebc53212702f448c0136f3892e52036fb9e5918192a130bde38bd",
+            "timestamp_start": 1680151158.981,
+            "timestamp_end": 1680151159.0514019
+        }
+    }
+]

@@ -3,13 +3,18 @@ When IO actions occur at the proxy server, they are passed down to layers as eve
 Events represent the only way for layers to receive new data from sockets.
 The counterpart to events are commands.
 """
+
+import typing
 import warnings
-from dataclasses import dataclass, is_dataclass
-from typing import Any, Generic, Optional, TypeVar
+from dataclasses import dataclass
+from dataclasses import is_dataclass
+from typing import Any
+from typing import Generic
+from typing import TypeVar
 
 from mitmproxy import flow
-from mitmproxy.proxy import commands
 from mitmproxy.connection import Connection
+from mitmproxy.proxy import commands
 
 
 class Event:
@@ -47,7 +52,7 @@ class DataReceived(ConnectionEvent):
 
     def __repr__(self):
         target = type(self.connection).__name__.lower()
-        return f"DataReceived({target}, {self.data})"
+        return f"DataReceived({target}, {self.data!r})"
 
 
 class ConnectionClosed(ConnectionEvent):
@@ -72,7 +77,7 @@ class CommandCompleted(Event):
         return super().__new__(cls)
 
     def __init_subclass__(cls, **kwargs):
-        command_cls = cls.__annotations__.get("command", None)
+        command_cls = typing.get_type_hints(cls).get("command", None)
         valid_command_subclass = (
             isinstance(command_cls, type)
             and issubclass(command_cls, commands.Command)
@@ -80,7 +85,7 @@ class CommandCompleted(Event):
         )
         if not valid_command_subclass:
             warnings.warn(
-                f"{command_cls} needs a properly annotated command attribute.",
+                f"{cls} needs a properly annotated command attribute.",
                 RuntimeWarning,
             )
         if command_cls in command_reply_subclasses:
@@ -101,7 +106,7 @@ command_reply_subclasses: dict[commands.Command, type[CommandCompleted]] = {}
 @dataclass(repr=False)
 class OpenConnectionCompleted(CommandCompleted):
     command: commands.OpenConnection
-    reply: Optional[str]
+    reply: str | None
     """error message"""
 
 

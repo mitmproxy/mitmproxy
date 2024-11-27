@@ -1,7 +1,7 @@
-import os
 import re
 
 import urwid
+
 from mitmproxy import flow
 from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import common
@@ -16,11 +16,6 @@ from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 
-if os.name == "nt":
-    from mitmproxy.contrib.urwid import raw_display
-else:
-    from urwid import raw_display  # type: ignore
-
 
 class StackWidget(urwid.Frame):
     def __init__(self, window, widget, title, focus):
@@ -28,7 +23,7 @@ class StackWidget(urwid.Frame):
         self.window = window
 
         if title:
-            header = urwid.AttrWrap(
+            header = urwid.AttrMap(
                 urwid.Text(title), "heading" if focus else "heading_inactive"
             )
         else:
@@ -134,7 +129,7 @@ class Window(urwid.Frame):
     def __init__(self, master):
         self.statusbar = statusbar.StatusBar(master)
         super().__init__(
-            None, header=None, footer=urwid.AttrWrap(self.statusbar, "background")
+            None, header=None, footer=urwid.AttrMap(self.statusbar, "background")
         )
         self.master = master
         self.master.view.sig_view_refresh.connect(self.view_changed)
@@ -148,7 +143,9 @@ class Window(urwid.Frame):
         signals.flow_change.connect(self.flow_changed)
         signals.pop_view_state.connect(self.pop)
 
-        self.master.options.subscribe(self.configure, ["console_layout", "console_layout_headers"])
+        self.master.options.subscribe(
+            self.configure, ["console_layout", "console_layout_headers"]
+        )
         self.pane = 0
         self.stacks = [WindowStack(master, "flowlist"), WindowStack(master, "eventlog")]
 
@@ -188,7 +185,7 @@ class Window(urwid.Frame):
                 focus_column=self.pane,
             )
 
-        self.body = urwid.AttrWrap(w, "background")
+        self.body = urwid.AttrMap(w, "background")
         signals.window_refresh.send()
 
     def flow_changed(self, flow: flow.Flow) -> None:
@@ -306,7 +303,7 @@ class Window(urwid.Frame):
             return self.master.keymap.handle(self.focus_stack().top_widget().keyctx, k)
 
 
-class Screen(raw_display.Screen):
+class Screen(urwid.raw_display.Screen):
     def write(self, data):
         if common.IS_WINDOWS_OR_WSL:
             # replace urwid's SI/SO, which produce artifacts under WSL.

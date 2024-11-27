@@ -2,10 +2,13 @@
 """
 Read a mitmproxy dump file.
 """
-from mitmproxy import io, http
-from mitmproxy.exceptions import FlowReadException
+
 import pprint
 import sys
+
+from mitmproxy import http
+from mitmproxy import io
+from mitmproxy.exceptions import FlowReadException
 
 with open(sys.argv[1], "rb") as logfile:
     freader = io.FlowReader(logfile)

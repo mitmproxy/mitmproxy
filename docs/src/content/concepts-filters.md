@@ -50,4 +50,4 @@ Anything but requests with a text/html content type:
 
 Replace entire GET string in a request (quotes required to make it work):
 
-   ":~q ~m GET:.*:/replacement.html"
+    ":~q ~m GET:.*:/replacement.html"

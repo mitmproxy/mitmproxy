@@ -1,18 +1,24 @@
 from __future__ import annotations
+
 import contextlib
 import copy
-import weakref
-from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass
-import os
 import pprint
 import textwrap
-from typing import Any, Optional, TextIO, Union
+import weakref
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+from typing import Optional
+from typing import TextIO
 
 import ruamel.yaml
 
 from mitmproxy import exceptions
-from mitmproxy.utils import signals, typecheck
+from mitmproxy.utils import signals
+from mitmproxy.utils import typecheck
 
 """
     The base implementation for Options.
@@ -27,10 +33,10 @@ class _Option:
     def __init__(
         self,
         name: str,
-        typespec: Union[type, object],  # object for Optional[x], which is not a type.
+        typespec: type | object,  # object for Optional[x], which is not a type.
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]],
+        choices: Sequence[str] | None,
     ) -> None:
         typecheck.check_option_type(name, default, typespec)
         self.name = name
@@ -103,7 +109,7 @@ class OptManager:
     mutation doesn't change the option state inadvertently.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.deferred: dict[str, Any] = {}
         self.changed = signals.SyncSignal(_sig_changed_spec)
         self.changed.connect(self._notify_subscribers)
@@ -116,10 +122,10 @@ class OptManager:
     def add_option(
         self,
         name: str,
-        typespec: Union[type, object],
+        typespec: type | object,
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]] = None,
+        choices: Sequence[str] | None = None,
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
         self.changed.send(updated={name})
@@ -150,13 +156,11 @@ class OptManager:
             if i not in self._options:
                 raise exceptions.OptionsError("No such option: %s" % i)
 
-        self._subscriptions.append(
-            (signals.make_weak_ref(func), set(opts))
-        )
+        self._subscriptions.append((signals.make_weak_ref(func), set(opts)))
 
     def _notify_subscribers(self, updated) -> None:
         cleanup = False
-        for (ref, opts) in self._subscriptions:
+        for ref, opts in self._subscriptions:
             callback = ref()
             if callback is not None:
                 if opts & updated:
@@ -263,7 +267,7 @@ class OptManager:
         if attr not in self._options:
             raise KeyError("No such option: %s" % attr)
         o = self._options[attr]
-        if o.typespec != bool:
+        if o.typespec is not bool:
             raise ValueError("Toggler can only be used with boolean options")
 
         def toggle():
@@ -368,14 +372,14 @@ class OptManager:
                 f"Received multiple values for {o.name}: {values}"
             )
 
-        optstr: Optional[str]
+        optstr: str | None
         if values:
             optstr = values[0]
         else:
             optstr = None
 
         if o.typespec in (str, Optional[str]):
-            if o.typespec == str and optstr is None:
+            if o.typespec is str and optstr is None:
                 raise exceptions.OptionsError(f"Option is required: {o.name}")
             return optstr
         elif o.typespec in (int, Optional[int]):
@@ -384,11 +388,11 @@ class OptManager:
                     return int(optstr)
                 except ValueError:
                     raise exceptions.OptionsError(f"Not an integer: {optstr}")
-            elif o.typespec == int:
+            elif o.typespec is int:
                 raise exceptions.OptionsError(f"Option is required: {o.name}")
             else:
                 return None
-        elif o.typespec == bool:
+        elif o.typespec is bool:
             if optstr == "toggle":
                 return not o.current()
             if not optstr or optstr == "true":
@@ -411,16 +415,16 @@ class OptManager:
 
         o = self._options[optname]
 
-        def mkf(l, s):
-            l = l.replace("_", "-")
-            f = ["--%s" % l]
+        def mkf(x, s):
+            x = x.replace("_", "-")
+            f = ["--%s" % x]
             if s:
                 f.append("-" + s)
             return f
 
         flags = mkf(optname, short)
 
-        if o.typespec == bool:
+        if o.typespec is bool:
             g = parser.add_mutually_exclusive_group(required=False)
             onf = mkf(optname, None)
             offf = mkf("no-" + optname, None)
@@ -519,14 +523,14 @@ def parse(text):
     if not text:
         return {}
     try:
-        yaml = ruamel.yaml.YAML(typ="unsafe", pure=True)
+        yaml = ruamel.yaml.YAML(typ="safe", pure=True)
         data = yaml.load(text)
     except ruamel.yaml.error.YAMLError as v:
         if hasattr(v, "problem_mark"):
             snip = v.problem_mark.get_snippet()
             raise exceptions.OptionsError(
                 "Config error at line %s:\n%s\n%s"
-                % (v.problem_mark.line + 1, snip, v.problem)
+                % (v.problem_mark.line + 1, snip, getattr(v, "problem", ""))
             )
         else:
             raise exceptions.OptionsError("Could not parse options.")
@@ -537,31 +541,38 @@ def parse(text):
     return data
 
 
-def load(opts: OptManager, text: str) -> None:
+def load(opts: OptManager, text: str, cwd: Path | str | None = None) -> None:
     """
     Load configuration from text, over-writing options already set in
     this object. May raise OptionsError if the config file is invalid.
     """
     data = parse(text)
+
+    scripts = data.get("scripts")
+    if scripts is not None and cwd is not None:
+        data["scripts"] = [
+            str(relative_path(Path(path), relative_to=Path(cwd))) for path in scripts
+        ]
+
     opts.update_defer(**data)
 
 
-def load_paths(opts: OptManager, *paths: str) -> None:
+def load_paths(opts: OptManager, *paths: Path | str) -> None:
     """
     Load paths in order. Each path takes precedence over the previous
     path. Paths that don't exist are ignored, errors raise an
     OptionsError.
     """
     for p in paths:
-        p = os.path.expanduser(p)
-        if os.path.exists(p) and os.path.isfile(p):
-            with open(p, encoding="utf8") as f:
+        p = Path(p).expanduser()
+        if p.exists() and p.is_file():
+            with p.open(encoding="utf8") as f:
                 try:
                     txt = f.read()
                 except UnicodeDecodeError as e:
                     raise exceptions.OptionsError(f"Error reading {p}: {e}")
             try:
-                load(opts, txt)
+                load(opts, txt, cwd=p.absolute().parent)
             except exceptions.OptionsError as e:
                 raise exceptions.OptionsError(f"Error reading {p}: {e}")
 
@@ -590,15 +601,15 @@ def serialize(
     ruamel.yaml.YAML().dump(data, file)
 
 
-def save(opts: OptManager, path: str, defaults: bool = False) -> None:
+def save(opts: OptManager, path: Path | str, defaults: bool = False) -> None:
     """
     Save to path. If the destination file exists, modify it in-place.
 
     Raises OptionsError if the existing data is corrupt.
     """
-    path = os.path.expanduser(path)
-    if os.path.exists(path) and os.path.isfile(path):
-        with open(path, encoding="utf8") as f:
+    path = Path(path).expanduser()
+    if path.exists() and path.is_file():
+        with path.open(encoding="utf8") as f:
             try:
                 data = f.read()
             except UnicodeDecodeError as e:
@@ -606,5 +617,17 @@ def save(opts: OptManager, path: str, defaults: bool = False) -> None:
     else:
         data = ""
 
-    with open(path, "wt", encoding="utf8") as f:
+    with path.open("w", encoding="utf8") as f:
         serialize(opts, f, data, defaults)
+
+
+def relative_path(script_path: Path | str, *, relative_to: Path | str) -> Path:
+    """
+    Make relative paths found in config files relative to said config file,
+    instead of relative to where the command is ran.
+    """
+    script_path = Path(script_path)
+    # Edge case when $HOME is not an absolute path
+    if script_path.expanduser() != script_path and not script_path.is_absolute():
+        script_path = script_path.expanduser().absolute()
+    return (relative_to / script_path.expanduser()).absolute()

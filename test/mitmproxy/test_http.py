@@ -1,17 +1,23 @@
 import asyncio
 import email
-import time
 import json
+import time
+from typing import Any
 from unittest import mock
 
 import pytest
 
 from mitmproxy import flow
 from mitmproxy import flowfilter
-from mitmproxy.http import Headers, Request, Response, HTTPFlow
+from mitmproxy.http import Headers
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Message
+from mitmproxy.http import Request
+from mitmproxy.http import Response
 from mitmproxy.net.http.cookies import CookieAttrs
 from mitmproxy.test.tflow import tflow
-from mitmproxy.test.tutils import treq, tresp
+from mitmproxy.test.tutils import treq
+from mitmproxy.test.tutils import tresp
 
 
 class TestRequest:
@@ -154,7 +160,9 @@ class TestRequestCore:
         _test_decoded_attr(treq(), "scheme")
 
     def test_port(self):
-        _test_passthrough_attr(treq(), "port")
+        _test_passthrough_attr(treq(), "port", 1234)
+        with pytest.raises(ValueError):
+            treq().port = "foo"
 
     def test_path(self):
         _test_decoded_attr(treq(), "path")
@@ -178,13 +186,13 @@ class TestRequestCore:
         assert request.authority == "fussball"
 
         # Don't fail on garbage
-        request.data.authority = b"foo\xFF\x00bar"
+        request.data.authority = b"foo\xff\x00bar"
         assert request.authority.startswith("foo")
         assert request.authority.endswith("bar")
         # foo.bar = foo.bar should not cause any side effects.
         d = request.authority
         request.authority = d
-        assert request.data.authority == b"foo\xFF\x00bar"
+        assert request.data.authority == b"foo\xff\x00bar"
 
     def test_host_update_also_updates_header(self):
         request = treq()
@@ -195,8 +203,7 @@ class TestRequestCore:
         request.headers["Host"] = "foo"
         request.authority = "foo"
         request.host = "example.org"
-        assert request.headers["Host"] == "example.org"
-        assert request.authority == "example.org:22"
+        assert request.headers["Host"] == request.authority == "example.org:22"
 
     def test_get_host_header(self):
         no_hdr = treq()
@@ -411,7 +418,7 @@ class TestRequestUtils:
 
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         assert list(request.urlencoded_form.items()) == [("foobar", "baz")]
-        request.raw_content = b"\xFF"
+        request.raw_content = b"\xff"
         assert len(request.urlencoded_form) == 1
 
     def test_set_urlencoded_form(self):
@@ -427,7 +434,7 @@ class TestRequestUtils:
         request.headers["Content-Type"] = "multipart/form-data"
         assert list(request.multipart_form.items()) == []
 
-        with mock.patch("mitmproxy.net.http.multipart.decode") as m:
+        with mock.patch("mitmproxy.net.http.multipart.decode_multipart") as m:
             m.side_effect = ValueError
             assert list(request.multipart_form.items()) == []
 
@@ -562,7 +569,7 @@ class TestResponseUtils:
         assert attrs["domain"] == "example.com"
         assert attrs["expires"] == "Wed Oct  21 16:29:41 2015"
         assert attrs["path"] == "/"
-        assert attrs["httponly"] == ""
+        assert attrs["httponly"] is None
 
     def test_get_cookies_no_value(self):
         resp = tresp()
@@ -860,10 +867,10 @@ class TestHeaders:
         ]
 
 
-def _test_passthrough_attr(message, attr):
+def _test_passthrough_attr(message: Message, attr: str, value: Any = b"foo") -> None:
     assert getattr(message, attr) == getattr(message.data, attr)
-    setattr(message, attr, b"foo")
-    assert getattr(message.data, attr) == b"foo"
+    setattr(message, attr, value)
+    assert getattr(message.data, attr) == value
 
 
 def _test_decoded_attr(message, attr):
@@ -884,13 +891,13 @@ def _test_decoded_attr(message, attr):
     setattr(message, attr, "Non-Autorisé")
     assert getattr(message.data, attr) == b"Non-Autoris\xc3\xa9"
     # Don't fail on garbage
-    setattr(message.data, attr, b"FOO\xBF\x00BAR")
+    setattr(message.data, attr, b"FOO\xbf\x00BAR")
     assert getattr(message, attr).startswith("FOO")
     assert getattr(message, attr).endswith("BAR")
     # foo.bar = foo.bar should not cause any side effects.
     d = getattr(message, attr)
     setattr(message, attr, d)
-    assert getattr(message.data, attr) == b"FOO\xBF\x00BAR"
+    assert getattr(message.data, attr) == b"FOO\xbf\x00BAR"
 
 
 class TestMessageData:
@@ -931,7 +938,9 @@ class TestMessage:
         resp = tresp()
         resp.trailers = Headers()
         resp2 = Response.from_state(resp.get_state())
-        assert resp.data == resp2.data
+        resp3 = tresp()
+        resp3.set_state(resp.get_state())
+        assert resp.data == resp2.data == resp3.data
 
     def test_content_length_update(self):
         resp = tresp()
@@ -1126,7 +1135,7 @@ class TestMessageText:
         assert "鏄庝集" in r.text
 
     def test_guess_latin_1(self):
-        r = tresp(content=b"\xF0\xE2")
+        r = tresp(content=b"\xf0\xe2")
         assert r.text == "ðâ"
 
     def test_none(self):
@@ -1159,7 +1168,7 @@ class TestMessageText:
     def test_cannot_decode(self):
         r = tresp()
         r.headers["content-type"] = "text/html; charset=utf8"
-        r.raw_content = b"\xFF"
+        r.raw_content = b"\xff"
         with pytest.raises(ValueError):
             assert r.text
 
@@ -1189,7 +1198,7 @@ class TestMessageText:
         r.headers["content-type"] = "text/html; charset=latin1"
         r.text = "\udcff"
         assert r.headers["content-type"] == "text/html; charset=utf-8"
-        assert r.raw_content == b"\xFF"
+        assert r.raw_content == b"\xff"
 
     def test_get_json(self):
         req = treq(content=None)

@@ -14,10 +14,10 @@ Note:
     https://stackoverflow.com/questions/55358072/cookie-manipulation-in-mitmproxy-requests-and-responses
 
 """
-import json
-from mitmproxy import http
-from typing import Union
 
+import json
+
+from mitmproxy import http
 
 PATH_TO_COOKIES = "./cookies.json"  # insert your path to the cookie file here
 FILTER_COOKIES = {
@@ -28,7 +28,7 @@ FILTER_COOKIES = {
 
 
 # -- Helper functions --
-def load_json_cookies() -> list[dict[str, Union[str, None]]]:
+def load_json_cookies() -> list[dict[str, str | None]]:
     """
     Load a particular json file containing a list of cookies.
     """
@@ -39,20 +39,29 @@ def load_json_cookies() -> list[dict[str, Union[str, None]]]:
 # NOTE: or just hardcode the cookies as [{"name": "", "value": ""}]
 
 
-def stringify_cookies(cookies: list[dict[str, Union[str, None]]]) -> str:
+def stringify_cookies(cookies: list[dict[str, str | None]]) -> str:
     """
     Creates a cookie string from a list of cookie dicts.
     """
-    return "; ".join([f"{c['name']}={c['value']}" if c.get("value", None) is not None else f"{c['name']}" for c in cookies])
+    return "; ".join(
+        [
+            f"{c['name']}={c['value']}"
+            if c.get("value", None) is not None
+            else f"{c['name']}"
+            for c in cookies
+        ]
+    )
 
 
-def parse_cookies(cookie_string: str) -> list[dict[str, Union[str, None]]]:
+def parse_cookies(cookie_string: str) -> list[dict[str, str | None]]:
     """
     Parses a cookie string into a list of cookie dicts.
     """
     return [
         {"name": g[0], "value": g[1]} if len(g) == 2 else {"name": g[0], "value": None}
-        for g in [k.split("=", 1) for k in [c.strip() for c in cookie_string.split(";")] if k]
+        for g in [
+            k.split("=", 1) for k in [c.strip() for c in cookie_string.split(";")] if k
+        ]
     ]
 
 

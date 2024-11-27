@@ -44,9 +44,11 @@ exports[`OptionMenu Component should render correctly 1`] = `
             onChange={[Function]}
             type="checkbox"
           />
-          Strip cache headers 
+          Strip cache headers
+           
           <a
             href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+            rel="noreferrer"
             target="_blank"
           >
             <i

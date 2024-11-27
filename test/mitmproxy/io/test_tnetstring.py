@@ -1,8 +1,8 @@
-import unittest
-import random
-import math
 import io
+import math
+import random
 import struct
+import unittest
 
 from mitmproxy.io import tnetstring
 
@@ -38,10 +38,10 @@ def get_random_object(random=random, depth=0):
         what = random.randint(0, 1)
         if what == 0:
             n = random.randint(0, 10)
-            l = []
+            lst = []
             for _ in range(n):
-                l.append(get_random_object(random, depth + 1))
-            return l
+                lst.append(get_random_object(random, depth + 1))
+            return lst
         if what == 1:
             n = random.randint(0, 10)
             d = {}
@@ -72,19 +72,19 @@ class Test_Format(unittest.TestCase):
         for data, expect in FORMAT_EXAMPLES.items():
             self.assertEqual(expect, tnetstring.loads(data))
             self.assertEqual(expect, tnetstring.loads(tnetstring.dumps(expect)))
-            self.assertEqual((expect, b""), tnetstring.pop(data))
+            self.assertEqual((expect, b""), tnetstring.pop(memoryview(data)))
 
     def test_roundtrip_format_random(self):
         for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
-            self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
+            self.assertEqual((v, b""), tnetstring.pop(memoryview(tnetstring.dumps(v))))
 
     def test_roundtrip_format_unicode(self):
         for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
-            self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
+            self.assertEqual((v, b""), tnetstring.pop(memoryview(tnetstring.dumps(v))))
 
     def test_roundtrip_big_integer(self):
         # Recent Python versions do not like ints above 4300 digits, https://github.com/python/cpython/issues/95778

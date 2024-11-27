@@ -1,33 +1,42 @@
 """
 This addon is responsible for starting/stopping the proxy server sockets/instances specified by the mode option.
 """
+
 from __future__ import annotations
 
 import asyncio
 import collections
 import ipaddress
 import logging
+from collections.abc import Iterable
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterable, Iterator, Optional
+from typing import Optional
 
 from wsproto.frame_protocol import Opcode
 
-from mitmproxy import (
-    command,
-    ctx,
-    exceptions,
-    http,
-    platform,
-    tcp,
-    websocket,
-)
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import http
+from mitmproxy import platform
+from mitmproxy import tcp
+from mitmproxy import udp
+from mitmproxy import websocket
 from mitmproxy.connection import Address
 from mitmproxy.flow import Flow
-from mitmproxy.proxy import events, mode_specs, server_hooks
+from mitmproxy.proxy import events
+from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import server_hooks
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
+from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.proxy.mode_servers import ProxyConnectionHandler, ServerInstance, ServerManager
-from mitmproxy.utils import human, signals
+from mitmproxy.proxy.mode_servers import ProxyConnectionHandler
+from mitmproxy.proxy.mode_servers import ServerInstance
+from mitmproxy.proxy.mode_servers import ServerManager
+from mitmproxy.utils import asyncio_utils
+from mitmproxy.utils import human
+from mitmproxy.utils import signals
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +71,15 @@ class Servers:
 
             # Shutdown modes that have been removed from the list.
             stop_tasks = [
-                s.stop() for spec, s in self._instances.items()
+                s.stop()
+                for spec, s in self._instances.items()
                 if spec not in new_instances
             ]
+
+            if not start_tasks and not stop_tasks:
+                return (
+                    True  # nothing to do, so we don't need to trigger `self.changed`.
+                )
 
             self._instances = new_instances
             # Notify listeners about the new not-yet-started servers.
@@ -99,22 +114,28 @@ class Proxyserver(ServerManager):
     """
     This addon runs the actual proxy server.
     """
-    connections: dict[tuple, ProxyConnectionHandler]
+
+    connections: dict[tuple | str, ProxyConnectionHandler]
     servers: Servers
 
     is_running: bool
-    _connect_addr: Optional[Address] = None
+    _connect_addr: Address | None = None
+    _update_task: asyncio.Task | None = None
+    _inject_tasks: set[asyncio.Task]
 
     def __init__(self):
         self.connections = {}
         self.servers = Servers(self)
         self.is_running = False
+        self._inject_tasks = set()
 
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
 
     @contextmanager
-    def register_connection(self, connection_id: tuple, handler: ProxyConnectionHandler):
+    def register_connection(
+        self, connection_id: tuple | str, handler: ProxyConnectionHandler
+    ):
         self.connections[connection_id] = handler
         try:
             yield
@@ -138,8 +159,9 @@ class Proxyserver(ServerManager):
             None,
             """
             Stream data to the client if response body exceeds the given
-            threshold. If streamed, the body will not be stored in any way.
-            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            threshold. If streamed, the body will not be stored in any way,
+            and such responses cannot be modified. Understands k/m/g
+            suffixes, i.e. 3m for 3 megabytes.
             """,
         )
         loader.add_option(
@@ -195,7 +217,7 @@ class Proxyserver(ServerManager):
     def running(self):
         self.is_running = True
 
-    def configure(self, updated):
+    def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:
             try:
                 human.parse_size(ctx.options.stream_large_bodies)
@@ -215,7 +237,10 @@ class Proxyserver(ServerManager):
         if "connect_addr" in updated:
             try:
                 if ctx.options.connect_addr:
-                    self._connect_addr = str(ipaddress.ip_address(ctx.options.connect_addr)), 0
+                    self._connect_addr = (
+                        str(ipaddress.ip_address(ctx.options.connect_addr)),
+                        0,
+                    )
                 else:
                     self._connect_addr = None
             except ValueError:
@@ -227,25 +252,31 @@ class Proxyserver(ServerManager):
             modes: list[mode_specs.ProxyMode] = []
             for mode in ctx.options.mode:
                 try:
-                    modes.append(
-                        mode_specs.ProxyMode.parse(mode)
-                    )
+                    modes.append(mode_specs.ProxyMode.parse(mode))
                 except ValueError as e:
-                    raise exceptions.OptionsError(f"Invalid proxy mode specification: {mode} ({e})")
+                    raise exceptions.OptionsError(
+                        f"Invalid proxy mode specification: {mode} ({e})"
+                    )
 
             # ...and don't listen on the same address.
-            listen_addrs = [
-                (
-                    m.listen_host(ctx.options.listen_host),
-                    m.listen_port(ctx.options.listen_port),
-                    m.transport_protocol
-                )
-                for m in modes
-            ]
+            listen_addrs = []
+            for m in modes:
+                if m.transport_protocol == "both":
+                    protocols = ["tcp", "udp"]
+                else:
+                    protocols = [m.transport_protocol]
+                host = m.listen_host(ctx.options.listen_host)
+                port = m.listen_port(ctx.options.listen_port)
+                if port is None:
+                    continue
+                for proto in protocols:
+                    listen_addrs.append((host, port, proto))
             if len(set(listen_addrs)) != len(listen_addrs):
                 (host, port, _) = collections.Counter(listen_addrs).most_common(1)[0][0]
                 dup_addr = human.format_address((host or "0.0.0.0", port))
-                raise exceptions.OptionsError(f"Cannot spawn multiple servers on the same address: {dup_addr}")
+                raise exceptions.OptionsError(
+                    f"Cannot spawn multiple servers on the same address: {dup_addr}"
+                )
 
             if ctx.options.mode and not ctx.master.addons.get("nextlayer"):
                 logger.warning("Warning: Running proxyserver without nextlayer addon!")
@@ -253,30 +284,45 @@ class Proxyserver(ServerManager):
                 if platform.original_addr:
                     platform.init_transparent_mode()
                 else:
-                    raise exceptions.OptionsError("Transparent mode not supported on this platform.")
+                    raise exceptions.OptionsError(
+                        "Transparent mode not supported on this platform."
+                    )
 
             if self.is_running:
-                asyncio.create_task(self.servers.update(modes))
+                self._update_task = asyncio_utils.create_task(
+                    self.servers.update(modes), name="update servers"
+                )
 
     async def setup_servers(self) -> bool:
-        return await self.servers.update([mode_specs.ProxyMode.parse(m) for m in ctx.options.mode])
+        """Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts)."""
+        return await self.servers.update(
+            [mode_specs.ProxyMode.parse(m) for m in ctx.options.mode]
+        )
 
     def listen_addrs(self) -> list[Address]:
-        return [
-            addr
-            for server in self.servers
-            for addr in server.listen_addrs
-        ]
+        return [addr for server in self.servers for addr in server.listen_addrs]
 
     def inject_event(self, event: events.MessageInjected):
-        connection_id = (
-            event.flow.client_conn.transport_protocol,
-            event.flow.client_conn.peername,
-            event.flow.client_conn.sockname,
-        )
+        connection_id: str | tuple
+        if event.flow.client_conn.transport_protocol != "udp":
+            connection_id = event.flow.client_conn.id
+        else:  # pragma: no cover
+            # temporary workaround: for UDP we don't have persistent client IDs yet.
+            connection_id = (
+                event.flow.client_conn.peername,
+                event.flow.client_conn.sockname,
+            )
         if connection_id not in self.connections:
             raise ValueError("Flow is not from a live connection.")
-        self.connections[connection_id].server_event(event)
+
+        t = asyncio_utils.create_task(
+            self.connections[connection_id].server_event(event),
+            name=f"inject_event",
+            client=event.flow.client_conn.peername,
+        )
+        # Python 3.11 Use TaskGroup instead.
+        self._inject_tasks.add(t)
+        t.add_done_callback(self._inject_tasks.remove)
 
     @command.command("inject.websocket")
     def inject_websocket(
@@ -305,6 +351,17 @@ class Proxyserver(ServerManager):
         except ValueError as e:
             logger.warning(str(e))
 
+    @command.command("inject.udp")
+    def inject_udp(self, flow: Flow, to_client: bool, message: bytes):
+        if not isinstance(flow, udp.UDPFlow):
+            logger.warning("Cannot inject UDP messages into non-UDP flows.")
+
+        event = UdpMessageInjected(flow, udp.UDPMessage(not to_client, message))
+        try:
+            self.inject_event(event)
+        except ValueError as e:
+            logger.warning(str(e))
+
     def server_connect(self, data: server_hooks.ServerConnectionHookData):
         if data.server.sockname is None:
             data.server.sockname = self._connect_addr
@@ -317,12 +374,7 @@ class Proxyserver(ServerManager):
             for listen_host, listen_port, *_ in server.listen_addrs:
                 self_connect = (
                     connect_port == listen_port
-                    and connect_host in (
-                        "localhost",
-                        "127.0.0.1",
-                        "::1",
-                        listen_host
-                    )
+                    and connect_host in ("localhost", "127.0.0.1", "::1", listen_host)
                     and server.mode.transport_protocol == data.server.transport_protocol
                 )
                 if self_connect:

@@ -1,9 +1,7 @@
-from typing import Optional
+import struct
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import strutils
-
-import struct
 
 # from https://github.com/nikitastupin/mitmproxy-mqtt-script
 
@@ -89,6 +87,7 @@ class MQTTControlPacket:
         s = f"[{self.Names[self.packet_type]}]"
 
         if self.packet_type == self.CONNECT:
+            assert self.payload
             s += f"""
 
 Client Id: {self.payload['ClientId']}
@@ -101,6 +100,7 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get('Password', b'None'))}
             s += " sent topic filters: "
             s += ", ".join([f"'{tf}'" for tf in self.topic_filters])
         elif self.packet_type == self.PUBLISH:
+            assert self.payload
             topic_name = strutils.bytes_to_escaped_str(self.topic_name)
             payload = strutils.bytes_to_escaped_str(self.payload)
 
@@ -209,9 +209,13 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get('Password', b'None'))}
                 self.payload["WillTopic"] = f.decode("utf-8")
             elif self.connect_flags["Will"] and "WillMessage" not in self.payload:
                 self.payload["WillMessage"] = f
-            elif self.connect_flags["UserName"] and "UserName" not in self.payload:  # pragma: no cover
+            elif (
+                self.connect_flags["UserName"] and "UserName" not in self.payload
+            ):  # pragma: no cover
                 self.payload["UserName"] = f.decode("utf-8")
-            elif self.connect_flags["Password"] and "Password" not in self.payload:  # pragma: no cover
+            elif (
+                self.connect_flags["Password"] and "Password" not in self.payload
+            ):  # pragma: no cover
                 self.payload["Password"] = f
             else:
                 raise AssertionError(f"Unknown field in CONNECT payload: {f}")
@@ -268,6 +272,6 @@ class ViewMQTT(base.View):
         return "MQTT", base.format_text(text)
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return 0

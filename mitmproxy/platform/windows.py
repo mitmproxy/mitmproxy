@@ -1,10 +1,10 @@
-import collections
+from __future__ import annotations
+
 import collections.abc
 import contextlib
-import ctypes
 import ctypes.wintypes
-import io
 import json
+import logging
 import os
 import re
 import socket
@@ -12,35 +12,41 @@ import socketserver
 import threading
 import time
 from collections.abc import Callable
-from typing import Any, ClassVar, Optional
+from io import BufferedIOBase
+from typing import Any
+from typing import cast
+from typing import ClassVar
 
-import pydivert
 import pydivert.consts
 
-from mitmproxy.net.local_ip import get_local_ip, get_local_ip6
+from mitmproxy.net.local_ip import get_local_ip
+from mitmproxy.net.local_ip import get_local_ip6
 
 REDIRECT_API_HOST = "127.0.0.1"
 REDIRECT_API_PORT = 8085
+
+
+logger = logging.getLogger(__name__)
 
 
 ##########################
 # Resolver
 
 
-def read(rfile: io.BufferedReader) -> Any:
+def read(rfile: BufferedIOBase) -> Any:
     x = rfile.readline().strip()
     if not x:
         return None
     return json.loads(x)
 
 
-def write(data, wfile: io.BufferedWriter) -> None:
+def write(data, wfile: BufferedIOBase) -> None:
     wfile.write(json.dumps(data).encode() + b"\n")
     wfile.flush()
 
 
 class Resolver:
-    sock: socket.socket
+    sock: socket.socket | None
     lock: threading.RLock
 
     def __init__(self):
@@ -84,7 +90,9 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
     for each received pickled client address, port tuple.
     """
 
-    def handle(self):
+    server: APIServer
+
+    def handle(self) -> None:
         proxifier: TransparentProxy = self.server.proxifier
         try:
             pid: int = read(self.rfile)
@@ -96,7 +104,9 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
                     if c is None:
                         return
                     try:
-                        server = proxifier.client_server_map[tuple(c)]
+                        server = proxifier.client_server_map[
+                            cast(tuple[str, int], tuple(c))
+                        ]
                     except KeyError:
                         server = None
                     write(server, self.wfile)
@@ -124,6 +134,7 @@ IN4_ADDR = ctypes.c_ubyte * 4
 #
 # IPv6
 #
+
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366896(v=vs.85).aspx
 class MIB_TCP6ROW_OWNER_PID(ctypes.Structure):
@@ -153,6 +164,7 @@ def MIB_TCP6TABLE_OWNER_PID(size):
 #
 # IPv4
 #
+
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa366913(v=vs.85).aspx
 class MIB_TCPROW_OWNER_PID(ctypes.Structure):
@@ -205,7 +217,7 @@ class TcpConnectionTable(collections.abc.Mapping):
         self._refresh_ipv6()
 
     def _refresh_ipv4(self):
-        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(
+        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(  # type: ignore
             ctypes.byref(self._tcp),
             ctypes.byref(self._tcp_size),
             False,
@@ -228,7 +240,7 @@ class TcpConnectionTable(collections.abc.Mapping):
             )
 
     def _refresh_ipv6(self):
-        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(
+        ret = ctypes.windll.iphlpapi.GetExtendedTcpTable(  # type: ignore
             ctypes.byref(self._tcp6),
             ctypes.byref(self._tcp6_size),
             False,
@@ -275,7 +287,7 @@ class Redirect(threading.Thread):
             try:
                 packet = self.windivert.recv()
             except OSError as e:
-                if e.winerror == 995:
+                if getattr(e, "winerror", None) == 995:
                     return
                 else:
                     raise
@@ -285,7 +297,7 @@ class Redirect(threading.Thread):
     def shutdown(self):
         self.windivert.close()
 
-    def recv(self) -> Optional[pydivert.Packet]:
+    def recv(self) -> pydivert.Packet | None:
         """
         Convenience function that receives a packet from the passed handler and handles error codes.
         If the process has been shut down, None is returned.
@@ -393,9 +405,9 @@ class TransparentProxy:
     which mitmproxy sees, but this would remove the correct client info from mitmproxy.
     """
 
-    local: Optional[RedirectLocal] = None
+    local: RedirectLocal | None = None
     # really weird linting error here.
-    forward: Optional[Redirect] = None  # noqa
+    forward: Redirect | None = None
     response: Redirect
     icmp: Redirect
 
@@ -409,7 +421,7 @@ class TransparentProxy:
         local: bool = True,
         forward: bool = True,
         proxy_port: int = 8080,
-        filter: Optional[str] = "tcp.DstPort == 80 or tcp.DstPort == 443",
+        filter: str | None = "tcp.DstPort == 80 or tcp.DstPort == 443",
     ) -> None:
         self.proxy_port = proxy_port
         self.filter = (
@@ -452,6 +464,10 @@ class TransparentProxy:
     def setup(cls):
         # TODO: Make sure that server can be killed cleanly. That's a bit difficult as we don't have access to
         # controller.should_exit when this is called.
+        logger.warning(
+            "Transparent mode on Windows is unsupported, flaky, and deprecated. "
+            "Consider using local redirect mode or WireGuard mode instead."
+        )
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_unavailable = s.connect_ex((REDIRECT_API_HOST, REDIRECT_API_PORT))
         if server_unavailable:

@@ -211,19 +211,43 @@ allowed IP addresses.
 mitmdump --mode reverse:https://example.com
 ```
 
-mitmproxy is usually used with a client that uses the proxy to access
-the Internet. Using reverse proxy mode, you can use mitmproxy to act
-like a normal HTTP server:
+In reverse proxy mode, mitmproxy acts as a normal server.
+Requests by clients will be forwarded to a preconfigured target server,
+and responses will be forwarded back to the client:
 
 {{< figure src="/schematics/proxy-modes-reverse.png" >}}
 
-Locally, reverse mode instances will listen on the same port as their regular
-equivalent, which is 8080 by default (except for DNS, which uses port 53).
-To specify a different port, append "`@`" followed by the number to the mode.
-For example, to listen on port 8081 for HTTP proxy request use
-`--mode reverse:https://example.com@8081`.
+### Listen Port
 
-There are various use-cases:
+With the exception of DNS, reverse proxy servers will listen on port 8080 by default (DNS uses 53).
+To listen on a different port, append `@portnumber` to the mode. You can
+also pass `--mode` repeatedly to run multiple reverse proxy servers on different ports. For example,
+the following command will run a reverse proxy server to example.com on port 80 and 443:
+
+```text
+mitmdump --mode reverse:https://example.com@80 --mode reverse:https://example.com@443
+```
+
+### Protocol Specification
+
+The examples above have focused on HTTP reverse proxying, but mitmproxy can also reverse proxy other protocols.
+To adjust the protocol, adjust the scheme in the proxy specification. For example, `--mode reverse:tcp://example.com:80`
+would establish a raw TCP proxy.
+
+| Scheme   | client ↔ mitmproxy                      | mitmproxy ↔ server |
+|----------|-----------------------------------------|--------------------|
+| http://  | HTTP or HTTPS (autodetected)            | HTTP               |
+| https:// | HTTP or HTTPS (autodetected)            | HTTPS              |
+| dns://   | DNS                                     | DNS                |
+| http3:// | HTTP/3                                  | HTTP/3             |
+| quic://  | Raw QUIC                                | Raw QUIC           |
+| tcp://   | Raw TCP or TCP-over-TLS (autodetected)  | Raw TCP            |
+| tls://   | Raw TCP or TCP-over-TLS (autodetected)  | Raw TCP-over-TLS   |
+| udp://   | Raw UDP or UDP-over-DTLS (autodetected) | Raw UDP            |
+| dtls://  | Raw UDP or UDP-over-DTLS (autodetected) | Raw UDP-over-DTLS  |
+
+
+### Reverse Proxy Examples
 
 - Say you have an internal API running at <http://example.local/>. You could now
     set up mitmproxy in reverse proxy mode at <http://debug.example.local/> and
@@ -236,16 +260,11 @@ There are various use-cases:
     your hosts file so that example.com points to 127.0.0.1 and then run
     mitmproxy in reverse proxy mode on port 80. You can test your app on the
     example.com domain and get all requests recorded in mitmproxy.
-- Say you have some toy project that should get SSL support. Simply set up
+- Say you have some toy project that should get TLS support. Simply set up
     mitmproxy as a reverse proxy on port 443 and you're done (`mitmdump -p 443
     --mode reverse:http://localhost:80/`). Mitmproxy auto-detects TLS traffic and intercepts
     it dynamically. There are better tools for this specific task, but mitmproxy
-    is very quick and simple way to set up an SSL-speaking server.
-- Want to add a non-SSL-capable compression proxy in front of your server? You
-    could even spawn a mitmproxy instance that terminates SSL (`--mode reverse:http://...`),
-    point it to the compression proxy and let the compression proxy point to a
-    SSL-initiating mitmproxy (`--mode reverse:https://...`), which then points to the real
-    server. As you see, it's a fairly flexible thing.
+    is very quick and simple way to set up an TLS-speaking server.
 - Want to know what goes on over (D)TLS (without HTTP)? With mitmproxy's raw
     traffic support you can. Use `--mode reverse:tls://example.com:1234` to
     spawn a TCP instance that connects to `example.com:1234` using TLS, and

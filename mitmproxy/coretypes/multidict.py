@@ -1,6 +1,8 @@
 from abc import ABCMeta
 from abc import abstractmethod
-from collections.abc import Iterator, MutableMapping, Sequence
+from collections.abc import Iterator
+from collections.abc import MutableMapping
+from collections.abc import Sequence
 from typing import TypeVar
 
 from mitmproxy.coretypes import serializable
@@ -148,7 +150,7 @@ class MultiDict(_MultiDict[KT, VT], serializable.Serializable):
 
     def __init__(self, fields=()):
         super().__init__()
-        self.fields = tuple(tuple(i) for i in fields)
+        self.fields = tuple(tuple(i) for i in fields)  # type: ignore
 
     @staticmethod
     def _reduce_values(values):
@@ -162,7 +164,7 @@ class MultiDict(_MultiDict[KT, VT], serializable.Serializable):
         return self.fields
 
     def set_state(self, state):
-        self.fields = tuple(tuple(x) for x in state)
+        self.fields = tuple(tuple(x) for x in state)  # type: ignore
 
     @classmethod
     def from_state(cls, state):

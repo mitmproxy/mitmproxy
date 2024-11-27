@@ -1,7 +1,5 @@
-from typing import Optional
-
-from mitmproxy.contrib.wbxml import ASCommandResponse
 from . import base
+from mitmproxy.contrib.wbxml import ASCommandResponse
 
 
 class ViewWBXML(base.View):
@@ -14,10 +12,10 @@ class ViewWBXML(base.View):
             parsedContent = parser.xmlString
             if parsedContent:
                 return "WBXML", base.format_text(parsedContent)
-        except:
+        except Exception:
             return None
 
     def render_priority(
-        self, data: bytes, *, content_type: Optional[str] = None, **metadata
+        self, data: bytes, *, content_type: str | None = None, **metadata
     ) -> float:
         return float(bool(data) and content_type in self.__content_types)

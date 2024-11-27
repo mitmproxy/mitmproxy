@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import re
 import urllib.parse
 from collections.abc import Sequence
-from typing import AnyStr, Optional
+from typing import AnyStr
 
 from mitmproxy.net import check
+from mitmproxy.net.check import is_valid_host
+from mitmproxy.net.check import is_valid_port
+from mitmproxy.utils.strutils import always_str
 
 # This regex extracts & splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=45891
-from mitmproxy.net.check import is_valid_host, is_valid_port
-from mitmproxy.utils.strutils import always_str
 
 _authority_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
@@ -34,8 +37,8 @@ def parse(url):
 
     # Size of Ascii character after encoding is 1 byte which is same as its size
     # But non-Ascii character's size after encoding will be more than its size
-    def ascii_check(l):
-        if len(l) == len(str(l).encode()):
+    def ascii_check(x):
+        if len(x) == len(str(x).encode()):
             return True
         return False
 
@@ -85,7 +88,7 @@ def unparse(scheme: str, host: str, port: int, path: str = "") -> str:
     return f"{scheme}://{authority}{path}"
 
 
-def encode(s: Sequence[tuple[str, str]], similar_to: str = None) -> str:
+def encode(s: Sequence[tuple[str, str]], similar_to: str | None = None) -> str:
     """
     Takes a list of (key, value) tuples and returns a urlencoded string.
     If similar_to is passed, the output is formatted similar to the provided urlencoded string.
@@ -143,7 +146,7 @@ def hostport(scheme: AnyStr, host: AnyStr, port: int) -> AnyStr:
             return "%s:%d" % (host, port)
 
 
-def default_port(scheme: AnyStr) -> Optional[int]:
+def default_port(scheme: AnyStr) -> int | None:
     return {
         "http": 80,
         b"http": 80,
@@ -152,7 +155,7 @@ def default_port(scheme: AnyStr) -> Optional[int]:
     }.get(scheme, None)
 
 
-def parse_authority(authority: AnyStr, check: bool) -> tuple[str, Optional[int]]:
+def parse_authority(authority: AnyStr, check: bool) -> tuple[str, int | None]:
     """Extract the host and port from host header/authority information
 
     Raises:

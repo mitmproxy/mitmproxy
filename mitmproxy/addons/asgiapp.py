@@ -1,12 +1,12 @@
 import asyncio
 import logging
-import traceback
 import urllib.parse
 
 import asgiref.compatibility
 import asgiref.wsgi
 
-from mitmproxy import ctx, http
+from mitmproxy import ctx
+from mitmproxy import http
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class ASGIApp:
         - It currently only implements the HTTP protocol (Lifespan and WebSocket are unimplemented).
     """
 
-    def __init__(self, asgi_app, host: str, port: int):
+    def __init__(self, asgi_app, host: str, port: int | None):
         asgi_app = asgiref.compatibility.guarantee_single_callable(asgi_app)
         self.asgi_app, self.host, self.port = asgi_app, host, port
 
@@ -30,7 +30,8 @@ class ASGIApp:
 
     def should_serve(self, flow: http.HTTPFlow) -> bool:
         return bool(
-            (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
+            flow.request.pretty_host == self.host
+            and (self.port is None or flow.request.port == self.port)
             and flow.live
             and not flow.error
             and not flow.response
@@ -42,7 +43,7 @@ class ASGIApp:
 
 
 class WSGIApp(ASGIApp):
-    def __init__(self, wsgi_app, host: str, port: int):
+    def __init__(self, wsgi_app, host: str, port: int | None):
         asgi_app = asgiref.wsgi.WsgiToAsgi(wsgi_app)
         super().__init__(asgi_app, host, port)
 
@@ -124,6 +125,7 @@ async def serve(app, flow: http.HTTPFlow):
             )
             flow.response.decode()
         elif event["type"] == "http.response.body":
+            assert flow.response
             flow.response.content += event.get("body", b"")
             if not event.get("more_body", False):
                 nonlocal sent_response
@@ -135,8 +137,8 @@ async def serve(app, flow: http.HTTPFlow):
         await app(scope, receive, send)
         if not sent_response:
             raise RuntimeError(f"no response sent.")
-    except Exception:
-        logger.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
+    except Exception as e:
+        logger.exception(f"Error in asgi app: {e}")
         flow.response = http.Response.make(500, b"ASGI Error.")
     finally:
         done.set()

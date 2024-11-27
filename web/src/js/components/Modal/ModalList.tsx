@@ -1,13 +1,13 @@
-import * as React from "react"
-import ModalLayout from './ModalLayout'
-import OptionContent from './OptionModal'
+import * as React from "react";
+import ModalLayout from "./ModalLayout";
+import OptionContent from "./OptionModal";
 
 function OptionModal() {
     return (
         <ModalLayout>
-            <OptionContent/>
+            <OptionContent />
         </ModalLayout>
-    )
+    );
 }
 
-export default [ OptionModal ]
+export default [OptionModal];

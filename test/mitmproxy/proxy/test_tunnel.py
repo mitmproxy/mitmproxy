@@ -1,17 +1,25 @@
-from typing import Optional
-
 import pytest
 
-from mitmproxy.proxy import tunnel, layer
-from mitmproxy.proxy.commands import SendData, Log, CloseConnection, OpenConnection
-from mitmproxy.connection import Server, ConnectionState
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import CloseTcpConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import Event, DataReceived, Start, ConnectionClosed
-from test.mitmproxy.proxy.tutils import Playbook, reply
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import Event
+from mitmproxy.proxy.events import Start
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 
 class TChildLayer(layer.Layer):
-    child_layer: Optional[layer.Layer] = None
+    child_layer: layer.Layer | None = None
 
     def _handle_event(self, event: Event) -> layer.CommandGenerator[None]:
         if isinstance(event, Start):
@@ -24,7 +32,7 @@ class TChildLayer(layer.Layer):
             err = yield OpenConnection(self.context.server)
             yield Log(f"Opened: {err=}. Server state: {self.context.server.state.name}")
         elif isinstance(event, DataReceived) and event.data == b"half-close":
-            err = yield CloseConnection(event.connection, half_close=True)
+            err = yield CloseTcpConnection(event.connection, half_close=True)
         elif isinstance(event, ConnectionClosed):
             yield Log(f"Got {event.connection.__class__.__name__.lower()} close.")
             yield CloseConnection(event.connection)
@@ -38,7 +46,7 @@ class TTunnelLayer(tunnel.TunnelLayer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         yield SendData(self.tunnel_connection, data)
         if data == b"handshake-success":
             return True, None
@@ -56,7 +64,7 @@ class TTunnelLayer(tunnel.TunnelLayer):
 
 @pytest.mark.parametrize("success", ["success", "fail"])
 def test_tunnel_handshake_start(tctx: Context, success):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
     server.state = ConnectionState.OPEN
 
     tl = TTunnelLayer(tctx, server, tctx.server)
@@ -87,7 +95,7 @@ def test_tunnel_handshake_start(tctx: Context, success):
 
 @pytest.mark.parametrize("success", ["success", "fail"])
 def test_tunnel_handshake_command(tctx: Context, success):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
 
     tl = TTunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
@@ -137,7 +145,7 @@ def test_tunnel_default_impls(tctx: Context):
     Some tunnels don't need certain features, so the default behaviour
     should be to be transparent.
     """
-    server = Server(None)
+    server = Server(address=None)
     server.state = ConnectionState.OPEN
     tl = tunnel.TunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
@@ -164,12 +172,12 @@ def test_tunnel_default_impls(tctx: Context):
         >> reply(None)
         << Log("Opened: err=None. Server state: OPEN")
         >> DataReceived(server, b"half-close")
-        << CloseConnection(server, half_close=True)
+        << CloseTcpConnection(server, half_close=True)
     )
 
 
 def test_tunnel_openconnection_error(tctx: Context):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
 
     tl = TTunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
@@ -192,7 +200,7 @@ def test_tunnel_openconnection_error(tctx: Context):
 
 @pytest.mark.parametrize("disconnect", ["client", "server"])
 def test_disconnect_during_handshake_start(tctx: Context, disconnect):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
     server.state = ConnectionState.OPEN
 
     tl = TTunnelLayer(tctx, server, tctx.server)
@@ -224,7 +232,7 @@ def test_disconnect_during_handshake_start(tctx: Context, disconnect):
 
 @pytest.mark.parametrize("disconnect", ["client", "server"])
 def test_disconnect_during_handshake_command(tctx: Context, disconnect):
-    server = Server(("proxy", 1234))
+    server = Server(address=("proxy", 1234))
 
     tl = TTunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)

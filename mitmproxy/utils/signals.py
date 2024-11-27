@@ -7,18 +7,19 @@ This is similar to the Blinker library (https://pypi.org/project/blinker/), with
   - supports type hints
   - supports async receivers.
 """
+
 from __future__ import annotations
+
 import asyncio
 import inspect
 import weakref
-from collections.abc import Callable, Awaitable
-from typing import Any, Generic, TypeVar, cast
-
-try:
-    from typing import ParamSpec
-except ImportError:  # pragma: no cover
-    # Python 3.9
-    from typing_extensions import ParamSpec
+from collections.abc import Awaitable
+from collections.abc import Callable
+from typing import Any
+from typing import cast
+from typing import Generic
+from typing import ParamSpec
+from typing import TypeVar
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -37,7 +38,7 @@ def make_weak_ref(obj: Any) -> weakref.ReferenceType:
 # We're running into https://github.com/python/mypy/issues/6073 here,
 # which is why the base class is a mixin and not a generic superclass.
 class _SignalMixin:
-    def __init__(self):
+    def __init__(self) -> None:
         self.receivers: list[weakref.ref[Callable]] = []
 
     def connect(self, receiver: Callable) -> None:
@@ -85,11 +86,13 @@ class _AsyncSignal(Generic[P], _SignalMixin):
         super().disconnect(receiver)
 
     async def send(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        await asyncio.gather(*[
-            aws
-            for aws in super().notify(*args, **kwargs)
-            if aws is not None and inspect.isawaitable(aws)
-        ])
+        await asyncio.gather(
+            *[
+                aws
+                for aws in super().notify(*args, **kwargs)
+                if aws is not None and inspect.isawaitable(aws)
+            ]
+        )
 
 
 # noinspection PyPep8Naming

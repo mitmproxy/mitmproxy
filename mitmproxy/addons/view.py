@@ -8,29 +8,33 @@ The View:
 - Exposes a settings store for flows that automatically expires if the flow is
   removed from the store.
 """
+
 import collections
 import logging
 import re
-from collections.abc import Iterator, MutableMapping, Sequence
-from typing import Any, Optional
+from collections.abc import Iterator
+from collections.abc import MutableMapping
+from collections.abc import Sequence
+from typing import Any
+from typing import Optional
 
 import sortedcontainers
 
 import mitmproxy.flow
 from mitmproxy import command
+from mitmproxy import connection
 from mitmproxy import ctx
 from mitmproxy import dns
 from mitmproxy import exceptions
-from mitmproxy import hooks
-from mitmproxy import connection
 from mitmproxy import flowfilter
+from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import tcp
 from mitmproxy import udp
 from mitmproxy.log import ALERT
-from mitmproxy.utils import human, signals
-
+from mitmproxy.utils import human
+from mitmproxy.utils import signals
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -133,18 +137,18 @@ orders = [
 ]
 
 
-def _signal_with_flow(flow: mitmproxy.flow.Flow) -> None:
-    ...
+def _signal_with_flow(flow: mitmproxy.flow.Flow) -> None: ...
 
 
-def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None:
-    ...
+def _sig_view_remove(flow: mitmproxy.flow.Flow, index: int) -> None: ...
 
 
 class View(collections.abc.Sequence):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._store = collections.OrderedDict()
+        self._store: collections.OrderedDict[str, mitmproxy.flow.Flow] = (
+            collections.OrderedDict()
+        )
         self.filter = flowfilter.match_all
         # Should we show only marked flows?
         self.show_marked = False
@@ -156,7 +160,7 @@ class View(collections.abc.Sequence):
             url=OrderRequestURL(self),
             size=OrderKeySize(self),
         )
-        self.order_key = self.default_order
+        self.order_key: _OrderKey = self.default_order
         self.order_reversed = False
         self.focus_follow = False
 
@@ -229,7 +233,7 @@ class View(collections.abc.Sequence):
         return self._rev(v - 1) + 1
 
     def index(
-        self, f: mitmproxy.flow.Flow, start: int = 0, stop: Optional[int] = None
+        self, f: mitmproxy.flow.Flow, start: int = 0, stop: int | None = None
     ) -> int:
         return self._rev(self._view.index(f, start, stop))
 
@@ -316,9 +320,9 @@ class View(collections.abc.Sequence):
         """
         if order_key not in self.orders:
             raise exceptions.CommandError("Unknown flow order: %s" % order_key)
-        order_key = self.orders[order_key]
-        self.order_key = order_key
-        newview = sortedcontainers.SortedListWithKey(key=order_key)
+        key = self.orders[order_key]
+        self.order_key = key
+        newview = sortedcontainers.SortedListWithKey(key=key)
         newview.update(self._view)
         self._view = newview
 
@@ -347,7 +351,7 @@ class View(collections.abc.Sequence):
                 raise exceptions.CommandError(str(e)) from e
         self.set_filter(filt)
 
-    def set_filter(self, flt: Optional[flowfilter.TFilter]):
+    def set_filter(self, flt: flowfilter.TFilter | None):
         self.filter = flt or flowfilter.match_all
         self._refilter()
 
@@ -475,8 +479,12 @@ class View(collections.abc.Sequence):
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
 
-        c = connection.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
-        s = connection.Server((req.host, req.port))
+        c = connection.Client(
+            peername=("", 0),
+            sockname=("", 0),
+            timestamp_start=req.timestamp_start - 0.0001,
+        )
+        s = connection.Server(address=(req.host, req.port))
 
         f = http.HTTPFlow(c, s)
         f.request = req
@@ -514,7 +522,7 @@ class View(collections.abc.Sequence):
                         self.focus.flow = f
                     self.sig_view_add.send(flow=f)
 
-    def get_by_id(self, flow_id: str) -> Optional[mitmproxy.flow.Flow]:
+    def get_by_id(self, flow_id: str) -> mitmproxy.flow.Flow | None:
         """
         Get flow with the given id from the store.
         Returns None if the flow is not found.
@@ -659,7 +667,7 @@ class Focus:
 
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: Optional[mitmproxy.flow.Flow] = None
+        self._flow: mitmproxy.flow.Flow | None = None
         self.sig_change = signals.SyncSignal(lambda: None)
         if len(self.view):
             self.flow = self.view[0]
@@ -668,18 +676,18 @@ class Focus:
         v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
-    def flow(self) -> Optional[mitmproxy.flow.Flow]:
+    def flow(self) -> mitmproxy.flow.Flow | None:
         return self._flow
 
     @flow.setter
-    def flow(self, f: Optional[mitmproxy.flow.Flow]):
+    def flow(self, f: mitmproxy.flow.Flow | None):
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
         self.sig_change.send()
 
     @property
-    def index(self) -> Optional[int]:
+    def index(self) -> int | None:
         if self.flow:
             return self.view.index(self.flow)
         return None

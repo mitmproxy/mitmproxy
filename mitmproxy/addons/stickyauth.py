@@ -1,8 +1,8 @@
 from typing import Optional
 
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
-from mitmproxy import ctx
 
 
 class StickyAuth:

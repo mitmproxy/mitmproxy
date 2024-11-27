@@ -1,9 +1,11 @@
 from collections.abc import Sequence
 from typing import NamedTuple
 
-import logging
-
-from mitmproxy import ctx, exceptions, flowfilter, http, version
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http
+from mitmproxy import version
 from mitmproxy.net.http.status_codes import NO_RESPONSE
 from mitmproxy.net.http.status_codes import RESPONSES
 
@@ -38,7 +40,7 @@ def parse_spec(option: str) -> BlockSpec:
 
 
 class BlockList:
-    def __init__(self):
+    def __init__(self) -> None:
         self.items: list[BlockSpec] = []
 
     def load(self, loader):
@@ -75,12 +77,7 @@ class BlockList:
             if spec.matches(flow):
                 flow.metadata["blocklisted"] = True
                 if spec.status_code == NO_RESPONSE:
-                    if flow.killable:
-                        flow.kill()
-                    else:
-                        logging.error(
-                            "Cannot kill flow, not killable: %s", flow.request.pretty_url
-                        )
+                    flow.kill()
                 else:
                     flow.response = http.Response.make(
                         spec.status_code, headers={"Server": version.MITMPROXY}

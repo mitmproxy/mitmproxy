@@ -3,7 +3,8 @@ import logging
 from collections.abc import Sequence
 
 import mitmproxy.types
-from mitmproxy import command, command_lexer
+from mitmproxy import command
+from mitmproxy import command_lexer
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns
@@ -374,7 +375,9 @@ class ConsoleAddon:
         flow = self.master.view.focus.flow
         focus_options = []
 
-        if isinstance(flow, tcp.TCPFlow):
+        if flow is None:
+            raise exceptions.CommandError("No flow selected.")
+        elif isinstance(flow, tcp.TCPFlow):
             focus_options = ["tcp-message"]
         elif isinstance(flow, udp.UDPFlow):
             focus_options = ["udp-message"]
@@ -395,6 +398,8 @@ class ConsoleAddon:
                 "set-cookies",
                 "url",
             ]
+            if flow.websocket:
+                focus_options.append("websocket-message")
         elif isinstance(flow, dns.DNSFlow):
             raise exceptions.CommandError(
                 "Cannot edit DNS flows yet, please submit a patch."
@@ -464,6 +469,10 @@ class ConsoleAddon:
             )
         elif flow_part in ["tcp-message", "udp-message"]:
             message = flow.messages[-1]
+            c = self.master.spawn_editor(message.content or b"")
+            message.content = c.rstrip(b"\n")
+        elif flow_part == "websocket-message":
+            message = flow.websocket.messages[-1]
             c = self.master.spawn_editor(message.content or b"")
             message.content = c.rstrip(b"\n")
 

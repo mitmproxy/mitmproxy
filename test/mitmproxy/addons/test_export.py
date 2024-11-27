@@ -1,15 +1,15 @@
 import os
 import shlex
+from unittest import mock
 
-import pytest
 import pyperclip
+import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.addons import export  # heh
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.test import taddons
-from unittest import mock
 
 
 @pytest.fixture
@@ -56,6 +56,11 @@ def tcp_flow():
 @pytest.fixture
 def udp_flow():
     return tflow.tudpflow()
+
+
+@pytest.fixture
+def websocket_flow():
+    return tflow.twebsocketflow()
 
 
 @pytest.fixture(scope="module")
@@ -217,6 +222,11 @@ class TestRaw:
         ):
             export.raw(udp_flow)
 
+    def test_websocket(self, websocket_flow):
+        assert b"hello binary" in export.raw(websocket_flow)
+        assert b"hello text" in export.raw(websocket_flow)
+        assert b"it's me" in export.raw(websocket_flow)
+
 
 class TestRawRequest:
     def test_get(self, get_request):
@@ -283,6 +293,10 @@ def test_export(tmp_path) -> None:
         os.unlink(f)
 
         e.file("httpie", tflow.tflow(resp=True), f)
+        assert qr(f)
+        os.unlink(f)
+
+        e.file("raw", tflow.twebsocketflow(), f)
         assert qr(f)
         os.unlink(f)
 

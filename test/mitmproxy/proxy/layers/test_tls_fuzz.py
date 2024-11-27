@@ -1,8 +1,10 @@
-from hypothesis import given, example
-from hypothesis.strategies import binary, integers
+from hypothesis import example
+from hypothesis import given
+from hypothesis.strategies import binary
+from hypothesis.strategies import integers
 
-from mitmproxy.tls import ClientHello
 from mitmproxy.proxy.layers.tls import parse_client_hello
+from mitmproxy.tls import ClientHello
 
 client_hello_with_extensions = bytes.fromhex(
     "16030300bb"  # record layer

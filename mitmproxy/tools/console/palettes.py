@@ -3,8 +3,10 @@
 #
 # http://urwid.org/manual/displayattributes.html
 #
-from collections.abc import Mapping, Sequence
-from typing import Optional
+from __future__ import annotations
+
+from collections.abc import Mapping
+from collections.abc import Sequence
 
 
 class Palette:
@@ -39,6 +41,7 @@ class Palette:
         "scheme_tcp",
         "scheme_udp",
         "scheme_dns",
+        "scheme_quic",
         "scheme_other",
         "url_punctuation",
         "url_domain",
@@ -88,10 +91,11 @@ class Palette:
         "commander_hint",
     ]
     _fields.extend(["gradient_%02d" % i for i in range(100)])
-    high: Optional[Mapping[str, Sequence[str]]] = None
+    high: Mapping[str, Sequence[str]] | None = None
+    low: Mapping[str, Sequence[str]]
 
-    def palette(self, transparent):
-        l = []
+    def palette(self, transparent: bool):
+        lst: list[Sequence[str | None]] = []
         highback, lowback = None, None
         if not transparent:
             if self.high and self.high.get("background"):
@@ -100,24 +104,24 @@ class Palette:
 
         for i in self._fields:
             if transparent and i == "background":
-                l.append(["background", "default", "default"])
+                lst.append(["background", "default", "default"])
             else:
-                v = [i]
+                v: list[str | None] = [i]
                 low = list(self.low[i])
                 if lowback and low[1] == "default":
                     low[1] = lowback
                 v.extend(low)
                 if self.high and i in self.high:
                     v.append(None)
-                    high = list(self.high[i])
+                    high: list[str | None] = list(self.high[i])
                     if highback and high[1] == "default":
                         high[1] = highback
                     v.extend(high)
                 elif highback and self.low[i][1] == "default":
                     high = [None, low[0], highback]
                     v.extend(high)
-                l.append(tuple(v))
-        return l
+                lst.append(tuple(v))
+        return lst
 
 
 def gen_gradient(palette, cols):
@@ -142,7 +146,6 @@ def gen_rgb_gradient(palette, cols):
 
 
 class LowDark(Palette):
-
     """
     Low-color dark background
     """
@@ -178,6 +181,7 @@ class LowDark(Palette):
         scheme_tcp=("dark magenta", "default"),
         scheme_udp=("dark magenta", "default"),
         scheme_dns=("dark blue", "default"),
+        scheme_quic=("brown", "default"),
         scheme_other=("dark magenta", "default"),
         url_punctuation=("light gray", "default"),
         url_domain=("white", "default"),
@@ -242,7 +246,6 @@ class Dark(LowDark):
 
 
 class LowLight(Palette):
-
     """
     Low-color light background
     """
@@ -278,6 +281,7 @@ class LowLight(Palette):
         scheme_tcp=("light magenta", "default"),
         scheme_udp=("light magenta", "default"),
         scheme_dns=("light blue", "default"),
+        scheme_quic=("brown", "default"),
         scheme_other=("light magenta", "default"),
         url_punctuation=("dark gray", "default"),
         url_domain=("dark gray", "default"),
@@ -399,6 +403,7 @@ class SolarizedLight(LowLight):
         scheme_tcp=("light magenta", "default"),
         scheme_udp=("light magenta", "default"),
         scheme_dns=("light blue", "default"),
+        scheme_quic=(sol_orange, "default"),
         scheme_other=("light magenta", "default"),
         url_punctuation=("dark gray", "default"),
         url_domain=("dark gray", "default"),

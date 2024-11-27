@@ -1,9 +1,11 @@
-import logging
+from __future__ import annotations
 
 import itertools
+import logging
 import shutil
 import sys
-from typing import IO, Optional, Union
+from typing import IO
+from typing import Optional
 
 from wsproto.frame_protocol import CloseReason
 
@@ -15,21 +17,26 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.contrib import click as miniclick
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from mitmproxy.udp import UDPFlow, UDPMessage
+from mitmproxy.net.dns import response_codes
+from mitmproxy.options import CONTENT_VIEW_LINES_CUTOFF
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
+from mitmproxy.udp import UDPFlow
+from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 from mitmproxy.utils import vt_codes
-from mitmproxy.websocket import WebSocketData, WebSocketMessage
+from mitmproxy.websocket import WebSocketData
+from mitmproxy.websocket import WebSocketMessage
 
 
 def indent(n: int, text: str) -> str:
-    l = str(text).strip().splitlines()
+    lines = str(text).strip().splitlines()
     pad = " " * n
-    return "\n".join(pad + i for i in l)
+    return "\n".join(pad + i for i in lines)
 
 
-CONTENTVIEW_STYLES = {
+CONTENTVIEW_STYLES: dict[str, dict[str, str | bool]] = {
     "highlight": dict(bold=True),
     "offset": dict(fg="blue"),
     "header": dict(fg="green", bold=True),
@@ -38,8 +45,8 @@ CONTENTVIEW_STYLES = {
 
 
 class Dumper:
-    def __init__(self, outfile: Optional[IO[str]] = None):
-        self.filter: Optional[flowfilter.TFilter] = None
+    def __init__(self, outfile: IO[str] | None = None):
+        self.filter: flowfilter.TFilter | None = None
         self.outfp: IO[str] = outfile or sys.stdout
         self.out_has_vt_codes = vt_codes.ensure_supported(self.outfp)
 
@@ -48,12 +55,12 @@ class Dumper:
             "flow_detail",
             int,
             1,
-            """
+            f"""
             The display detail level for flows in mitmdump: 0 (quiet) to 4 (very verbose).
               0: no output
               1: shortened request URL with response status code
               2: full request URL with response status code and HTTP headers
-              3: 2 + truncated response content, content of WebSocket and TCP messages
+              3: 2 + truncated response content, content of WebSocket and TCP messages (content_view_lines_cutoff: {CONTENT_VIEW_LINES_CUTOFF})
               4: 3 + nothing is truncated
             """,
         )
@@ -96,7 +103,7 @@ class Dumper:
             vs = strutils.bytes_to_escaped_str(v)
             self.echo(f"{ks}: {vs}", ident=4)
 
-    def _echo_trailers(self, trailers: Optional[http.Headers]):
+    def _echo_trailers(self, trailers: http.Headers | None):
         if not trailers:
             return
         self.echo("--- HTTP Trailers", fg="magenta", ident=4)
@@ -104,13 +111,13 @@ class Dumper:
 
     def _colorful(self, line):
         yield "    "  # we can already indent here
-        for (style, text) in line:
+        for style, text in line:
             yield self.style(text, **CONTENTVIEW_STYLES.get(style, {}))
 
     def _echo_message(
         self,
-        message: Union[http.Message, TCPMessage, UDPMessage, WebSocketMessage],
-        flow: Union[http.HTTPFlow, TCPFlow, UDPFlow],
+        message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+        flow: http.HTTPFlow | TCPFlow | UDPFlow,
     ):
         _, lines, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview, message, flow
@@ -119,7 +126,9 @@ class Dumper:
             logging.debug(error)
 
         if ctx.options.flow_detail == 3:
-            lines_to_echo = itertools.islice(lines, 70)
+            lines_to_echo = itertools.islice(
+                lines, ctx.options.content_view_lines_cutoff
+            )
         else:
             lines_to_echo = lines
 
@@ -203,7 +212,7 @@ class Dumper:
             blink=(code_int == 418),
         )
 
-        if not flow.response.is_http2:
+        if not (flow.response.is_http2 or flow.response.is_http3):
             reason = flow.response.reason
         else:
             reason = http.status_codes.RESPONSES.get(flow.response.status_code, "")
@@ -334,16 +343,29 @@ class Dumper:
     def udp_error(self, f):
         self._proto_error(f)
 
-    def _proto_message(self, f):
+    def _proto_message(self, f: TCPFlow | UDPFlow) -> None:
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
+            if f.client_conn.tls_version == "QUICv1":
+                if f.type == "tcp":
+                    quic_type = "stream"
+                else:
+                    quic_type = "dgrams"
+                # TODO: This should not be metadata, this should be typed attributes.
+                flow_type = (
+                    f"quic {quic_type} {f.metadata.get('quic_stream_id_client','')} "
+                    f"{direction} mitmproxy {direction} "
+                    f"quic {quic_type} {f.metadata.get('quic_stream_id_server','')}"
+                )
+            else:
+                flow_type = f.type
             self.echo(
                 "{client} {direction} {type} {direction} {server}".format(
                     client=human.format_address(f.client_conn.peername),
                     server=human.format_address(f.server_conn.address),
                     direction=direction,
-                    type=f.type,
+                    type=flow_type,
                 )
             )
             if ctx.options.flow_detail >= 3:
@@ -376,9 +398,17 @@ class Dumper:
             self._echo_dns_query(f)
 
             arrows = self.style(" <<", bold=True)
-            answers = ", ".join(
-                self.style(str(x), fg="bright_blue") for x in f.response.answers
-            )
+            if f.response.answers:
+                answers = ", ".join(
+                    self.style(str(x), fg="bright_blue") for x in f.response.answers
+                )
+            else:
+                answers = self.style(
+                    response_codes.to_str(
+                        f.response.response_code,
+                    ),
+                    fg="red",
+                )
             self.echo(f"{arrows} {answers}")
 
     def dns_error(self, f: dns.DNSFlow):

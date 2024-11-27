@@ -1,135 +1,154 @@
 import asyncio
-import ipaddress
 import socket
-from typing import Callable
+import sys
+import typing
 
 import pytest
 
+import mitmproxy_rs
 from mitmproxy import dns
-from mitmproxy.addons import dns_resolver, proxyserver
-from mitmproxy.connection import Address
+from mitmproxy.addons import dns_resolver
+from mitmproxy.addons import proxyserver
 from mitmproxy.proxy.mode_specs import ProxyMode
-from mitmproxy.test import taddons, tflow, tutils
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
-async def test_simple(monkeypatch):
-    monkeypatch.setattr(
-        dns_resolver, "resolve_message", lambda _, __: asyncio.sleep(0, "resp")
-    )
-
+async def test_ignores_reverse_mode():
     dr = dns_resolver.DnsResolver()
     with taddons.context(dr, proxyserver.Proxyserver()):
         f = tflow.tdnsflow()
-        await dr.dns_request(f)
-        assert f.response
+        f.client_conn.proxy_mode = ProxyMode.parse("dns")
+        assert dr._should_resolve(f)
 
-        f = tflow.tdnsflow()
+        f.client_conn.proxy_mode = ProxyMode.parse("wireguard")
+        f.server_conn.address = ("10.0.0.53", 53)
+        assert dr._should_resolve(f)
+
         f.client_conn.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8")
-        await dr.dns_request(f)
-        assert not f.response
+        assert not dr._should_resolve(f)
 
 
-class DummyLoop:
-    async def getnameinfo(self, socketaddr: Address, flags: int = 0):
-        assert flags == socket.NI_NAMEREQD
-        if socketaddr[0] in ("8.8.8.8", "2001:4860:4860::8888"):
-            return ("dns.google", "")
-        e = socket.gaierror()
-        e.errno = socket.EAI_NONAME
-        raise e
-
-    async def getaddrinfo(self, host: str, port: int, *, family: int):
-        e = socket.gaierror()
-        e.errno = socket.EAI_NONAME
-        if family == socket.AF_INET:
-            if host == "dns.google":
-                return [(socket.AF_INET, None, None, None, ("8.8.8.8", port))]
-        elif family == socket.AF_INET6:
-            if host == "dns.google":
-                return [
-                    (
-                        socket.AF_INET6,
-                        None,
-                        None,
-                        None,
-                        ("2001:4860:4860::8888", port, None, None),
-                    )
-                ]
-        else:
-            e.errno = socket.EAI_FAMILY
-        raise e
+def _err():
+    raise RuntimeError("failed to get name servers")
 
 
-async def test_resolve():
-    async def fail_with(question: dns.Question, code: int):
-        with pytest.raises(dns_resolver.ResolveError) as ex:
-            await dns_resolver.resolve_question(question, DummyLoop())
-        assert ex.value.response_code == code
+async def test_name_servers(caplog, monkeypatch):
+    dr = dns_resolver.DnsResolver()
+    with taddons.context(dr) as tctx:
+        assert dr.name_servers() == mitmproxy_rs.dns.get_system_dns_servers()
 
-    async def succeed_with(
-        question: dns.Question, check: Callable[[dns.ResourceRecord], bool]
-    ):
-        assert any(
-            map(check, await dns_resolver.resolve_question(question, DummyLoop()))
+        tctx.options.dns_name_servers = ["1.1.1.1"]
+        assert dr.name_servers() == ["1.1.1.1"]
+
+        monkeypatch.setattr(mitmproxy_rs.dns, "get_system_dns_servers", _err)
+        tctx.options.dns_name_servers = []
+        assert dr.name_servers() == []
+        assert "Failed to get system dns servers" in caplog.text
+
+
+async def lookup(name: str):
+    match name:
+        case "ipv4.example.com":
+            return ["1.2.3.4"]
+        case "ipv6.example.com":
+            return ["::1"]
+        case "no-a-records.example.com":
+            raise socket.gaierror(socket.EAI_NODATA)
+        case "no-network.example.com":
+            raise socket.gaierror(socket.EAI_AGAIN)
+        case _:
+            raise socket.gaierror(socket.EAI_NONAME)
+
+
+async def getaddrinfo(host: str, *_, **__):
+    return [[None, None, None, None, [ip]] for ip in await lookup(host)]
+
+
+Domain = typing.Literal[
+    "nxdomain.example.com",
+    "no-a-records.example.com",
+    "no-network.example.com",
+    "txt.example.com",
+    "ipv4.example.com",
+    "ipv6.example.com",
+]
+# We use literals here instead of bools because that makes the test easier to parse.
+HostsFile = typing.Literal["hosts", "no-hosts"]
+NameServers = typing.Literal["nameservers", "no-nameservers"]
+
+
+@pytest.mark.parametrize("hosts_file", typing.get_args(HostsFile))
+@pytest.mark.parametrize("name_servers", typing.get_args(NameServers))
+@pytest.mark.parametrize("domain", typing.get_args(Domain))
+async def test_lookup(
+    domain: Domain, hosts_file: HostsFile, name_servers: NameServers, monkeypatch
+):
+    if name_servers == "nameservers":
+        monkeypatch.setattr(
+            mitmproxy_rs.dns, "get_system_dns_servers", lambda: ["8.8.8.8"]
         )
+        monkeypatch.setattr(
+            mitmproxy_rs.dns.DnsResolver, "lookup_ipv4", lambda _, name: lookup(name)
+        )
+        monkeypatch.setattr(
+            mitmproxy_rs.dns.DnsResolver, "lookup_ipv6", lambda _, name: lookup(name)
+        )
+    else:
+        monkeypatch.setattr(mitmproxy_rs.dns, "get_system_dns_servers", lambda: [])
+        monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", getaddrinfo)
 
-    await fail_with(
-        dns.Question("dns.google", dns.types.A, dns.classes.CH),
-        dns.response_codes.NOTIMP,
-    )
-    await fail_with(
-        dns.Question("not.exists", dns.types.A, dns.classes.IN),
-        dns.response_codes.NXDOMAIN,
-    )
-    await fail_with(
-        dns.Question("dns.google", dns.types.SOA, dns.classes.IN),
-        dns.response_codes.NOTIMP,
-    )
-    await fail_with(
-        dns.Question("totally.invalid", dns.types.PTR, dns.classes.IN),
-        dns.response_codes.FORMERR,
-    )
-    await fail_with(
-        dns.Question("invalid.in-addr.arpa", dns.types.PTR, dns.classes.IN),
-        dns.response_codes.FORMERR,
-    )
-    await fail_with(
-        dns.Question("0.0.0.1.in-addr.arpa", dns.types.PTR, dns.classes.IN),
-        dns.response_codes.NXDOMAIN,
-    )
+    dr = dns_resolver.DnsResolver()
+    match domain:
+        case "txt.example.com":
+            typ = dns.types.TXT
+        case "ipv6.example.com":
+            typ = dns.types.AAAA
+        case _:
+            typ = dns.types.A
 
-    await succeed_with(
-        dns.Question("dns.google", dns.types.A, dns.classes.IN),
-        lambda rr: rr.ipv4_address == ipaddress.IPv4Address("8.8.8.8"),
-    )
-    await succeed_with(
-        dns.Question("dns.google", dns.types.AAAA, dns.classes.IN),
-        lambda rr: rr.ipv6_address == ipaddress.IPv6Address("2001:4860:4860::8888"),
-    )
-    await succeed_with(
-        dns.Question("8.8.8.8.in-addr.arpa", dns.types.PTR, dns.classes.IN),
-        lambda rr: rr.domain_name == "dns.google",
-    )
-    await succeed_with(
-        dns.Question(
-            "8.8.8.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.8.4.0.6.8.4.1.0.0.2.ip6.arpa",
-            dns.types.PTR,
-            dns.classes.IN,
-        ),
-        lambda rr: rr.domain_name == "dns.google",
-    )
+    with taddons.context(dr) as tctx:
+        tctx.options.dns_use_hosts_file = hosts_file == "hosts"
+        req = tutils.tdnsreq(
+            questions=[
+                dns.Question(domain, typ, dns.classes.IN),
+            ]
+        )
+        flow = tflow.tdnsflow(req=req)
+        await dr.dns_request(flow)
 
-    req = tutils.tdnsreq()
-    req.query = False
-    assert (
-        await dns_resolver.resolve_message(req, DummyLoop())
-    ).response_code == dns.response_codes.REFUSED
-    req.query = True
-    req.op_code = dns.op_codes.IQUERY
-    assert (
-        await dns_resolver.resolve_message(req, DummyLoop())
-    ).response_code == dns.response_codes.NOTIMP
-    req.op_code = dns.op_codes.QUERY
-    resp = await dns_resolver.resolve_message(req, DummyLoop())
-    assert resp.response_code == dns.response_codes.NOERROR
-    assert filter(lambda rr: str(rr.ipv4_address) == "8.8.8.8", resp.answers)
+        match (domain, name_servers, hosts_file):
+            case [_, "no-nameservers", "no-hosts"]:
+                assert flow.error
+            case ["nxdomain.example.com", _, _]:
+                assert flow.response.response_code == dns.response_codes.NXDOMAIN
+            case ["no-network.example.com", _, _]:
+                assert flow.response.response_code == dns.response_codes.SERVFAIL
+            case ["no-a-records.example.com", _, _]:
+                if sys.platform == "win32":
+                    # On Windows, EAI_NONAME and EAI_NODATA are the same constant (11001)...
+                    assert flow.response.response_code == dns.response_codes.NXDOMAIN
+                else:
+                    assert flow.response.response_code == dns.response_codes.NOERROR
+                assert not flow.response.answers
+            case ["txt.example.com", "nameservers", _]:
+                assert flow.server_conn.address == ("8.8.8.8", 53)
+            case ["txt.example.com", "no-nameservers", _]:
+                assert flow.error
+            case ["ipv4.example.com", "nameservers", _]:
+                assert flow.response.answers[0].data == b"\x01\x02\x03\x04"
+            case ["ipv4.example.com", "no-nameservers", "hosts"]:
+                assert flow.response.answers[0].data == b"\x01\x02\x03\x04"
+            case ["ipv6.example.com", "nameservers", _]:
+                assert (
+                    flow.response.answers[0].data
+                    == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+                )
+            case ["ipv6.example.com", "no-nameservers", "hosts"]:
+                assert (
+                    flow.response.answers[0].data
+                    == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+                )
+            case other:
+                typing.assert_never(other)

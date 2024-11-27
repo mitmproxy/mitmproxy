@@ -5,14 +5,15 @@ as HTTP flows as well. They can be distinguished from regular HTTP requests by h
 
 This module only defines the classes for individual `WebSocketMessage`s and the `WebSocketData` container.
 """
+
 import time
 import warnings
-from typing import Union
-from typing import Optional
+from dataclasses import dataclass
+from dataclasses import field
 
-from mitmproxy import stateobject
-from mitmproxy.coretypes import serializable
 from wsproto.frame_protocol import Opcode
+
+from mitmproxy.coretypes import serializable
 
 WebSocketMessageState = tuple[int, bool, bytes, float, bool, bool]
 
@@ -52,10 +53,10 @@ class WebSocketMessage(serializable.Serializable):
 
     def __init__(
         self,
-        type: Union[int, Opcode],
+        type: int | Opcode,
         from_client: bool,
         content: bytes,
-        timestamp: Optional[float] = None,
+        timestamp: float | None = None,
         dropped: bool = False,
         injected: bool = False,
     ) -> None:
@@ -90,6 +91,12 @@ class WebSocketMessage(serializable.Serializable):
             self.injected,
         ) = state
         self.type = Opcode(typ)
+
+    def _format_ws_message(self) -> bytes:
+        if self.from_client:
+            return b"[OUTGOING] " + self.content
+        else:
+            return b"[INCOMING] " + self.content
 
     def __repr__(self):
         if self.type == Opcode.TEXT:
@@ -144,45 +151,32 @@ class WebSocketMessage(serializable.Serializable):
         self.content = value.encode()
 
 
-class WebSocketData(stateobject.StateObject):
+@dataclass
+class WebSocketData(serializable.SerializableDataclass):
     """
     A data container for everything related to a single WebSocket connection.
     This is typically accessed as `mitmproxy.http.HTTPFlow.websocket`.
     """
 
-    messages: list[WebSocketMessage]
+    messages: list[WebSocketMessage] = field(default_factory=list)
     """All `WebSocketMessage`s transferred over this connection."""
 
-    closed_by_client: Optional[bool] = None
+    closed_by_client: bool | None = None
     """
     `True` if the client closed the connection,
     `False` if the server closed the connection,
     `None` if the connection is active.
     """
-    close_code: Optional[int] = None
+    close_code: int | None = None
     """[Close Code](https://tools.ietf.org/html/rfc6455#section-7.1.5)"""
-    close_reason: Optional[str] = None
+    close_reason: str | None = None
     """[Close Reason](https://tools.ietf.org/html/rfc6455#section-7.1.6)"""
 
-    timestamp_end: Optional[float] = None
+    timestamp_end: float | None = None
     """*Timestamp:* WebSocket connection closed."""
-
-    _stateobject_attributes = dict(
-        messages=list[WebSocketMessage],
-        closed_by_client=bool,
-        close_code=int,
-        close_reason=str,
-        timestamp_end=float,
-    )
-
-    def __init__(self):
-        self.messages = []
 
     def __repr__(self):
         return f"<WebSocketData ({len(self.messages)} messages)>"
 
-    @classmethod
-    def from_state(cls, state):
-        d = WebSocketData()
-        d.set_state(state)
-        return d
+    def _get_formatted_messages(self) -> bytes:
+        return b"\n".join(m._format_ws_message() for m in self.messages)

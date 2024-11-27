@@ -1,7 +1,7 @@
 # Quick Start
 
 - Install mitmproxy as described in [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
-- Run `node --version` to make sure that you have at least Node.js 14 or above. If you are on **Ubuntu <= 20.04**, you
+- Run `node --version` to make sure that you have at least Node.js 18 or above. If you are on **Ubuntu <= 22.04**, you
   need to
   [upgrade](https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions).
 - Run `cd mitmproxy/web` to change to the directory with package.json
@@ -12,6 +12,10 @@
 ## Testing
 
 - Run `npm test` to run the test suite.
+
+## Code formatting
+
+- Run `npm run prettier` to format your code. You can also integrate prettier into your editor, see https://prettier.io/docs/en/editors.html
 
 ## Architecture
 

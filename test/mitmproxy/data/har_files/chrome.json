@@ -1,0 +1,575 @@
+[
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1680134454.25,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1680134454.264666
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": [
+                "108.138.246.80",
+                443
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "https",
+            "host": "mitmproxy.org",
+            "port": 443,
+            "path": "/",
+            "http_version": "HTTP/2",
+            "headers": [
+                [
+                    ":authority",
+                    "mitmproxy.org"
+                ],
+                [
+                    ":method",
+                    "GET"
+                ],
+                [
+                    ":path",
+                    "/"
+                ],
+                [
+                    ":scheme",
+                    "https"
+                ],
+                [
+                    "accept",
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+                ],
+                [
+                    "accept-encoding",
+                    "gzip, deflate, br"
+                ],
+                [
+                    "accept-language",
+                    "en-US,en;q=0.9"
+                ],
+                [
+                    "cache-control",
+                    "max-age=0"
+                ],
+                [
+                    "dnt",
+                    "1"
+                ],
+                [
+                    "if-modified-since",
+                    "Sat, 04 Mar 2023 18:02:08 GMT"
+                ],
+                [
+                    "if-none-match",
+                    "W/\"a1550c2bd25c5bcfef789d730f5bbddf\""
+                ],
+                [
+                    "referer",
+                    "https://www.google.com/"
+                ],
+                [
+                    "sec-ch-ua",
+                    "\"Chromium\";v=\"110\", \"Not A(Brand\";v=\"24\", \"Google Chrome\";v=\"110\""
+                ],
+                [
+                    "sec-ch-ua-mobile",
+                    "?0"
+                ],
+                [
+                    "sec-ch-ua-platform",
+                    "\"macOS\""
+                ],
+                [
+                    "sec-fetch-dest",
+                    "document"
+                ],
+                [
+                    "sec-fetch-mode",
+                    "navigate"
+                ],
+                [
+                    "sec-fetch-site",
+                    "cross-site"
+                ],
+                [
+                    "sec-fetch-user",
+                    "?1"
+                ],
+                [
+                    "upgrade-insecure-requests",
+                    "1"
+                ],
+                [
+                    "user-agent",
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+                ],
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1680134454.25,
+            "timestamp_end": 1680134454.264666,
+            "pretty_host": "mitmproxy.org"
+        },
+        "response": {
+            "http_version": "HTTP/2",
+            "status_code": 304,
+            "reason": "Not Modified",
+            "headers": [
+                [
+                    "age",
+                    "11391"
+                ],
+                [
+                    "alt-svc",
+                    "h3=\":443\"; ma=86400"
+                ],
+                [
+                    "date",
+                    "Thu, 30 Mar 2023 00:00:54 GMT"
+                ],
+                [
+                    "etag",
+                    "W/\"a1550c2bd25c5bcfef789d730f5bbddf\""
+                ],
+                [
+                    "server",
+                    "AmazonS3"
+                ],
+                [
+                    "vary",
+                    "Accept-Encoding"
+                ],
+                [
+                    "via",
+                    "1.1 e758e6512b4c08d28af121962cc722ce.cloudfront.net (CloudFront)"
+                ],
+                [
+                    "x-amz-cf-id",
+                    "PaWnOEEyng3O4PBX2lab_qyD2DQ60VajC413wiIbt93eiNkaSKvpkQ=="
+                ],
+                [
+                    "x-amz-cf-pop",
+                    "SFO5-P1"
+                ],
+                [
+                    "x-cache",
+                    "Hit from cloudfront"
+                ]
+            ],
+            "contentLength": 23866,
+            "contentHash": "7fd5f643a86976f5711df86ae2d5f9f8137a47c705dee31ccc550215564a5364",
+            "timestamp_start": 1680134454.25,
+            "timestamp_end": 1680134454.264666
+        }
+    },
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1689251552.676,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1689251552.680119
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": null,
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "https",
+            "host": "www.google.com",
+            "port": 443,
+            "path": "/",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    "DNT",
+                    "1"
+                ],
+                [
+                    "Upgrade-Insecure-Requests",
+                    "1"
+                ],
+                [
+                    "User-Agent",
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                ],
+                [
+                    "sec-ch-ua",
+                    "\"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\", \"Google Chrome\";v=\"114\""
+                ],
+                [
+                    "sec-ch-ua-arch",
+                    "\"arm\""
+                ],
+                [
+                    "sec-ch-ua-bitness",
+                    "\"64\""
+                ],
+                [
+                    "sec-ch-ua-full-version",
+                    "\"114.0.5735.198\""
+                ],
+                [
+                    "sec-ch-ua-full-version-list",
+                    "\"Not.A/Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"114.0.5735.198\", \"Google Chrome\";v=\"114.0.5735.198\""
+                ],
+                [
+                    "sec-ch-ua-mobile",
+                    "?0"
+                ],
+                [
+                    "sec-ch-ua-model",
+                    "\"\""
+                ],
+                [
+                    "sec-ch-ua-platform",
+                    "\"macOS\""
+                ],
+                [
+                    "sec-ch-ua-platform-version",
+                    "\"13.2.1\""
+                ],
+                [
+                    "sec-ch-ua-wow64",
+                    "?0"
+                ],
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1689251552.676,
+            "timestamp_end": 1689251552.680119,
+            "pretty_host": "www.google.com"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 0,
+            "reason": "",
+            "headers": [],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1689251552.676,
+            "timestamp_end": 1689251552.680119
+        }
+    },
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1690289926.182,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1690289926.2402048
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": [
+                "142.250.185.164",
+                443
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "https",
+            "host": "www.google.com",
+            "port": 443,
+            "path": "/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    ":authority",
+                    "www.google.com"
+                ],
+                [
+                    ":method",
+                    "GET"
+                ],
+                [
+                    ":path",
+                    "/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png"
+                ],
+                [
+                    ":scheme",
+                    "https"
+                ],
+                [
+                    "accept",
+                    "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+                ],
+                [
+                    "accept-encoding",
+                    "gzip, deflate, br"
+                ],
+                [
+                    "accept-language",
+                    "en-US,en;q=0.9"
+                ],
+                [
+                    "cache-control",
+                    "no-cache"
+                ],
+                [
+                    "cookie",
+                    "SID=YAieF18TdLas-8SKhGKNYvnieZbB1wJ1jf2tW44mAWYKcppPKLvK_Ok7NklKqsURxU82bg.; __Secure-1PSID=YAieF18TdLas-8SKhGKNYvnieZbB1wJ1jf2tW44mAWYKcppP1MvyqChs4flonGDrhu0qfw.; __Secure-3PSID=YAieF18TdLas-8SKhGKNYvnieZbB1wJ1jf2tW44mAWYKcppPqnnM4L77WRxhbrutGn6uEw.; HSID=AOiDlkphfGSlvWKsu; SSID=A_mrp5cpjfkd72x04; APISID=GtMYjIVXfk0omvEX/A1mpBXxfb2x4uc-qq; SAPISID=lTu95MmvfwxU5H_h/Af79riHHI6PPtD3q3; __Secure-1PAPISID=lTu95MmvfwxU5H_h/Af79riHHI6PPtD3q3; __Secure-3PAPISID=lTu95MmvfwxU5H_h/Af79riHHI6PPtD3q3; OGPC=19022552-1:19031986-1:; SEARCH_SAMESITE=CgQI5pgB; AEC=Ad49MVEbr-A-zp-lPUibpASs-qNYts6opSVc67g4tFxAiIcO79t6fv7tSw; OTZ=7131795_48_52_123900_48_436380; 1P_JAR=2023-7-25-11; __Secure-ENID=13.SE=o3Bl7qRCyr6NPgYD4acm8JRn0rHVFaHBm2GJK2uTs7tHS0gwr5E_QfusAwogWPHDkJWCTosdnQbrw5mZIk4a0GdDMLmUgp1c63gYrMAoNoAJYN7hQ-HNT6ztr32WVkImvjtzfI7XxVRC4uRovzZP5X1CLbq5eifYkMGyuQWB4vKok5OBwvnbAJoETbBQ7yaG_vBp3v2Mx7RLCXMHzmb_55e6fogLMGMRw_ilgfQjayO31xAlXhPfFrPsx-R7p9uEu1ka; NID=511=nguIsOmSJcCSka0RAZK37__ia-Rm4RXhcxFnfwfMxyS3IIKf7KKi8QPxqH8MgLl4hFljOeweA_8t_o6JYklI6f6TpenXMrjXP9rFfaflNOp7fwNQX3hDPqOnHANLFsQBpc2Yh56SsDfzVDnjJcGw1rPV3a6N-N4r8e0bdLseNy0OgT8RdVSqoCREsbvn6Q-lmadCfM35a8FToMgl8fP7WXXZRutJKIJBly6os_NDIxJO25qntdadaEhYmujyFCTkGHcbTqtR3VhiEO3L4KZOmmWd9eVnVuqJDPvRt20aNy4c-_tctcvq48qW5SwUE1eiDoN0SFeTFlIIK1P1kchv6Nno4wNWoadtqvIIxMBzrp2ueN5AufcVUP4GcfT3glpuphaMEjcWYi9dN-qdvoIZTDoY2UbjYW5Mv3V7jF1UyZaR7q8BVQTFrHeGoeaHpVYsQP3uKGT5KdmLMWLLyLQ; __Secure-1PSIDTS=sidts-CjEBPu3jIZnNVFcJFxoLH-VBGrYwtBzLlYvkamouuPMziP33rF7t30l_WylizU_03CxbEAA; __Secure-3PSIDTS=sidts-CjEBPu3jIZnNVFcJFxoLH-VBGrYwtBzLlYvkamouuPMziP33rF7t30l_WylizU_03CxbEAA; SIDCC=APoG2W_9UqmUgcCg-einZHGu5g355CBjyEUdjxqwA_6rEuwN_gn337dUXNMjvB3mCSnLWrSgnTA; __Secure-1PSIDCC=APoG2W8WMUYq99_nTjsvPQwHnvITj9AqaBQWvoJrzTikBF9ct4-xVUD6NwEvj-eXsXpvjuHCg2I; __Secure-3PSIDCC=APoG2W-9cTkSJnEPYb1qMKif0ohMbB5jrVPirjfWRynrxpgbjD29BKtUFSbH48Vi2XGqPylzJYs0"
+                ],
+                [
+                    "dnt",
+                    "1"
+                ],
+                [
+                    "pragma",
+                    "no-cache"
+                ],
+                [
+                    "referer",
+                    "https://www.google.com/"
+                ],
+                [
+                    "sec-ch-ua",
+                    "\"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\", \"Google Chrome\";v=\"114\""
+                ],
+                [
+                    "sec-ch-ua-arch",
+                    "\"arm\""
+                ],
+                [
+                    "sec-ch-ua-bitness",
+                    "\"64\""
+                ],
+                [
+                    "sec-ch-ua-full-version",
+                    "\"114.0.5735.198\""
+                ],
+                [
+                    "sec-ch-ua-full-version-list",
+                    "\"Not.A/Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"114.0.5735.198\", \"Google Chrome\";v=\"114.0.5735.198\""
+                ],
+                [
+                    "sec-ch-ua-mobile",
+                    "?0"
+                ],
+                [
+                    "sec-ch-ua-model",
+                    "\"\""
+                ],
+                [
+                    "sec-ch-ua-platform",
+                    "\"macOS\""
+                ],
+                [
+                    "sec-ch-ua-platform-version",
+                    "\"13.2.1\""
+                ],
+                [
+                    "sec-ch-ua-wow64",
+                    "?0"
+                ],
+                [
+                    "sec-fetch-dest",
+                    "image"
+                ],
+                [
+                    "sec-fetch-mode",
+                    "no-cors"
+                ],
+                [
+                    "sec-fetch-site",
+                    "same-origin"
+                ],
+                [
+                    "user-agent",
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                ],
+                [
+                    "x-client-data",
+                    "CKG1yQEIiLbJAQiltskBCKmdygEI0eXKAQiVocsBCIagzQEI2rTNAQjLtc0BCIa9zQEI3L3NAQi8vs0BCKS/zQEI/r/NAQjnwc0BCLLDzQEY06DNAQ=="
+                ],
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1690289926.182,
+            "timestamp_end": 1690289926.2402048,
+            "pretty_host": "www.google.com"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "accept-ranges",
+                    "bytes"
+                ],
+                [
+                    "alt-svc",
+                    "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                ],
+                [
+                    "cache-control",
+                    "private, max-age=31536000"
+                ],
+                [
+                    "content-length",
+                    "7108"
+                ],
+                [
+                    "content-type",
+                    "image/png"
+                ],
+                [
+                    "cross-origin-opener-policy-report-only",
+                    "same-origin; report-to=\"static-on-bigtable\""
+                ],
+                [
+                    "cross-origin-resource-policy",
+                    "cross-origin"
+                ],
+                [
+                    "date",
+                    "Tue, 25 Jul 2023 12:58:46 GMT"
+                ],
+                [
+                    "expires",
+                    "Tue, 25 Jul 2023 12:58:46 GMT"
+                ],
+                [
+                    "last-modified",
+                    "Tue, 22 Oct 2019 18:30:00 GMT"
+                ],
+                [
+                    "report-to",
+                    "{\"group\":\"static-on-bigtable\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/static-on-bigtable\"}]}"
+                ],
+                [
+                    "server",
+                    "sffe"
+                ],
+                [
+                    "x-content-type-options",
+                    "nosniff"
+                ],
+                [
+                    "x-xss-protection",
+                    "0"
+                ]
+            ],
+            "contentLength": 7108,
+            "contentHash": "d2c8a5c554b741fab4a622552e5f89d8a75b09baa3bc5b37819a4279217d6cec",
+            "timestamp_start": 1690289926.182,
+            "timestamp_end": 1690289926.2402048
+        }
+    }
+]

@@ -1,4 +1,3 @@
-import asyncio
 import builtins
 import io
 import logging
@@ -13,18 +12,7 @@ from mitmproxy.utils import vt_codes
 @pytest.fixture(autouse=True)
 def ensure_cleanup():
     yield
-    assert not any(
-        isinstance(x, termlog.TermLogHandler)
-        for x in logging.root.handlers
-    )
-
-
-async def test_delayed_teardown():
-    t = termlog.TermLog()
-    t.done()
-    assert t.logger in logging.root.handlers
-    await asyncio.sleep(0)
-    assert t.logger not in logging.root.handlers
+    assert not any(isinstance(x, termlog.TermLogHandler) for x in logging.root.handlers)
 
 
 def test_output(capsys):
@@ -42,7 +30,7 @@ def test_output(capsys):
     assert "two" not in out
     assert "three" in out
     assert "four" in out
-    t.done()
+    t.uninstall()
 
 
 async def test_styling(monkeypatch) -> None:
@@ -55,7 +43,7 @@ async def test_styling(monkeypatch) -> None:
         logging.warning("hello")
 
     assert "\x1b[33mhello\x1b[0m" in f.getvalue()
-    t.done()
+    t.uninstall()
 
 
 async def test_cannot_print(monkeypatch) -> None:
@@ -72,4 +60,4 @@ async def test_cannot_print(monkeypatch) -> None:
 
         assert exc_info.value.args[0] == 1
 
-    t.done()
+    t.uninstall()

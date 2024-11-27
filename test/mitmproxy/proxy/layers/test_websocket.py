@@ -2,19 +2,27 @@ import secrets
 from dataclasses import dataclass
 
 import pytest
-
-import wsproto
 import wsproto.events
-from mitmproxy.http import HTTPFlow, Request, Response
-from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.commands import SendData, CloseConnection, Log
-from mitmproxy.connection import ConnectionState
-from mitmproxy.proxy.events import DataReceived, ConnectionClosed
-from mitmproxy.proxy.layers import http, websocket
-from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.websocket import WebSocketData, WebSocketMessage
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
 from wsproto.frame_protocol import Opcode
+
+from mitmproxy.connection import ConnectionState
+from mitmproxy.http import HTTPFlow
+from mitmproxy.http import Request
+from mitmproxy.http import Response
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import websocket
+from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
+from mitmproxy.websocket import WebSocketData
+from mitmproxy.websocket import WebSocketMessage
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
 
 
 @dataclass
@@ -122,7 +130,9 @@ def test_upgrade(tctx):
 
 
 def test_upgrade_streamed(tctx):
-    """If the HTTP response is streamed, we may get early data from the client."""
+    """
+    Test that streaming the response does not change behavior.
+    """
     tctx.server.address = ("example.com", 80)
     tctx.server.state = ConnectionState.OPEN
     flow = Placeholder(HTTPFlow)
@@ -161,6 +171,10 @@ def test_upgrade_streamed(tctx):
         )
         << http.HttpResponseHeadersHook(flow)
         >> reply(side_effect=enable_streaming)
+        # Current implementation: We know that body size for 101 responses must be zero,
+        # so we never trigger streaming logic in the first place.
+        << http.HttpResponseHook(flow)
+        >> reply()
         << SendData(
             tctx.client,
             b"HTTP/1.1 101 Switching Protocols\r\n"
@@ -168,11 +182,9 @@ def test_upgrade_streamed(tctx):
             b"Connection: Upgrade\r\n"
             b"\r\n",
         )
-        << http.HttpResponseHook(flow)
-        >> DataReceived(tctx.client, masked_bytes(b"\x81\x0bhello world"))  # early !!
-        >> reply(to=-2)
         << websocket.WebsocketStartHook(flow)
-        >> reply()
+        >> DataReceived(tctx.client, masked_bytes(b"\x81\x0bhello world"))  # early data
+        >> reply(to=-2)
         << websocket.WebsocketMessageHook(flow)
         >> reply()
         << SendData(tctx.server, masked(b"\x81\x0bhello world"))
@@ -402,9 +414,9 @@ def test_close_code(ws_testdata):
 
 def test_deflate(ws_testdata):
     tctx, playbook, flow = ws_testdata
-    flow.response.headers[
-        "Sec-WebSocket-Extensions"
-    ] = "permessage-deflate; server_max_window_bits=10"
+    flow.response.headers["Sec-WebSocket-Extensions"] = (
+        "permessage-deflate; server_max_window_bits=10"
+    )
     assert (
         playbook
         << websocket.WebsocketStartHook(flow)

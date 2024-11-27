@@ -2,18 +2,30 @@
 import contextlib
 import inspect
 import textwrap
+import typing
 from pathlib import Path
 
-from mitmproxy import hooks, log, addonmanager
-from mitmproxy.proxy import server_hooks, layer
-from mitmproxy.proxy.layers import dns, http, modes, tcp, tls, udp, websocket
+from mitmproxy import addonmanager
+from mitmproxy import hooks
+from mitmproxy import log
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import server_hooks
+from mitmproxy.proxy.layers import dns
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import udp
+from mitmproxy.proxy.layers import websocket
+from mitmproxy.proxy.layers.http import _hooks as http
 
 known = set()
 
 
 def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
     all_params = [
-        list(inspect.signature(hook.__init__, eval_str=True).parameters.values())[1:] for hook in hooks
+        list(inspect.signature(hook.__init__, eval_str=True).parameters.values())[1:]
+        for hook in hooks
     ]
 
     # slightly overengineered, but this was fun to write.  ¯\_(ツ)_/¯
@@ -22,15 +34,9 @@ def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
     for params in all_params:
         for param in params:
             try:
-                mod = inspect.getmodule(param.annotation).__name__
-                if mod == "typing":
-                    # this is ugly, but can be removed once we are on Python 3.9+ only
-                    imports.add(
-                        inspect.getmodule(param.annotation.__args__[0]).__name__
-                    )
-                    types.add(param.annotation._name)
-                else:
-                    imports.add(mod)
+                imports.add(inspect.getmodule(param.annotation).__name__)
+                for t in typing.get_args(param.annotation):
+                    imports.add(inspect.getmodule(t).__name__)
             except AttributeError:
                 raise ValueError(f"Missing type annotation: {params}")
     imports.discard("builtins")
@@ -54,7 +60,8 @@ def category(name: str, desc: str, hooks: list[type[hooks.Hook]]) -> None:
             raise RuntimeError(f"Already documented: {hook}")
         known.add(hook.name)
         doc = inspect.getdoc(hook)
-        print(f"    def {hook.name}({', '.join(str(p) for p in ['self'] + params)}):")
+        print(f"    @staticmethod")
+        print(f"    def {hook.name}({', '.join(str(p) for p in params)}):")
         print(textwrap.indent(f'"""\n{doc}\n"""', "        "))
         if params:
             print(
@@ -90,6 +97,7 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             server_hooks.ServerConnectHook,
             server_hooks.ServerConnectedHook,
             server_hooks.ServerDisconnectedHook,
+            server_hooks.ServerConnectErrorHook,
         ],
     )
 
@@ -104,6 +112,8 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             http.HttpErrorHook,
             http.HttpConnectHook,
             http.HttpConnectUpstreamHook,
+            http.HttpConnectedHook,
+            http.HttpConnectErrorHook,
         ],
     )
 
@@ -136,6 +146,15 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
             udp.UdpMessageHook,
             udp.UdpEndHook,
             udp.UdpErrorHook,
+        ],
+    )
+
+    category(
+        "QUIC",
+        "",
+        [
+            quic.QuicStartClientHook,
+            quic.QuicStartServerHook,
         ],
     )
 

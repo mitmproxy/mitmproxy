@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from mitmproxy import connection
 from . import commands
+from mitmproxy import connection
 
 
 @dataclass
@@ -60,6 +60,17 @@ class ServerConnectedHook(commands.StartHook):
 class ServerDisconnectedHook(commands.StartHook):
     """
     A server connection has been closed (either by us or the server).
+    """
+
+    data: ServerConnectionHookData
+
+
+@dataclass
+class ServerConnectErrorHook(commands.StartHook):
+    """
+    Mitmproxy failed to connect to a server.
+
+    Every server connection will receive either a server_connected or a server_connect_error event, but not both.
     """
 
     data: ServerConnectionHookData

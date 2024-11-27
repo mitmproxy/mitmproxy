@@ -1,11 +1,11 @@
-from typing import Optional
-
 import urwid
 
 import mitmproxy.flow
 from mitmproxy import http
-from mitmproxy.tools.console import common, searchable
-from mitmproxy.utils import human, strutils
+from mitmproxy.tools.console import common
+from mitmproxy.tools.console import searchable
+from mitmproxy.utils import human
+from mitmproxy.utils import strutils
 
 
 def maybe_timestamp(base, attr):
@@ -25,8 +25,8 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
 
     sc = flow.server_conn
     cc = flow.client_conn
-    req: Optional[http.Request]
-    resp: Optional[http.Response]
+    req: http.Request | None
+    resp: http.Response | None
     if isinstance(flow, http.HTTPFlow):
         req = flow.request
         resp = flow.response
@@ -80,7 +80,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             ]
 
             if c.altnames:
-                parts.append(("Alt names", ", ".join(c.altnames)))
+                parts.append(("Alt names", ", ".join(str(x.value) for x in c.altnames)))
             text.extend(common.format_keyvals(parts, indent=4))
 
     if cc is not None:

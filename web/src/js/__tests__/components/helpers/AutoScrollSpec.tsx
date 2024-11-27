@@ -1,41 +1,56 @@
 import * as React from "react";
-import ReactDOM from "react-dom"
-import AutoScroll from '../../../components/helpers/AutoScroll'
-import { calcVScroll } from '../../../components/helpers/VirtualScroll'
-import TestUtils from 'react-dom/test-utils'
+import * as autoscroll from "../../../components/helpers/AutoScroll";
+import { fireEvent, render } from "../../test-utils";
 
-describe('Autoscroll', () => {
-    let mockFn = jest.fn()
-    class tComponent extends React.Component {
-        constructor(props, context){
-            super(props, context)
-            this.state = { vScroll: calcVScroll() }
-        }
-
-       UNSAFE_componentWillUpdate() {
-           mockFn("foo")
-       }
-
-       componentDidUpdate() {
-           mockFn("bar")
-       }
-
-       render() {
-           return (<p>foo</p>)
-       }
+describe("Autoscroll", () => {
+    interface TComponentProps {
+        height: number;
     }
 
-    it('should update component', () => {
-        let Foo = AutoScroll(tComponent),
-            autoScroll = TestUtils.renderIntoDocument(<Foo></Foo>),
-            viewport = ReactDOM.findDOMNode(autoScroll)
-        viewport.scrollTop = 10
-        Object.defineProperty(viewport, "scrollHeight", { value: 10, writable: true })
-        autoScroll.UNSAFE_componentWillUpdate()
-        expect(mockFn).toBeCalledWith("foo")
+    class TComponent extends React.Component<TComponentProps> {
+        private viewport = React.createRef<HTMLDivElement>();
 
-        Object.defineProperty(viewport, "scrollHeight", { value: 0, writable: true })
-        autoScroll.componentDidUpdate()
-        expect(mockFn).toBeCalledWith("bar")
-    })
-})
+        getSnapshotBeforeUpdate(prevProps) {
+            this.fixupJsDom(prevProps.height);
+            return autoscroll.isAtBottom(this.viewport);
+        }
+
+        componentDidUpdate(prevProps, prevState, snapshot) {
+            this.fixupJsDom(this.props.height);
+            if (snapshot) {
+                autoscroll.adjustScrollTop(this.viewport);
+            }
+        }
+
+        fixupJsDom(scrollHeight: number) {
+            // work around jsdom limitations
+            Object.defineProperty(this.viewport.current!, "clientHeight", {
+                value: 100,
+                writable: true,
+            });
+            Object.defineProperty(this.viewport.current!, "scrollHeight", {
+                value: scrollHeight,
+                writable: true,
+            });
+        }
+
+        render() {
+            return <div ref={this.viewport} />;
+        }
+    }
+
+    it("should update component", () => {
+        const { rerender, container } = render(<TComponent height={120} />);
+        const viewport = container.firstElementChild!;
+
+        fireEvent.scroll(viewport, { target: { scrollTop: 10 } });
+        rerender(<TComponent height={140} />);
+
+        expect(viewport.scrollTop).toBe(10);
+
+        fireEvent.scroll(viewport, { target: { scrollTop: 40 } });
+        rerender(<TComponent height={160} />);
+
+        expect(viewport.scrollTop).toBeGreaterThanOrEqual(60);
+    });
+});

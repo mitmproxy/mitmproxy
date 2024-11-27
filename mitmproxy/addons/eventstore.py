@@ -2,15 +2,15 @@ import asyncio
 import collections
 import logging
 from collections.abc import Callable
-from typing import Optional
 
-from mitmproxy import command, log
+from mitmproxy import command
+from mitmproxy import log
 from mitmproxy.log import LogEntry
 from mitmproxy.utils import signals
 
 
 class EventStore:
-    def __init__(self, size=10000):
+    def __init__(self, size: int = 10000) -> None:
         self.data: collections.deque[LogEntry] = collections.deque(maxlen=size)
         self.sig_add = signals.SyncSignal(lambda entry: None)
         self.sig_refresh = signals.SyncSignal(lambda: None)
@@ -26,7 +26,7 @@ class EventStore:
         self.sig_add.send(entry)
 
     @property
-    def size(self) -> Optional[int]:
+    def size(self) -> int | None:
         return self.data.maxlen
 
     @command.command("eventstore.clear")

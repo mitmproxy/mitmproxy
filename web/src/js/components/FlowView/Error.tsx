@@ -1,12 +1,12 @@
-import {HTTPFlow} from "../../flow";
-import {formatTimeStamp} from "../../utils";
+import { HTTPFlow } from "../../flow";
+import { formatTimeStamp } from "../../utils";
 import * as React from "react";
 
 type ErrorProps = {
-    flow: HTTPFlow & { error: Error }
-}
+    flow: HTTPFlow & { error: Error };
+};
 
-export default function Error({flow}: ErrorProps) {
+export default function Error({ flow }: ErrorProps) {
     return (
         <section className="error">
             <div className="alert alert-warning">
@@ -16,6 +16,6 @@ export default function Error({flow}: ErrorProps) {
                 </div>
             </div>
         </section>
-    )
+    );
 }
 Error.displayName = "Error";

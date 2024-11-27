@@ -1,8 +1,437 @@
 # Release History
 
+<!--
+✨ Please add a bullet point describing your change.                                                             ✨
+✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
+-->
+
 ## Unreleased: mitmproxy next
 
+- Stop sorting keys in JSON contentview
+  ([#7346](https://github.com/mitmproxy/mitmproxy/pull/7346), @injust)
 
+## 24 November 2024: mitmproxy 11.0.1
+
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
+  ([#7228](https://github.com/mitmproxy/mitmproxy/pull/7228), @fatanugraha)
+- Implement stricter validation of HTTP headers to harden against request smuggling attacks.
+  ([#7345](https://github.com/mitmproxy/mitmproxy/issues/7345), @mhils)
+- Increase HTTP/2 default flow control window size, fixing performance issues.
+  ([#7317](https://github.com/mitmproxy/mitmproxy/pull/7317), @sujaldev)
+- Fix a bug where mitmproxy would incorrectly report that TLS 1.0 and 1.1 are not supported
+  with the current OpenSSL build.
+  ([#7241](https://github.com/mitmproxy/mitmproxy/pull/7241), @mhils)
+- Docker: Update image to Python 3.13 on Debian Bookworm.
+  ([#7242](https://github.com/mitmproxy/mitmproxy/pull/7242), @mhils)
+- Add a `tun` proxy mode that creates a virtual network device on Linux for transparent proxying.
+  ([#7278](https://github.com/mitmproxy/mitmproxy/pull/7278), @mhils)
+- `browser.start` command now supports Firefox.
+  ([#7239](https://github.com/mitmproxy/mitmproxy/pull/7239), @sujaldev)
+- Fix interaction of the `modify_headers` and `stream_large_bodies` options.
+  This may break users of `modify_headers` that rely on filters referencing the message body.
+  We expect this to be uncommon, but please make yourself heard if that's not the case.
+  ([#7286](https://github.com/mitmproxy/mitmproxy/pull/7286), @lukant)
+- Fix a crash when handling corrupted compressed body in savehar addon and its tests.
+  ([#7320](https://github.com/mitmproxy/mitmproxy/pull/7320), @8192bytes)
+- Remove dependency on `protobuf` library as it was no longer being used.
+  ([#7327](https://github.com/mitmproxy/mitmproxy/pull/7327), @matthew16550)
+
+## 02 October 2024: mitmproxy 11.0.0
+
+- mitmproxy now supports transparent HTTP/3 proxying.
+  ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
+- Add HTTP3 support in HTTPS reverse-proxy mode.
+  ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
+- mitmproxy now officially supports Python 3.13.
+  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
+  ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
+- Add `show_ignored_hosts` option to display ignored flows in the UI.
+  This option is implemented as a temporary workaround and will be removed in the future.
+  ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
+- Fix slow tnetstring parsing in case of very large tnetstring.
+  ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
+  determine the operating system's name servers.
+  ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
+- Improve the error message when users specify the `certs` option without a matching private key.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+- Fix a bug where intermediate certificates would not be transmitted when using QUIC.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+- Fix a bug where fragmented QUIC client hellos were not handled properly.
+  ([#7067](https://github.com/mitmproxy/mitmproxy/pull/7067), @errorxyz)
+- Emit a warning when users configure a TLS version that is not supported by the
+  current OpenSSL build.
+  ([#7139](https://github.com/mitmproxy/mitmproxy/pull/7139), @mhils)
+- Fix a bug where mitmproxy would crash when receiving `STOP_SENDING` QUIC frames.
+  ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
+- Fix error when unmarking all flows.
+  ([#7192](https://github.com/mitmproxy/mitmproxy/pull/7192), @bburky)
+- Add addon to update the alt-svc header in reverse mode.
+  ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
+- Do not send unnecessary empty data frames when streaming HTTP/2.
+  ([#7196](https://github.com/mitmproxy/mitmproxy/pull/7196), @rubu)
+- Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
+  ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
+- Fix of measurement unit in HAR import, duration is in milliseconds.
+  ([#7179](https://github.com/mitmproxy/mitmproxy/pull/7179), @dstd)
+- `Connection.tls_version` now is `QUICv1` instead of `QUIC` for QUIC.
+  ([#7201](https://github.com/mitmproxy/mitmproxy/pull/7201), @mhils)
+- Add support for full mTLS with client certs between client and mitmproxy.
+  ([#7175](https://github.com/mitmproxy/mitmproxy/pull/7175), @Kriechi)
+- Update documentation adding a list of all possibile web_columns.
+  ([#7205](https://github.com/mitmproxy/mitmproxy/pull/7205), @lups2000, @Abhishek-Bohora)
+
+## 02 August 2024: mitmproxy 10.4.2
+
+- Fix a crash on startup when mitmproxy is unable to determine the OS' DNS servers
+  ([#7066](https://github.com/mitmproxy/mitmproxy/pull/7066), @errorxyz)
+
+## 29 July 2024: mitmproxy 10.4.1
+
+- Fix a bug where macOS local mode would not start up on macOS.
+  ([#7045](https://github.com/mitmproxy/mitmproxy/pull/7045), @mhils)
+- Fix UDP error handling when we learn that the remote has disconnected.
+  ([#7045](https://github.com/mitmproxy/mitmproxy/pull/7045), @mhils)
+- Container images are now published to both Docker Hub and GitHub Container Registry.
+  ([#7061](https://github.com/mitmproxy/mitmproxy/pull/7061), @mhils)
+
+## 25 July 2024: mitmproxy 10.4.0
+
+* Add support for DNS over TCP.
+  ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
+* Add first MVP new Capture Tab in mitmweb
+  ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
+* Add `HttpConnectedHook` and `HttpConnectErrorHook`.
+  ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
+* Fix non-linear growth in processing time for large HTTP bodies.
+  ([#6952](https://github.com/mitmproxy/mitmproxy/pull/6952), @jackfromeast)
+* Fix a bug where connections would be incorrectly ignored with `allow_hosts`.
+  ([#7002](https://github.com/mitmproxy/mitmproxy/pull/7002), @JarLob, @mhils)
+* Fix zstd decompression to read across frames.
+  ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
+* Handle certificates we cannot parse more gracefully.
+  ([#6994](https://github.com/mitmproxy/mitmproxy/pull/6994), @mhils)
+* Parse compressed domain names in ResourceRecord data.
+  ([#6954](https://github.com/mitmproxy/mitmproxy/pull/6954), @errorxyz)
+* Fix a bug where mitmweb's flow list would not stay at the bottom.
+  ([#7008](https://github.com/mitmproxy/mitmproxy/pull/7008), @mhils)
+* Fix a bug where SSH connections would be incorrectly handled as HTTP.
+  ([#7041](https://github.com/mitmproxy/mitmproxy/pull/7041), @mhils)
+* Skip UTF-8 byte-order marks (BOM) when loading HAR files.
+  ([#6897](https://github.com/mitmproxy/mitmproxy/pull/6897), @dstd)
+* Allow `typing.Sequence[str]` to be an editable option.
+  ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
+* Add Host header to CONNECT requests.
+  ([#7021](https://github.com/mitmproxy/mitmproxy/pull/7021), @petsneakers)
+* Support all query types in DNS mode.
+  ([#6975](https://github.com/mitmproxy/mitmproxy/pull/6975), @errorxyz)
+* Fix a bug where mitmproxy would crash for pipelined HTTP flows.
+  ([#7031](https://github.com/mitmproxy/mitmproxy/pull/7031), @gdiepen, @mhils)
+* Add an optional "index" column for mitmweb.
+  ([#7039](https://github.com/mitmproxy/mitmproxy/pull/7039), @mhils)
+
+## 12 June 2024: mitmproxy 10.3.1
+
+* Release tags are now prefixed with `v` again.
+  ([#6810](https://github.com/mitmproxy/mitmproxy/pull/6810), @mhils)
+* Fix a bug where mitmproxy would not exit when `-n` is passed.
+  ([#6819](https://github.com/mitmproxy/mitmproxy/pull/6819), @mhils)
+* Set the `unbuffered` (stdout/stderr) flag for the `mitmdump` PyInstaller build.
+  ([#6821](https://github.com/mitmproxy/mitmproxy/pull/6821), @Prinzhorn)
+* Fix a bug where client replay would not work with proxyauth.
+  ([#6866](https://github.com/mitmproxy/mitmproxy/pull/6866), @mhils)
+* Fix slowdown when sending large amounts of data over HTTP/2.
+  ([#6875](https://github.com/mitmproxy/mitmproxy/pull/6875), @aib)
+* Add an option to strip HTTPS records from DNS responses to block encrypted ClientHellos.
+  ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
+* Add an API to parse HTTPS records from DNS RDATA.
+  ([#6884](https://github.com/mitmproxy/mitmproxy/pull/6884), @errorxyz)
+* Fix flow export in mitmweb for Safari
+  ([#6917](https://github.com/mitmproxy/mitmproxy/pull/6917), @mhils, @canyesilyurt)
+* Releases now come with a Sigstore attestations file to demonstrate build provenance.
+  ([f05c050](https://github.com/mitmproxy/mitmproxy/commit/f05c050f615b9ab9963707944c893bc94e738525), @mhils)
+
+## 17 April 2024: mitmproxy 10.3.0
+
+* Add support for editing non text files in a hex editor
+  ([#6768](https://github.com/mitmproxy/mitmproxy/pull/6768), @wnyyyy)
+* Add `server_connect_error` hook that is triggered when connection establishment fails.
+  ([#6806](https://github.com/mitmproxy/mitmproxy/pull/6806), @haanhvu, @spacewasp, @mhils)
+* Add section in mitmweb for rendering, adding and removing a comment
+  ([#6709](https://github.com/mitmproxy/mitmproxy/pull/6709), @lups2000)
+* Fix multipart form content view being unusable.
+  ([#6653](https://github.com/mitmproxy/mitmproxy/pull/6653), @DaniElectra)
+* Documentation Improvements on CA Certificate Generation
+  ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)
+* Make it possible to read flows from stdin with mitmweb.
+  ([#6732](https://github.com/mitmproxy/mitmproxy/pull/6732), @jaywor1)
+* Update aioquic dependency to >= 1.0.0, < 2.0.0.
+  ([#6747](https://github.com/mitmproxy/mitmproxy/pull/6747), @jlaine)
+* Fix a bug where async `client_connected` handlers would crash mitmproxy.
+  ([#6749](https://github.com/mitmproxy/mitmproxy/pull/6749), @mhils)
+* Add button to close flow details panel
+  ([#6734](https://github.com/mitmproxy/mitmproxy/pull/6734), @lups2000)
+* Ignore SIGPIPE signals when there is lots of traffic.
+  Socket errors are handled directly and do not require extra signals
+  that generate noise.
+  ([#6764](https://github.com/mitmproxy/mitmproxy/pull/6764), @changsin)
+* Add primitive websocket interception and modification
+  ([#6766](https://github.com/mitmproxy/mitmproxy/pull/6766), @errorxyz)
+* Add support for exporting websocket messages when using "raw" export.
+  ([#6767](https://github.com/mitmproxy/mitmproxy/pull/6767), @txrp0x9)
+* The "save body" feature now also includes WebSocket messages.
+  ([#6767](https://github.com/mitmproxy/mitmproxy/pull/6767), @txrp0x9)
+* Fix compatibility with older cryptography versions and silence a DeprecationWarning on Python <3.11.
+  ([#6790](https://github.com/mitmproxy/mitmproxy/pull/6790), @mhils)
+* Fix a bug when proxying unicode domains.
+  ([#6796](https://github.com/mitmproxy/mitmproxy/pull/6796), @mhils)
+
+
+## 07 March 2024: mitmproxy 10.2.4
+
+* Fix a bug where errors during startup would not be displayed when running mitmproxy.
+  ([#6719](https://github.com/mitmproxy/mitmproxy/pull/6719), @mhils)
+* Use newer cryptography APIs to avoid CryptographyDeprecationWarnings.
+  This bumps the minimum required version to cryptography 42.0.
+  ([#6718](https://github.com/mitmproxy/mitmproxy/pull/6718), @mhils)
+
+
+## 06 March 2024: mitmproxy 10.2.3
+
+* Fix a regression where `allow_hosts`/`ignore_hosts` would break with IPv6 connections.
+  ([#6614](https://github.com/mitmproxy/mitmproxy/pull/6614), @dqxpb)
+* Fix bug where failed CONNECT request URLs are saved to HAR files incorrectly.
+  ([#6599](https://github.com/mitmproxy/mitmproxy/pull/6599), @basedBaba)
+* Add an arm64 variant for the precompiled macOS app.
+  ([#6633](https://github.com/mitmproxy/mitmproxy/pull/6633), @mhils)
+* Fix duplicate answers being returned in DNS queries.
+  ([#6648](https://github.com/mitmproxymitmproxy/pull/6648), @sujaldev)
+* Fix bug where wireguard config is generated with incorrect endpoint when two or more NICs are active.
+  ([#6659](https://github.com/mitmproxy/mitmproxy/pull/6659), @basedBaba)
+* Fix a regression when leaf cert creation would fail with intermediate CAs in `ca_file`.
+  ([#6666](https://github.com/mitmproxy/mitmproxy/pull/6666), @manselmi)
+* Add `content_view_lines_cutoff` option to mitmdump
+  ([#6692](https://github.com/mitmproxy/mitmproxy/pull/6692), @errorxyz)
+* Allow runtime modifications of HTTP flow filters for server replays
+  ([#6695](https://github.com/mitmproxy/mitmproxy/pull/6695), @errorxyz)
+* Fix bug view options menu in case of overflow
+  ([#6697](https://github.com/mitmproxy/mitmproxy/pull/6697), @lups2000)
+* Allow --allow-hosts and --ignore-hosts to work together
+  ([#6711](https://github.com/mitmproxy/mitmproxy/pull/6711), @dstd)
+
+
+## 21 January 2024: mitmproxy 10.2.2
+
+* Fix a regression where clientplayback would break due to eager task execution.
+  ([#6605](https://github.com/mitmproxy/mitmproxy/pull/6605), @mhils)
+* Fix a regression where WebSocket connections would break due to eager task execution.
+  ([#6609](https://github.com/mitmproxy/mitmproxy/pull/6609), @mhils)
+* Fix bug where insecure HTTP requests are saved incorrectly when exporting to HAR files.
+  ([#6578](https://github.com/mitmproxy/mitmproxy/pull/6578), @DaniElectra)
+* `allow_hosts`/`ignore_hosts` option now matches against the full `host:port` string.
+  ([#6594](https://github.com/mitmproxy/mitmproxy/pull/6594), @LouisAsanaka)
+
+
+## 06 January 2024: mitmproxy 10.2.1
+
+* Fix a regression introduced in mitmproxy 10.2.0: WireGuard servers
+  now bind to all interfaces again.
+  ([#6587](https://github.com/mitmproxy/mitmproxy/pull/6587), @mhils)
+* Remove stale reference to `ctx.log` in addon documentation.
+  ([#6552](https://github.com/mitmproxy/mitmproxy/pull/6552), @brojonat)
+* Fix a bug where a traceback is shown during shutdown.
+  ([#6581](https://github.com/mitmproxy/mitmproxy/pull/6581), @mhils)
+
+
+## 04 January 2024: mitmproxy 10.2.0
+
+* *Local Redirect Mode* is now officially available on
+  [macOS](https://mitmproxy.org/posts/local-redirect/macos/)
+  and [Windows](https://mitmproxy.org/posts/local-redirect/windows/).
+  See the linked blog posts for details. (@emanuele-em, @mhils)
+* UDP streams are now backed by a new implementation in `mitmproxy_rs`.
+  This represents a major API change as UDP traffic is now exposed as streams
+  instead of a callback for each packet. (@mhils)
+* Fix a regression from mitmproxy 10.1.6 where `ignore_hosts` would terminate requests
+  instead of forwarding them.
+  ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
+* `ignore_hosts` now waits for the entire HTTP headers if it suspects the connection to be HTTP.
+  ([#6559](https://github.com/mitmproxy/mitmproxy/pull/6559), @mhils)
+
+
+## 14 December 2023: mitmproxy 10.1.6
+
+* Fix compatibility with Windows Schannel clients, which previously got
+  confused by CA and leaf certificate sharing the same Subject Key Identifier.
+  ([#6549](https://github.com/mitmproxy/mitmproxy/pull/6549), @driuba and @mhils)
+* Change keybinding for exporting flow from "e" to "x" to avoid conflict with "edit" keybinding.
+  ([#6225](https://github.com/mitmproxy/mitmproxy/issues/6225), @Llama1412)
+* Fix bug where response flows from HAR files had incorrect `content-length` headers
+  ([#6548](https://github.com/mitmproxy/mitmproxy/pull/6548), @zanieb)
+* Improved handling for `allow_hosts`/`ignore_hosts` options in WireGuard mode (#5930).
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix a bug where TCP connections were not closed properly.
+  ([#6543](https://github.com/mitmproxy/mitmproxy/pull/6543), @mhils)
+* DNS resolution is now exempted from `ignore_hosts` in WireGuard Mode.
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix case sensitivity of URL added to blocklist
+  ([#6493](https://github.com/mitmproxy/mitmproxy/pull/6493), @emanuele-em)
+* Fix a bug where logging was stopped prematurely during shutdown.
+  ([#6541](https://github.com/mitmproxy/mitmproxy/pull/6541), @mhils)
+* For plaintext traffic, `ignore_hosts` now also takes HTTP/1 host headers into account.
+  ([#6513](https://github.com/mitmproxy/mitmproxy/pull/6513), @dsphper)
+* Fix empty cookie attributes being set to `Key=` instead of `Key`
+  ([#5084](https://github.com/mitmproxy/mitmproxy/pull/5084), @Speedlulu)
+* Scripts with relative paths are now loaded relative to the config file and not where the command is ran
+  ([#4860](https://github.com/mitmproxy/mitmproxy/pull/4860), @Speedlulu)
+* Fix `mitmweb` splitter becoming drag and drop.
+  ([#6492](https://github.com/mitmproxy/mitmproxy/pull/6492), @xBZZZZ)
+* Enhance documentation and add alert log messages when stream_large_bodies and modify_body are set
+  ([#6514](https://github.com/mitmproxy/mitmproxy/pull/6514), @rosydawn6)
+
+### Breaking Changes
+
+* Subject Alternative Names are now represented as `cryptography.x509.GeneralNames` instead of `list[str]`
+  across the codebase. This fixes a regression introduced in mitmproxy 10.1.1 related to punycode domain encoding.
+  ([#6537](https://github.com/mitmproxy/mitmproxy/pull/6537), @mhils)
+
+
+## 14 November 2023: mitmproxy 10.1.5
+
+* Remove stray `replay-extra` from CLI status bar.
+  ([37d62ce](https://github.com/mitmproxy/mitmproxy/commit/37d62ce73ebd57780cff5ecf8b2ee57ec7d8ab30), @mhils)
+
+
+## 13 November 2023: mitmproxy 10.1.4
+
+* Fix a hang/freeze in the macOS distributions when doing TLS negotiation.
+  ([#6480](https://github.com/mitmproxy/mitmproxy/pull/6480), @mhils)
+* Update savehar addon to fix creating corrupt har files caused by empty response content
+  ([#6459](https://github.com/mitmproxy/mitmproxy/pull/6459), @lain3d)
+* Update savehar addon to handle scenarios where "path" key in cookie
+  attrs dict is missing.
+  ([#6458](https://github.com/mitmproxy/mitmproxy/pull/6458), @pogzyb)
+* Add `server_replay_extra` option to serverplayback to define behaviour
+  when replayable response is missing.
+  ([#6465](https://github.com/mitmproxy/mitmproxy/pull/6465), @dkarandikar)
+
+
+## 04 November 2023: mitmproxy 10.1.3
+
+* Fix a bug introduced in mitmproxy 10.1.2 where mitmweb would fail to establish
+  a WebSocket connection. Affected users may need to clear their browser cache
+  or hard-reload mitmweb (Ctrl+Shift+R).
+  ([#6454](https://github.com/mitmproxy/mitmproxy/pull/6454), @mhils)
+
+
+## 03 November 2023: mitmproxy 10.1.2
+
+* Add a raw hex stream contentview.
+  ([#6389](https://github.com/mitmproxy/mitmproxy/pull/6389), @mhils)
+* Add a contentview for DNS-over-HTTPS.
+  ([#6389](https://github.com/mitmproxy/mitmproxy/pull/6389), @mhils)
+* Replaced standalone mitmproxy binaries on macOS with an app bundle
+  that contains the mitmproxy/mitmweb/mitmdump CLI tools.
+  This change was necessary to support macOS code signing requirements.
+  Homebrew remains the recommended installation method.
+  ([#6447](https://github.com/mitmproxy/mitmproxy/pull/6447), @mhils)
+* Fix certificate generation to work with strict mode OpenSSL 3.x clients
+  ([#6410](https://github.com/mitmproxy/mitmproxy/pull/6410), @mmaxim)
+* Fix path() documentation that the return value might include the query string
+  ([#6412](https://github.com/mitmproxy/mitmproxy/pull/6412), @tddschn)
+* mitmproxy now officially supports Python 3.12.
+  ([#6434](https://github.com/mitmproxy/mitmproxy/pull/6434), @mhils)
+* Fix root-relative URLs so that mitmweb can run in subdirectories.
+  ([#6411](https://github.com/mitmproxy/mitmproxy/pull/6411), @davet2001)
+* Add an optional parameter(ldap search filter key) to ProxyAuth-LDAP.
+  ([#6428](https://github.com/mitmproxy/mitmproxy/pull/6428), @outlaws-bai)
+* Fix a regression when using the proxyauth addon with clients that (rightfully) reuse connections.
+  ([#6432](https://github.com/mitmproxy/mitmproxy/pull/6432), @mhils)
+
+
+## 27 September 2023: mitmproxy 10.1.1
+
+* Fix certificate generation for punycode domains.
+  ([#6382](https://github.com/mitmproxy/mitmproxy/pull/6382), @mhils)
+* Fix a bug that would crash mitmweb when opening options.
+  ([#6386](https://github.com/mitmproxy/mitmproxy/pull/6386), @mhils)
+
+
+## 24 September 2023: mitmproxy 10.1.0
+
+* Add support for reading HAR files using the existing flow loading APIs, e.g. `mitmproxy -r example.har`.
+  ([#6335](https://github.com/mitmproxy/mitmproxy/pull/6335), @stanleygvi)
+* Add support for writing HAR files using the `save.har` command and the `hardump` option for mitmdump.
+  ([#6368](https://github.com/mitmproxy/mitmproxy/pull/6368), @stanleygvi)
+* Packaging changes:
+  - `mitmproxy-rs` does not depend on a protobuf compiler being available anymore,
+    we're now also providing a working source distribution for all platforms.
+  - On macOS, `mitmproxy-rs` now depends on `mitmproxy-macos`. We only provide binary wheels for this package because
+    it contains a code-signed system extension. Building from source requires a valid Apple Developer Id, see CI for
+    details.
+  - On Windows, `mitmproxy-rs` now depends on `mitmproxy-windows`. We only provide binary wheels for this package to
+    simplify our deployment process, see CI for how to build from source.
+
+  ([#6303](https://github.com/mitmproxy/mitmproxy/issues/6303), @mhils)
+* Increase maximum dump file size accepted by mitmweb
+  ([#6373](https://github.com/mitmproxy/mitmproxy/pull/6373), @t-wy)
+
+
+## 04 August 2023: mitmproxy 10.0.0
+
+* Add experimental support for HTTP/3 and QUIC.
+  ([#5435](https://github.com/mitmproxy/mitmproxy/issues/5435), @meitinger)
+* ASGI/WSGI apps can now listen on all ports for a specific hostname.
+  This makes it simpler to accept both HTTP and HTTPS.
+  ([#5725](https://github.com/mitmproxy/mitmproxy/pull/5725), @mhils)
+* Add `replay.server.add` command for adding flows to server replay buffer
+  ([#5851](https://github.com/mitmproxy/mitmproxy/pull/5851), @italankin)
+* Remove string escaping in raw view.
+  ([#5470](https://github.com/mitmproxy/mitmproxy/issues/5470), @stephenspol)
+* Updating `Request.port` now also updates the Host header if present.
+  This aligns with `Request.host`, which already does this.
+  ([#5908](https://github.com/mitmproxy/mitmproxy/pull/5908), @sujaldev)
+* Fix editing of multipart HTTP requests from the CLI.
+  ([#5148](https://github.com/mitmproxy/mitmproxy/issues/5148), @mhils)
+* Add documentation on using Magisk module for intercepting traffic in Android production builds.
+  ([#5924](https://github.com/mitmproxy/mitmproxy/pull/5924), @Jurrie)
+* Fix a bug where the direction indicator in the message stream view would be in the wrong direction.
+  ([#5921](https://github.com/mitmproxy/mitmproxy/issues/5921), @konradh)
+* Fix a bug where peername would be None in tls_passthrough script, which would make it not working.
+  ([#5904](https://github.com/mitmproxy/mitmproxy/pull/5904), @truebit)
+* the `esc` key can now be used to exit the current view
+  ([#6087](https://github.com/mitmproxy/mitmproxy/pull/6087), @sujaldev)
+* focus-follow shortcut will now work in flow view context too.
+  ([#6088](https://github.com/mitmproxy/mitmproxy/pull/6088), @sujaldev)
+* Fix a bug where a server connection timeout would cause requests to be issued with a wrong SNI in reverse proxy mode.
+  ([#6148](https://github.com/mitmproxy/mitmproxy/pull/6148), @mhils)
+* The `server_replay_nopop` option has been renamed to `server_replay_reuse` to avoid confusing double-negation.
+  ([#6084](https://github.com/mitmproxy/mitmproxy/issues/6084), @prady0t, @Semnodime)
+* Add zstd to valid gRPC encoding schemes.
+  ([#6188](https://github.com/mitmproxy/mitmproxy/pull/6188), @tsaaristo)
+* For reverse proxy directly accessed via IP address, the IP address is now included
+  as a subject in the generated certificate.
+  ([#6202](https://github.com/mitmproxy/mitmproxy/pull/6202), @mhils)
+* Enable legacy SSL connect when connecting to server if the `ssl_insecure` flag is set.
+  ([#6281](https://github.com/mitmproxy/mitmproxy/pull/6281), @DurandA)
+* Change wording in the [http-reply-from-proxy.py example](https://github.com/mitmproxy/mitmproxy/blob/main/examples/addons/http-reply-from-proxy.py).
+  ([#6117](https://github.com/mitmproxy/mitmproxy/pull/6117), @Semnodime)
+* Added option to specify an elliptic curve for key exchange between mitmproxy <-> server
+  ([#6170](https://github.com/mitmproxy/mitmproxy/pull/6170), @Mike-Ki-ASD)
+* Add "Prettier" code linting tool to mitmweb.
+  ([#5985](https://github.com/mitmproxy/mitmproxy/pull/5985), @alexgershberg)
+* When logging exceptions, provide the entire exception object to log handlers
+  ([#6295](https://github.com/mitmproxy/mitmproxy/pull/6295), @mhils)
+* mitmproxy now requires Python 3.10 or above.
+  ([#5954](https://github.com/mitmproxy/mitmproxy/pull/5954), @mhils)
+
+### Breaking Changes
+
+* The `onboarding_port` option has been removed. The onboarding app now responds
+  to all requests for the hostname specified in `onboarding_host`.
+* `connection.Client` and `connection.Server` now accept keyword arguments only.
+  This is a breaking change for custom addons that use these classes directly.
 
 ## 07 April 2023: mitmproxy 9.0.1
 
@@ -29,7 +458,7 @@
   ([#5414](https://github.com/mitmproxy/mitmproxy/pull/5414), @meitinger)
 * Add WireGuard mode to enable transparent proxying via WireGuard.
   ([#5562](https://github.com/mitmproxy/mitmproxy/pull/5562), @decathorpe, @mhils)
-* Add DTLS support. 
+* Add DTLS support.
   ([#5397](https://github.com/mitmproxy/mitmproxy/pull/5397), @kckeiks).
 * Add a quick help bar to mitmproxy.
   ([#5381](https://github.com/mitmproxy/mitmproxy/pull/5381/), [#5652](https://github.com/mitmproxy/mitmproxy/pull/5652), @kckeiks, @mhils).
@@ -43,6 +472,12 @@
   See [the docs](https://docs.mitmproxy.org/dev/addons-api-changelog/) for details and upgrade instructions.
   ([#5590](https://github.com/mitmproxy/mitmproxy/pull/5590), @mhils)
 
+### Breaking Changes
+
+ * The `mode` option is now a list of server specs instead of a single spec.
+   The CLI interface is unaffected, but users may need to update their `config.yaml`.
+   ([#5393](https://github.com/mitmproxy/mitmproxy/pull/5393), @mhils)
+
 ### Full Changelog
 
 * Mitmproxy binaries now ship with Python 3.11.
@@ -53,7 +488,7 @@
   ([#5623](https://github.com/mitmproxy/mitmproxy/issues/5623), @SapiensAnatis)
 * Add MQTT content view.
   ([#5588](https://github.com/mitmproxy/mitmproxy/pull/5588), @nikitastupin, @abbbe)
-* Setting `connection_strategy` to `lazy` now also disables early 
+* Setting `connection_strategy` to `lazy` now also disables early
   upstream connections to fetch TLS certificate details.
   ([#5487](https://github.com/mitmproxy/mitmproxy/pull/5487), @mhils)
 * Fix order of event hooks on startup.
@@ -123,7 +558,7 @@
   ([#4469](https://github.com/mitmproxy/mitmproxy/issues/4469), @mhils)
 * Add flatpak support to the browser addon
   ([#5200](https://github.com/mitmproxy/mitmproxy/issues/5200), @pauloromeira)
-* Add example addon to dump contents to files based on a filter expression 
+* Add example addon to dump contents to files based on a filter expression
   ([#5190](https://github.com/mitmproxy/mitmproxy/issues/5190), @redraw)
 * Fix a bug where the wrong SNI is sent to an upstream HTTPS proxy
   ([#5109](https://github.com/mitmproxy/mitmproxy/issues/5109), @mhils)
@@ -133,14 +568,14 @@
   ([#5217](https://github.com/mitmproxy/mitmproxy/issues/5217), @randomstuff)
 * Improve cut addon to better handle binary contents
   ([#3965](https://github.com/mitmproxy/mitmproxy/issues/3965), @mhils)
-* Fix text truncation for full-width characters 
+* Fix text truncation for full-width characters
   ([#4278](https://github.com/mitmproxy/mitmproxy/issues/4278), @kjy00302)
 * Fix mitmweb export copy failed in non-secure domain.
   ([#5264](https://github.com/mitmproxy/mitmproxy/issues/5264), @Pactortester)
 * Add example script for manipulating cookies.
   ([#5278](https://github.com/mitmproxy/mitmproxy/issues/5278), @WillahScott)
-* When opening an external viewer for message contents, mailcap files are not considered anymore.  
-  This preempts the upcoming deprecation of Python's `mailcap` module. 
+* When opening an external viewer for message contents, mailcap files are not considered anymore.
+  This preempts the upcoming deprecation of Python's `mailcap` module.
   ([#5297](https://github.com/mitmproxy/mitmproxy/issues/5297), @KORraNpl)
 * Fix hostname encoding for IDNA domains in upstream mode.
   ([#5316](https://github.com/mitmproxy/mitmproxy/issues/5316), @nneonneo)
@@ -201,7 +636,7 @@
 * Add ability to specify custom ports with LDAP authentication (#5068, @demonoidvk)
 * Add support for rotating saved streams every hour or day (@EndUser509)
 * Console Improvements on Windows (@mhils)
-* Fix processing of `--set` options (#5067, @marwinxxii) 
+* Fix processing of `--set` options (#5067, @marwinxxii)
 * Lowercase user-added header names and emit a log message to notify the user when using HTTP/2 (#4746, @mhils)
 * Exit early if there are errors on startup (#4544, @mhils)
 * Fixed encoding guessing: only search for meta tags in HTML bodies (##4566, @Prinzhorn)

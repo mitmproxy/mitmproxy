@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import asyncio
+
 import click
 
 from mitmproxy.addons import dumper
-from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def run_async(coro):

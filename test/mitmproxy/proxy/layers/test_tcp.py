@@ -1,11 +1,18 @@
 import pytest
 
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
+from ..tutils import Placeholder
+from ..tutils import Playbook
+from ..tutils import reply
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import CloseTcpConnection
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import SendData
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import tcp
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
-from mitmproxy.tcp import TCPFlow, TCPMessage
-from ..tutils import Placeholder, Playbook, reply
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPMessage
 
 
 def test_open_connection(tctx):
@@ -52,7 +59,7 @@ def test_simple(tctx):
         >> reply()
         << SendData(tctx.client, b"hi")
         >> ConnectionClosed(tctx.server)
-        << CloseConnection(tctx.client, half_close=True)
+        << CloseTcpConnection(tctx.client, half_close=True)
         >> ConnectionClosed(tctx.client)
         << CloseConnection(tctx.server)
         << tcp.TcpEndHook(f)
@@ -88,7 +95,7 @@ def test_receive_data_after_half_close(tctx):
         >> DataReceived(tctx.client, b"eof-delimited-request")
         << SendData(tctx.server, b"eof-delimited-request")
         >> ConnectionClosed(tctx.client)
-        << CloseConnection(tctx.server, half_close=True)
+        << CloseTcpConnection(tctx.server, half_close=True)
         >> DataReceived(tctx.server, b"i'm late")
         << SendData(tctx.client, b"i'm late")
         >> ConnectionClosed(tctx.server)
