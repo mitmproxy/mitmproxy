@@ -362,6 +362,11 @@ class CertStore:
     """
 
     STORE_CAP = 100
+    default_privatekey: rsa.RSAPrivateKey
+    default_ca: Cert
+    default_chain_file: Path | None
+    default_chain_certs: list[Cert]
+    dhparams: DHParams
     certs: dict[TCertId, CertStoreEntry]
     expire_queue: list[CertStoreEntry]
 
@@ -376,7 +381,12 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
-            x509.load_pem_x509_certificates(self.default_chain_file.read_bytes())
+            [
+                Cert(c)
+                for c in x509.load_pem_x509_certificates(
+                    self.default_chain_file.read_bytes()
+                )
+            ]
             if self.default_chain_file
             else [default_ca]
         )
