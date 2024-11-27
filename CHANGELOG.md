@@ -9,6 +9,7 @@
 
 - Stop sorting keys in JSON contentview
   ([#7346](https://github.com/mitmproxy/mitmproxy/pull/7346), @injust)
+- Fix a bug where a custom CA would raise an error.
 
 ## 24 November 2024: mitmproxy 11.0.1
 

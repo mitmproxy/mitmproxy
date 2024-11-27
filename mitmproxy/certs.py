@@ -362,6 +362,11 @@ class CertStore:
     """
 
     STORE_CAP = 100
+    default_privatekey: rsa.RSAPrivateKey
+    default_ca: Cert
+    default_chain_file: Path | None
+    default_chain_certs: list[Cert]
+    dhparams: DHParams
     certs: dict[TCertId, CertStoreEntry]
     expire_queue: list[CertStoreEntry]
 
