@@ -14,7 +14,12 @@ RUN mkdir /home/mitmproxy/.mitmproxy \
     && chown mitmproxy:mitmproxy /home/mitmproxy/.mitmproxy
 
 COPY --from=wheelbuilder /wheels /wheels
-RUN pip install --no-index --find-links=/wheels mitmproxy
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && pip install --no-build-isolation --find-links=/wheels mitmproxy \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN rm -rf /wheels
 
 VOLUME /home/mitmproxy/.mitmproxy

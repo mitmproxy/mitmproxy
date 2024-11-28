@@ -25,7 +25,7 @@
       "url": "logo.png"
     },
     "title": "BrowserUp MitmProxy",
-    "version": "1.23"
+    "version": "1.24"
   },
   "paths": {
     "/har": {
@@ -634,77 +634,6 @@
           }
         }
       },
-      "WebSocketMessage": {
-        "type": "object",
-        "required": [
-          "type",
-          "opcode",
-          "data",
-          "time"
-        ],
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "opcode": {
-            "type": "number"
-          },
-          "data": {
-            "type": "string"
-          },
-          "time": {
-            "type": "number"
-          }
-        }
-      },
-      "Header": {
-        "type": "object",
-        "required": [
-          "name",
-          "value"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          },
-          "comment": {
-            "type": "string"
-          }
-        }
-      },
-      "Action": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "className": {
-            "type": "string"
-          },
-          "tagName": {
-            "type": "string"
-          },
-          "xpath": {
-            "type": "string"
-          },
-          "dataAttributes": {
-            "type": "string"
-          },
-          "formName": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "PageTimings": {
         "type": "object",
         "required": [
@@ -779,6 +708,28 @@
             "format": "int64",
             "minimum": -1,
             "default": -1
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomHarData": {
+        "type": "object",
+        "minProperties": 1
+      },
+      "Header": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
           },
           "comment": {
             "type": "string"
@@ -862,6 +813,59 @@
             }
           }
         }
+      },
+      "WebSocketMessage": {
+        "type": "object",
+        "required": [
+          "type",
+          "opcode",
+          "data",
+          "time"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "opcode": {
+            "type": "number"
+          },
+          "data": {
+            "type": "string"
+          },
+          "time": {
+            "type": "number"
+          }
+        }
+      },
+      "Action": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "xpath": {
+            "type": "string"
+          },
+          "dataAttributes": {
+            "type": "string"
+          },
+          "formName": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "HarEntry": {
         "type": "object",
@@ -1321,10 +1325,6 @@
             "type": "string"
           }
         }
-      },
-      "CustomHarData": {
-        "type": "object",
-        "minProperties": 1
       },
       "Page": {
         "type": "object",

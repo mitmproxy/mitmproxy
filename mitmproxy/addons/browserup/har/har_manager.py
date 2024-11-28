@@ -1,13 +1,13 @@
-from datetime import datetime
-from datetime import timezone
-from mitmproxy.net.http import cookies
+import copy
+import json
+import logging
+import tempfile
+from datetime import datetime, timezone
+from threading import Lock
+
 from mitmproxy.addons.browserup.har.har_builder import HarBuilder
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
-import json
-import copy
-import tempfile
-import logging
-from threading import Lock
+from mitmproxy.net.http import cookies
 
 mutex = Lock()
 

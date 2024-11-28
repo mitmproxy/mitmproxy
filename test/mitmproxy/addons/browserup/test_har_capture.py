@@ -1,18 +1,17 @@
 import json
-import pytest
-import tempfile
 import os
-from mitmproxy import http
-from mitmproxy.test import tflow
-from mitmproxy.test.tflow import twebsocketflow
-from mitmproxy.test import tutils
-from mitmproxy.test import taddons
-from mitmproxy.net.http import cookies
-from mitmproxy.utils import data
-from mitmproxy.addons.browserup import har_capture_addon
-from mitmproxy import websocket
+import tempfile
+
+import pytest
 from wsproto.frame_protocol import Opcode
+
+from mitmproxy import http, websocket
+from mitmproxy.addons.browserup import har_capture_addon
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
+from mitmproxy.net.http import cookies
+from mitmproxy.test import taddons, tflow, tutils
+from mitmproxy.test.tflow import twebsocketflow
+from mitmproxy.utils import data
 
 
 class TestHARCapture:

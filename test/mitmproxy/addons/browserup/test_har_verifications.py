@@ -1,15 +1,12 @@
 import pytest
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
-from mitmproxy.test import taddons
-from mitmproxy import http
-
-from mitmproxy.addons.browserup import har_capture_addon
-from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
-from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
-from mitmproxy.test.tflow import twebsocketflow
-from mitmproxy import websocket
 from wsproto.frame_protocol import Opcode
+
+from mitmproxy import http, websocket
+from mitmproxy.addons.browserup import har_capture_addon
+from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
+from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
+from mitmproxy.test import taddons, tflow, tutils
+from mitmproxy.test.tflow import twebsocketflow
 
 
 class TestHARVerifications:

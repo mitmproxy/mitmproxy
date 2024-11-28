@@ -1,9 +1,8 @@
 import pytest
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
-from mitmproxy.test import taddons
+
 from mitmproxy import http
 from mitmproxy.addons.browserup import har_capture_addon
+from mitmproxy.test import taddons, tflow, tutils
 
 
 class TestHARErrors:
