@@ -102,17 +102,15 @@ def validate_headers(message: Message) -> None:
         # > HTTP/1.1 requests (or later minor revisions); such knowledge might be in the form of specific user
         # > configuration or by remembering the version of a prior received response. A server MUST NOT send a response
         # > containing Transfer-Encoding unless the corresponding request indicates HTTP/1.1 (or later minor revisions).
-
+        if not message.is_http11:
+            raise ValueError(f"unexpected HTTP transfer encoding header for {message.http_version}: {te[0]!r}")
         # > A server MUST NOT send a Transfer-Encoding header field in any response with a status code of 1xx
         # > (Informational) or 204 (No Content).
-        te_disallowed = not message.is_http11 or (
+        if (
             isinstance(message, Response)
             and (100 <= message.status_code <= 199 or message.status_code == 204)
-        )
-        if te_disallowed:
-            raise ValueError(
-                f"Unexpected HTTP transfer encoding: {message.http_version!r}"
-            )
+        ):
+            raise ValueError(f"unexpected HTTP transfer encoding header for response with status code {message.status_code}")
         parse_transfer_encoding(te[0])
     elif cl:
         # > If a message is received without Transfer-Encoding and with an invalid Content-Length header field, then the
