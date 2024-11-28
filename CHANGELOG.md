@@ -39,6 +39,8 @@
   ([#7320](https://github.com/mitmproxy/mitmproxy/pull/7320), @8192bytes)
 - Remove dependency on `protobuf` library as it was no longer being used.
   ([#7327](https://github.com/mitmproxy/mitmproxy/pull/7327), @matthew16550)
+- Fix a bug in windows management in mitmproxy TUI whereby the help window does not appear if "?" is pressed within the overlay
+  ([#6500](https://github.com/mitmproxy/mitmproxy/pull/6500), @emanuele-em)
 
 ## 02 October 2024: mitmproxy 11.0.0
 
