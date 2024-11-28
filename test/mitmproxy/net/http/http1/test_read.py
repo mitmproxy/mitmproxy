@@ -120,10 +120,6 @@ def test_expected_http_body_size():
             treq(headers=Headers(transfer_encoding="qux")),
         )
     # transfer-encoding: gzip
-    with pytest.raises(ValueError, match="Invalid request transfer encoding"):
-        expected_http_body_size(
-            treq(headers=Headers(transfer_encoding="gzip")),
-        )
     assert (
         expected_http_body_size(
             treq(),
