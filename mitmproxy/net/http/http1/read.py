@@ -111,12 +111,10 @@ def expected_http_body_size(
             case "chunked" | "compress,chunked" | "deflate,chunked" | "gzip,chunked":
                 return None
             case "compress" | "deflate" | "gzip" | "identity":
-                if response:
-                    return -1
-                else:
-                    raise ValueError(
-                        "Invalid request transfer encoding, message body cannot be determined reliably."
-                    )
+                # These values are valid for responses only (not requests), which is ensured in
+                # mitmproxy.net.http.validate. Here we strive for maximum compatibility with
+                # weird clients, assuming validate_inbound_headers=false.
+                return -1
             case other:  # pragma: no cover
                 typing.assert_never(other)
 

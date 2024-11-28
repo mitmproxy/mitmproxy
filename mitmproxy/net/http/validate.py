@@ -3,6 +3,7 @@ import re
 import typing
 
 from mitmproxy.http import Message
+from mitmproxy.http import Request
 from mitmproxy.http import Response
 
 logger = logging.getLogger(__name__)
@@ -103,15 +104,31 @@ def validate_headers(message: Message) -> None:
         # > configuration or by remembering the version of a prior received response. A server MUST NOT send a response
         # > containing Transfer-Encoding unless the corresponding request indicates HTTP/1.1 (or later minor revisions).
         if not message.is_http11:
-            raise ValueError(f"unexpected HTTP transfer encoding header for {message.http_version}: {te[0]!r}")
+            raise ValueError(
+                f"unexpected HTTP transfer-encoding {te[0]!r} for {message.http_version}"
+            )
         # > A server MUST NOT send a Transfer-Encoding header field in any response with a status code of 1xx
         # > (Informational) or 204 (No Content).
-        if (
-            isinstance(message, Response)
-            and (100 <= message.status_code <= 199 or message.status_code == 204)
+        if isinstance(message, Response) and (
+            100 <= message.status_code <= 199 or message.status_code == 204
         ):
-            raise ValueError(f"unexpected HTTP transfer encoding header for response with status code {message.status_code}")
-        parse_transfer_encoding(te[0])
+            raise ValueError(
+                f"unexpected HTTP transfer-encoding {te[0]!r} for response with status code {message.status_code}"
+            )
+        # > If a Transfer-Encoding header field is present in a request and the chunked transfer coding is not the final
+        # > encoding, the message body length cannot be determined reliably; the server MUST respond with the 400 (Bad
+        # > Request) status code and then close the connection.
+        te_parsed = parse_transfer_encoding(te[0])
+        match te_parsed:
+            case "chunked" | "compress,chunked" | "deflate,chunked" | "gzip,chunked":
+                pass
+            case "compress" | "deflate" | "gzip" | "identity":
+                if isinstance(message, Request):
+                    raise ValueError(
+                        f"unexpected HTTP transfer-encoding {te_parsed!r} for request"
+                    )
+            case other:  # pragma: no cover
+                typing.assert_never(other)
     elif cl:
         # > If a message is received without Transfer-Encoding and with an invalid Content-Length header field, then the
         # > message framing is invalid and the recipient MUST treat it as an unrecoverable error, unless the field value

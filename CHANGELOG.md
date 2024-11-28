@@ -13,6 +13,7 @@
   ([#7355](https://github.com/mitmproxy/mitmproxy/pull/7355), @nneonneo)
 - Fix a bug where the mitmproxy UI would crash on negative durations.
   ([#7358](https://github.com/mitmproxy/mitmproxy/pull/7358), @mhils)
+- Allow HTTP transfer encodings with read-until-EOF semantics in requests if `validate_inbound_headers` is disabled.
 
 ## 24 November 2024: mitmproxy 11.0.1
 
