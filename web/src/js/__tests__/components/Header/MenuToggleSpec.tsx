@@ -35,7 +35,7 @@ test("OptionsToggle", async () => {
     fireEvent.click(screen.getByText("toggle anticache"));
 
     await waitFor(() =>
-        expect(store.getState().ui.optionsEditor.anticache?.error).toContain(
+        expect(store.getState().ui.optionsEditor.anticache?.error.toString()).toContain(
             "backend missing",
         ),
     );
