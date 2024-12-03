@@ -3,7 +3,7 @@
     <asciinema-player id="asciinema-player" src="/recordings/{{ $file }}.cast" font-size="13px" poster="npt:{{ .Get "poster" }}" preload></asciinema-player>
     {{- if .Get "instructions" -}}
         {{- $instructions_file := print "static/recordings/" $file "_instructions.json" -}}
-        {{ $data := getJSON $instructions_file }}
+        {{ $data := resources.Get $instructions_file | transform.Unmarshal }}
         <article class="panel">
             <p class="panel-heading">
                 Video Content
