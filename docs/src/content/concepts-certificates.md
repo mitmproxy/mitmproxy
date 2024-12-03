@@ -69,7 +69,11 @@ documentation for some common platforms. The mitmproxy CA cert is located in
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
        the mitmproxy certificate.
-- [iOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
+- iOS Simulator
+  1. Ensure the macOS machine running the emulator is configured to use mitmproxy in its network settings.
+  2. Open Safari on the emulator and visit `mitm.it` to download the iOS certificate.
+  3. Navigate to Settings > General > VPN & Device Management to install the certificate.
+  4. Go to Settings > About > Certificate Trust Settings and enable trust for the installed root certificate.
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html):  
   `sudo keytool -importcert -alias mitmproxy -storepass changeit -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -file ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
