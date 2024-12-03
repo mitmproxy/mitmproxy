@@ -21,7 +21,8 @@ export default function Modes() {
                 <h3>Recommended</h3>
                 <div className="modes-container">
                     <Regular />
-                    {!platform.startsWith("linux") ? (
+                    {platform.startsWith("win32") ||
+                    platform.startsWith("darwin") ? (
                         <Local />
                     ) : (
                         <MissingMode

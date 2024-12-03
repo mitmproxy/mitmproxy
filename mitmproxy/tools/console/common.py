@@ -346,7 +346,7 @@ def format_http_content_type(content_type: str) -> tuple[str, str]:
 def format_duration(duration: float) -> tuple[str, str]:
     pretty_duration = human.pretty_duration(duration)
     style = "gradient_%02d" % int(
-        99 - 100 * min(math.log2(1 + 1000 * duration) / 12, 0.99)
+        99 - 100 * min(math.log2(max(1.0, 1000 * duration)) / 12, 0.99)
     )
     return pretty_duration, style
 
