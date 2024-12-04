@@ -119,7 +119,9 @@ def expected_http_body_size(
                 if te == "identity" or "content-length" in headers:
                     pass  # Content-Length or 0
                 else:
-                    return -1  # compress/deflate/gzip with no content-length -> read until eof
+                    return (
+                        -1
+                    )  # compress/deflate/gzip with no content-length -> read until eof
             case other:  # pragma: no cover
                 typing.assert_never(other)
 
