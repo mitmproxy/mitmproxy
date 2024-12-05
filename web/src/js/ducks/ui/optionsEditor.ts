@@ -44,6 +44,7 @@ const optionsEditorSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
+        // this action type comes from ducks/ui/modal.ts. Once it's received, the state is reset.
         builder.addCase(HIDE_MODAL, () => {
             return defaultState;
         });
