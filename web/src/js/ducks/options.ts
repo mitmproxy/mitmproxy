@@ -38,12 +38,12 @@ export async function pureSendUpdate(option: Option, value, dispatch) {
             [option]: value,
         });
         if (response.status === 200) {
-            dispatch(optionsEditorActions.updateSuccess(option));
+            dispatch(optionsEditorActions.updateSuccess({ option }));
         } else {
             throw await response.text();
         }
     } catch (error) {
-        dispatch(optionsEditorActions.updateError(option, error));
+        dispatch(optionsEditorActions.updateError({ option, error }));
     }
 }
 
@@ -51,7 +51,7 @@ const sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: 
 
 export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {
-        dispatch(optionsEditorActions.startUpdate(name, value));
+        dispatch(optionsEditorActions.startUpdate({ option: name, value }));
         sendUpdate(name, value, dispatch);
     };
 }
