@@ -65,7 +65,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
 
     const handleClickCopyButton = () => {
         const url = MessageUtils.getContentURL(flow, message, contentView); //without the 'maxLines' parameter, so we can get the full content of the content view
-        
+
         fetchApi(url)
             .then((response) => {
                 if (!response.ok) {
