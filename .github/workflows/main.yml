@@ -19,22 +19,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v12
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v12
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v12
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@v11
+    uses: mhils/workflows/.github/workflows/python-tox.yml@v12
     with:
       cmd: tox -e individual_coverage
 
@@ -75,7 +75,7 @@ jobs:
           # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
           sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
         if: matrix.os == 'ubuntu-latest'
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -148,7 +148,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@v11
+    uses: mhils/workflows/.github/workflows/python-build.yml@v12
     with:
       python-version-file: .github/python-version.txt
       artifact: binaries.wheel
@@ -201,7 +201,7 @@ jobs:
         run: npm ci
       - working-directory: ./web
         run: npm test
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./web/coverage/coverage-final.json
@@ -232,8 +232,8 @@ jobs:
         with:
           python-version-file: .github/python-version.txt
       - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.92.1/hugo_extended_0.92.1_Linux-64bit.deb
-          echo "a9440adfd3ecce40089def287dee4e42ffae252ba08c77d1ac575b880a079ce6 hugo_extended_0.92.1_Linux-64bit.deb" | sha256sum -c
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
+          echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
       - run: pip install -e .[dev]
       - run: ./docs/build.py
@@ -267,7 +267,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@v11
+    uses: mhils/workflows/.github/workflows/alls-green.yml@v12
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -311,7 +311,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
         with:
@@ -327,7 +327,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64

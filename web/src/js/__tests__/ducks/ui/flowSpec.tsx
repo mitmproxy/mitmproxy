@@ -1,22 +1,26 @@
-import reduceFlow, * as FlowActions from "../../../ducks/ui/flow";
+import flowReducer, {
+    selectTab,
+    setContentViewFor,
+    defaultState,
+} from "../../../ducks/ui/flow";
 
 describe("option reducer", () => {
     it("should return initial state", () => {
-        expect(reduceFlow(undefined, { type: "other" })).toEqual(
-            FlowActions.defaultState,
-        );
+        expect(flowReducer(undefined, { type: "other" })).toEqual(defaultState);
     });
 
     it("should handle set tab", () => {
-        expect(
-            reduceFlow(undefined, FlowActions.selectTab("response")).tab,
-        ).toEqual("response");
+        expect(flowReducer(undefined, selectTab("response")).tab).toEqual(
+            "response",
+        );
     });
 
     it("should handle set content view", () => {
         expect(
-            reduceFlow(undefined, FlowActions.setContentViewFor("foo", "Raw"))
-                .contentViewFor["foo"],
+            flowReducer(
+                undefined,
+                setContentViewFor({ messageId: "foo", contentView: "Raw" }),
+            ).contentViewFor["foo"],
         ).toEqual("Raw");
     });
 });

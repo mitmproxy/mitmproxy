@@ -658,7 +658,7 @@ class HttpStream(layer.Layer):
                 # flow has not been seen yet, register it.
                 yield HttpRequestHeadersHook(self.flow)
             else:
-                # immediately kill of server connection
+                # immediately kill server connection
                 yield commands.CloseConnection(self.flow.server_conn)
             yield HttpErrorHook(self.flow)
             yield SendHttp(
