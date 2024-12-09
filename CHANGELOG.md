@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Add cache-busting for mitmweb's front end code.
 
 ## 05 December 2024: mitmproxy 11.0.2
 
