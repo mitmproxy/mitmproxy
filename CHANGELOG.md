@@ -9,7 +9,6 @@
 - Allow single-click editing of URL requests in mitmweb.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 
-
 ## 05 December 2024: mitmproxy 11.0.2
 
 - Stop sorting keys in JSON contentview
