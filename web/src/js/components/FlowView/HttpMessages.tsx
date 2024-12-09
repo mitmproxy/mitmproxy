@@ -45,6 +45,7 @@ function RequestLine({ flow }: RequestLineProps) {
                         )
                     }
                     isValid={(url) => !!parseUrl(url)?.host}
+                    setCursorOnClick={true}
                 />
                 &nbsp;
                 <ValidateEditor

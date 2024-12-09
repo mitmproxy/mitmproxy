@@ -9,6 +9,7 @@ export interface ValueEditorProps {
     onInput?: (newVal: string) => void;
     onKeyDown?: (e: React.KeyboardEvent<HTMLSpanElement>) => void;
     placeholder?: string;
+    setCursorOnClick?: boolean;
 }
 
 /** "plaintext-only" for browsers which support it, "true" for everyone else */
@@ -69,11 +70,14 @@ export default class ValueEditor extends Component<ValueEditorProps> {
             this.input.current.focus();
             this.suppress_events = false;
 
-            const range = document.createRange();
-            range.selectNodeContents(this.input.current);
-            const sel = window.getSelection();
-            sel?.removeAllRanges();
-            sel?.addRange(range);
+            if (!this.props.setCursorOnClick) {
+                // Default behavior: Select the entire text
+                const range = document.createRange();
+                range.selectNodeContents(this.input.current);
+                const sel = window.getSelection();
+                sel?.removeAllRanges();
+                sel?.addRange(range);
+            }
 
             this.props.onEditStart?.();
         });
@@ -125,8 +129,15 @@ export default class ValueEditor extends Component<ValueEditorProps> {
                 has_not_selected_text,
             );
 
-        if (still_on_elem && has_not_selected_text) {
-            this.startEditing();
+        if (this.props.setCursorOnClick) {
+            // Allow setting the cursor directly at the click position
+            if (still_on_elem) {
+                this.startEditing();
+            }
+        } else {
+            if (still_on_elem && has_not_selected_text) {
+                this.startEditing();
+            }
         }
         this.suppress_events = false;
     };
