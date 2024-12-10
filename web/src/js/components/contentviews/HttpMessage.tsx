@@ -34,7 +34,8 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
     );
     const [edit, setEdit] = useState<boolean>(false);
     const [isCopied, setIsCopied] = useState<boolean>(false);
-    const [isFetchingFullContent, setIsFetchingFullContent] = useState<boolean>(false);
+    const [isFetchingFullContent, setIsFetchingFullContent] =
+        useState<boolean>(false);
 
     let url: string;
     if (edit) {
