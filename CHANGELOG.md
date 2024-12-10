@@ -9,7 +9,7 @@
 
 - Add cache-busting for mitmweb's front end code.
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
-- Allow single-click editing of URL requests in mitmweb.
+- Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 
 ## 05 December 2024: mitmproxy 11.0.2
