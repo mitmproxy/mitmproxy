@@ -6,6 +6,9 @@
 -->
 
 ## Unreleased: mitmproxy next
+
+- Add cache-busting for mitmweb's front end code.
+  ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Allow single-click editing of URL requests in mitmweb.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 
