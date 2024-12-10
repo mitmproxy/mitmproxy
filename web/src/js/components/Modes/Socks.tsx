@@ -69,6 +69,7 @@ function SocksRow({
                         onEditDone={(host) =>
                             dispatch(setListenHost({ server, value: host }))
                         }
+                        selectAllOnClick={true}
                     />
 
                     <p>Listen Port</p>
@@ -88,6 +89,7 @@ function SocksRow({
                                 }),
                             )
                         }
+                        selectAllOnClick={true}
                     />
                 </Popover>
             </ModeToggle>

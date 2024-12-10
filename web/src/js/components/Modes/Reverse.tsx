@@ -110,6 +110,7 @@ function ReverseToggleRow({
                         dispatch(setDestination({ server, value }))
                     }
                     placeholder="example.com"
+                    selectAllOnClick={true}
                 />
                 <Popover iconClass="fa fa-cog">
                     <h4>Advanced Configuration</h4>
@@ -121,6 +122,7 @@ function ReverseToggleRow({
                             dispatch(setListenHost({ server, value }))
                         }
                         placeholder="*"
+                        selectAllOnClick={true}
                     />
                     <p>Listen Port</p>
                     <ValueEditor
@@ -135,6 +137,7 @@ function ReverseToggleRow({
                             )
                         }
                         placeholder="8080"
+                        selectAllOnClick={true}
                     />
                 </Popover>
                 {removable && (

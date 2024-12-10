@@ -69,6 +69,7 @@ function WireGuardRow({
                         onEditDone={(host) =>
                             dispatch(setListenHost({ server, value: host }))
                         }
+                        selectAllOnClick={true}
                     />
                     <p>Listen Port</p>
                     <ValueEditor
@@ -87,6 +88,7 @@ function WireGuardRow({
                                 }),
                             )
                         }
+                        selectAllOnClick={true}
                     />
                     <p>Configuration File</p>
                     <ValueEditor
@@ -96,6 +98,7 @@ function WireGuardRow({
                         onEditDone={(path) =>
                             dispatch(setFilePath({ server, value: path }))
                         }
+                        selectAllOnClick={true}
                     />
                 </Popover>
             </ModeToggle>

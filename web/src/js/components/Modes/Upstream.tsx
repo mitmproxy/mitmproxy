@@ -67,6 +67,7 @@ function UpstreamRow({
                         dispatch(setDestination({ server, value }))
                     }
                     placeholder="http://example.com:8080"
+                    selectAllOnClick={true}
                 />
                 <Popover iconClass="fa fa-cog">
                     <h4>Advanced Configuration</h4>
@@ -77,6 +78,7 @@ function UpstreamRow({
                         onEditDone={(host) =>
                             dispatch(setListenHost({ server, value: host }))
                         }
+                        selectAllOnClick={true}
                     />
 
                     <p>Listen Port</p>
@@ -96,6 +98,7 @@ function UpstreamRow({
                                 }),
                             )
                         }
+                        selectAllOnClick={true}
                     />
                 </Popover>
             </ModeToggle>
