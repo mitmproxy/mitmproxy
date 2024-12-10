@@ -63,7 +63,6 @@ function DnsRow({
                         onEditDone={(host) =>
                             dispatch(setListenHost({ server, value: host }))
                         }
-                        selectAllOnClick={true}
                     />
 
                     <p>Listen Port</p>
@@ -83,7 +82,6 @@ function DnsRow({
                                 }),
                             )
                         }
-                        selectAllOnClick={true}
                     />
                 </Popover>
             </ModeToggle>

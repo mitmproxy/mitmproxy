@@ -68,7 +68,6 @@ function RegularRow({
                         onEditDone={(host) =>
                             dispatch(setListenHost({ server, value: host }))
                         }
-                        selectAllOnClick={true}
                     />
 
                     <p>Listen Port</p>
@@ -88,7 +87,6 @@ function RegularRow({
                                 }),
                             )
                         }
-                        selectAllOnClick={true}
                     />
                 </Popover>
             </ModeToggle>
