@@ -34,6 +34,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
     );
     const [edit, setEdit] = useState<boolean>(false);
     const [isCopied, setIsCopied] = useState<boolean>(false);
+    const [isFetchingFullContent, setIsFetchingFullContent] = useState<boolean>(false);
 
     let url: string;
     if (edit) {
@@ -65,7 +66,8 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
 
     const handleClickCopyButton = () => {
         const url = MessageUtils.getContentURL(flow, message, contentView); //without the 'maxLines' parameter, so we can get the full content of the content view
-
+        setIsFetchingFullContent(true);
+        setIsCopied(true);
         fetchApi(url)
             .then((response) => {
                 if (!response.ok) {
@@ -76,9 +78,9 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 return response.json();
             })
             .then((data: ContentViewData) => {
-                setIsCopied(true);
-                copyViewContentDataToClipboard(data);
+                setIsFetchingFullContent(false);
                 setTimeout(() => setIsCopied(false), 1000);
+                copyViewContentDataToClipboard(data);
             })
             .catch((e) => {
                 console.error(e);
@@ -126,6 +128,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                         onClick={handleClickCopyButton}
                         icon="fa-clipboard"
                         className="btn-xs"
+                        disabled={isFetchingFullContent}
                     >
                         {isCopied ? "Copied!" : "Copy"}
                     </Button>
