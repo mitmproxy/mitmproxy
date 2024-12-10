@@ -115,7 +115,7 @@ function ReverseToggleRow({
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor
-                        className="mode-reverse-input"
+                        className="mode-input"
                         content={server.listen_host || ""}
                         onEditDone={(value) =>
                             dispatch(setListenHost({ server, value }))
@@ -124,7 +124,7 @@ function ReverseToggleRow({
                     />
                     <p>Listen Port</p>
                     <ValueEditor
-                        className="mode-reverse-input"
+                        className="mode-input"
                         content={String(server.listen_port || "")}
                         onEditDone={(value) =>
                             dispatch(
