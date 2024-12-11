@@ -129,14 +129,16 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             <div className="contentview" key="view">
                 <div className="controls">
                     <h5>{desc}</h5>
-                    <Button
-                        onClick={handleClickCopyButton}
-                        icon="fa-clipboard"
-                        className="btn-xs"
-                        disabled={isFetchingFullContent}
-                    >
-                        {isCopied ? "Copied!" : "Copy"}
-                    </Button>
+                    {contentViewData && contentViewData?.lines.length > 0 && (
+                        <Button
+                            onClick={handleClickCopyButton}
+                            icon="fa-clipboard"
+                            className="btn-xs"
+                            disabled={isFetchingFullContent}
+                        >
+                            {isCopied ? "Copied!" : "Copy"}
+                        </Button>
+                    )}
                     &nbsp;
                     <Button
                         onClick={() => setEdit(true)}
