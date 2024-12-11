@@ -32,13 +32,13 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         () => setMaxLines(Math.max(1024, maxLines * 2)),
         [maxLines],
     );
-    const [edit, setEdit] = useState<boolean>(false);
+    const [isEdited, setIsEdited] = useState<boolean>(false);
     const [isCopied, setIsCopied] = useState<boolean>(false);
     const [isFetchingFullContent, setIsFetchingFullContent] =
         useState<boolean>(false);
 
     let url: string;
-    if (edit) {
+    if (isEdited) {
         url = MessageUtils.getContentURL(flow, message);
     } else {
         url = MessageUtils.getContentURL(
@@ -50,7 +50,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
     }
     const content = useContent(url, message.contentHash);
     const contentViewData = useMemo<ContentViewData | undefined>(() => {
-        if (content && !edit) {
+        if (content && !isEdited) {
             try {
                 return JSON.parse(content);
             } catch (e) {
@@ -92,11 +92,11 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             });
     };
 
-    if (edit) {
+    if (isEdited) {
         const save = async () => {
             const content = editorRef.current?.getContent();
             await dispatch(flowActions.update(flow, { [part]: { content } }));
-            setEdit(false);
+            setIsEdited(false);
         };
         return (
             <div className="contentview" key="edit">
@@ -111,7 +111,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                     </Button>
                     &nbsp;
                     <Button
-                        onClick={() => setEdit(false)}
+                        onClick={() => setIsEdited(false)}
                         icon="fa-times text-danger"
                         className="btn-xs"
                     >
@@ -141,7 +141,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                     )}
                     &nbsp;
                     <Button
-                        onClick={() => setEdit(true)}
+                        onClick={() => setIsEdited(true)}
                         icon="fa-edit"
                         className="btn-xs"
                     >
