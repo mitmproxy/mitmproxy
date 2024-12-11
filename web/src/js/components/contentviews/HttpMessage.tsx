@@ -67,8 +67,9 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
 
     const handleClickCopyButton = () => {
         const url = MessageUtils.getContentURL(flow, message, contentView); //without the 'maxLines' parameter, so we can get the full content of the content view
+
         setIsFetchingFullContent(true);
-        setIsCopied(true);
+
         fetchApi(url)
             .then((response) => {
                 if (!response.ok) {
@@ -79,12 +80,15 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 return response.json();
             })
             .then((data: ContentViewData) => {
-                setIsFetchingFullContent(false);
-                setTimeout(() => setIsCopied(false), 1000);
                 copyViewContentDataToClipboard(data);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2000);
             })
             .catch((e) => {
                 console.error(e);
+            })
+            .finally(() => {
+                setIsFetchingFullContent(false);
             });
     };
 
