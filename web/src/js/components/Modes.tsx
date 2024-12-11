@@ -30,7 +30,10 @@ export default function Modes() {
                     ) : (
                         <MissingMode
                             title="Local Redirect Mode"
-                            description={localModeUnavailable ?? "This mode is only supported on Windows and MacOS."}
+                            description={
+                                localModeUnavailable ??
+                                "This mode is only supported on Windows and MacOS."
+                            }
                         />
                     )}
                     <Wireguard />
