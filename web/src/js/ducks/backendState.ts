@@ -25,7 +25,7 @@ export interface BackendState {
     contentViews: string[];
     servers: { [key: string]: ServerInfo };
     platform: string;
-    localModeUnavailable: string | null
+    localModeUnavailable: string | null;
 }
 
 export const defaultState: BackendState = {
@@ -34,7 +34,7 @@ export const defaultState: BackendState = {
     contentViews: [],
     servers: {},
     platform: "",
-    localModeUnavailable: null
+    localModeUnavailable: null,
 };
 
 export function mockUpdate(newState: Partial<BackendState>) {

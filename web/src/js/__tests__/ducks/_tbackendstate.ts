@@ -7,6 +7,7 @@ export function TBackendState(): Required<BackendState> {
             "Auto",
             "Raw"
         ],
+        "localModeUnavailable": null,
         "platform": "darwin",
         "servers": {
             "regular": {
