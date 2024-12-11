@@ -655,6 +655,7 @@ class State(RequestHandler):
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },
             "platform": sys.platform,
+            "localModeUnavailable": mitmproxy_rs.local.LocalRedirector.unavailable_reason()
         }
 
     def get(self):
