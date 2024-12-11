@@ -24,17 +24,13 @@ export default function Modes() {
                 <h3>Recommended</h3>
                 <div className="modes-container">
                     <Regular />
-                    {platform.startsWith("win32") ||
-                    platform.startsWith("darwin") ? (
-                        <Local />
-                    ) : (
+                    {localModeUnavailable !== null ? (
                         <MissingMode
                             title="Local Redirect Mode"
-                            description={
-                                localModeUnavailable ??
-                                "This mode is only supported on Windows and MacOS."
-                            }
+                            description={localModeUnavailable}
                         />
+                    ) : (
+                        <Local />
                     )}
                     <Wireguard />
                     <Reverse />
