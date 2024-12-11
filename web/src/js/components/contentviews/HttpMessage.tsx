@@ -11,6 +11,7 @@ import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import LineRenderer from "./LineRenderer";
 import ViewSelector from "./ViewSelector";
+import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -32,7 +33,11 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         [maxLines],
     );
     const [edit, setEdit] = useState<boolean>(false);
-    let url;
+    const [isCopied, setIsCopied] = useState<boolean>(false);
+    const [isFetchingFullContent, setIsFetchingFullContent] =
+        useState<boolean>(false);
+
+    let url: string;
     if (edit) {
         url = MessageUtils.getContentURL(flow, message);
     } else {
@@ -59,6 +64,33 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             return undefined;
         }
     }, [content]);
+
+    const handleClickCopyButton = () => {
+        const url = MessageUtils.getContentURL(flow, message, contentView); //without the 'maxLines' parameter, so we can get the full content of the content view
+
+        setIsFetchingFullContent(true);
+
+        fetchApi(url)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(
+                        `${response.status} ${response.statusText}`.trim(),
+                    );
+                }
+                return response.json();
+            })
+            .then((data: ContentViewData) => {
+                copyViewContentDataToClipboard(data);
+                setIsCopied(true);
+                setTimeout(() => setIsCopied(false), 2000);
+            })
+            .catch((e) => {
+                console.error(e);
+            })
+            .finally(() => {
+                setIsFetchingFullContent(false);
+            });
+    };
 
     if (edit) {
         const save = async () => {
@@ -97,6 +129,17 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             <div className="contentview" key="view">
                 <div className="controls">
                     <h5>{desc}</h5>
+                    {contentViewData && contentViewData?.lines.length > 0 && (
+                        <Button
+                            onClick={handleClickCopyButton}
+                            icon="fa-clipboard"
+                            className="btn-xs"
+                            disabled={isFetchingFullContent}
+                        >
+                            {isCopied ? "Copied!" : "Copy"}
+                        </Button>
+                    )}
+                    &nbsp;
                     <Button
                         onClick={() => setEdit(true)}
                         icon="fa-edit"
