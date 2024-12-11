@@ -17,6 +17,7 @@ export default function Comment({ flow }: { flow: Flow }) {
                     dispatch(flowActions.update(flow, { comment }));
                 }}
                 placeholder="empty"
+                selectAllOnClick={true}
             />
         </section>
     );

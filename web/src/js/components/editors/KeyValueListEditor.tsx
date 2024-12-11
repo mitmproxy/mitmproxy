@@ -36,6 +36,7 @@ class Row extends Component<RowProps> {
                     onEditDone={(newKey) =>
                         this.props.onEditDone([newKey, value])
                     }
+                    selectAllOnClick={true}
                 />
                 :&nbsp;
                 <ValueEditor
@@ -47,6 +48,7 @@ class Row extends Component<RowProps> {
                         this.props.onEditDone([key, newVal])
                     }
                     placeholder="empty"
+                    selectAllOnClick={true}
                 />
             </div>
         );

@@ -242,8 +242,7 @@ jobs:
           name: docs
           path: docs/public
       # For releases, also build the archive version of the docs.
-      - if: startsWith(github.ref, 'refs/tags/')
-        run: ./docs/build.py
+      - run: ./docs/build.py
         env:
           DOCS_ARCHIVE: true
       - if: startsWith(github.ref, 'refs/tags/')
