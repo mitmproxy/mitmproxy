@@ -50,6 +50,7 @@ async def make() -> str:
     data["contentViews"] = ["Auto", "Raw"]
     data["version"] = "1.2.3"
     data["platform"] = "darwin"
+    data["localModeUnavailable"] = None
 
     # language=TypeScript
     content = (
