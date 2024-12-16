@@ -11,9 +11,13 @@ Requires pypac to be installed and available on the python path.
 This class is inspired by the user contributed add-on:
 https://github.com/mitmproxy/mitmproxy/blob/main/examples/contrib/change_upstream_proxy.py
 """
+
 import logging
+
 import pypac
-from mitmproxy import ctx, http
+
+from mitmproxy import ctx
+from mitmproxy import http
 from mitmproxy.net import server_spec
 
 
@@ -39,23 +43,30 @@ class UpstreamPac:
     @staticmethod
     def configure(updated) -> None:
         if "pac_url" in updated:
-
             if ctx.options.pac_url is None:
                 UpstreamPac.pac_file = None
                 logging.info("No pac file specified")
             else:
-                UpstreamPac.pac_file = pypac.get_pac(url=ctx.options.pac_url,
-                                                     allowed_content_types=["application/x-ns-proxy-autoconfig ",
-                                                                            "application/x-javascript-config",
-                                                                            "text/html",
-                                                                            "text/plain"])
+                UpstreamPac.pac_file = pypac.get_pac(
+                    url=ctx.options.pac_url,
+                    allowed_content_types=[
+                        "application/x-ns-proxy-autoconfig ",
+                        "application/x-javascript-config",
+                        "text/html",
+                        "text/plain",
+                    ],
+                )
                 if UpstreamPac.pac_file is None:
-                    logging.error("Failed to load pac file from: %s", ctx.options.pac_url)
+                    logging.error(
+                        "Failed to load pac file from: %s", ctx.options.pac_url
+                    )
 
     @staticmethod
     def proxy_address(flow: http.HTTPFlow) -> tuple[str, tuple[str, int]] | None:
         if UpstreamPac.pac_file:
-            proxy = UpstreamPac.pac_file.find_proxy_for_url(flow.request.url, flow.request.host)
+            proxy = UpstreamPac.pac_file.find_proxy_for_url(
+                flow.request.url, flow.request.host
+            )
 
             if proxy == "DIRECT":
                 if ctx.options.direct_upstream_proxy is not None:
@@ -73,7 +84,9 @@ class UpstreamPac:
 
         if address is not None:
             logging.info(
-                "Using proxy %s://%s:%s for %s" % (address[0], address[1][0], address[1][1], flow.request.host))
+                "Using proxy %s://%s:%s for %s"
+                % (address[0], address[1][0], address[1][1], flow.request.host)
+            )
             flow.server_conn.via = address
 
 
