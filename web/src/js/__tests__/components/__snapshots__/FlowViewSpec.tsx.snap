@@ -143,6 +143,7 @@ exports[`FlowView 1`] = `
           <h5>
             Loading...
           </h5>
+           
           <button
             class="btn-xs btn btn-default"
           >
@@ -333,6 +334,7 @@ exports[`FlowView 2`] = `
           <h5>
             Loading...
           </h5>
+           
           <button
             class="btn-xs btn btn-default"
           >
