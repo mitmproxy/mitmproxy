@@ -3,13 +3,13 @@ import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
 
-type FilterInputProps = {
+interface FilterInputProps {
     type: string;
-    color: any;
+    color: string;
     placeholder: string;
     value: string;
-    onChange: (value) => void;
-};
+    onChange: (value: string) => void;
+}
 
 type FilterInputState = {
     value: string;
@@ -48,7 +48,7 @@ export default class FilterInput extends Component<
         this.setState({ value: nextProps.value });
     }
 
-    isValid(filt) {
+    isValid(filt: string) {
         try {
             if (filt) {
                 Filt.parse(filt);
@@ -70,8 +70,9 @@ export default class FilterInput extends Component<
         }
     }
 
-    onChange(e) {
+    onChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value = e.target.value;
+        console.log(value);
         this.setState({ value });
 
         // Only propagate valid filters upwards.
@@ -96,7 +97,7 @@ export default class FilterInput extends Component<
         this.setState({ mousefocus: false });
     }
 
-    onKeyDown(e) {
+    onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
@@ -105,7 +106,7 @@ export default class FilterInput extends Component<
         e.stopPropagation();
     }
 
-    selectFilter(cmd) {
+    selectFilter(cmd: string) {
         this.setState({ value: cmd });
         this.inputRef.current?.focus();
     }
