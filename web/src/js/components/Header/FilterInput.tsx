@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
+import WebsocketBackend from "../../backends/websocket";
+import BackendSingleton from "../../backends/BackendSingleton";
 
 interface FilterInputProps {
     type: string;
@@ -51,7 +53,20 @@ export default class FilterInput extends Component<
     isValid(filt: string) {
         try {
             if (filt) {
-                Filt.parse(filt);
+                if (filt.startsWith("~b")) {
+                    // temporary solution
+                    const backend = BackendSingleton.getInstance();
+                    if (backend instanceof WebsocketBackend) {
+                        // just an example of usage
+                        backend.sendMessage("flows", {
+                            cmd: "updateFilter",
+                            name: "search",
+                            expr: "~b boo",
+                        });
+                    }
+                } else {
+                    Filt.parse(filt);
+                }
             }
             return true;
         } catch (e) {
@@ -97,13 +112,13 @@ export default class FilterInput extends Component<
         this.setState({ mousefocus: false });
     }
 
-    onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    onKeyDown(e: Partial<React.KeyboardEvent<HTMLInputElement>>) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({ mousefocus: false });
         }
-        e.stopPropagation();
+        e.stopPropagation?.();
     }
 
     selectFilter(cmd: string) {

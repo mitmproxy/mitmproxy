@@ -98,8 +98,7 @@ export default class WebsocketBackend {
     sendMessage(resource, data) {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             const message = JSON.stringify({ resource, ...data });
-            console.log(message);
-            //this.socket.send(message);
+            this.socket.send(message);
         } else {
             console.error(
                 "WebSocket is not open. Cannot send message:",
