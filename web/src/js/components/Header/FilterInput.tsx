@@ -91,7 +91,6 @@ export default class FilterInput extends Component<
 
     onChange(e) {
         const value = e.target.value;
-        console.log(value);
         this.setState({ value });
 
         // Only propagate valid filters upwards.
