@@ -5,8 +5,14 @@ import FilterDocs from "./FilterDocs";
 import { backend } from "../../app";
 import WebsocketBackend from "../../backends/websocket";
 
+export enum FILTER_TYPE {
+    SEARCH = "search",
+    HIGHLIGHT = "tag",
+    INTERCEPT = "pause",
+}
+
 interface FilterInputProps {
-    type: string;
+    type: FILTER_TYPE;
     color: string;
     placeholder: string;
     value: string;
@@ -56,8 +62,11 @@ export default class FilterInput extends Component<
                 if (filt.startsWith("~b")) {
                     // temporary solution
                     if (backend instanceof WebsocketBackend) {
-                        // just as an example
-                        backend.updateFilter("search", "~b boo");
+                        if (this.props.type === FILTER_TYPE.SEARCH) {
+                            backend.updateFilter("search", filt);
+                        } else if (this.props.type === FILTER_TYPE.HIGHLIGHT) {
+                            backend.updateFilter("highlight", filt);
+                        }
                     }
                 } else {
                     Filt.parse(filt);

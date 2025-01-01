@@ -1,6 +1,8 @@
 import * as React from "react";
 import renderer from "react-test-renderer";
-import FilterInput from "../../../components/Header/FilterInput";
+import FilterInput, {
+    FILTER_TYPE,
+} from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
 import { act, render } from "../../test-utils";
 
@@ -8,7 +10,7 @@ describe("FilterInput Component", () => {
     it("should render correctly", () => {
         const filterInput = renderer.create(
             <FilterInput
-                type="foo"
+                type={FILTER_TYPE.SEARCH}
                 color="red"
                 placeholder="bar"
                 onChange={() => undefined}
@@ -23,7 +25,7 @@ describe("FilterInput Component", () => {
         const ref = React.createRef<FilterInput>();
         render(
             <FilterInput
-                type="foo"
+                type={FILTER_TYPE.SEARCH}
                 color="red"
                 placeholder="bar"
                 value="wat"
@@ -37,7 +39,7 @@ describe("FilterInput Component", () => {
     it("should handle componentWillReceiveProps", () => {
         const { rerender, getByDisplayValue } = render(
             <FilterInput
-                type="typ"
+                type={FILTER_TYPE.SEARCH}
                 color="red"
                 value="foo"
                 placeholder=""
@@ -46,7 +48,7 @@ describe("FilterInput Component", () => {
         );
         rerender(
             <FilterInput
-                type="typ"
+                type={FILTER_TYPE.SEARCH}
                 color="red"
                 value="bar"
                 placeholder=""
