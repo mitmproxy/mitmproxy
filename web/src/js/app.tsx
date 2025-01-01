@@ -5,12 +5,19 @@ import { Provider } from "react-redux";
 import ProxyApp from "./components/ProxyApp";
 import { add as addLog } from "./ducks/eventLog";
 import useUrlState from "./urlState";
+import WebSocketBackend from "./backends/websocket";
+import StaticBackend from "./backends/static";
 import { store } from "./ducks";
-import BackendSingleton from "./backends/BackendSingleton";
 
 useUrlState(store);
-
-BackendSingleton.getInstance(); // Initialize the backend singleton instance
+// @ts-expect-error custom property on window
+if (window.MITMWEB_STATIC) {
+    // @ts-expect-error new property on window for debugging
+    window.backend = new StaticBackend(store);
+} else {
+    // @ts-expect-error new property on window for debugging
+    window.backend = new WebSocketBackend(store);
+}
 
 window.addEventListener("error", (e: ErrorEvent) => {
     store.dispatch(addLog(`${e.message}\n${e.error.stack}`));
