@@ -64,7 +64,7 @@ dependencies = [
 dev = [
     "click>=7.0,<=8.1.7",
     "hypothesis>=6.104.2,<=6.122.1",
-    "pdoc>=14.5.1,<=15.0.0",
+    "pdoc>=14.5.1,<=15.0.1",
     "pyinstaller==6.11.1",
     "pyinstaller-hooks-contrib==2024.10",
     "pytest-asyncio>=0.23.6,<=0.24.0",
