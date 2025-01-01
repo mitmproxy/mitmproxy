@@ -11,13 +11,13 @@ export enum FILTER_TYPE {
     INTERCEPT = "pause",
 }
 
-interface FilterInputProps {
+type FilterInputProps = {
     type: FILTER_TYPE;
-    color: string;
+    color: any;
     placeholder: string;
     value: string;
-    onChange: (value: string) => void;
-}
+    onChange: (value) => void;
+};
 
 type FilterInputState = {
     value: string;
@@ -89,7 +89,7 @@ export default class FilterInput extends Component<
         }
     }
 
-    onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange(e) {
         const value = e.target.value;
         console.log(value);
         this.setState({ value });
@@ -116,7 +116,7 @@ export default class FilterInput extends Component<
         this.setState({ mousefocus: false });
     }
 
-    onKeyDown(e: Partial<React.KeyboardEvent<HTMLInputElement>>) {
+    onKeyDown(e) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
@@ -125,7 +125,7 @@ export default class FilterInput extends Component<
         e.stopPropagation?.();
     }
 
-    selectFilter(cmd: string) {
+    selectFilter(cmd) {
         this.setState({ value: cmd });
         this.inputRef.current?.focus();
     }
