@@ -80,7 +80,9 @@ describe("FilterInput Component", () => {
 
     it("should handle change", () => {
         const filterInput = dummyInput();
-        const mockEvent = { target: { value: "~a bar" } };
+        const mockEvent = {
+            target: { value: "~a bar" },
+        } as React.ChangeEvent<HTMLInputElement>;
         act(() => filterInput.onChange(mockEvent));
         expect(filterInput.state.value).toEqual("~a bar");
         expect(filterInput.props.onChange).toBeCalledWith("~a bar");
