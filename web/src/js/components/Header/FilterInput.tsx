@@ -2,8 +2,8 @@ import React, { Component } from "react";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
+import { backend } from "../../app";
 import WebsocketBackend from "../../backends/websocket";
-import BackendSingleton from "../../backends/BackendSingleton";
 
 interface FilterInputProps {
     type: string;
@@ -55,14 +55,9 @@ export default class FilterInput extends Component<
             if (filt) {
                 if (filt.startsWith("~b")) {
                     // temporary solution
-                    const backend = BackendSingleton.getInstance();
                     if (backend instanceof WebsocketBackend) {
-                        // just an example of usage
-                        backend.sendMessage("flows", {
-                            cmd: "updateFilter",
-                            name: "search",
-                            expr: "~b boo",
-                        });
+                        // just as an example
+                        backend.updateFilter("search", "~b boo");
                     }
                 } else {
                     Filt.parse(filt);
