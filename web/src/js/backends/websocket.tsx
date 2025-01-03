@@ -94,6 +94,31 @@ export default class WebsocketBackend {
         }
     }
 
+    updateFilter(name: string, expr: string) {
+        this.sendMessage("flows", {
+            cmd: "updateFilter",
+            name,
+            expr,
+        });
+    }
+
+    private sendMessage(resource, data) {
+        const message = JSON.stringify({ resource, ...data });
+        if (
+            this.socket &&
+            (this.socket.readyState === WebSocket.CONNECTING ||
+                this.socket.readyState === WebSocket.OPEN)
+        ) {
+            this.socket.send(message);
+        } else {
+            console.error(
+                "WebSocket is not open. Cannot send message:",
+                resource,
+                data,
+            );
+        }
+    }
+
     onClose(closeEvent) {
         this.store.dispatch(
             connectionActions.connectionError(

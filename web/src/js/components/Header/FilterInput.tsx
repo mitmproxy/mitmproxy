@@ -3,8 +3,14 @@ import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
 
+export enum FILTER_TYPE {
+    SEARCH = "search",
+    HIGHLIGHT = "tag",
+    INTERCEPT = "pause",
+}
+
 type FilterInputProps = {
-    type: string;
+    type: FILTER_TYPE;
     color: any;
     placeholder: string;
     value: string;
@@ -48,7 +54,7 @@ export default class FilterInput extends Component<
         this.setState({ value: nextProps.value });
     }
 
-    isValid(filt) {
+    isValid(filt: string) {
         try {
             if (filt) {
                 Filt.parse(filt);
@@ -102,7 +108,7 @@ export default class FilterInput extends Component<
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({ mousefocus: false });
         }
-        e.stopPropagation();
+        e.stopPropagation?.();
     }
 
     selectFilter(cmd) {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import FilterInput from "./FilterInput";
+import FilterInput, { FILTER_TYPE } from "./FilterInput";
 import * as flowsActions from "../../ducks/flows";
 import { setFilter, setHighlight } from "../../ducks/flows";
 import Button from "../common/Button";
@@ -37,7 +37,7 @@ function InterceptInput() {
         <FilterInput
             value={value || ""}
             placeholder="Intercept"
-            type="pause"
+            type={FILTER_TYPE.INTERCEPT}
             color="hsl(208, 56%, 53%)"
             onChange={(val) => dispatch(updateOptions("intercept", val))}
         />
@@ -51,7 +51,7 @@ function FlowFilterInput() {
         <FilterInput
             value={value || ""}
             placeholder="Search"
-            type="search"
+            type={FILTER_TYPE.SEARCH}
             color="black"
             onChange={(value) => dispatch(setFilter(value))}
         />
@@ -65,7 +65,7 @@ function HighlightInput() {
         <FilterInput
             value={value || ""}
             placeholder="Highlight"
-            type="tag"
+            type={FILTER_TYPE.HIGHLIGHT}
             color="hsl(48, 100%, 50%)"
             onChange={(value) => dispatch(setHighlight(value))}
         />
