@@ -316,7 +316,9 @@ class Proxyserver(ServerManager):
         if connection_id not in self.connections:
             raise ValueError("Flow is not from a live connection.")
 
-        t = self._inject_tasks.create_task(self.connections[connection_id].server_event(event))
+        t = self._inject_tasks.create_task(
+            self.connections[connection_id].server_event(event)
+        )
         asyncio_utils.set_task_debug_info(
             t,
             name="inject_event",
