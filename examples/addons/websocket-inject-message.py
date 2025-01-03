@@ -5,6 +5,7 @@ This example shows how to inject a WebSocket message into a running connection.
 """
 
 import asyncio
+from asyncio import TaskGroup
 
 from mitmproxy import ctx
 from mitmproxy import http
@@ -34,12 +35,9 @@ async def inject_async(flow: http.HTTPFlow):
         msg = msg[1:] + msg[:1]
 
 
-# Python 3.11: replace with TaskGroup
-tasks = set()
+tasks = TaskGroup()
 
 
 def websocket_start(flow: http.HTTPFlow):
     # we need to hold a reference to the task, otherwise it will be garbage collected.
-    t = asyncio.create_task(inject_async(flow))
-    tasks.add(t)
-    t.add_done_callback(tasks.remove)
+    tasks.create_task(inject_async(flow))

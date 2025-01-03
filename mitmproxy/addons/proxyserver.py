@@ -8,6 +8,7 @@ import asyncio
 import collections
 import ipaddress
 import logging
+from asyncio import TaskGroup
 from collections.abc import Iterable
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -121,13 +122,13 @@ class Proxyserver(ServerManager):
     is_running: bool
     _connect_addr: Address | None = None
     _update_task: asyncio.Task | None = None
-    _inject_tasks: set[asyncio.Task]
+    _inject_tasks: TaskGroup
 
     def __init__(self):
         self.connections = {}
         self.servers = Servers(self)
         self.is_running = False
-        self._inject_tasks = set()
+        self._inject_tasks = TaskGroup()
 
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
@@ -315,14 +316,12 @@ class Proxyserver(ServerManager):
         if connection_id not in self.connections:
             raise ValueError("Flow is not from a live connection.")
 
-        t = asyncio_utils.create_task(
-            self.connections[connection_id].server_event(event),
-            name=f"inject_event",
+        t = self._inject_tasks.create_task(self.connections[connection_id].server_event(event))
+        asyncio_utils.set_task_debug_info(
+            t,
+            name="inject_event",
             client=event.flow.client_conn.peername,
         )
-        # Python 3.11 Use TaskGroup instead.
-        self._inject_tasks.add(t)
-        t.add_done_callback(self._inject_tasks.remove)
 
     @command.command("inject.websocket")
     def inject_websocket(

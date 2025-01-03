@@ -2,7 +2,7 @@
 name = "mitmproxy"
 description = "An interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {file="LICENSE"}
 authors = [{name = "Aldo Cortesi", email = "aldo@corte.si"}]
 maintainers = [{name = "Maximilian Hils", email = "mitmproxy@maximilianhils.com"}]
@@ -16,8 +16,6 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -43,7 +41,7 @@ dependencies = [
     "hyperframe>=6.0,<=6.0.1",
     "kaitaistruct>=0.10,<=0.10",
     "ldap3>=2.8,<=2.9.1",
-    "mitmproxy_rs>=0.11.1,<0.12",  # relaxed upper bound here: we control this
+    "mitmproxy_rs>=0.11.2,<0.12",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.0",
     "passlib>=1.6.5,<=1.7.4",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
@@ -53,7 +51,6 @@ dependencies = [
     "ruamel.yaml>=0.16,<=0.18.7",
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado>=6.4.1,<=6.4.2",
-    "typing-extensions>=4.3,<=4.11.0; python_version<'3.11'",
     "urwid>=2.6.14,<=2.6.16",
     "wsproto>=1.0,<=1.2.0",
     "publicsuffix2>=2.20190812,<=2.20191221",
@@ -143,8 +140,6 @@ filterwarnings = [
     "ignore:datetime.datetime.utcnow:DeprecationWarning:aioquic.*:",
     "error::RuntimeWarning",
     "error::pytest.PytestUnraisableExceptionWarning",
-    # The following warning should only appear on Python 3.11 and below where eager_task_factory is not present
-    "default:coroutine 'ConnectionHandler.hook_task' was never awaited:RuntimeWarning",
 ]
 
 [tool.pytest.individual_coverage]
