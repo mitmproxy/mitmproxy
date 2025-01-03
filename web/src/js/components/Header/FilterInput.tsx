@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
-import { backend } from "../../app";
-import WebsocketBackend from "../../backends/websocket";
 
 export enum FILTER_TYPE {
     SEARCH = "search",
@@ -59,18 +57,7 @@ export default class FilterInput extends Component<
     isValid(filt: string) {
         try {
             if (filt) {
-                if (filt.startsWith("~b")) {
-                    // temporary solution
-                    if (backend instanceof WebsocketBackend) {
-                        if (this.props.type === FILTER_TYPE.SEARCH) {
-                            backend.updateFilter("search", filt);
-                        } else if (this.props.type === FILTER_TYPE.HIGHLIGHT) {
-                            backend.updateFilter("highlight", filt);
-                        }
-                    }
-                } else {
-                    Filt.parse(filt);
-                }
+                Filt.parse(filt);
             }
             return true;
         } catch (e) {

@@ -17,13 +17,18 @@ declare global {
     }
 }
 
-useUrlState(store);
-
-if (window.MITMWEB_STATIC) {
-    window.backend = new StaticBackend(store);
-} else {
-    window.backend = new WebSocketBackend(store);
+function initializeBackend(): WebSocketBackend | StaticBackend {
+    if (window.MITMWEB_STATIC) {
+        window.backend = new StaticBackend(store);
+    } else {
+        window.backend = new WebSocketBackend(store);
+    }
+    return window.backend;
 }
+
+export const backend = initializeBackend(); // we should export the backend variable before 'useUrlState(store)' otherwise backend is undefined when refreshing the page or changing the url
+
+useUrlState(store);
 
 window.addEventListener("error", (e: ErrorEvent) => {
     store.dispatch(addLog(`${e.message}\n${e.error.stack}`));
@@ -38,5 +43,3 @@ document.addEventListener("DOMContentLoaded", () => {
         </Provider>,
     );
 });
-
-export const backend = window.backend;

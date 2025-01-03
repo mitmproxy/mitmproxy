@@ -103,8 +103,12 @@ export default class WebsocketBackend {
     }
 
     private sendMessage(resource, data) {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            const message = JSON.stringify({ resource, ...data });
+        const message = JSON.stringify({ resource, ...data });
+        if (
+            this.socket &&
+            (this.socket.readyState === WebSocket.CONNECTING ||
+                this.socket.readyState === WebSocket.OPEN)
+        ) {
             this.socket.send(message);
         } else {
             console.error(
