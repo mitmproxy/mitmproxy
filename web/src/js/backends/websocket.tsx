@@ -12,6 +12,12 @@ import { BackendState } from "../ducks/backendState";
 
 const CMD_RESET = "reset";
 
+interface WebSocketMessage {
+    cmd: string;
+    resource: string;
+    data?: any;
+}
+
 export default class WebsocketBackend {
     activeFetches: {
         flows?: [];
@@ -49,7 +55,7 @@ export default class WebsocketBackend {
         this.store.dispatch(connectionActions.startFetching());
     }
 
-    fetchData(resource) {
+    fetchData(resource: string) {
         const queue = [];
         this.activeFetches[resource] = queue;
         fetchApi(`./${resource}`)
@@ -61,7 +67,7 @@ export default class WebsocketBackend {
             });
     }
 
-    onMessage(msg) {
+    onMessage(msg: WebSocketMessage) {
         if (msg.cmd === CMD_RESET) {
             return this.fetchData(msg.resource);
         }
@@ -73,7 +79,7 @@ export default class WebsocketBackend {
         }
     }
 
-    receive(resource, data) {
+    receive(resource: string, data: any) {
         const type = `${resource}_RECEIVE`.toUpperCase();
         if (resource === "state") {
             this.store.dispatch({
@@ -86,7 +92,7 @@ export default class WebsocketBackend {
         }
         const queue = this.activeFetches[resource];
         delete this.activeFetches[resource];
-        queue.forEach((msg) => this.onMessage(msg));
+        queue.forEach((msg: WebSocketMessage) => this.onMessage(msg));
 
         if (Object.keys(this.activeFetches).length === 0) {
             // We have fetched the last resource
@@ -102,7 +108,7 @@ export default class WebsocketBackend {
         });
     }
 
-    private sendMessage(resource, data) {
+    private sendMessage(resource: string, data: any) {
         const message = JSON.stringify({ resource, ...data });
         if (
             this.socket &&
@@ -119,7 +125,7 @@ export default class WebsocketBackend {
         }
     }
 
-    onClose(closeEvent) {
+    onClose(closeEvent: CloseEvent) {
         this.store.dispatch(
             connectionActions.connectionError(
                 `Connection closed at ${new Date().toUTCString()} with error code ${
