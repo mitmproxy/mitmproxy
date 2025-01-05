@@ -17,16 +17,12 @@ declare global {
     }
 }
 
-function initializeBackend(): WebSocketBackend | StaticBackend {
-    if (window.MITMWEB_STATIC) {
-        window.backend = new StaticBackend(store);
-    } else {
-        window.backend = new WebSocketBackend(store);
-    }
-    return window.backend;
+// we should set the window.backend variable before 'useUrlState(store)' otherwise window.backend is undefined when refreshing the page or changing the url
+if (window.MITMWEB_STATIC) {
+    window.backend = new StaticBackend(store);
+} else {
+    window.backend = new WebSocketBackend(store);
 }
-
-export const backend = initializeBackend(); // we should export the backend variable before 'useUrlState(store)' otherwise backend is undefined when refreshing the page or changing the url
 
 useUrlState(store);
 

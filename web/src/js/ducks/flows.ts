@@ -4,7 +4,6 @@ import * as store from "./utils/store";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
 import { sortFunctions } from "../flow/utils";
-import { backend } from "../app";
 import WebsocketBackend from "../backends/websocket";
 
 export const ADD = "FLOWS_ADD";
@@ -153,15 +152,15 @@ export function makeSort({
 }
 
 export function setFilter(filter: string) {
-    if (backend instanceof WebsocketBackend) {
-        backend.updateFilter("search", filter);
+    if (window.backend instanceof WebsocketBackend) {
+        window.backend.updateFilter("search", filter);
     }
     return { type: SET_FILTER, filter };
 }
 
 export function setHighlight(highlight: string) {
-    if (backend instanceof WebsocketBackend) {
-        backend.updateFilter("highlight", highlight);
+    if (window.backend instanceof WebsocketBackend) {
+        window.backend.updateFilter("highlight", highlight);
     }
     return { type: SET_HIGHLIGHT, highlight };
 }
