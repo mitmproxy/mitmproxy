@@ -8,7 +8,9 @@
 ## Unreleased: mitmproxy next
 
 - **Local Capture Mode** is now available on Linux as well.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
 - mitmproxy now requires Python 3.10 or above.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
 - Add cache-busting for mitmweb's front end code.
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
