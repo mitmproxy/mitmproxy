@@ -16,7 +16,7 @@ async def ttask():
 async def test_simple(monkeypatch):
     monkeypatch.setenv("PYTEST_CURRENT_TEST", "test_foo")
     task = asyncio_utils.create_task(
-        ttask(), name="ttask", keep_ref=False, client=("127.0.0.1", 42313)
+        ttask(), name="ttask", keep_ref=True, client=("127.0.0.1", 42313)
     )
     assert (
         asyncio_utils.task_repr(task)
