@@ -251,8 +251,15 @@ ignore_errors = true
 extend-exclude = ["mitmproxy/contrib/"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "TID251"]
 ignore = ["F541", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"examples/**" = ["TID251"]
+"test/**" = ["TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"asyncio.create_task".msg = "Use mitmproxy.utils.asyncio_utils.create_task instead to avoid GC footgun."
 
 
 [tool.ruff.lint.isort]

@@ -8,18 +8,30 @@ from contextlib import contextmanager
 
 from mitmproxy.utils import human
 
+_KEEP_ALIVE = set()
+
 
 def create_task(
     coro: Coroutine,
     *,
     name: str,
+    keep_ref: bool,
     client: tuple | None = None,
 ) -> asyncio.Task:
     """
-    Like asyncio.create_task, but also store some debug info on the task object.
+    Wrapper around `asyncio.create_task`.
+
+    - Use `keep_ref` to keep an internal reference.
+      This ensures that the task is not garbage collected mid-execution if no other reference is kept.
+    - Use `client` to pass the client address as additional debug info on the task.
     """
-    t = asyncio.create_task(coro)
+    t = asyncio.create_task(coro)  # noqa: TID251
     set_task_debug_info(t, name=name, client=client)
+    if keep_ref and not t.done():
+        # The event loop only keeps weak references to tasks.
+        # A task that isn’t referenced elsewhere may get garbage collected at any time, even before it’s done.
+        _KEEP_ALIVE.add(t)
+        t.add_done_callback(_KEEP_ALIVE.discard)
     return t
 
 
