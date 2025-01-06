@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import logging
@@ -35,6 +34,7 @@ from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
+from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
@@ -290,7 +290,6 @@ class FilterHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
-    _send_tasks: ClassVar[set[asyncio.Task]] = set()
 
     def open(self, *args, **kwargs):
         self.connections.add(self)
@@ -306,9 +305,11 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             except tornado.websocket.WebSocketClosedError:
                 cls.connections.discard(conn)
 
-        t = asyncio.create_task(wrapper())
-        cls._send_tasks.add(t)
-        t.add_done_callback(cls._send_tasks.remove)
+        asyncio_utils.create_task(
+            wrapper(),
+            name="WebSocketEventBroadcaster",
+            keep_ref=True,
+        )
 
     @classmethod
     def broadcast(cls, **kwargs):
