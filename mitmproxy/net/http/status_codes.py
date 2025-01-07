@@ -1,3 +1,8 @@
+# Covered status codes:
+# - official HTTP status codes: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+# - custom codes:
+#   - 444 No Response
+#   - 499 Client Closed Request
 CONTINUE = 100
 SWITCHING = 101
 PROCESSING = 102
@@ -11,6 +16,8 @@ NO_CONTENT = 204
 RESET_CONTENT = 205
 PARTIAL_CONTENT = 206
 MULTI_STATUS = 207
+ALREADY_REPORTED = 208
+IM_USED = 226
 
 MULTIPLE_CHOICE = 300
 MOVED_PERMANENTLY = 301
@@ -19,6 +26,7 @@ SEE_OTHER = 303
 NOT_MODIFIED = 304
 USE_PROXY = 305
 TEMPORARY_REDIRECT = 307
+PERMANENT_REDIRECT = 308
 
 BAD_REQUEST = 400
 UNAUTHORIZED = 401
@@ -39,7 +47,16 @@ UNSUPPORTED_MEDIA_TYPE = 415
 REQUESTED_RANGE_NOT_SATISFIABLE = 416
 EXPECTATION_FAILED = 417
 IM_A_TEAPOT = 418
+MISDIRECTED_REQUEST = 421
 UNPROCESSABLE_CONTENT = 422
+LOCKED = 423
+FAILED_DEPENDENCY = 424
+TOO_EARLY = 425
+UPGRADE_REQUIRED = 426
+PRECONDITION_REQUIRED = 428
+TOO_MANY_REQUESTS = 429
+REQUEST_HEADER_FIELDS_TOO_LARGE = 431
+UNAVAILABLE_FOR_LEGAL_REASONS = 451
 NO_RESPONSE = 444
 CLIENT_CLOSED_REQUEST = 499
 
@@ -49,8 +66,11 @@ BAD_GATEWAY = 502
 SERVICE_UNAVAILABLE = 503
 GATEWAY_TIMEOUT = 504
 HTTP_VERSION_NOT_SUPPORTED = 505
+VARIANT_ALSO_NEGOTIATES = 506
 INSUFFICIENT_STORAGE_SPACE = 507
+LOOP_DETECTED = 508
 NOT_EXTENDED = 510
+NETWORK_AUTHENTICATION_REQUIRED = 511
 
 RESPONSES = {
     # 100
@@ -64,9 +84,11 @@ RESPONSES = {
     ACCEPTED: "Accepted",
     NON_AUTHORITATIVE_INFORMATION: "Non-Authoritative Information",
     NO_CONTENT: "No Content",
-    RESET_CONTENT: "Reset Content.",
+    RESET_CONTENT: "Reset Content",
     PARTIAL_CONTENT: "Partial Content",
     MULTI_STATUS: "Multi-Status",
+    ALREADY_REPORTED: "Already Reported",
+    IM_USED: "IM Used",
     # 300
     MULTIPLE_CHOICE: "Multiple Choices",
     MOVED_PERMANENTLY: "Moved Permanently",
@@ -76,6 +98,7 @@ RESPONSES = {
     USE_PROXY: "Use Proxy",
     # 306 not defined??
     TEMPORARY_REDIRECT: "Temporary Redirect",
+    PERMANENT_REDIRECT: "Permanent Redirect",
     # 400
     BAD_REQUEST: "Bad Request",
     UNAUTHORIZED: "Unauthorized",
@@ -96,7 +119,16 @@ RESPONSES = {
     REQUESTED_RANGE_NOT_SATISFIABLE: "Requested Range not satisfiable",
     EXPECTATION_FAILED: "Expectation Failed",
     IM_A_TEAPOT: "I'm a teapot",
+    MISDIRECTED_REQUEST: "Misdirected Request",
     UNPROCESSABLE_CONTENT: "Unprocessable Content",
+    LOCKED: "Locked",
+    FAILED_DEPENDENCY: "Failed Dependency",
+    TOO_EARLY: "Too Early",
+    UPGRADE_REQUIRED: "Upgrade Required",
+    PRECONDITION_REQUIRED: "Precondition Required",
+    TOO_MANY_REQUESTS: "Too Many Requests",
+    REQUEST_HEADER_FIELDS_TOO_LARGE: "Request Header Fields Too Large",
+    UNAVAILABLE_FOR_LEGAL_REASONS: "Unavailable For Legal Reasons",
     NO_RESPONSE: "No Response",
     CLIENT_CLOSED_REQUEST: "Client Closed Request",
     # 500
@@ -106,6 +138,9 @@ RESPONSES = {
     SERVICE_UNAVAILABLE: "Service Unavailable",
     GATEWAY_TIMEOUT: "Gateway Time-out",
     HTTP_VERSION_NOT_SUPPORTED: "HTTP Version not supported",
+    VARIANT_ALSO_NEGOTIATES: "Variant Also Negotiates",
     INSUFFICIENT_STORAGE_SPACE: "Insufficient Storage Space",
+    LOOP_DETECTED: "Loop Detected",
     NOT_EXTENDED: "Not Extended",
+    NETWORK_AUTHENTICATION_REQUIRED: "Network Authentication Required",
 }
