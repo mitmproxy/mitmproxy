@@ -5,7 +5,7 @@ import Filt from "../filt/filt";
 import { Flow } from "../flow";
 import { sortFunctions } from "../flow/utils";
 import WebsocketBackend from "../backends/websocket";
-import {backend} from "../backends";
+import { backend } from "../backends";
 
 export const ADD = "FLOWS_ADD";
 export const UPDATE = "FLOWS_UPDATE";

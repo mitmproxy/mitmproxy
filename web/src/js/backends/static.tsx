@@ -33,6 +33,5 @@ export default class StaticBackend {
         this.store.dispatch({ type, cmd: "receive", resource, data });
     }
 
-    updateFilter(name: string, expr: string) {
-    }
+    updateFilter(name: string, expr: string) {}
 }
