@@ -58,7 +58,7 @@ class TestBlockList:
             assert f.response.status_code == 403
             assert f.metadata["blocklisted"]
 
-    def test_mixedcased_headers(self):
+    def test_mixedcased_header_names(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(bl, block_list=["|~hq User-Agent:\\scurl|401"])
