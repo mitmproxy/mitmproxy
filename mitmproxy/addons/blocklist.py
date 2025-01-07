@@ -7,7 +7,6 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import version
 from mitmproxy.net.http.status_codes import NO_RESPONSE
-from mitmproxy.net.http.status_codes import RESPONSES
 
 
 class BlockSpec(NamedTuple):
@@ -33,8 +32,6 @@ def parse_spec(option: str) -> BlockSpec:
     except ValueError:
         raise ValueError(f"Invalid HTTP status code: {status}")
     flow_filter = flowfilter.parse(flow_patt)
-    if not RESPONSES.get(status_code):
-        raise ValueError(f"Invalid HTTP status code: {status}")
 
     return BlockSpec(matches=flow_filter, status_code=status_code)
 
