@@ -29,6 +29,9 @@ class TestBlockList:
             (":~u test:404", b"https://example.org/images/TEST.jpg", 404),
             ("/!jpg/418", b"https://example.org/images/test.jpg", None),
             ("/!png/418", b"https://example.org/images/test.jpg", 418),
+            ("|~u /DATA|500", b"https://example.org/DATA", 500),
+            ("|~u /ASSETS|501", b"https://example.org/assets", 501),
+            ("|~u /ping|201", b"https://example.org/PING", 201),
         ],
     )
     def test_block(self, filter, request_url, status_code):
