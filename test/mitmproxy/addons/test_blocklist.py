@@ -29,6 +29,9 @@ class TestBlockList:
             (":~u test:404", b"https://example.org/images/TEST.jpg", 404),
             ("/!jpg/418", b"https://example.org/images/test.jpg", None),
             ("/!png/418", b"https://example.org/images/test.jpg", 418),
+            ("|~u /DATA|500", b"https://example.org/DATA", 500),
+            ("|~u /ASSETS|501", b"https://example.org/assets", 501),
+            ("|~u /ping|201", b"https://example.org/PING", 201),
         ],
     )
     def test_block(self, filter, request_url, status_code):
@@ -43,6 +46,28 @@ class TestBlockList:
                 assert f.metadata["blocklisted"]
             else:
                 assert not f.response
+
+    def test_uppercase_header_values(self):
+        bl = blocklist.BlockList()
+        with taddons.context(bl) as tctx:
+            tctx.configure(bl, block_list=["|~hq Cookie:\\sfoo=BAR|403"])
+            f = tflow.tflow()
+            f.request.url = "https://example.org/robots.txt"
+            f.request.headers["Cookie"] = "foo=BAR; key1=value1"
+            bl.request(f)
+            assert f.response.status_code == 403
+            assert f.metadata["blocklisted"]
+
+    def test_mixedcase_header_names(self):
+        # this test is meant to document existing behavior, not advocate for it.
+        bl = blocklist.BlockList()
+        with taddons.context(bl) as tctx:
+            tctx.configure(bl, block_list=["|~hq User-Agent:\\scurl|401"])
+            f = tflow.tflow()
+            f.request.url = "https://example.org/products/123"
+            f.request.headers["user-agent"] = "curl/8.11.1"
+            bl.request(f)
+            assert not f.response
 
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()
