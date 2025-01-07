@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import ProxyApp from "./components/ProxyApp";
 import { add as addLog } from "./ducks/eventLog";
 import useUrlState from "./urlState";
+import { backend } from "./backends";
 import WebSocketBackend from "./backends/websocket";
 import StaticBackend from "./backends/static";
 import { store } from "./ducks";
@@ -17,12 +18,8 @@ declare global {
     }
 }
 
-// we should set the window.backend variable before 'useUrlState(store)' otherwise window.backend is undefined when refreshing the page or changing the url
-if (window.MITMWEB_STATIC) {
-    window.backend = new StaticBackend(store);
-} else {
-    window.backend = new WebSocketBackend(store);
-}
+// Attach to window to ease debugging
+window.backend = backend;
 
 useUrlState(store);
 
