@@ -47,7 +47,7 @@ class TestBlockList:
             else:
                 assert not f.response
 
-    def test_upppercased_header_values(self):
+    def test_uppercase_header_values(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(bl, block_list=["|~hq Cookie:\\sfoo=BAR|403"])
@@ -58,7 +58,8 @@ class TestBlockList:
             assert f.response.status_code == 403
             assert f.metadata["blocklisted"]
 
-    def test_mixedcased_header_names(self):
+    def test_mixedcase_header_names(self):
+        # this test is meant to document existing behavior, not advocate for it.
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(bl, block_list=["|~hq User-Agent:\\scurl|401"])
