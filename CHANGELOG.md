@@ -15,6 +15,8 @@
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
+- Remove checks for status code.
+  ([#7454](https://github.com/mitmproxy/mitmproxy/pull/7454), @AdityaPatadiya)
 
 ## 05 December 2024: mitmproxy 11.0.2
 
