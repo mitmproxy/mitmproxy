@@ -17,6 +17,9 @@
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 - Add missing status codes
   ([#7455])(https://github.com/mitmproxy/mitmproxy/pull/7455, @jwadolowski)
+- All filter expressions are now case-insensitive by default.
+  Users can opt into case-sensitive filters by setting MITMPROXY_CASE_SENSITIVE_FILTERS=1
+  as an environment variable.
 - Remove filter expression lowercasing in block_list addon
   ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
 
