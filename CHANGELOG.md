@@ -15,6 +15,8 @@
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
+- Add missing status codes
+  ([#7455])(https://github.com/mitmproxy/mitmproxy/pull/7455, @jwadolowski)
 - Remove filter expression lowercasing in block_list addon
   ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
 
