@@ -33,8 +33,6 @@ def parse_spec(option: str) -> BlockSpec:
     except ValueError:
         raise ValueError(f"Invalid HTTP status code: {status}")
     flow_filter = flowfilter.parse(flow_patt)
-    if not RESPONSES.get(status_code):
-        raise ValueError(f"Invalid HTTP status code: {status}")
 
     return BlockSpec(matches=flow_filter, status_code=status_code)
 
