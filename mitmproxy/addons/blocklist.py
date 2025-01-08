@@ -23,7 +23,7 @@ def parse_spec(option: str) -> BlockSpec:
     """
     sep, rem = option[0], option[1:]
 
-    parts = rem.lower().split(sep, 2)
+    parts = rem.split(sep, 2)
     if len(parts) != 2:
         raise ValueError("Invalid number of parameters (2 are expected)")
     flow_patt, status = parts
