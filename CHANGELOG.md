@@ -7,10 +7,18 @@
 
 ## Unreleased: mitmproxy next
 
+- **Local Capture Mode** is now available on Linux as well.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
+- mitmproxy now requires Python 3.12 or above.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
 - Add cache-busting for mitmweb's front end code.
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
+- Add missing status codes
+  ([#7455])(https://github.com/mitmproxy/mitmproxy/pull/7455, @jwadolowski)
+- Remove filter expression lowercasing in block_list addon
+  ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
 
 ## 05 December 2024: mitmproxy 11.0.2
 

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from mitmproxy import ctx
+from mitmproxy.utils import asyncio_utils
 
 
 def load(_):
@@ -23,8 +24,11 @@ def load(_):
 
 
 def running():
-    # attach is somewhere so that it's not collected.
-    ctx.task = asyncio.create_task(make_request())  # type: ignore
+    asyncio_utils.create_task(
+        make_request(),
+        name="selftest",
+        keep_ref=True,
+    )
 
 
 async def make_request():
