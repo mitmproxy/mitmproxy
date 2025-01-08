@@ -19,6 +19,8 @@
   ([#7455])(https://github.com/mitmproxy/mitmproxy/pull/7455, @jwadolowski)
 - Remove filter expression lowercasing in block_list addon
   ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
+- Remove check for status codes in the blocklist add-on.
+  ([#7453](https://github.com/mitmproxy/mitmproxy/pull/7453), @lups2000, @AdityaPatadiya)
 
 ## 05 December 2024: mitmproxy 11.0.2
 
