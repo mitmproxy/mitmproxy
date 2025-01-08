@@ -3,14 +3,14 @@ import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
 
-export enum FILTER_TYPE {
+export enum FILTER_ICON {
     SEARCH = "search",
     HIGHLIGHT = "tag",
     INTERCEPT = "pause",
 }
 
 type FilterInputProps = {
-    type: FILTER_TYPE;
+    icon: FILTER_ICON;
     color: any;
     placeholder: string;
     value: string;
@@ -125,7 +125,7 @@ export default class FilterInput extends Component<
     }
 
     render() {
-        const { type, color, placeholder } = this.props;
+        const { icon, color, placeholder } = this.props;
         const { value, focus, mousefocus } = this.state;
         return (
             <div
@@ -134,7 +134,7 @@ export default class FilterInput extends Component<
                 })}
             >
                 <span className="input-group-addon">
-                    <i className={"fa fa-fw fa-" + type} style={{ color }} />
+                    <i className={"fa fa-fw fa-" + icon} style={{ color }} />
                 </span>
                 <input
                     type="text"
