@@ -118,11 +118,15 @@ describe("FilterInput Component", () => {
         const filterInput = dummyInput();
         const input = filterInput.inputRef.current!;
         input.blur = jest.fn();
-        const mockEvent = {
+        const mockEvent: Partial<React.KeyboardEvent<HTMLInputElement>> = {
             key: "Escape",
             stopPropagation: jest.fn(),
         };
-        act(() => filterInput.onKeyDown(mockEvent));
+        act(() =>
+            filterInput.onKeyDown(
+                mockEvent as React.KeyboardEvent<HTMLInputElement>,
+            ),
+        );
         expect(input.blur).toBeCalled();
         expect(filterInput.state.mousefocus).toBeFalsy();
         expect(mockEvent.stopPropagation).toBeCalled();

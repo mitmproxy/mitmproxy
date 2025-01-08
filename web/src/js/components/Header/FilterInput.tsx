@@ -102,13 +102,13 @@ export default class FilterInput extends Component<
         this.setState({ mousefocus: false });
     }
 
-    onKeyDown(e: Partial<React.KeyboardEvent<HTMLInputElement>>) {
+    onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({ mousefocus: false });
         }
-        e.stopPropagation?.();
+        e.stopPropagation();
     }
 
     selectFilter(cmd: string) {
