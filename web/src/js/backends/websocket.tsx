@@ -111,6 +111,9 @@ export default class WebsocketBackend {
     private sendMessage(resource: string, data: any) {
         const message = JSON.stringify({ resource, ...data });
         if (
+            // During the CONNECTING state, the message may not be delivered immediately,
+            // but it will be queued by the WebSocket implementation and sent as soon as
+            // the connection is fully established.
             this.socket &&
             (this.socket.readyState === WebSocket.CONNECTING ||
                 this.socket.readyState === WebSocket.OPEN)
