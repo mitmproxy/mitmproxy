@@ -301,7 +301,7 @@ class ConsoleAddon:
             try:
                 self.master.commands.call_strings(cmd, args)
             except exceptions.CommandError as e:
-                logger.error(str(e))
+                logger.exception(str(e))
 
         self.master.prompt_for_user_choice(prompt, callback)
 
