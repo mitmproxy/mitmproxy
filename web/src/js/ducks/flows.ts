@@ -151,10 +151,16 @@ export function makeSort({
 }
 
 export function setFilter(filter: string) {
+    if (window.backend) {
+        window.backend.updateFilter("search", filter);
+    }
     return { type: SET_FILTER, filter };
 }
 
 export function setHighlight(highlight: string) {
+    if (window.backend) {
+        window.backend.updateFilter("highlight", highlight);
+    }
     return { type: SET_HIGHLIGHT, highlight };
 }
 

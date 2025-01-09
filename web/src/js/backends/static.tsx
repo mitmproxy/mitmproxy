@@ -32,4 +32,6 @@ export default class StaticBackend {
         const type = `${resource}_RECEIVE`.toUpperCase();
         this.store.dispatch({ type, cmd: "receive", resource, data });
     }
+
+    updateFilter(_name: string, _expr: string) {}
 }

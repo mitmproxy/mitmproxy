@@ -1,6 +1,8 @@
 import * as React from "react";
 import renderer from "react-test-renderer";
-import FilterInput from "../../../components/Header/FilterInput";
+import FilterInput, {
+    FILTER_ICON,
+} from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
 import { act, render } from "../../test-utils";
 
@@ -8,7 +10,7 @@ describe("FilterInput Component", () => {
     it("should render correctly", () => {
         const filterInput = renderer.create(
             <FilterInput
-                type="foo"
+                icon={FILTER_ICON.SEARCH}
                 color="red"
                 placeholder="bar"
                 onChange={() => undefined}
@@ -23,7 +25,7 @@ describe("FilterInput Component", () => {
         const ref = React.createRef<FilterInput>();
         render(
             <FilterInput
-                type="foo"
+                icon={FILTER_ICON.SEARCH}
                 color="red"
                 placeholder="bar"
                 value="wat"
@@ -37,7 +39,7 @@ describe("FilterInput Component", () => {
     it("should handle componentWillReceiveProps", () => {
         const { rerender, getByDisplayValue } = render(
             <FilterInput
-                type="typ"
+                icon={FILTER_ICON.SEARCH}
                 color="red"
                 value="foo"
                 placeholder=""
@@ -46,7 +48,7 @@ describe("FilterInput Component", () => {
         );
         rerender(
             <FilterInput
-                type="typ"
+                icon={FILTER_ICON.SEARCH}
                 color="red"
                 value="bar"
                 placeholder=""
@@ -116,11 +118,15 @@ describe("FilterInput Component", () => {
         const filterInput = dummyInput();
         const input = filterInput.inputRef.current!;
         input.blur = jest.fn();
-        const mockEvent = {
+        const mockEvent: Partial<React.KeyboardEvent<HTMLInputElement>> = {
             key: "Escape",
             stopPropagation: jest.fn(),
         };
-        act(() => filterInput.onKeyDown(mockEvent));
+        act(() =>
+            filterInput.onKeyDown(
+                mockEvent as React.KeyboardEvent<HTMLInputElement>,
+            ),
+        );
         expect(input.blur).toBeCalled();
         expect(filterInput.state.mousefocus).toBeFalsy();
         expect(mockEvent.stopPropagation).toBeCalled();
