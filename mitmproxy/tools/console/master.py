@@ -67,15 +67,18 @@ class ConsoleMaster(master.Master):
     def options_error(self, exc) -> None:
         signals.status_message.send(message=str(exc), expire=1)
 
-    def prompt_for_exit(self) -> None:
+    def prompt_for_user_choice(self, prompt, callback) -> None:
         signals.status_prompt_onekey.send(
-            prompt="Quit",
+            prompt=prompt,
             keys=[
                 ("yes", "y"),
                 ("no", "n"),
             ],
-            callback=self.quit,
+            callback=callback,
         )
+
+    def prompt_for_exit(self) -> None:
+        self.prompt_for_user_choice("Quit", self.quit)
 
     def sig_add_log(self, entry: log.LogEntry):
         if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(
