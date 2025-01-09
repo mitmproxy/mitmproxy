@@ -9,6 +9,7 @@ import mitmproxy_rs
 from mitmproxy import dns
 from mitmproxy.addons import dns_resolver
 from mitmproxy.addons import proxyserver
+from mitmproxy.addons.dns_resolver import GetaddrinfoFallbackResolver
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -152,3 +153,8 @@ async def test_lookup(
                 )
             case other:
                 typing.assert_never(other)
+
+
+async def test_unspec_lookup(monkeypatch):
+    monkeypatch.setattr(asyncio.get_running_loop(), "getaddrinfo", getaddrinfo)
+    assert await GetaddrinfoFallbackResolver().lookup_ip("ipv6.example.com") == ["::1"]
