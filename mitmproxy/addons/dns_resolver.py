@@ -41,8 +41,8 @@ class DnsResolver:
     @cache
     def name_servers(self) -> list[str]:
         """
-        The Operating System name servers,
-        or `[]` if they cannot be determined.
+        Returns the operating system's name servers unless custom name servers are set.
+        On error, an empty list is returned.
         """
         try:
             return (
@@ -62,7 +62,7 @@ class DnsResolver:
         Returns:
             The DNS resolver to use.
         Raises:
-            MissingNameServers, if name servers are unknown but the host file should be ignored.
+            MissingNameServers, if name servers are unknown and `dns_use_hosts_file` is disabled.
         """
         if ns := self.name_servers():
             # We always want to use our own resolver if name server info is available.
@@ -158,7 +158,7 @@ class Resolver(Protocol):
         ...
 
 
-class GetaddrinfoFallbackResolver:
+class GetaddrinfoFallbackResolver(Resolver):
     async def lookup_ip(self, domain: str) -> list[str]:
         return await self._lookup(domain, socket.AF_UNSPEC)
 
