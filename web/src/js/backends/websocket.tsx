@@ -115,7 +115,7 @@ export default class WebsocketBackend {
             (this.socket.readyState === WebSocket.CONNECTING ||
                 this.socket.readyState === WebSocket.OPEN)
         ) {
-            console.log(message)
+            console.log(message);
             //this.socket.send(message);
         } else {
             console.error(
