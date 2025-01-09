@@ -4,7 +4,6 @@ import * as store from "./utils/store";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
 import { sortFunctions } from "../flow/utils";
-import { backend } from "../backends";
 
 export const ADD = "FLOWS_ADD";
 export const UPDATE = "FLOWS_UPDATE";
@@ -152,12 +151,16 @@ export function makeSort({
 }
 
 export function setFilter(filter: string) {
-    backend.updateFilter("search", filter);
+    if (window.backend) {
+        window.backend.updateFilter("search", filter);
+    }
     return { type: SET_FILTER, filter };
 }
 
 export function setHighlight(highlight: string) {
-    backend.updateFilter("highlight", highlight);
+    if (window.backend) {
+        window.backend.updateFilter("highlight", highlight);
+    }
     return { type: SET_HIGHLIGHT, highlight };
 }
 
