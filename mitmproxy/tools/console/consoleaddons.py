@@ -294,6 +294,7 @@ class ConsoleAddon:
         """
         Prompt the user before running the specified command.
         """
+
         def callback(opt):
             if opt == "n":
                 return

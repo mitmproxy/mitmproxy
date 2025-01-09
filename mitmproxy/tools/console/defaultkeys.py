@@ -139,9 +139,17 @@ def map(km: Keymap) -> None:
         "Revert changes to this flow",
     )
     km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow")
-    km.add("z", "console.command.confirm \"Delete all flows\" view.flows.remove @all", ["flowlist"], "Clear flow list")
     km.add(
-        "Z", "console.command.confirm \"Purge all hidden flows\" view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing"
+        "z",
+        'console.command.confirm "Delete all flows" view.flows.remove @all',
+        ["flowlist"],
+        "Clear flow list",
+    )
+    km.add(
+        "Z",
+        'console.command.confirm "Purge all hidden flows" view.flows.remove @hidden',
+        ["flowlist"],
+        "Purge all flows not showing",
     )
     km.add(
         "|",
@@ -227,7 +235,12 @@ def map(km: Keymap) -> None:
         "Save data to file as CSV",
     )
 
-    km.add("z", "console.command.confirm \"Clear event log\" eventstore.clear", ["eventlog"], "Clear")
+    km.add(
+        "z",
+        'console.command.confirm "Clear event log" eventstore.clear',
+        ["eventlog"],
+        "Clear",
+    )
 
     km.add(
         "a",
