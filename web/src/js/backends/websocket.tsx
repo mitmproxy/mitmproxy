@@ -31,7 +31,7 @@ export default class WebsocketBackend {
     constructor(store) {
         this.activeFetches = {};
         this.store = store;
-        this.messagesQueue = []
+        this.messagesQueue = [];
         this.connect();
     }
 
@@ -117,7 +117,7 @@ export default class WebsocketBackend {
         const message = JSON.stringify({ resource, ...data });
         if (this.socket) {
             if (this.socket.readyState === WebSocket.CONNECTING) {
-                this.messagesQueue.push(message)
+                this.messagesQueue.push(message);
             } else if (this.socket.readyState === WebSocket.OPEN) {
                 this.socket.send(message);
             } else {
