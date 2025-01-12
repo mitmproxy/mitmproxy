@@ -240,7 +240,7 @@ jobs:
       # For releases, also build the archive version of the docs.
       - run: ./docs/build.py
         env:
-          DOCS_ARCHIVE: true
+          DOCS_ARCHIVE: ${{ github.ref_name }}
       - if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:

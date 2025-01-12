@@ -1,0 +1,20 @@
+h1, h2, h3, h4, h5, h6, th {
+  .anchor {
+    display: inline-block;
+    width: 0;
+    margin-left: -1.5rem;
+    margin-right: 1.5rem;
+    transition: all 100ms ease-in-out;
+    opacity: 0;
+  }
+  &:hover .anchor {
+    opacity: 1;
+  }
+  &:target {
+    color: black;
+    .anchor {
+      opacity: 1;
+      color: black
+    }
+  }
+}

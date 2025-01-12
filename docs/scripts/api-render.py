@@ -60,9 +60,7 @@ for module in modules:
         title: "{module}"
         url: "{filename}"
 
-        menu:
-            addons:
-                parent: 'Event Hooks & API'
+        menu: api
         ---
 
         {{{{< readfile file="/generated/{filename}" >}}}}

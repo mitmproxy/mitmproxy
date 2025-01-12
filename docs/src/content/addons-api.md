@@ -1,11 +1,11 @@
 ---
-title: "Event Hooks & API"
+title: "Event Hooks"
 url: "api/events.html"
 aliases:
     - /addons-events/
 layout: single
 menu:
-    addons:
+    api:
         weight: 3
 ---
 
