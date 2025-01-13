@@ -1023,8 +1023,9 @@ class HttpLayer(layer.Layer):
                 else:
                     yield from self.event_to_child(stream, command.event)
             elif isinstance(command, SendHttp):
-                conn = self.connections[command.connection]
-                yield from self.event_to_child(conn, command.event)
+                if command.connection in self.connections:
+                    conn = self.connections[command.connection]
+                    yield from self.event_to_child(conn, command.event)
             elif isinstance(command, DropStream):
                 self.streams.pop(command.stream_id, None)
             elif isinstance(command, GetHttpConnection):
