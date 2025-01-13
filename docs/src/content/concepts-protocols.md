@@ -36,7 +36,7 @@ server does not speak HTTP/2, mitmproxy seamlessly translates messages to HTTP/1
 ## HTTP/3
 
 HTTP/3 support in mitmproxy is based on [aioquic](https://github.com/aiortc/aioquic). Mitmproxy's HTTP/3 functionality
-is available in reverse proxy, local and wireguard mode.
+is available in reverse proxy, local and WireGuard mode.
 
 ##### Known Limitations
 
