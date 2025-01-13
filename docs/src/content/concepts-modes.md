@@ -345,8 +345,8 @@ mitmdump --mode dns
 This mode will listen for incoming DNS queries and use the resolve
 capabilities of your operating system to return an answer. For A/AAAA
 queries you can opt to ignore the system's hosts file using the
-[`dns_use_hosts_file`]({{< relref "concept-options">}}#dns_use_hosts_file)
+[`dns_use_hosts_file`]({{< relref "concepts-options">}}#dns_use_hosts_file)
 option. Custom name servers for lookups can be specified using the
-[`dns_name_servers`]({{< relref "concept-options" >}}#dns_name_servers)
+[`dns_name_servers`]({{< relref "concepts-options" >}}#dns_name_servers)
 option. By default port 53 will be used. To specify a different port, say 5353,
 use `--mode dns@5353`.
