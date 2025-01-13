@@ -268,7 +268,7 @@ would establish a raw TCP proxy.
 - Want to know what goes on over (D)TLS (without HTTP)? With mitmproxy's raw
     traffic support you can. Use `--mode reverse:tls://example.com:1234` to
     spawn a TCP instance that connects to `example.com:1234` using TLS, and
-    `--mode reverse:dtls://example.com:1234` to use UDP and DTLS respectively instead.  
+    `--mode reverse:dtls://example.com:1234` to use UDP and DTLS respectively instead.
     Incoming client connections can either use (D)TLS themselves or raw TCP/UDP.
     In case you want to inspect raw traffic only for some hosts and HTTP for
     others, have a look at the [tcp_hosts]({{< relref "concepts-options" >}}#tcp_hosts)
@@ -343,12 +343,10 @@ mitmdump --mode dns
 ```
 
 This mode will listen for incoming DNS queries and use the resolve
-capabilities of your operation system to return an answer.
-By default port 53 will be used. To specify a different port, say 5353,
+capabilities of your operating system to return an answer. For A/AAAA
+queries you can opt to ignore the system's hosts file using the
+[`dns_use_hosts_file`]({{< relref "concept-options">}}#dns_use_hosts_file)
+option. Custom name servers for lookups can be specified using the
+[`dns_name_servers`]({{< relref "concept-options" >}}#dns_name_servers)
+option. By default port 53 will be used. To specify a different port, say 5353,
 use `--mode dns@5353`.
-
-Since the lookup API is limited to turning host names into IP addresses
-and vice-versa, only A, AAAA, PTR and CNAME queries are supported.
-You can, however, use reverse mode to specify an upstream server and
-unlock all query types. For example, to use Google's Public DNS server
-specify `--mode reverse:dns://8.8.8.8`.
