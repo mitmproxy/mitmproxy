@@ -6,9 +6,8 @@ import os
 import re
 import subprocess
 import sys
-from pathlib import Path
-
 import tomllib
+from pathlib import Path
 
 root = Path(__file__).parent.parent.absolute()
 

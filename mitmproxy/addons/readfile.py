@@ -10,6 +10,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
+from mitmproxy.utils import asyncio_utils
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,11 @@ class ReadFile:
 
     def running(self):
         if ctx.options.rfile:
-            self._read_task = asyncio.create_task(self.doread(ctx.options.rfile))
+            self._read_task = asyncio_utils.create_task(
+                self.doread(ctx.options.rfile),
+                name="readfile",
+                keep_ref=False,
+            )
 
     @command.command("readfile.reading")
     def reading(self) -> bool:

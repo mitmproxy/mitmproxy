@@ -284,6 +284,27 @@ class ConsoleAddon:
             quoted += " "
         signals.status_prompt_command.send(partial=quoted)
 
+    @command.command("console.command.confirm")
+    def console_command_confirm(
+        self,
+        prompt: str,
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs,
+    ) -> None:
+        """
+        Prompt the user before running the specified command.
+        """
+
+        def callback(opt):
+            if opt == "n":
+                return
+            try:
+                self.master.commands.call_strings(cmd, args)
+            except exceptions.CommandError as e:
+                logger.exception(str(e))
+
+        self.master.prompt_for_user_choice(prompt, callback)
+
     @command.command("console.command.set")
     def console_command_set(self, option_name: str) -> None:
         """

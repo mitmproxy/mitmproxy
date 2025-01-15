@@ -7,12 +7,27 @@
 
 ## Unreleased: mitmproxy next
 
+- Copy request/response data to the clipboard in mitmweb
+  ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
+
+## 12 January 2025: mitmproxy 11.1.0
+
+- **Local Capture Mode** is now available on Linux as well.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
+- mitmproxy now requires Python 3.12 or above.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
 - Add cache-busting for mitmweb's front end code.
   ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
-- Copy request/response data to the clipboard in mitmweb
-  ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
+- Add missing status codes
+  ([#7455](https://github.com/mitmproxy/mitmproxy/pull/7455), @jwadolowski)
+- Remove filter expression lowercasing in block_list addon
+  ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
+- Remove check for status codes in the blocklist add-on.
+  ([#7453](https://github.com/mitmproxy/mitmproxy/pull/7453), @lups2000, @AdityaPatadiya)
+- Prompt user before clearing screen
+  ([#7445](https://github.com/mitmproxy/mitmproxy/pull/7445), @errorxyz)
 
 ## 05 December 2024: mitmproxy 11.0.2
 
@@ -68,7 +83,7 @@
   ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
 - Fix slow tnetstring parsing in case of very large tnetstring.
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
-- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to
   determine the operating system's name servers.
   ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
 - Improve the error message when users specify the `certs` option without a matching private key.

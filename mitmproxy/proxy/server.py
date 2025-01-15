@@ -103,14 +103,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
     layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
-    hook_tasks: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
-        self.hook_tasks = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -135,6 +133,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         watch = asyncio_utils.create_task(
             self.timeout_watchdog.watch(),
             name="timeout watchdog",
+            keep_ref=False,
             client=self.client.peername,
         )
 
@@ -150,6 +149,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             handler = asyncio_utils.create_task(
                 self.handle_connection(self.client),
                 name=f"client connection handler",
+                keep_ref=False,
                 client=self.client.peername,
             )
             self.transports[self.client].handler = handler
@@ -394,6 +394,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         handler = asyncio_utils.create_task(
                             self.open_connection(command),
                             name=f"server connection handler {command.connection.address}",
+                            keep_ref=False,
                             client=self.client.peername,
                         )
                         self.transports[command.connection] = ConnectionIO(
@@ -403,6 +404,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         task = asyncio_utils.create_task(
                             self.wakeup(command),
                             name=f"wakeup timer ({command.delay:.1f}s)",
+                            keep_ref=False,
                             client=self.client.peername,
                         )
                         assert task is not None
@@ -422,14 +424,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     elif isinstance(command, commands.CloseConnection):
                         self.close_connection(command.connection, False)
                     elif isinstance(command, commands.StartHook):
-                        t = asyncio_utils.create_task(
+                        asyncio_utils.create_task(
                             self.hook_task(command),
                             name=f"handle_hook({command.name})",
+                            keep_ref=True,
                             client=self.client.peername,
                         )
-                        # Python 3.11 Use TaskGroup instead.
-                        self.hook_tasks.add(t)
-                        t.add_done_callback(self.hook_tasks.remove)
                     elif isinstance(command, commands.Log):
                         self.log(command.message, command.level)
                     else:

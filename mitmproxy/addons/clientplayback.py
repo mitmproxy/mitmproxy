@@ -158,7 +158,9 @@ class ClientPlayback:
     def running(self):
         self.options = ctx.options
         self.playback_task = asyncio_utils.create_task(
-            self.playback(), name="client playback"
+            self.playback(),
+            name="client playback",
+            keep_ref=False,
         )
 
     async def done(self):
@@ -177,7 +179,9 @@ class ClientPlayback:
                 h = ReplayHandler(self.inflight, self.options)
                 if ctx.options.client_replay_concurrency == -1:
                     t = asyncio_utils.create_task(
-                        h.replay(), name="client playback awaiting response"
+                        h.replay(),
+                        name="client playback awaiting response",
+                        keep_ref=False,
                     )
                     # keep a reference so this is not garbage collected
                     self.replay_tasks.add(t)

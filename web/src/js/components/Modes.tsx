@@ -11,7 +11,10 @@ import Dns from "./Modes/Dns";
 import MissingMode from "./Modes/MissingMode";
 
 export default function Modes() {
-    const platform = useAppSelector((state) => state.backendState.platform);
+    const { platform, localModeUnavailable } = useAppSelector(
+        (state) => state.backendState,
+    );
+
     return (
         <div className="modes">
             <h2>Intercept Traffic</h2>
@@ -21,14 +24,13 @@ export default function Modes() {
                 <h3>Recommended</h3>
                 <div className="modes-container">
                     <Regular />
-                    {platform.startsWith("win32") ||
-                    platform.startsWith("darwin") ? (
-                        <Local />
-                    ) : (
+                    {localModeUnavailable !== null ? (
                         <MissingMode
                             title="Local Redirect Mode"
-                            description="This mode is only supported on Windows and MacOS."
+                            description={localModeUnavailable}
                         />
+                    ) : (
+                        <Local />
                     )}
                     <Wireguard />
                     <Reverse />
