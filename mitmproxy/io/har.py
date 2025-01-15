@@ -37,6 +37,7 @@ def fix_headers(
 
     return http.Headers(flow_headers)
 
+
 def fix_content_encoding(content_encoding: str | None) -> str:
     """
     Converts invalid content-encoding values to "indentity" while leaving valid values unchanged.
