@@ -21,7 +21,6 @@ describe("flow reducer", () => {
         expect(reduceFlows(undefined, {})).toEqual({
             highlight: undefined,
             filter: undefined,
-            isMultipleFlowsSelection: false,
             sort: { column: undefined, desc: false },
             selected: [],
             ...reduce(undefined, {}),
@@ -44,7 +43,6 @@ describe("flow reducer", () => {
                 ),
             ).toEqual({
                 ...state,
-                isMultipleFlowsSelection: true,
                 selected: ["2", "3"],
             });
         });

@@ -79,7 +79,6 @@ export const testState: RootState = {
     options: defaultOptions,
     flows: {
         selected: [tflow1.id],
-        isMultipleFlowsSelection: false,
         byId: {
             [tflow0.id]: tflow0,
             [tflow1.id]: tflow1,
