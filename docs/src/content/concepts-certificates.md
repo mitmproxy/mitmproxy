@@ -61,6 +61,7 @@ documentation for some common platforms. The mitmproxy CA cert is located in
   `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
 - [Fedora](https://docs.fedoraproject.org/en-US/quick-docs/using-shared-system-certificates/#proc_adding-new-certificates)
+- [Arch Linux](https://wiki.archlinux.org/title/Transport_Layer_Security#Add_a_certificate_to_a_trust_store)
 - [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
 - [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
 - [iOS](http://jasdev.me/intercepting-ios-traffic)  
@@ -69,7 +70,11 @@ documentation for some common platforms. The mitmproxy CA cert is located in
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
        the mitmproxy certificate.
-- [iOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
+- iOS Simulator
+  1. Ensure the macOS machine running the emulator is configured to use mitmproxy in its network settings.
+  2. Open Safari on the emulator and visit `mitm.it` to download the iOS certificate.
+  3. Navigate to Settings > General > VPN & Device Management to install the certificate.
+  4. Go to Settings > About > Certificate Trust Settings and enable trust for the installed root certificate.
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html):  
   `sudo keytool -importcert -alias mitmproxy -storepass changeit -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -file ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)

@@ -373,6 +373,8 @@ class BaseGridEditor(urwid.WidgetWrap):
         return None
 
     def handle_key(self, key):
+        if key == "?":
+            signals.pop_view_state.send()
         return False
 
     def cmd_add(self):

@@ -118,7 +118,12 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                     <ViewSelector
                         value={contentView}
                         onChange={(cv) =>
-                            dispatch(setContentViewFor(flow.id + part, cv))
+                            dispatch(
+                                setContentViewFor({
+                                    messageId: flow.id + part,
+                                    contentView: cv,
+                                }),
+                            )
                         }
                     />
                 </div>

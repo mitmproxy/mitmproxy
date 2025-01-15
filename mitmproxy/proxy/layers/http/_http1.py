@@ -264,12 +264,13 @@ class Http1Server(Http1Connection):
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
+            if not (self.conn.state & ConnectionState.CAN_WRITE):
+                return
             if not self.response and event.code != status_codes.NO_RESPONSE:
                 yield commands.SendData(
                     self.conn, make_error_response(event.code, event.message)
                 )
-            if self.conn.state & ConnectionState.CAN_WRITE:
-                yield commands.CloseConnection(self.conn)
+            yield commands.CloseConnection(self.conn)
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -283,8 +284,6 @@ class Http1Server(Http1Connection):
                     self.request = http1.read_request_head(
                         [bytes(x) for x in request_head]
                     )
-                    if self.context.options.validate_inbound_headers:
-                        http1.validate_headers(self.request.headers)
                     expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
                     yield commands.SendData(self.conn, make_error_response(400, str(e)))
@@ -406,8 +405,6 @@ class Http1Client(Http1Connection):
                     self.response = http1.read_response_head(
                         [bytes(x) for x in response_head]
                     )
-                    if self.context.options.validate_inbound_headers:
-                        http1.validate_headers(self.response.headers)
                     expected_size = http1.expected_http_body_size(
                         self.request, self.response
                     )

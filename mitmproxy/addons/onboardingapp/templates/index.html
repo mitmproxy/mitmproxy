@@ -55,6 +55,10 @@
         <li><code>mv mitmproxy-ca-cert.pem /etc/pki/ca-trust/source/anchors/</code></li>
         <li><code>sudo update-ca-trust</code></li>
     </ol>
+    <h5>Arch Linux</h5>
+    <ol>
+        <code>sudo trust anchor --store mitmproxy-ca-cert.pem</code>
+    </ol>
     {% endcall %}
     {% call entry('macOS', 'apple') %}
     <h5>Manual Installation</h5>

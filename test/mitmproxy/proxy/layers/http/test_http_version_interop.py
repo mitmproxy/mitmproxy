@@ -45,7 +45,8 @@ def h2_client(tctx: Context) -> tuple[h2.connection.H2Connection, Playbook]:
     server_preamble = Placeholder(bytes)
     assert playbook << SendData(tctx.client, server_preamble)
     assert event_types(conn.receive_data(server_preamble())) == [
-        h2.events.RemoteSettingsChanged
+        h2.events.RemoteSettingsChanged,
+        h2.events.WindowUpdated,
     ]
 
     settings_ack = Placeholder(bytes)
@@ -134,6 +135,7 @@ def test_h1_to_h2(tctx):
     events = conn.receive_data(request())
     assert event_types(events) == [
         h2.events.RemoteSettingsChanged,
+        h2.events.WindowUpdated,
         h2.events.RequestReceived,
         h2.events.StreamEnded,
     ]

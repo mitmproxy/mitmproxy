@@ -57,7 +57,12 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                 <ViewSelector
                     value={contentView}
                     onChange={(cv) =>
-                        dispatch(setContentViewFor(flow.id + "messages", cv))
+                        dispatch(
+                            setContentViewFor({
+                                messageId: flow.id + "messages",
+                                contentView: cv,
+                            }),
+                        )
                     }
                 />
             </div>

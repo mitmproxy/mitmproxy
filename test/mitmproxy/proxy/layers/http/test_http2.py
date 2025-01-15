@@ -116,6 +116,7 @@ def test_simple(tctx):
     frames = decode_frames(initial())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
     sff = FrameFactory()
@@ -258,6 +259,7 @@ def test_request_trailers(tctx: Context, open_h2_server_conn: Server, stream):
     frames = decode_frames(server_data1.setdefault(b"") + server_data2())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
         hyperframe.frame.DataFrame,
         hyperframe.frame.HeadersFrame,
@@ -323,6 +325,7 @@ def test_long_response(tctx: Context, trailers):
     frames = decode_frames(initial())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
     sff = FrameFactory()
@@ -348,11 +351,6 @@ def test_long_response(tctx: Context, trailers):
         >> DataReceived(
             server,
             sff.build_data_frame(b"a" * 10000, flags=[]).serialize(),
-        )
-        << SendData(
-            server,
-            sff.build_window_update_frame(0, 40000).serialize()
-            + sff.build_window_update_frame(1, 40000).serialize(),
         )
         >> DataReceived(
             server,
@@ -590,10 +588,11 @@ def test_no_normalization(tctx, normalize):
     frames = decode_frames(initial())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
     assert (
-        hpack.hpack.Decoder().decode(frames[1].data, True) == request_headers_lower
+        hpack.hpack.Decoder().decode(frames[2].data, True) == request_headers_lower
         if normalize
         else request_headers
     )
@@ -666,9 +665,10 @@ def test_end_stream_via_headers(tctx, stream):
     frames = decode_frames(forwarded_request_frames())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
-    assert "END_STREAM" in frames[1].flags
+    assert "END_STREAM" in frames[2].flags
 
     frames = decode_frames(forwarded_response_frames())
     assert [type(x) for x in frames] == [
@@ -861,6 +861,7 @@ def test_stream_concurrency(tctx):
     frames = decode_frames(data_req2())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
     frames = decode_frames(data_req1())
@@ -920,7 +921,7 @@ def test_max_concurrency(tctx):
         )
         << SendData(tctx.client, Placeholder(bytes))
     )
-    settings, req1 = decode_frames(req1_bytes())
+    settings, _, req1 = decode_frames(req1_bytes())
     (settings_ack,) = decode_frames(settings_ack_bytes())
     (req2,) = decode_frames(req2_bytes())
 
@@ -961,6 +962,7 @@ def test_stream_concurrent_get_connection(tctx):
     frames = decode_frames(data())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
         hyperframe.frame.HeadersFrame,
     ]
@@ -1013,6 +1015,7 @@ def test_kill_stream(tctx):
     frames = decode_frames(data_req1())
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.HeadersFrame,
     ]
 
@@ -1120,6 +1123,7 @@ def test_early_server_data(tctx):
     )
     assert [type(x) for x in decode_frames(server1())] == [
         hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
         hyperframe.frame.SettingsFrame,
     ]
     assert [type(x) for x in decode_frames(server2())] == [

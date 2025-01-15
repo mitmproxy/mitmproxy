@@ -404,7 +404,7 @@ class TestNextLayer:
             assert nl._next_layer(m.context, http_get, b"").flow is not None
 
     def test_next_layer(self, monkeypatch, caplog):
-        caplog.set_level(logging.INFO)
+        caplog.set_level(logging.DEBUG)
         nl = NextLayer()
 
         with taddons.context(nl) as tctx:
