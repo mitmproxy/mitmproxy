@@ -8,6 +8,7 @@ from datetime import datetime
 from mitmproxy import connection
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy.net import encoding
 from mitmproxy.net.http.headers import infer_content_encoding
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,15 @@ def fix_headers(
         flow_headers.append((key.encode(), value.encode()))
 
     return http.Headers(flow_headers)
+
+def fix_content_encoding(content_encoding: str | None) -> str:
+    """
+    Converts invalid content-encoding values to "indentity" while leaving valid values unchanged.
+    """
+    if not content_encoding or content_encoding not in encoding.custom_encode:
+        return "identity"
+
+    return content_encoding
 
 
 def request_to_flow(request_json: dict) -> http.HTTPFlow:
@@ -109,7 +119,7 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
 
     # Then encode the content, as in `Response.set_content`
     response_content = http.encoding.encode(
-        response_content, response_headers.get("content-encoding") or "identity"
+        response_content, fix_content_encoding(response_headers.get("content_encoding"))
     )
 
     new_flow.response = http.Response(
