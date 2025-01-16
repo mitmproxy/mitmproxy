@@ -90,14 +90,16 @@ jobs:
           - image: windows-2019
             platform: windows
           - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
-            platform: linux
+            platform: linux-x86_64
+          - image: ubuntu-22.04-arm  # Oldest available version so we get oldest glibc possible.
+            platform: linux-arm64
     runs-on: ${{ matrix.image }}
     steps:
       - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
       - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
-      - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
+      - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
         uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d
@@ -105,7 +107,7 @@ jobs:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      - if: startsWith(matrix.platform, 'macos') && github.repository == 'mitmproxy/mitmproxy'
+      - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         run: |
           python -u release/build.py macos-app \
@@ -115,11 +117,11 @@ jobs:
             --password "${{ secrets.APPLE_APP_PASSWORD }}"
 
       # Linux
-      - if: matrix.platform == 'linux'
-        run: python -u release/build.py standalone-binaries wheel
+      - if: runner.os == 'Linux'
+        run: python -u release/build.py standalone-binaries
 
       # Windows
-      - if: matrix.platform == 'windows'
+      - if: runner.os == 'Windows'
         run: python -u release/build.py standalone-binaries
 
       - uses: actions/upload-artifact@v4
