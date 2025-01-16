@@ -45,11 +45,8 @@ TlsVersion = Literal[
 # this version at least provides useful type checking messages.
 Address = tuple[str, int]
 
-kw_only = {"kw_only": True}
 
-
-# noinspection PyDataclass
-@dataclass(**kw_only)
+@dataclass(kw_only=True)
 class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """
     Base class for client and server connections.
@@ -174,9 +171,8 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
         return self.alpn
 
 
-# noinspection PyDataclass
-@dataclass(eq=False, repr=False, **kw_only)
-class Client(Connection):
+@dataclass(eq=False, repr=False, kw_only=True)
+class Client(Connection):  # type: ignore[override]
     """A connection between a client and mitmproxy."""
 
     peername: Address
@@ -263,8 +259,7 @@ class Client(Connection):
             self.certificate_list = []
 
 
-# noinspection PyDataclass
-@dataclass(eq=False, repr=False, **kw_only)
+@dataclass(eq=False, repr=False, kw_only=True)
 class Server(Connection):
     """A connection between mitmproxy and an upstream server."""
 
