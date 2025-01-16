@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - We now provide standalone binaries for Linux arm64.
+  ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
