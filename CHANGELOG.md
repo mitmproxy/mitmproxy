@@ -9,6 +9,7 @@
 
 - We now provide standalone binaries for Linux arm64.
   ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
+- Standalone binaries are now compiled with Python 3.13.
 
 ## 12 January 2025: mitmproxy 11.1.0
 
