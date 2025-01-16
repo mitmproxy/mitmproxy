@@ -321,21 +321,23 @@ class HttpStream(layer.Layer):
             else:
                 chunks = [event.data]
             for chunk in chunks:
-                yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
+                if chunk:  # empty data frame without End Stream flag may be rejected due to CVE-2019-9518
+                    yield SendHttp(
+                        RequestData(self.stream_id, chunk), self.context.server
+                    )
         elif isinstance(event, RequestTrailers):
             # we don't do anything further here, we wait for RequestEndOfMessage first to trigger the request hook.
             self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
             if callable(self.flow.request.stream):
                 chunks = self.flow.request.stream(b"")
-                if chunks == b"":
-                    chunks = []
-                elif isinstance(chunks, bytes):
+                if isinstance(chunks, bytes):
                     chunks = [chunks]
                 for chunk in chunks:
-                    yield SendHttp(
-                        RequestData(self.stream_id, chunk), self.context.server
-                    )
+                    if chunk:  # empty data frame without End Stream flag may be rejected due to CVE-2019-9518
+                        yield SendHttp(
+                            RequestData(self.stream_id, chunk), self.context.server
+                        )
 
             self.flow.request.timestamp_end = time.time()
             yield HttpRequestHook(self.flow)
@@ -444,21 +446,23 @@ class HttpStream(layer.Layer):
             else:
                 chunks = [event.data]
             for chunk in chunks:
-                yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
+                if chunk:  # empty data frame without End Stream flag may be rejected due to CVE-2019-9518
+                    yield SendHttp(
+                        ResponseData(self.stream_id, chunk), self.context.client
+                    )
         elif isinstance(event, ResponseTrailers):
             self.flow.response.trailers = event.trailers
             # will be sent in send_response() after the response hook.
         elif isinstance(event, ResponseEndOfMessage):
             if callable(self.flow.response.stream):
                 chunks = self.flow.response.stream(b"")
-                if chunks == b"":
-                    chunks = []
-                elif isinstance(chunks, bytes):
+                if isinstance(chunks, bytes):
                     chunks = [chunks]
                 for chunk in chunks:
-                    yield SendHttp(
-                        ResponseData(self.stream_id, chunk), self.context.client
-                    )
+                    if chunk:  # empty data frame without End Stream flag may be rejected due to CVE-2019-9518
+                        yield SendHttp(
+                            ResponseData(self.stream_id, chunk), self.context.client
+                        )
             yield from self.send_response(already_streamed=True)
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
