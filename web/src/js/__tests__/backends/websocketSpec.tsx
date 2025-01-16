@@ -97,3 +97,70 @@ test("websocket backend", async () => {
 
     jest.restoreAllMocks();
 });
+
+test("sendMessage should send message when WebSocket is open", () => {
+    const backend = new WebSocketBackend({ dispatch: jest.fn() });
+
+    const sendMessageSpy = jest.spyOn(backend as any, "sendMessage"); // trick to spy on sendMessage, which is private
+
+    backend.socket = { readyState: WebSocket.OPEN, send: jest.fn() } as any;
+
+    const name = "search";
+    const expr = "~b boo";
+
+    backend.updateFilter(name, expr);
+
+    expect(sendMessageSpy).toHaveBeenCalledWith("flows", {
+        cmd: "updateFilter",
+        name,
+        expr,
+    });
+});
+
+test("sendMessage should queue messages when WebSocket is CONNECTING", () => {
+    const backend = new WebSocketBackend({ dispatch: jest.fn() });
+
+    backend.socket = {
+        readyState: WebSocket.CONNECTING,
+        send: jest.fn(),
+    } as any;
+
+    const messageQueueSpy = jest.spyOn(backend.messagesQueue, "push");
+
+    const name = "search";
+    const expr = "~b boo";
+    backend.updateFilter(name, expr);
+
+    expect(messageQueueSpy).toHaveBeenCalledWith(
+        JSON.stringify({
+            resource: "flows",
+            cmd: "updateFilter",
+            name: "search",
+            expr: "~b boo",
+        }),
+    );
+    expect(backend.messagesQueue).toHaveLength(1);
+});
+
+test("sendMessage should log an error if WebSocket is not CONNECTING or OPEN", () => {
+    const backend = new WebSocketBackend({ dispatch: jest.fn() });
+
+    backend.socket = {
+        readyState: WebSocket.CLOSING,
+        send: jest.fn(),
+    } as any;
+
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    const name = "search";
+    const expr = "~b boo";
+    backend.updateFilter(name, expr);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "WebSocket is not open. Cannot send message:",
+        "flows",
+        { cmd: "updateFilter", name: "search", expr: "~b boo" },
+    );
+
+    consoleErrorSpy.mockRestore();
+});

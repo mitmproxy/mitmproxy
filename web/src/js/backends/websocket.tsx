@@ -26,10 +26,12 @@ export default class WebsocketBackend {
     };
     store: Store<RootState>;
     socket: WebSocket;
+    messagesQueue: string[]; // Queue for messages while connecting.
 
     constructor(store) {
         this.activeFetches = {};
         this.store = store;
+        this.messagesQueue = [];
         this.connect();
     }
 
@@ -48,6 +50,9 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
+        this.messagesQueue.forEach((message) => this.socket.send(message)); // Flush the message queue.
+        this.messagesQueue = [];
+
         this.fetchData("state");
         this.fetchData("flows");
         this.fetchData("events");
@@ -110,21 +115,18 @@ export default class WebsocketBackend {
 
     private sendMessage(resource: string, data: any) {
         const message = JSON.stringify({ resource, ...data });
-        if (
-            // During the CONNECTING state, the message may not be delivered immediately,
-            // but it will be queued by the WebSocket implementation and sent as soon as
-            // the connection is fully established.
-            this.socket &&
-            (this.socket.readyState === WebSocket.CONNECTING ||
-                this.socket.readyState === WebSocket.OPEN)
-        ) {
-            this.socket.send(message);
-        } else {
-            console.error(
-                "WebSocket is not open. Cannot send message:",
-                resource,
-                data,
-            );
+        if (this.socket) {
+            if (this.socket.readyState === WebSocket.CONNECTING) {
+                this.messagesQueue.push(message);
+            } else if (this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(message);
+            } else {
+                console.error(
+                    "WebSocket is not open. Cannot send message:",
+                    resource,
+                    data,
+                );
+            }
         }
     }
 
