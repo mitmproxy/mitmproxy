@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Copy request/response data to the clipboard in mitmweb
+  ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
