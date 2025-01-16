@@ -26,6 +26,8 @@
   ([#7453](https://github.com/mitmproxy/mitmproxy/pull/7453), @lups2000, @AdityaPatadiya)
 - Prompt user before clearing screen
   ([#7445](https://github.com/mitmproxy/mitmproxy/pull/7445), @errorxyz)
+- add tests for Streamline filter expression case-sensitivity.
+  ([#7481](https://github.com/mitmproxy/mitmproxy/pull/7481), @AdityaPatadiya)
 
 ## 05 December 2024: mitmproxy 11.0.2
 

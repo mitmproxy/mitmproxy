@@ -1,4 +1,5 @@
 import io
+import os
 from unittest.mock import patch
 
 import pytest
@@ -228,7 +229,18 @@ class TestMatchingHTTPFlow:
 
     def test_method(self):
         q = self.req()
+
+        os.environ["MITMPROXY_CASE_SENSITIVE_FILTERS"] = "0"
         assert self.q("~m get", q)
+        assert self.q("~m GET", q)
+        assert not self.q("~m post", q)
+
+        q.request.method = "oink"
+        assert not self.q("~m get", q)
+
+        os.environ["MITMPROXY_CASE_SENSITIVE_FILTERS"] = "1"
+        assert not self.q("~m get", q)
+        assert not self.q("~m GET", q)
         assert not self.q("~m post", q)
 
         q.request.method = "oink"
@@ -236,13 +248,24 @@ class TestMatchingHTTPFlow:
 
     def test_domain(self):
         q = self.req()
+
+        os.environ["MITMPROXY_CASE_SENSITIVE_FILTERS"] = "0"
         assert self.q("~d address", q)
+        assert self.q("~d ADDRESS", q)
+        assert not self.q("~d none", q)
+
+        os.environ["MITMPROXY_CASE_SENSITIVE_FILTERS"] = "1"
+        assert self.q("~d address", q)
+        assert self.q("~d ADDRESS", q)
         assert not self.q("~d none", q)
 
     def test_url(self):
         q = self.req()
         s = self.resp()
+
+        os.environ["MITMPROXY_CASE_SENSITIVE_FILTERS"] = "0"
         assert self.q("~u address", q)
+        assert self.q("~u ADDRESS", q)
         assert self.q("~u address:22/path", q)
         assert not self.q("~u moo/path", q)
 
@@ -250,6 +273,21 @@ class TestMatchingHTTPFlow:
         assert not self.q("~u address", q)
 
         assert self.q("~u address", s)
+        assert self.q("~u ADDRESS", s)
+        assert self.q("~u address:22/path", s)
+        assert not self.q("~u moo/path", s)
+
+        os.environ["MITMPROXY_CASE_SENSITIVE_FILTERS"] = "1"
+        assert not self.q("~u address", q)
+        assert not self.q("~u ADDRESS", q)
+        assert not self.q("~u address:22/path", q)
+        assert not self.q("~u moo/path", q)
+
+        q.request = None
+        assert not self.q("~u address", q)
+
+        assert self.q("~u address", s)
+        assert self.q("~u ADDRESS", s)
         assert self.q("~u address:22/path", s)
         assert not self.q("~u moo/path", s)
 

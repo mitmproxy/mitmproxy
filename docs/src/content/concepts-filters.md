@@ -12,11 +12,15 @@ expressions consist of the following operators:
 
 {{< readfile file="/generated/filters.html" >}}
 
-- Regexes are Python-style
-- Regexes can be specified as quoted strings
+- Regexes are Python-style.
+- Regexes can be specified as quoted strings.
+- Regexes are case-insensitive by default.[^1]
 - Header matching (~h, ~hq, ~hs) is against a string of the form "name: value".
 - Strings with no operators are matched against the request URL.
 - The default binary operator is &.
+
+[^1]: This can be disabled by setting `MITMPROXY_CASE_SENSITIVE_FILTERS=1`
+  as an environment variable.
 
 ## View flow selectors
 
