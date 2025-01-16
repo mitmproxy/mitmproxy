@@ -1,0 +1,8 @@
+@import "syntax";
+/* background for both hugo *and* pdoc. */
+.chroma pre, pre.chroma {
+  background-color: #f7f7f7;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: .5rem 0 .5rem .5rem;
+}

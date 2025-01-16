@@ -1,0 +1,30 @@
+
+main {
+  a {
+    text-decoration: none;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  figure {
+    text-align: center;
+  }
+
+
+  code {
+    color: #1a9f1a;
+    font-size: 0.875em;
+    font-weight: normal;
+  }
+
+  h2 {
+    padding-top: 1em;
+    border-top: 1px solid #c0c0c0;
+  }
+}

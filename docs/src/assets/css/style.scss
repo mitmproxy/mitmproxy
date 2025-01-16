@@ -1,0 +1,26 @@
+@import "modern-normalize";
+
+$max-mobile-width: 768px;
+
+@import "layout";
+@import "header";
+@import "sidebar";
+@import "content";
+
+@import "components/badges";
+@import "components/anchors";
+@import "components/asciinema-player";
+@import "components/syntax-highlighting";
+@import "components/github-button";
+
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (max-width: $max-mobile-width) {
+  .hide-mobile {
+    display: none;
+  }
+}

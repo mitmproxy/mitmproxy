@@ -733,7 +733,7 @@ class Application(tornado.web.Application):
                 (r"/filter-help(?:\.json)?", FilterHelp),
                 (r"/updates", ClientConnection),
                 (r"/commands(?:\.json)?", Commands),
-                (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
+                (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),  # FIXME
                 (r"/events(?:\.json)?", Events),
                 (r"/flows(?:\.json)?", Flows),
                 (r"/flows/dump", DumpFlows),
@@ -755,7 +755,7 @@ class Application(tornado.web.Application):
                     FlowContentView,
                 ),
                 (r"/clear", ClearAll),
-                (r"/options(?:\.json)?", Options),
+                (r"/options(?:\.json)?", Options),  # FIXME
                 (r"/options/save", SaveOptions),
                 (r"/state(?:\.json)?", State),
                 (r"/processes", ProcessList),

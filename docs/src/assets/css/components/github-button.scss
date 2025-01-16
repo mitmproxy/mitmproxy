@@ -1,0 +1,12 @@
+.github-button {
+  margin-top: 1.5rem;
+  font-size: .75em;
+  padding: .5em 1em;
+  border-radius: 4px;
+  float: right;
+  color: #0D6EFDFF;
+  border: solid #6C757DFF 1px;
+  &:hover {
+    background-color: #E2E3E5FF;
+  }
+}

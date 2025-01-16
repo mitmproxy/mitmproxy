@@ -1,0 +1,67 @@
+body > nav {
+
+  > label {
+    display: none;
+    font-size: 1.5em;
+    padding: .5rem;
+    align-items: center;
+    color: #4a4a4a;
+    > svg {
+      height: 2ex;
+      margin-right: .5ex;
+    }
+    cursor: pointer;
+  }
+
+  > #navtoggle {
+    position: absolute;
+    height: 0;
+    opacity: 0;
+  }
+
+  margin-top: 1rem;
+
+  @media (max-width: $max-mobile-width) {
+
+    margin-top: 0;
+    > label {
+      display: flex;
+    }
+
+    background: #eee;
+    border-bottom: solid #ccc 1px;
+
+    > #navtoggle + div {
+      display: none;
+    }
+    > #navtoggle:checked + div {
+      display: inherit;
+    }
+  }
+
+  h2 {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: .25rem;
+  }
+
+  a {
+    display: block;
+    color: #4a4a4a;
+
+    margin-left: -10px;
+    padding: 5px 10px;
+    border-radius: 2px;
+
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
