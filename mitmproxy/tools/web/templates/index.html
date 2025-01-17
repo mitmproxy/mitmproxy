@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href=".{{ static_url('vendor.css') }}" />
     <link rel="stylesheet" href=".{{ static_url('app.css') }}" />
-    <script src=".{{ static_url('app.js') }}"></script>
+    <script src=".{{ static_url('app.js') }}" data-xsrf="{{ xsrf_token }}"></script>
 </head>
 <body>
     <div id="mitmproxy"></div>

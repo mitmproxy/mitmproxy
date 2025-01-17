@@ -433,3 +433,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 200
         assert resp.headers["Content-Type"] == "image/png"
         assert resp.body == app.TRANSPARENT_PNG
+
+    def test_xsrf_hardening_app(self):
+        """Ensure that xsrf token is not provided for JS requests."""
+        resp = self.fetch("/", headers={"Sec-Fetch-Mode": "same-origin"})
+        assert resp.code == 412
+        assert b"xsrf" not in resp.body
+        assert b"xsrf" in self.fetch("/", headers={"Sec-Fetch-Mode": "navigate"}).body
