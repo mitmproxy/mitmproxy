@@ -9,6 +9,7 @@ import pytest
 import tornado.testing
 from tornado import httpclient
 from tornado import websocket
+from tornado.web import create_signed_value
 
 import mitmproxy_rs
 from mitmproxy import log
@@ -45,6 +46,11 @@ async def test_generated_files(filename):
     )
 
 
+def test_all_handlers_have_auth():
+    for _, handler in app.handlers:
+        assert issubclass(handler, app.AuthRequestHandler)
+
+
 @pytest.mark.usefixtures("no_tornado_logging", "tdata")
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
@@ -73,7 +79,17 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         webapp.settings["xsrf_cookies"] = False
         return webapp
 
+    @property
+    def auth_cookie(self) -> str:
+        auth_cookie = create_signed_value(
+            secret=self._app.settings["cookie_secret"],
+            name=app.AuthRequestHandler.AUTH_COOKIE_NAME,
+            value=app.AuthRequestHandler.AUTH_COOKIE_VALUE,
+        ).decode()
+        return f"{app.AuthRequestHandler.AUTH_COOKIE_NAME}={auth_cookie}"
+
     def fetch(self, *args, **kwargs) -> httpclient.HTTPResponse:
+        kwargs.setdefault("headers", {}).setdefault("Cookie", self.auth_cookie)
         # tornado disallows POST without content by default.
         return super().fetch(*args, **kwargs, allow_nonstandard_methods=True)
 
@@ -379,9 +395,12 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @tornado.testing.gen_test
     def test_websocket(self):
-        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_req = httpclient.HTTPRequest(
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
 
-        ws_client = yield websocket.websocket_connect(ws_url)
+        ws_client = yield websocket.websocket_connect(ws_req)
         self.master.options.anticomp = True
 
         r1 = yield ws_client.read_message()
@@ -402,7 +421,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client.close()
 
         # trigger on_close by opening a second connection.
-        ws_client2 = yield websocket.websocket_connect(ws_url)
+        ws_client2 = yield websocket.websocket_connect(ws_req)
         ws_client2.close()
 
     def test_process_list(self):
@@ -440,3 +459,17 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 412
         assert b"xsrf" not in resp.body
         assert b"xsrf" in self.fetch("/", headers={"Sec-Fetch-Mode": "navigate"}).body
+
+    def test_unauthorized_api(self):
+        assert self.fetch("/", headers={"Cookie": ""}).code == 403
+
+    @tornado.testing.gen_test
+    def test_unauthorized_websocket(self):
+        try:
+            yield websocket.websocket_connect(
+                f"ws://localhost:{self.get_http_port()}/updates"
+            )
+        except httpclient.HTTPClientError as e:
+            assert e.code == 403
+        else:
+            assert False

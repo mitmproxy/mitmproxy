@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>mitmproxy</title>
+    <link rel="icon" href=".{{ static_url('images/favicon.ico') }}" type="image/x-icon"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>403 Auth Token Required</h1>
+    <p>To access mitmproxy, please enter the authentication token printed in the console below.</p>
+    <form method="GET">
+        <label>
+            <input type="password" name="token" size="32" placeholder="" />
+        </label>
+        <input type="submit" />
+    </form>
+</body>
+</html>

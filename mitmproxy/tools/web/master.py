@@ -93,6 +93,11 @@ class WebMaster(master.Master):
             },
         )
 
+    @property
+    def web_url(self) -> str:
+        # noinspection HttpUrlsUsage
+        return f"http://{self.options.web_host}:{self.options.web_port}/?token={self.app.settings["auth_token"]}"
+
     async def running(self):
         # Register tornado with the current event loop
         tornado.ioloop.IOLoop.current()
@@ -109,8 +114,6 @@ class WebMaster(master.Master):
                 message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 2}`."
             raise OSError(e.errno, message, e.filename) from e
 
-        logger.info(
-            f"Web server listening at http://{self.options.web_host}:{self.options.web_port}/",
-        )
+        logger.info(f"Web server listening at {self.web_url}")
 
         return await super().running()

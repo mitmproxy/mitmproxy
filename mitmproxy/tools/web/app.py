@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import functools
 import hashlib
+import hmac
 import json
 import logging
 import os.path
@@ -12,6 +14,7 @@ from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar
+from typing import Concatenate
 
 import tornado.escape
 import tornado.web
@@ -206,7 +209,54 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
-class RequestHandler(tornado.web.RequestHandler):
+class AuthRequestHandler(tornado.web.RequestHandler):
+    AUTH_COOKIE_NAME = "mitmproxy-auth"
+    AUTH_COOKIE_VALUE = b"y"
+
+    def __init_subclass__(cls, **kwargs):
+        """Automatically wrap all request handlers with `_require_auth`."""
+        for method in cls.SUPPORTED_METHODS:
+            method = method.lower()
+            fn = getattr(cls, method)
+            if fn is not tornado.web.RequestHandler._unimplemented_method:
+                setattr(cls, method, AuthRequestHandler._require_auth(fn))
+
+    @staticmethod
+    def _require_auth[**P, R](
+        fn: Callable[Concatenate[AuthRequestHandler, P], R],
+    ) -> Callable[Concatenate[AuthRequestHandler, P], R | None]:
+        @functools.wraps(fn)
+        def wrapper(
+            self: AuthRequestHandler, *args: P.args, **kwargs: P.kwargs
+        ) -> R | None:
+            if not self.current_user:
+                self.require_setting("auth_token", "AuthRequestHandler")
+                if not hmac.compare_digest(
+                    self.get_query_argument("token", default="invalid"),
+                    self.settings["auth_token"],
+                ):
+                    self.set_status(403)
+                    self.render("login.html")
+                    return None
+                self.set_signed_cookie(
+                    self.AUTH_COOKIE_NAME,
+                    self.AUTH_COOKIE_VALUE,
+                    expires_days=400,
+                    httponly=True,
+                    samesite="Strict",
+                )
+            return fn(self, *args, **kwargs)
+
+        return wrapper
+
+    def get_current_user(self) -> bool:
+        return (
+            self.get_signed_cookie(self.AUTH_COOKIE_NAME, min_version=2)
+            == self.AUTH_COOKIE_VALUE
+        )
+
+
+class RequestHandler(AuthRequestHandler):
     application: Application
 
     def write(self, chunk: str | bytes | dict | list):
@@ -298,7 +348,7 @@ class FilterHelp(RequestHandler):
         self.write(dict(commands=flowfilter.help))
 
 
-class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
+class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
 
@@ -717,6 +767,34 @@ class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     }
 
 
+handlers = [
+    (r"/", IndexHandler),
+    (r"/filter-help(?:\.json)?", FilterHelp),
+    (r"/updates", ClientConnection),
+    (r"/commands(?:\.json)?", Commands),
+    (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
+    (r"/events(?:\.json)?", Events),
+    (r"/flows(?:\.json)?", Flows),
+    (r"/flows/dump", DumpFlows),
+    (r"/flows/resume", ResumeFlows),
+    (r"/flows/kill", KillFlows),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data", FlowContent),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?", FlowContentView),
+    (r"/clear", ClearAll),
+    (r"/options(?:\.json)?", Options),
+    (r"/options/save", SaveOptions),
+    (r"/state(?:\.json)?", State),
+    (r"/processes", ProcessList),
+    (r"/executable-icon", ProcessImage),
+]  # fmt: skip
+
+
 class Application(tornado.web.Application):
     master: mitmproxy.tools.web.master.WebMaster
 
@@ -734,43 +812,12 @@ class Application(tornado.web.Application):
             debug=debug,
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
+            auth_token=secrets.token_hex(16),
         )
 
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
         self.add_handlers(
             # make mitmweb accessible by IP only to prevent DNS rebinding.
             r"^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$",
-            [
-                (r"/", IndexHandler),
-                (r"/filter-help(?:\.json)?", FilterHelp),
-                (r"/updates", ClientConnection),
-                (r"/commands(?:\.json)?", Commands),
-                (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
-                (r"/events(?:\.json)?", Events),
-                (r"/flows(?:\.json)?", Flows),
-                (r"/flows/dump", DumpFlows),
-                (r"/flows/resume", ResumeFlows),
-                (r"/flows/kill", KillFlows),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data",
-                    FlowContent,
-                ),
-                (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/"
-                    r"content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?",
-                    FlowContentView,
-                ),
-                (r"/clear", ClearAll),
-                (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions),
-                (r"/state(?:\.json)?", State),
-                (r"/processes", ProcessList),
-                (r"/executable-icon", ProcessImage),
-            ],
+            handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
         )

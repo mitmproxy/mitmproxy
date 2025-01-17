@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import logging
 import webbrowser
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from mitmproxy import ctx
 from mitmproxy.tools.web.web_columns import AVAILABLE_WEB_COLUMNS
+
+if TYPE_CHECKING:
+    from mitmproxy.tools.web.master import WebMaster
 
 
 class WebAddon:
@@ -21,11 +27,11 @@ class WebAddon:
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
-            web_url = f"http://{ctx.options.web_host}:{ctx.options.web_port}/"
-            success = open_browser(web_url)
+            master: WebMaster = ctx.master  # type: ignore
+            success = open_browser(master.web_url)
             if not success:
                 logging.info(
-                    f"No web browser found. Please open a browser and point it to {web_url}",
+                    f"No web browser found. Please open a browser and point it to {master.web_url}",
                 )
 
 
