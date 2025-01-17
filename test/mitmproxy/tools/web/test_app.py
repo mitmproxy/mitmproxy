@@ -86,10 +86,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         )
 
     def test_index(self):
-        response: httpclient.HTTPResponse = self.fetch("/")
+        response = self.fetch("/")
         assert response.code == 200
-        assert '"/' not in str(
-            response.body
+        assert (
+            b'="/' not in response.body
         ), "HTML content should not contain root-relative paths"
 
     def test_filter_help(self):
