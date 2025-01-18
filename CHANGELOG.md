@@ -7,6 +7,13 @@
 
 ## Unreleased: mitmproxy next
 
+- We now provide standalone binaries for Linux arm64.
+  ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
+- Standalone binaries are now compiled with Python 3.13.
+  ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
+
+## 12 January 2025: mitmproxy 11.1.0
+
 - **Local Capture Mode** is now available on Linux as well.
   ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
 - mitmproxy now requires Python 3.12 or above.
