@@ -7,6 +7,16 @@
 
 ## Unreleased: mitmproxy next
 
+- [CVE-2025-23217](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-wg33-5h85-7q5p):
+  mitmweb's API now requires an authentication token by default.
+  The mitmweb API is bound to localhost only, but @gronke found that an attacker can circumvent that restriction
+  by tunneling requests through the proxy server itself in an [SSRF](https://en.wikipedia.org/wiki/Server-side_request_forgery)-style attack.
+  ([fa89055](https://github.com/mitmproxy/mitmproxy/commit/fa89055e196d953f11fd241e36ee37858993486a), @mhils)
+- Add (optional) password protection for mitmweb. The `web_password` option replaces the randomly-generated token
+  authentication with a fixed secret that survives mitmproxy restarts.
+  ([0bd573a](https://github.com/mitmproxy/mitmproxy/commit/0bd573a5995f61d82f5157e927b0eb93cdc4ebab), @mhils)
+- mitmweb can now be hosted under arbitrary domains, the previously-used DNS rebind protection is not required anymore.
+  ([62693af](https://github.com/mitmproxy/mitmproxy/commit/62693aff9a38ad0bb36716569fc627f26e489ccc), @mhils)
 - Security Hardening: mitmweb's `xsrf_token` cookie is now `HttpOnly; SameSite=Strict`.
   ([#7491](https://github.com/mitmproxy/mitmproxy/pull/7491), @mhils)
 - We now provide standalone binaries for Linux arm64.
