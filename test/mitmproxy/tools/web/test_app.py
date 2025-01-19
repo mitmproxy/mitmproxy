@@ -460,6 +460,18 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert b"xsrf" not in resp.body
         assert b"xsrf" in self.fetch("/", headers={"Sec-Fetch-Mode": "navigate"}).body
 
+    def test_xsrf_hardening_login(self):
+        """Ensure that xsrf token is not provided for JS requests."""
+        resp = self.fetch("/", headers={"Sec-Fetch-Mode": "same-origin", "Cookie": ""})
+        assert resp.code == 403
+        assert b"xsrf" not in resp.body
+        assert (
+            b"xsrf"
+            in self.fetch(
+                "/", headers={"Sec-Fetch-Mode": "navigate", "Cookie": ""}
+            ).body
+        )
+
     def test_unauthorized_api(self):
         assert self.fetch("/", headers={"Cookie": ""}).code == 403
 

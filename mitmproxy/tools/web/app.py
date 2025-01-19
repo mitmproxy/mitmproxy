@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import functools
 import hashlib
-import hmac
 import json
 import logging
 import os.path
@@ -37,6 +36,7 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.net.http import status_codes
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
+from mitmproxy.tools.web.webaddons import WebAuth
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
@@ -221,6 +221,12 @@ class AuthRequestHandler(tornado.web.RequestHandler):
             if fn is not tornado.web.RequestHandler._unimplemented_method:
                 setattr(cls, method, AuthRequestHandler._require_auth(fn))
 
+    def auth_fail(self, invalid_password: bool) -> None:
+        """
+        Will be called when returning a 403.
+        May write a login form as the response.
+        """
+
     @staticmethod
     def _require_auth[**P, R](
         fn: Callable[Concatenate[AuthRequestHandler, P], R],
@@ -230,13 +236,10 @@ class AuthRequestHandler(tornado.web.RequestHandler):
             self: AuthRequestHandler, *args: P.args, **kwargs: P.kwargs
         ) -> R | None:
             if not self.current_user:
-                self.require_setting("auth_token", "AuthRequestHandler")
-                if not hmac.compare_digest(
-                    self.get_query_argument("token", default="invalid"),
-                    self.settings["auth_token"],
-                ):
+                password = self.get_argument("token", default="")
+                if not self.settings["is_valid_password"](password):
                     self.set_status(403)
-                    self.render("login.html")
+                    self.auth_fail(bool(password))
                     return None
                 self.set_signed_cookie(
                     self.AUTH_COOKIE_NAME,
@@ -332,6 +335,12 @@ class IndexHandler(RequestHandler):
         # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
         return self.request.headers.get("Sec-Fetch-Mode", "navigate") == "navigate"
 
+    def auth_fail(self, invalid_password: bool) -> None:
+        # For mitmweb, we only write a login form for IndexHandler,
+        # which has additional Sec-Fetch-Mode protections.
+        if self._is_fetch_mode_navigate():
+            self.render("login.html", invalid_password=invalid_password)
+
     def get(self):
         # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
         if self._is_fetch_mode_navigate():
@@ -341,6 +350,8 @@ class IndexHandler(RequestHandler):
                 status_codes.PRECONDITION_FAILED,
                 f"Unexpected Sec-Fetch-Mode header: {self.request.headers.get('Sec-Fetch-Mode')}",
             )
+
+    post = get  # login form
 
 
 class FilterHelp(RequestHandler):
@@ -802,6 +813,7 @@ class Application(tornado.web.Application):
         self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
+        auth_addon: WebAuth = master.addons.get("webauth")
         super().__init__(
             default_host="dns-rebind-protection",
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -812,7 +824,7 @@ class Application(tornado.web.Application):
             debug=debug,
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
-            auth_token=secrets.token_hex(16),
+            is_valid_password=auth_addon.is_valid_password,
         )
 
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])

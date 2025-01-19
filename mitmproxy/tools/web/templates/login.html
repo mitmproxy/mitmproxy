@@ -18,12 +18,17 @@
     </style>
 </head>
 <body>
-    <h1>403 Auth Token Required</h1>
-    <p>To access mitmproxy, please enter the authentication token printed in the console below.</p>
-    <form method="GET">
+    {% if invalid_password %}
+    <h1 style="color: darkred">403 Invalid Password</h1>
+    {% else %}
+    <h1>403 Authentication Required</h1>
+    {% end %}
+    <p>To access mitmproxy, please enter the password or authentication token printed in the console.</p>
+    <form method="POST">
         <label>
             <input type="password" name="token" size="32" placeholder="" />
         </label>
+        {% module xsrf_form_html() %}
         <input type="submit" />
     </form>
 </body>
