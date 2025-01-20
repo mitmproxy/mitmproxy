@@ -4,24 +4,26 @@
 </label>
 <input id="navtoggle" type="checkbox" aria-hidden="true" tabindex="-1">
 <div>
-<h2>Overview</h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "overview") }}
-
-<h2>Beginner Tutorial</h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "mitmproxytutorial") }}
-
-<h2>Core concepts</h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "concepts") }}
-
-<h2> Addon Development </h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "addons") }}
-
-<h2> API Reference </h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "api") }}
-
-<h2> HOWTOs </h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "howto") }}
-
-<h2> Tutorials </h2>
-{{ partial "sidemenu" (dict "ctx" . "menuname" "tutes") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "overview" "Title" "Overview" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "mitmproxytutorial" "Title" "Beginner Tutorial") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "concepts" "Title" "Core Concepts" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "addons" "Title" "Addon Development" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "api" "Title" "API Reference") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "howto" "Title" "HOWTOs" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "tutorials" "Title" "Tutorials" "Open" true) }}
 </div>
+
+
+{{ define "partials/sidebar/menu" }}
+    {{ $section := (where .Ctx.Site.RegularPages "Section" .Section).ByWeight }}
+{{ $open := and (or .Open (eq .Ctx.Page.Section .Section)) "open"  }}
+    <details {{ $open }}>
+    <summary>{{ .Title }}</summary>
+
+    {{ range $section }}
+        <a href="{{ .Permalink }}">
+            {{ .Name }}
+        </a>
+    {{ end }}
+    </details>
+{{ end }}
