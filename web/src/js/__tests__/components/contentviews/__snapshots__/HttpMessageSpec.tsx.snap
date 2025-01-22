@@ -244,6 +244,111 @@ exports[`HttpMessage 3`] = `
 </DocumentFragment>
 `;
 
+exports[`HttpMessage 4`] = `
+<DocumentFragment>
+  <div
+    class="contentview"
+  >
+    <div
+      class="controls"
+    >
+      <h5>
+        Raw
+      </h5>
+      <button
+        class="btn-xs btn btn-default"
+        disabled=""
+      >
+        <i
+          class="fa fa-clipboard"
+        />
+         Copy
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+      >
+        <i
+          class="fa fa-edit"
+        />
+         Edit
+      </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <i
+          class="fa fa-fw fa-upload"
+        />
+        Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <i
+            class="fa fa-fw fa-files-o"
+          />
+           
+          <b>
+            View:
+          </b>
+           raw 
+          <span
+            class="caret"
+          />
+        </span>
+      </a>
+    </div>
+    <pre>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+      <div>
+        <span
+          class="text"
+        >
+          rawdata
+        </span>
+      </div>
+    </pre>
+  </div>
+</DocumentFragment>
+`;
+
 exports[`ViewImage 1`] = `
 <DocumentFragment>
   <div
