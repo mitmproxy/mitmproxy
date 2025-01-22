@@ -57,7 +57,7 @@ test("HttpMessage", async () => {
     await waitFor(() => screen.getAllByText("rawdata"));
     expect(asFragment()).toMatchSnapshot();
 
-    await waitFor(() => screen.getAllByText("Copy"));
+    await waitFor(() => screen.getByText("Copy"));
     expect(asFragment()).toMatchSnapshot();
     fireEvent.click(screen.getByText("Copy"));
 });
