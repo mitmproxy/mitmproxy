@@ -257,7 +257,6 @@ exports[`HttpMessage 4`] = `
       </h5>
       <button
         class="btn-xs btn btn-default"
-        disabled=""
       >
         <i
           class="fa fa-clipboard"
