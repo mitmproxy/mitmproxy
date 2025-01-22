@@ -62,12 +62,7 @@ export function reverseString(s) {
     );
 }
 
-function getCookie(name) {
-    const r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
-    return r ? r[1] : undefined;
-}
-
-const xsrf = getCookie("_xsrf");
+const xsrf = document.currentScript?.getAttribute("data-xsrf");
 
 export function fetchApi(
     url: string,

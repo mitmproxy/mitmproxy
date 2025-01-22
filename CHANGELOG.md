@@ -7,6 +7,12 @@
 
 ## Unreleased: mitmproxy next
 
+- Security Hardening: mitmweb's `xsrf_token` cookie is now `HttpOnly; SameSite=Strict`.
+  ([#7491](https://github.com/mitmproxy/mitmproxy/pull/7491), @mhils)
+- We now provide standalone binaries for Linux arm64.
+  ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
+- Standalone binaries are now compiled with Python 3.13.
+  ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
 - Copy request/response data to the clipboard in mitmweb
   ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
 
