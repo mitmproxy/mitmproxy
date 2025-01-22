@@ -286,16 +286,59 @@ class FilterHelp(RequestHandler):
     def get(self):
         self.write(dict(commands=flowfilter.help))
 
+class FiltersManager():
+    def __init__(self):
+        self.filters: dict[str, flowfilter.TFilter] = {
+            "search": flowfilter.match_all,
+            "highlight": flowfilter.match_all,
+        }
+
+    def update_filter(self, name: str, expression: flowfilter.TFilter):
+        self.filters[name] = expression
+        for f in self.view:
+            print(f)
+
+    def get_filter(self, name: str) -> flowfilter.TFilter:
+        return self.filters.get(name, flowfilter.match_all)
+    
+    def get_all_filters(self) -> dict[str, flowfilter.TFilter]:
+        return self.filters.copy()
+
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
+    
+    filters_manager = FiltersManager()
 
     def open(self, *args, **kwargs):
         self.connections.add(self)
 
     def on_close(self):
         self.connections.discard(self)
+        
+    async def on_message(self, message: str):
+        try:
+            data = json.loads(message)
+            
+            # Validate the required fields
+            if not all(key in data for key in ["resource", "cmd", "name", "expr"]):
+                print(f"Invalid message format: Missing required fields.")            
+                return
+            
+            resource = data["resource"]
+            command = data["cmd"]
+            name = data["name"]
+            expression = data["expr"]
+            
+            if resource == "flows" and command == "updateFilter":
+                self.filters_manager.update_filter(name, expression)
+                print(f"Updated filters: {self.filters_manager.get_all_filters()}")
+            else:
+                print("Unsupported command.")
+            
+        except json.JSONDecodeError:
+            print(f"Invalid JSON received from {self}: {message}")
 
     @classmethod
     def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
