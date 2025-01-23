@@ -1,5 +1,5 @@
 ---
-title: "Options"
+title: "Custom Options"
 weight: 3
 aliases:
   - /addons-options/

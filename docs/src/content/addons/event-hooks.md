@@ -1,6 +1,6 @@
 ---
 title: "Event Hooks"
-weight: 3
+weight: 2
 aliases:
     - /addons-events/
     - api/events.html

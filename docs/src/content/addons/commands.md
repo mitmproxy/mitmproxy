@@ -1,5 +1,5 @@
 ---
-title: "Commands"
+title: "Custom Commands"
 weight: 4
 aliases:
     - /addons-commands/
