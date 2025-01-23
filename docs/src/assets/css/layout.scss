@@ -34,15 +34,15 @@ body {
 
   > nav {
     grid-area: nav;
-    > div {
-      padding: 0 $pad;
-    }
   }
 
   > main {
     grid-area: main;
-    padding: 0 $pad;
     max-width: $content-width;
+    padding: 0.75rem 0 2rem 1.5rem;
+    @media (max-width: $max-mobile-width) {
+      padding: 0 $pad 2rem;
+    }
   }
 }
 
