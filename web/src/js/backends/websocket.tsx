@@ -7,6 +7,8 @@ import { fetchApi } from "../utils";
 import * as connectionActions from "../ducks/connection";
 import { Store } from "redux";
 import { RootState } from "../ducks";
+import { PayloadAction } from "@reduxjs/toolkit";
+import { BackendState } from "../ducks/backendState";
 
 const CMD_RESET = "reset";
 
@@ -29,12 +31,12 @@ export default class WebsocketBackend {
         this.socket = new WebSocket(
             location.origin.replace("http", "ws") +
                 location.pathname.replace(/\/$/, "") +
-                "/updates"
+                "/updates",
         );
         this.socket.addEventListener("open", () => this.onOpen());
         this.socket.addEventListener("close", (event) => this.onClose(event));
         this.socket.addEventListener("message", (msg) =>
-            this.onMessage(JSON.parse(msg.data))
+            this.onMessage(JSON.parse(msg.data)),
         );
         this.socket.addEventListener("error", (error) => this.onError(error));
     }
@@ -48,7 +50,7 @@ export default class WebsocketBackend {
     }
 
     fetchData(resource) {
-        let queue = [];
+        const queue = [];
         this.activeFetches[resource] = queue;
         fetchApi(`./${resource}`)
             .then((res) => res.json())
@@ -66,15 +68,23 @@ export default class WebsocketBackend {
         if (msg.resource in this.activeFetches) {
             this.activeFetches[msg.resource].push(msg);
         } else {
-            let type = `${msg.resource}_${msg.cmd}`.toUpperCase();
+            const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
             this.store.dispatch({ type, ...msg });
         }
     }
 
     receive(resource, data) {
-        let type = `${resource}_RECEIVE`.toUpperCase();
-        this.store.dispatch({ type, cmd: "receive", resource, data });
-        let queue = this.activeFetches[resource];
+        const type = `${resource}_RECEIVE`.toUpperCase();
+        if (resource === "state") {
+            this.store.dispatch({
+                type,
+                payload: data,
+            } as PayloadAction<BackendState>);
+        } else {
+            // deprecated: these should be converted to payload actions as well.
+            this.store.dispatch({ type, cmd: "receive", resource, data });
+        }
+        const queue = this.activeFetches[resource];
         delete this.activeFetches[resource];
         queue.forEach((msg) => this.onMessage(msg));
 
@@ -89,14 +99,14 @@ export default class WebsocketBackend {
             connectionActions.connectionError(
                 `Connection closed at ${new Date().toUTCString()} with error code ${
                     closeEvent.code
-                }.`
-            )
+                }.`,
+            ),
         );
         console.error("websocket connection closed", closeEvent);
     }
 
-    onError(error) {
+    onError(...args) {
         // FIXME
-        console.error("websocket connection errored", arguments);
+        console.error("websocket connection errored", args);
     }
 }

@@ -1,32 +1,23 @@
-export const HIDE_MODAL = "UI_HIDE_MODAL";
-export const SET_ACTIVE_MODAL = "UI_SET_ACTIVE_MODAL";
+import { createSlice } from "@reduxjs/toolkit";
 
-const defaultState = {
+const defaultState: { activeModal: string | undefined } = {
     activeModal: undefined,
 };
 
-export default function reducer(state = defaultState, action) {
-    switch (action.type) {
-        case SET_ACTIVE_MODAL:
-            return {
-                ...state,
-                activeModal: action.activeModal,
-            };
+const modalSlice = createSlice({
+    name: "ui/modal",
+    initialState: defaultState,
+    reducers: {
+        setActiveModal(state, action) {
+            state.activeModal = action.payload;
+        },
+        hideModal(state) {
+            state.activeModal = undefined;
+        },
+    },
+});
 
-        case HIDE_MODAL:
-            return {
-                ...state,
-                activeModal: undefined,
-            };
-        default:
-            return state;
-    }
-}
-
-export function setActiveModal(activeModal) {
-    return { type: SET_ACTIVE_MODAL, activeModal };
-}
-
-export function hideModal() {
-    return { type: HIDE_MODAL };
-}
+const { actions, reducer } = modalSlice;
+export const HIDE_MODAL = modalSlice.actions.hideModal.type;
+export const { setActiveModal, hideModal } = actions;
+export default reducer;

@@ -8,14 +8,14 @@ jest.mock("../../utils");
 
 describe("flow reducer", () => {
     let s;
-    for (let i of ["1", "2", "3", "4"]) {
+    for (const i of ["1", "2", "3", "4"]) {
         s = reduceFlows(s, {
             type: flowActions.ADD,
             data: { id: i },
             cmd: "add",
         });
     }
-    let state = s;
+    const state = s;
 
     it("should return initial state", () => {
         expect(reduceFlows(undefined, {})).toEqual({
@@ -37,7 +37,10 @@ describe("flow reducer", () => {
 
         it("should be possible to deselect a flow", () => {
             expect(
-                reduceFlows({ ...state, selected: ["1"] }, flowActions.select())
+                reduceFlows(
+                    { ...state, selected: ["1"] },
+                    flowActions.select(),
+                ),
             ).toEqual({
                 ...state,
                 selected: [],
@@ -47,12 +50,12 @@ describe("flow reducer", () => {
         it("should be possible to select relative", () => {
             // haven't selected any flow
             expect(flowActions.selectRelative(state, 1)).toEqual(
-                flowActions.select("4")
+                flowActions.select("4"),
             );
 
             // already selected some flows
             expect(
-                flowActions.selectRelative({ ...state, selected: [2] }, 1)
+                flowActions.selectRelative({ ...state, selected: [2] }, 1),
             ).toEqual(flowActions.select("3"));
         });
 
@@ -64,7 +67,7 @@ describe("flow reducer", () => {
                     type: flowActions.REMOVE,
                     data: "2",
                     cmd: "remove",
-                }
+                },
             );
             expect(next.selected).toEqual(["3"]);
 
@@ -75,7 +78,7 @@ describe("flow reducer", () => {
                     type: flowActions.REMOVE,
                     data: "4",
                     cmd: "remove",
-                }
+                },
             );
             expect(next.selected).toEqual(["3"]);
 
@@ -86,44 +89,44 @@ describe("flow reducer", () => {
                     type: flowActions.REMOVE,
                     data: "3",
                     cmd: "remove",
-                }
+                },
             );
             expect(next.selected).toEqual(["2", "4"]);
         });
     });
 
     it("should be possible to set filter", () => {
-        let filt = "~u 123";
+        const filt = "~u 123";
         expect(
-            reduceFlows(undefined, flowActions.setFilter(filt)).filter
+            reduceFlows(undefined, flowActions.setFilter(filt)).filter,
         ).toEqual(filt);
     });
 
     it("should be possible to set highlight", () => {
-        let key = "foo";
+        const key = "foo";
         expect(
-            reduceFlows(undefined, flowActions.setHighlight(key)).highlight
+            reduceFlows(undefined, flowActions.setHighlight(key)).highlight,
         ).toEqual(key);
     });
 
     it("should be possible to set sort", () => {
-        let sort = { column: "tls", desc: true };
+        const sort = { column: "tls", desc: true };
         expect(
             reduceFlows(undefined, flowActions.setSort(sort.column, sort.desc))
-                .sort
+                .sort,
         ).toEqual(sort);
     });
 });
 
 describe("flows actions", () => {
-    let store = TStore();
-    let tflow = TFlow();
+    const store = TStore();
+    const tflow = TFlow();
 
     it("should handle resume action", () => {
         store.dispatch(flowActions.resume(tflow));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/resume",
-            { method: "POST" }
+            { method: "POST" },
         );
     });
 
@@ -136,7 +139,7 @@ describe("flows actions", () => {
         store.dispatch(flowActions.kill(tflow));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/kill",
-            { method: "POST" }
+            { method: "POST" },
         );
     });
 
@@ -149,7 +152,7 @@ describe("flows actions", () => {
         store.dispatch(flowActions.remove(tflow));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
-            { method: "DELETE" }
+            { method: "DELETE" },
         );
     });
 
@@ -157,7 +160,7 @@ describe("flows actions", () => {
         store.dispatch(flowActions.duplicate(tflow));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/duplicate",
-            { method: "POST" }
+            { method: "POST" },
         );
     });
 
@@ -165,7 +168,7 @@ describe("flows actions", () => {
         store.dispatch(flowActions.replay(tflow));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/replay",
-            { method: "POST" }
+            { method: "POST" },
         );
     });
 
@@ -173,7 +176,7 @@ describe("flows actions", () => {
         store.dispatch(flowActions.revert(tflow));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/revert",
-            { method: "POST" }
+            { method: "POST" },
         );
     });
 
@@ -181,13 +184,13 @@ describe("flows actions", () => {
         store.dispatch(flowActions.update(tflow, "foo"));
         expect(fetchApi.put).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
-            "foo"
+            "foo",
         );
     });
 
     it("should handle uploadContent action", () => {
-        let body = new FormData(),
-            file = new window.Blob(["foo"], { type: "plain/text" });
+        const body = new FormData();
+        const file = new window.Blob(["foo"], { type: "plain/text" });
         body.append("file", file);
         store.dispatch(flowActions.uploadContent(tflow, "foo", "foo"));
         // window.Blob's lastModified is always the current time,
@@ -197,7 +200,7 @@ describe("flows actions", () => {
             {
                 method: "POST",
                 body: expect.anything(),
-            }
+            },
         );
     });
 
@@ -207,7 +210,7 @@ describe("flows actions", () => {
     });
 
     it("should handle upload action", () => {
-        let body = new FormData();
+        const body = new FormData();
         body.append("file", "foo");
         store.dispatch(flowActions.upload("foo"));
         expect(fetchApi).toBeCalledWith("/flows/dump", {
@@ -218,8 +221,8 @@ describe("flows actions", () => {
 });
 
 test("makeSort", () => {
-    const a = TFlow(),
-        b = TFlow();
+    const a = TFlow();
+    const b = TFlow();
     a.request.scheme = "https";
     a.request.method = "POST";
     a.request.path = "/foo";
@@ -227,7 +230,7 @@ test("makeSort", () => {
     a.response.status_code = 418;
 
     Object.keys(FlowColumns).forEach((column, i) => {
-        // @ts-ignore
+        // @ts-expect-error jest is funky about type annotations here.
         const sort = flowActions.makeSort({ column, desc: i % 2 == 0 });
         expect(sort(a, b)).toBeDefined();
     });

@@ -32,12 +32,12 @@ test("HttpMessage", async () => {
         JSON.stringify({
             lines: Array(5).fill([["text", "rawdata"]]),
             description: "Raw",
-        })
+        }),
     );
 
     const tflow = TFlow();
     const { asFragment } = render(
-        <HttpMessage flow={tflow} message={tflow.request} />
+        <HttpMessage flow={tflow} message={tflow.request} />,
     );
     await waitFor(() => screen.getAllByText("data"));
     expect(screen.queryByText("additional")).toBeNull();
@@ -61,7 +61,7 @@ test("HttpMessage", async () => {
 test("ViewImage", async () => {
     const flow = TFlow();
     const { asFragment } = render(
-        <ViewImage flow={flow} message={flow.request} />
+        <ViewImage flow={flow} message={flow.request} />,
     );
     expect(asFragment()).toMatchSnapshot();
 });

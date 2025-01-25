@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import platform
 import socket
 import sys
 
@@ -13,6 +14,10 @@ skip_windows = pytest.mark.skipif(os.name == "nt", reason="Skipping due to Windo
 
 skip_not_windows = pytest.mark.skipif(
     os.name != "nt", reason="Skipping due to not Windows"
+)
+
+skip_not_linux = pytest.mark.skipif(
+    platform.system() != "Linux", reason="Skipping due to not Linux"
 )
 
 try:
@@ -35,7 +40,7 @@ class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         return loop
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def event_loop_policy(request):
     return EagerTaskCreationEventLoopPolicy()
 

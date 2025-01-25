@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
 import ProxyApp from "./components/ProxyApp";
@@ -10,12 +10,12 @@ import StaticBackend from "./backends/static";
 import { store } from "./ducks";
 
 useUrlState(store);
-// @ts-ignore
+// @ts-expect-error custom property on window
 if (window.MITMWEB_STATIC) {
-    // @ts-ignore
+    // @ts-expect-error new property on window for debugging
     window.backend = new StaticBackend(store);
 } else {
-    // @ts-ignore
+    // @ts-expect-error new property on window for debugging
     window.backend = new WebSocketBackend(store);
 }
 
@@ -24,10 +24,11 @@ window.addEventListener("error", (e: ErrorEvent) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    render(
+    const container = document.getElementById("mitmproxy");
+    const root = createRoot(container!);
+    root.render(
         <Provider store={store}>
             <ProxyApp />
         </Provider>,
-        document.getElementById("mitmproxy")
     );
 });

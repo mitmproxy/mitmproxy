@@ -9,10 +9,10 @@ type ViewSelectorProps = {
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
     const contentViews = useAppSelector(
-        (state) => state.backendState.contentViews || []
+        (state) => state.backendState.contentViews || [],
     );
 
-    let inner = (
+    const inner = (
         <span>
             <i className="fa fa-fw fa-files-o" />
             &nbsp;<b>View:</b> {value.toLowerCase()} <span className="caret" />

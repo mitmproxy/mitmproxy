@@ -27,17 +27,26 @@ class ConnectionState(Flag):
 
 TransportProtocol = Literal["tcp", "udp"]
 
+# https://docs.openssl.org/master/man3/SSL_get_version/#return-values
+TlsVersion = Literal[
+    "SSLv3",
+    "TLSv1",
+    "TLSv1.1",
+    "TLSv1.2",
+    "TLSv1.3",
+    "DTLSv0.9",
+    "DTLSv1",
+    "DTLSv1.2",
+    "QUICv1",
+]
 
 # practically speaking we may have IPv6 addresses with flowinfo and scope_id,
 # but type checking isn't good enough to properly handle tuple unions.
 # this version at least provides useful type checking messages.
 Address = tuple[str, int]
 
-kw_only = {"kw_only": True}
 
-
-# noinspection PyDataclass
-@dataclass(**kw_only)
+@dataclass(kw_only=True)
 class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """
     Base class for client and server connections.
@@ -104,7 +113,7 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
     """The active cipher name as returned by OpenSSL's `SSL_CIPHER_get_name`."""
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
-    tls_version: str | None = None
+    tls_version: TlsVersion | None = None
     """The active TLS version."""
     sni: str | None = None
     """
@@ -162,9 +171,8 @@ class Connection(serializable.SerializableDataclass, metaclass=ABCMeta):
         return self.alpn
 
 
-# noinspection PyDataclass
-@dataclass(eq=False, repr=False, **kw_only)
-class Client(Connection):
+@dataclass(eq=False, repr=False, kw_only=True)
+class Client(Connection):  # type: ignore[override]
     """A connection between a client and mitmproxy."""
 
     peername: Address
@@ -251,8 +259,7 @@ class Client(Connection):
             self.certificate_list = []
 
 
-# noinspection PyDataclass
-@dataclass(eq=False, repr=False, **kw_only)
+@dataclass(eq=False, repr=False, kw_only=True)
 class Server(Connection):
     """A connection between mitmproxy and an upstream server."""
 

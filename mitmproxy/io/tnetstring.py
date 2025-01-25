@@ -154,7 +154,7 @@ def loads(string: bytes) -> TSerializable:
     """
     This function parses a tnetstring into a python object.
     """
-    return pop(string)[0]
+    return pop(memoryview(string))[0]
 
 
 def load(file_handle: BinaryIO) -> TSerializable:
@@ -178,17 +178,17 @@ def load(file_handle: BinaryIO) -> TSerializable:
     if c != b":":
         raise ValueError("not a tnetstring: missing or invalid length prefix")
 
-    data = file_handle.read(int(data_length))
+    data = memoryview(file_handle.read(int(data_length)))
     data_type = file_handle.read(1)[0]
 
     return parse(data_type, data)
 
 
-def parse(data_type: int, data: bytes) -> TSerializable:
+def parse(data_type: int, data: memoryview) -> TSerializable:
     if data_type == ord(b","):
-        return data
+        return data.tobytes()
     if data_type == ord(b";"):
-        return data.decode("utf8")
+        return str(data, "utf8")
     if data_type == ord(b"#"):
         try:
             return int(data)
@@ -226,20 +226,28 @@ def parse(data_type: int, data: bytes) -> TSerializable:
     raise ValueError(f"unknown type tag: {data_type}")
 
 
-def pop(data: bytes) -> tuple[TSerializable, bytes]:
+def split(data: memoryview, sep: bytes) -> tuple[int, memoryview]:
+    i = 0
+    try:
+        ord_sep = ord(sep)
+        while data[i] != ord_sep:
+            i += 1
+        # here i is the position of b":" in the memoryview
+        return int(data[:i]), data[i + 1 :]
+    except (IndexError, ValueError):
+        raise ValueError(
+            f"not a tnetstring: missing or invalid length prefix: {data.tobytes()!r}"
+        )
+
+
+def pop(data: memoryview) -> tuple[TSerializable, memoryview]:
     """
     This function parses a tnetstring into a python object.
     It returns a tuple giving the parsed object and a string
     containing any unparsed data from the end of the string.
     """
-    #  Parse out data length, type and remaining string.
-    try:
-        blength, data = data.split(b":", 1)
-        length = int(blength)
-    except ValueError:
-        raise ValueError(
-            f"not a tnetstring: missing or invalid length prefix: {data!r}"
-        )
+    # Parse out data length, type and remaining string.
+    length, data = split(data, b":")
     try:
         data, data_type, remain = data[:length], data[length], data[length + 1 :]
     except IndexError:

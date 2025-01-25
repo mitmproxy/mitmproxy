@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-
 import { onKeyDown } from "../ducks/ui/keyboard";
 import MainView from "./MainView";
 import Header from "./Header";
@@ -20,6 +19,11 @@ type ProxyAppMainState = {
     error?: Error;
     errorInfo?: React.ErrorInfo;
 };
+
+export interface Menu {
+    (): JSX.Element;
+    title: string;
+}
 
 class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
     state: ProxyAppMainState = {};
@@ -83,5 +87,5 @@ export default connect(
     }),
     {
         onKeyDown,
-    }
+    },
 )(ProxyAppMain);

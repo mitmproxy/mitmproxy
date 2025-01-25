@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import socket
 import ssl
 from collections.abc import AsyncGenerator
 from collections.abc import Callable
@@ -12,7 +11,6 @@ from typing import ClassVar
 from typing import TypeVar
 from unittest.mock import Mock
 
-import mitmproxy_rs
 import pytest
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.asyncio.server import QuicServer
@@ -26,6 +24,7 @@ from aioquic.quic.connection import QuicConnectionError
 
 from .test_clientplayback import tcp_server
 import mitmproxy.platform
+import mitmproxy_rs
 from mitmproxy import dns
 from mitmproxy import exceptions
 from mitmproxy.addons import dns_resolver
@@ -232,7 +231,7 @@ def test_options():
             tctx.configure(ps, mode=["invalid!"])
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(ps, mode=["regular", "reverse:example.com"])
-        tctx.configure(ps, mode=["regular"], server=False)
+        tctx.configure(ps, mode=["regular", "local"], server=False)
 
 
 async def test_startup_err(monkeypatch, caplog) -> None:
@@ -266,22 +265,18 @@ async def test_shutdown_err(caplog_async) -> None:
         await _wait_for_connection_closes(ps)
 
 
-class DummyResolver:
-    async def dns_request(self, flow: dns.DNSFlow) -> None:
-        flow.response = await dns_resolver.resolve_message(flow.request, self)
-
-    async def getaddrinfo(self, host: str, port: int, *, family: int, type: int):
-        if family == socket.AF_INET and host == "dns.google":
-            return [(socket.AF_INET, type, None, None, ("8.8.8.8", port))]
-        e = socket.gaierror()
-        e.errno = socket.EAI_NONAME
-        raise e
+async def lookup_ipv4():
+    return await asyncio.sleep(0, ["8.8.8.8"])
 
 
-async def test_dns(caplog_async) -> None:
+async def test_dns(caplog_async, monkeypatch) -> None:
+    monkeypatch.setattr(
+        mitmproxy_rs.dns.DnsResolver, "lookup_ipv4", lambda _, __: lookup_ipv4()
+    )
+
     caplog_async.set_level("INFO")
     ps = Proxyserver()
-    with taddons.context(ps, DummyResolver()) as tctx:
+    with taddons.context(ps, dns_resolver.DnsResolver()) as tctx:
         tctx.configure(
             ps,
             mode=["dns@127.0.0.1:0"],
@@ -291,7 +286,7 @@ async def test_dns(caplog_async) -> None:
         await caplog_async.await_log("DNS server listening at")
         assert ps.servers
         dns_addr = ps.servers["dns@127.0.0.1:0"].listen_addrs[0]
-        s = await mitmproxy_rs.open_udp_connection(*dns_addr)
+        s = await mitmproxy_rs.udp.open_udp_connection(*dns_addr)
         req = tdnsreq()
         s.write(req.packed)
         resp = dns.Message.unpack(await s.read(65535))
@@ -389,7 +384,7 @@ async def test_udp(caplog_async) -> None:
             )
             assert ps.servers
             addr = ps.servers[mode].listen_addrs[0]
-            stream = await mitmproxy_rs.open_udp_connection(*addr)
+            stream = await mitmproxy_rs.udp.open_udp_connection(*addr)
             stream.write(b"\x16")
             assert b"\x01" == await stream.read(65535)
             assert repr(ps) == "Proxyserver(1 active conns)"
@@ -852,7 +847,7 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
     with taddons.context(ps, nl, ta) as tctx:
         ta.configure(["confdir"])
         async with quic_server(H3EchoServer, alpn=["h3"]) as server_addr:
-            orig_open_connection = mitmproxy_rs.open_udp_connection
+            orig_open_connection = mitmproxy_rs.udp.open_udp_connection
 
             async def open_connection_path(
                 host: str, port: int, *args, **kwargs
@@ -863,7 +858,7 @@ async def test_regular_http3(caplog_async, monkeypatch) -> None:
                 return orig_open_connection(host, port, *args, **kwargs)
 
             monkeypatch.setattr(
-                mitmproxy_rs, "open_udp_connection", open_connection_path
+                mitmproxy_rs.udp, "open_udp_connection", open_connection_path
             )
             mode = f"http3@127.0.0.1:0"
             tctx.configure(

@@ -1,27 +1,19 @@
 import * as React from "react";
 import EventLogList from "../../../components/EventLog/EventList";
-import TestUtils from "react-dom/test-utils";
+import { EventLogItem, LogLevel } from "../../../ducks/eventLog";
+import { render } from "../../test-utils";
 
 describe("EventList Component", () => {
-    let mockEventList = [
-            { id: 1, level: "info", message: "foo" },
-            { id: 2, level: "error", message: "bar" },
-        ],
-        eventLogList = TestUtils.renderIntoDocument(
-            <EventLogList events={mockEventList} />
-        );
+    const mockEventList: EventLogItem[] = [
+        { id: "1", level: LogLevel.info, message: "foo" },
+        { id: "2", level: LogLevel.error, message: "bar" },
+    ];
 
     it("should render correctly", () => {
-        expect(eventLogList.state).toMatchSnapshot();
-        expect(eventLogList.props).toMatchSnapshot();
-    });
-
-    it("should handle componentWillUnmount", () => {
-        window.removeEventListener = jest.fn();
-        eventLogList.componentWillUnmount();
-        expect(window.removeEventListener).toBeCalledWith(
-            "resize",
-            eventLogList.onViewportUpdate
+        const { asFragment, unmount } = render(
+            <EventLogList events={mockEventList} />,
         );
+        expect(asFragment()).toMatchSnapshot();
+        unmount(); // no errors
     });
 });

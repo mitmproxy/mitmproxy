@@ -13,18 +13,26 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
 
-      - uses: install-pinned/ruff@f8793aa7caf0b3196d6ed1370aea45f3c06304a3
-      - run: ruff --fix-only .
+      - run: pip install -e .[dev]
+      - run: ruff check --fix-only .
       - run: ruff format .
 
-      - name: Run prettier
-        run: |
-          npm ci
-          npm run prettier
+      - run: web/gen/all
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .github/node-version.txt
+      - run: npm ci
+        working-directory: web
+      - run: npm run eslint
+        working-directory: web
+        continue-on-error: true
+      - run: npm run prettier
         working-directory: web
 
       - uses: mhils/add-pr-ref-in-changelog@main
 
-      - uses: autofix-ci/action@d3e591514b99d0fca6779455ff8338516663f7cc
+      - uses: autofix-ci/action@2891949f3779a1cafafae1523058501de3d4e944

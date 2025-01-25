@@ -41,48 +41,48 @@ class TestModifyHeaders:
             tctx.configure(mh, modify_headers=["/~q/one/two", "/~s/one/three"])
             f = tflow.tflow()
             f.request.headers["one"] = "xxx"
-            mh.request(f)
+            mh.requestheaders(f)
             assert f.request.headers["one"] == "two"
 
             f = tflow.tflow(resp=True)
             f.response.headers["one"] = "xxx"
-            mh.response(f)
+            mh.responseheaders(f)
             assert f.response.headers["one"] == "three"
 
             tctx.configure(mh, modify_headers=["/~s/one/two", "/~s/one/three"])
             f = tflow.tflow(resp=True)
             f.request.headers["one"] = "xxx"
             f.response.headers["one"] = "xxx"
-            mh.response(f)
+            mh.responseheaders(f)
             assert f.response.headers.get_all("one") == ["two", "three"]
 
             tctx.configure(mh, modify_headers=["/~q/one/two", "/~q/one/three"])
             f = tflow.tflow()
             f.request.headers["one"] = "xxx"
-            mh.request(f)
+            mh.requestheaders(f)
             assert f.request.headers.get_all("one") == ["two", "three"]
 
             # test removal of existing headers
             tctx.configure(mh, modify_headers=["/~q/one/", "/~s/one/"])
             f = tflow.tflow()
             f.request.headers["one"] = "xxx"
-            mh.request(f)
+            mh.requestheaders(f)
             assert "one" not in f.request.headers
 
             f = tflow.tflow(resp=True)
             f.response.headers["one"] = "xxx"
-            mh.response(f)
+            mh.responseheaders(f)
             assert "one" not in f.response.headers
 
             tctx.configure(mh, modify_headers=["/one/"])
             f = tflow.tflow()
             f.request.headers["one"] = "xxx"
-            mh.request(f)
+            mh.requestheaders(f)
             assert "one" not in f.request.headers
 
             f = tflow.tflow(resp=True)
             f.response.headers["one"] = "xxx"
-            mh.response(f)
+            mh.responseheaders(f)
             assert "one" not in f.response.headers
 
             # test modifying a header that is also part of the filter expression
@@ -95,7 +95,7 @@ class TestModifyHeaders:
             )
             f = tflow.tflow()
             f.request.headers["user-agent"] = "Hello, it's me, Mozilla"
-            mh.request(f)
+            mh.requestheaders(f)
             assert "Definitely not Mozilla ;)" == f.request.headers["user-agent"]
 
     @pytest.mark.parametrize("take", [True, False])
@@ -106,13 +106,13 @@ class TestModifyHeaders:
             f = tflow.tflow()
             if take:
                 f.response = tresp()
-            mh.request(f)
+            mh.requestheaders(f)
             assert (f.request.headers["content-length"] == "42") ^ take
 
             f = tflow.tflow(resp=True)
             if take:
                 f.kill()
-            mh.response(f)
+            mh.responseheaders(f)
             assert (f.response.headers["content-length"] == "42") ^ take
 
 
@@ -125,7 +125,7 @@ class TestModifyHeadersFile:
             tctx.configure(mh, modify_headers=["/~q/one/@" + str(tmpfile)])
             f = tflow.tflow()
             f.request.headers["one"] = "xxx"
-            mh.request(f)
+            mh.requestheaders(f)
             assert f.request.headers["one"] == "two"
 
     async def test_nonexistent(self, tmpdir, caplog):
@@ -142,5 +142,5 @@ class TestModifyHeadersFile:
             tmpfile.remove()
             f = tflow.tflow()
             f.request.content = b"foo"
-            mh.request(f)
+            mh.requestheaders(f)
             assert "Could not read" in caplog.text

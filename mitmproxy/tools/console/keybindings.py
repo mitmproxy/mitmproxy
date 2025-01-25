@@ -12,8 +12,7 @@ HELP_HEIGHT = 5
 class KeyItem(urwid.WidgetWrap):
     def __init__(self, walker, binding, focused):
         self.walker, self.binding, self.focused = walker, binding, focused
-        super().__init__(None)
-        self._w = self.get_widget()
+        super().__init__(self.get_widget())
 
     def get_widget(self):
         cmd = textwrap.dedent(self.binding.command).strip()
@@ -116,14 +115,14 @@ class KeyHelp(urwid.Frame):
     def set_active(self, val):
         h = urwid.Text("Key Binding Help")
         style = "heading" if val else "heading_inactive"
-        self.header = urwid.AttrWrap(h, style)
+        self.header = urwid.AttrMap(h, style)
 
     def widget(self, txt):
         cols, _ = self.master.ui.get_cols_rows()
         return urwid.ListBox([urwid.Text(i) for i in textwrap.wrap(txt, cols)])
 
     def sig_mod(self, txt):
-        self.set_body(self.widget(txt))
+        self.body = self.widget(txt)
 
 
 class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
@@ -146,13 +145,13 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
     def get_focused_binding(self):
         if self.focus_position != 0:
             return None
-        f = self.widget_list[0]
+        f = self.contents[0][0]
         return f.walker.get_focus()[0].binding
 
     def keypress(self, size, key):
         if key == "m_next":
             self.focus_position = (self.focus_position + 1) % len(self.widget_list)
-            self.widget_list[1].set_active(self.focus_position == 1)
+            self.contents[1][0].set_active(self.focus_position == 1)
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
@@ -160,6 +159,5 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
         item_rows = None
         if len(size) == 2:
             item_rows = self.get_item_rows(size, focus=True)
-        i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size, i, True, item_rows)
-        return self.focus_item.keypress(tsize, key)
+        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
+        return self.focus.keypress(tsize, key)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pprint
 import textwrap
+import typing
 from collections.abc import Sequence
 from typing import Optional
 
@@ -33,12 +34,11 @@ class OptionItem(urwid.WidgetWrap):
         self.walker, self.opt, self.focused = walker, opt, focused
         self.namewidth = namewidth
         self.editing = editing
-        super().__init__(None)
-        self._w = self.get_widget()
+        super().__init__(self.get_widget())
 
     def get_widget(self):
         val = self.opt.current()
-        if self.opt.typespec == bool:
+        if self.opt.typespec is bool:
             displayval = "true" if val else "false"
         elif not val:
             displayval = ""
@@ -190,7 +190,7 @@ class OptionsList(urwid.ListBox):
                 self.walker._modified()
             elif key == "m_select":
                 foc, idx = self.get_focus()
-                if foc.opt.typespec == bool:
+                if foc.opt.typespec is bool:
                     self.master.options.toggler(foc.opt.name)()
                     # Bust the focus widget cache
                     self.set_focus(self.walker.index)
@@ -207,7 +207,7 @@ class OptionsList(urwid.ListBox):
                             self.master.options.setter(foc.opt.name),
                         )
                     )
-                elif foc.opt.typespec == Sequence[str]:
+                elif foc.opt.typespec in (Sequence[str], typing.Sequence[str]):
                     self.master.overlay(
                         overlay.OptionsOverlay(
                             self.master,
@@ -231,14 +231,14 @@ class OptionHelp(urwid.Frame):
     def set_active(self, val):
         h = urwid.Text("Option Help")
         style = "heading" if val else "heading_inactive"
-        self.header = urwid.AttrWrap(h, style)
+        self.header = urwid.AttrMap(h, style)
 
     def widget(self, txt):
         cols, _ = self.master.ui.get_cols_rows()
         return urwid.ListBox([urwid.Text(i) for i in textwrap.wrap(txt, cols)])
 
     def update_help_text(self, txt: str) -> None:
-        self.set_body(self.widget(txt))
+        self.body = self.widget(txt)
 
 
 class Options(urwid.Pile, layoutwidget.LayoutWidget):
@@ -273,6 +273,5 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
         item_rows = None
         if len(size) == 2:
             item_rows = self.get_item_rows(size, focus=True)
-        i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size, i, True, item_rows)
-        return self.focus_item.keypress(tsize, key)
+        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
+        return self.focus.keypress(tsize, key)

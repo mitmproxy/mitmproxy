@@ -1,5 +1,5 @@
 import { Reducer } from "redux";
-import { RECEIVE, UPDATE } from "./options";
+import { Option, RECEIVE, UPDATE } from "./options";
 import { OptionsState } from "./_options_gen";
 
 interface OptionMeta<T> {
@@ -11,20 +11,23 @@ interface OptionMeta<T> {
 }
 
 type OptionsMetaState = Partial<{
-    [name in keyof OptionsState]: OptionMeta<OptionsState[name]>;
+    [name in Option]: OptionMeta<OptionsState[name]>;
 }>;
 
 export const defaultState: OptionsMetaState = {};
 
-const reducer: Reducer<OptionsMetaState> = (state = defaultState, action) => {
+const reducer: Reducer<OptionsMetaState> = (
+    state = defaultState,
+    action,
+): OptionsMetaState => {
     switch (action.type) {
         case RECEIVE:
-            return action.data;
+            return action.data as OptionsMetaState;
 
         case UPDATE:
             return {
                 ...state,
-                ...action.data,
+                ...(action.data as OptionsMetaState),
             };
 
         default:

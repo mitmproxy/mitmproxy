@@ -1,6 +1,5 @@
-import reduceFlows, * as flowsActions from "../../../ducks/flows";
+import * as flowsActions from "../../../ducks/flows";
 import { onKeyDown } from "../../../ducks/ui/keyboard";
-import * as UIActions from "../../../ducks/ui/flow";
 import * as modalActions from "../../../ducks/ui/modal";
 import { fetchApi, runCommand } from "../../../utils";
 import { TStore } from "../tutils";
@@ -8,198 +7,192 @@ import { TStore } from "../tutils";
 jest.mock("../../../utils");
 
 describe("onKeyDown", () => {
-    let flows = flowsActions.defaultState;
-    for (let i = 1; i <= 12; i++) {
-        flows = reduceFlows(flows, {
-            type: flowsActions.ADD,
-            data: { id: i + "", request: true, response: true, type: "http" },
-            cmd: "add",
+    const makeStore = () => {
+        const store = TStore();
+        store.dispatch({
+            type: flowsActions.RECEIVE,
+            cmd: "receive",
+            data: [],
         });
-    }
+        store.dispatch(flowsActions.setFilter(""));
+        store.dispatch(flowsActions.select("1"));
+        for (let i = 1; i <= 12; i++) {
+            store.dispatch({
+                type: flowsActions.ADD,
+                cmd: "add",
+                data: {
+                    id: i + "",
+                    request: true,
+                    response: true,
+                    type: "http",
+                    intercepted: true,
+                    modified: true,
+                },
+            });
+        }
+        return store;
+    };
 
-    const store = TStore();
-    store.getState().flows = flows;
-
-    let createKeyEvent = (key, ctrlKey = false) => {
-        // @ts-ignore
+    const createKeyEvent = (key, ctrlKey = false) => {
+        // @ts-expect-error not a real KeyboardEvent
         return onKeyDown({ key, ctrlKey, preventDefault: jest.fn() });
     };
 
     afterEach(() => {
-        store.clearActions();
-        // @ts-ignore
+        // @ts-expect-error mocking
         fetchApi.mockClear();
     });
 
-    it("should handle cursor up", () => {
-        store.getState().flows = reduceFlows(flows, flowsActions.select("2"));
-        store.dispatch(createKeyEvent("k"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["1"], type: flowsActions.SELECT },
-        ]);
-
-        store.clearActions();
-        store.dispatch(createKeyEvent("ArrowUp"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["1"], type: flowsActions.SELECT },
-        ]);
-    });
-
-    it("should handle cursor down", () => {
+    it("should handle cursor up/down", () => {
+        const store = makeStore();
+        // down
         store.dispatch(createKeyEvent("j"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["3"], type: flowsActions.SELECT },
-        ]);
-
-        store.clearActions();
+        expect(store.getState().flows.selected).toEqual(["2"]);
         store.dispatch(createKeyEvent("ArrowDown"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["3"], type: flowsActions.SELECT },
-        ]);
+        expect(store.getState().flows.selected).toEqual(["3"]);
+
+        // up
+        store.dispatch(createKeyEvent("k"));
+        expect(store.getState().flows.selected).toEqual(["2"]);
+        store.dispatch(createKeyEvent("ArrowUp"));
+        expect(store.getState().flows.selected).toEqual(["1"]);
+        store.dispatch(createKeyEvent("ArrowUp"));
+        expect(store.getState().flows.selected).toEqual(["1"]);
     });
 
-    it("should handle page down", () => {
-        store.dispatch(createKeyEvent(" "));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["12"], type: flowsActions.SELECT },
-        ]);
-
-        store.getState().flows = reduceFlows(flows, flowsActions.select("1"));
-        store.clearActions();
+    it("should handle scrolling", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("PageDown"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["11"], type: flowsActions.SELECT },
-        ]);
-    });
-
-    it("should handle page up", () => {
-        store.getState().flows = reduceFlows(flows, flowsActions.select("11"));
-        store.dispatch(createKeyEvent("PageUp"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["1"], type: flowsActions.SELECT },
-        ]);
-    });
-
-    it("should handle select first", () => {
-        store.dispatch(createKeyEvent("Home"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["1"], type: flowsActions.SELECT },
-        ]);
-    });
-
-    it("should handle select last", () => {
-        store.getState().flows = reduceFlows(flows, flowsActions.select("1"));
+        expect(store.getState().flows.selected).toEqual(["11"]);
         store.dispatch(createKeyEvent("End"));
-        expect(store.getActions()).toEqual([
-            { flowIds: ["12"], type: flowsActions.SELECT },
-        ]);
+        expect(store.getState().flows.selected).toEqual(["12"]);
+        store.dispatch(createKeyEvent("PageUp"));
+        expect(store.getState().flows.selected).toEqual(["2"]);
+        store.dispatch(createKeyEvent("Home"));
+        expect(store.getState().flows.selected).toEqual(["1"]);
     });
 
     it("should handle deselect", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("Escape"));
-        expect(store.getActions()).toEqual([
-            { flowIds: [], type: flowsActions.SELECT },
-        ]);
+        expect(store.getState().flows.selected).toEqual([]);
     });
 
     it("should handle switch to left tab", () => {
+        const store = makeStore();
+        expect(store.getState().ui.flow.tab).toBe("request");
         store.dispatch(createKeyEvent("ArrowLeft"));
-        expect(store.getActions()).toEqual([
-            { tab: "comment", type: UIActions.SET_TAB },
-        ]);
+        expect(store.getState().ui.flow.tab).toBe("comment");
     });
 
     it("should handle switch to right tab", () => {
+        const store = makeStore();
+        expect(store.getState().ui.flow.tab).toBe("request");
         store.dispatch(createKeyEvent("Tab"));
-        expect(store.getActions()).toEqual([
-            { tab: "response", type: UIActions.SET_TAB },
-        ]);
-
-        store.clearActions();
+        expect(store.getState().ui.flow.tab).toBe("response");
         store.dispatch(createKeyEvent("ArrowRight"));
-        expect(store.getActions()).toEqual([
-            { tab: "response", type: UIActions.SET_TAB },
-        ]);
+        expect(store.getState().ui.flow.tab).toBe("connection");
     });
 
     it("should handle delete action", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("d"));
-        expect(fetchApi).toBeCalledWith("/flows/1", { method: "DELETE" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1", { method: "DELETE" });
     });
 
     it("should handle create action", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("n"));
-        expect(runCommand).toBeCalledWith(
+        expect(runCommand).toHaveBeenCalledWith(
             "view.flows.create",
             "get",
-            "https://example.com/"
+            "https://example.com/",
         );
     });
 
     it("should handle duplicate action", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("D"));
-        expect(fetchApi).toBeCalledWith("/flows/1/duplicate", {
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/duplicate", {
             method: "POST",
         });
     });
 
     it("should handle resume action", () => {
+        const store = makeStore();
         // resume all
         store.dispatch(createKeyEvent("A"));
-        expect(fetchApi).toBeCalledWith("/flows/resume", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", {
+            method: "POST",
+        });
         // resume
         store.getState().flows.byId[
             store.getState().flows.selected[0]
         ].intercepted = true;
         store.dispatch(createKeyEvent("a"));
-        expect(fetchApi).toBeCalledWith("/flows/1/resume", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", {
+            method: "POST",
+        });
     });
 
     it("should handle replay action", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("r"));
-        expect(fetchApi).toBeCalledWith("/flows/1/replay", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/replay", {
+            method: "POST",
+        });
     });
 
     it("should handle revert action", () => {
-        store.getState().flows.byId[
-            store.getState().flows.selected[0]
-        ].modified = true;
+        const store = makeStore();
         store.dispatch(createKeyEvent("v"));
-        expect(fetchApi).toBeCalledWith("/flows/1/revert", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/revert", {
+            method: "POST",
+        });
     });
 
     it("should handle kill action", () => {
+        const store = makeStore();
         // kill all
         store.dispatch(createKeyEvent("X"));
-        expect(fetchApi).toBeCalledWith("/flows/kill", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/kill", {
+            method: "POST",
+        });
         // kill
         store.dispatch(createKeyEvent("x"));
-        expect(fetchApi).toBeCalledWith("/flows/1/kill", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/kill", {
+            method: "POST",
+        });
     });
 
     it("should handle clear action", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("z"));
-        expect(fetchApi).toBeCalledWith("/clear", { method: "POST" });
+        expect(fetchApi).toHaveBeenCalledWith("/clear", { method: "POST" });
     });
 
     it("should stop on some action with no flow is selected", () => {
-        store.getState().flows = reduceFlows(undefined, {});
+        const store = makeStore();
+        store.dispatch(flowsActions.select(undefined));
         store.dispatch(createKeyEvent("ArrowLeft"));
         store.dispatch(createKeyEvent("Tab"));
         store.dispatch(createKeyEvent("ArrowRight"));
         store.dispatch(createKeyEvent("D"));
-        expect(fetchApi).not.toBeCalled();
+        expect(fetchApi).not.toHaveBeenCalled();
     });
 
     it("should do nothing when Ctrl and undefined key is pressed ", () => {
+        const store = makeStore();
         store.dispatch(createKeyEvent("Backspace", true));
         store.dispatch(createKeyEvent(0));
-        expect(fetchApi).not.toBeCalled();
+        expect(fetchApi).not.toHaveBeenCalled();
     });
 
     it("should close modal", () => {
-        store.getState().ui.modal.activeModal = true;
+        const store = makeStore();
+        store.dispatch(modalActions.setActiveModal("OptionModal"));
+        expect(store.getState().ui.modal.activeModal).toEqual("OptionModal");
         store.dispatch(createKeyEvent("Escape"));
-        expect(store.getActions()).toEqual([{ type: modalActions.HIDE_MODAL }]);
+        expect(store.getState().ui.modal.activeModal).toEqual(undefined);
     });
 });

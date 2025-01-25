@@ -1,17 +1,15 @@
-import thunk from "redux-thunk";
-import configureStore, {
-    MockStoreCreator,
-    MockStoreEnhanced,
-} from "redux-mock-store";
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
-import { AppDispatch, RootState } from "../../ducks";
+import { RootState } from "../../ducks";
+import { reducer } from "../../ducks/store";
 import { DNSFlow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
-
-const mockStoreCreator: MockStoreCreator<RootState, AppDispatch> =
-    configureStore([thunk]);
+import { configureStore } from "@reduxjs/toolkit";
+import { Tab } from "../../ducks/ui/tabs";
+import { LogLevel } from "../../ducks/eventLog";
+import { ReverseProxyProtocols } from "../../backends/consts";
+import { defaultReverseState } from "../../modes/reverse";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -66,10 +64,16 @@ export const testState: RootState = {
             activeModal: undefined,
         },
         optionsEditor: {
-            booleanOption: { isUpdating: true, error: false },
-            strOption: { error: true },
-            intOption: {},
-            choiceOption: {},
+            anticache: { isUpdating: true, error: false, value: true },
+            cert_passphrase: {
+                isUpdating: false,
+                error: "incorrect password",
+                value: "correcthorsebatterystaple",
+            },
+        },
+        tabs: {
+            current: Tab.Capture,
+            isInitial: true,
         },
     },
     options: defaultOptions,
@@ -117,8 +121,8 @@ export const testState: RootState = {
             error: true,
         },
         view: [
-            { id: "1", level: "info", message: "foo" },
-            { id: "2", level: "error", message: "bar" },
+            { id: "1", level: LogLevel.info, message: "foo" },
+            { id: "2", level: LogLevel.error, message: "bar" },
         ],
         byId: {}, // TODO: incomplete
         list: [], // TODO: incomplete
@@ -128,8 +132,79 @@ export const testState: RootState = {
     commandBar: {
         visible: false,
     },
+    modes: {
+        regular: [
+            {
+                active: true,
+            },
+        ],
+        local: [
+            {
+                active: false,
+                selectedProcesses: "",
+            },
+        ],
+        wireguard: [
+            {
+                active: false,
+            },
+        ],
+        reverse: [
+            {
+                active: false,
+                protocol: ReverseProxyProtocols.HTTPS,
+                destination: "example.com",
+            },
+            defaultReverseState(),
+        ],
+        transparent: [
+            {
+                active: false,
+            },
+        ],
+        socks: [
+            {
+                active: false,
+            },
+        ],
+        upstream: [
+            {
+                active: false,
+                destination: "example.com",
+            },
+        ],
+        dns: [
+            {
+                active: false,
+            },
+        ],
+    },
+    processes: {
+        currentProcesses: [
+            {
+                is_visible: true,
+                executable: "curl.exe",
+                is_system: false,
+                display_name: "curl",
+            },
+            {
+                is_visible: true,
+                executable: "http.exe",
+                is_system: false,
+                display_name: "http",
+            },
+        ],
+        isLoading: false,
+    },
 };
 
-export function TStore(): MockStoreEnhanced<RootState, AppDispatch> {
-    return mockStoreCreator(testState);
-}
+export const TStore = () =>
+    configureStore({
+        reducer,
+        preloadedState: testState,
+        middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware({
+                immutableCheck: { warnAfter: 500_000 },
+                serializableCheck: { warnAfter: 500_000 },
+            }),
+    });

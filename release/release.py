@@ -72,7 +72,7 @@ if __name__ == "__main__":
     title = f"## {date}: mitmproxy {version}"
     cl = changelog.read_text("utf8")
     assert title not in cl
-    cl, ok = re.subn(r"(?<=## Unreleased: mitmproxy next)", f"\n\n\n\n{title}", cl)
+    cl, ok = re.subn(r"(?<=## Unreleased: mitmproxy next)", f"\n\n\n{title}", cl)
     assert ok == 1
     changelog.write_text(cl, "utf8")
 
@@ -176,7 +176,7 @@ if __name__ == "__main__":
             time.sleep(30)  # relatively strict rate limits here.
 
     print("➡️ Checking GitHub Releases...")
-    resp = get(f"https://api.github.com/repos/{repo}/releases/tags/{version}")
+    resp = get(f"https://api.github.com/repos/{repo}/releases/tags/{tag_name}")
     assert resp.status == 200
 
     print("➡️ Checking PyPI...")

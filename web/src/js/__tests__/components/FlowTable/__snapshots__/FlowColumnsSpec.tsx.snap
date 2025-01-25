@@ -133,9 +133,7 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
   />
   <span
     className="marker pull-right"
-  >
-    
-  </span>
+  />
   http://address:22/path
 </td>
 `;
@@ -152,9 +150,7 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
   />
   <span
     className="marker pull-right"
-  >
-    
-  </span>
+  />
   http://address:22/path
 </td>
 `;
@@ -186,6 +182,22 @@ exports[`should render columns: icon 1`] = `
           <div
             class="resource-icon resource-icon-websocket"
           />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
+`;
+
+exports[`should render columns: index 1`] = `
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-index"
+        >
+          1
         </td>
       </tr>
     </tbody>

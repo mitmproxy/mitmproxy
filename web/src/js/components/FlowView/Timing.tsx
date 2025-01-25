@@ -93,7 +93,7 @@ export default function Timing({ flow }: { flow: Flow }) {
                     t: flow.response?.timestamp_end,
                     deltaTo: ref,
                 },
-            ]
+            ],
         );
     }
 
@@ -105,8 +105,13 @@ export default function Timing({ flow }: { flow: Flow }) {
                     {timestamps
                         .filter((v): v is TimeStampProps => !!v.t)
                         .sort((a, b) => a.t - b.t)
-                        .map((props) => (
-                            <TimeStamp key={props.title} {...props} />
+                        .map(({ title, t, deltaTo }) => (
+                            <TimeStamp
+                                key={title}
+                                title={title}
+                                t={t}
+                                deltaTo={deltaTo}
+                            />
                         ))}
                 </tbody>
             </table>

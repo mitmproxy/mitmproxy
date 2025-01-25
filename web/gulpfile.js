@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const gulp = require("gulp");
 const gulpEsbuild = require("gulp-esbuild");
 const less = require("gulp-less");
@@ -55,7 +56,7 @@ function esbuild(dev) {
                 minify: !dev,
                 keepNames: true,
                 bundle: true,
-            })
+            }),
         )
         .pipe(gulp.dest("../mitmproxy/tools/web/static"))
         .pipe(livereload({ auto: false }));
@@ -77,16 +78,8 @@ const copy_src = [
 
 function copy() {
     return gulp
-        .src(copy_src, { base: "src/" })
+        .src(copy_src, { base: "src/", encoding: false })
         .pipe(gulp.dest("../mitmproxy/tools/web/static"));
-}
-
-const template_src = "src/templates/*";
-
-function templates() {
-    return gulp
-        .src(template_src, { base: "src/" })
-        .pipe(gulp.dest("../mitmproxy/tools/web"));
 }
 
 const peg_src = "src/js/filt/*.peg";
@@ -99,9 +92,10 @@ function peg() {
         .pipe(
             replace(
                 "module.exports = ",
-                'import * as flowutils from "../flow/utils"\n' +
-                    "export default "
-            )
+                "/* eslint-disable */\n" +
+                    'import * as flowutils from "../flow/utils"\n' +
+                    "export default ",
+            ),
         )
         .pipe(gulp.dest("src/"));
 }
@@ -112,7 +106,6 @@ const dev = gulp.parallel(
     styles_app_dev,
     peg,
     scripts_dev,
-    templates
 );
 
 const prod = gulp.parallel(
@@ -121,7 +114,6 @@ const prod = gulp.parallel(
     styles_app_prod,
     peg,
     scripts_prod,
-    templates
 );
 
 exports.dev = dev;
@@ -132,7 +124,6 @@ exports.default = function watch() {
     gulp.watch(["src/css/vendor*"], opts, styles_vendor_dev);
     gulp.watch(["src/css/**"], opts, styles_app_dev);
     gulp.watch(["src/js/**"], opts, scripts_dev);
-    gulp.watch(template_src, opts, templates);
     gulp.watch(peg_src, opts, peg);
     gulp.watch(copy_src, opts, copy);
 };

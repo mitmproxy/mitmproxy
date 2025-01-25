@@ -7,7 +7,169 @@
 
 ## Unreleased: mitmproxy next
 
-* Release tags are now prefixed with `v` again to follow SemVer convention.
+- Security Hardening: mitmweb's `xsrf_token` cookie is now `HttpOnly; SameSite=Strict`.
+  ([#7491](https://github.com/mitmproxy/mitmproxy/pull/7491), @mhils)
+- We now provide standalone binaries for Linux arm64.
+  ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
+- Standalone binaries are now compiled with Python 3.13.
+  ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
+
+## 12 January 2025: mitmproxy 11.1.0
+
+- **Local Capture Mode** is now available on Linux as well.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
+- mitmproxy now requires Python 3.12 or above.
+  ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
+- Add cache-busting for mitmweb's front end code.
+  ([#7386](https://github.com/mitmproxy/mitmproxy/pull/7386), @mhils)
+- Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
+  ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
+- Add missing status codes
+  ([#7455](https://github.com/mitmproxy/mitmproxy/pull/7455), @jwadolowski)
+- Remove filter expression lowercasing in block_list addon
+  ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
+- Remove check for status codes in the blocklist add-on.
+  ([#7453](https://github.com/mitmproxy/mitmproxy/pull/7453), @lups2000, @AdityaPatadiya)
+- Prompt user before clearing screen
+  ([#7445](https://github.com/mitmproxy/mitmproxy/pull/7445), @errorxyz)
+
+## 05 December 2024: mitmproxy 11.0.2
+
+- Stop sorting keys in JSON contentview
+  ([#7346](https://github.com/mitmproxy/mitmproxy/pull/7346), @injust)
+- Fix a bug where a custom CA would raise an error.
+  ([#7355](https://github.com/mitmproxy/mitmproxy/pull/7355), @nneonneo)
+- Fix a bug where the mitmproxy UI would crash on negative durations.
+  ([#7358](https://github.com/mitmproxy/mitmproxy/pull/7358), @mhils)
+- Allow technically invalid HTTP transfer encodings in requests if `validate_inbound_headers` is disabled.
+  ([#7361](https://github.com/mitmproxy/mitmproxy/pull/7361), [#7373](https://github.com/mitmproxy/mitmproxy/pull/7373), @mhils)
+- Fix a bug in windows management in mitmproxy TUI whereby the help window does not appear if "?" is pressed within the overlay
+  ([#6500](https://github.com/mitmproxy/mitmproxy/pull/6500), @emanuele-em)
+
+## 24 November 2024: mitmproxy 11.0.1
+
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
+  ([#7228](https://github.com/mitmproxy/mitmproxy/pull/7228), @fatanugraha)
+- Implement stricter validation of HTTP headers to harden against request smuggling attacks.
+  ([#7345](https://github.com/mitmproxy/mitmproxy/issues/7345), @mhils)
+- Increase HTTP/2 default flow control window size, fixing performance issues.
+  ([#7317](https://github.com/mitmproxy/mitmproxy/pull/7317), @sujaldev)
+- Fix a bug where mitmproxy would incorrectly report that TLS 1.0 and 1.1 are not supported
+  with the current OpenSSL build.
+  ([#7241](https://github.com/mitmproxy/mitmproxy/pull/7241), @mhils)
+- Docker: Update image to Python 3.13 on Debian Bookworm.
+  ([#7242](https://github.com/mitmproxy/mitmproxy/pull/7242), @mhils)
+- Add a `tun` proxy mode that creates a virtual network device on Linux for transparent proxying.
+  ([#7278](https://github.com/mitmproxy/mitmproxy/pull/7278), @mhils)
+- `browser.start` command now supports Firefox.
+  ([#7239](https://github.com/mitmproxy/mitmproxy/pull/7239), @sujaldev)
+- Fix interaction of the `modify_headers` and `stream_large_bodies` options.
+  This may break users of `modify_headers` that rely on filters referencing the message body.
+  We expect this to be uncommon, but please make yourself heard if that's not the case.
+  ([#7286](https://github.com/mitmproxy/mitmproxy/pull/7286), @lukant)
+- Fix a crash when handling corrupted compressed body in savehar addon and its tests.
+  ([#7320](https://github.com/mitmproxy/mitmproxy/pull/7320), @8192bytes)
+- Remove dependency on `protobuf` library as it was no longer being used.
+  ([#7327](https://github.com/mitmproxy/mitmproxy/pull/7327), @matthew16550)
+
+## 02 October 2024: mitmproxy 11.0.0
+
+- mitmproxy now supports transparent HTTP/3 proxying.
+  ([#7202](https://github.com/mitmproxy/mitmproxy/pull/7202), @errorxyz, @meitinger, @mhils)
+- Add HTTP3 support in HTTPS reverse-proxy mode.
+  ([#7114](https://github.com/mitmproxy/mitmproxy/pull/7114), @errorxyz)
+- mitmproxy now officially supports Python 3.13.
+  ([#6934](https://github.com/mitmproxy/mitmproxy/pull/6934), @mhils)
+- Tighten HTTP detection heuristic to better support custom TCP-based protocols.
+  ([#7087](https://github.com/mitmproxy/mitmproxy/pull/7087))
+- Add `show_ignored_hosts` option to display ignored flows in the UI.
+  This option is implemented as a temporary workaround and will be removed in the future.
+  ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
+- Fix slow tnetstring parsing in case of very large tnetstring.
+  ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to
+  determine the operating system's name servers.
+  ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
+- Improve the error message when users specify the `certs` option without a matching private key.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+- Fix a bug where intermediate certificates would not be transmitted when using QUIC.
+  ([#7073](https://github.com/mitmproxy/mitmproxy/pull/7073), @mhils)
+- Fix a bug where fragmented QUIC client hellos were not handled properly.
+  ([#7067](https://github.com/mitmproxy/mitmproxy/pull/7067), @errorxyz)
+- Emit a warning when users configure a TLS version that is not supported by the
+  current OpenSSL build.
+  ([#7139](https://github.com/mitmproxy/mitmproxy/pull/7139), @mhils)
+- Fix a bug where mitmproxy would crash when receiving `STOP_SENDING` QUIC frames.
+  ([#7119](https://github.com/mitmproxy/mitmproxy/pull/7119), @mhils)
+- Fix error when unmarking all flows.
+  ([#7192](https://github.com/mitmproxy/mitmproxy/pull/7192), @bburky)
+- Add addon to update the alt-svc header in reverse mode.
+  ([#7093](https://github.com/mitmproxy/mitmproxy/pull/7093), @errorxyz)
+- Do not send unnecessary empty data frames when streaming HTTP/2.
+  ([#7196](https://github.com/mitmproxy/mitmproxy/pull/7196), @rubu)
+- Fix a bug where mitmproxy would ignore Ctrl+C/SIGTERM on OpenBSD.
+  ([#7130](https://github.com/mitmproxy/mitmproxy/pull/7130), @catap)
+- Fix of measurement unit in HAR import, duration is in milliseconds.
+  ([#7179](https://github.com/mitmproxy/mitmproxy/pull/7179), @dstd)
+- `Connection.tls_version` now is `QUICv1` instead of `QUIC` for QUIC.
+  ([#7201](https://github.com/mitmproxy/mitmproxy/pull/7201), @mhils)
+- Add support for full mTLS with client certs between client and mitmproxy.
+  ([#7175](https://github.com/mitmproxy/mitmproxy/pull/7175), @Kriechi)
+- Update documentation adding a list of all possibile web_columns.
+  ([#7205](https://github.com/mitmproxy/mitmproxy/pull/7205), @lups2000, @Abhishek-Bohora)
+
+## 02 August 2024: mitmproxy 10.4.2
+
+- Fix a crash on startup when mitmproxy is unable to determine the OS' DNS servers
+  ([#7066](https://github.com/mitmproxy/mitmproxy/pull/7066), @errorxyz)
+
+## 29 July 2024: mitmproxy 10.4.1
+
+- Fix a bug where macOS local mode would not start up on macOS.
+  ([#7045](https://github.com/mitmproxy/mitmproxy/pull/7045), @mhils)
+- Fix UDP error handling when we learn that the remote has disconnected.
+  ([#7045](https://github.com/mitmproxy/mitmproxy/pull/7045), @mhils)
+- Container images are now published to both Docker Hub and GitHub Container Registry.
+  ([#7061](https://github.com/mitmproxy/mitmproxy/pull/7061), @mhils)
+
+## 25 July 2024: mitmproxy 10.4.0
+
+* Add support for DNS over TCP.
+  ([#6935](https://github.com/mitmproxy/mitmproxy/pull/6935), @errorxyz)
+* Add first MVP new Capture Tab in mitmweb
+  ([#6999](https://github.com/mitmproxy/mitmproxy/pull/6999), @lups2000)
+* Add `HttpConnectedHook` and `HttpConnectErrorHook`.
+  ([#6930](https://github.com/mitmproxy/mitmproxy/pull/6930), @errorxyz)
+* Fix non-linear growth in processing time for large HTTP bodies.
+  ([#6952](https://github.com/mitmproxy/mitmproxy/pull/6952), @jackfromeast)
+* Fix a bug where connections would be incorrectly ignored with `allow_hosts`.
+  ([#7002](https://github.com/mitmproxy/mitmproxy/pull/7002), @JarLob, @mhils)
+* Fix zstd decompression to read across frames.
+  ([#6921](https://github.com/mitmproxy/mitmproxy/pull/6921), @zendai)
+* Handle certificates we cannot parse more gracefully.
+  ([#6994](https://github.com/mitmproxy/mitmproxy/pull/6994), @mhils)
+* Parse compressed domain names in ResourceRecord data.
+  ([#6954](https://github.com/mitmproxy/mitmproxy/pull/6954), @errorxyz)
+* Fix a bug where mitmweb's flow list would not stay at the bottom.
+  ([#7008](https://github.com/mitmproxy/mitmproxy/pull/7008), @mhils)
+* Fix a bug where SSH connections would be incorrectly handled as HTTP.
+  ([#7041](https://github.com/mitmproxy/mitmproxy/pull/7041), @mhils)
+* Skip UTF-8 byte-order marks (BOM) when loading HAR files.
+  ([#6897](https://github.com/mitmproxy/mitmproxy/pull/6897), @dstd)
+* Allow `typing.Sequence[str]` to be an editable option.
+  ([#7001](https://github.com/mitmproxy/mitmproxy/pull/7001), @errorxyz)
+* Add Host header to CONNECT requests.
+  ([#7021](https://github.com/mitmproxy/mitmproxy/pull/7021), @petsneakers)
+* Support all query types in DNS mode.
+  ([#6975](https://github.com/mitmproxy/mitmproxy/pull/6975), @errorxyz)
+* Fix a bug where mitmproxy would crash for pipelined HTTP flows.
+  ([#7031](https://github.com/mitmproxy/mitmproxy/pull/7031), @gdiepen, @mhils)
+* Add an optional "index" column for mitmweb.
+  ([#7039](https://github.com/mitmproxy/mitmproxy/pull/7039), @mhils)
+
+## 12 June 2024: mitmproxy 10.3.1
+
+* Release tags are now prefixed with `v` again.
   ([#6810](https://github.com/mitmproxy/mitmproxy/pull/6810), @mhils)
 * Fix a bug where mitmproxy would not exit when `-n` is passed.
   ([#6819](https://github.com/mitmproxy/mitmproxy/pull/6819), @mhils)
@@ -15,7 +177,16 @@
   ([#6821](https://github.com/mitmproxy/mitmproxy/pull/6821), @Prinzhorn)
 * Fix a bug where client replay would not work with proxyauth.
   ([#6866](https://github.com/mitmproxy/mitmproxy/pull/6866), @mhils)
-
+* Fix slowdown when sending large amounts of data over HTTP/2.
+  ([#6875](https://github.com/mitmproxy/mitmproxy/pull/6875), @aib)
+* Add an option to strip HTTPS records from DNS responses to block encrypted ClientHellos.
+  ([#6876](https://github.com/mitmproxy/mitmproxy/pull/6876), @errorxyz)
+* Add an API to parse HTTPS records from DNS RDATA.
+  ([#6884](https://github.com/mitmproxy/mitmproxy/pull/6884), @errorxyz)
+* Fix flow export in mitmweb for Safari
+  ([#6917](https://github.com/mitmproxy/mitmproxy/pull/6917), @mhils, @canyesilyurt)
+* Releases now come with a Sigstore attestations file to demonstrate build provenance.
+  ([f05c050](https://github.com/mitmproxy/mitmproxy/commit/f05c050f615b9ab9963707944c893bc94e738525), @mhils)
 
 ## 17 April 2024: mitmproxy 10.3.0
 
@@ -28,7 +199,7 @@
 * Fix multipart form content view being unusable.
   ([#6653](https://github.com/mitmproxy/mitmproxy/pull/6653), @DaniElectra)
 * Documentation Improvements on CA Certificate Generation
-  ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)  
+  ([#5370](https://github.com/mitmproxy/mitmproxy/pull/5370), @zioalex)
 * Make it possible to read flows from stdin with mitmweb.
   ([#6732](https://github.com/mitmproxy/mitmproxy/pull/6732), @jaywor1)
 * Update aioquic dependency to >= 1.0.0, < 2.0.0.

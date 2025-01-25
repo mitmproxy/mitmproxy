@@ -21,6 +21,16 @@ class Options(optmanager.OptManager):
             False,
             "Use the Host header to construct URLs for display.",
         )
+        self.add_option(
+            "show_ignored_hosts",
+            bool,
+            False,
+            """
+            Record ignored flows in the UI even if we do not perform TLS interception.
+            This option will keep ignored flows' contents in memory, which can greatly increase memory usage.
+            A future release will fix this issue, record ignored flows by default, and remove this option.
+            """,
+        )
 
         # Proxy options
         self.add_option(
@@ -61,18 +71,6 @@ class Options(optmanager.OptManager):
             Note that passing cert_passphrase on the command line makes your passphrase visible in your system's
             process list. Specify it in config.yaml to avoid this.
             """,
-        )
-        self.add_option(
-            "ciphers_client",
-            Optional[str],
-            None,
-            "Set supported ciphers for client <-> mitmproxy connections using OpenSSL syntax.",
-        )
-        self.add_option(
-            "ciphers_server",
-            Optional[str],
-            None,
-            "Set supported ciphers for mitmproxy <-> server connections using OpenSSL syntax.",
         )
         self.add_option(
             "client_certs", Optional[str], None, "Client certificate file or directory."
@@ -148,6 +146,12 @@ class Options(optmanager.OptManager):
             bool,
             True,
             "Enable/disable support for QUIC and HTTP/3. Enabled by default.",
+        )
+        self.add_option(
+            "http_connect_send_host_header",
+            bool,
+            True,
+            "Include host header with CONNECT requests. Enabled by default.",
         )
         self.add_option(
             "websocket",

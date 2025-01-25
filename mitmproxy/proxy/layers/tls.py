@@ -1,5 +1,6 @@
 import struct
 import time
+import typing
 from collections.abc import Iterator
 from dataclasses import dataclass
 from logging import DEBUG
@@ -11,6 +12,7 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import connection
+from mitmproxy.connection import TlsVersion
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
 from mitmproxy.proxy import commands
@@ -157,7 +159,9 @@ def dtls_parse_client_hello(data: bytes) -> ClientHello | None:
 
 
 HTTP1_ALPNS = (b"http/1.1", b"http/1.0", b"http/0.9")
-HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
+HTTP2_ALPN = b"h2"
+HTTP3_ALPN = b"h3"
+HTTP_ALPNS = (HTTP3_ALPN, HTTP2_ALPN, *HTTP1_ALPNS)
 
 
 # We need these classes as hooks can only have one argument at the moment.
@@ -360,14 +364,24 @@ class TLSLayer(tunnel.TunnelLayer):
                 cert = self.tls.get_peer_certificate()
                 if cert:
                     all_certs.insert(0, cert)
+            self.conn.certificate_list = []
+            for cert in all_certs:
+                try:
+                    # This may fail for weird certs, https://github.com/mitmproxy/mitmproxy/issues/6968.
+                    parsed_cert = certs.Cert.from_pyopenssl(cert)
+                except ValueError as e:
+                    yield commands.Log(
+                        f"{self.debug}[tls] failed to parse certificate: {e}", WARNING
+                    )
+                else:
+                    self.conn.certificate_list.append(parsed_cert)
 
             self.conn.timestamp_tls_setup = time.time()
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
-            self.conn.certificate_list = [
-                certs.Cert.from_pyopenssl(x) for x in all_certs
-            ]
             self.conn.cipher = self.tls.get_cipher_name()
-            self.conn.tls_version = self.tls.get_protocol_version_name()
+            self.conn.tls_version = typing.cast(
+                TlsVersion, self.tls.get_protocol_version_name()
+            )
             if self.debug:
                 yield commands.Log(
                     f"{self.debug}[tls] tls established: {self.conn}", DEBUG

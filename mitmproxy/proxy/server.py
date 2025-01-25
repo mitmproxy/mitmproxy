@@ -20,9 +20,9 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Literal
 
-import mitmproxy_rs
 from OpenSSL import SSL
 
+import mitmproxy_rs
 from mitmproxy import http
 from mitmproxy import options as moptions
 from mitmproxy import tls
@@ -103,14 +103,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     max_conns: collections.defaultdict[Address, asyncio.Semaphore]
     layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
-    hook_tasks: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
         self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
-        self.hook_tasks = set()
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -121,6 +119,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         else:
             timeout = UDP_TIMEOUT
         self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
+
+        self._server_event_lock = asyncio.Lock()
 
         # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
         self._drain_lock = asyncio.Lock()
@@ -133,6 +133,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         watch = asyncio_utils.create_task(
             self.timeout_watchdog.watch(),
             name="timeout watchdog",
+            keep_ref=False,
             client=self.client.peername,
         )
 
@@ -144,10 +145,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             assert writer
             writer.close()
         else:
-            self.server_event(events.Start())
+            await self.server_event(events.Start())
             handler = asyncio_utils.create_task(
                 self.handle_connection(self.client),
                 name=f"client connection handler",
+                keep_ref=False,
                 client=self.client.peername,
             )
             self.transports[self.client].handler = handler
@@ -181,7 +183,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
             self.log(f"Cannot open connection, no hostname given.")
-            self.server_event(
+            await self.server_event(
                 events.OpenConnectionCompleted(
                     command, f"Cannot open connection, no hostname given."
                 )
@@ -197,7 +199,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 f"server connection to {human.format_address(command.connection.address)} killed before connect: {err}"
             )
             await self.handle_hook(server_hooks.ServerConnectErrorHook(hook_data))
-            self.server_event(
+            await self.server_event(
                 events.OpenConnectionCompleted(command, f"Connection killed: {err}")
             )
             return
@@ -213,7 +215,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         local_addr=command.connection.sockname,
                     )
                 elif command.connection.transport_protocol == "udp":
-                    reader = writer = await mitmproxy_rs.open_udp_connection(
+                    reader = writer = await mitmproxy_rs.udp.open_udp_connection(
                         *command.connection.address,
                         local_addr=command.connection.sockname,
                     )
@@ -226,7 +228,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 self.log(f"error establishing server connection: {err}")
                 command.connection.error = err
                 await self.handle_hook(server_hooks.ServerConnectErrorHook(hook_data))
-                self.server_event(events.OpenConnectionCompleted(command, err))
+                await self.server_event(events.OpenConnectionCompleted(command, err))
                 if isinstance(e, asyncio.CancelledError):
                     # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
                     # > In almost all situations the exception must be re-raised.
@@ -252,7 +254,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     addr = human.format_address(command.connection.address)
                 self.log(f"server connect {addr}")
                 await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
-                self.server_event(events.OpenConnectionCompleted(command, None))
+                await self.server_event(events.OpenConnectionCompleted(command, None))
 
                 try:
                     await self.handle_connection(command.connection)
@@ -268,7 +270,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         task = asyncio.current_task()
         assert task is not None
         self.wakeup_timer.discard(task)
-        self.server_event(events.Wakeup(request))
+        await self.server_event(events.Wakeup(request))
 
     async def handle_connection(self, connection: Connection) -> None:
         """
@@ -290,7 +292,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 cancelled = e
                 break
 
-            self.server_event(events.DataReceived(connection, data))
+            await self.server_event(events.DataReceived(connection, data))
 
             try:
                 await self.drain_writers()
@@ -304,7 +306,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         else:
             connection.state = ConnectionState.CLOSED
 
-        self.server_event(events.ConnectionClosed(connection))
+        await self.server_event(events.ConnectionClosed(connection))
 
         if connection.state is ConnectionState.CAN_WRITE:
             # we may still use this connection to *send* stuff,
@@ -355,7 +357,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     async def hook_task(self, hook: commands.StartHook) -> None:
         await self.handle_hook(hook)
         if hook.blocking:
-            self.server_event(events.HookCompleted(hook))
+            await self.server_event(events.HookCompleted(hook))
 
     @abc.abstractmethod
     async def handle_hook(self, hook: commands.StartHook) -> None:
@@ -373,56 +375,67 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             level, message, extra={"client": self.client.peername}, exc_info=exc_info
         )
 
-    def server_event(self, event: events.Event) -> None:
-        self.timeout_watchdog.register_activity()
-        try:
-            layer_commands = self.layer.handle_event(event)
-            for command in layer_commands:
-                if isinstance(command, commands.OpenConnection):
-                    assert command.connection not in self.transports
-                    handler = asyncio_utils.create_task(
-                        self.open_connection(command),
-                        name=f"server connection handler {command.connection.address}",
-                        client=self.client.peername,
-                    )
-                    self.transports[command.connection] = ConnectionIO(handler=handler)
-                elif isinstance(command, commands.RequestWakeup):
-                    task = asyncio_utils.create_task(
-                        self.wakeup(command),
-                        name=f"wakeup timer ({command.delay:.1f}s)",
-                        client=self.client.peername,
-                    )
-                    assert task is not None
-                    self.wakeup_timer.add(task)
-                elif (
-                    isinstance(command, commands.ConnectionCommand)
-                    and command.connection not in self.transports
-                ):
-                    pass  # The connection has already been closed.
-                elif isinstance(command, commands.SendData):
-                    writer = self.transports[command.connection].writer
-                    assert writer
-                    if not writer.is_closing():
-                        writer.write(command.data)
-                elif isinstance(command, commands.CloseTcpConnection):
-                    self.close_connection(command.connection, command.half_close)
-                elif isinstance(command, commands.CloseConnection):
-                    self.close_connection(command.connection, False)
-                elif isinstance(command, commands.StartHook):
-                    t = asyncio_utils.create_task(
-                        self.hook_task(command),
-                        name=f"handle_hook({command.name})",
-                        client=self.client.peername,
-                    )
-                    # Python 3.11 Use TaskGroup instead.
-                    self.hook_tasks.add(t)
-                    t.add_done_callback(self.hook_tasks.remove)
-                elif isinstance(command, commands.Log):
-                    self.log(command.message, command.level)
-                else:
-                    raise RuntimeError(f"Unexpected command: {command}")
-        except Exception:
-            self.log(f"mitmproxy has crashed!", logging.ERROR, exc_info=True)
+    async def server_event(self, event: events.Event) -> None:
+        # server_event is supposed to be completely sync without any `await` that could pause execution.
+        # However, create_task with an [eager task factory] will schedule tasks immediately,
+        # which causes [reentrancy issues]. So we put the entire thing behind a lock.
+        #
+        # [eager task factory]: https://docs.python.org/3/library/asyncio-task.html#eager-task-factory
+        # [reentrancy issues]: https://github.com/mitmproxy/mitmproxy/issues/7027.
+        async with self._server_event_lock:
+            # No `await` beyond this point.
+
+            self.timeout_watchdog.register_activity()
+            try:
+                layer_commands = self.layer.handle_event(event)
+                for command in layer_commands:
+                    if isinstance(command, commands.OpenConnection):
+                        assert command.connection not in self.transports
+                        handler = asyncio_utils.create_task(
+                            self.open_connection(command),
+                            name=f"server connection handler {command.connection.address}",
+                            keep_ref=False,
+                            client=self.client.peername,
+                        )
+                        self.transports[command.connection] = ConnectionIO(
+                            handler=handler
+                        )
+                    elif isinstance(command, commands.RequestWakeup):
+                        task = asyncio_utils.create_task(
+                            self.wakeup(command),
+                            name=f"wakeup timer ({command.delay:.1f}s)",
+                            keep_ref=False,
+                            client=self.client.peername,
+                        )
+                        assert task is not None
+                        self.wakeup_timer.add(task)
+                    elif (
+                        isinstance(command, commands.ConnectionCommand)
+                        and command.connection not in self.transports
+                    ):
+                        pass  # The connection has already been closed.
+                    elif isinstance(command, commands.SendData):
+                        writer = self.transports[command.connection].writer
+                        assert writer
+                        if not writer.is_closing():
+                            writer.write(command.data)
+                    elif isinstance(command, commands.CloseTcpConnection):
+                        self.close_connection(command.connection, command.half_close)
+                    elif isinstance(command, commands.CloseConnection):
+                        self.close_connection(command.connection, False)
+                    elif isinstance(command, commands.StartHook):
+                        asyncio_utils.create_task(
+                            self.hook_task(command),
+                            name=f"handle_hook({command.name})",
+                            keep_ref=True,
+                            client=self.client.peername,
+                        )
+                    elif isinstance(command, commands.Log):
+                        self.log(command.message, command.level)
+                    else:
+                        raise RuntimeError(f"Unexpected command: {command}")
+            except Exception:
+                self.log(f"mitmproxy has crashed!", logging.ERROR, exc_info=True)
 
     def close_connection(
         self, connection: Connection, half_close: bool = False
@@ -478,9 +491,9 @@ class SimpleConnectionHandler(LiveConnectionHandler):  # pragma: no cover
 
     hook_handlers: dict[str, Callable]
 
-    def __init__(self, reader, writer, options, mode, hooks):
+    def __init__(self, reader, writer, options, mode, hook_handlers):
         super().__init__(reader, writer, options, mode)
-        self.hook_handlers = hooks
+        self.hook_handlers = hook_handlers
 
     async def handle_hook(self, hook: commands.StartHook) -> None:
         if hook.name in self.hook_handlers:

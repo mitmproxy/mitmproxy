@@ -4,6 +4,7 @@ import os
 import ssl
 from pathlib import Path
 from typing import Any
+from typing import Literal
 from typing import TypedDict
 
 from aioquic.h3.connection import H3_ALPN
@@ -24,10 +25,12 @@ from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers import quic
 from mitmproxy.proxy.layers import tls as proxy_tls
 
+logger = logging.getLogger(__name__)
+
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
 
-DEFAULT_CIPHERS = (
+_DEFAULT_CIPHERS = (
     "ECDHE-ECDSA-AES128-GCM-SHA256",
     "ECDHE-RSA-AES128-GCM-SHA256",
     "ECDHE-ECDSA-AES256-GCM-SHA384",
@@ -55,6 +58,22 @@ DEFAULT_CIPHERS = (
     "AES256-SHA",
     "DES-CBC3-SHA",
 )
+
+_DEFAULT_CIPHERS_WITH_SECLEVEL_0 = ("@SECLEVEL=0", *_DEFAULT_CIPHERS)
+
+
+def _default_ciphers(
+    min_tls_version: net_tls.Version,
+) -> tuple[str, ...]:
+    """
+    @SECLEVEL=0 is necessary for TLS 1.1 and below to work,
+    see https://github.com/pyca/cryptography/issues/9523
+    """
+    if min_tls_version in net_tls.INSECURE_TLS_MIN_VERSIONS:
+        return _DEFAULT_CIPHERS_WITH_SECLEVEL_0
+    else:
+        return _DEFAULT_CIPHERS
+
 
 # 2022/05: X509_CHECK_FLAG_NEVER_CHECK_SUBJECT is not available in LibreSSL, ignore gracefully as it's not critical.
 DEFAULT_HOSTFLAGS = (
@@ -107,8 +126,6 @@ class TlsConfig:
     # TODO: This addon should manage the following options itself, which are current defined in mitmproxy/options.py:
     #  - upstream_cert
     #  - add_upstream_certs_to_client_chain
-    #  - ciphers_client
-    #  - ciphers_server
     #  - key_size
     #  - certs
     #  - cert_passphrase
@@ -116,12 +133,17 @@ class TlsConfig:
     #  - ssl_verify_upstream_trusted_confdir
 
     def load(self, loader):
+        insecure_tls_min_versions = (
+            ", ".join(x.name for x in net_tls.INSECURE_TLS_MIN_VERSIONS[:-1])
+            + f" and {net_tls.INSECURE_TLS_MIN_VERSIONS[-1].name}"
+        )
         loader.add_option(
             name="tls_version_client_min",
             typespec=str,
             default=net_tls.DEFAULT_MIN_VERSION.name,
             choices=[x.name for x in net_tls.Version],
-            help=f"Set the minimum TLS version for client connections.",
+            help=f"Set the minimum TLS version for client connections. "
+            f"{insecure_tls_min_versions} are insecure.",
         )
         loader.add_option(
             name="tls_version_client_max",
@@ -135,7 +157,8 @@ class TlsConfig:
             typespec=str,
             default=net_tls.DEFAULT_MIN_VERSION.name,
             choices=[x.name for x in net_tls.Version],
-            help=f"Set the minimum TLS version for server connections.",
+            help=f"Set the minimum TLS version for server connections. "
+            f"{insecure_tls_min_versions} are insecure.",
         )
         loader.add_option(
             name="tls_version_server_max",
@@ -157,6 +180,24 @@ class TlsConfig:
             default=None,
             help="Use a specific elliptic curve for ECDHE key exchange on server connections. "
             'OpenSSL syntax, for example "prime256v1" (see `openssl ecparam -list_curves`).',
+        )
+        loader.add_option(
+            name="request_client_cert",
+            typespec=bool,
+            default=False,
+            help=f"Requests a client certificate (TLS message 'CertificateRequest') to establish a mutual TLS connection between client and mitmproxy (combined with 'client_certs' option for mitmproxy and upstream).",
+        )
+        loader.add_option(
+            "ciphers_client",
+            str | None,
+            None,
+            "Set supported ciphers for client <-> mitmproxy connections using OpenSSL syntax.",
+        )
+        loader.add_option(
+            "ciphers_server",
+            str | None,
+            None,
+            "Set supported ciphers for mitmproxy <-> server connections using OpenSSL syntax.",
         )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
@@ -180,7 +221,9 @@ class TlsConfig:
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
         # don't assign to client.cipher_list, doesn't need to be stored.
-        cipher_list = client.cipher_list or DEFAULT_CIPHERS
+        cipher_list = client.cipher_list or _default_ciphers(
+            net_tls.Version[ctx.options.tls_version_client_min]
+        )
 
         if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
             # exempted from coverage until https://bugs.python.org/issue18233 is fixed.
@@ -197,7 +240,7 @@ class TlsConfig:
             cipher_list=tuple(cipher_list),
             ecdh_curve=ctx.options.tls_ecdh_curve_client,
             chain_file=entry.chain_file,
-            request_client_cert=False,
+            request_client_cert=ctx.options.request_client_cert,
             alpn_select_callback=alpn_select_callback,
             extra_chain_certs=tuple(extra_chain_certs),
             dhparams=self.certstore.dhparams,
@@ -270,7 +313,9 @@ class TlsConfig:
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
         # don't assign to client.cipher_list, doesn't need to be stored.
-        cipher_list = server.cipher_list or DEFAULT_CIPHERS
+        cipher_list = server.cipher_list or _default_ciphers(
+            net_tls.Version[ctx.options.tls_version_server_min]
+        )
 
         client_cert: str | None = None
         if ctx.options.client_certs:
@@ -441,7 +486,7 @@ class TlsConfig:
                 else None,
             )
             if self.certstore.default_ca.has_expired():
-                logging.warning(
+                logger.warning(
                     "The mitmproxy certificate authority has expired!\n"
                     "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
                     "The CA will be regenerated automatically after restarting mitmproxy.\n"
@@ -483,6 +528,60 @@ class TlsConfig:
                         raise exceptions.OptionsError(
                             f"Invalid ECDH curve: {ecdh_curve!r}"
                         ) from e
+
+        if "tls_version_client_min" in updated:
+            self._warn_unsupported_version("tls_version_client_min", True)
+        if "tls_version_client_max" in updated:
+            self._warn_unsupported_version("tls_version_client_max", False)
+        if "tls_version_server_min" in updated:
+            self._warn_unsupported_version("tls_version_server_min", True)
+        if "tls_version_server_max" in updated:
+            self._warn_unsupported_version("tls_version_server_max", False)
+        if "tls_version_client_min" in updated or "ciphers_client" in updated:
+            self._warn_seclevel_missing("client")
+        if "tls_version_server_min" in updated or "ciphers_server" in updated:
+            self._warn_seclevel_missing("server")
+
+    def _warn_unsupported_version(self, attribute: str, warn_unbound: bool):
+        val = net_tls.Version[getattr(ctx.options, attribute)]
+        supported_versions = [
+            v for v in net_tls.Version if net_tls.is_supported_version(v)
+        ]
+        supported_versions_str = ", ".join(v.name for v in supported_versions)
+
+        if val is net_tls.Version.UNBOUNDED:
+            if warn_unbound:
+                logger.info(
+                    f"{attribute} has been set to {val.name}. Note that your "
+                    f"OpenSSL build only supports the following TLS versions: {supported_versions_str}"
+                )
+        elif val not in supported_versions:
+            logger.warning(
+                f"{attribute} has been set to {val.name}, which is not supported by the current OpenSSL build. "
+                f"The current build only supports the following versions: {supported_versions_str}"
+            )
+
+    def _warn_seclevel_missing(self, side: Literal["client", "server"]) -> None:
+        """
+        OpenSSL cipher spec need to specify @SECLEVEL for old TLS versions to work,
+        see https://github.com/pyca/cryptography/issues/9523.
+        """
+        if side == "client":
+            custom_ciphers = ctx.options.ciphers_client
+            min_tls_version = ctx.options.tls_version_client_min
+        else:
+            custom_ciphers = ctx.options.ciphers_server
+            min_tls_version = ctx.options.tls_version_server_min
+
+        if (
+            custom_ciphers
+            and net_tls.Version[min_tls_version] in net_tls.INSECURE_TLS_MIN_VERSIONS
+            and "@SECLEVEL=0" not in custom_ciphers
+        ):
+            logger.warning(
+                f'With tls_version_{side}_min set to {min_tls_version}, ciphers_{side} must include "@SECLEVEL=0" '
+                f"for insecure TLS versions to work."
+            )
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """

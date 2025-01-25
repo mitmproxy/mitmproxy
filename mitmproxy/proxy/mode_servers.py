@@ -33,7 +33,6 @@ from typing import TYPE_CHECKING
 from typing import TypeVar
 
 import mitmproxy_rs
-
 from mitmproxy import ctx
 from mitmproxy import flow
 from mitmproxy import platform
@@ -185,8 +184,11 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
     async def handle_stream(
         self,
         reader: asyncio.StreamReader | mitmproxy_rs.Stream,
-        writer: asyncio.StreamWriter | mitmproxy_rs.Stream,
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream | None = None,
     ) -> None:
+        if writer is None:
+            assert isinstance(reader, mitmproxy_rs.Stream)
+            writer = reader
         handler = ProxyConnectionHandler(
             ctx.master, reader, writer, ctx.options, self.mode
         )
@@ -205,7 +207,8 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
                 handler.layer.context.client.sockname = original_dst
                 handler.layer.context.server.address = original_dst
         elif isinstance(
-            self.mode, (mode_specs.WireGuardMode, mode_specs.LocalMode)
+            self.mode,
+            (mode_specs.WireGuardMode, mode_specs.LocalMode, mode_specs.TunMode),
         ):  # pragma: no cover on platforms without wg-test-client
             handler.layer.context.server.address = writer.get_extra_info(
                 "remote_endpoint", handler.layer.context.client.sockname
@@ -214,12 +217,9 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
         with self.manager.register_connection(handler.layer.context.client.id, handler):
             await handler.handle_client()
 
-    async def handle_udp_stream(self, stream: mitmproxy_rs.Stream) -> None:
-        await self.handle_stream(stream, stream)
-
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: list[asyncio.Server | mitmproxy_rs.UdpServer]
+    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -233,7 +233,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def listen_addrs(self) -> tuple[Address, ...]:
         addrs = []
         for s in self._servers:
-            if isinstance(s, mitmproxy_rs.UdpServer):
+            if isinstance(s, mitmproxy_rs.udp.UdpServer):
                 addrs.append(s.getsockname())
             else:
                 try:
@@ -246,6 +246,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         assert not self._servers
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
+        assert port is not None
         try:
             self._servers = await self.listen(host, port)
         except OSError as e:
@@ -270,8 +271,12 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> list[asyncio.Server | mitmproxy_rs.UdpServer]:
-        if self.mode.transport_protocol == "tcp":
+    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer]:
+        if self.mode.transport_protocol not in ("tcp", "udp", "both"):
+            raise AssertionError(self.mode.transport_protocol)
+
+        servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer] = []
+        if self.mode.transport_protocol in ("tcp", "both"):
             # workaround for https://github.com/python/cpython/issues/89856:
             # We want both IPv4 and IPv6 sockets to bind to the same port.
             # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
@@ -280,49 +285,56 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.bind(("", 0))
-                    fixed_port = s.getsockname()[1]
+                    port = s.getsockname()[1]
                     s.close()
-                    return [
-                        await asyncio.start_server(self.handle_stream, host, fixed_port)
-                    ]
+                    servers.append(
+                        await asyncio.start_server(self.handle_stream, host, port)
+                    )
                 except Exception as e:
                     logger.debug(
                         f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                     )
-            return [await asyncio.start_server(self.handle_stream, host, port)]
-        elif self.mode.transport_protocol == "udp":
+                    port = 0
+                    servers.append(
+                        await asyncio.start_server(self.handle_stream, host, port)
+                    )
+            else:
+                servers.append(
+                    await asyncio.start_server(self.handle_stream, host, port)
+                )
+        if self.mode.transport_protocol in ("udp", "both"):
             # we start two servers for dual-stack support.
             # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
             if host == "":
-                ipv4 = await mitmproxy_rs.start_udp_server(
+                ipv4 = await mitmproxy_rs.udp.start_udp_server(
                     "0.0.0.0",
                     port,
-                    self.handle_udp_stream,
+                    self.handle_stream,
                 )
+                servers.append(ipv4)
                 try:
-                    ipv6 = await mitmproxy_rs.start_udp_server(
-                        "::",
+                    ipv6 = await mitmproxy_rs.udp.start_udp_server(
+                        "[::]",
                         ipv4.getsockname()[1],
-                        self.handle_udp_stream,
+                        self.handle_stream,
                     )
+                    servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
-                    return [ipv4]
-                else:  # pragma: no cover
-                    return [ipv4, ipv6]
-            return [
-                await mitmproxy_rs.start_udp_server(
-                    host,
-                    port,
-                    self.handle_udp_stream,
+            else:
+                servers.append(
+                    await mitmproxy_rs.udp.start_udp_server(
+                        host,
+                        port,
+                        self.handle_stream,
+                    )
                 )
-            ]
-        else:
-            raise AssertionError(self.mode.transport_protocol)
+
+        return servers
 
 
 class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
-    _server: mitmproxy_rs.WireGuardServer | None = None
+    _server: mitmproxy_rs.wireguard.WireGuardServer | None = None
 
     server_key: str
     client_key: str
@@ -347,6 +359,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         assert self._server is None
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
+        assert port is not None
 
         if self.mode.data:
             conf_path = Path(self.mode.data).expanduser()
@@ -358,8 +371,8 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             conf_path.write_text(
                 json.dumps(
                     {
-                        "server_key": mitmproxy_rs.genkey(),
-                        "client_key": mitmproxy_rs.genkey(),
+                        "server_key": mitmproxy_rs.wireguard.genkey(),
+                        "client_key": mitmproxy_rs.wireguard.genkey(),
                     },
                     indent=4,
                 )
@@ -372,16 +385,16 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         except Exception as e:
             raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
         # error early on invalid keys
-        p = mitmproxy_rs.pubkey(self.client_key)
-        _ = mitmproxy_rs.pubkey(self.server_key)
+        p = mitmproxy_rs.wireguard.pubkey(self.client_key)
+        _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
 
-        self._server = await mitmproxy_rs.start_wireguard_server(
+        self._server = await mitmproxy_rs.wireguard.start_wireguard_server(
             host or "0.0.0.0",
             port,
             self.server_key,
             [p],
-            self.wg_handle_stream,
-            self.wg_handle_stream,
+            self.handle_stream,
+            self.handle_stream,
         )
 
         conf = self.client_conf()
@@ -405,7 +418,7 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             DNS = 10.0.0.53
 
             [Peer]
-            PublicKey = {mitmproxy_rs.pubkey(self.server_key)}
+            PublicKey = {mitmproxy_rs.wireguard.pubkey(self.server_key)}
             AllowedIPs = 0.0.0.0/0
             Endpoint = {host}:{port}
             """
@@ -422,14 +435,9 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         finally:
             self._server = None
 
-    async def wg_handle_stream(
-        self, stream: mitmproxy_rs.Stream
-    ) -> None:  # pragma: no cover on platforms without wg-test-client
-        await self.handle_stream(stream, stream)
-
 
 class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
-    _server: ClassVar[mitmproxy_rs.LocalRedirector | None] = None
+    _server: ClassVar[mitmproxy_rs.local.LocalRedirector | None] = None
     """The local redirector daemon. Will be started once and then reused for all future instances."""
     _instance: ClassVar[LocalRedirectorInstance | None] = None
     """The current LocalRedirectorInstance. Will be unset again if an instance is stopped."""
@@ -448,16 +456,14 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         stream: mitmproxy_rs.Stream,
     ) -> None:
         if cls._instance is not None:
-            await cls._instance.handle_stream(stream, stream)
+            await cls._instance.handle_stream(stream)
 
     async def _start(self) -> None:
         if self._instance:
             raise RuntimeError("Cannot spawn more than one local redirector.")
 
-        if self.mode.data.startswith("!"):
-            spec = f"{self.mode.data},{os.getpid()}"
-        elif self.mode.data:
-            spec = self.mode.data
+        if self.mode.data:
+            spec = f"{self.mode.data},!{os.getpid()}"
         else:
             spec = f"!{os.getpid()}"
 
@@ -465,7 +471,7 @@ class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
         cls._instance = self  # assign before awaiting to avoid races
         if cls._server is None:
             try:
-                cls._server = await mitmproxy_rs.start_local_redirector(
+                cls._server = await mitmproxy_rs.local.start_local_redirector(
                     cls.redirector_handle_stream,
                     cls.redirector_handle_stream,
                 )
@@ -511,6 +517,47 @@ class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
 class DnsInstance(AsyncioServerInstance[mode_specs.DnsMode]):
     def make_top_layer(self, context: Context) -> Layer:
         return layers.DNSLayer(context)
+
+
+class TunInstance(ServerInstance[mode_specs.TunMode]):
+    _server: mitmproxy_rs.tun.TunInterface | None = None
+    listen_addrs = ()
+
+    def make_top_layer(
+        self, context: Context
+    ) -> Layer:  # pragma: no cover mocked in tests
+        return layers.modes.TransparentProxy(context)
+
+    @property
+    def is_running(self) -> bool:
+        return self._server is not None
+
+    @property
+    def tun_name(self) -> str | None:
+        if self._server:
+            return self._server.tun_name()
+        else:
+            return None
+
+    def to_json(self) -> dict:
+        return {"tun_name": self.tun_name, **super().to_json()}
+
+    async def _start(self) -> None:
+        assert self._server is None
+        self._server = await mitmproxy_rs.tun.create_tun_interface(
+            self.handle_stream,
+            self.handle_stream,
+            tun_name=self.mode.data or None,
+        )
+        logger.info(f"TUN interface created: {self._server.tun_name()}")
+
+    async def _stop(self) -> None:
+        assert self._server is not None
+        try:
+            self._server.close()
+            await self._server.wait_closed()
+        finally:
+            self._server = None
 
 
 # class Http3Instance(AsyncioServerInstance[mode_specs.Http3Mode]):

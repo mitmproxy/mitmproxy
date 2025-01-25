@@ -5,6 +5,6 @@ type HideInStaticProps = {
 };
 
 export default function HideInStatic({ children }: HideInStaticProps) {
-    // @ts-ignore
+    // @ts-expect-error unknown property.
     return window.MITMWEB_STATIC ? null : <>{children}</>;
 }

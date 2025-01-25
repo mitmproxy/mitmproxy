@@ -17,7 +17,7 @@ describe("VirtualScroll", () => {
                 rowHeight: 32,
                 viewportHeight: 400,
                 viewportTop: 0,
-            })
+            }),
         ).toEqual({
             start: 0,
             end: 0,
@@ -34,7 +34,7 @@ describe("VirtualScroll", () => {
                 viewportHeight: 300,
                 viewportTop: 0,
                 rowHeight: 100,
-            })
+            }),
         ).toEqual({
             start: 0,
             end: 4,
@@ -50,7 +50,7 @@ describe("VirtualScroll", () => {
                 rowHeight: 32,
                 viewportHeight: 400,
                 viewportTop: 12_000,
-            })
+            }),
         ).toEqual({
             start: 0,
             end: 10,
@@ -67,7 +67,7 @@ describe("VirtualScroll", () => {
                 viewportHeight: 400,
                 viewportTop: 12_000,
                 rowHeight: 32,
-            })
+            }),
         ).toEqual({
             start: 0,
             end: 4,

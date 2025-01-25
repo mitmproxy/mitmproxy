@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 import ipaddress
+import logging
 import os
 import sys
 import warnings
@@ -19,11 +20,14 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dsa
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.types import CertificatePublicKeyTypes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import ExtendedKeyUsageOID
 from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
+
+logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 CA_EXPIRY = datetime.timedelta(days=10 * 365)
@@ -91,6 +95,9 @@ class Cert(serializable.Serializable):
     def to_pyopenssl(self) -> OpenSSL.crypto.X509:
         return OpenSSL.crypto.X509.from_cryptography(self._cert)
 
+    def public_key(self) -> CertificatePublicKeyTypes:
+        return self._cert.public_key()
+
     def fingerprint(self) -> bytes:
         return self._cert.fingerprint(hashes.SHA256())
 
@@ -126,6 +133,17 @@ class Cert(serializable.Serializable):
     @property
     def serial(self) -> int:
         return self._cert.serial_number
+
+    @property
+    def is_ca(self) -> bool:
+        constraints: x509.BasicConstraints
+        try:
+            constraints = self._cert.extensions.get_extension_for_class(
+                x509.BasicConstraints
+            ).value
+            return constraints.ca
+        except x509.ExtensionNotFound:
+            return False
 
     @property
     def keyinfo(self) -> tuple[str, int]:
@@ -344,6 +362,11 @@ class CertStore:
     """
 
     STORE_CAP = 100
+    default_privatekey: rsa.RSAPrivateKey
+    default_ca: Cert
+    default_chain_file: Path | None
+    default_chain_certs: list[Cert]
+    dhparams: DHParams
     certs: dict[TCertId, CertStoreEntry]
     expire_queue: list[CertStoreEntry]
 
@@ -358,7 +381,12 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.default_chain_certs = (
-            x509.load_pem_x509_certificates(self.default_chain_file.read_bytes())
+            [
+                Cert(c)
+                for c in x509.load_pem_x509_certificates(
+                    self.default_chain_file.read_bytes()
+                )
+            ]
             if self.default_chain_file
             else [default_ca]
         )
@@ -502,11 +530,34 @@ class CertStore:
         raw = path.read_bytes()
         cert = Cert.from_pem(raw)
         try:
-            key = load_pem_private_key(raw, password=passphrase)
-        except ValueError:
-            key = self.default_privatekey
+            private_key = load_pem_private_key(raw, password=passphrase)
+        except ValueError as e:
+            private_key = self.default_privatekey
+            if cert.public_key() != private_key.public_key():
+                raise ValueError(
+                    f'Unable to find private key in "{path.absolute()}": {e}'
+                ) from e
+        else:
+            if cert.public_key() != private_key.public_key():
+                raise ValueError(
+                    f'Private and public keys in "{path.absolute()}" do not match:\n'
+                    f"{cert.public_key()=}\n"
+                    f"{private_key.public_key()=}"
+                )
 
-        self.add_cert(CertStoreEntry(cert, key, path, [cert]), spec)
+        try:
+            chain = [Cert(x) for x in x509.load_pem_x509_certificates(raw)]
+        except ValueError as e:
+            logger.warning(f"Failed to read certificate chain: {e}")
+            chain = [cert]
+
+        if cert.is_ca:
+            logger.warning(
+                f'"{path.absolute()}" is a certificate authority and not a leaf certificate. '
+                f"This indicates a misconfiguration, see https://docs.mitmproxy.org/stable/concepts-certificates/."
+            )
+
+        self.add_cert(CertStoreEntry(cert, private_key, path, chain), spec)
 
     def add_cert(self, entry: CertStoreEntry, *names: str) -> None:
         """

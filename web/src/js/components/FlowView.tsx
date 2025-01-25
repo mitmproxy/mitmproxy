@@ -65,13 +65,18 @@ export function tabsForFlow(flow: Flow): string[] {
 }
 
 export default function FlowView() {
-    const dispatch = useAppDispatch(),
-        flow = useAppSelector(
-            (state) => state.flows.byId[state.flows.selected[0]]
-        ),
-        tabs = tabsForFlow(flow);
-
+    const dispatch = useAppDispatch();
+    const flow = useAppSelector(
+        (state) => state.flows.byId[state.flows.selected[0]],
+    );
     let active = useAppSelector((state) => state.ui.flow.tab);
+
+    if (flow == undefined) {
+        return <></>;
+    }
+
+    const tabs = tabsForFlow(flow);
+
     if (tabs.indexOf(active) < 0) {
         if (active === "response" && flow.error) {
             active = "error";

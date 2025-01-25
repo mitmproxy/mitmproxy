@@ -147,16 +147,15 @@ def identity(content):
 def decode_gzip(content: bytes) -> bytes:
     if not content:
         return b""
-    gfile = gzip.GzipFile(fileobj=BytesIO(content))
-    return gfile.read()
+    with gzip.GzipFile(fileobj=BytesIO(content)) as f:
+        return f.read()
 
 
 def encode_gzip(content: bytes) -> bytes:
     s = BytesIO()
     # set mtime to 0 so that gzip encoding is deterministic.
-    gf = gzip.GzipFile(fileobj=s, mode="wb", mtime=0)
-    gf.write(content)
-    gf.close()
+    with gzip.GzipFile(fileobj=s, mode="wb", mtime=0) as f:
+        f.write(content)
     return s.getvalue()
 
 
@@ -174,12 +173,7 @@ def decode_zstd(content: bytes) -> bytes:
     if not content:
         return b""
     zstd_ctx = zstd.ZstdDecompressor()
-    try:
-        return zstd_ctx.decompress(content)
-    except zstd.ZstdError:
-        # If the zstd stream is streamed without a size header,
-        # try decoding with a 10MiB output buffer
-        return zstd_ctx.decompress(content, max_output_size=10 * 2**20)
+    return zstd_ctx.stream_reader(BytesIO(content), read_across_frames=True).read()
 
 
 def encode_zstd(content: bytes) -> bytes:

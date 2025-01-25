@@ -1,59 +1,82 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import classnames from "classnames";
-import StartMenu from "./Header/StartMenu";
-import OptionMenu from "./Header/OptionMenu";
 import FileMenu from "./Header/FileMenu";
-import FlowMenu from "./Header/FlowMenu";
 import ConnectionIndicator from "./Header/ConnectionIndicator";
 import HideInStatic from "./common/HideInStatic";
-import { useAppSelector } from "../ducks";
+import CaptureMenu from "./Header/CaptureMenu";
+import { useAppDispatch, useAppSelector } from "../ducks";
+import FlowListMenu from "./Header/FlowListMenu";
+import OptionMenu from "./Header/OptionMenu";
+import FlowMenu from "./Header/FlowMenu";
+import { Menu } from "./ProxyApp";
+import { shallowEqual } from "react-redux";
+import { Tab, setCurrent } from "../ducks/ui/tabs";
 
-interface Menu {
-    (): JSX.Element;
-
-    title: string;
-}
+const tabs: { [key in Tab]: Menu } = {
+    [Tab.Capture]: CaptureMenu,
+    [Tab.FlowList]: FlowListMenu,
+    [Tab.Options]: OptionMenu,
+    [Tab.Flow]: FlowMenu,
+};
 
 export default function Header() {
-    const selectedFlows = useAppSelector((state) =>
-            state.flows.selected.filter((id) => id in state.flows.byId)
-        ),
-        [ActiveMenu, setActiveMenu] = useState<Menu>(() => StartMenu),
-        [wasFlowSelected, setWasFlowSelected] = useState(false);
+    const dispatch = useAppDispatch();
+    const currentTab = useAppSelector((state) => state.ui.tabs.current);
+    const selectedFlows = useAppSelector(
+        (state) => state.flows.selected.filter((id) => id in state.flows.byId),
+        shallowEqual,
+    );
+    const [wasFlowSelected, setWasFlowSelected] = useState(false);
+    const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
+    const isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);
 
-    let entries: Menu[] = [StartMenu, OptionMenu];
+    const entries: Tab[] = [Tab.Capture, Tab.FlowList, Tab.Options];
     if (selectedFlows.length > 0) {
-        if (!wasFlowSelected) {
-            setActiveMenu(() => FlowMenu);
-            setWasFlowSelected(true);
-        }
-        entries.push(FlowMenu);
-    } else {
-        if (wasFlowSelected) {
-            setWasFlowSelected(false);
-        }
-        if (ActiveMenu === FlowMenu) {
-            setActiveMenu(() => StartMenu);
-        }
+        entries.push(Tab.Flow);
     }
 
-    function handleClick(active: Menu, e) {
+    // Switch to "Flow List" when the first flow appears.
+    useEffect(() => {
+        if (hasFlows && isInitialTab) {
+            dispatch(setCurrent(Tab.FlowList));
+        }
+    }, [hasFlows]);
+
+    // Switch to "Flow" tab if we just selected a new flow.
+    useEffect(() => {
+        if (selectedFlows.length > 0 && !wasFlowSelected) {
+            // User just clicked on a flow without having previously selected one.
+            dispatch(setCurrent(Tab.Flow));
+            setWasFlowSelected(true);
+        } else if (selectedFlows.length === 0) {
+            if (wasFlowSelected) {
+                setWasFlowSelected(false);
+            }
+            if (currentTab === Tab.Flow) {
+                dispatch(setCurrent(Tab.FlowList));
+            }
+        }
+    }, [selectedFlows, wasFlowSelected, currentTab]);
+
+    function handleClick(tab: Tab, e: React.MouseEvent<HTMLAnchorElement>) {
         e.preventDefault();
-        setActiveMenu(() => active);
+        dispatch(setCurrent(tab));
     }
+
+    const ActiveMenu = tabs[currentTab];
 
     return (
         <header>
             <nav className="nav-tabs nav-tabs-lg">
                 <FileMenu />
-                {entries.map((Entry) => (
+                {entries.map((tab) => (
                     <a
-                        key={Entry.title}
+                        key={tab}
                         href="#"
-                        className={classnames({ active: Entry === ActiveMenu })}
-                        onClick={(e) => handleClick(Entry, e)}
+                        className={classnames({ active: tab === currentTab })}
+                        onClick={(e) => handleClick(tab, e)}
                     >
-                        {Entry.title}
+                        {tabs[tab].title}
                     </a>
                 ))}
                 <HideInStatic>

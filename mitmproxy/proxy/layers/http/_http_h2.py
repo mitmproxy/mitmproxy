@@ -49,8 +49,21 @@ class BufferedH2Connection(h2.connection.H2Connection):
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
+        self.local_settings.initial_window_size = 2**31 - 1
+        self.local_settings.max_frame_size = 2**17
+        self.max_inbound_frame_size = 2**17
+        # hyper-h2 pitfall: we need to acknowledge here, otherwise its sends out the old settings.
+        self.local_settings.acknowledge()
         self.stream_buffers = collections.defaultdict(collections.deque)
         self.stream_trailers = {}
+
+    def initiate_connection(self):
+        super().initiate_connection()
+        # We increase the flow-control window for new streams with a setting,
+        # but we need to increase the overall connection flow-control window as well.
+        self.increment_flow_control_window(
+            2**31 - 1 - self.inbound_flow_control_window
+        )  # maximum - default
 
     def send_data(
         self,
@@ -68,12 +81,12 @@ class BufferedH2Connection(h2.connection.H2Connection):
         frame_size = len(data)
         assert pad_length is None
 
-        while frame_size > self.max_outbound_frame_size:
-            chunk_data = data[: self.max_outbound_frame_size]
-            self.send_data(stream_id, chunk_data, end_stream=False)
+        if frame_size > self.max_outbound_frame_size:
+            for start in range(0, frame_size, self.max_outbound_frame_size):
+                chunk = data[start : start + self.max_outbound_frame_size]
+                self.send_data(stream_id, chunk, end_stream=False)
 
-            data = data[self.max_outbound_frame_size :]
-            frame_size -= len(chunk_data)
+            return
 
         if self.stream_buffers.get(stream_id, None):
             # We already have some data buffered, let's append.

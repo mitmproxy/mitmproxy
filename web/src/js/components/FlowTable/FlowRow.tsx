@@ -16,17 +16,17 @@ export default React.memo(function FlowRow({
     selected,
     highlighted,
 }: FlowRowProps) {
-    const dispatch = useAppDispatch(),
-        displayColumnNames = useAppSelector(
-            (state) => state.options.web_columns
-        ),
-        className = classnames({
-            selected: selected,
-            highlighted: highlighted,
-            intercepted: flow.intercepted,
-            "has-request": flow.type === "http" && flow.request,
-            "has-response": flow.type === "http" && flow.response,
-        });
+    const dispatch = useAppDispatch();
+    const displayColumnNames = useAppSelector(
+        (state) => state.options.web_columns,
+    );
+    const className = classnames({
+        selected: selected,
+        highlighted: highlighted,
+        intercepted: flow.intercepted,
+        "has-request": flow.type === "http" && flow.request,
+        "has-response": flow.type === "http" && flow.response,
+    });
 
     const onClick = useCallback(
         (e) => {
@@ -38,7 +38,7 @@ export default React.memo(function FlowRow({
             }
             dispatch(select(flow.id));
         },
-        [flow]
+        [flow],
     );
 
     const displayColumns = displayColumnNames

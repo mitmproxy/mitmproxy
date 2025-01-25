@@ -27,6 +27,8 @@ from ._events import ResponseEndOfMessage
 from ._events import ResponseHeaders
 from ._events import ResponseProtocolError
 from ._events import ResponseTrailers
+from ._hooks import HttpConnectedHook
+from ._hooks import HttpConnectErrorHook
 from ._hooks import HttpConnectHook
 from ._hooks import HttpErrorHook
 from ._hooks import HttpRequestHeadersHook
@@ -49,6 +51,7 @@ from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 from mitmproxy.net.http import url
 from mitmproxy.net.http.http1 import expected_http_body_size
+from mitmproxy.net.http.validate import validate_headers
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -59,6 +62,7 @@ from mitmproxy.proxy.layers import tls
 from mitmproxy.proxy.layers import websocket
 from mitmproxy.proxy.layers.http import _upstream_proxy
 from mitmproxy.proxy.utils import expect
+from mitmproxy.proxy.utils import ReceiveBuffer
 from mitmproxy.utils import human
 from mitmproxy.websocket import WebSocketData
 
@@ -69,7 +73,9 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
-def validate_request(mode: HTTPMode, request: http.Request) -> str | None:
+def validate_request(
+    mode: HTTPMode, request: http.Request, validate_inbound_headers: bool
+) -> str | None:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent and request.method == "CONNECT":
@@ -77,6 +83,14 @@ def validate_request(mode: HTTPMode, request: http.Request) -> str | None:
             f"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
             f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
         )
+    if validate_inbound_headers:
+        try:
+            validate_headers(request)
+        except ValueError as e:
+            return (
+                f"Received {e} from client, refusing to prevent request smuggling attacks. "
+                "Disable the validate_inbound_headers option to skip this security check."
+            )
     return None
 
 
@@ -143,8 +157,8 @@ class DropStream(HttpCommand):
 
 
 class HttpStream(layer.Layer):
-    request_body_buf: bytes
-    response_body_buf: bytes
+    request_body_buf: ReceiveBuffer
+    response_body_buf: ReceiveBuffer
     flow: http.HTTPFlow
     stream_id: StreamId
     child_layer: layer.Layer | None = None
@@ -158,8 +172,8 @@ class HttpStream(layer.Layer):
 
     def __init__(self, context: Context, stream_id: int) -> None:
         super().__init__(context)
-        self.request_body_buf = b""
-        self.response_body_buf = b""
+        self.request_body_buf = ReceiveBuffer()
+        self.response_body_buf = ReceiveBuffer()
         self.client_state = self.state_uninitialized
         self.server_state = self.state_uninitialized
         self.stream_id = stream_id
@@ -201,10 +215,8 @@ class HttpStream(layer.Layer):
         self.flow.request = event.request
         self.flow.live = True
 
-        if err := validate_request(self.mode, self.flow.request):
-            self.flow.response = http.Response.make(502, str(err))
-            self.client_state = self.state_errored
-            return (yield from self.send_response())
+        if (yield from self.check_invalid(True)):
+            return
 
         if self.flow.request.method == "CONNECT":
             return (yield from self.handle_connect())
@@ -275,7 +287,7 @@ class HttpStream(layer.Layer):
             )
             self.flow.request.headers.pop("expect")
 
-        if self.flow.request.stream:
+        if self.flow.request.stream and not event.end_stream:
             yield from self.start_request_stream()
         else:
             self.client_state = self.state_consume_request_body
@@ -352,8 +364,8 @@ class HttpStream(layer.Layer):
             self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
             self.flow.request.timestamp_end = time.time()
-            self.flow.request.data.content = self.request_body_buf
-            self.request_body_buf = b""
+            self.flow.request.data.content = bytes(self.request_body_buf)
+            self.request_body_buf.clear()
             self.client_state = self.state_done
             yield HttpRequestHook(self.flow)
             if (yield from self.check_killed(True)):
@@ -398,12 +410,14 @@ class HttpStream(layer.Layer):
 
         if not event.end_stream and (yield from self.check_body_size(False)):
             return
+        if (yield from self.check_invalid(False)):
+            return
 
         yield HttpResponseHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
             return
 
-        elif self.flow.response.stream:
+        elif self.flow.response.stream and not event.end_stream:
             yield from self.start_response_stream()
         else:
             self.server_state = self.state_consume_response_body
@@ -459,8 +473,8 @@ class HttpStream(layer.Layer):
             self.flow.response.trailers = event.trailers
         elif isinstance(event, ResponseEndOfMessage):
             assert self.flow.response
-            self.flow.response.data.content = self.response_body_buf
-            self.response_body_buf = b""
+            self.flow.response.data.content = bytes(self.response_body_buf)
+            self.response_body_buf.clear()
             yield from self.send_response()
 
     def send_response(self, already_streamed: bool = False):
@@ -605,19 +619,61 @@ class HttpStream(layer.Layer):
                 self.flow.request.stream = True
                 if self.request_body_buf:
                     # clear buffer and then fake a DataReceived event with everything we had in the buffer so far.
-                    body_buf = self.request_body_buf
-                    self.request_body_buf = b""
+                    body_buf = bytes(self.request_body_buf)
+                    self.request_body_buf.clear()
                     yield from self.start_request_stream()
                     yield from self.handle_event(RequestData(self.stream_id, body_buf))
             if response:
                 assert self.flow.response
                 self.flow.response.stream = True
                 if self.response_body_buf:
-                    body_buf = self.response_body_buf
-                    self.response_body_buf = b""
+                    body_buf = bytes(self.response_body_buf)
+                    self.response_body_buf.clear()
                     yield from self.start_response_stream()
                     yield from self.handle_event(ResponseData(self.stream_id, body_buf))
         return False
+
+    def check_invalid(self, request: bool) -> layer.CommandGenerator[bool]:
+        err: str | None = None
+        if request:
+            err = validate_request(
+                self.mode,
+                self.flow.request,
+                self.context.options.validate_inbound_headers,
+            )
+        elif self.context.options.validate_inbound_headers:
+            assert self.flow.response is not None
+            try:
+                validate_headers(self.flow.response)
+            except ValueError as e:
+                err = (
+                    f"Received {e} from server, refusing to prevent request smuggling attacks. "
+                    "Disable the validate_inbound_headers option to skip this security check."
+                )
+
+        if err:
+            self.flow.error = flow.Error(err)
+
+            if request:
+                # flow has not been seen yet, register it.
+                yield HttpRequestHeadersHook(self.flow)
+            else:
+                # immediately kill server connection
+                yield commands.CloseConnection(self.flow.server_conn)
+            yield HttpErrorHook(self.flow)
+            yield SendHttp(
+                ResponseProtocolError(
+                    self.stream_id,
+                    err,
+                    status_codes.BAD_REQUEST if request else status_codes.BAD_GATEWAY,
+                ),
+                self.context.client,
+            )
+            self.flow.live = False
+            self.client_state = self.server_state = self.state_errored
+            return True
+        else:
+            return False
 
     def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
         killed_by_us = (
@@ -748,16 +804,30 @@ class HttpStream(layer.Layer):
             )
 
         if 200 <= self.flow.response.status_code < 300:
+            yield HttpConnectedHook(self.flow)
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
             self._handle_event = self.passthrough
             yield from self.child_layer.handle_event(events.Start())
+        else:
+            yield HttpConnectErrorHook(self.flow)
+            self.client_state = self.state_errored
+            self.flow.live = False
+
+        content = self.flow.response.raw_content
+        done_after_headers = not (content or self.flow.response.trailers)
+        yield SendHttp(
+            ResponseHeaders(self.stream_id, self.flow.response, done_after_headers),
+            self.context.client,
+        )
+        if content:
+            yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
+
+        if self.flow.response.trailers:
             yield SendHttp(
-                ResponseHeaders(self.stream_id, self.flow.response, True),
+                ResponseTrailers(self.stream_id, self.flow.response.trailers),
                 self.context.client,
             )
-            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-        else:
-            yield from self.send_response()
+        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     @expect(RequestData, RequestEndOfMessage, events.Event)
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:

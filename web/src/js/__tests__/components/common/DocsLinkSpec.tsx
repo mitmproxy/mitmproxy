@@ -4,16 +4,16 @@ import DocsLink from "../../../components/common/DocsLink";
 
 describe("DocsLink Component", () => {
     it("should be able to be rendered with children nodes", () => {
-        let docsLink = renderer.create(
-                <DocsLink children="foo" resource="bar"></DocsLink>
-            ),
-            tree = docsLink.toJSON();
+        const docsLink = renderer.create(
+            <DocsLink resource="bar">foo</DocsLink>,
+        );
+        const tree = docsLink.toJSON();
         expect(tree).toMatchSnapshot();
     });
 
     it("should be able to be rendered without children nodes", () => {
-        let docsLink = renderer.create(<DocsLink resource="bar"></DocsLink>),
-            tree = docsLink.toJSON();
+        const docsLink = renderer.create(<DocsLink resource="bar"></DocsLink>);
+        const tree = docsLink.toJSON();
         expect(tree).toMatchSnapshot();
     });
 });

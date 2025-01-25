@@ -1,31 +1,19 @@
-import React from "react";
-import ReactDOM from "react-dom";
+import { RefObject } from "react";
 
-const symShouldStick = Symbol("shouldStick") as any;
-const isAtBottom = (v) =>
-    Math.round(v.scrollTop) + v.clientHeight === v.scrollHeight;
+export const isAtBottom = (viewport: RefObject<HTMLElement>) => {
+    const v = viewport.current;
+    if (v === null) {
+        return false;
+    }
+    if (v.scrollTop === 0) {
+        // We're at the top
+        return false;
+    }
+    return Math.ceil(v.scrollTop) + v.clientHeight >= v.scrollHeight;
+};
 
-export default (Component) =>
-    Object.assign(
-        class AutoScrollWrapper extends Component {
-            static displayName = Component.name;
-
-            UNSAFE_componentWillUpdate() {
-                const viewport = ReactDOM.findDOMNode(this);
-                this[symShouldStick] =
-                    viewport.scrollTop && isAtBottom(viewport);
-                super.UNSAFE_componentWillUpdate &&
-                    super.UNSAFE_componentWillUpdate();
-                super.componentWillUpdate && super.componentWillUpdate();
-            }
-
-            componentDidUpdate() {
-                const viewport = ReactDOM.findDOMNode(this);
-                if (this[symShouldStick] && !isAtBottom(viewport)) {
-                    viewport.scrollTop = viewport.scrollHeight;
-                }
-                super.componentDidUpdate && super.componentDidUpdate();
-            }
-        },
-        Component
-    );
+export const adjustScrollTop = (viewport: RefObject<HTMLElement>) => {
+    if (viewport.current && !isAtBottom(viewport)) {
+        viewport.current.scrollTop = viewport.current.scrollHeight;
+    }
+};

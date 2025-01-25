@@ -23,7 +23,7 @@ class StackWidget(urwid.Frame):
         self.window = window
 
         if title:
-            header = urwid.AttrWrap(
+            header = urwid.AttrMap(
                 urwid.Text(title), "heading" if focus else "heading_inactive"
             )
         else:
@@ -129,7 +129,7 @@ class Window(urwid.Frame):
     def __init__(self, master):
         self.statusbar = statusbar.StatusBar(master)
         super().__init__(
-            None, header=None, footer=urwid.AttrWrap(self.statusbar, "background")
+            None, header=None, footer=urwid.AttrMap(self.statusbar, "background")
         )
         self.master = master
         self.master.view.sig_view_refresh.connect(self.view_changed)
@@ -185,7 +185,7 @@ class Window(urwid.Frame):
                 focus_column=self.pane,
             )
 
-        self.body = urwid.AttrWrap(w, "background")
+        self.body = urwid.AttrMap(w, "background")
         signals.window_refresh.send()
 
     def flow_changed(self, flow: flow.Flow) -> None:

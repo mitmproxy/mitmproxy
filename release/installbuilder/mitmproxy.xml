@@ -21,6 +21,9 @@
                         <distributionFile>
                             <origin>logo.ico</origin>
                         </distributionFile>
+                        <distributionFile>
+                            <origin>run.ps1</origin>
+                        </distributionFile>
                     </distributionFileList>
                 </folder>
                 <folder>
@@ -32,9 +35,6 @@
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
                             <origin>../build/pyinstaller/out/onedir/*</origin>
-                        </distributionFile>
-                        <distributionFile>
-                            <origin>run.ps1</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -59,7 +59,7 @@
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>powershell.exe</windowsExec>
-                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmproxy</windowsExecArgs>
+                    <windowsExecArgs>-File "${installdir}\run.ps1" mitmproxy</windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${user_home_directory}</windowsPath>
                 </startMenuShortcut>
@@ -69,7 +69,7 @@
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>powershell.exe</windowsExec>
-                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmweb</windowsExecArgs>
+                    <windowsExecArgs>-File "${installdir}\run.ps1" mitmweb</windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${user_home_directory}</windowsPath>
                 </startMenuShortcut>
@@ -79,7 +79,7 @@
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
                     <windowsExec>powershell.exe</windowsExec>
-                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmdump</windowsExecArgs>
+                    <windowsExecArgs>-File "${installdir}\run.ps1" mitmdump</windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
                     <windowsPath>${user_home_directory}</windowsPath>
                 </startMenuShortcut>
@@ -98,7 +98,7 @@
     <finalPageActionList>
         <runProgram>
             <program>cmd</program>
-            <programArguments>/c powershell -File "${installdir}\bin\run.ps1" mitmproxy &amp;</programArguments>
+            <programArguments>/c powershell -File "${installdir}\run.ps1" mitmproxy &amp;</programArguments>
             <progressText>Launch mitmproxy now</progressText>
             <workingDirectory>${user_home_directory}</workingDirectory>
         </runProgram>

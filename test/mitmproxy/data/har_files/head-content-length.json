@@ -26,7 +26,7 @@
             "tls_version": null,
             "timestamp_start": 1702398196.067544,
             "timestamp_tls_setup": null,
-            "timestamp_end": 1702398297.6314745
+            "timestamp_end": 1702398196.169108
         },
         "server_conn": {
             "id": "hardcoded_for_test",
@@ -75,7 +75,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1702398196.067544,
-            "timestamp_end": 1702398297.6314745,
+            "timestamp_end": 1702398196.169108,
             "pretty_host": "files.pythonhosted.org"
         },
         "response": {
@@ -187,7 +187,7 @@
             "contentLength": 0,
             "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "timestamp_start": 1702398196.067544,
-            "timestamp_end": 1702398297.6314745
+            "timestamp_end": 1702398196.169108
         }
     }
 ]

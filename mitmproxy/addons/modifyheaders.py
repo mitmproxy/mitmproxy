@@ -81,12 +81,12 @@ class ModifyHeaders:
                     ) from e
                 self.replacements.append(spec)
 
-    def request(self, flow):
+    def requestheaders(self, flow):
         if flow.response or flow.error or not flow.live:
             return
         self.run(flow, flow.request.headers)
 
-    def response(self, flow):
+    def responseheaders(self, flow):
         if flow.error or not flow.live:
             return
         self.run(flow, flow.response.headers)

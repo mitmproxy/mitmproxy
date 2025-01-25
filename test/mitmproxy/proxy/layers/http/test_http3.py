@@ -1,4 +1,3 @@
-import collections.abc
 from collections.abc import Callable
 from collections.abc import Iterable
 
@@ -14,6 +13,7 @@ from aioquic.h3.connection import Headers as H3Headers
 from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
 from aioquic.h3.connection import StreamType
+from aioquic.quic.packet import QuicErrorCode
 
 from mitmproxy import connection
 from mitmproxy import version
@@ -76,26 +76,6 @@ class DelayedPlaceholder(tutils._Placeholder[bytes]):
         return super().__call__()
 
 
-class MultiPlaybook(tutils.Playbook):
-    """Playbook that allows multiple events and commands to be registered at once."""
-
-    def __lshift__(self, c):
-        if isinstance(c, collections.abc.Iterable):
-            for c_i in c:
-                super().__lshift__(c_i)
-        else:
-            super().__lshift__(c)
-        return self
-
-    def __rshift__(self, e):
-        if isinstance(e, collections.abc.Iterable):
-            for e_i in e:
-                super().__rshift__(e_i)
-        else:
-            super().__rshift__(e)
-        return self
-
-
 class FrameFactory:
     """Helper class for generating QUIC stream events and commands."""
 
@@ -111,7 +91,6 @@ class FrameFactory:
         self.encoder_placeholder: tutils.Placeholder[bytes] | None = None
         self.peer_stream_id: dict[StreamType, int] = {}
         self.local_stream_id: dict[StreamType, int] = {}
-        self.max_push_id: int | None = None
 
     def get_default_stream_id(self, stream_type: StreamType, for_local: bool) -> int:
         if stream_type == StreamType.CONTROL:
@@ -155,21 +134,6 @@ class FrameFactory:
             connection=self.conn,
             stream_id=stream_id,
             data=encode_uint_var(stream_type),
-            end_stream=False,
-        )
-
-    def send_max_push_id(self) -> quic.SendQuicStreamData:
-        def cb(data: bytes) -> None:
-            buf = Buffer(data=data)
-            assert buf.pull_uint_var() == FrameType.MAX_PUSH_ID
-            buf = Buffer(data=buf.pull_bytes(buf.pull_uint_var()))
-            self.max_push_id = buf.pull_uint_var()
-            assert buf.eof()
-
-        return quic.SendQuicStreamData(
-            connection=self.conn,
-            stream_id=self.peer_stream_id[StreamType.CONTROL],
-            data=CallbackPlaceholder(cb),
             end_stream=False,
         )
 
@@ -335,27 +299,45 @@ class FrameFactory:
             end_stream=end_stream,
         )
 
-    def send_reset(self, error_code: int, stream_id: int = 0) -> quic.ResetQuicStream:
+    def send_reset(
+        self, error_code: ErrorCode, stream_id: int = 0
+    ) -> quic.ResetQuicStream:
         return quic.ResetQuicStream(
             connection=self.conn,
             stream_id=stream_id,
-            error_code=error_code,
+            error_code=int(error_code),
         )
 
     def receive_reset(
-        self, error_code: int, stream_id: int = 0
+        self, error_code: ErrorCode, stream_id: int = 0
     ) -> quic.QuicStreamReset:
         return quic.QuicStreamReset(
             connection=self.conn,
             stream_id=stream_id,
-            error_code=error_code,
+            error_code=int(error_code),
+        )
+
+    def send_stop(
+        self, error_code: ErrorCode, stream_id: int = 0
+    ) -> quic.StopSendingQuicStream:
+        return quic.StopSendingQuicStream(
+            connection=self.conn,
+            stream_id=stream_id,
+            error_code=int(error_code),
+        )
+
+    def receive_stop(
+        self, error_code: ErrorCode, stream_id: int = 0
+    ) -> quic.QuicStreamStopSending:
+        return quic.QuicStreamStopSending(
+            connection=self.conn,
+            stream_id=stream_id,
+            error_code=int(error_code),
         )
 
     def send_init(self) -> Iterable[quic.SendQuicStreamData]:
         yield self.send_stream_type(StreamType.CONTROL)
         yield self.send_settings()
-        if not self.is_client:
-            yield self.send_max_push_id()
         yield self.send_stream_type(StreamType.QPACK_ENCODER)
         yield self.send_stream_type(StreamType.QPACK_DECODER)
 
@@ -380,12 +362,12 @@ def open_h3_server_conn():
     return server
 
 
-def start_h3_client(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactory]:
+def start_h3_proxy(tctx: context.Context) -> tuple[tutils.Playbook, FrameFactory]:
     tctx.client.alpn = b"h3"
     tctx.client.transport_protocol = "udp"
     tctx.server.transport_protocol = "udp"
 
-    playbook = MultiPlaybook(layers.HttpLayer(tctx, layers.http.HTTPMode.regular))
+    playbook = tutils.Playbook(layers.HttpLayer(tctx, layers.http.HTTPMode.regular))
     cff = FrameFactory(conn=tctx.client, is_client=True)
     assert (
         playbook
@@ -402,11 +384,11 @@ def make_h3(open_connection: commands.OpenConnection) -> None:
 
 
 def test_ignore_push(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
 
 
 def test_fail_without_header(tctx: context.Context):
-    playbook = MultiPlaybook(layers.http.Http3Server(tctx))
+    playbook = tutils.Playbook(layers.http.Http3Server(tctx))
     cff = FrameFactory(tctx.client, is_client=True)
     assert (
         playbook
@@ -416,12 +398,13 @@ def test_fail_without_header(tctx: context.Context):
         >> cff.receive_encoder()
         >> http.ResponseProtocolError(0, "first message", http.status_codes.NO_RESPONSE)
         << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
+        << cff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
     )
     assert cff.is_done
 
 
 def test_invalid_header(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     assert (
         playbook
         >> cff.receive_headers(
@@ -435,7 +418,7 @@ def test_invalid_header(tctx: context.Context):
         << cff.send_decoder()  # for receive_headers
         << quic.CloseQuicConnection(
             tctx.client,
-            error_code=ErrorCode.H3_GENERAL_PROTOCOL_ERROR,
+            error_code=ErrorCode.H3_GENERAL_PROTOCOL_ERROR.value,
             frame_type=None,
             reason_phrase="Invalid HTTP/3 request headers: Required pseudo header is missing: b':scheme'",
         )
@@ -452,7 +435,7 @@ def test_invalid_header(tctx: context.Context):
 
 
 def test_simple(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     sff = FrameFactory(server, is_client=False)
@@ -499,7 +482,7 @@ def test_response_trailers(
     open_h3_server_conn: connection.Server,
     stream: str,
 ):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     tctx.server = open_h3_server_conn
     sff = FrameFactory(tctx.server, is_client=False)
 
@@ -573,7 +556,7 @@ def test_request_trailers(
     open_h3_server_conn: connection.Server,
     stream: str,
 ):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     tctx.server = open_h3_server_conn
     sff = FrameFactory(tctx.server, is_client=False)
 
@@ -629,7 +612,7 @@ def test_request_trailers(
 
 
 def test_upstream_error(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     err = tutils.Placeholder(bytes)
@@ -680,7 +663,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
     """
     server = tutils.Placeholder(connection.Server)
     flow = tutils.Placeholder(HTTPFlow)
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
 
     def enable_request_streaming(flow: HTTPFlow):
         flow.request.stream = True
@@ -713,26 +696,28 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
         else:
             playbook >> quic.QuicConnectionClosed(
                 tctx.client,
-                error_code=ErrorCode.H3_REQUEST_CANCELLED,
+                error_code=ErrorCode.H3_REQUEST_CANCELLED.value,
                 frame_type=None,
                 reason_phrase="peer closed connection",
             )
 
         if stream:
             playbook << commands.CloseConnection(server)
-        playbook << http.HttpErrorHook(flow)
-        playbook >> tutils.reply()
+        playbook << (error_hook := http.HttpErrorHook(flow))
+        if "RST" in how:
+            playbook << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        playbook >> tutils.reply(to=error_hook)
 
         if how == "RST+disconnect":
             playbook >> quic.QuicConnectionClosed(
                 tctx.client,
-                error_code=ErrorCode.H3_NO_ERROR,
+                error_code=ErrorCode.H3_NO_ERROR.value,
                 frame_type=None,
                 reason_phrase="peer closed connection",
             )
         assert playbook
         assert (
-            "stream reset" in flow().error.msg
+            "stream closed by client" in flow().error.msg
             or "peer closed connection" in flow().error.msg
         )
         return
@@ -770,27 +755,29 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
     else:
         playbook >> quic.QuicConnectionClosed(
             tctx.client,
-            error_code=ErrorCode.H3_REQUEST_CANCELLED,
+            error_code=ErrorCode.H3_REQUEST_CANCELLED.value,
             frame_type=None,
             reason_phrase="peer closed connection",
         )
 
     playbook << commands.CloseConnection(server)
-    playbook << http.HttpErrorHook(flow)
-    playbook >> tutils.reply()
+    playbook << (error_hook := http.HttpErrorHook(flow))
+    if "RST" in how:
+        playbook << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+    playbook >> tutils.reply(to=error_hook)
     assert playbook
 
     if how == "RST+disconnect":
         playbook >> quic.QuicConnectionClosed(
             tctx.client,
-            error_code=ErrorCode.H3_REQUEST_CANCELLED,
+            error_code=ErrorCode.H3_REQUEST_CANCELLED.value,
             frame_type=None,
             reason_phrase="peer closed connection",
         )
         assert playbook
 
     if "RST" in how:
-        assert "stream reset" in flow().error.msg
+        assert "stream closed by client" in flow().error.msg
     else:
         assert "peer closed connection" in flow().error.msg
 
@@ -801,7 +788,7 @@ def test_rst_then_close(tctx):
 
     This is slightly different to H2, as QUIC will close the connection immediately.
     """
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     err = tutils.Placeholder(str)
@@ -820,13 +807,13 @@ def test_rst_then_close(tctx):
         >> cff.receive_data(b"unexpected data frame")
         << quic.CloseQuicConnection(
             tctx.client,
-            error_code=quic.QuicErrorCode.PROTOCOL_VIOLATION,
+            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
             frame_type=None,
             reason_phrase=err,
         )
         >> quic.QuicConnectionClosed(
             tctx.client,
-            error_code=quic.QuicErrorCode.PROTOCOL_VIOLATION,
+            error_code=QuicErrorCode.PROTOCOL_VIOLATION.value,
             frame_type=None,
             reason_phrase=err,
         )
@@ -845,7 +832,7 @@ def test_cancel_then_server_disconnect(tctx: context.Context):
         - server disconnects
         - error hook completes.
     """
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     assert (
@@ -864,8 +851,9 @@ def test_cancel_then_server_disconnect(tctx: context.Context):
         # cancel
         >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
         << commands.CloseConnection(server)
-        << http.HttpErrorHook(flow)
-        >> tutils.reply()
+        << (err_hook := http.HttpErrorHook(flow))
+        << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        >> tutils.reply(to=err_hook)
         >> events.ConnectionClosed(server)
         << None
     )
@@ -882,7 +870,7 @@ def test_cancel_during_response_hook(tctx: context.Context):
 
     Given that we have already triggered the response hook, we don't want to trigger the error hook.
     """
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
     assert (
@@ -905,15 +893,15 @@ def test_cancel_during_response_hook(tctx: context.Context):
         >> tutils.reply(to=reponse_headers)
         << (response := http.HttpResponseHook(flow))
         >> cff.receive_reset(error_code=ErrorCode.H3_REQUEST_CANCELLED)
+        << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
         >> tutils.reply(to=response)
-        << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
     )
     assert cff.is_done
 
 
 def test_stream_concurrency(tctx: context.Context):
     """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow1 = tutils.Placeholder(HTTPFlow)
     flow2 = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
@@ -953,7 +941,7 @@ def test_stream_concurrency(tctx: context.Context):
 
 def test_stream_concurrent_get_connection(tctx: context.Context):
     """Test that an immediate second request for the same domain does not trigger a second connection attempt."""
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     playbook.hooks = False
     server = tutils.Placeholder(connection.Server)
     sff = FrameFactory(server, is_client=False)
@@ -979,7 +967,7 @@ def test_stream_concurrent_get_connection(tctx: context.Context):
 
 def test_kill_stream(tctx: context.Context):
     """Test that we can kill individual streams."""
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     flow1 = tutils.Placeholder(HTTPFlow)
     flow2 = tutils.Placeholder(HTTPFlow)
     server = tutils.Placeholder(connection.Server)
@@ -1004,6 +992,7 @@ def test_kill_stream(tctx: context.Context):
         << http.HttpErrorHook(flow2)
         >> tutils.reply()
         << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR, stream_id=4)
+        << cff.send_stop(ErrorCode.H3_INTERNAL_ERROR, stream_id=4)
         >> tutils.reply(to=request_header1)
         << http.HttpRequestHook(flow1)
         >> tutils.reply()
@@ -1020,10 +1009,61 @@ def test_kill_stream(tctx: context.Context):
     assert cff.is_done and sff.is_done
 
 
+@pytest.mark.parametrize("close_type", ["RESET_STREAM", "STOP_SENDING"])
+def test_receive_stop_sending(tctx: context.Context, close_type: str):
+    playbook, cff = start_h3_proxy(tctx)
+    playbook.hooks = False
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    sff = FrameFactory(server, is_client=False)
+    assert (
+        playbook
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << cff.send_decoder()
+        << commands.OpenConnection(server)
+        >> tutils.reply(None, side_effect=make_h3)
+        << sff.send_init()
+        << sff.send_headers(example_request_headers, end_stream=True)
+        >> sff.receive_init()
+        << sff.send_encoder()
+    )
+
+    close1 = cff.receive_reset(ErrorCode.H3_REQUEST_CANCELLED)
+    close2 = cff.receive_stop(ErrorCode.H3_REQUEST_CANCELLED)
+    if close_type == "STOP_SENDING":
+        close1, close2 = close2, close1
+
+    assert (
+        playbook
+        # Client now closes the stream.
+        >> close1
+        # We shut down the server...
+        << sff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        << sff.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
+        << (err_hook := http.HttpErrorHook(flow))
+        # ...and the client stream.
+        << cff.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        << (
+            cff.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
+            if close_type == "STOP_SENDING"
+            else None
+        )
+        >> tutils.reply(to=err_hook)
+        # These don't do anything anymore.
+        >> close2
+        << None
+        >> sff.receive_reset(ErrorCode.H3_REQUEST_CANCELLED)
+        << None
+        >> sff.receive_stop(ErrorCode.H3_REQUEST_CANCELLED)
+        << None
+    )
+    assert flow().error.msg == "stream closed by client (H3_REQUEST_CANCELLED)"
+
+
 class TestClient:
     def test_no_data_on_closed_stream(self, tctx: context.Context):
         frame_factory = FrameFactory(tctx.server, is_client=False)
-        playbook = MultiPlaybook(Http3Client(tctx))
+        playbook = tutils.Playbook(Http3Client(tctx))
         req = Request.make("GET", "http://example.com/")
         resp = [(b":status", b"200")]
         assert (
@@ -1051,15 +1091,16 @@ class TestClient:
                 1, "cancelled", code=http.status_codes.CLIENT_CLOSED_REQUEST
             )
             << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
+            << frame_factory.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
             >> frame_factory.receive_data(b"foo")
-            << quic.StopQuicStream(tctx.server, 0, ErrorCode.H3_REQUEST_CANCELLED)
+            << None
         )  # important: no ResponseData event here!
 
         assert frame_factory.is_done
 
     def test_ignore_wrong_order(self, tctx: context.Context):
         frame_factory = FrameFactory(tctx.server, is_client=False)
-        playbook = MultiPlaybook(Http3Client(tctx))
+        playbook = tutils.Playbook(Http3Client(tctx))
         req = Request.make("GET", "http://example.com/")
         assert (
             playbook
@@ -1103,7 +1144,7 @@ class TestClient:
 
 
 def test_early_server_data(tctx: context.Context):
-    playbook, cff = start_h3_client(tctx)
+    playbook, cff = start_h3_proxy(tctx)
     sff = FrameFactory(tctx.server, is_client=False)
 
     tctx.server.address = ("example.com", 80)

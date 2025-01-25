@@ -79,7 +79,7 @@ class SerializableDataclass(Serializable):
         return tuple(fields)
 
     def get_state(self) -> State:
-        state = {}
+        state: dict[str, State] = {}
         for field in self.__fields():
             val = getattr(self, field.name)
             state[field.name] = _to_state(val, field.type, field.name)
@@ -105,7 +105,7 @@ class SerializableDataclass(Serializable):
                     continue
                 except dataclasses.FrozenInstanceError:
                     pass
-            val = _to_val(f_state, field.type, field.name)
+            val: typing.Any = _to_val(f_state, field.type, field.name)
             try:
                 setattr(self, field.name, val)
             except dataclasses.FrozenInstanceError:
@@ -118,10 +118,9 @@ class SerializableDataclass(Serializable):
             )
 
 
-V = TypeVar("V")
-
-
-def _process(attr_val: typing.Any, attr_type: type[V], attr_name: str, make: bool) -> V:
+def _process(
+    attr_val: typing.Any, attr_type: typing.Any, attr_name: str, make: bool
+) -> typing.Any:
     origin = typing.get_origin(attr_type)
     if origin is typing.Literal:
         if attr_val not in typing.get_args(attr_type):
@@ -190,11 +189,11 @@ def _process(attr_val: typing.Any, attr_type: type[V], attr_name: str, make: boo
         raise TypeError(f"Unexpected type for {attr_name}: {attr_type!r}")
 
 
-def _to_val(state: typing.Any, attr_type: type[U], attr_name: str) -> U:
+def _to_val(state: typing.Any, attr_type: typing.Any, attr_name: str) -> typing.Any:
     """Create an object based on the state given in val."""
     return _process(state, attr_type, attr_name, True)
 
 
-def _to_state(value: typing.Any, attr_type: type[U], attr_name: str) -> U:
+def _to_state(value: typing.Any, attr_type: typing.Any, attr_name: str) -> typing.Any:
     """Get the state of the object given as val."""
     return _process(value, attr_type, attr_name, False)

@@ -174,6 +174,9 @@ def test_reverse_proxy(tctx, keep_host_header):
 
 
 def test_reverse_dns(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(dns.DNSFlow)
     server = Placeholder(Server)
     tctx.client.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8:53")
@@ -216,7 +219,7 @@ def test_quic(tctx: Context, keep_host_header: bool):
             << RequestWakeup(Placeholder(float))
         )
         assert tctx.server.address == ("example.org", 443)
-        assert quic.quic_parse_client_hello(client_hello()).sni == (
+        assert quic.quic_parse_client_hello_from_datagrams([client_hello()]).sni == (
             "other.example.com" if keep_host_header else "example.org"
         )
 

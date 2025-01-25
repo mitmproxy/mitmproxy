@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import logging
 import os.path
 import re
+import secrets
+import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
@@ -18,6 +19,7 @@ import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master
+import mitmproxy_rs
 from mitmproxy import certs
 from mitmproxy import command
 from mitmproxy import contentviews
@@ -29,13 +31,21 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
+from mitmproxy.net.http import status_codes
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
+from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.websocket import WebSocketMessage
+
+TRANSPARENT_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08"
+    b"\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc\xff\x07"
+    b"\x00\x02\x00\x01\xfc\xa8Q\rh\x00\x00\x00\x00IEND\xaeB`\x82"
+)
 
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
@@ -268,10 +278,19 @@ class RequestHandler(tornado.web.RequestHandler):
 
 
 class IndexHandler(RequestHandler):
+    def _is_fetch_mode_navigate(self) -> bool:
+        # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
+        return self.request.headers.get("Sec-Fetch-Mode", "navigate") == "navigate"
+
     def get(self):
-        token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
-        assert token
-        self.render("index.html")
+        # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
+        if self._is_fetch_mode_navigate():
+            self.render("index.html", xsrf_token=self.xsrf_token)
+        else:
+            raise APIError(
+                status_codes.PRECONDITION_FAILED,
+                f"Unexpected Sec-Fetch-Mode header: {self.request.headers.get('Sec-Fetch-Mode')}",
+            )
 
 
 class FilterHelp(RequestHandler):
@@ -282,9 +301,8 @@ class FilterHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
-    _send_tasks: ClassVar[set[asyncio.Task]] = set()
 
-    def open(self):
+    def open(self, *args, **kwargs):
         self.connections.add(self)
 
     def on_close(self):
@@ -298,9 +316,11 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             except tornado.websocket.WebSocketClosedError:
                 cls.connections.discard(conn)
 
-        t = asyncio.create_task(wrapper())
-        cls._send_tasks.add(t)
-        t.add_done_callback(cls._send_tasks.remove)
+        asyncio_utils.create_task(
+            wrapper(),
+            name="WebSocketEventBroadcaster",
+            keep_ref=True,
+        )
 
     @classmethod
     def broadcast(cls, **kwargs):
@@ -637,16 +657,57 @@ class DnsRebind(RequestHandler):
 
 
 class State(RequestHandler):
+    # Separate method for testability.
+    @staticmethod
+    def get_json(master: mitmproxy.tools.web.master.WebMaster):
+        return {
+            "version": version.VERSION,
+            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
+            "servers": {
+                s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
+            },
+            "platform": sys.platform,
+            "localModeUnavailable": mitmproxy_rs.local.LocalRedirector.unavailable_reason(),
+        }
+
     def get(self):
-        self.write(
+        self.write(State.get_json(self.master))
+
+
+class ProcessList(RequestHandler):
+    @staticmethod
+    def get_json():
+        processes = mitmproxy_rs.process_info.active_executables()
+        return [
             {
-                "version": version.VERSION,
-                "contentViews": [
-                    v.name for v in contentviews.views if v.name != "Query"
-                ],
-                "servers": [s.to_json() for s in self.master.proxyserver.servers],
+                "is_visible": process.is_visible,
+                "executable": process.executable,
+                "is_system": process.is_system,
+                "display_name": process.display_name,
             }
-        )
+            for process in processes
+        ]
+
+    def get(self):
+        self.write(ProcessList.get_json())
+
+
+class ProcessImage(RequestHandler):
+    def get(self):
+        path = self.get_query_argument("path", None)
+
+        if not path:
+            raise APIError(400, "Missing 'path' parameter.")
+
+        try:
+            icon_bytes = mitmproxy_rs.process_info.executable_icon(path)
+        except Exception:
+            icon_bytes = TRANSPARENT_PNG
+
+        self.set_header("Content-Type", "image/png")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("Cache-Control", "max-age=604800")
+        self.write(icon_bytes)
 
 
 class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
@@ -668,7 +729,8 @@ class Application(tornado.web.Application):
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
-            cookie_secret=os.urandom(256),
+            xsrf_cookie_kwargs=dict(httponly=True, samesite="Strict"),
+            cookie_secret=secrets.token_bytes(32),
             debug=debug,
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
@@ -708,5 +770,7 @@ class Application(tornado.web.Application):
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),
                 (r"/state(?:\.json)?", State),
+                (r"/processes", ProcessList),
+                (r"/executable-icon", ProcessImage),
             ],
         )

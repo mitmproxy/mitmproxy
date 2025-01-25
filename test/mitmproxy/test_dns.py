@@ -28,6 +28,20 @@ class TestResourceRecord:
         assert (
             str(dns.ResourceRecord.TXT("test", "unicode text 😀")) == "unicode text 😀"
         )
+        params = {
+            0: b"\x00",
+            1: b"\x01",
+            2: b"",
+            3: b"\x02",
+            4: b"\x03",
+            5: b"\x04",
+            6: b"\x05",
+        }
+        record = dns.https_records.HTTPSRecord(1, "example.com", params)
+        assert (
+            str(dns.ResourceRecord.HTTPS("example.com", record))
+            == "priority: 1 target_name: 'example.com' {'mandatory': b'\\x00', 'alpn': b'\\x01', 'no_default_alpn': b'', 'port': b'\\x02', 'ipv4hint': b'\\x03', 'ech': b'\\x04', 'ipv6hint': b'\\x05'}"
+        )
         assert (
             str(
                 dns.ResourceRecord(
@@ -65,6 +79,37 @@ class TestResourceRecord:
         assert rr.domain_name == "www.example.org"
         rr.text = "sample text"
         assert rr.text == "sample text"
+
+    def test_https_record_ech(self):
+        rr = dns.ResourceRecord(
+            "test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b""
+        )
+        params = {3: b"\x01\xbb"}
+        record = dns.https_records.HTTPSRecord(1, "example.org", params)
+        rr.data = dns.https_records.pack(record)
+        assert rr.https_ech is None
+        rr.https_ech = "dGVzdHN0cmluZwo="
+        assert rr.https_ech == "dGVzdHN0cmluZwo="
+        rr.https_ech = None
+        assert rr.https_ech is None
+
+    def test_https_record_alpn(self):
+        rr = dns.ResourceRecord(
+            "test", dns.types.ANY, dns.classes.IN, dns.ResourceRecord.DEFAULT_TTL, b""
+        )
+        record = dns.https_records.HTTPSRecord(1, "example.org", {})
+        rr.data = dns.https_records.pack(record)
+
+        assert rr.https_alpn is None
+        assert rr.data == b"\x00\x01\x07example\x03org\x00"
+
+        rr.https_alpn = [b"h2", b"h3"]
+        assert rr.https_alpn == (b"h2", b"h3")
+        assert rr.data == b"\x00\x01\x07example\x03org\x00\x00\x01\x00\x06\x02h2\x02h3"
+
+        rr.https_alpn = None
+        assert rr.https_alpn is None
+        assert rr.data == b"\x00\x01\x07example\x03org\x00"
 
 
 class TestMessage:
@@ -164,8 +209,24 @@ class TestMessage:
             + b"\x00\x00\x03\x84\x00H\x07ns-1707\tawsdns-21\x02co\x02uk\x00\x11awsdns-hostmaster\x06amazon\xc0\x19\x00"
             + b"\x00\x00\x01\x00\x00\x1c \x00\x00\x03\x84\x00\x12u\x00\x00\x01Q\x80\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
         )
-        assert invalid_rr_domain_name.answers[0].data == b"\x99live\xc0\x12"
-
+        assert (
+            invalid_rr_domain_name.answers[0].data == b"\x99live\x06github\x03com\x00"
+        )
+        valid_compressed_rr_data = dns.Message.unpack(
+            b"\x10}\x81\x80\x00\x01\x00\x01\x00\x00\x00\x01\x06google\x03com\x00\x00\x06\x00\x01\xc0\x0c\x00\x06\x00"
+            + b"\x01\x00\x00\x00\x0c\x00&\x03ns1\xc0\x0c\tdns-admin\xc0\x0c&~gw\x00\x00\x03\x84\x00\x00\x03\x84\x00"
+            + b"\x00\x07\x08\x00\x00\x00<\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
+        )
+        assert (
+            valid_compressed_rr_data.answers[0].data
+            == b"\x03ns1\x06google\x03com\x00\tdns-admin\x06google\x03com\x00&~gw\x00\x00\x03\x84\x00\x00\x03\x84\x00"
+            + b"\x00\x07\x08\x00\x00\x00<"
+        )
+        A_record_data_contains_pointer_label = dns.Message.unpack(
+            b"\x98A\x81\x80\x00\x01\x00\x01\x00\x00\x00\x01\x06google\x03com\x00\x00\x01\x00\x01\xc0\x0c\x00\x01\x00"
+            + b"\x01\x00\x00\x00/\x00\x04\xd8:\xc4\xae\x00\x00)\x02\x00\x00\x00\x00\x00\x00\x00"
+        )
+        assert A_record_data_contains_pointer_label.answers[0].data == b"\xd8:\xc4\xae"
         req = tutils.tdnsreq()
         for flag in (
             "authoritative_answer",
@@ -251,3 +312,9 @@ class TestDNSFlow:
     def test_repr(self):
         f = tflow.tdnsflow()
         assert "DNSFlow" in repr(f)
+
+    def test_question(self):
+        r = tflow.tdnsreq()
+        assert r.question
+        r.questions = []
+        assert not r.question

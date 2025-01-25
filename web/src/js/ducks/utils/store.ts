@@ -53,7 +53,7 @@ export const defaultState = {
  */
 export function reduce<S extends Item>(
     state: State<S> = defaultState,
-    action
+    action,
 ): State<S> {
     let { byId, list, listIndex, view, viewIndex } = state;
 
@@ -86,39 +86,39 @@ export function reduce<S extends Item>(
                 ({ view, viewIndex } = sortedInsert(
                     state,
                     action.item,
-                    action.sort
+                    action.sort,
                 ));
             }
             break;
 
-        case UPDATE:
+        case UPDATE: {
             byId = { ...byId, [action.item.id]: action.item };
             list = [...list];
             list[listIndex[action.item.id]] = action.item;
 
-            let hasOldItem = action.item.id in viewIndex;
-            let hasNewItem = action.filter(action.item);
+            const hasOldItem = action.item.id in viewIndex;
+            const hasNewItem = action.filter(action.item);
             if (hasNewItem && !hasOldItem) {
                 ({ view, viewIndex } = sortedInsert(
                     state,
                     action.item,
-                    action.sort
+                    action.sort,
                 ));
             } else if (!hasNewItem && hasOldItem) {
                 ({ data: view, dataIndex: viewIndex } = removeData(
                     view,
                     viewIndex,
-                    action.item.id
+                    action.item.id,
                 ));
             } else if (hasNewItem && hasOldItem) {
                 ({ view, viewIndex } = sortedUpdate(
                     state,
                     action.item,
-                    action.sort
+                    action.sort,
                 ));
             }
             break;
-
+        }
         case REMOVE:
             if (!(action.id in byId)) {
                 break;
@@ -128,14 +128,14 @@ export function reduce<S extends Item>(
             ({ data: list, dataIndex: listIndex } = removeData(
                 list,
                 listIndex,
-                action.id
+                action.id,
             ));
 
             if (action.id in viewIndex) {
                 ({ data: view, dataIndex: viewIndex } = removeData(
                     view,
                     viewIndex,
-                    action.id
+                    action.id,
                 ));
             }
             break;
@@ -160,7 +160,7 @@ export function reduce<S extends Item>(
 
 export function setFilter<S extends Item>(
     filter: FilterFn<S> = defaultFilter,
-    sort: SortFn<S> = defaultSort
+    sort: SortFn<S> = defaultSort,
 ) {
     return { type: SET_FILTER, filter, sort };
 }
@@ -172,7 +172,7 @@ export function setSort<S extends Item>(sort: SortFn<S> = defaultSort) {
 export function add<S extends Item>(
     item: S,
     filter: FilterFn<S> = defaultFilter,
-    sort: SortFn<S> = defaultSort
+    sort: SortFn<S> = defaultSort,
 ) {
     return { type: ADD, item, filter, sort };
 }
@@ -180,7 +180,7 @@ export function add<S extends Item>(
 export function update<S extends Item>(
     item: S,
     filter: FilterFn<S> = defaultFilter,
-    sort: SortFn<S> = defaultSort
+    sort: SortFn<S> = defaultSort,
 ) {
     return { type: UPDATE, item, filter, sort };
 }
@@ -192,7 +192,7 @@ export function remove(id: string) {
 export function receive<S extends Item>(
     list: S[],
     filter: FilterFn<S> = defaultFilter,
-    sort: SortFn<S> = defaultSort
+    sort: SortFn<S> = defaultSort,
 ) {
     return { type: RECEIVE, list, filter, sort };
 }
@@ -200,7 +200,7 @@ export function receive<S extends Item>(
 function sortedInsert<S extends Item>(
     state: State<S>,
     item: S,
-    sort: SortFn<S>
+    sort: SortFn<S>,
 ) {
     const index = sortedIndex(state.view, item, sort);
     const view = [...state.view];
@@ -217,7 +217,7 @@ function sortedInsert<S extends Item>(
 function removeData<S extends Item>(
     currentData: S[],
     currentDataIndex: { [id: string]: number },
-    id: string
+    id: string,
 ) {
     const index = currentDataIndex[id];
     const data = [...currentData];
@@ -235,10 +235,10 @@ function removeData<S extends Item>(
 function sortedUpdate<S extends Item>(
     state: State<S>,
     item: S,
-    sort: SortFn<S>
+    sort: SortFn<S>,
 ) {
-    let view = [...state.view];
-    let viewIndex = { ...state.viewIndex };
+    const view = [...state.view];
+    const viewIndex = { ...state.viewIndex };
     let index = viewIndex[item.id];
     view[index] = item;
     while (index + 1 < view.length && sort(view[index], view[index + 1]) > 0) {
@@ -259,8 +259,8 @@ function sortedUpdate<S extends Item>(
 }
 
 function sortedIndex(list, item, sort) {
-    let low = 0;
-    let high = list.length;
+    let low = 0,
+        high = list.length;
 
     while (low < high) {
         const middle = (low + high) >>> 1;
@@ -278,6 +278,6 @@ function defaultFilter() {
     return true;
 }
 
-function defaultSort(a, b) {
+function defaultSort(_a, _b) {
     return 0;
 }

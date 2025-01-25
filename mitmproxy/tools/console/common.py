@@ -188,7 +188,7 @@ class TruncatedText(urwid.Widget):
             text = text[::-1]
             attr = attr[::-1]
 
-        text_len = urwid.util.calc_width(text, 0, len(text))
+        text_len = urwid.calc_width(text, 0, len(text))
         if size is not None and len(size) > 0:
             width = size[0]
         else:
@@ -346,7 +346,7 @@ def format_http_content_type(content_type: str) -> tuple[str, str]:
 def format_duration(duration: float) -> tuple[str, str]:
     pretty_duration = human.pretty_duration(duration)
     style = "gradient_%02d" % int(
-        99 - 100 * min(math.log2(1 + 1000 * duration) / 12, 0.99)
+        99 - 100 * min(math.log2(max(1.0, 1000 * duration)) / 12, 0.99)
     )
     return pretty_duration, style
 
@@ -762,7 +762,7 @@ def format_flow(
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:
             duration = None
-        if f.client_conn.tls_version == "QUIC":
+        if f.client_conn.tls_version == "QUICv1":
             protocol = "quic"
         else:
             protocol = f.type

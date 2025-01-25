@@ -92,6 +92,7 @@ class Script:
             self.reloadtask = asyncio_utils.create_task(
                 self.watcher(),
                 name=f"script watcher for {path}",
+                keep_ref=False,
             )
         else:
             self.loadscript()
