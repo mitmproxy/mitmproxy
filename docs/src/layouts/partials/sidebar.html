@@ -8,8 +8,11 @@
     <p class="menu-label">Overview</p>
     {{ partial "sidemenu" (dict "ctx" . "menuname" "overview") }}
 
-    <p class="menu-label">Beginner Tutorial</p>
+    <p class="menu-label">Beginner Tutorial (CLI)</p>
     {{ partial "sidemenu" (dict "ctx" . "menuname" "mitmproxytutorial") }}
+
+    <p class="menu-label">Beginner Tutorial (Web)</p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "web-tutorial") }}
 
     <p class="menu-label">Core concepts</p>
     {{ partial "sidemenu" (dict "ctx" . "menuname" "concepts") }}
