@@ -18,7 +18,8 @@ import json
 import pprint
 import re  # noqa: F401
 from datetime import datetime
-from typing import Optional, Any
+from typing import Any
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import conlist

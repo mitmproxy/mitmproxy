@@ -17,7 +17,8 @@ from __future__ import annotations
 import json
 import pprint
 import re  # noqa: F401
-from typing import Optional, Any
+from typing import Any
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import conint
