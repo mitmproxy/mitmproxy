@@ -6,19 +6,19 @@ from mitmproxy import flowfilter
 class FiltersManager():
        
     def __init__(self, view):
-        self.filters: dict[str, flowfilter.TFilter] = {
+        self.filters: dict[str, str] = {
             "search": "",
             "highlight": "",
         }
         self.view = view
 
-    def update_filter(self, name: str, expression: flowfilter.TFilter):
+    def update_filter(self, name: str, expression: str):
         self.filters[name] = expression
 
-    def get_filter(self, name: str) -> flowfilter.TFilter:
+    def get_filter(self, name: str) -> str:
         return self.filters.get(name, "")
     
-    def get_all_filters(self) -> dict[str, flowfilter.TFilter]:
+    def get_all_filters(self) -> dict[str, str]:
         return self.filters.copy()
 
     def get_matching_flow_ids(self) -> List[str]:
