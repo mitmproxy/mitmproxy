@@ -293,7 +293,7 @@ class FilterHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
-    application: Application # ref to the application, in order to update filters
+    application: Application # reference to the application, in order to be able to update the filters
 
     def open(self, *args, **kwargs):
         self.connections.add(self)

@@ -7,8 +7,8 @@ class FiltersManager():
        
     def __init__(self, view):
         self.filters: dict[str, flowfilter.TFilter] = {
-            "search": flowfilter.match_all,
-            "highlight": flowfilter.match_all,
+            "search": "",
+            "highlight": "",
         }
         self.view = view
 
@@ -22,5 +22,17 @@ class FiltersManager():
         return self.filters.copy()
 
     def get_matching_flow_ids(self) -> List[str]:
-        match_search = flowfilter.parse(self.get_filter("search")) # TODO: handle highlight
-        return [f.id for f in self.view if match_search(f)]
+        search = self.get_filter("search")
+        highlight = self.get_filter("highlight")
+        if search and highlight:
+            match_search = flowfilter.parse(search)
+            match_highlight = flowfilter.parse(highlight)
+            return [f.id for f in self.view if match_search(f) and match_highlight(f)]
+        elif search:
+            match_search = flowfilter.parse(search)
+            return [f.id for f in self.view if match_search(f)]
+        elif highlight:
+            match_highlight = flowfilter.parse(highlight)
+            return [f.id for f in self.view if match_highlight(f)]
+        else:
+            return []
