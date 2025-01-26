@@ -16,7 +16,7 @@ class FiltersManager():
         self.filters[name] = expression
 
     def get_filter(self, name: str) -> flowfilter.TFilter:
-        return self.filters.get(name, flowfilter.match_all)
+        return self.filters.get(name, "")
     
     def get_all_filters(self) -> dict[str, flowfilter.TFilter]:
         return self.filters.copy()
