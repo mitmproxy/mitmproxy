@@ -16,7 +16,10 @@ import tornado.escape
 import tornado.web
 import tornado.websocket
 
+import mitmproxy.addons
+import mitmproxy.addons.view
 import mitmproxy.flow
+from mitmproxy.tools.web.filters import FiltersManager
 import mitmproxy.tools.web.master
 import mitmproxy_rs
 from mitmproxy import certs
@@ -286,30 +289,11 @@ class FilterHelp(RequestHandler):
     def get(self):
         self.write(dict(commands=flowfilter.help))
 
-class FiltersManager():
-    def __init__(self):
-        self.filters: dict[str, flowfilter.TFilter] = {
-            "search": flowfilter.match_all,
-            "highlight": flowfilter.match_all,
-        }
-
-    def update_filter(self, name: str, expression: flowfilter.TFilter):
-        self.filters[name] = expression
-        for f in self.view:
-            print(f)
-
-    def get_filter(self, name: str) -> flowfilter.TFilter:
-        return self.filters.get(name, flowfilter.match_all)
-    
-    def get_all_filters(self) -> dict[str, flowfilter.TFilter]:
-        return self.filters.copy()
-
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
-    
-    filters_manager = FiltersManager()
+    application: Application # ref to the application, in order to update filters
 
     def open(self, *args, **kwargs):
         self.connections.add(self)
@@ -332,8 +316,13 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
             expression = data["expr"]
             
             if resource == "flows" and command == "updateFilter":
-                self.filters_manager.update_filter(name, expression)
-                print(f"Updated filters: {self.filters_manager.get_all_filters()}")
+                filters_manager = self.application.master.filters_manager
+                
+                filters_manager.update_filter(name, expression)
+                print(f"Updated filters: {filters_manager.get_all_filters()}")
+                self.broadcast(
+                    resource="flows", cmd="filtersUpdated", data=filters_manager.get_matching_flow_ids()
+                )
             else:
                 print("Unsupported command.")
             
