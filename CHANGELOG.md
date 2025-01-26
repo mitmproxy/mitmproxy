@@ -13,7 +13,8 @@
   ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
 - Standalone binaries are now compiled with Python 3.13.
   ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
-- Add mitmweb tutorial to docs. 
+- Add mitmweb tutorial to docs.
+  ([#7509](https://github.com/mitmproxy/mitmproxy/pull/7509), @EstherRoeth)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
