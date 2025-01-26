@@ -21,7 +21,7 @@ jobs:
   lint:
     uses: mhils/workflows/.github/workflows/python-tox.yml@v11
     with:
-      cmd: tox -e lint || true
+      cmd: tox -e lint
 
   filename-matching:
     uses: mhils/workflows/.github/workflows/python-tox.yml@v11

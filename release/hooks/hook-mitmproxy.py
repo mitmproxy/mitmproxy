@@ -1,7 +1,6 @@
 hiddenimports = [
     "mitmproxy.script",
-    "mitmproxy.addons.browserup.*"
-    "cgi",
+    "mitmproxy.addons.browserup.*" "cgi",
     "http.cookies",
     "wsgiref.validate",
     "wsgiref.simple_server",
@@ -26,5 +25,5 @@ hiddenimports = [
     "falcon.errors",
     "falcon.redirects",
     "falcon.http_error",
-    "falcon.http_status"
+    "falcon.http_status",
 ]

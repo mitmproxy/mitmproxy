@@ -7,12 +7,14 @@ from falcon import testing
 
 import mitmproxy.addons.browserup.browserup_addons_manager
 from mitmproxy.addons.browserup import har_capture_addon
-from mitmproxy.test import taddons, tflow, tutils
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 from mitmproxy.utils import data
 
 
 class TestAPI:
-    def flow(self, resp_content=b'message'):
+    def flow(self, resp_content=b"message"):
         times = dict(
             timestamp_start=746203200,
             timestamp_end=746203290,
@@ -20,8 +22,8 @@ class TestAPI:
 
         # Create a dummy flow for testing
         return tflow.tflow(
-            req=tutils.treq(method=b'GET', **times),
-            resp=tutils.tresp(content=resp_content, **times)
+            req=tutils.treq(method=b"GET", **times),
+            resp=tutils.tresp(content=resp_content, **times),
         )
 
     def client(self):
@@ -36,58 +38,74 @@ class TestAPI:
     # pytest will inject the object returned by the "client" function
     # as an additional parameter.
     def test_healthcheck(self, hc):
-        response = self.client().simulate_get('/healthcheck')
+        response = self.client().simulate_get("/healthcheck")
         assert response.status == falcon.HTTP_OK
 
     def test_verify_present(self, hc):
-        response = self.client().simulate_post('/verify/present/FindMyName', json={})
+        response = self.client().simulate_post("/verify/present/FindMyName", json={})
         assert response.status == falcon.HTTP_OK
 
     def test_verify_not_present(self, hc):
-        response = self.client().simulate_post('/verify/not_present/DontFindMyName', json={})
+        response = self.client().simulate_post(
+            "/verify/not_present/DontFindMyName", json={}
+        )
         assert response.status == falcon.HTTP_OK
 
     def test_verify_sla(self, hc):
-        response = self.client().simulate_post('/verify/sla/10/LoadsFast', json={})
+        response = self.client().simulate_post("/verify/sla/10/LoadsFast", json={})
         assert response.status == falcon.HTTP_OK
 
     def test_verify_size(self, hc):
-        response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={'error_if_no_traffic': True})
+        response = self.client().simulate_post(
+            "/verify/size/100/NotTooLarge", json={"error_if_no_traffic": True}
+        )
         assert response.status == falcon.HTTP_OK
 
     def test_verify_size_bad_match_criteria(self, hc):
-        response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={'foo': True})
+        response = self.client().simulate_post(
+            "/verify/size/100/NotTooLarge", json={"foo": True}
+        )
         assert response.status == falcon.HTTP_422
 
     def test_add_float_counter(self, hc):
-        response = self.client().simulate_post('/har/counters', json={'name': 'fooAmount', 'value': 5.0})
+        response = self.client().simulate_post(
+            "/har/counters", json={"name": "fooAmount", "value": 5.0}
+        )
         assert response.status == falcon.HTTP_204
 
     def test_add_integer_counter(self, hc):
-        response = self.client().simulate_post('/har/counters', json={'name': 'fooAmount', 'value': 5})
+        response = self.client().simulate_post(
+            "/har/counters", json={"name": "fooAmount", "value": 5}
+        )
         assert response.status == falcon.HTTP_204
 
     def test_add_counter_schema_wrong_string_instead_of_number(self, hc):
-        response = self.client().simulate_post('/har/counters', json={'name': 3, 'value': 'nope'})
+        response = self.client().simulate_post(
+            "/har/counters", json={"name": 3, "value": "nope"}
+        )
         assert response.status == falcon.HTTP_422
 
     def test_add_counter_schema_wrong(self, hc):
-        response = self.client().simulate_post('/har/counters', json={'name': 3})
+        response = self.client().simulate_post("/har/counters", json={"name": 3})
         assert response.status == falcon.HTTP_422
 
     def test_add_error(self, hc):
-        response = self.client().simulate_post('/har/errors', json={'name': 'BadError', 'details': 'Woops, super bad'})
+        response = self.client().simulate_post(
+            "/har/errors", json={"name": "BadError", "details": "Woops, super bad"}
+        )
         assert response.status == falcon.HTTP_204
 
     def test_add_error_schema_wrong(self, hc):
-        response = self.client().simulate_post('/har/errors', json={'name': 'sdfsd', 'foo': 'Bar'})
+        response = self.client().simulate_post(
+            "/har/errors", json={"name": "sdfsd", "foo": "Bar"}
+        )
         assert response.status == falcon.HTTP_422
 
 
 @pytest.fixture()
 def path(tmpdir):
     d = tempfile.TemporaryDirectory().name
-    return os.path.join(d, 'test.har')
+    return os.path.join(d, "test.har")
 
 
 @pytest.fixture()
