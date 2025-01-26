@@ -1,10 +1,9 @@
 from typing import List
-from mitmproxy.tools.cmdline import mitmproxy
+
 from mitmproxy import flowfilter
 
 
-class FiltersManager():
-       
+class FiltersManager:
     def __init__(self, view):
         self.filters: dict[str, str] = {
             "search": "",
@@ -17,7 +16,7 @@ class FiltersManager():
 
     def get_filter(self, name: str) -> str:
         return self.filters.get(name, "")
-    
+
     def get_all_filters(self) -> dict[str, str]:
         return self.filters.copy()
 

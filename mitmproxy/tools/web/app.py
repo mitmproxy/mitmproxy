@@ -19,7 +19,6 @@ import tornado.websocket
 import mitmproxy.addons
 import mitmproxy.addons.view
 import mitmproxy.flow
-from mitmproxy.tools.web.filters import FiltersManager
 import mitmproxy.tools.web.master
 import mitmproxy_rs
 from mitmproxy import certs
@@ -293,39 +292,41 @@ class FilterHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
-    application: Application # reference to the application, in order to be able to update the filters
+    application: Application  # reference to the application, in order to be able to update the filters
 
     def open(self, *args, **kwargs):
         self.connections.add(self)
 
     def on_close(self):
         self.connections.discard(self)
-        
+
     async def on_message(self, message: str):
         try:
             data = json.loads(message)
-            
+
             # Validate the required fields
             if not all(key in data for key in ["resource", "cmd", "name", "expr"]):
-                print(f"Invalid message format: Missing required fields.")            
+                print(f"Invalid message format: Missing required fields.")
                 return
-            
+
             resource = data["resource"]
             command = data["cmd"]
             name = data["name"]
             expression = data["expr"]
-            
+
             if resource == "flows" and command == "updateFilter":
                 filters_manager = self.application.master.filters_manager
-                
+
                 filters_manager.update_filter(name, expression)
                 print(f"Updated filters: {filters_manager.get_all_filters()}")
                 self.broadcast(
-                    resource="flows", cmd="filtersUpdated", data=filters_manager.get_matching_flow_ids()
+                    resource="flows",
+                    cmd="filtersUpdated",
+                    data=filters_manager.get_matching_flow_ids(),
                 )
             else:
                 print("Unsupported command.")
-            
+
         except json.JSONDecodeError:
             print(f"Invalid JSON received from {self}: {message}")
 
