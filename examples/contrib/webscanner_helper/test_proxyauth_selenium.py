@@ -3,16 +3,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from examples.contrib.webscanner_helper.proxyauth_selenium import AuthorizationOracle
+from examples.contrib.webscanner_helper.proxyauth_selenium import logger
+from examples.contrib.webscanner_helper.proxyauth_selenium import randomString
+from examples.contrib.webscanner_helper.proxyauth_selenium import SeleniumAddon
+from mitmproxy.http import HTTPFlow
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.http import HTTPFlow
-
-from examples.contrib.webscanner_helper.proxyauth_selenium import logger, randomString, AuthorizationOracle, \
-    SeleniumAddon
 
 
 class TestRandomString:
-
     def test_random_string(self):
         res = randomString()
         assert isinstance(res, str)
@@ -36,8 +36,11 @@ oracle = AuthenticationOracleTest()
 
 @pytest.fixture(scope="module", autouse=True)
 def selenium_addon(request):
-    addon = SeleniumAddon(fltr=r"~u http://example\.com/login\.php", domain=r"~d http://example\.com",
-                          auth_oracle=oracle)
+    addon = SeleniumAddon(
+        fltr=r"~u http://example\.com/login\.php",
+        domain=r"~d http://example\.com",
+        auth_oracle=oracle,
+    )
     browser = MagicMock()
     addon.browser = browser
     yield addon
@@ -49,11 +52,10 @@ def selenium_addon(request):
 
 
 class TestSeleniumAddon:
-
     def test_request_replay(self, selenium_addon):
         f = tflow.tflow(resp=tutils.tresp())
         f.request.is_replay = True
-        with mock.patch.object(logger, 'warning') as mock_warning:
+        with mock.patch.object(logger, "warning") as mock_warning:
             selenium_addon.request(f)
         mock_warning.assert_called()
 
@@ -62,7 +64,7 @@ class TestSeleniumAddon:
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
         assert not selenium_addon.set_cookies
-        with mock.patch.object(logger, 'debug') as mock_debug:
+        with mock.patch.object(logger, "debug") as mock_debug:
             selenium_addon.request(f)
         mock_debug.assert_called()
         assert selenium_addon.set_cookies
@@ -79,9 +81,11 @@ class TestSeleniumAddon:
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
         assert not selenium_addon.set_cookies
-        with mock.patch.object(logger, 'debug') as mock_debug:
-            with mock.patch('examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login',
-                            return_value=[{"name": "cookie", "value": "test"}]) as mock_login:
+        with mock.patch.object(logger, "debug") as mock_debug:
+            with mock.patch(
+                "examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login",
+                return_value=[{"name": "cookie", "value": "test"}],
+            ) as mock_login:
                 selenium_addon.request(f)
         mock_debug.assert_called()
         assert selenium_addon.set_cookies
@@ -95,7 +99,7 @@ class TestSeleniumAddon:
         selenium_addon.set_cookies = False
         assert not selenium_addon.set_cookies
 
-        with mock.patch.object(logger, 'debug') as mock_debug:
+        with mock.patch.object(logger, "debug") as mock_debug:
             selenium_addon.request(f)
         mock_debug.assert_called()
         selenium_addon.filter = fltr
@@ -105,8 +109,10 @@ class TestSeleniumAddon:
         f = tflow.tflow(resp=tutils.tresp())
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
-        with mock.patch('examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login',
-                        return_value=[]) as mock_login:
+        with mock.patch(
+            "examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login",
+            return_value=[],
+        ) as mock_login:
             selenium_addon.response(f)
         mock_login.assert_called()
 
@@ -114,7 +120,9 @@ class TestSeleniumAddon:
         f = tflow.tflow(resp=tutils.tresp())
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
-        with mock.patch('examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login',
-                        return_value=[{"name": "cookie", "value": "test"}]) as mock_login:
+        with mock.patch(
+            "examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login",
+            return_value=[{"name": "cookie", "value": "test"}],
+        ) as mock_login:
             selenium_addon.response(f)
         mock_login.assert_called()

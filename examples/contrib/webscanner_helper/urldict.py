@@ -1,7 +1,11 @@
 import itertools
 import json
+from collections.abc import Callable
+from collections.abc import Generator
 from collections.abc import MutableMapping
-from typing import Any, Callable, Generator, TextIO, Union, cast
+from typing import Any
+from typing import cast
+from typing import TextIO
 
 from mitmproxy import flowfilter
 from mitmproxy.http import HTTPFlow
@@ -45,7 +49,6 @@ class URLDict(MutableMapping):
         return self.store.__len__()
 
     def get_generator(self, flow: HTTPFlow) -> Generator[Any, None, None]:
-
         for fltr, value in self.store.items():
             if flowfilter.match(fltr, flow):
                 yield value
@@ -74,9 +77,9 @@ class URLDict(MutableMapping):
         return cls._load(json_obj, value_loader)
 
     def _dump(self, value_dumper: Callable = f_id) -> dict:
-        dumped: dict[Union[flowfilter.TFilter, str], Any] = {}
+        dumped: dict[flowfilter.TFilter | str, Any] = {}
         for fltr, value in self.store.items():
-            if hasattr(fltr, 'pattern'):
+            if hasattr(fltr, "pattern"):
                 # cast necessary for mypy
                 dumped[cast(Any, fltr).pattern] = value_dumper(value)
             else:

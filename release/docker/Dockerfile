@@ -1,18 +1,25 @@
-FROM python:3.9-buster as wheelbuilder
+FROM python:3.13-bookworm AS wheelbuilder
 
-ARG MITMPROXY_WHEEL
-COPY $MITMPROXY_WHEEL /wheels/
-RUN pip install wheel && pip wheel --wheel-dir /wheels /wheels/${MITMPROXY_WHEEL}
+COPY mitmproxy-*-py3-none-any.whl /wheels/
+RUN pip install wheel && pip wheel --wheel-dir /wheels /wheels/*.whl
 
-FROM python:3.9-slim-buster
+FROM python:3.13-slim-bookworm
 
 RUN useradd -mU mitmproxy
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gosu \
+    && apt-get install -y --no-install-recommends gosu nano \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /home/mitmproxy/.mitmproxy \
+    && chown mitmproxy:mitmproxy /home/mitmproxy/.mitmproxy
+
 COPY --from=wheelbuilder /wheels /wheels
-RUN pip install --no-index --find-links=/wheels mitmproxy
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && pip install --no-build-isolation --find-links=/wheels mitmproxy \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN rm -rf /wheels
 
 VOLUME /home/mitmproxy/.mitmproxy

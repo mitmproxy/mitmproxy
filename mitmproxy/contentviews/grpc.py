@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import logging
 import struct
-from dataclasses import dataclass, field
+from collections.abc import Generator
+from collections.abc import Iterable
+from collections.abc import Iterator
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
-from typing import Generator, Iterable, Iterator
 
-from mitmproxy import contentviews, flow, flowfilter, http
+from mitmproxy import contentviews
+from mitmproxy import flow
+from mitmproxy import flowfilter
+from mitmproxy import http
 from mitmproxy.contentviews import base
 from mitmproxy.net.encoding import decode
 
@@ -259,7 +265,9 @@ class ProtoParser:
         packed_field: ProtoParser.Field,
     ) -> list[ProtoParser.Field]:
         if not isinstance(packed_field.wire_value, bytes):
-            raise ValueError(f"can not unpack field with data other than bytes: {type(packed_field.wire_value)}")
+            raise ValueError(
+                f"can not unpack field with data other than bytes: {type(packed_field.wire_value)}"
+            )
         wire_data: bytes = packed_field.wire_value
         tag: int = packed_field.tag
         options: ProtoParser.ParserOptions = packed_field.options
@@ -504,9 +512,11 @@ class ProtoParser:
                         if match:
                             if only_first_hit:
                                 # only first match
-                                self.name = fd.name
-                                self.preferred_decoding = fd.intended_decoding
-                                self.try_unpack = fd.as_packed
+                                if fd.name is not None:
+                                    self.name = fd.name
+                                if fd.intended_decoding is not None:
+                                    self.preferred_decoding = fd.intended_decoding
+                                self.try_unpack = bool(fd.as_packed)
                                 return
                             else:
                                 # overwrite matches till last rule was inspected
@@ -551,7 +561,7 @@ class ProtoParser:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     if int(self.wire_value).bit_length() > 32:
                         # ignore the fact that varint could exceed 64bit (would violate the specs)
                         return ProtoParser.DecodedTypes.uint64, self.wire_value
@@ -562,21 +572,21 @@ class ProtoParser:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     return ProtoParser.DecodedTypes.fixed64, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.bit_32:
                 try:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     return ProtoParser.DecodedTypes.fixed32, self.wire_value
             elif self.wire_type == ProtoParser.WireTypes.len_delimited:
                 try:
                     return intended_decoding, self.decode_as(
                         intended_decoding, try_as_packed
                     )
-                except:
+                except Exception:
                     # failover strategy: message --> string (valid UTF-8) --> bytes
                     len_delimited_strategy: list[ProtoParser.DecodedTypes] = [
                         ProtoParser.DecodedTypes.message,
@@ -591,7 +601,7 @@ class ProtoParser:
                             return failover_decoding, self.decode_as(
                                 failover_decoding, False
                             )
-                        except:
+                        except Exception:
                             pass
 
             # we should never get here (could not be added to tests)
@@ -773,8 +783,8 @@ class ProtoParser:
     def __init__(
         self,
         data: bytes,
-        rules: list[ProtoParser.ParserRule] = None,
-        parser_options: ParserOptions = None,
+        rules: list[ProtoParser.ParserRule] | None = None,
+        parser_options: ParserOptions | None = None,
     ) -> None:
         self.data: bytes = data
         if parser_options is None:
@@ -951,7 +961,9 @@ def format_grpc(
 
 @dataclass
 class ViewConfig:
-    parser_options: ProtoParser.ParserOptions = field(default_factory=ProtoParser.ParserOptions)
+    parser_options: ProtoParser.ParserOptions = field(
+        default_factory=ProtoParser.ParserOptions
+    )
     parser_rules: list[ProtoParser.ParserRule] = field(default_factory=list)
 
 
@@ -976,10 +988,11 @@ class ViewGrpcProtobuf(base.View):
         "gzip",
         "identity",
         "deflate",
+        "zstd",
     ]
 
     # allows to take external ParserOptions object. goes with defaults otherwise
-    def __init__(self, config: ViewConfig = None) -> None:
+    def __init__(self, config: ViewConfig | None = None) -> None:
         super().__init__()
         if config is None:
             config = ViewConfig()
@@ -1062,7 +1075,7 @@ class ViewGrpcProtobuf(base.View):
                     if h in self.__valid_grpc_encodings
                     else self.__valid_grpc_encodings[0]
                 )
-            except:
+            except Exception:
                 grpc_encoding = self.__valid_grpc_encodings[0]
 
             text_iter = format_grpc(
@@ -1101,7 +1114,6 @@ class ViewGrpcProtobuf(base.View):
         http_message: http.Message | None = None,
         **unknown_metadata,
     ) -> float:
-
         if bool(data) and content_type in self.__content_types_grpc:
             return 1
         if bool(data) and content_type in self.__content_types_pb:

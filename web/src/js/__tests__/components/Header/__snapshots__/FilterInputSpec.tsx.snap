@@ -10,7 +10,7 @@ exports[`FilterInput Component should render correctly 1`] = `
     <i
       className="fa fa-fw fa-foo"
       style={
-        Object {
+        {
           "color": "red",
         }
       }

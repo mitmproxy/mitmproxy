@@ -1,17 +1,20 @@
-import * as React from "react"
-import ValueEditor from '../../../components/editors/ValueEditor'
-import {render, waitFor} from "../../test-utils";
+import * as React from "react";
+import ValueEditor from "../../../components/editors/ValueEditor";
+import { render, waitFor } from "../../test-utils";
 
 test("ValueEditor", async () => {
     const onEditDone = jest.fn();
-    let editor: { current?: ValueEditor | null } = {}
-    const {asFragment} = render(
-        <ValueEditor ref={x => editor.current = x} content="hello world" onEditDone={onEditDone}/>
+    const editor: { current?: ValueEditor | null } = {};
+    const { asFragment } = render(
+        <ValueEditor
+            ref={(x) => (editor.current = x)}
+            content="hello world"
+            onEditDone={onEditDone}
+        />,
     );
     expect(asFragment()).toMatchSnapshot();
 
-    if (!editor.current)
-        throw "err";
+    if (!editor.current) throw "err";
 
     editor.current.startEditing();
     await waitFor(() => expect(editor.current?.isEditing()).toBeTruthy());

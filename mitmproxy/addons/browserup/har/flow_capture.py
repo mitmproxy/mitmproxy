@@ -1,13 +1,12 @@
 import base64
-import typing
 import logging
+import typing
+from datetime import datetime, timezone
 
 from mitmproxy import connection
-from mitmproxy.utils import strutils
 from mitmproxy.addons.browserup.har.har_builder import HarBuilder
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
-from datetime import datetime
-from datetime import timezone
+from mitmproxy.utils import strutils
 
 # all the specifics to do with converting a flow into a HAR
 # A list of server seen till now is maintained so we can avoid

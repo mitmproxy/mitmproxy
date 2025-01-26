@@ -5,6 +5,7 @@ offload computations from mitmproxy's main master thread.
 
 import asyncio
 import inspect
+
 from mitmproxy import hooks
 
 

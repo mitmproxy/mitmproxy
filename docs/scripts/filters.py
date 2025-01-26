@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-
 from mitmproxy import flowfilter
-
 
 print('<table class="table filtertable"><tbody>')
 for i in flowfilter.help:

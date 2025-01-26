@@ -1,6 +1,6 @@
 import collections
 import logging
-from typing import Dict, List, NamedTuple, Tuple
+from typing import NamedTuple
 
 import h2.config
 import h2.connection
@@ -8,7 +8,6 @@ import h2.events
 import h2.exceptions
 import h2.settings
 import h2.stream
-
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +20,7 @@ class H2ConnectionLogger(h2.config.DummyLogger):
 
     def debug(self, fmtstr, *args):
         logger.debug(
-            f"{self.conn_type} {fmtstr}",
-            *args,
-            extra={"client": self.peername}
+            f"{self.conn_type} {fmtstr}", *args, extra={"client": self.peername}
         )
 
     def trace(self, fmtstr, *args):
@@ -31,7 +28,7 @@ class H2ConnectionLogger(h2.config.DummyLogger):
             logging.DEBUG - 1,
             f"{self.conn_type} {fmtstr}",
             *args,
-            extra={"client": self.peername}
+            extra={"client": self.peername},
         )
 
 
@@ -48,12 +45,25 @@ class BufferedH2Connection(h2.connection.H2Connection):
     """
 
     stream_buffers: collections.defaultdict[int, collections.deque[SendH2Data]]
-    stream_trailers: Dict[int, List[Tuple[bytes, bytes]]]
+    stream_trailers: dict[int, list[tuple[bytes, bytes]]]
 
     def __init__(self, config: h2.config.H2Configuration):
         super().__init__(config)
+        self.local_settings.initial_window_size = 2**31 - 1
+        self.local_settings.max_frame_size = 2**17
+        self.max_inbound_frame_size = 2**17
+        # hyper-h2 pitfall: we need to acknowledge here, otherwise its sends out the old settings.
+        self.local_settings.acknowledge()
         self.stream_buffers = collections.defaultdict(collections.deque)
         self.stream_trailers = {}
+
+    def initiate_connection(self):
+        super().initiate_connection()
+        # We increase the flow-control window for new streams with a setting,
+        # but we need to increase the overall connection flow-control window as well.
+        self.increment_flow_control_window(
+            2**31 - 1 - self.inbound_flow_control_window
+        )  # maximum - default
 
     def send_data(
         self,
@@ -71,12 +81,12 @@ class BufferedH2Connection(h2.connection.H2Connection):
         frame_size = len(data)
         assert pad_length is None
 
-        while frame_size > self.max_outbound_frame_size:
-            chunk_data = data[: self.max_outbound_frame_size]
-            self.send_data(stream_id, chunk_data, end_stream=False)
+        if frame_size > self.max_outbound_frame_size:
+            for start in range(0, frame_size, self.max_outbound_frame_size):
+                chunk = data[start : start + self.max_outbound_frame_size]
+                self.send_data(stream_id, chunk, end_stream=False)
 
-            data = data[self.max_outbound_frame_size :]
-            frame_size -= len(chunk_data)
+            return
 
         if self.stream_buffers.get(stream_id, None):
             # We already have some data buffered, let's append.
@@ -93,7 +103,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
                 # We can't send right now, so we buffer.
                 self.stream_buffers[stream_id].append(SendH2Data(data, end_stream))
 
-    def send_trailers(self, stream_id: int, trailers: List[Tuple[bytes, bytes]]):
+    def send_trailers(self, stream_id: int, trailers: list[tuple[bytes, bytes]]):
         if self.stream_buffers.get(stream_id, None):
             # Though trailers are not subject to flow control, we need to queue them and send strictly after data frames
             self.stream_trailers[stream_id] = trailers
@@ -173,7 +183,9 @@ class BufferedH2Connection(h2.connection.H2Connection):
             if not self.stream_buffers[stream_id]:
                 del self.stream_buffers[stream_id]
                 if stream_id in self.stream_trailers:
-                    self.send_headers(stream_id, self.stream_trailers.pop(stream_id), end_stream=True)
+                    self.send_headers(
+                        stream_id, self.stream_trailers.pop(stream_id), end_stream=True
+                    )
             sent_any_data = True
 
         return sent_any_data

@@ -1,4 +1,5 @@
 import pytest
+
 from mitmproxy.utils import data
 
 

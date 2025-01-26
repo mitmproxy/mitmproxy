@@ -1,16 +1,17 @@
 import asyncio
 import logging
-import traceback
-from typing import Optional
 
-from mitmproxy import addonmanager, hooks
+from . import ctx as mitmproxy_ctx
+from .addons import termlog
+from .proxy.mode_specs import ReverseMode
+from .utils import asyncio_utils
+from mitmproxy import addonmanager
 from mitmproxy import command
 from mitmproxy import eventsequence
+from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import options
-from . import ctx as mitmproxy_ctx
-from .proxy.mode_specs import ReverseMode
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +22,21 @@ class Master:
     """
 
     event_loop: asyncio.AbstractEventLoop
+    _termlog_addon: termlog.TermLog | None = None
 
-    def __init__(self, opts, event_loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(
+        self,
+        opts: options.Options,
+        event_loop: asyncio.AbstractEventLoop | None = None,
+        with_termlog: bool = False,
+    ):
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
+
+        if with_termlog:
+            self._termlog_addon = termlog.TermLog()
+            self.addons.add(self._termlog_addon)
 
         self.log = log.Log(self)  # deprecated, do not use.
         self._legacy_log_events = log.LegacyLogEvents(self)
@@ -35,35 +46,48 @@ class Master:
         # may want to spawn tasks during the initial configuration phase,
         # which happens before run().
         self.event_loop = event_loop or asyncio.get_running_loop()
-        try:
-            self.should_exit = asyncio.Event()
-        except RuntimeError:  # python 3.9 and below
-            self.should_exit = asyncio.Event(loop=self.event_loop)  # type: ignore
+        self.should_exit = asyncio.Event()
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = self.log  # deprecated, do not use.
         mitmproxy_ctx.options = self.options
 
     async def run(self) -> None:
-        old_handler = self.event_loop.get_exception_handler()
-        self.event_loop.set_exception_handler(self._asyncio_exception_handler)
-        try:
+        with (
+            asyncio_utils.install_exception_handler(self._asyncio_exception_handler),
+            asyncio_utils.set_eager_task_factory(),
+        ):
             self.should_exit.clear()
 
+            # Can we exit before even bringing up servers?
             if ec := self.addons.get("errorcheck"):
                 await ec.shutdown_if_errored()
             if ps := self.addons.get("proxyserver"):
-                await ps.setup_servers()
-            if ec := self.addons.get("errorcheck"):
-                await ec.shutdown_if_errored()
-                ec.finish()
-            await self.running()
+                # This may block for some proxy modes, so we also monitor should_exit.
+                await asyncio.wait(
+                    [
+                        asyncio.create_task(ps.setup_servers()),
+                        asyncio.create_task(self.should_exit.wait()),
+                    ],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                if self.should_exit.is_set():
+                    return
+                # Did bringing up servers fail?
+                if ec := self.addons.get("errorcheck"):
+                    await ec.shutdown_if_errored()
+
             try:
+                await self.running()
+                # Any errors in the final part of startup?
+                if ec := self.addons.get("errorcheck"):
+                    await ec.shutdown_if_errored()
+                    ec.finish()
+
                 await self.should_exit.wait()
             finally:
-                # .wait might be cancelled (e.g. by sys.exit)
+                # if running() was called, we also always want to call done().
+                # .wait might be cancelled (e.g. by sys.exit), so  this needs to be in a finally block.
                 await self.done()
-        finally:
-            self.event_loop.set_exception_handler(old_handler)
 
     def shutdown(self):
         """
@@ -78,23 +102,20 @@ class Master:
     async def done(self) -> None:
         await self.addons.trigger_event(hooks.DoneHook())
         self._legacy_log_events.uninstall()
+        if self._termlog_addon is not None:
+            self._termlog_addon.uninstall()
 
-    def _asyncio_exception_handler(self, loop, context):
+    def _asyncio_exception_handler(self, loop, context) -> None:
         try:
             exc: Exception = context["exception"]
         except KeyError:
-            logger.error(
-                f"Unhandled asyncio error: {context}"
-                "\nPlease lodge a bug report at:"
-                + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
-            )
+            logger.error(f"Unhandled asyncio error: {context}")
         else:
             if isinstance(exc, OSError) and exc.errno == 10038:
                 return  # suppress https://bugs.python.org/issue43253
             logger.error(
-                "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-                + "\nPlease lodge a bug report at:"
-                + "\n\thttps://github.com/mitmproxy/mitmproxy/issues"
+                "Unhandled error in task.",
+                exc_info=(type(exc), exc, exc.__traceback__),
             )
 
     async def load_flow(self, f):
@@ -102,12 +123,17 @@ class Master:
         Loads a flow
         """
 
-        if isinstance(f, http.HTTPFlow) and len(self.options.mode) == 1 and self.options.mode[0].startswith("reverse:"):
+        if (
+            isinstance(f, http.HTTPFlow)
+            and len(self.options.mode) == 1
+            and self.options.mode[0].startswith("reverse:")
+        ):
             # When we load flows in reverse proxy mode, we adjust the target host to
             # the reverse proxy destination for all flows we load. This makes it very
             # easy to replay saved flows against a different host.
             # We may change this in the future so that clientplayback always replays to the first mode.
             mode = ReverseMode.parse(self.options.mode[0])
+            assert isinstance(mode, ReverseMode)
             f.request.host, f.request.port, *_ = mode.address
             f.request.scheme = mode.scheme
 

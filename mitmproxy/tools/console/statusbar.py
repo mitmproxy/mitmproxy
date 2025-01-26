@@ -1,20 +1,24 @@
 from __future__ import annotations
+
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Optional
 
 import urwid
 
 import mitmproxy.tools.console.master
-from mitmproxy.tools.console import commandexecutor, flowlist, quickhelp
+from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import flowlist
+from mitmproxy.tools.console import quickhelp
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.utils import human
 
 
 @lru_cache
-def shorten_message(msg: tuple[str, str] | str, max_width: int) -> list[tuple[str, str]]:
+def shorten_message(
+    msg: tuple[str, str] | str, max_width: int
+) -> list[tuple[str, str]]:
     """
     Shorten message so that it fits into a single line in the statusbar.
     """
@@ -69,7 +73,9 @@ class ActionBar(urwid.WidgetWrap):
         if not self.prompting and flow is None or flow == self.master.view.focus.flow:
             self.show_quickhelp()
 
-    def sig_message(self, message: tuple[str, str] | str, expire: int | None = 1) -> None:
+    def sig_message(
+        self, message: tuple[str, str] | str, expire: int | None = 1
+    ) -> None:
         if self.prompting:
             return
         cols, _ = self.master.ui.get_cols_rows()
@@ -84,15 +90,15 @@ class ActionBar(urwid.WidgetWrap):
 
             signals.call_in.send(seconds=expire, callback=cb)
 
-    def sig_prompt(self, prompt: str, text: str | None, callback: Callable[[str], None]) -> None:
+    def sig_prompt(
+        self, prompt: str, text: str | None, callback: Callable[[str], None]
+    ) -> None:
         signals.focus.send(section="footer")
         self.top._w = urwid.Edit(f"{prompt.strip()}: ", text or "")
         self.bottom._w = urwid.Text("")
         self.prompting = callback
 
-    def sig_prompt_command(
-        self, partial: str = "", cursor: Optional[int] = None
-    ) -> None:
+    def sig_prompt_command(self, partial: str = "", cursor: int | None = None) -> None:
         signals.focus.send(section="footer")
         self.top._w = commander.CommandEdit(
             self.master,
@@ -109,7 +115,9 @@ class ActionBar(urwid.WidgetWrap):
         execute = commandexecutor.CommandExecutor(self.master)
         execute(txt)
 
-    def sig_prompt_onekey(self, prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]) -> None:
+    def sig_prompt_onekey(
+        self, prompt: str, keys: list[tuple[str, str]], callback: Callable[[str], None]
+    ) -> None:
         """
         Keys are a set of (word, key) tuples. The appropriate key in the
         word is highlighted.
@@ -150,11 +158,11 @@ class ActionBar(urwid.WidgetWrap):
                     return k
 
     def show_quickhelp(self) -> None:
-        try:
-            s = self.master.window.focus_stack()
+        if w := self.master.window:
+            s = w.focus_stack()
             focused_widget = type(s.top_widget())
             is_top_widget = len(s.stack) == 1
-        except AttributeError:  # on startup
+        else:  # on startup
             focused_widget = flowlist.FlowListBox
             is_top_widget = True
         focused_flow = self.master.view.focus.flow
@@ -196,7 +204,7 @@ class StatusBar(urwid.WidgetWrap):
         self.redraw()
         signals.call_in.send(seconds=self.REFRESHTIME, callback=self.refresh)
 
-    def sig_update(self, flow=None, updated=None):
+    def sig_update(self, *args, **kwargs) -> None:
         self.redraw()
 
     def keypress(self, *args, **kwargs):
@@ -270,8 +278,6 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("showhost")
         if not self.master.options.server_replay_refresh:
             opts.append("norefresh")
-        if self.master.options.server_replay_kill_extra:
-            opts.append("killextra")
         if not self.master.options.upstream_cert:
             opts.append("no-upstream-cert")
         if self.master.options.console_focus_follow:
@@ -297,7 +303,7 @@ class StatusBar(urwid.WidgetWrap):
 
     def redraw(self) -> None:
         fc = self.master.commands.execute("view.properties.length")
-        if self.master.view.focus.flow is None:
+        if self.master.view.focus.index is None:
             offset = 0
         else:
             offset = self.master.view.focus.index + 1
@@ -315,16 +321,18 @@ class StatusBar(urwid.WidgetWrap):
             ("heading", f"{arrow} {marked} [{offset}/{fc}]".ljust(11)),
         ]
 
-        listen_addrs: list[str] = list(dict.fromkeys(
-            human.format_address(a)
-            for a in self.master.addons.get("proxyserver").listen_addrs()
-        ))
+        listen_addrs: list[str] = list(
+            dict.fromkeys(
+                human.format_address(a)
+                for a in self.master.addons.get("proxyserver").listen_addrs()
+            )
+        )
         if listen_addrs:
             boundaddr = f"[{', '.join(listen_addrs)}]"
         else:
             boundaddr = ""
         t.extend(self.get_status())
-        status = urwid.AttrWrap(
+        status = urwid.AttrMap(
             urwid.Columns(
                 [
                     urwid.Text(t),

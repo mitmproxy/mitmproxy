@@ -1,9 +1,9 @@
-import re
 import base64
+import re
 from typing import Optional
 
-from mitmproxy import exceptions
 from mitmproxy import ctx
+from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.proxy import mode_specs
 from mitmproxy.utils import strutils
@@ -27,7 +27,7 @@ class UpstreamAuth:
     - Reverse proxy regular requests (CONNECT is invalid in this mode)
     """
 
-    auth: Optional[bytes] = None
+    auth: bytes | None = None
 
     def load(self, loader):
         loader.add_option(
@@ -53,7 +53,10 @@ class UpstreamAuth:
 
     def requestheaders(self, f: http.HTTPFlow):
         if self.auth:
-            if isinstance(f.client_conn.proxy_mode, mode_specs.UpstreamMode) and f.request.scheme == "http":
+            if (
+                isinstance(f.client_conn.proxy_mode, mode_specs.UpstreamMode)
+                and f.request.scheme == "http"
+            ):
                 f.request.headers["Proxy-Authorization"] = self.auth
             elif isinstance(f.client_conn.proxy_mode, mode_specs.ReverseMode):
                 f.request.headers["Authorization"] = self.auth

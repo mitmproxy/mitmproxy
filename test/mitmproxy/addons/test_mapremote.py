@@ -27,6 +27,16 @@ class TestMapRemote:
             mr.request(f)
             assert f.request.url == "https://mitmproxy.org/img/test.jpg"
 
+    def test_host_header(self):
+        mr = mapremote.MapRemote()
+        with taddons.context(mr) as tctx:
+            tctx.configure(mr, map_remote=["|http://[^/]+|http://example.com:4444"])
+            f = tflow.tflow()
+            f.request.url = b"http://example.org/example"
+            f.request.headers["Host"] = "example.org"
+            mr.request(f)
+            assert f.request.headers.get("Host", "") == "example.com:4444"
+
     def test_is_killed(self):
         mr = mapremote.MapRemote()
         with taddons.context(mr) as tctx:

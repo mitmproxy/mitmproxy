@@ -1,13 +1,13 @@
-import falcon
-from falcon import testing
-import pytest
-from mitmproxy.addons.browserup import har_capture_addon
-import mitmproxy.addons.browserup.browserup_addons_manager
-import tempfile
 import os
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
-from mitmproxy.test import taddons
+import tempfile
+
+import falcon
+import pytest
+from falcon import testing
+
+import mitmproxy.addons.browserup.browserup_addons_manager
+from mitmproxy.addons.browserup import har_capture_addon
+from mitmproxy.test import taddons, tflow, tutils
 from mitmproxy.utils import data
 
 

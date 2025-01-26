@@ -1,18 +1,18 @@
-import io
 import csv
+import io
 import logging
 import os.path
 from collections.abc import Sequence
-from typing import Any, Union
-
-from mitmproxy import command
-from mitmproxy import exceptions
-from mitmproxy import flow
-from mitmproxy import certs
-import mitmproxy.types
+from typing import Any
 
 import pyperclip
 
+import mitmproxy.types
+from mitmproxy import certs
+from mitmproxy import command
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy.log import ALERT
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,17 @@ def is_addr(v):
     return isinstance(v, tuple) and len(v) > 1
 
 
-def extract(cut: str, f: flow.Flow) -> Union[str, bytes]:
+def extract(cut: str, f: flow.Flow) -> str | bytes:
+    # Hack for https://github.com/mitmproxy/mitmproxy/issues/6721:
+    # Make "save body" keybind work for WebSocket flows.
+    # Ideally the keybind would be smarter and this here can get removed.
+    if (
+        isinstance(f, http.HTTPFlow)
+        and f.websocket
+        and cut in ("request.content", "response.content")
+    ):
+        return f.websocket._get_formatted_messages()
+
     path = cut.split(".")
     current: Any = f
     for i, spec in enumerate(path):
@@ -86,7 +96,7 @@ class Cut:
         or "false", "bytes" are preserved, and all other values are
         converted to strings.
         """
-        ret: list[list[Union[str, bytes]]] = []
+        ret: list[list[str | bytes]] = []
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
         return ret  # type: ignore
@@ -132,7 +142,7 @@ class Cut:
                         writer.writerow(vals)
                 logger.log(
                     ALERT,
-                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows))
+                    "Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)),
                 )
         except OSError as e:
             logger.error(str(e))
@@ -148,7 +158,7 @@ class Cut:
         format is UTF-8 encoded CSV. If there is exactly one row and one
         column, the data is written to file as-is, with raw bytes preserved.
         """
-        v: Union[str, bytes]
+        v: str | bytes
         fp = io.StringIO(newline="")
         if len(cuts) == 1 and len(flows) == 1:
             v = extract_str(cuts[0], flows[0])

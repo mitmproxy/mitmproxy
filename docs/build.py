@@ -3,7 +3,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-
 here = Path(__file__).parent
 
 for script in sorted((here / "scripts").glob("*.py")):

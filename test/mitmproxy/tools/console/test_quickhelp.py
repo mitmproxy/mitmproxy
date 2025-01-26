@@ -1,7 +1,8 @@
 import pytest
 
 from mitmproxy.test.tflow import tflow
-from mitmproxy.tools.console import defaultkeys, quickhelp
+from mitmproxy.tools.console import defaultkeys
+from mitmproxy.tools.console import quickhelp
 from mitmproxy.tools.console.eventlog import EventLog
 from mitmproxy.tools.console.flowlist import FlowListBox
 from mitmproxy.tools.console.flowview import FlowView
@@ -38,12 +39,12 @@ tflow2.marked = "x"
         (EventLog, None, True),
         (PathEditor, None, False),
         (SimpleOverlay, None, False),
-    ]
+    ],
 )
 def test_quickhelp(widget, flow, keymap, is_root_widget):
     qh = quickhelp.make(widget, flow, is_root_widget)
     for row in [qh.top_items, qh.bottom_items]:
-        for (title, v) in row.items():
+        for title, v in row.items():
             if isinstance(v, quickhelp.BasicKeyHelp):
                 key_short = v.key
             else:

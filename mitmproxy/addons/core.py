@@ -1,18 +1,17 @@
 import logging
 import os
 from collections.abc import Sequence
-from typing import Union
 
-from mitmproxy.log import ALERT
-from mitmproxy.utils import emoji
-from mitmproxy import ctx, hooks
-from mitmproxy import exceptions
-from mitmproxy import command
-from mitmproxy import flow
-from mitmproxy import optmanager
-from mitmproxy.net.http import status_codes
 import mitmproxy.types
-
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import hooks
+from mitmproxy import optmanager
+from mitmproxy.log import ALERT
+from mitmproxy.net.http import status_codes
+from mitmproxy.utils import emoji
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ class Core:
         Mark flows.
         """
         updated = []
-        if marker not in emoji.emoji:
+        if not (marker == "" or marker in emoji.emoji):
             raise exceptions.CommandError(f"invalid marker value")
 
         for i in flows:
@@ -134,7 +133,7 @@ class Core:
         """
         Quickly set a number of common values on flows.
         """
-        val: Union[int, str] = value
+        val: int | str = value
         if attr == "status_code":
             try:
                 val = int(val)  # type: ignore

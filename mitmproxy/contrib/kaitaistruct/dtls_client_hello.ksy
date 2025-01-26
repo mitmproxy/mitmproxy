@@ -1,6 +1,7 @@
 meta:
   id: dtls_client_hello
   endian: be
+  license: MIT
 
 seq:
   - id: version

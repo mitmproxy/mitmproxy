@@ -1,84 +1,51 @@
-import * as React from "react"
-import ReactDOM from 'react-dom'
-import renderer from 'react-test-renderer'
-import Splitter from '../../../components/common/Splitter'
-import TestUtils from 'react-dom/test-utils';
+import * as React from "react";
+import Splitter from "../../../components/common/Splitter";
+import { act, render } from "../../test-utils";
 
-describe('Splitter Component', () => {
+describe.each([["x"], ["y"]])("Splitter Component", (axis) => {
+    it(`should render correctly (${axis} axis)`, () => {
+        const ref = React.createRef<Splitter>();
+        const { asFragment, unmount } = render(
+            <>
+                <div></div>
+                <Splitter axis={axis} ref={ref} />
+                <div></div>
+            </>,
+        );
+        const splitter = ref.current!;
 
-    it('should render correctly', () => {
-        let splitter = renderer.create(<Splitter/>),
-            tree = splitter.toJSON()
-        expect(tree).toMatchSnapshot()
-    })
+        expect(asFragment()).toMatchSnapshot();
 
-    let splitter = TestUtils.renderIntoDocument(<Splitter/>),
-        dom = ReactDOM.findDOMNode(splitter),
-        previousElementSibling = {
-            offsetHeight: 0,
-            offsetWidth: 0,
-            style: {flex: ''}
-        },
-        nextElementSibling = {
-            style: {flex: ''}
-        }
+        act(() => {
+            splitter.onPointerDown({
+                target: {
+                    setPointerCapture: () => 0,
+                } as unknown,
+                pageX: 100,
+                pageY: 200,
+                pointerId: 42,
+            } as React.PointerEvent<HTMLDivElement>);
+        });
+        expect(splitter.state.startPos).toBe(axis === "x" ? 100 : 200);
 
-    it('should handle mouseDown ', () => {
-        window.addEventListener = jest.fn()
-        splitter.onMouseDown({pageX: 1, pageY: 2})
-        expect(splitter.state.startX).toEqual(1)
-        expect(splitter.state.startY).toEqual(2)
-        expect(window.addEventListener).toBeCalledWith('mousemove', splitter.onMouseMove)
-        expect(window.addEventListener).toBeCalledWith('mouseup', splitter.onMouseUp)
-        expect(window.addEventListener).toBeCalledWith('dragend', splitter.onDragEnd)
-    })
+        act(() => {
+            splitter.onPointerMove({
+                pageX: 300,
+                pageY: 300,
+                pointerId: 42,
+            } as React.PointerEvent<HTMLDivElement>);
+        });
+        expect(splitter.node.current!.style.transform).toBeTruthy();
 
-    it('should handle dragEnd', () => {
-        window.removeEventListener = jest.fn()
-        splitter.onDragEnd()
-        expect(dom.style.transform).toEqual('')
-        expect(window.removeEventListener).toBeCalledWith('dragend', splitter.onDragEnd)
-        expect(window.removeEventListener).toBeCalledWith('mouseup', splitter.onMouseUp)
-        expect(window.removeEventListener).toBeCalledWith('mousemove', splitter.onMouseMove)
-    })
+        act(() => {
+            splitter.onLostPointerCapture({
+                pageX: 400,
+                pageY: 400,
+                pointerId: 42,
+            } as React.PointerEvent<HTMLDivElement>);
+        });
+        expect(asFragment()).toMatchSnapshot();
 
-    it('should handle mouseUp', () => {
-
-        Object.defineProperty(dom, 'previousElementSibling', {value: previousElementSibling})
-        Object.defineProperty(dom, 'nextElementSibling', {value: nextElementSibling})
-        splitter.onMouseUp({pageX: 3, pageY: 4})
-        expect(splitter.state.applied).toBeTruthy()
-        expect(nextElementSibling.style.flex).toEqual('1 1 auto')
-        expect(previousElementSibling.style.flex).toEqual('0 0 2px')
-    })
-
-    it('should handle mouseMove', () => {
-        splitter.onMouseMove({pageX: 10, pageY: 10})
-        expect(dom.style.transform).toEqual("translate(9px, 0px)")
-
-        let splitterY = TestUtils.renderIntoDocument(<Splitter axis="y"/>)
-        splitterY.onMouseMove({pageX: 10, pageY: 10})
-        expect(ReactDOM.findDOMNode(splitterY).style.transform).toEqual("translate(0px, 10px)")
-    })
-
-    it('should handle resize', () => {
-        let x = jest.spyOn(window, 'setTimeout');
-        splitter.onResize()
-        expect(x).toHaveBeenCalled()
-    })
-
-    it('should handle componentWillUnmount', () => {
-        splitter.componentWillUnmount()
-        expect(previousElementSibling.style.flex).toEqual('')
-        expect(nextElementSibling.style.flex).toEqual('')
-        expect(splitter.state.applied).toBeTruthy()
-    })
-
-    it('should handle reset', () => {
-        splitter.reset(false)
-        expect(splitter.state.applied).toBeFalsy()
-
-        expect(splitter.reset(true)).toEqual(undefined)
-    })
-
-})
+        unmount();
+    });
+});

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional
 
-from mitmproxy import flow, udp
-from mitmproxy.proxy import commands, events, layer
-from mitmproxy.proxy.commands import StartHook
+from mitmproxy import flow
+from mitmproxy import udp
 from mitmproxy.connection import Connection
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
+from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import MessageInjected
 from mitmproxy.proxy.utils import expect
@@ -60,7 +62,7 @@ class UDPLayer(layer.Layer):
     Simple UDP layer that just relays messages right now.
     """
 
-    flow: Optional[udp.UDPFlow]
+    flow: udp.UDPFlow | None
 
     def __init__(self, context: Context, ignore: bool = False):
         super().__init__(context)
@@ -89,7 +91,6 @@ class UDPLayer(layer.Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed, UdpMessageInjected)
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
-
         if isinstance(event, UdpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(
@@ -118,13 +119,11 @@ class UDPLayer(layer.Layer):
                 yield commands.SendData(send_to, event.data)
 
         elif isinstance(event, events.ConnectionClosed):
-            if send_to.connected:
-                yield commands.CloseConnection(send_to)
-            else:
-                self._handle_event = self.done
-                if self.flow:
-                    yield UdpEndHook(self.flow)
-                    self.flow.live = False
+            self._handle_event = self.done
+            yield commands.CloseConnection(send_to)
+            if self.flow:
+                yield UdpEndHook(self.flow)
+                self.flow.live = False
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

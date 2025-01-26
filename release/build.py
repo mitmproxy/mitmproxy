@@ -9,10 +9,10 @@ import shutil
 import subprocess
 import tarfile
 import urllib.request
+import warnings
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
 
 import click
 import cryptography.fernet
@@ -46,10 +46,9 @@ def wheel():
     subprocess.check_call(
         [
             "python",
-            "setup.py",
-            "-q",
-            "bdist_wheel",
-            "--dist-dir",
+            "-m",
+            "build",
+            "--outdir",
             DIST_DIR,
         ]
     )
@@ -84,19 +83,39 @@ def archive(path: Path) -> tarfile.TarFile | ZipFile2:
 
 
 def version() -> str:
-    return os.environ.get("GITHUB_REF_NAME", "").replace("/", "-") or os.environ.get("BUILD_VERSION", "dev")
-
-
-def operating_system() -> Literal["windows", "linux", "macos", "unknown"]:
-    pf = platform.system()
-    if pf == "Windows":
-        return "windows"
-    elif pf == "Linux":
-        return "linux"
-    elif pf == "Darwin":
-        return "macos"
+    if ref := os.environ.get("GITHUB_REF", ""):
+        if ref.startswith("refs/tags/") and not ref.startswith("refs/tags/v"):
+            raise AssertionError(f"Unexpected tag: {ref}")
+        return (
+            ref.removeprefix("refs/heads/")
+            .removeprefix("refs/pull/")
+            .removeprefix("refs/tags/v")
+            .replace("/", "-")
+        )
     else:
-        return "unknown"
+        return os.environ.get("BUILD_VERSION", "dev")
+
+
+def operating_system() -> str:
+    match platform.system():
+        case "Windows":
+            system = "windows"
+        case "Linux":
+            system = "linux"
+        case "Darwin":
+            system = "macos"
+        case other:
+            warnings.warn("Unexpected system.")
+            system = other
+    match platform.machine():
+        case "AMD64" | "x86_64":
+            machine = "x86_64"
+        case "arm64":
+            machine = "arm64"
+        case other:
+            warnings.warn("Unexpected platform.")
+            machine = other
+    return f"{system}-{machine}"
 
 
 def _pyinstaller(specfile: str) -> None:
@@ -108,7 +127,7 @@ def _pyinstaller(specfile: str) -> None:
             "--workpath",
             TEMP_DIR / "pyinstaller/temp",
             "--distpath",
-            TEMP_DIR / "pyinstaller/dist",
+            TEMP_DIR / "pyinstaller/out",
             specfile,
         ],
         cwd=here / "specs",
@@ -117,31 +136,114 @@ def _pyinstaller(specfile: str) -> None:
 
 @cli.command()
 def standalone_binaries():
-    """All platforms: Build the standalone binaries generated with PyInstaller"""
+    """Windows and Linux: Build the standalone binaries generated with PyInstaller"""
     with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
         _pyinstaller("standalone.spec")
 
+        _test_binaries(TEMP_DIR / "pyinstaller/out")
+
         for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
-            executable = TEMP_DIR / "pyinstaller/dist" / tool
+            executable = TEMP_DIR / "pyinstaller/out" / tool
             if platform.system() == "Windows":
                 executable = executable.with_suffix(".exe")
 
-            # Test if it works at all O:-)
-            print(f"> {executable} --version")
-            subprocess.check_call([executable, "--version"])
-
             f.add(str(executable), str(executable.name))
-    print(f"Packed {f.name}.")
+    print(f"Packed {f.name!r}.")
+
+
+@cli.command()
+@click.option("--keychain")
+@click.option("--team-id")
+@click.option("--apple-id")
+@click.option("--password")
+def macos_app(
+    keychain: str | None,
+    team_id: str | None,
+    apple_id: str | None,
+    password: str | None,
+) -> None:
+    """
+    macOS: Build into mitmproxy.app.
+
+    If you do not specify options, notarization is skipped.
+    """
+
+    _pyinstaller("onedir.spec")
+    _test_binaries(TEMP_DIR / "pyinstaller/out/mitmproxy.app/Contents/MacOS")
+
+    if keychain:
+        assert isinstance(team_id, str)
+        assert isinstance(apple_id, str)
+        assert isinstance(password, str)
+        # Notarize the app bundle.
+        subprocess.check_call(
+            [
+                "xcrun",
+                "notarytool",
+                "store-credentials",
+                "AC_PASSWORD",
+                *(["--keychain", keychain]),
+                *(["--team-id", team_id]),
+                *(["--apple-id", apple_id]),
+                *(["--password", password]),
+            ]
+        )
+        subprocess.check_call(
+            [
+                "ditto",
+                "-c",
+                "-k",
+                "--keepParent",
+                TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+                TEMP_DIR / "notarize.zip",
+            ]
+        )
+        subprocess.check_call(
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                TEMP_DIR / "notarize.zip",
+                *(["--keychain", keychain]),
+                *(["--keychain-profile", "AC_PASSWORD"]),
+                "--wait",
+            ]
+        )
+        # 2023: it's not possible to staple to unix executables.
+        # subprocess.check_call([
+        #     "xcrun",
+        #     "stapler",
+        #     "staple",
+        #     TEMP_DIR / "pyinstaller/out/mitmproxy.app",
+        # ])
+    else:
+        warnings.warn("Notarization skipped.")
+
+    with archive(DIST_DIR / f"mitmproxy-{version()}-{operating_system()}") as f:
+        f.add(str(TEMP_DIR / "pyinstaller/out/mitmproxy.app"), "mitmproxy.app")
+    print(f"Packed {f.name!r}.")
 
 
 def _ensure_pyinstaller_onedir():
-    if not (TEMP_DIR / "pyinstaller/dist/onedir").exists():
-        _pyinstaller("windows-dir.spec")
+    if not (TEMP_DIR / "pyinstaller/out/onedir").exists():
+        _pyinstaller("onedir.spec")
+        _test_binaries(TEMP_DIR / "pyinstaller/out/onedir")
 
+
+def _test_binaries(binary_directory: Path) -> None:
     for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
+        executable = binary_directory / tool
+        if platform.system() == "Windows":
+            executable = executable.with_suffix(".exe")
+
         print(f"> {tool} --version")
-        executable = (TEMP_DIR / "pyinstaller/dist/onedir" / tool).with_suffix(".exe")
         subprocess.check_call([executable, "--version"])
+
+        if tool == "mitmproxy":
+            continue  # requires a TTY, which we don't have here.
+
+        print(f"> {tool} -s selftest.py")
+        subprocess.check_call([executable, "-s", here / "selftest.py"])
 
 
 @cli.command()
@@ -150,7 +252,7 @@ def msix_installer():
     _ensure_pyinstaller_onedir()
 
     shutil.copytree(
-        TEMP_DIR / "pyinstaller/dist/onedir",
+        TEMP_DIR / "pyinstaller/out/onedir",
         TEMP_DIR / "msix",
         dirs_exist_ok=True,
     )
@@ -159,7 +261,13 @@ def msix_installer():
     manifest = TEMP_DIR / "msix/AppxManifest.xml"
     app_version = version()
     if not re.match(r"\d+\.\d+\.\d+", app_version):
-        app_version = datetime.now().strftime("%y%m.%d.%H%M").replace(".0", ".").replace(".0", ".").replace(".0", ".")
+        app_version = (
+            datetime.now()
+            .strftime("%y%m.%d.%H%M")
+            .replace(".0", ".")
+            .replace(".0", ".")
+            .replace(".0", ".")
+        )
     manifest.write_text(manifest.read_text().replace("1.2.3", app_version))
 
     makeappx_exe = (
@@ -184,26 +292,31 @@ def installbuilder_installer():
     """Windows: Build the InstallBuilder installer."""
     _ensure_pyinstaller_onedir()
 
-    IB_VERSION = "22.10.0"
-    IB_SETUP_SHA256 = "49cbfc3ee8de02426abc0c1b92839934bdb0bf0ea12d88388dde9e4102fc429f"
+    IB_VERSION = "23.4.0"
+    IB_SETUP_SHA256 = "e4ff212ed962f9e0030d918b8a6e4d6dd8a9adc8bf8bc1833459351ee649eff3"
     IB_DIR = here / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = Path(
-        rf"C:\Program Files\VMware InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
+        rf"C:\Program Files\InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
     )
     IB_LICENSE = IB_DIR / "license.xml"
 
     if not IB_LICENSE.exists():
         print("Decrypt InstallBuilder license...")
         f = cryptography.fernet.Fernet(os.environ["CI_BUILD_KEY"].encode())
-        with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(
-            IB_LICENSE, "wb"
-        ) as outfile:
+        with (
+            open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile,
+            open(IB_LICENSE, "wb") as outfile,
+        ):
             outfile.write(f.decrypt(infile.read()))
 
     if not IB_CLI.exists():
         if not IB_SETUP.exists():
-            print("Downloading InstallBuilder...")
+            url = (
+                f"https://github.com/mitmproxy/installbuilder-mirror/releases/download/"
+                f"{IB_VERSION}/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe"
+            )
+            print(f"Downloading InstallBuilder from {url}...")
 
             def report(block, blocksize, total):
                 done = block * blocksize
@@ -212,7 +325,7 @@ def installbuilder_installer():
 
             tmp = IB_SETUP.with_suffix(".tmp")
             urllib.request.urlretrieve(
-                f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-x64-installer.exe",
+                url,
                 tmp,
                 reporthook=report,
             )
@@ -226,7 +339,9 @@ def installbuilder_installer():
                     break
                 ib_setup_hash.update(data)
         if ib_setup_hash.hexdigest() != IB_SETUP_SHA256:  # pragma: no cover
-            raise RuntimeError(f"InstallBuilder hashes don't match: {ib_setup_hash.hexdigest()}")
+            raise RuntimeError(
+                f"InstallBuilder hashes don't match: {ib_setup_hash.hexdigest()}"
+            )
 
         print("Install InstallBuilder...")
         subprocess.run(
@@ -252,15 +367,16 @@ def installbuilder_installer():
     installer = DIST_DIR / f"mitmproxy-{version()}-windows-x64-installer.exe"
     assert installer.exists()
 
+    # unify filenames
+    installer = installer.rename(
+        installer.with_name(installer.name.replace("x64", "x86_64"))
+    )
+
     print("Run installer...")
     subprocess.run(
         [installer, "--mode", "unattended", "--unattendedmodeui", "none"], check=True
     )
-    MITMPROXY_INSTALL_DIR = Path(rf"C:\Program Files\mitmproxy\bin")
-    for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
-        executable = (MITMPROXY_INSTALL_DIR / tool).with_suffix(".exe")
-        print(f"> {executable} --version")
-        subprocess.check_call([executable, "--version"])
+    _test_binaries(Path(r"C:\Program Files\mitmproxy\bin"))
 
 
 if __name__ == "__main__":

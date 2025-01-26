@@ -1,15 +1,17 @@
 import logging
 import shlex
-from collections.abc import Callable, Sequence
-from typing import Any, Union
+from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Any
 
 import pyperclip
 
 import mitmproxy.types
 from mitmproxy import command
-from mitmproxy import ctx, http
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy.net.http.http1 import assemble
 from mitmproxy.utils import strutils
 
@@ -130,7 +132,10 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
     )
 
     if request_present and response_present:
-        return b"".join([raw_request(f), separator, raw_response(f)])
+        parts = [raw_request(f), raw_response(f)]
+        if isinstance(f, http.HTTPFlow) and f.websocket:
+            parts.append(f.websocket._get_formatted_messages())
+        return separator.join(parts)
     elif request_present:
         return raw_request(f)
     elif response_present:
@@ -139,7 +144,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
         raise exceptions.CommandError("Can't export flow with no request or response.")
 
 
-formats: dict[str, Callable[[flow.Flow], Union[str, bytes]]] = dict(
+formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,

@@ -1,7 +1,9 @@
 from unittest import mock
 
 import pytest
-from mitmproxy.utils.signals import AsyncSignal, SyncSignal
+
+from mitmproxy.utils.signals import AsyncSignal
+from mitmproxy.utils.signals import SyncSignal
 
 
 def test_sync_signal() -> None:

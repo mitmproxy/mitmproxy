@@ -1,5 +1,6 @@
-import urwid
 import textwrap
+
+import urwid
 
 from mitmproxy import command
 from mitmproxy.tools.console import layoutwidget
@@ -14,8 +15,7 @@ command_focus_change = utils_signals.SyncSignal(lambda text: None)
 class CommandItem(urwid.WidgetWrap):
     def __init__(self, walker, cmd: command.Command, focused: bool):
         self.walker, self.cmd, self.focused = walker, cmd, focused
-        super().__init__(None)
-        self._w = self.get_widget()
+        super().__init__(self.get_widget())
 
     def get_widget(self):
         parts = [("focus", ">> " if self.focused else "   "), ("title", self.cmd.name)]
@@ -111,19 +111,21 @@ class CommandHelp(urwid.Frame):
     def set_active(self, val):
         h = urwid.Text("Command Help")
         style = "heading" if val else "heading_inactive"
-        self.header = urwid.AttrWrap(h, style)
+        self.header = urwid.AttrMap(h, style)
 
     def widget(self, txt):
         cols, _ = self.master.ui.get_cols_rows()
         return urwid.ListBox([urwid.Text(i) for i in textwrap.wrap(txt, cols)])
 
     def sig_mod(self, txt):
-        self.set_body(self.widget(txt))
+        self.body = self.widget(txt)
 
 
 class Commands(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Command Reference"
     keyctx = "commands"
+
+    focus_position: int
 
     def __init__(self, master):
         oh = CommandHelp(master)

@@ -1,0 +1,328 @@
+[project]
+name = "mitmproxy"
+description = "An interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file="LICENSE"}
+authors = [{name = "Aldo Cortesi", email = "aldo@corte.si"}]
+maintainers = [{name = "Maximilian Hils", email = "mitmproxy@maximilianhils.com"}]
+dynamic = ["version"]
+
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console :: Curses",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Security",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: System :: Networking :: Monitoring",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+
+# https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
+# It is not considered best practice to use install_requires to pin dependencies to specific versions.
+dependencies = [
+    "aioquic>=1.1.0,<=1.2.0",
+    "asgiref>=3.2.10,<=3.8.1",
+    "Brotli>=1.0,<=1.1.0",
+    "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
+    "cryptography>=42.0,<43.1",  # relaxed upper bound here to get security fixes
+    "flask>=3.0,<=3.1.0",
+    "h11>=0.11,<=0.14.0",
+    "h2>=4.1,<=4.1.0",
+    "hyperframe>=6.0,<=6.0.1",
+    "kaitaistruct>=0.10,<=0.10",
+    "ldap3>=2.8,<=2.9.1",
+    "mitmproxy_rs>=0.10.7,<0.11",  # relaxed upper bound here: we control this
+    "msgpack>=1.0.0,<=1.1.0",
+    "passlib>=1.6.5,<=1.7.4",
+    "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
+    "pyOpenSSL>=22.1,<=24.2.1",
+    "pyparsing>=2.4.2,<=3.2.0",
+    "pyperclip<=1.9.0,>=1.9.0",
+    "ruamel.yaml>=0.16,<=0.18.6",
+    "sortedcontainers>=2.3,<=2.4.0",
+    "tornado<=6.4.1,>=6.4.1",
+    "typing-extensions>=4.3,<=4.11.0; python_version<'3.11'",
+    "urwid>=2.6.14,<=2.6.16",
+    "wsproto>=1.0,<=1.2.0",
+    "publicsuffix2>=2.20190812,<=2.20191221",
+    "zstandard>=0.15,<=0.23.0",
+    "falcon>=4.0.2",
+    "marshmallow>=3.0.0",
+    "falcon-apispec@git+https://github.com/browserup/falcon-apispec#egg=falcon-apispec",
+    "python-dateutil>=2.8.1",
+    "glom>=20.11.0",
+    "jsonschema>=3.2.0",
+    "jsonpath_ng>=1.5.3",
+    "typing-extensions>=4.3,<4.5; python_version<'3.12'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "click>=7.0,<=8.1.7",
+    "hypothesis>=6.104.2,<=6.119.3",
+    "pdoc>=14.5.1,<=15.0.0",
+    "pyinstaller==6.11.1",
+    "pyinstaller-hooks-contrib==2024.10",
+    "pytest-asyncio>=0.23.6,<=0.24.0",
+    "pytest-cov>=5.0.0,<=6.0.0",
+    "pytest-timeout>=2.3.1,<=2.3.1",
+    "pytest-xdist>=3.5.0,<=3.6.1",
+    "pytest>=8.2.2,<=8.3.3",
+    "requests>=2.9.1,<=2.32.3",
+    "tox>=4.15.1,<=4.23.2",
+    "wheel>=0.36.2,<=0.45.0",
+    "build>=0.10.0,<=1.2.2.post1",
+    "mypy>=1.10.1,<=1.13.0",
+    "ruff>=0.5.0,<=0.7.4",
+    "types-certifi>=2021.10.8.3,<=2021.10.8.3",
+    "types-Flask>=1.1.6,<=1.1.6",
+    "types-Werkzeug>=1.0.9,<=1.0.9",
+    "types-requests>=2.32.0.20240622,<=2.32.0.20241016",
+    "types-cryptography>=3.3.23.2,<=3.3.23.2",
+    "types-pyOpenSSL>=23.3.0.0,<=24.1.0.20240722",
+]
+
+[project.urls]
+Homepage = "https://mitmproxy.org"
+Source = "https://github.com/mitmproxy/mitmproxy/"
+Documentation = "https://docs.mitmproxy.org/stable/"
+Issues = "https://github.com/mitmproxy/mitmproxy/issues"
+
+[project.scripts]
+mitmproxy = "mitmproxy.tools.main:mitmproxy"
+mitmdump = "mitmproxy.tools.main:mitmdump"
+mitmweb = "mitmproxy.tools.main:mitmweb"
+browserup-proxy = "mitmproxy.tools.main:browserupproxy"
+
+[project.entry-points.pyinstaller40]
+hook-dirs = "mitmproxy.utils.pyinstaller:hook_dirs"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "mitmproxy.version.VERSION"}
+
+[tool.setuptools.packages.find]
+include = ["mitmproxy*"]
+
+[tool.coverage.run]
+branch = false
+omit = [
+    "*contrib*",
+    "*tnetstring*",
+    "*platform*",
+    "*main.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "raise AssertionError",
+    "if typing.TYPE_CHECKING:",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "@abstractmethod",
+    "assert_never",
+    "\\.\\.\\.",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = "test"
+addopts = "--capture=no --color=yes"
+filterwarnings = [
+    "ignore::DeprecationWarning:tornado.*:",
+    "ignore:datetime.datetime.utcnow:DeprecationWarning:aioquic.*:",
+    "error::RuntimeWarning",
+    "error::pytest.PytestUnraisableExceptionWarning",
+    # The following warning should only appear on Python 3.11 and below where eager_task_factory is not present
+    "default:coroutine 'ConnectionHandler.hook_task' was never awaited:RuntimeWarning",
+]
+
+[tool.pytest.individual_coverage]
+exclude = [
+  "mitmproxy/addons/__init__.py",
+  "mitmproxy/addons/onboarding.py",
+  "mitmproxy/addons/onboardingapp/__init__.py",
+  "mitmproxy/contentviews/__init__.py",
+  "mitmproxy/contentviews/base.py",
+  "mitmproxy/contentviews/grpc.py",
+  "mitmproxy/contrib/*",
+  "mitmproxy/ctx.py",
+  "mitmproxy/exceptions.py",
+  "mitmproxy/flow.py",
+  "mitmproxy/io/io.py",
+  "mitmproxy/io/tnetstring.py",
+  "mitmproxy/log.py",
+  "mitmproxy/master.py",
+  "mitmproxy/net/check.py",
+  "mitmproxy/net/http/cookies.py",
+  "mitmproxy/net/http/multipart.py",
+  "mitmproxy/net/tls.py",
+  "mitmproxy/platform/__init__.py",
+  "mitmproxy/platform/linux.py",
+  "mitmproxy/platform/openbsd.py",
+  "mitmproxy/platform/osx.py",
+  "mitmproxy/platform/pf.py",
+  "mitmproxy/platform/windows.py",
+  "mitmproxy/proxy/__init__.py",
+  "mitmproxy/proxy/layers/http/__init__.py",
+  "mitmproxy/proxy/layers/http/_base.py",
+  "mitmproxy/proxy/layers/http/_events.py",
+  "mitmproxy/proxy/layers/http/_hooks.py",
+  "mitmproxy/proxy/layers/http/_http1.py",
+  "mitmproxy/proxy/layers/http/_http2.py",
+  "mitmproxy/proxy/layers/http/_http3.py",
+  "mitmproxy/proxy/layers/http/_http_h2.py",
+  "mitmproxy/proxy/layers/http/_http_h3.py",
+  "mitmproxy/proxy/layers/http/_upstream_proxy.py",
+  "mitmproxy/proxy/layers/tls.py",
+  "mitmproxy/proxy/server.py",
+  "mitmproxy/test/taddons.py",
+  "mitmproxy/test/tflow.py",
+  "mitmproxy/test/tutils.py",
+  "mitmproxy/tools/console/commander/commander.py",
+  "mitmproxy/tools/console/commandexecutor.py",
+  "mitmproxy/tools/console/commands.py",
+  "mitmproxy/tools/console/common.py",
+  "mitmproxy/tools/console/consoleaddons.py",
+  "mitmproxy/tools/console/eventlog.py",
+  "mitmproxy/tools/console/flowdetailview.py",
+  "mitmproxy/tools/console/flowlist.py",
+  "mitmproxy/tools/console/flowview.py",
+  "mitmproxy/tools/console/grideditor/base.py",
+  "mitmproxy/tools/console/grideditor/col_bytes.py",
+  "mitmproxy/tools/console/grideditor/col_subgrid.py",
+  "mitmproxy/tools/console/grideditor/col_text.py",
+  "mitmproxy/tools/console/grideditor/col_viewany.py",
+  "mitmproxy/tools/console/grideditor/editors.py",
+  "mitmproxy/tools/console/help.py",
+  "mitmproxy/tools/console/keybindings.py",
+  "mitmproxy/tools/console/keymap.py",
+  "mitmproxy/tools/console/layoutwidget.py",
+  "mitmproxy/tools/console/master.py",
+  "mitmproxy/tools/console/options.py",
+  "mitmproxy/tools/console/overlay.py",
+  "mitmproxy/tools/console/quickhelp.py",
+  "mitmproxy/tools/console/searchable.py",
+  "mitmproxy/tools/console/signals.py",
+  "mitmproxy/tools/console/statusbar.py",
+  "mitmproxy/tools/console/tabs.py",
+  "mitmproxy/tools/console/window.py",
+  "mitmproxy/tools/main.py",
+  "mitmproxy/tools/web/app.py",
+  "mitmproxy/tools/web/master.py",
+  "mitmproxy/tools/web/webaddons.py",
+  "mitmproxy/utils/bits.py",
+  "mitmproxy/utils/pyinstaller/*",
+  "mitmproxy/utils/vt_codes.py",
+]
+
+[tool.mypy]
+check_untyped_defs = true
+ignore_missing_imports = true
+files = [
+    "mitmproxy",
+    "examples/addons",
+    "release/*.py",
+]
+exclude = [
+    "^docs/",
+    "^release/build/",
+    "^examples/contrib/",
+]
+
+[[tool.mypy.overrides]]
+module = "mitmproxy.contrib.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "tornado.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "test.*"
+ignore_errors = true
+
+[tool.ruff]
+extend-exclude = ["mitmproxy/contrib/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["F541", "E501"]
+
+
+[tool.ruff.lint.isort]
+# these rules are a bit weird, but they mimic our existing reorder_python_imports style.
+# if we break compatibility here, consider removing all customization + enforce absolute imports.
+force-single-line = true
+order-by-type = false
+section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
+no-lines-before = ["first-party"]
+known-first-party = ["test", "mitmproxy", "mitmproxy_rs"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py, lint, mypy
+skipsdist = True
+toxworkdir={env:TOX_WORK_DIR:.tox}
+
+[testenv]
+deps =
+  -e .[dev]
+setenv = HOME = {envtmpdir}
+commands =
+  mitmdump --version
+  pytest --timeout 60 -vv \
+    --cov-report xml \
+    --continue-on-collection-errors \
+    --cov=mitmproxy --cov=release \
+    {posargs}
+
+[testenv:old-dependencies]
+uv_resolution = lowest-direct
+
+[testenv:lint]
+commands =
+  ruff check .
+
+[testenv:filename_matching]
+deps =
+commands =
+  python ./test/filename_matching.py
+
+[testenv:mypy]
+commands =
+  mypy {posargs}
+
+[testenv:individual_coverage]
+commands =
+  python ./test/individual_coverage.py {posargs}
+
+[testenv:wheeltest]
+recreate = True
+deps =
+commands =
+  pip install {posargs}
+  mitmproxy --version
+  mitmdump --version
+  mitmweb --version
+"""

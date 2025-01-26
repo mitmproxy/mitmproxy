@@ -1,6 +1,7 @@
 """
 Server specs are used to describe an upstream proxy or server.
 """
+
 import re
 from functools import cache
 from typing import Literal
@@ -8,8 +9,8 @@ from typing import Literal
 from mitmproxy.net import check
 
 ServerSpec = tuple[
-    Literal["http", "https", "tls", "dtls", "tcp", "udp", "dns"],
-    tuple[str, int]
+    Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"],
+    tuple[str, int],
 ]
 
 server_spec_re = re.compile(
@@ -45,7 +46,17 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
         scheme = m.group("scheme")
     else:
         scheme = default_scheme
-    if scheme not in ("http", "https", "tls", "dtls", "tcp", "udp", "dns"):
+    if scheme not in (
+        "http",
+        "https",
+        "http3",
+        "tls",
+        "dtls",
+        "tcp",
+        "udp",
+        "dns",
+        "quic",
+    ):
         raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")
@@ -62,6 +73,8 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
             port = {
                 "http": 80,
                 "https": 443,
+                "quic": 443,
+                "http3": 443,
                 "dns": 53,
             }[scheme]
         except KeyError:

@@ -1,5 +1,7 @@
 import time
+
 import pytest
+
 from mitmproxy.utils import human
 
 
@@ -16,8 +18,8 @@ def test_parse_size():
     assert human.parse_size("0b") == 0
     assert human.parse_size("1") == 1
     assert human.parse_size("1k") == 1024
-    assert human.parse_size("1m") == 1024 ** 2
-    assert human.parse_size("1g") == 1024 ** 3
+    assert human.parse_size("1m") == 1024**2
+    assert human.parse_size("1g") == 1024**3
     with pytest.raises(ValueError):
         human.parse_size("1f")
     with pytest.raises(ValueError):

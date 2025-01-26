@@ -1,22 +1,21 @@
 import enum
-import platform
 import math
+import platform
 from collections.abc import Iterable
 from functools import lru_cache
-from typing import Optional, Union
 
-from publicsuffix2 import get_sld, get_tld
-
-import urwid
 import urwid.util
+from publicsuffix2 import get_sld
+from publicsuffix2 import get_tld
 
+from mitmproxy import dns
 from mitmproxy import flow
+from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
-from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.udp import UDPFlow
-from mitmproxy import dns
-from mitmproxy.dns import DNSFlow
+from mitmproxy.utils import emoji
+from mitmproxy.utils import human
 
 # Detect Windows Subsystem for Linux and Windows
 IS_WINDOWS_OR_WSL = (
@@ -32,22 +31,22 @@ def is_keypress(k):
         return True
 
 
-def highlight_key(str, key, textattr="text", keyattr="key"):
-    l = []
-    parts = str.split(key, 1)
+def highlight_key(text, key, textattr="text", keyattr="key"):
+    lst = []
+    parts = text.split(key, 1)
     if parts[0]:
-        l.append((textattr, parts[0]))
-    l.append((keyattr, key))
+        lst.append((textattr, parts[0]))
+    lst.append((keyattr, key))
     if parts[1]:
-        l.append((textattr, parts[1]))
-    return l
+        lst.append((textattr, parts[1]))
+    return lst
 
 
 KEY_MAX = 30
 
 
 def format_keyvals(
-    entries: Iterable[tuple[str, Union[None, str, urwid.Widget]]],
+    entries: Iterable[tuple[str, None | str | urwid.Widget]],
     key_format: str = "key",
     value_format: str = "text",
     indent: int = 0,
@@ -96,8 +95,8 @@ if urwid.util.detected_encoding:
     SYMBOL_REPLAY = "\u21ba"
     SYMBOL_RETURN = "\u2190"
     SYMBOL_MARK = "\u25cf"
-    SYMBOL_UP = "\u21E7"
-    SYMBOL_DOWN = "\u21E9"
+    SYMBOL_UP = "\u21e7"
+    SYMBOL_DOWN = "\u21e9"
     SYMBOL_ELLIPSIS = "\u2026"
     SYMBOL_FROM_CLIENT = "\u21d2"
     SYMBOL_TO_CLIENT = "\u21d0"
@@ -119,6 +118,7 @@ SCHEME_STYLES = {
     "tcp": "scheme_tcp",
     "udp": "scheme_udp",
     "dns": "scheme_dns",
+    "quic": "scheme_quic",
 }
 HTTP_REQUEST_METHOD_STYLES = {
     "GET": "method_get",
@@ -188,7 +188,7 @@ class TruncatedText(urwid.Widget):
             text = text[::-1]
             attr = attr[::-1]
 
-        text_len = urwid.util.calc_width(text, 0, len(text))
+        text_len = urwid.calc_width(text, 0, len(text))
         if size is not None and len(size) > 0:
             width = size[0]
         else:
@@ -242,11 +242,11 @@ def rle_append_beginning_modify(rle, a_r):
             rle[0:0] = [(a, r)]
 
 
-def colorize_host(host):
+def colorize_host(host: str):
     tld = get_tld(host)
     sld = get_sld(host)
 
-    attr = []
+    attr: list = []
 
     tld_size = len(tld)
     sld_size = len(sld) - tld_size
@@ -268,14 +268,14 @@ def colorize_host(host):
     return attr
 
 
-def colorize_req(s):
+def colorize_req(s: str):
     path = s.split("?", 2)[0]
     i_query = len(path)
     i_last_slash = path.rfind("/")
     i_ext = path[i_last_slash + 1 :].rfind(".")
     i_ext = i_last_slash + i_ext if i_ext >= 0 else len(s)
     in_val = False
-    attr = []
+    attr: list = []
     for i in range(len(s)):
         c = s[i]
         if (
@@ -358,7 +358,7 @@ def format_size(num_bytes: int) -> tuple[str, str]:
 
 
 def format_left_indicators(*, focused: bool, intercepted: bool, timestamp: float):
-    indicators: list[Union[str, tuple[str, str]]] = []
+    indicators: list[str | tuple[str, str]] = []
     if focused:
         indicators.append(("focus", ">>"))
     else:
@@ -376,7 +376,7 @@ def format_right_indicators(
     replay: bool,
     marked: str,
 ):
-    indicators: list[Union[str, tuple[str, str]]] = []
+    indicators: list[str | tuple[str, str]] = []
     if replay:
         indicators.append(("replay", SYMBOL_REPLAY))
     else:
@@ -404,12 +404,12 @@ def format_http_flow_list(
     request_timestamp: float,
     request_is_push_promise: bool,
     intercepted: bool,
-    response_code: Optional[int],
-    response_reason: Optional[str],
-    response_content_length: Optional[int],
-    response_content_type: Optional[str],
-    duration: Optional[float],
-    error_message: Optional[str],
+    response_code: int | None,
+    response_reason: str | None,
+    response_content_length: int | None,
+    response_content_type: str | None,
+    duration: float | None,
+    error_message: str | None,
 ) -> urwid.Widget:
     req = []
 
@@ -492,7 +492,7 @@ def format_http_flow_table(
     render_mode: RenderMode,
     focused: bool,
     marked: str,
-    is_replay: Optional[str],
+    is_replay: str | None,
     request_method: str,
     request_scheme: str,
     request_host: str,
@@ -502,12 +502,12 @@ def format_http_flow_table(
     request_timestamp: float,
     request_is_push_promise: bool,
     intercepted: bool,
-    response_code: Optional[int],
-    response_reason: Optional[str],
-    response_content_length: Optional[int],
-    response_content_type: Optional[str],
-    duration: Optional[float],
-    error_message: Optional[str],
+    response_code: int | None,
+    response_reason: str | None,
+    response_content_length: int | None,
+    response_content_type: str | None,
+    duration: float | None,
+    error_message: str | None,
 ) -> urwid.Widget:
     items = [
         format_left_indicators(
@@ -548,7 +548,6 @@ def format_http_flow_table(
         response_style = ""
 
     if response_code:
-
         status = str(response_code)
         status_style = response_style or HTTP_RESPONSE_CODE_STYLE.get(
             response_code // 100, "code_other"
@@ -616,8 +615,8 @@ def format_message_flow(
     client_address,
     server_address,
     total_size: int,
-    duration: Optional[float],
-    error_message: Optional[str],
+    duration: float | None,
+    error_message: str | None,
 ):
     conn = f"{human.format_address(client_address)} <-> {human.format_address(server_address)}"
 
@@ -668,16 +667,16 @@ def format_dns_flow(
     focused: bool,
     intercepted: bool,
     marked: str,
-    is_replay: Optional[str],
+    is_replay: str | None,
     op_code: str,
     request_timestamp: float,
     domain: str,
     type: str,
-    response_code: Optional[str],
+    response_code: str | None,
     response_code_http_equiv: int,
-    answer: Optional[str],
+    answer: str | None,
     error_message: str,
-    duration: Optional[float],
+    duration: float | None,
 ):
     items = []
 
@@ -748,8 +747,8 @@ def format_flow(
     relevant for display and call the render with only that. This assures that rows
     are updated if the flow is changed.
     """
-    duration: Optional[float]
-    error_message: Optional[str]
+    duration: float | None
+    error_message: str | None
     if f.error:
         error_message = f.error.msg
     else:
@@ -763,12 +762,16 @@ def format_flow(
             duration = f.messages[-1].timestamp - f.client_conn.timestamp_start
         else:
             duration = None
+        if f.client_conn.tls_version == "QUICv1":
+            protocol = "quic"
+        else:
+            protocol = f.type
         return format_message_flow(
             render_mode=render_mode,
             focused=focused,
             timestamp_start=f.client_conn.timestamp_start,
             marked=f.marked,
-            protocol=f.type,
+            protocol=protocol,
             client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
             total_size=total_size,
@@ -778,7 +781,7 @@ def format_flow(
     elif isinstance(f, DNSFlow):
         if f.response:
             duration = f.response.timestamp - f.request.timestamp
-            response_code_str: Optional[str] = dns.response_codes.to_str(
+            response_code_str: str | None = dns.response_codes.to_str(
                 f.response.response_code
             )
             response_code_http_equiv = dns.response_codes.http_equiv_status_code(
@@ -810,14 +813,14 @@ def format_flow(
         )
     elif isinstance(f, HTTPFlow):
         intercepted = f.intercepted
-        response_content_length: Optional[int]
+        response_content_length: int | None
         if f.response:
             if f.response.raw_content is not None:
                 response_content_length = len(f.response.raw_content)
             else:
                 response_content_length = None
-            response_code: Optional[int] = f.response.status_code
-            response_reason: Optional[str] = f.response.reason
+            response_code: int | None = f.response.status_code
+            response_reason: str | None = f.response.reason
             response_content_type = f.response.headers.get("content-type")
             if f.response.timestamp_end:
                 duration = max(

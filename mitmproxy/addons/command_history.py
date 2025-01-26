@@ -41,7 +41,7 @@ class CommandHistory:
     def done(self):
         if ctx.options.command_history and len(self.history) >= self.VACUUM_SIZE:
             # vacuum history so that it doesn't grow indefinitely.
-            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2:]) + "\n"
+            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2 :]) + "\n"
             try:
                 self.history_file.write_text(history_str)
             except Exception as e:

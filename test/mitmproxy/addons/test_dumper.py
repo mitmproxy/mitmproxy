@@ -7,6 +7,7 @@ import pytest
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
 from mitmproxy.http import Headers
+from mitmproxy.net.dns import response_codes
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -96,12 +97,27 @@ def test_simple():
 def test_echo_body():
     f = tflow.tflow(resp=True)
     f.response.headers["content-type"] = "text/html"
-    f.response.content = b"foo bar voing\n" * 100
+    f.response.content = b"foo bar voing\n" * 600
 
     sio = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3)
+        d._echo_message(f.response, f)
+        t = sio.getvalue()
+        assert "cut off" in t
+
+
+def test_echo_body_custom_cutoff():
+    f = tflow.tflow(resp=True)
+    f.response.headers["content-type"] = "text/html"
+    f.response.content = b"foo bar voing\n" * 4
+
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3)
+        ctx.configure(d, content_view_lines_cutoff=3)
         d._echo_message(f.response, f)
         t = sio.getvalue()
         assert "cut off" in t
@@ -117,7 +133,7 @@ def test_echo_trailer():
         f.request.headers["content-type"] = "text/html"
         f.request.headers["transfer-encoding"] = "chunked"
         f.request.headers["trailer"] = "my-little-request-trailer"
-        f.request.content = b"some request content\n" * 100
+        f.request.content = b"some request content\n" * 600
         f.request.trailers = Headers(
             [(b"my-little-request-trailer", b"foobar-request-trailer")]
         )
@@ -226,6 +242,12 @@ def test_dns():
         assert "8.8.8.8" in sio.getvalue()
         sio.truncate(0)
 
+        f = tflow.tdnsflow()
+        f.response = f.request.fail(response_codes.NOTIMP)
+        d.dns_response(f)
+        assert "NOTIMP" in sio.getvalue()
+        sio.truncate(0)
+
         f = tflow.tdnsflow(err=True)
         d.dns_error(f)
         assert "error" in sio.getvalue()
@@ -277,6 +299,27 @@ def test_http2():
         f.response.http_version = b"HTTP/2.0"
         d.response(f)
         assert "HTTP/2.0 200 OK" in sio.getvalue()
+
+
+def test_quic():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d):
+        f = tflow.ttcpflow()
+        f.client_conn.tls_version = "QUICv1"
+        # TODO: This should not be metadata, this should be typed attributes.
+        f.metadata["quic_stream_id_client"] = 1
+        f.metadata["quic_stream_id_server"] = 1
+        d.tcp_message(f)
+        assert "quic stream 1" in sio.getvalue()
+
+        f2 = tflow.tudpflow()
+        f2.client_conn.tls_version = "QUICv1"
+        # TODO: This should not be metadata, this should be typed attributes.
+        f2.metadata["quic_stream_id_client"] = 1
+        f2.metadata["quic_stream_id_server"] = 1
+        d.udp_message(f2)
+        assert "quic stream 1" in sio.getvalue()
 
 
 def test_styling():

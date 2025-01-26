@@ -1,9 +1,7 @@
 import logging
-
 import math
 import sys
 from functools import lru_cache
-from typing import Optional
 
 import urwid
 
@@ -119,7 +117,14 @@ class FlowDetails(tabs.Tabs):
     def tab_http_response(self):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
-        if self.flow.intercepted and flow.response:
+
+        # there is no good way to detect what part of the flow is intercepted,
+        # so we apply some heuristics to see if it's the HTTP response.
+        websocket_started = flow.websocket and len(flow.websocket.messages) != 0
+        response_is_intercepted = (
+            self.flow.intercepted and flow.response and not websocket_started
+        )
+        if response_is_intercepted:
             return "Response intercepted"
         else:
             return "Response"
@@ -147,7 +152,14 @@ class FlowDetails(tabs.Tabs):
         return "UDP Stream"
 
     def tab_websocket_messages(self):
-        return "WebSocket Messages"
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        assert flow.websocket
+
+        if self.flow.intercepted and len(flow.websocket.messages) != 0:
+            return "WebSocket Messages intercepted"
+        else:
+            return "WebSocket Messages"
 
     def tab_details(self):
         return "Detail"
@@ -189,7 +201,7 @@ class FlowDetails(tabs.Tabs):
                 align="right",
             ),
         ]
-        contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
+        contentview_status_bar = urwid.AttrMap(urwid.Columns(cols), "heading")
         return contentview_status_bar
 
     FROM_CLIENT_MARKER = ("from_client", f"{common.SYMBOL_FROM_CLIENT} ")
@@ -256,20 +268,16 @@ class FlowDetails(tabs.Tabs):
         viewmode = self.master.commands.call("console.flowview.mode")
 
         widget_lines = []
-
-        from_client = flow.messages[0].from_client
         for m in flow.messages:
             _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
 
             for line in lines:
-                if from_client:
+                if m.from_client:
                     line.insert(0, self.FROM_CLIENT_MARKER)
                 else:
                     line.insert(0, self.TO_CLIENT_MARKER)
 
                 widget_lines.append(urwid.Text(line))
-
-            from_client = not from_client
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
@@ -330,7 +338,7 @@ class FlowDetails(tabs.Tabs):
         text_objects = []
         for line in lines:
             txt = []
-            for (style, text) in line:
+            for style, text in line:
                 if total_chars + len(text) > max_chars:
                     text = text[: max_chars - total_chars]
                 txt.append((style, text))
@@ -404,7 +412,7 @@ class FlowDetails(tabs.Tabs):
                     align="right",
                 ),
             ]
-            title = urwid.AttrWrap(urwid.Columns(cols), "heading")
+            title = urwid.AttrMap(urwid.Columns(cols), "heading")
 
             txt.append(title)
             txt.extend(body)
@@ -422,7 +430,7 @@ class FlowDetails(tabs.Tabs):
         return searchable.Searchable(txt)
 
     def dns_message_text(
-        self, type: str, message: Optional[dns.Message]
+        self, type: str, message: dns.Message | None
     ) -> searchable.Searchable:
         # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
         if message:

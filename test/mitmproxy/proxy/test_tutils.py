@@ -4,8 +4,10 @@ from typing import Any
 
 import pytest
 
-from mitmproxy.proxy import commands, events, layer
 from . import tutils
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
+from mitmproxy.proxy import layer
 
 
 class TEvent(events.Event):
@@ -111,6 +113,12 @@ def test_command_reply(tplaybook):
     tplaybook >> tutils.reply()
     assert tplaybook
     assert tplaybook.actual[1] == tplaybook.actual[2].command
+
+    tplaybook >> TEvent((42,))
+    tplaybook << TCommand(42)
+    tplaybook >> tutils.reply(to=TCommand)
+    assert tplaybook
+    assert tplaybook.actual[4] == tplaybook.actual[5].command
 
 
 def test_default_playbook(tctx):

@@ -1,17 +1,23 @@
+from __future__ import annotations
+
 import argparse
 import asyncio
 import logging
 import os
 import signal
 import sys
-from collections.abc import Callable, Sequence
-from typing import Any, Optional, TypeVar
+from collections.abc import Callable
+from collections.abc import Sequence
+from typing import Any
+from typing import TypeVar
 
-from mitmproxy import exceptions, master
+from mitmproxy import exceptions
+from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
-from mitmproxy.utils import debug, arg_check
+from mitmproxy.utils import arg_check
+from mitmproxy.utils import debug
 
 
 def process_options(parser, opts, args):
@@ -28,9 +34,7 @@ def process_options(parser, opts, args):
         args.flow_detail = 2
 
     adict = {
-        key: val
-        for key, val in vars(args).items()
-        if key in opts and val is not None
+        key: val for key, val in vars(args).items() if key in opts and val is not None
     }
     opts.update(**adict)
 
@@ -42,7 +46,7 @@ def run(
     master_cls: type[T],
     make_parser: Callable[[options.Options], argparse.ArgumentParser],
     arguments: Sequence[str],
-    extra: Callable[[Any], dict] = None,
+    extra: Callable[[Any], dict] | None = None,
 ) -> T:  # pragma: no cover
     """
     extra: Extra argument processing callable which returns a dict of
@@ -54,6 +58,9 @@ def run(
         logging.getLogger("tornado").setLevel(logging.WARNING)
         logging.getLogger("asyncio").setLevel(logging.WARNING)
         logging.getLogger("hpack").setLevel(logging.WARNING)
+        logging.getLogger("quic").setLevel(
+            logging.WARNING
+        )  # aioquic uses a different prefix...
         debug.register_info_dumpers()
 
         opts = options.Options()
@@ -109,10 +116,20 @@ def run(
         def _sigterm(*_):
             loop.call_soon_threadsafe(master.shutdown)
 
-        # We can't use loop.add_signal_handler because that's not available on Windows' Proactorloop,
-        # but signal.signal just works fine for our purposes.
-        signal.signal(signal.SIGINT, _sigint)
-        signal.signal(signal.SIGTERM, _sigterm)
+        try:
+            # Prefer loop.add_signal_handler where it is available
+            # https://github.com/mitmproxy/mitmproxy/issues/7128
+            loop.add_signal_handler(signal.SIGINT, _sigint)
+            loop.add_signal_handler(signal.SIGTERM, _sigterm)
+        except NotImplementedError:
+            # Fall back to `signal.signal` for platforms where that is not available (Windows' Proactorloop)
+            signal.signal(signal.SIGINT, _sigint)
+            signal.signal(signal.SIGTERM, _sigterm)
+
+        # to fix the issue mentioned https://github.com/mitmproxy/mitmproxy/issues/6744
+        # by setting SIGPIPE to SIG_IGN, the process will not terminate and continue to run
+        if hasattr(signal, "SIGPIPE"):
+            signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
         await master.run()
         return master
@@ -120,14 +137,14 @@ def run(
     return asyncio.run(main())
 
 
-def mitmproxy(args=None) -> Optional[int]:  # pragma: no cover
+def mitmproxy(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import console
 
     run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
     return None
 
 
-def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
+def mitmdump(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import dump
 
     def extra(args):
@@ -144,7 +161,7 @@ def mitmdump(args=None) -> Optional[int]:  # pragma: no cover
     return None
 
 
-def mitmweb(args=None) -> Optional[int]:  # pragma: no cover
+def mitmweb(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import web
 
     run(web.master.WebMaster, cmdline.mitmweb, args)

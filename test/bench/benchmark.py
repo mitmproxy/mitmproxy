@@ -46,7 +46,7 @@ class Benchmark:
             "benchmark_save_path",
             str,
             "/tmp/profile",
-            "Destination for the .prof and and .bench result files",
+            "Destination for the .prof and .bench result files",
         )
         ctx.options.update(
             mode="reverse:http://devd.io:10001",
@@ -56,7 +56,7 @@ class Benchmark:
     def running(self):
         if not self.started:
             self.started = True
-            asyncio.get_running_loop().create_task(self.procs())
+            self._task = asyncio.create_task(self.procs())
 
     def done(self):
         self.pr.dump_stats(ctx.options.benchmark_save_path + ".prof")

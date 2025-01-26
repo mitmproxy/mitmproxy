@@ -3,12 +3,13 @@ from unittest.mock import Mock
 import pytest
 
 from mitmproxy import connection
-from mitmproxy.proxy import events, commands
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import events
 
 
 @pytest.fixture
 def tconn() -> connection.Server:
-    return connection.Server(None)
+    return connection.Server(address=None)
 
 
 def test_dataclasses(tconn):

@@ -9,7 +9,7 @@ from mitmproxy.proxy import commands
 
 @pytest.fixture
 def tconn() -> connection.Server:
-    return connection.Server(None)
+    return connection.Server(address=None)
 
 
 def test_dataclasses(tconn):
@@ -17,6 +17,7 @@ def test_dataclasses(tconn):
     assert repr(commands.SendData(tconn, b"foo"))
     assert repr(commands.OpenConnection(tconn))
     assert repr(commands.CloseConnection(tconn))
+    assert repr(commands.CloseTcpConnection(tconn, half_close=True))
     assert repr(commands.Log("hello"))
 
 

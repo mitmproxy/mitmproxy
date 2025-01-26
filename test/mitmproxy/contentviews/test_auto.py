@@ -1,6 +1,6 @@
+from . import full_eval
 from mitmproxy.contentviews import auto
 from mitmproxy.test import tflow
-from . import full_eval
 
 
 def test_view_auto():
@@ -46,8 +46,8 @@ def test_view_auto():
     )
     assert f[0] == "Unknown Image"
 
-    f = v(b"\xFF" * 30)
-    assert f[0] == "Hex"
+    f = v(b"\xff" * 30)
+    assert f[0] == "Hexdump"
 
     f = v(
         b"",

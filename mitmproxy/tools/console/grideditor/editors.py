@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any
 
 import urwid
 
@@ -50,10 +50,9 @@ class ResponseHeaderEditor(HeaderEditor):
 
 class RequestMultipartEditor(base.FocusEditor):
     title = "Edit Multipart Form"
-    columns = [col_text.Column("Key"), col_text.Column("Value")]
+    columns = [col_bytes.Column("Key"), col_bytes.Column("Value")]
 
     def get_data(self, flow):
-
         return flow.request.multipart_form.items(multi=True)
 
     def set_data(self, vals, flow):
@@ -65,7 +64,6 @@ class RequestUrlEncodedEditor(base.FocusEditor):
     columns = [col_text.Column("Key"), col_text.Column("Value")]
 
     def get_data(self, flow):
-
         return flow.request.urlencoded_form.items(multi=True)
 
     def set_data(self, vals, flow):
@@ -192,11 +190,7 @@ class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
     def __init__(
         self,
         master,
-        vals: Union[
-            list[list[Any]],
-            list[Any],
-            Any,
-        ],
+        vals: (list[list[Any]] | list[Any] | Any),
     ) -> None:
         if vals is not None:
             # Whatever vals is, make it a list of rows containing lists of column values.

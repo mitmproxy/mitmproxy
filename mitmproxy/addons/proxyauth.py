@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import binascii
 import weakref
-from abc import ABC, abstractmethod
-from typing import MutableMapping
+from abc import ABC
+from abc import abstractmethod
+from collections.abc import MutableMapping
 from typing import Optional
 
 import ldap3
 import passlib.apache
 
-from mitmproxy import connection, ctx
+from mitmproxy import connection
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.net.http import status_codes
@@ -22,10 +24,10 @@ REALM = "mitmproxy"
 class ProxyAuth:
     validator: Validator | None = None
 
-    def __init__(self):
-        self.authenticated: MutableMapping[
-            connection.Client, tuple[str, str]
-        ] = weakref.WeakKeyDictionary()
+    def __init__(self) -> None:
+        self.authenticated: MutableMapping[connection.Client, tuple[str, str]] = (
+            weakref.WeakKeyDictionary()
+        )
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
@@ -38,7 +40,7 @@ class ProxyAuth:
             "username:pass",
             "any" to accept any user/pass combination,
             "@path" to use an Apache htpasswd file,
-            or "ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree" for LDAP authentication.
+            or "ldap[s]:url_server_ldap[:port]:dn_auth:password:dn_subtree[?search_filter_key=...]" for LDAP authentication.
             """,
         )
 
@@ -74,6 +76,8 @@ class ProxyAuth:
             # Is this connection authenticated by a previous HTTP CONNECT?
             if f.client_conn in self.authenticated:
                 f.metadata["proxyauth"] = self.authenticated[f.client_conn]
+            elif f.is_replay:
+                pass
             else:
                 self.authenticate_http(f)
 
@@ -141,7 +145,9 @@ def is_http_proxy(f: http.HTTPFlow) -> bool:
         - True, if authentication is done as if mitmproxy is a proxy
         - False, if authentication is done as if mitmproxy is an HTTP server
     """
-    return isinstance(f.client_conn.proxy_mode, (mode_specs.RegularMode, mode_specs.UpstreamMode))
+    return isinstance(
+        f.client_conn.proxy_mode, (mode_specs.RegularMode, mode_specs.UpstreamMode)
+    )
 
 
 def mkauth(username: str, password: str, scheme: str = "basic") -> str:
@@ -209,6 +215,7 @@ class Ldap(Validator):
     conn: ldap3.Connection
     server: ldap3.Server
     dn_subtree: str
+    filter_key: str
 
     def __init__(self, proxyauth: str):
         (
@@ -218,6 +225,7 @@ class Ldap(Validator):
             ldap_user,
             ldap_pass,
             self.dn_subtree,
+            self.filter_key,
         ) = self.parse_spec(proxyauth)
         server = ldap3.Server(url, port=port, use_ssl=use_ssl)
         conn = ldap3.Connection(server, ldap_user, ldap_pass, auto_bind=True)
@@ -225,7 +233,7 @@ class Ldap(Validator):
         self.server = server
 
     @staticmethod
-    def parse_spec(spec: str) -> tuple[bool, str, int | None, str, str, str]:
+    def parse_spec(spec: str) -> tuple[bool, str, int | None, str, str, str, str]:
         try:
             if spec.count(":") > 4:
                 (
@@ -241,6 +249,16 @@ class Ldap(Validator):
                 security, url, ldap_user, ldap_pass, dn_subtree = spec.split(":")
                 port = None
 
+            if "?" in dn_subtree:
+                dn_subtree, search_str = dn_subtree.split("?")
+                key, value = search_str.split("=")
+                if key == "search_filter_key":
+                    search_filter_key = value
+                else:
+                    raise ValueError
+            else:
+                search_filter_key = "cn"
+
             if security == "ldaps":
                 use_ssl = True
             elif security == "ldap":
@@ -248,14 +266,22 @@ class Ldap(Validator):
             else:
                 raise ValueError
 
-            return use_ssl, url, port, ldap_user, ldap_pass, dn_subtree
+            return (
+                use_ssl,
+                url,
+                port,
+                ldap_user,
+                ldap_pass,
+                dn_subtree,
+                search_filter_key,
+            )
         except ValueError:
             raise exceptions.OptionsError(f"Invalid LDAP specification: {spec}")
 
     def __call__(self, username: str, password: str) -> bool:
         if not username or not password:
             return False
-        self.conn.search(self.dn_subtree, f"(cn={username})")
+        self.conn.search(self.dn_subtree, f"({self.filter_key}={username})")
         if self.conn.response:
             c = ldap3.Connection(
                 self.server, self.conn.response[0]["dn"], password, auto_bind=True

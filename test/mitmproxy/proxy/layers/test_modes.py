@@ -1,36 +1,46 @@
 import copy
 
 import pytest
-from mitmproxy import dns
 
+from mitmproxy import dns
 from mitmproxy.addons.proxyauth import ProxyAuth
-from mitmproxy.connection import Client, Server
+from mitmproxy.connection import Client
+from mitmproxy.connection import ConnectionState
+from mitmproxy.connection import Server
 from mitmproxy.proxy import layers
-from mitmproxy.proxy.commands import (
-    CloseConnection,
-    Log,
-    OpenConnection,
-    SendData,
-)
+from mitmproxy.proxy.commands import CloseConnection
+from mitmproxy.proxy.commands import Log
+from mitmproxy.proxy.commands import OpenConnection
+from mitmproxy.proxy.commands import RequestWakeup
+from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.context import Context
-from mitmproxy.proxy.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy.layer import NextLayer, NextLayerHook
-from mitmproxy.proxy.layers import http, modes, tcp, tls
+from mitmproxy.proxy.events import ConnectionClosed
+from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.layer import NextLayer
+from mitmproxy.proxy.layer import NextLayerHook
+from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers import quic
+from mitmproxy.proxy.layers import tcp
+from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers import udp
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy.layers.tcp import TcpMessageHook, TcpStartHook
-from mitmproxy.proxy.layers.tls import (
-    ClientTLSLayer,
-    TlsStartClientHook,
-    TlsStartServerHook,
-)
+from mitmproxy.proxy.layers.tcp import TcpMessageHook
+from mitmproxy.proxy.layers.tcp import TcpStartHook
+from mitmproxy.proxy.layers.tls import ClientTLSLayer
+from mitmproxy.proxy.layers.tls import TlsStartClientHook
+from mitmproxy.proxy.layers.tls import TlsStartServerHook
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from test.mitmproxy.proxy.layers.test_tls import (
-    reply_tls_start_client,
-    reply_tls_start_server,
-)
-from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
+from mitmproxy.udp import UDPFlow
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
+from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
+from test.mitmproxy.proxy.tutils import Placeholder
+from test.mitmproxy.proxy.tutils import Playbook
+from test.mitmproxy.proxy.tutils import reply
+from test.mitmproxy.proxy.tutils import reply_next_layer
 
 
 def test_upstream_https(tctx):
@@ -43,12 +53,24 @@ def test_upstream_https(tctx):
     curl -x localhost:8080 -k http://example.com
     """
     tctx1 = Context(
-        Client(("client", 1234), ("127.0.0.1", 8080), 1605699329),
+        Client(
+            peername=("client", 1234),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+            state=ConnectionState.OPEN,
+        ),
         copy.deepcopy(tctx.options),
     )
-    tctx1.client.proxy_mode = ProxyMode.parse("upstream:https://example.mitmproxy.org:8081")
+    tctx1.client.proxy_mode = ProxyMode.parse(
+        "upstream:https://example.mitmproxy.org:8081"
+    )
     tctx2 = Context(
-        Client(("client", 4321), ("127.0.0.1", 8080), 1605699329),
+        Client(
+            peername=("client", 4321),
+            sockname=("127.0.0.1", 8080),
+            timestamp_start=1605699329,
+            state=ConnectionState.OPEN,
+        ),
         copy.deepcopy(tctx.options),
     )
     assert tctx2.client.proxy_mode == ProxyMode.parse("regular")
@@ -91,8 +113,8 @@ def test_upstream_https(tctx):
         << SendData(tctx2.client, serverhello)
     )
     assert (
-        # forward serverhello to proxy1
         proxy1
+        # forward serverhello to proxy1
         >> DataReceived(upstream, serverhello())
         << SendData(upstream, request)
     )
@@ -152,6 +174,9 @@ def test_reverse_proxy(tctx, keep_host_header):
 
 
 def test_reverse_dns(tctx):
+    tctx.client.transport_protocol = "udp"
+    tctx.server.transport_protocol = "udp"
+
     f = Placeholder(dns.DNSFlow)
     server = Placeholder(Server)
     tctx.client.proxy_mode = ProxyMode.parse("reverse:dns://8.8.8.8:53")
@@ -159,6 +184,8 @@ def test_reverse_dns(tctx):
     assert (
         Playbook(modes.ReverseProxy(tctx), hooks=False)
         >> DataReceived(tctx.client, tflow.tdnsreq().packed)
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.DNSLayer)
         << layers.dns.DnsRequestHook(f)
         >> reply(None)
         << OpenConnection(server)
@@ -166,6 +193,56 @@ def test_reverse_dns(tctx):
         << SendData(tctx.server, tflow.tdnsreq().packed)
     )
     assert server().address == ("8.8.8.8", 53)
+
+
+@pytest.mark.parametrize("keep_host_header", [True, False])
+def test_quic(tctx: Context, keep_host_header: bool):
+    with taddons.context():
+        tctx.options.keep_host_header = keep_host_header
+        tctx.server.sni = "other.example.com"
+        tctx.client.proxy_mode = ProxyMode.parse("reverse:quic://example.org:443")
+        client_hello = Placeholder(bytes)
+
+        def set_settings(data: quic.QuicTlsData):
+            data.settings = quic.QuicTlsSettings()
+
+        assert (
+            Playbook(modes.ReverseProxy(tctx))
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            >> DataReceived(tctx.client, b"\x00")
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(layers.ServerQuicLayer)
+            << quic.QuicStartServerHook(Placeholder(quic.QuicTlsData))
+            >> reply(side_effect=set_settings)
+            << SendData(tctx.server, client_hello)
+            << RequestWakeup(Placeholder(float))
+        )
+        assert tctx.server.address == ("example.org", 443)
+        assert quic.quic_parse_client_hello_from_datagrams([client_hello()]).sni == (
+            "other.example.com" if keep_host_header else "example.org"
+        )
+
+
+def test_udp(tctx: Context):
+    tctx.client.proxy_mode = ProxyMode.parse("reverse:udp://1.2.3.4:5")
+    flow = Placeholder(UDPFlow)
+    assert (
+        Playbook(modes.ReverseProxy(tctx))
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        >> DataReceived(tctx.client, b"test-input")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow)
+        >> reply()
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(tctx.server, b"test-input")
+    )
+    assert tctx.server.address == ("1.2.3.4", 5)
+    assert len(flow().messages) == 1
+    assert flow().messages[0].content == b"test-input"
 
 
 @pytest.mark.parametrize("patch", [True, False])
@@ -178,9 +255,6 @@ def test_reverse_proxy_tcp_over_tls(
         client --TCP-- mitmproxy --TCP over TLS-- server
     reverse proxying.
     """
-
-    if patch:
-        monkeypatch.setattr(tls, "ServerTLSLayer", tls.MockTLSLayer)
 
     flow = Placeholder(TCPFlow)
     data = Placeholder(bytes)
@@ -206,8 +280,8 @@ def test_reverse_proxy_tcp_over_tls(
         )
         if connection_strategy == "lazy":
             (
-                # only now we open a connection
                 playbook
+                # only now we open a connection
                 << OpenConnection(tctx.server)
                 >> reply(None)
             )
@@ -216,6 +290,11 @@ def test_reverse_proxy_tcp_over_tls(
         )
         assert data() == b"\x01\x02\x03"
     else:
+        (
+            playbook
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(tls.ServerTLSLayer)
+        )
         if connection_strategy == "lazy":
             (
                 playbook
@@ -372,7 +451,7 @@ def test_socks5_trickle(tctx: Context):
             r"Unsupported SOCKS5 request: b'\x05\x02\x00\x01\x7f\x00\x00\x01\x124'",
         ),
         (
-            CLIENT_HELLO + b"\x05\x01\x00\xFF\x00\x00",
+            CLIENT_HELLO + b"\x05\x01\x00\xff\x00\x00",
             SERVER_HELLO + b"\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00",
             r"Unknown address type: 255",
         ),
@@ -451,7 +530,7 @@ def test_socks5_auth_success(
             b"\x05\x01\x00",
             None,
             None,
-            b"\x05\xFF\x00\x01\x00\x00\x00\x00\x00\x00",
+            b"\x05\xff\x00\x01\x00\x00\x00\x00\x00\x00",
             "Client does not support SOCKS5 with user/password authentication.",
         ),
         (

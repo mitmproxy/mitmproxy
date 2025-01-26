@@ -1,0 +1,145 @@
+[
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1680136662.482,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1680136662.5890002
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": [
+                "13.35.121.50",
+                443
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "GET",
+            "scheme": "https",
+            "host": "mitmproxy.org",
+            "port": 443,
+            "path": "/?=",
+            "http_version": "HTTP/1.1",
+            "headers": [
+                [
+                    "Host",
+                    "mitmproxy.org"
+                ],
+                [
+                    "User-Agent",
+                    "Charles/4.6.3"
+                ],
+                [
+                    "content-length",
+                    "0"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1680136662.482,
+            "timestamp_end": 1680136662.5890002,
+            "pretty_host": "mitmproxy.org"
+        },
+        "response": {
+            "http_version": "HTTP/1.1",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "Content-Type",
+                    "text/html"
+                ],
+                [
+                    "Content-Length",
+                    "23866"
+                ],
+                [
+                    "Last-Modified",
+                    "Sat, 04 Mar 2023 18:02:08 GMT"
+                ],
+                [
+                    "Server",
+                    "AmazonS3"
+                ],
+                [
+                    "Date",
+                    "Wed, 29 Mar 2023 08:30:06 GMT"
+                ],
+                [
+                    "ETag",
+                    "\"a1550c2bd25c5bcfef789d730f5bbddf\""
+                ],
+                [
+                    "Vary",
+                    "Accept-Encoding"
+                ],
+                [
+                    "X-Cache",
+                    "Hit from cloudfront"
+                ],
+                [
+                    "Via",
+                    "1.1 85331abd84b5669394785900a34f7b14.cloudfront.net (CloudFront)"
+                ],
+                [
+                    "X-Amz-Cf-Pop",
+                    "SFO5-C1"
+                ],
+                [
+                    "Alt-Svc",
+                    "h3=\":443\"; ma=86400"
+                ],
+                [
+                    "X-Amz-Cf-Id",
+                    "Kk1li6yk9uTkdA-9qj0AGGjPrNRPabTH_kq4rm91I5Xq3rtCARbzFg=="
+                ],
+                [
+                    "Age",
+                    "58057"
+                ],
+                [
+                    "Connection",
+                    "keep-alive"
+                ]
+            ],
+            "contentLength": 23866,
+            "contentHash": "7fd5f643a86976f5711df86ae2d5f9f8137a47c705dee31ccc550215564a5364",
+            "timestamp_start": 1680136662.482,
+            "timestamp_end": 1680136662.5890002
+        }
+    }
+]

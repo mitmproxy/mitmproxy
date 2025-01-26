@@ -2,19 +2,24 @@ import _thread
 import asyncio
 import json
 import logging
-import falcon
 import os
-
+from pathlib import Path
 from typing import Optional
 from wsgiref.simple_server import make_server
+
+import falcon
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
-from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema, ErrorSchema, CounterSchema, PageTimingSchema
-from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
-from mitmproxy.addons.browserup.browser_data_addon import BrowserDataAddOn
+
 from mitmproxy import ctx
-from pathlib import Path
+from mitmproxy.addons.browserup.browser_data_addon import BrowserDataAddOn
+from mitmproxy.addons.browserup.har.har_schemas import (CounterSchema,
+                                                        ErrorSchema,
+                                                        MatchCriteriaSchema,
+                                                        PageTimingSchema,
+                                                        VerifyResultSchema)
+from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
 
 # https://marshmallow.readthedocs.io/en/stable/quickstart.html
 

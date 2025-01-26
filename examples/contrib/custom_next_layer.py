@@ -8,10 +8,12 @@ Example usage:
     - mitmdump -s custom_next_layer.py
     - curl -x localhost:8080 -k https://example.com
 """
+
 import logging
 
 from mitmproxy import ctx
-from mitmproxy.proxy import layer, layers
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import layers
 
 
 def running():

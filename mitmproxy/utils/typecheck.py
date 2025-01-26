@@ -17,7 +17,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
     TypeError otherwise. This function supports only those types required for
     options.
     """
-    e = TypeError("Expected {} for {}, but got {}.".format(typeinfo, name, type(value)))
+    e = TypeError(f"Expected {typeinfo} for {name}, but got {type(value)}.")
 
     origin = typing.get_origin(typeinfo)
 

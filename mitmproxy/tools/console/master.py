@@ -1,6 +1,6 @@
 import asyncio
+import contextlib
 import mimetypes
-import os
 import os.path
 import shlex
 import shutil
@@ -8,35 +8,34 @@ import stat
 import subprocess
 import sys
 import tempfile
-import contextlib
 import threading
 from typing import TypeVar
 
+import urwid
 from tornado.platform.asyncio import AddThreadSelectorEventLoop
 
-import urwid
-
 from mitmproxy import addons
-from mitmproxy import master
 from mitmproxy import log
-from mitmproxy.addons import errorcheck, intercept
+from mitmproxy import master
+from mitmproxy import options
+from mitmproxy.addons import errorcheck
 from mitmproxy.addons import eventstore
+from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
-from mitmproxy.contrib.tornado import patch_tornado
 from mitmproxy.tools.console import consoleaddons
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
-
+from mitmproxy.utils import strutils
 
 T = TypeVar("T", str, bytes)
 
 
 class ConsoleMaster(master.Master):
-    def __init__(self, opts):
+    def __init__(self, opts: options.Options) -> None:
         super().__init__(opts)
 
         self.view: view.View = view.View()
@@ -48,8 +47,6 @@ class ConsoleMaster(master.Master):
         defaultkeys.map(self.keymap)
         self.options.errored.connect(self.options_error)
 
-        self.view_stack = []
-
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
@@ -57,11 +54,11 @@ class ConsoleMaster(master.Master):
             self.events,
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
-            keymap.KeymapConfig(),
-            errorcheck.ErrorCheck(log_to_stderr=True),
+            keymap.KeymapConfig(self),
+            errorcheck.ErrorCheck(repeat_errors_on_stderr=True),
         )
 
-        self.window = None
+        self.window: window.Window | None = None
 
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
@@ -124,18 +121,29 @@ class ConsoleMaster(master.Master):
         else:
             return "vi"
 
+    def get_hex_editor(self) -> str:
+        editors = ["ghex", "bless", "hexedit", "hxd", "hexer", "hexcurse"]
+        for editor in editors:
+            if shutil.which(editor):
+                return editor
+        return self.get_editor()
+
     def spawn_editor(self, data: T) -> T:
-        text = not isinstance(data, bytes)
+        text = isinstance(data, str)
         fd, name = tempfile.mkstemp("", "mitmproxy", text=text)
+        with_hexeditor = isinstance(data, bytes) and strutils.is_mostly_bin(data)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
-        c = self.get_editor()
+        if with_hexeditor:
+            c = self.get_hex_editor()
+        else:
+            c = self.get_editor()
         cmd = shlex.split(c)
         cmd.append(name)
         with self.uistopped():
             try:
                 subprocess.call(cmd)
-            except:
+            except Exception:
                 signals.status_message.send(message="Can't start editor: %s" % c)
             else:
                 with open(name, "r" if text else "rb") as f:
@@ -170,7 +178,7 @@ class ConsoleMaster(master.Master):
         with self.uistopped():
             try:
                 subprocess.call(cmd, shell=False)
-            except:
+            except Exception:
                 signals.status_message.send(
                     message="Can't start external viewer: %s" % " ".join(c)
                 )
@@ -219,7 +227,6 @@ class ConsoleMaster(master.Master):
 
         loop = asyncio.get_running_loop()
         if isinstance(loop, getattr(asyncio, "ProactorEventLoop", tuple())):
-            patch_tornado()
             # fix for https://bugs.python.org/issue37373
             loop = AddThreadSelectorEventLoop(loop)  # type: ignore
         self.loop = urwid.MainLoop(
@@ -241,9 +248,11 @@ class ConsoleMaster(master.Master):
         await super().done()
 
     def overlay(self, widget, **kwargs):
+        assert self.window
         self.window.set_overlay(widget, **kwargs)
 
     def switch_view(self, name):
+        assert self.window
         self.window.push(name)
 
     def quit(self, a):

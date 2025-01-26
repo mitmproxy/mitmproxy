@@ -1,27 +1,26 @@
 import asyncio
+import importlib.machinery
+import importlib.util
 import logging
 import os
-import importlib.util
-import importlib.machinery
 import sys
 import types
-import traceback
 from collections.abc import Sequence
-from typing import Optional
 
-from mitmproxy import addonmanager, hooks
+import mitmproxy.types as mtypes
+from mitmproxy import addonmanager
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import eventsequence
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy import command
-from mitmproxy import eventsequence
-from mitmproxy import ctx
-import mitmproxy.types as mtypes
+from mitmproxy import hooks
 from mitmproxy.utils import asyncio_utils
 
 logger = logging.getLogger(__name__)
 
 
-def load_script(path: str) -> Optional[types.ModuleType]:
+def load_script(path: str) -> types.ModuleType | None:
     fullname = "__mitmproxy_script__.{}".format(
         os.path.splitext(os.path.basename(path))[0]
     )
@@ -39,32 +38,35 @@ def load_script(path: str) -> Optional[types.ModuleType]:
         loader.exec_module(m)
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
+    except ImportError as e:
+        if getattr(sys, "frozen", False):
+            e.msg += (
+                f".\n"
+                f"Note that mitmproxy's binaries include their own Python environment. "
+                f"If your addon requires the installation of additional dependencies, "
+                f"please install mitmproxy from PyPI "
+                f"(https://docs.mitmproxy.org/stable/overview-installation/#installation-from-the-python-package-index-pypi)."
+            )
+        script_error_handler(path, e)
     except Exception as e:
-        script_error_handler(path, e, msg=str(e))
+        script_error_handler(path, e)
     finally:
         sys.path[:] = oldpath
         return m
 
 
-def script_error_handler(path, exc, msg="", tb=False):
+def script_error_handler(path: str, exc: Exception) -> None:
     """
-    Handles all the user's script errors with
-    an optional traceback
+    Log errors during script loading.
     """
-    exception = type(exc).__name__
-    if msg:
-        exception = msg
-    lineno = ""
-    if hasattr(exc, "lineno"):
-        lineno = str(exc.lineno)
-    log_msg = f"in script {path}:{lineno} {exception}"
-    if tb:
-        etype, value, tback = sys.exc_info()
-        tback = addonmanager.cut_traceback(tback, "invoke_addon_sync")
-        log_msg = (
-            log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
-        )
-    logger.error(log_msg)
+    tback = exc.__traceback__
+    tback = addonmanager.cut_traceback(
+        tback, "invoke_addon_sync"
+    )  # we're calling configure() on load
+    tback = addonmanager.cut_traceback(
+        tback, "_call_with_frames_removed"
+    )  # module execution from importlib
+    logger.error(f"error in script {path}", exc_info=(type(exc), exc, tback))
 
 
 ReloadInterval = 1
@@ -79,11 +81,11 @@ class Script:
         self.name = "scriptmanager:" + path
         self.path = path
         self.fullpath = os.path.expanduser(path.strip("'\" "))
-        self.ns = None
+        self.ns: types.ModuleType | None = None
         self.is_running = False
 
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError("No such script")
+            raise exceptions.OptionsError(f"No such script: {self.fullpath}")
 
         self.reloadtask = None
         if reload:
@@ -119,14 +121,17 @@ class Script:
                 ctx.master.addons.invoke_addon_sync(
                     self.ns, hooks.ConfigureHook(ctx.options.keys())
                 )
-            except exceptions.OptionsError as e:
-                script_error_handler(self.fullpath, e, msg=str(e))
+            except Exception as e:
+                script_error_handler(self.fullpath, e)
             if self.is_running:
                 # We're already running, so we call that on the addon now.
                 ctx.master.addons.invoke_addon_sync(self.ns, hooks.RunningHook())
 
     async def watcher(self):
-        last_mtime = 0
+        # Script loading is terminally confused at the moment.
+        # This here is a stopgap workaround to defer loading.
+        await asyncio.sleep(0)
+        last_mtime = 0.0
         while True:
             try:
                 mtime = os.stat(self.fullpath).st_mtime

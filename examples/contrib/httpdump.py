@@ -6,7 +6,7 @@
 #   - dumper_folder: content dump destination folder (default: ./httpdump)
 #   - open_browser: open integrated browser with proxy configured at start (default: true)
 #
-# remember to add your own mitmproxy authorative certs in your browser/os!
+# remember to add your own mitmproxy authoritative certs in your browser/os!
 # certs docs: https://docs.mitmproxy.org/stable/concepts-certificates/
 # filter expressions docs: https://docs.mitmproxy.org/stable/concepts-filters/
 import logging
@@ -14,8 +14,9 @@ import mimetypes
 import os
 from pathlib import Path
 
-from mitmproxy import ctx, http
+from mitmproxy import ctx
 from mitmproxy import flowfilter
+from mitmproxy import http
 
 
 class HTTPDump:
@@ -32,7 +33,7 @@ class HTTPDump:
             name="open_browser",
             typespec=bool,
             default=True,
-            help="open integrated browser at start"
+            help="open integrated browser at start",
         )
 
     def running(self):

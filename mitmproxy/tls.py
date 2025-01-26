@@ -1,12 +1,12 @@
 import io
 from dataclasses import dataclass
-from typing import Optional
 
 from kaitaistruct import KaitaiStream
-
 from OpenSSL import SSL
+
 from mitmproxy import connection
-from mitmproxy.contrib.kaitaistruct import tls_client_hello, dtls_client_hello
+from mitmproxy.contrib.kaitaistruct import dtls_client_hello
+from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
 from mitmproxy.proxy import context
 
@@ -18,7 +18,7 @@ class ClientHello:
 
     _raw_bytes: bytes
 
-    def __init__(self, raw_client_hello: bytes, dtls: bool=False):
+    def __init__(self, raw_client_hello: bytes, dtls: bool = False):
         """Create a TLS ClientHello object from raw bytes."""
         self._raw_bytes = raw_client_hello
         if dtls:
@@ -67,7 +67,7 @@ class ClientHello:
         return self._client_hello.cipher_suites.cipher_suites
 
     @property
-    def sni(self) -> Optional[str]:
+    def sni(self) -> str | None:
         """
         The [Server Name Indication](https://en.wikipedia.org/wiki/Server_Name_Indication),
         which indicates which hostname the client wants to connect to.
@@ -141,7 +141,7 @@ class TlsData:
     """The affected connection."""
     context: context.Context
     """The context object for this connection."""
-    ssl_conn: Optional[SSL.Connection] = None
+    ssl_conn: SSL.Connection | None = None
     """
     The associated pyOpenSSL `SSL.Connection` object.
     This will be set by an addon in the `tls_start_*` event hooks.

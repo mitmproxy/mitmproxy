@@ -1,11 +1,12 @@
 import base64
+
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.addons import upstream_auth
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.addons import upstream_auth
 
 
 def test_configure():

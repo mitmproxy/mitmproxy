@@ -1,11 +1,21 @@
-import * as React from "react"
-import ValidateEditor from '../../../components/editors/ValidateEditor'
-import {fireEvent, render, screen, userEvent, waitFor} from "../../test-utils";
+import * as React from "react";
+import ValidateEditor from "../../../components/editors/ValidateEditor";
+import {
+    fireEvent,
+    render,
+    screen,
+    userEvent,
+    waitFor,
+} from "../../test-utils";
 
 test("ValidateEditor", async () => {
     const onEditDone = jest.fn();
-    const {asFragment} = render(
-        <ValidateEditor content="ok" isValid={x => x.includes("ok")} onEditDone={onEditDone}/>
+    const { asFragment } = render(
+        <ValidateEditor
+            content="ok"
+            isValid={(x) => x.includes("ok")}
+            onEditDone={onEditDone}
+        />,
     );
     expect(asFragment()).toMatchSnapshot();
 

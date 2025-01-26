@@ -49,6 +49,7 @@ def common_options(parser, opts):
     opts.make_parser(parser, "mode", short="m")
     opts.make_parser(parser, "anticache")
     opts.make_parser(parser, "showhost")
+    opts.make_parser(parser, "show_ignored_hosts")
     opts.make_parser(parser, "rfile", metavar="PATH", short="r")
     opts.make_parser(parser, "scripts", metavar="SCRIPT", short="s")
     opts.make_parser(parser, "stickycookie", metavar="FILTER")
@@ -83,7 +84,8 @@ def common_options(parser, opts):
     group = parser.add_argument_group("Server Replay")
     opts.make_parser(group, "server_replay", metavar="PATH", short="S")
     opts.make_parser(group, "server_replay_kill_extra")
-    opts.make_parser(group, "server_replay_nopop")
+    opts.make_parser(group, "server_replay_extra")
+    opts.make_parser(group, "server_replay_reuse")
     opts.make_parser(group, "server_replay_refresh")
 
     # Map Remote

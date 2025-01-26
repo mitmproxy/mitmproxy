@@ -2,13 +2,13 @@ import contextlib
 import inspect
 import logging
 import pprint
+import sys
 import traceback
 import types
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional
-
-import sys
+from typing import Any
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -51,8 +51,11 @@ def safecall():
         etype, value, tb = sys.exc_info()
         tb = cut_traceback(tb, "invoke_addon_sync")
         tb = cut_traceback(tb, "invoke_addon")
+        assert etype
+        assert value
         logger.error(
-            "Addon error: %s" % "".join(traceback.format_exception(etype, value, tb))
+            f"Addon error: {value}",
+            exc_info=(etype, value, tb),
         )
 
 
@@ -70,7 +73,7 @@ class Loader:
         typespec: type,
         default: Any,
         help: str,
-        choices: Optional[Sequence[str]] = None,
+        choices: Sequence[str] | None = None,
     ) -> None:
         """
         Add an option to mitmproxy.
@@ -79,6 +82,7 @@ class Loader:
         reflowed by tools. Information on the data type should be omitted -
         it will be generated and added by tools as needed.
         """
+        assert not isinstance(choices, str)
         if name in self.master.options:
             existing = self.master.options._options[name]
             same_signature = (
@@ -181,8 +185,8 @@ class AddonManager:
                 raise exceptions.AddonManagerError(
                     "An addon called '%s' already exists." % name
                 )
-        l = Loader(self.master)
-        self.invoke_addon_sync(addon, LoadHook(l))
+        loader = Loader(self.master)
+        self.invoke_addon_sync(addon, LoadHook(loader))
         for a in traverse([addon]):
             name = _get_name(a)
             self.lookup[name] = a

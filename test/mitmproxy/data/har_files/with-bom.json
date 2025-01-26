@@ -1,0 +1,173 @@
+[
+    {
+        "id": "hardcoded_for_test",
+        "intercepted": false,
+        "is_replay": null,
+        "type": "http",
+        "modified": false,
+        "marked": "",
+        "comment": "",
+        "timestamp_created": 0,
+        "client_conn": {
+            "id": "hardcoded_for_test",
+            "peername": [
+                "127.0.0.1",
+                0
+            ],
+            "sockname": [
+                "127.0.0.1",
+                0
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": 1689428246.093,
+            "timestamp_tls_setup": null,
+            "timestamp_end": 1689428246.262796
+        },
+        "server_conn": {
+            "id": "hardcoded_for_test",
+            "peername": null,
+            "sockname": null,
+            "address": [
+                "99.83.181.31",
+                443
+            ],
+            "tls_established": false,
+            "cert": null,
+            "sni": null,
+            "cipher": null,
+            "alpn": null,
+            "tls_version": null,
+            "timestamp_start": null,
+            "timestamp_tcp_setup": null,
+            "timestamp_tls_setup": null,
+            "timestamp_end": null
+        },
+        "request": {
+            "method": "POST",
+            "scheme": "https",
+            "host": "signal-metrics-collector-beta.s-onetag.com",
+            "port": 443,
+            "path": "/metrics",
+            "http_version": "HTTP/2",
+            "headers": [
+                [
+                    ":authority",
+                    "signal-metrics-collector-beta.s-onetag.com"
+                ],
+                [
+                    ":method",
+                    "POST"
+                ],
+                [
+                    ":path",
+                    "/metrics"
+                ],
+                [
+                    ":scheme",
+                    "https"
+                ],
+                [
+                    "accept",
+                    "*/*"
+                ],
+                [
+                    "accept-encoding",
+                    "gzip, deflate, br"
+                ],
+                [
+                    "accept-language",
+                    "en-US,en;q=0.9"
+                ],
+                [
+                    "cache-control",
+                    "no-cache"
+                ],
+                [
+                    "content-length",
+                    "1310"
+                ],
+                [
+                    "content-type",
+                    "text/plain;charset=UTF-8"
+                ],
+                [
+                    "dnt",
+                    "1"
+                ],
+                [
+                    "origin",
+                    "https://reqbin.com"
+                ],
+                [
+                    "pragma",
+                    "no-cache"
+                ],
+                [
+                    "sec-ch-ua",
+                    "\"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\", \"Google Chrome\";v=\"114\""
+                ],
+                [
+                    "sec-ch-ua-mobile",
+                    "?0"
+                ],
+                [
+                    "sec-ch-ua-platform",
+                    "\"macOS\""
+                ],
+                [
+                    "sec-fetch-dest",
+                    "empty"
+                ],
+                [
+                    "sec-fetch-mode",
+                    "no-cors"
+                ],
+                [
+                    "sec-fetch-site",
+                    "cross-site"
+                ],
+                [
+                    "user-agent",
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+                ]
+            ],
+            "contentLength": 1310,
+            "contentHash": "94c0d23b4e9f828b4b9062885ba0b785ce53fc374aef106b01fa62ff9f15c35b",
+            "timestamp_start": 1689428246.093,
+            "timestamp_end": 1689428246.262796,
+            "pretty_host": "signal-metrics-collector-beta.s-onetag.com"
+        },
+        "response": {
+            "http_version": "HTTP/2",
+            "status_code": 200,
+            "reason": "OK",
+            "headers": [
+                [
+                    "access-control-allow-origin",
+                    "*"
+                ],
+                [
+                    "content-length",
+                    "0"
+                ],
+                [
+                    "date",
+                    "Sat, 15 Jul 2023 13:37:26 GMT"
+                ],
+                [
+                    "vary",
+                    "Origin"
+                ]
+            ],
+            "contentLength": 0,
+            "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "timestamp_start": 1689428246.093,
+            "timestamp_end": 1689428246.262796
+        }
+    }
+]

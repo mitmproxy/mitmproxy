@@ -1,15 +1,17 @@
-from logging import DEBUG
-
 import time
-from typing import Optional
+from logging import DEBUG
 
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http, connection
+from mitmproxy import connection
+from mitmproxy import http
 from mitmproxy.net.http import http1
-from mitmproxy.proxy import commands, context, layer, tunnel
-from mitmproxy.proxy.layers.http._hooks import HttpConnectUpstreamHook
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import context
+from mitmproxy.proxy import layer
+from mitmproxy.proxy import tunnel
 from mitmproxy.proxy.layers import tls
+from mitmproxy.proxy.layers.http._hooks import HttpConnectUpstreamHook
 from mitmproxy.utils import human
 
 
@@ -32,7 +34,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         scheme, address = ctx.server.via
         assert scheme in ("http", "https")
 
-        http_proxy = connection.Server(address)
+        http_proxy = connection.Server(address=address)
 
         stack = tunnel.LayerStack()
         if scheme == "https":
@@ -48,7 +50,12 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             return (yield from super().start_handshake())
         assert self.conn.address
         flow = http.HTTPFlow(self.context.client, self.tunnel_connection)
-        authority = self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
+        authority = (
+            self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
+        )
+        headers = http.Headers()
+        if self.context.options.http_connect_send_host_header:
+            headers.insert(0, b"Host", authority)
         flow.request = http.Request(
             host=self.conn.address[0],
             port=self.conn.address[1],
@@ -57,7 +64,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             authority=authority,
             path=b"",
             http_version=b"HTTP/1.1",
-            headers=http.Headers(),
+            headers=headers,
             content=b"",
             trailers=None,
             timestamp_start=time.time(),
@@ -69,16 +76,14 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
 
     def receive_handshake_data(
         self, data: bytes
-    ) -> layer.CommandGenerator[tuple[bool, Optional[str]]]:
+    ) -> layer.CommandGenerator[tuple[bool, str | None]]:
         if not self.send_connect:
             return (yield from super().receive_handshake_data(data))
         self.buf += data
         response_head = self.buf.maybe_extract_lines()
         if response_head:
             try:
-                response = http1.read_response_head([
-                    bytes(x) for x in response_head
-                ])
+                response = http1.read_response_head([bytes(x) for x in response_head])
             except ValueError as e:
                 proxyaddr = human.format_address(self.tunnel_connection.address)
                 yield commands.Log(f"{proxyaddr}: {e}")

@@ -1,5 +1,4 @@
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 
 DEFAULT_PAGE_TITLE = "Default"
 DEFAULT_PAGE_REF = "page_1"

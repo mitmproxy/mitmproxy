@@ -21,6 +21,16 @@ class Options(optmanager.OptManager):
             False,
             "Use the Host header to construct URLs for display.",
         )
+        self.add_option(
+            "show_ignored_hosts",
+            bool,
+            False,
+            """
+            Record ignored flows in the UI even if we do not perform TLS interception.
+            This option will keep ignored flows' contents in memory, which can greatly increase memory usage.
+            A future release will fix this issue, record ignored flows by default, and remove this option.
+            """,
+        )
 
         # Proxy options
         self.add_option(
@@ -63,18 +73,6 @@ class Options(optmanager.OptManager):
             """,
         )
         self.add_option(
-            "ciphers_client",
-            Optional[str],
-            None,
-            "Set supported ciphers for client <-> mitmproxy connections using OpenSSL syntax.",
-        )
-        self.add_option(
-            "ciphers_server",
-            Optional[str],
-            None,
-            "Set supported ciphers for mitmproxy <-> server connections using OpenSSL syntax.",
-        )
-        self.add_option(
             "client_certs", Optional[str], None, "Client certificate file or directory."
         )
         self.add_option(
@@ -90,11 +88,19 @@ class Options(optmanager.OptManager):
             """,
         )
         self.add_option("allow_hosts", Sequence[str], [], "Opposite of --ignore-hosts.")
-        self.add_option("listen_host", str, "",
-                        "Address to bind proxy server(s) to (may be overridden for individual modes, see `mode`).")
-        self.add_option("listen_port", Optional[int], None,
-                        "Port to bind proxy server(s) to (may be overridden for individual modes, see `mode`). "
-                        "By default, the port is mode-specific. The default regular HTTP proxy spawns on port 8080.")
+        self.add_option(
+            "listen_host",
+            str,
+            "",
+            "Address to bind proxy server(s) to (may be overridden for individual modes, see `mode`).",
+        )
+        self.add_option(
+            "listen_port",
+            Optional[int],
+            None,
+            "Port to bind proxy server(s) to (may be overridden for individual modes, see `mode`). "
+            "By default, the port is mode-specific. The default regular HTTP proxy spawns on port 8080.",
+        )
         self.add_option(
             "mode",
             Sequence[str],
@@ -103,8 +109,9 @@ class Options(optmanager.OptManager):
             The proxy server type(s) to spawn. Can be passed multiple times.
 
             Mitmproxy supports "regular" (HTTP), "transparent", "socks5", "reverse:SPEC",
-            and "upstream:SPEC" proxy servers. For reverse and upstream proxy modes, SPEC
-            is host specification in the form of "http[s]://host[:port]".
+            "upstream:SPEC", and "wireguard[:PATH]" proxy servers. For reverse and upstream proxy modes, SPEC
+            is host specification in the form of "http[s]://host[:port]". For WireGuard mode, PATH may point to
+            a file containing key material. If no such file exists, it will be created on startup.
 
             You may append `@listen_port` or `@listen_host:listen_port` to override `listen_host` or `listen_port` for
             a specific proxy mode. Features such as client playback will use the first mode to determine
@@ -122,7 +129,7 @@ class Options(optmanager.OptManager):
             "http2",
             bool,
             True,
-            "Enable/disable HTTP/2 support. " "HTTP/2 support is enabled by default.",
+            "Enable/disable HTTP/2 support. HTTP/2 support is enabled by default.",
         )
         self.add_option(
             "http2_ping_keepalive",
@@ -133,6 +140,18 @@ class Options(optmanager.OptManager):
             the specified number of seconds to prevent the remote site from closing it.
             Set to 0 to disable this feature.
             """,
+        )
+        self.add_option(
+            "http3",
+            bool,
+            True,
+            "Enable/disable support for QUIC and HTTP/3. Enabled by default.",
+        )
+        self.add_option(
+            "http_connect_send_host_header",
+            bool,
+            True,
+            "Include host header with CONNECT requests. Enabled by default.",
         )
         self.add_option(
             "websocket",
@@ -147,13 +166,6 @@ class Options(optmanager.OptManager):
             True,
             "Enable/disable raw TCP connections. "
             "TCP connections are enabled by default. ",
-        )
-        self.add_option(
-            "rawudp",
-            bool,
-            True,
-            "Enable/disable raw UDP connections. "
-            "UDP connections are enabled by default. ",
         )
         self.add_option(
             "ssl_insecure",

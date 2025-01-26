@@ -1,17 +1,16 @@
 import pytest
 
 from mitmproxy.http import Headers
-from mitmproxy.net.http.http1.assemble import (
-    assemble_request,
-    assemble_request_head,
-    assemble_response,
-    assemble_response_head,
-    _assemble_request_line,
-    _assemble_request_headers,
-    _assemble_response_headers,
-    assemble_body,
-)
-from mitmproxy.test.tutils import treq, tresp
+from mitmproxy.net.http.http1.assemble import _assemble_request_headers
+from mitmproxy.net.http.http1.assemble import _assemble_request_line
+from mitmproxy.net.http.http1.assemble import _assemble_response_headers
+from mitmproxy.net.http.http1.assemble import assemble_body
+from mitmproxy.net.http.http1.assemble import assemble_request
+from mitmproxy.net.http.http1.assemble import assemble_request_head
+from mitmproxy.net.http.http1.assemble import assemble_response
+from mitmproxy.net.http.http1.assemble import assemble_response_head
+from mitmproxy.test.tutils import treq
+from mitmproxy.test.tutils import tresp
 
 
 def test_assemble_request():

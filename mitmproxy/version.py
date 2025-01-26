@@ -2,12 +2,12 @@ import os
 import subprocess
 import sys
 
-VERSION = "10.0.0.dev"
+VERSION = "12.0.0.dev"
 MITMPROXY = "mitmproxy " + VERSION
 
 # Serialization format version. This is displayed nowhere, it just needs to be incremented by one
 # for each change in the file format.
-FLOW_FORMAT_VERSION = 18
+FLOW_FORMAT_VERSION = 21
 
 
 def get_dev_version() -> str:
@@ -18,7 +18,7 @@ def get_dev_version() -> str:
     mitmproxy_version = VERSION
 
     here = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    try:
+    try:  # pragma: no cover
         # Check that we're in the mitmproxy repository: https://github.com/mitmproxy/mitmproxy/issues/3987
         # cb0e3287090786fad566feb67ac07b8ef361b2c3 is the first mitmproxy commit.
         subprocess.run(

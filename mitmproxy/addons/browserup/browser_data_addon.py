@@ -1,12 +1,13 @@
-import mitmproxy.http
+import base64
+import hashlib
+import json
 import logging
-import re
 import os
 import pathlib
+import re
 import time
-import hashlib
-import base64
-import json
+
+import mitmproxy.http
 
 
 # Inject a script into browser-responses for html that lets us get DOM timings, first paint time, and other metrics.

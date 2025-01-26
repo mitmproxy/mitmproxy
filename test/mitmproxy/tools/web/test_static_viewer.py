@@ -1,14 +1,13 @@
 import json
 from unittest import mock
 
+from mitmproxy import flowfilter
+from mitmproxy.addons import readfile
+from mitmproxy.addons import save
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-
-from mitmproxy import flowfilter
-from mitmproxy.tools.web.app import flow_to_json
-
 from mitmproxy.tools.web import static_viewer
-from mitmproxy.addons import save, readfile
+from mitmproxy.tools.web.app import flow_to_json
 
 
 def test_save_static(tmpdir):

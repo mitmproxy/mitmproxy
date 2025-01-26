@@ -1,6 +1,6 @@
+from . import full_eval
 from mitmproxy.contentviews import urlencoded
 from mitmproxy.net.http import url
-from . import full_eval
 
 
 def test_view_urlencoded():
@@ -12,7 +12,7 @@ def test_view_urlencoded():
     d = url.encode([("adsfa", "")]).encode()
     assert v(d)
 
-    assert not v(b"\xFF\x00")
+    assert not v(b"\xff\x00")
 
 
 def test_render_priority():

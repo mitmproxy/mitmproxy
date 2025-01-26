@@ -1,19 +1,19 @@
 from __future__ import annotations
+
 import asyncio
 import logging
+import sys
 from typing import IO
 
-import sys
-
-from mitmproxy import ctx, log
+from mitmproxy import ctx
+from mitmproxy import log
 from mitmproxy.utils import vt_codes
 
 
 class TermLog:
-    def __init__(
-        self,
-        out: IO[str] | None = None
-    ):
+    _teardown_task: asyncio.Task | None = None
+
+    def __init__(self, out: IO[str] | None = None):
         self.logger = TermLogHandler(out)
         self.logger.install()
 
@@ -27,24 +27,15 @@ class TermLog:
         if "termlog_verbosity" in updated:
             self.logger.setLevel(ctx.options.termlog_verbosity.upper())
 
-    def done(self):
-        t = self._teardown()
-        try:
-            # try to delay teardown a bit.
-            asyncio.create_task(t)
-        except RuntimeError:
-            # no event loop, we're in a test.
-            asyncio.run(t)
-
-    async def _teardown(self):
+    def uninstall(self) -> None:
+        # uninstall the log dumper.
+        # This happens at the very very end after done() is completed,
+        # because we don't want to uninstall while other addons are still logging.
         self.logger.uninstall()
 
 
 class TermLogHandler(log.MitmLogHandler):
-    def __init__(
-        self,
-        out: IO[str] | None = None
-    ):
+    def __init__(self, out: IO[str] | None = None):
         super().__init__()
         self.file: IO[str] = out or sys.stdout
         self.has_vt_codes = vt_codes.ensure_supported(self.file)
