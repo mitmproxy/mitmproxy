@@ -19,9 +19,9 @@ flow_har_entry_patch.patch_flow()  # patch flow object with a har entry method
 
 
 class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
-    def load(self, l):
+    def load(self, loader):
         logging.info("Loading HarCaptureAddon")
-        l.add_option("harcapture", str, "", "HAR capture path.")
+        loader.add_option("harcapture", str, "", "HAR capture path.")
 
     def get_resources(self):
         return [

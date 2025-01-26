@@ -29,13 +29,13 @@ VERSION = "1.24"
 class BrowserUpAddonsManagerAddOn:
     initialized = False
 
-    def load(self, l):
+    def load(self, loader):
         logging.info("Loading BrowserUpAddonsManagerAddOn")
         logging.info("Version {}".format(VERSION))
 
         ctx.options.update(listen_port=48080)
 
-        l.add_option(
+        loader.add_option(
             name="addons_management_port",
             typespec=Optional[int],
             default=48088,

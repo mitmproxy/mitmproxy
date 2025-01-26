@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import pprint
 import re  # noqa: F401
+from typing import Any
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -30,7 +31,7 @@ class Har(BaseModel):
     """
 
     log: HarLog = Field(...)
-    additional_properties: Dict[str, Any] = {}
+    additional_properties: dict[str, Any] = {}
     __properties = ["log"]
 
     class Config:

@@ -168,7 +168,7 @@ def mitmweb(args=None) -> int | None:  # pragma: no cover
     return None
 
 
-def browserupproxy(args=None) -> Optional[int]:  # pragma: no cover
+def browserupproxy(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import browserup_proxy
 
     def extra(args):

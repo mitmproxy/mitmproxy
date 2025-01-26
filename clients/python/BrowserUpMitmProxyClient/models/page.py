@@ -18,7 +18,7 @@ import json
 import pprint
 import re  # noqa: F401
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel
 from pydantic import conlist
@@ -44,7 +44,7 @@ class Page(BaseModel):
     errors: Optional[conlist(Error)] = Field(None, alias="_errors")
     page_timings: PageTimings = Field(..., alias="pageTimings")
     comment: Optional[StrictStr] = None
-    additional_properties: Dict[str, Any] = {}
+    additional_properties: dict[str, Any] = {}
     __properties = [
         "startedDateTime",
         "id",

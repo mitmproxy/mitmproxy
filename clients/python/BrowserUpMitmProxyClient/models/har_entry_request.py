@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import pprint
 import re  # noqa: F401
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel
 from pydantic import conlist
@@ -54,7 +54,7 @@ class HarEntryRequest(BaseModel):
     headers_size: StrictInt = Field(..., alias="headersSize")
     body_size: StrictInt = Field(..., alias="bodySize")
     comment: Optional[StrictStr] = None
-    additional_properties: Dict[str, Any] = {}
+    additional_properties: dict[str, Any] = {}
     __properties = [
         "method",
         "url",

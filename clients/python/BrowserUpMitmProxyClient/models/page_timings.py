@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import pprint
 import re  # noqa: F401
+from typing import Any
 from typing import Optional
 from typing import Union
 
@@ -61,7 +62,7 @@ class PageTimings(BaseModel):
         -1, alias="_firstContentfulPaint"
     )
     comment: Optional[StrictStr] = None
-    additional_properties: Dict[str, Any] = {}
+    additional_properties: dict[str, Any] = {}
     __properties = [
         "onContentLoad",
         "onLoad",

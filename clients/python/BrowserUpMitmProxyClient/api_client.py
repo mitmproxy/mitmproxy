@@ -349,7 +349,7 @@ class ApiClient(object):
         if data is None:
             return None
 
-        if type(klass) == str:
+        if type(klass) is str:
             if klass.startswith("List["):
                 sub_kls = re.match(r"List\[(.*)]", klass).group(1)
                 return [self.__deserialize(sub_data, sub_kls) for sub_data in data]
@@ -366,7 +366,7 @@ class ApiClient(object):
 
         if klass in self.PRIMITIVE_TYPES:
             return self.__deserialize_primitive(data, klass)
-        elif klass == object:
+        elif klass is object:
             return self.__deserialize_object(data)
         elif klass == datetime.date:
             return self.__deserialize_date(data)
