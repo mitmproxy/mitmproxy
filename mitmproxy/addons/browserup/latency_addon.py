@@ -2,7 +2,6 @@ from time import sleep
 
 
 class LatencyResource:
-
     def addon_path(self):
         return "latency/{latency}"
 
@@ -29,7 +28,6 @@ class LatencyResource:
 
 
 class LatencyAddOn:
-
     def __init__(self):
         self.num = 0
         self.latency_ms = 0
@@ -42,6 +40,4 @@ class LatencyAddOn:
             sleep(self.latency_ms / 1000)
 
 
-addons = [
-    LatencyAddOn()
-]
+addons = [LatencyAddOn()]

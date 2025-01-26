@@ -5,18 +5,11 @@
 import unittest
 
 import BrowserUpMitmProxyClient
-
-from pprint import pprint
 from BrowserUpMitmProxyClient.api import browser_up_proxy_api
 from BrowserUpMitmProxyClient.model.counter import Counter
-from BrowserUpMitmProxyClient.model.error import Error
-from BrowserUpMitmProxyClient.model.har import Har
-from BrowserUpMitmProxyClient.model.match_criteria import MatchCriteria
-from BrowserUpMitmProxyClient.model.verify_result import VerifyResult
 
 
 class TestBrowserupMitmProxyPythonClient(unittest.TestCase):
-
     def setUp(self):
         """Configure client"""
         self.configuration = BrowserUpMitmProxyClient.Configuration(
@@ -63,4 +56,8 @@ class TestBrowserupMitmProxyPythonClient(unittest.TestCase):
         har = self.api_instance.get_har_log()
 
         self.assertTrue(
-            any(item.name == counter.name and item.value == counter.value for item in har.log.pages[0].counters))
+            any(
+                item.name == counter.name and item.value == counter.value
+                for item in har.log.pages[0].counters
+            )
+        )

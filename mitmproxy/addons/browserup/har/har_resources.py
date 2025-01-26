@@ -8,9 +8,9 @@ import falcon
 from marshmallow import ValidationError
 
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
-from mitmproxy.addons.browserup.har.har_schemas import (CounterSchema,
-                                                        ErrorSchema,
-                                                        MatchCriteriaSchema)
+from mitmproxy.addons.browserup.har.har_schemas import CounterSchema
+from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema
+from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema
 from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 
 
@@ -32,7 +32,7 @@ class HealthCheckResource:
             200:
                 description: OK means all is well.
         """
-        resp.text = 'OK'
+        resp.text = "OK"
         resp.content_type = falcon.MEDIA_TEXT
         resp.status = falcon.HTTP_200
 
@@ -51,7 +51,10 @@ class ValidateMatchCriteriaMixin:
             MatchCriteriaSchema().load(criteria)
         except ValidationError as err:
             resp.content_type = falcon.MEDIA_JSON
-            raise falcon.HTTPError(falcon.HTTP_422, description=json.dumps({'error': err.messages}, ensure_ascii=False))
+            raise falcon.HTTPError(
+                falcon.HTTP_422,
+                description=json.dumps({"error": err.messages}, ensure_ascii=False),
+            )
 
 
 class VerifyResponseMixin:
@@ -65,16 +68,21 @@ class NoEntriesResponseMixin:
     def respond_with_no_entries_error(self, resp, bool):
         resp.status = falcon.HTTP_500
         resp.content_type = falcon.MEDIA_JSON
-        resp.text = json.dumps({"error": 'No traffic entries are present! Is the proxy setup correctly?', }, ensure_ascii=False)
+        resp.text = json.dumps(
+            {
+                "error": "No traffic entries are present! Is the proxy setup correctly?",
+            },
+            ensure_ascii=False,
+        )
 
 
 class HarResource(RespondWithHarMixin):
     def apispec(self, spec):
-        path = os.path.abspath(os.path.dirname(__file__) + '/../schemas/*.json')
+        path = os.path.abspath(os.path.dirname(__file__) + "/../schemas/*.json")
         files = glob.glob(path)
         for filepath in files:
             filename = Path(filepath).resolve().stem
-            with open(filepath, encoding='utf-8') as f:
+            with open(filepath, encoding="utf-8") as f:
                 schema = json.load(f)
                 spec.components.schema(filename, component=schema)
         spec.path(resource=self)
@@ -101,17 +109,17 @@ class HarResource(RespondWithHarMixin):
                 schema:
                   $ref: "#/components/schemas/Har"
         """
-        clean_har = req.get_param('cleanHar') == 'true'
+        clean_har = req.get_param("cleanHar") == "true"
         har = self.HarCaptureAddon.get_har(clean_har)
 
         if clean_har:
-            filtered_har = self.HarCaptureAddon.create_filtered_har_and_track_submitted(report_last_page = True,
-                                                                                        include_websockets = True,
-                                                                                        include_videos = True)
+            filtered_har = self.HarCaptureAddon.create_filtered_har_and_track_submitted(
+                report_last_page=True, include_websockets=True, include_videos=True
+            )
         else:
-            filtered_har = self.HarCaptureAddon.create_filtered_har_and_track_submitted(report_last_page = False,
-                                                                                        include_websockets = False,
-                                                                                        include_videos = False)
+            filtered_har = self.HarCaptureAddon.create_filtered_har_and_track_submitted(
+                report_last_page=False, include_websockets=False, include_videos=False
+            )
 
         old_har_file = self.HarCaptureAddon.save_har(filtered_har)
         if clean_har:
@@ -172,13 +180,13 @@ class HarPageResource(RespondWithHarMixin):
                         schema:
                             $ref: "#/components/schemas/Har"
         """
-        page_title = req.get_param('title')
+        page_title = req.get_param("title")
         har = self.HarCaptureAddon.new_page(page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 
 
-class HarCaptureTypesResource():
+class HarCaptureTypesResource:
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -201,7 +209,7 @@ class HarCaptureTypesResource():
                         schema:
                             $ref: "#/components/schemas/Har"
         """
-        capture_types = req.get_param('captureTypes')
+        capture_types = req.get_param("captureTypes")
         capture_types = capture_types.strip("[]").split(",")
 
         capture_types_parsed = []
@@ -220,10 +228,11 @@ class HarCaptureTypesResource():
         self.HarCaptureAddon.har_capture_types = capture_types_parsed
         resp.status = falcon.HTTP_200
 
+
 # decorates har with _page_timings gathered from injected JS script
 
 
-class PageTimingsResource():
+class PageTimingsResource:
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -238,7 +247,7 @@ class PageTimingsResource():
     # By accepting regular form posts, rather than application/json, we get out of some
     # CORS headaches.
     def on_post(self, req, resp):
-        logging.debug('Page timings resource post')
+        logging.debug("Page timings resource post")
         try:
             form = req.get_media()
             page_timings = {}
@@ -246,17 +255,19 @@ class PageTimingsResource():
                 page_timings = json.loads(part.text)
             self.HarCaptureAddon.add_page_info_to_har(page_timings)
         except ValidationError as err:
-            logging.debug('Page timings validation error')
-            logging.debug(json.dumps({'Page timings error': err.messages}))
+            logging.debug("Page timings validation error")
+            logging.debug(json.dumps({"Page timings error": err.messages}))
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON
-            resp.text = json.dumps({'error': err.messages}, ensure_ascii=False)
+            resp.text = json.dumps({"error": err.messages}, ensure_ascii=False)
         else:
-            logging.debug('Page timings returning 204')
+            logging.debug("Page timings returning 204")
             resp.status = falcon.HTTP_204
 
 
-class PresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
+class PresentResource(
+    VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin
+):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -304,14 +315,16 @@ class PresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatch
         criteria = req.media
         hv = HarVerifications(self.HarCaptureAddon.har)
         result = hv.present(criteria)
-        self.HarCaptureAddon.add_verification_to_har(name, 'present', result)
-        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+        self.HarCaptureAddon.add_verification_to_har(name, "present", result)
+        if criteria.get("error_if_no_traffic", True) and hv.no_entries():
             self.respond_with_no_entries_error(resp, result)
         else:
             self.respond_with_bool(resp, result)
 
 
-class NotPresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
+class NotPresentResource(
+    VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin
+):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -358,14 +371,16 @@ class NotPresentResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMa
         criteria = req.media
         hv = HarVerifications(self.HarCaptureAddon.har)
         result = hv.not_present(criteria)
-        self.HarCaptureAddon.add_verification_to_har(name, 'not_present', result)
-        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+        self.HarCaptureAddon.add_verification_to_har(name, "not_present", result)
+        if criteria.get("error_if_no_traffic", True) and hv.no_entries():
             self.respond_with_no_entries_error(resp, result)
         else:
             self.respond_with_bool(resp, result)
 
 
-class SizeResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
+class SizeResource(
+    VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin
+):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -419,16 +434,18 @@ class SizeResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCri
         criteria = req.media
         size_val = int(size) * 1000
         hv = HarVerifications(self.HarCaptureAddon.har)
-        max_size = hv.get_max(criteria, 'response')
+        max_size = hv.get_max(criteria, "response")
         result = size_val <= max_size
-        self.HarCaptureAddon.add_verification_to_har(name, 'size', result)
-        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+        self.HarCaptureAddon.add_verification_to_har(name, "size", result)
+        if criteria.get("error_if_no_traffic", True) and hv.no_entries():
             self.respond_with_no_entries_error(resp, result)
         else:
             self.respond_with_bool(resp, result)
 
 
-class SLAResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin):
+class SLAResource(
+    VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCriteriaMixin
+):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -482,16 +499,16 @@ class SLAResource(VerifyResponseMixin, NoEntriesResponseMixin, ValidateMatchCrit
         criteria = req.media
         time_val = int(time)
         hv = HarVerifications(self.HarCaptureAddon.har)
-        val = hv.get_max(criteria, 'time')
+        val = hv.get_max(criteria, "time")
         result = time_val <= val
-        self.HarCaptureAddon.add_verification_to_har(name, 'sla', val)
-        if criteria.get('error_if_no_traffic', True) and hv.no_entries():
+        self.HarCaptureAddon.add_verification_to_har(name, "sla", val)
+        if criteria.get("error_if_no_traffic", True) and hv.no_entries():
             self.respond_with_no_entries_error(resp, result)
         else:
             self.respond_with_bool(resp, result)
 
 
-class CounterResource():
+class CounterResource:
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -529,12 +546,12 @@ class CounterResource():
         except ValidationError as err:
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON
-            resp.text = json.dumps({'error': err.messages}, ensure_ascii=False)
+            resp.text = json.dumps({"error": err.messages}, ensure_ascii=False)
         else:
             resp.status = falcon.HTTP_204
 
 
-class ErrorResource():
+class ErrorResource:
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
@@ -572,6 +589,6 @@ class ErrorResource():
         except ValidationError as err:
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON
-            resp.text = json.dumps({'error': err.messages}, ensure_ascii=False)
+            resp.text = json.dumps({"error": err.messages}, ensure_ascii=False)
         else:
             resp.status = falcon.HTTP_204
