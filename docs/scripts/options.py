@@ -48,8 +48,7 @@ for key, option in sorted(unified_options.items(), key=lambda t: t[0]):
         f"""
           <tr id="{key}">
           <th>
-            <a class="anchor" href="#{key}">#&nbsp;&nbsp;</a>
-            {key}<br/>
+            {key}<a class="anchor" href="#{key}"></a><br/>
             {' '.join(["<span class='badge'>{}</span>".format(t) for t in option['tools']])}</th>
           <td>{option['type']}</td>
           <td>{option['help']}<br/>

@@ -1,8 +1,7 @@
 ---
 title: "Intercept Requests"
 weight: 2
-aliases:
-  - /mitmproxytutorial-interceptrequests/
+url: /mitmproxytutorial-interceptrequests/
 has_asciinema: true
 ---
 

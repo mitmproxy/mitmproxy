@@ -18,8 +18,6 @@ You can start any of our three tools from the command line / terminal.
 * **mitmweb** gives you a browser-based GUI
 * **mitmdump** gives you non-interactive terminal output
 
-If you use the command-line interface, we highly recommend you to take the [tutorial]({{< relref "/mitmproxytutorial/user-interface" >}}) to get started.
-
 ## Configure your browser or device
 
 Mitmproxy starts as a [regular HTTP proxy]({{< relref

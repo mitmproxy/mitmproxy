@@ -1,8 +1,7 @@
 ---
 title: "What's Next"
 weight: 5
-aliases:
-  - /mitmproxytutorial-whatsnext/
+url: /mitmproxytutorial-whatsnext/
 ---
 
 # What's Next

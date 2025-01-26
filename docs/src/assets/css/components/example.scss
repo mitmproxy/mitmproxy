@@ -1,16 +1,16 @@
 .example {
 
-  .highlight {
+  max-width: 100%;
+  margin-bottom: 1em;
+
+  .highlight pre {
     margin: 0;
   }
 
   .path {
     font-style: italic;
-    width: 100%;
     text-align: right;
   }
 
-  max-width: 100%;
-  margin-bottom: 1em;
 
 }

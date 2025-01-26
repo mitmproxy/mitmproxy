@@ -5,7 +5,8 @@
 <input id="navtoggle" type="checkbox" aria-hidden="true" tabindex="-1">
 <div>
     {{ partial "sidebar/menu" (dict "Ctx" . "Section" "overview" "Title" "Overview" "Open" true) }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "mitmproxytutorial" "Title" "Beginner Tutorial") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "web-tutorials" "Title" "Video Tutorials (Web UI)") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "cli-tutorials" "Title" "Video Tutorials (CLI)") }}
     {{ partial "sidebar/menu" (dict "Ctx" . "Section" "concepts" "Title" "Core Concepts" "Open" true) }}
     {{ partial "sidebar/menu" (dict "Ctx" . "Section" "addons" "Title" "Addon Development" "Open" true) }}
     {{ partial "sidebar/menu" (dict "Ctx" . "Section" "api" "Title" "API Reference") }}

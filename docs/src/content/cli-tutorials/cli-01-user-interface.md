@@ -1,8 +1,7 @@
 ---
 title: "User Interface"
 weight: 1
-aliases:
-  - /mitmproxytutorial-userinterface/
+url: /mitmproxytutorial-userinterface/
 has_asciinema: true
 ---
 

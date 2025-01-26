@@ -1,8 +1,7 @@
 ---
 title: "Modify Requests"
 weight: 3
-aliases:
-  - /mitmproxytutorial-modifyrequests/
+url: /mitmproxytutorial-modifyrequests/
 has_asciinema: true
 ---
 

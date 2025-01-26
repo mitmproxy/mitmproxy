@@ -7,11 +7,12 @@ $max-mobile-width: 768px;
 @import "sidebar";
 @import "content";
 
-@import "components/badges";
 @import "components/anchors";
 @import "components/asciinema-player";
-@import "components/syntax-highlighting";
+@import "components/badges";
+@import "components/example";
 @import "components/github-button";
+@import "components/syntax-highlighting";
 
 @media (prefers-reduced-motion: no-preference) {
   html:focus-within {

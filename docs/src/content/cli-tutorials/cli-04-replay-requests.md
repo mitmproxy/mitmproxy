@@ -1,8 +1,7 @@
 ---
 title: "Replay Requests"
 weight: 4
-aliases:
-  - /mitmproxytutorial-replayrequests/
+url: /mitmproxytutorial-replayrequests/
 has_asciinema: true
 ---
 
