@@ -1,4 +1,5 @@
 import logging
+from mitmproxy import exceptions
 
 
 class DisableH2C:
@@ -30,7 +31,8 @@ class DisableH2C:
             and f.request.http_version == "HTTP/2.0"
         )
         if is_connection_preface:
-            f.kill()
+            if f.killable:
+                f.kill()
             logging.warning(
                 "Initiating HTTP/2 connections with prior knowledge are currently not supported."
             )
