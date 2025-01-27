@@ -15,6 +15,8 @@
   ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
 - Fix console freezing due to DNS queries with an empty question section.
   ([#7497](https://github.com/mitmproxy/mitmproxy/pull/7497), @sujaldev)
+- Add mitmweb tutorial to docs.
+  ([#7509](https://github.com/mitmproxy/mitmproxy/pull/7509), @EstherRoeth)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
