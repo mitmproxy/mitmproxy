@@ -3,6 +3,7 @@ import logging
 import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
+from pprint import pformat
 from typing import Any
 
 import pyperclip
@@ -108,62 +109,54 @@ def httpie_command(f: flow.Flow) -> str:
 
 
 def python_requests_command(f: flow.Flow) -> str:
-    # Copy as Python Requests
     request = cleanup_request(f)
     request = pop_headers(request)
 
-    def escape_quotes(s: str) -> str:
-        return s.replace('"', '\\"')
+    def _pformat(dictionary: dict):
+        return "{\n " + pformat(dictionary, indent=4, sort_dicts=False)[1:-1] + "\n}"
 
-    code = "import requests\n\n"
+    cookies = dict(request.cookies.items())
+    headers = dict(request.headers.items())
+    headers.pop("cookie", None)
 
-    code += f'url = "{request.pretty_url}"\n'
-
-    # parse cookie
-    code += "cookies = {\n"
-    for k, v in request.cookies.items():
-        code += f'    "{k}": "{escape_quotes(v)}",\n'
-    code += "}\n"
-
-    # parse header
-    request.headers.pop("cookie", None)
-    code += "headers = {\n"
-    for k, v in request.headers.items():
-        code += f'    "{k}": "{escape_quotes(v)}",\n'
-    code += "}\n"
+    code = [
+        "import requests",
+        "",
+        f'url = "{request.pretty_url}"',
+        "",
+        ("cookies = " + _pformat(cookies) + "\n") if cookies else None,
+        ("headers = " + _pformat(headers) + "\n") if headers else None,
+        "",
+    ]
 
     is_json = False
     if request.content:
         try:
-            request.content.decode("utf-8")
-        except UnicodeDecodeError:
-            # binary data will be represented as hex string
-            # format for multipart form data
-            body_str = (
-                '"""' + repr(request.content)[2:-1].replace("\\r\\n", "\n") + '"""'
-            )
-        else:
+            body = json.loads(request.content)
+            is_json = True
+        except ValueError:
             try:
-                # json data
-                body = json.loads(request.content)
-                body_str = repr(body)
-                is_json = True
-            except json.JSONDecodeError:
-                # Fall back to plain string representation
-                body_str = f'"{escape_quotes(repr(request.content)[2:-1])}"'
+                body = request.text
+            except ValueError:
+                body = request.content
 
-        code += f"body = {body_str}\n"
-    else:
-        code += "body = None\n"
+        code.append(f"body = {pformat(body, indent=4, sort_dicts=False)}\n")
 
-    param = "json=body" if is_json else "data=body"
-    code += (
-        f'res = requests.request(method="{escape_quotes(request.method)}", '
-        f"url=url, headers=headers, cookies=cookies, {param})\n"
+    data_arg = f" {'json' if is_json else 'data'}=body" if request.content else ""
+    code.append(
+        (
+            f"with requests.request("
+            f"method={repr(request.method)}, "
+            f"url=url,"
+            f"{' cookies=cookies,' if cookies else ''}"
+            f"{' headers=headers,' if headers else ''}"
+            f"{data_arg}"
+        ).rstrip(",")
+        + ") as response:"
     )
-    code += "print(res.text)\n"
+    code.append("    print(response.text)")
 
-    return code
+    return "\n".join(line for line in code if line is not None)
 
 
 def raw_request(f: flow.Flow) -> bytes:
