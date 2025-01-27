@@ -52,4 +52,3 @@ class TestDisableH2CleartextUpgrade:
             f.kill()
 
             a.request(f)
-
