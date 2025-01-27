@@ -1,5 +1,4 @@
 import logging
-from mitmproxy import exceptions
 
 
 class DisableH2C:
