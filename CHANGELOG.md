@@ -20,6 +20,7 @@
 - Fixed a bug that caused mitmproxy to crash when loading prior knowledge h2 flows.
   ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
 - Flows can now be exported as python requests code.
+  ([#7515](https://github.com/mitmproxy/mitmproxy/pull/7515), @sujaldev)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
