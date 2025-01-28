@@ -226,9 +226,20 @@ class TestMatchingHTTPFlow:
         s.response.encode("gzip")
         self.match_body(q, s)
 
-    def test_method(self):
+    def test_method(self, monkeypatch):
         q = self.req()
+
+        monkeypatch.setenv("MITMPROXY_CASE_SENSITIVE_FILTERS", "0")
         assert self.q("~m get", q)
+        assert self.q("~m GET", q)
+        assert not self.q("~m post", q)
+
+        q.request.method = "oink"
+        assert not self.q("~m get", q)
+
+        monkeypatch.setenv("MITMPROXY_CASE_SENSITIVE_FILTERS", "1")
+        assert not self.q("~m get", q)
+        assert not self.q("~m GET", q)
         assert not self.q("~m post", q)
 
         q.request.method = "oink"

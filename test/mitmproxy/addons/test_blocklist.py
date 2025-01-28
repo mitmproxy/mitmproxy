@@ -67,7 +67,7 @@ class TestBlockList:
             f.request.url = "https://example.org/products/123"
             f.request.headers["user-agent"] = "curl/8.11.1"
             bl.request(f)
-            assert not f.response
+            assert f.response
 
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()
