@@ -332,20 +332,24 @@ class TestExportPythonRequestsCommand:
         assert export_python_requests(post_request) == result
 
     def test_patch(self, export_curl, patch_request):
-        result = (
-            "import requests\n"
-            "\n"
-            'url = "http://address:22/path?query=param"\n'
-            "cookies = {\n"
-            "}\n"
-            "headers = {\n"
-            '    "header": "qvalue",\n'
-            "}\n"
-            'body = "content"\n'
-            'res = requests.request(method="PATCH", url=url, headers=headers, '
-            "cookies=cookies, data=body)\n"
-            "print(res.text)\n"
-        )
+        result = textwrap.dedent("""
+        import requests
+
+        url = 'http://address:22/path?query=param'
+        cookies = {}
+        headers = {'header': 'qvalue'}
+        body = 'content'
+
+
+        def main():
+            with requests.request(
+                method='PATCH', url=url, cookies=cookies, headers=headers, data=body
+            ) as response:
+                print(response.text)
+
+
+        main()
+        """).lstrip()
         assert export.python_requests_command(patch_request) == result
 
     def test_tcp(self, export_curl, tcp_flow):
