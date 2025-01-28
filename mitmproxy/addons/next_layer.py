@@ -281,7 +281,7 @@ class NextLayer:
         if context.client.transport_protocol != "tcp" or data_server:
             return None
 
-        host_header_expected = context.client.alpn in HTTP1_ALPNS or re.match(
+        host_header_expected = re.match(
             rb"[A-Z]{3,}.+HTTP/", data_client, re.IGNORECASE
         )
         if host_header_expected:

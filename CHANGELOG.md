@@ -19,6 +19,7 @@
   ([#7509](https://github.com/mitmproxy/mitmproxy/pull/7509), @EstherRoeth)
 - Fixed a bug that caused mitmproxy to crash when loading prior knowledge h2 flows.
   ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
+- Fix a bug where mitmproxy would get stuck in secure web proxy mode when using `ignore_hosts` or `allow_hosts`.
 
 ## 12 January 2025: mitmproxy 11.1.0
 
