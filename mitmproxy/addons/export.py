@@ -146,7 +146,7 @@ def python_requests_command(f: flow.Flow) -> str:
     code.append(
         (
             f"with requests.request("
-            f"method={repr(request.method)}, "
+            f"method={request.method!r}, "
             f"url=url,"
             f"{' cookies=cookies,' if cookies else ''}"
             f"{' headers=headers,' if headers else ''}"
