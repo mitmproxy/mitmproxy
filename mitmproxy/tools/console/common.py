@@ -243,6 +243,9 @@ def rle_append_beginning_modify(rle, a_r):
 
 
 def colorize_host(host: str):
+    if not host:
+        return []
+
     tld = get_tld(host)
     sld = get_sld(host)
 

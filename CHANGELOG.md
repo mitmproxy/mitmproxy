@@ -7,6 +7,23 @@
 
 ## Unreleased: mitmproxy next
 
+- Security Hardening: mitmweb's `xsrf_token` cookie is now `HttpOnly; SameSite=Strict`.
+  ([#7491](https://github.com/mitmproxy/mitmproxy/pull/7491), @mhils)
+- We now provide standalone binaries for Linux arm64.
+  ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
+- Standalone binaries are now compiled with Python 3.13.
+  ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
+- Fix console freezing due to DNS queries with an empty question section.
+  ([#7497](https://github.com/mitmproxy/mitmproxy/pull/7497), @sujaldev)
+- Add mitmweb tutorial to docs.
+  ([#7509](https://github.com/mitmproxy/mitmproxy/pull/7509), @EstherRoeth)
+- Fixed a bug that caused mitmproxy to crash when loading prior knowledge h2 flows.
+  ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
+- Fix a bug where mitmproxy would get stuck in secure web proxy mode when using `ignore_hosts` or `allow_hosts`.
+  ([#7519](https://github.com/mitmproxy/mitmproxy/pull/7519), @mhils)
+
+## 12 January 2025: mitmproxy 11.1.0
+
 - **Local Capture Mode** is now available on Linux as well.
   ([#7440](https://github.com/mitmproxy/mitmproxy/pull/7440), @mhils)
 - mitmproxy now requires Python 3.12 or above.
@@ -16,13 +33,17 @@
 - Clicking the URL in mitmweb now places the cursor at the current position instead of selecting the entire URL.
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 - Add missing status codes
-  ([#7455])(https://github.com/mitmproxy/mitmproxy/pull/7455, @jwadolowski)
+  ([#7455](https://github.com/mitmproxy/mitmproxy/pull/7455), @jwadolowski)
 - All filter expressions are now case-insensitive by default.
   Users can opt into case-sensitive filters by setting MITMPROXY_CASE_SENSITIVE_FILTERS=1
   as an environment variable.
   ([#7458](https://github.com/mitmproxy/mitmproxy/pull/7458), @mhils, @AdityaPatadiya)
 - Remove filter expression lowercasing in block_list addon
   ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
+- Remove check for status codes in the blocklist add-on.
+  ([#7453](https://github.com/mitmproxy/mitmproxy/pull/7453), @lups2000, @AdityaPatadiya)
+- Prompt user before clearing screen
+  ([#7445](https://github.com/mitmproxy/mitmproxy/pull/7445), @errorxyz)
 
 ## 05 December 2024: mitmproxy 11.0.2
 
@@ -78,7 +99,7 @@
   ([#6720](https://github.com/mitmproxy/mitmproxy/pull/6720), @NicolaiSoeborg)
 - Fix slow tnetstring parsing in case of very large tnetstring.
   ([#7121](https://github.com/mitmproxy/mitmproxy/pull/7121), @mik1904)
-- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to 
+- Add `getaddrinfo`-based fallback for DNS resolution if we are unable to
   determine the operating system's name servers.
   ([#7122](https://github.com/mitmproxy/mitmproxy/pull/7122), @mhils)
 - Improve the error message when users specify the `certs` option without a matching private key.
