@@ -1,5 +1,6 @@
 import os
 import shlex
+import textwrap
 from unittest import mock
 
 import pyperclip
@@ -69,6 +70,14 @@ def export_curl():
     with taddons.context() as tctx:
         tctx.configure(e)
         yield export.curl_command
+
+
+@pytest.fixture(scope="module")
+def export_python_requests():
+    e = export.Export()
+    with taddons.context() as tctx:
+        tctx.configure(e)
+        yield export.python_requests_command
 
 
 class TestExportCurlCommand:
@@ -196,31 +205,33 @@ class TestExportHttpieCommand:
 
 
 class TestExportPythonRequestsCommand:
-    def test_get(self, get_request):
+    def test_get(self, export_python_requests, get_request):
         # test cookie
         get_request.request.cookies = [
             ("cookie", "chocolate_chip"),
             ("session_id", "abc123"),
             ("user_id", "987654321"),
         ]
-        result = (
-            "import requests\n"
-            "\n"
-            'url = "http://address:22/path?a=foo&a=bar&b=baz"\n'
-            "cookies = {\n"
-            '    "cookie": "chocolate_chip",\n'
-            '    "session_id": "abc123",\n'
-            '    "user_id": "987654321",\n'
-            "}\n"
-            "headers = {\n"
-            '    "header": "qvalue",\n'
-            "}\n"
-            "body = None\n"
-            'res = requests.request(method="GET", url=url, headers=headers, '
-            "cookies=cookies, data=body)\n"
-            "print(res.text)\n"
-        )
-        assert export.python_requests_command(get_request) == result
+
+        result = textwrap.dedent("""
+        import requests
+        
+        url = 'http://address:22/path?a=foo&a=bar&b=baz'
+        cookies = {'cookie': 'chocolate_chip', 'session_id': 'abc123', 'user_id': '987654321'}
+        headers = {'header': 'qvalue'}
+        body = None
+
+
+        def main():
+            with requests.request(
+                method='GET', url=url, cookies=cookies, headers=headers, data=body
+            ) as response:
+                print(response.text)
+
+
+        main()
+        """).lstrip()
+        assert export_python_requests(get_request) == result
 
     def test_post(self, post_request):
         post_request.request.content = b"id=1&name=nate"
