@@ -255,7 +255,7 @@ class TestExportPythonRequestsCommand:
         """).lstrip()
         assert export.python_requests_command(post_request) == result
 
-    def test_post_json(self, post_request):
+    def test_post_json(self, export_python_requests, post_request):
         post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
         # test different json data types
         post_request.request.content = b"""{
@@ -270,23 +270,33 @@ class TestExportPythonRequestsCommand:
                 },
                 "array": [1, 2, 3, 4]
             }"""
-        result = (
-            "import requests\n"
-            "\n"
-            'url = "http://address:22/path"\n'
-            "cookies = {\n"
-            "}\n"
-            "headers = {\n"
-            '    "Content-Type": "application/json; charset=utf-8",\n'
-            "}\n"
-            "body = {'string': 'Hello, world!', 'number': 42, 'float': 3.14, 'boolean': "
-            "True, 'nullValue': None, 'object': {'name': 'John', 'age': 30}, 'array': [1, "
-            "2, 3, 4]}\n"
-            'res = requests.request(method="POST", url=url, headers=headers, '
-            "cookies=cookies, json=body)\n"
-            "print(res.text)\n"
-        )
-        assert export.python_requests_command(post_request) == result
+
+        result = textwrap.dedent("""
+        import requests
+
+        url = 'http://address:22/path'
+        cookies = {}
+        headers = {'Content-Type': 'application/json; charset=utf-8'}
+        body = {   'string': 'Hello, world!',
+            'number': 42,
+            'float': 3.14,
+            'boolean': True,
+            'nullValue': None,
+            'object': {'name': 'John', 'age': 30},
+            'array': [1, 2, 3, 4]}
+
+
+        def main():
+            with requests.request(
+                method='POST', url=url, cookies=cookies, headers=headers, json=body
+            ) as response:
+                print(response.text)
+
+
+        main()
+        """).lstrip()
+
+        assert export_python_requests(post_request) == result
 
     def test_success_with_binary_data(self, post_request):
         # yeah, we support binary data in python
