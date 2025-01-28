@@ -61,7 +61,6 @@ def request_content_for_console(request: http.Request) -> str:
     return shlex.quote(escaped_text)
 
 
-
 def curl_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
@@ -91,7 +90,7 @@ def curl_command(f: flow.Flow) -> str:
 
     command = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
-        command += f' -d {request_content_for_console(request)}'
+        command += f" -d {request_content_for_console(request)}"
     return command
 
 
