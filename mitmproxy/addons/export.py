@@ -121,10 +121,10 @@ def python_requests_command(f: flow.Flow) -> str:
         and request.pretty_host != server_addr
     )
 
-    def _pformat(dictionary: dict, indent=4) -> str:
+    def _pformat(obj, indent=4) -> str:
         # TODO: Set `block_style=True` when https://github.com/python/cpython/pull/129274 is released.
         return textwrap.indent(
-            pformat(dictionary, indent=indent, sort_dicts=False), " " * indent
+            pformat(obj, indent=indent, sort_dicts=False), " " * indent
         )[indent:]
 
     cookies = dict(request.cookies.items())
