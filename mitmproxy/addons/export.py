@@ -161,7 +161,7 @@ def python_requests_command(f: flow.Flow) -> str:
         ) as response:
             print(response.text)
 
-    """).replace("import requests\n\n", "import requests \n")
+    """).replace("import requests\n\n", "import requests\n")
 
     if preserve_ip:
         code += textwrap.dedent(f"""
