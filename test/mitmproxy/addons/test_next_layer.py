@@ -500,7 +500,7 @@ explicit_proxy_configs = [
             ignore_hosts=[".+"],
             ignore_conn=True,
             data_client=client_hello_with_extensions,
-            alpn=b"http/1.1"
+            alpn=b"http/1.1",
         ),
         id=f"explicit proxy: ignore_hosts over established secure web proxy",
     ),

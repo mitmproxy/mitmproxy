@@ -48,7 +48,6 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello_from_datagrams
 from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
-from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
