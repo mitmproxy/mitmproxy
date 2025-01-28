@@ -21,6 +21,7 @@
   ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
 - Fix a bug where mitmproxy would get stuck in secure web proxy mode when using `ignore_hosts` or `allow_hosts`.
   ([#7519](https://github.com/mitmproxy/mitmproxy/pull/7519), @mhils)
+- Fix a bug where exporting a curl or httpie command with escaped characters would lead to different data being sent.
 
 ## 12 January 2025: mitmproxy 11.1.0
 
