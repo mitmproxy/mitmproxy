@@ -10,7 +10,8 @@ from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
-from typing import ClassVar, List
+from typing import ClassVar
+from typing import List
 
 import tornado.escape
 import tornado.web
@@ -322,14 +323,15 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         for conn in cls.connections.copy():
             cls.send(conn, message)
 
+
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
     application: Application
     filters: dict[str:str] = {}
-    
+
     def broadcast_flow_update(f: mitmproxy.flow.Flow):
         pass
-    
+
     def get_matching_flow_ids(self, name: str) -> List[str]:
         expr = self.filters.get(name)
         if not expr:
@@ -337,10 +339,10 @@ class ClientConnection(WebSocketEventBroadcaster):
 
         match_expr = flowfilter.parse(expr)
         return [f.id for f in self.application.master.view if match_expr(f)]
-    
+
     def send_matching_flow_ids(self, name: str, expr: str):
         matching_flow_ids = self.get_matching_flow_ids(name)
-        
+
         self.send(
             conn=self,
             message=json.dumps(
@@ -354,7 +356,7 @@ class ClientConnection(WebSocketEventBroadcaster):
                 ensure_ascii=False,
             ).encode("utf8", "surrogateescape"),
         )
-    
+
     async def on_message(self, message: str):
         try:
             data = json.loads(message)
@@ -369,7 +371,7 @@ class ClientConnection(WebSocketEventBroadcaster):
                 if not expr:
                     del self.filters[name]
                 print(self.filters)
-                
+
                 self.send_matching_flow_ids(name, expr)
             else:
                 raise APIError(400, "Unsupported command.")
