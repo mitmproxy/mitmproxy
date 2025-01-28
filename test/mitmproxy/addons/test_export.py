@@ -362,25 +362,28 @@ class TestExportPythonRequestsCommand:
         with pytest.raises(exceptions.CommandError):
             export.python_requests_command(udp_flow)
 
-    def test_correct_host_used(self, get_request):
+    def test_correct_host_used(self, export_python_requests, get_request):
         get_request.request.headers["host"] = "domain:22"
 
-        result = (
-            "import requests\n"
-            "\n"
-            'url = "http://domain:22/path?a=foo&a=bar&b=baz"\n'
-            "cookies = {\n"
-            "}\n"
-            "headers = {\n"
-            '    "header": "qvalue",\n'
-            '    "host": "domain:22",\n'
-            "}\n"
-            "body = None\n"
-            'res = requests.request(method="GET", url=url, headers=headers, '
-            "cookies=cookies, data=body)\n"
-            "print(res.text)\n"
-        )
-        assert export.python_requests_command(get_request) == result
+        result = textwrap.dedent("""
+        import requests
+
+        url = 'http://domain:22/path?a=foo&a=bar&b=baz'
+        cookies = {}
+        headers = {'header': 'qvalue', 'host': 'domain:22'}
+        body = None
+
+
+        def main():
+            with requests.request(
+                method='GET', url=url, cookies=cookies, headers=headers, data=body
+            ) as response:
+                print(response.text)
+
+
+        main()
+        """).lstrip()
+        assert export_python_requests(get_request) == result
 
 
 class TestRaw:
