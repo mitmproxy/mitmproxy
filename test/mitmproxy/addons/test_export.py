@@ -233,21 +233,26 @@ class TestExportPythonRequestsCommand:
         """).lstrip()
         assert export_python_requests(get_request) == result
 
-    def test_post(self, post_request):
+    def test_post(self, export_python_requests, post_request):
         post_request.request.content = b"id=1&name=nate"
-        result = (
-            "import requests\n"
-            "\n"
-            'url = "http://address:22/path"\n'
-            "cookies = {\n"
-            "}\n"
-            "headers = {\n"
-            "}\n"
-            'body = "id=1&name=nate"\n'
-            'res = requests.request(method="POST", url=url, headers=headers, '
-            "cookies=cookies, data=body)\n"
-            "print(res.text)\n"
-        )
+        result = textwrap.dedent("""
+        import requests
+
+        url = 'http://address:22/path'
+        cookies = {}
+        headers = {}
+        body = 'id=1&name=nate'
+
+
+        def main():
+            with requests.request(
+                method='POST', url=url, cookies=cookies, headers=headers, data=body
+            ) as response:
+                print(response.text)
+
+
+        main()
+        """).lstrip()
         assert export.python_requests_command(post_request) == result
 
     def test_post_json(self, post_request):
