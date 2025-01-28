@@ -112,8 +112,9 @@ def python_requests_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
 
-    def _pformat(dictionary: dict):
-        return "{\n " + pformat(dictionary, indent=4, sort_dicts=False)[1:-1] + "\n}"
+    def _pformat(dictionary: dict) -> str:
+        # TODO: Set `block_style=True` when https://github.com/python/cpython/pull/129274 is released.
+        return pformat(dictionary, indent=4, sort_dicts=False)
 
     cookies = dict(request.cookies.items())
     headers = dict(request.headers.items())
@@ -140,7 +141,7 @@ def python_requests_command(f: flow.Flow) -> str:
             except ValueError:
                 body = request.content
 
-        code.append(f"body = {pformat(body, indent=4, sort_dicts=False)}\n")
+        code.append(f"body = {_pformat(body)}\n")
 
     data_arg = f" {'json' if is_json else 'data'}=body" if request.content else ""
     code.append(
