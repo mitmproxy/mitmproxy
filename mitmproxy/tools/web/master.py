@@ -19,7 +19,6 @@ from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import static_viewer
 from mitmproxy.tools.web import webaddons
-from mitmproxy.tools.web.filters import FiltersManager
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +51,6 @@ class WebMaster(master.Master):
         self.app = app.Application(self, self.options.web_debug)
         self.proxyserver: Proxyserver = self.addons.get("proxyserver")
         self.proxyserver.servers.changed.connect(self._sig_servers_changed)
-        self.filters_manager = FiltersManager(self.view)
 
     def _sig_view_add(self, flow: flow.Flow) -> None:
         app.ClientConnection.broadcast(

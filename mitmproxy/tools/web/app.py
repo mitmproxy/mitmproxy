@@ -19,6 +19,7 @@ import tornado.websocket
 import mitmproxy.addons
 import mitmproxy.addons.view
 import mitmproxy.flow
+from mitmproxy.tools.web.filters import FiltersManager
 import mitmproxy.tools.web.master
 import mitmproxy_rs
 from mitmproxy import certs
@@ -292,43 +293,12 @@ class FilterHelp(RequestHandler):
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
-    application: Application  # reference to the application, in order to be able to update the filters
 
     def open(self, *args, **kwargs):
         self.connections.add(self)
 
     def on_close(self):
         self.connections.discard(self)
-
-    async def on_message(self, message: str):
-        try:
-            data = json.loads(message)
-
-            # Validate the required fields
-            if not all(key in data for key in ["resource", "cmd", "name", "expr"]):
-                print(f"Invalid message format: Missing required fields.")
-                return
-
-            resource = data["resource"]
-            command = data["cmd"]
-            name = data["name"]
-            expression = data["expr"]
-
-            if resource == "flows" and command == "updateFilter":
-                filters_manager = self.application.master.filters_manager
-
-                filters_manager.update_filter(name, expression)
-                print(f"Updated filters: {filters_manager.get_all_filters()}")
-                self.broadcast(
-                    resource="flows",
-                    cmd="filtersUpdated",
-                    data=filters_manager.get_matching_flow_ids(),
-                )
-            else:
-                print("Unsupported command.")
-
-        except json.JSONDecodeError:
-            print(f"Invalid JSON received from {self}: {message}")
 
     @classmethod
     def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
@@ -353,9 +323,44 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         for conn in cls.connections.copy():
             cls.send(conn, message)
 
-
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
+    application: Application
+    filters_manager = FiltersManager()
+    
+    def broadcast_flow_update(f: mitmproxy.flow.Flow):
+        pass
+    
+    def broadcast_matching_flow_ids(self, name: str, expr: str):
+        matching_flow_ids = self.filters_manager.get_matching_flow_ids(name, self.application.master.view)
+        
+        self.broadcast(
+            resource="flows",
+            cmd="filtersUpdated",
+            name=name,
+            expr=expr,
+            data=matching_flow_ids
+        )
+    
+    async def on_message(self, message: str):
+        try:
+            data = json.loads(message)
+
+            resource = data["resource"]
+            command = data["cmd"]
+            name = data["name"]
+            expr = data["expr"]
+
+            if resource == "flows" and command == "updateFilter":
+                self.filters_manager.update_filter(name, expr)
+                self.broadcast_matching_flow_ids(name, expr)
+            else:
+                raise APIError(400, "Unsupported command.")
+
+        except json.JSONDecodeError:
+            raise APIError(400, f"Invalid JSON received from {self}: {message}")
+        except Exception as e:
+            raise APIError(400, f"Error processing message from {self}: {e}")
 
 
 class Flows(RequestHandler):
