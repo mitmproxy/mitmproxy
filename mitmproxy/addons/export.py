@@ -1,6 +1,7 @@
 import json
 import logging
 import shlex
+import textwrap
 from collections.abc import Callable
 from collections.abc import Sequence
 from pprint import pformat
@@ -112,25 +113,25 @@ def python_requests_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
 
-    def _pformat(dictionary: dict) -> str:
+    server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
+
+    preserve_ip = (
+        ctx.options.export_preserve_original_ip
+        and server_addr
+        and request.pretty_host != server_addr
+    )
+
+    def _pformat(dictionary: dict, indent=4) -> str:
         # TODO: Set `block_style=True` when https://github.com/python/cpython/pull/129274 is released.
-        return pformat(dictionary, indent=4, sort_dicts=False)
+        return textwrap.indent(
+            pformat(dictionary, indent=indent, sort_dicts=False), " " * indent
+        )[indent:]
 
     cookies = dict(request.cookies.items())
     headers = dict(request.headers.items())
     headers.pop("cookie", None)
 
-    code = [
-        "import requests",
-        "",
-        f'url = "{request.pretty_url}"',
-        "",
-        ("cookies = " + _pformat(cookies) + "\n") if cookies else None,
-        ("headers = " + _pformat(headers) + "\n") if headers else None,
-        "",
-    ]
-
-    is_json = False
+    is_json, body = False, None
     if request.content:
         try:
             body = json.loads(request.content)
@@ -140,24 +141,38 @@ def python_requests_command(f: flow.Flow) -> str:
                 body = request.text
             except ValueError:
                 body = request.content
+    body_param = "json" if is_json else "data"
 
-        code.append(f"body = {_pformat(body)}\n")
+    code = textwrap.dedent(f"""
+    {'from unittest.mock import patch' if preserve_ip else ''}
 
-    data_arg = f" {'json' if is_json else 'data'}=body" if request.content else ""
-    code.append(
-        (
-            f"with requests.request("
-            f"method={request.method!r}, "
-            f"url=url,"
-            f"{' cookies=cookies,' if cookies else ''}"
-            f"{' headers=headers,' if headers else ''}"
-            f"{data_arg}"
-        ).rstrip(",")
-        + ") as response:"
-    )
-    code.append("    print(response.text)")
+    import requests
+    {'from urllib3.connection import HTTPConnection' if preserve_ip else ''}
 
-    return "\n".join(line for line in code if line is not None)
+    url = {request.pretty_url!r}
+    cookies = {_pformat(cookies)}
+    headers = {_pformat(headers)}
+    body = {_pformat(body)}
+
+
+    def main():
+        with requests.request(
+            method={request.method!r}, url=url, cookies=cookies, headers=headers, {body_param}=body
+        ) as response:
+            print(response.text)
+
+    """).replace("import requests\n\n", "import requests \n")
+
+    if preserve_ip:
+        code += textwrap.dedent(f"""
+        with patch.object(HTTPConnection, "host", ""):
+            with patch.object(HTTPConnection, "_dns_host", {server_addr!r}, create=True):
+                main()
+        """)
+    else:
+        code += "\nmain()\n"
+
+    return code.lstrip("\n")
 
 
 def raw_request(f: flow.Flow) -> bytes:
