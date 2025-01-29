@@ -326,7 +326,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
-    
+
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self.application = application
