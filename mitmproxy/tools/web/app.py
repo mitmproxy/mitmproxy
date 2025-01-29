@@ -326,7 +326,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
-    
+
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self.filters: dict[str, str] = {}  # Instance-level filters
@@ -344,7 +344,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 
     def send_matching_flow_ids(self, name: str, expr: str):
         matching_flow_ids = self.get_matching_flow_ids(name)
-        
+
         message = json.dumps(
             {
                 "resource": "flows",
