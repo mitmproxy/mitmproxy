@@ -221,15 +221,10 @@ class TestExportPythonRequestsCommand:
         headers = {'header': 'qvalue'}
         body = None
 
-
-        def main():
-            with requests.request(
-                method='GET', url=url, cookies=cookies, headers=headers, data=body
-            ) as response:
-                print(response.text)
-
-
-        main()
+        with requests.request(
+            method='GET', url=url, cookies=cookies, headers=headers, data=body
+        ) as response:
+            print(response.text)
         """).lstrip()
         assert export_python_requests(get_request) == result
 
@@ -243,15 +238,10 @@ class TestExportPythonRequestsCommand:
         headers = {}
         body = 'id=1&name=nate'
 
-
-        def main():
-            with requests.request(
-                method='POST', url=url, cookies=cookies, headers=headers, data=body
-            ) as response:
-                print(response.text)
-
-
-        main()
+        with requests.request(
+            method='POST', url=url, cookies=cookies, headers=headers, data=body
+        ) as response:
+            print(response.text)
         """).lstrip()
         assert export.python_requests_command(post_request) == result
 
@@ -285,15 +275,10 @@ class TestExportPythonRequestsCommand:
             'object': {'name': 'John', 'age': 30},
             'array': [1, 2, 3, 4]}
 
-
-        def main():
-            with requests.request(
-                method='POST', url=url, cookies=cookies, headers=headers, json=body
-            ) as response:
-                print(response.text)
-
-
-        main()
+        with requests.request(
+            method='POST', url=url, cookies=cookies, headers=headers, json=body
+        ) as response:
+            print(response.text)
         """).lstrip()
 
         assert export_python_requests(post_request) == result
@@ -319,15 +304,10 @@ class TestExportPythonRequestsCommand:
          b'\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef'
          b'\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xfe\\xff')
 
-
-        def main():
-            with requests.request(
-                method='POST', url=url, cookies=cookies, headers=headers, data=body
-            ) as response:
-                print(response.text)
-
-
-        main()
+        with requests.request(
+            method='POST', url=url, cookies=cookies, headers=headers, data=body
+        ) as response:
+            print(response.text)
         """).lstrip()
         assert export_python_requests(post_request) == result
 
@@ -340,15 +320,10 @@ class TestExportPythonRequestsCommand:
         headers = {'header': 'qvalue'}
         body = 'content'
 
-
-        def main():
-            with requests.request(
-                method='PATCH', url=url, cookies=cookies, headers=headers, data=body
-            ) as response:
-                print(response.text)
-
-
-        main()
+        with requests.request(
+            method='PATCH', url=url, cookies=cookies, headers=headers, data=body
+        ) as response:
+            print(response.text)
         """).lstrip()
         assert export.python_requests_command(patch_request) == result
 
@@ -379,22 +354,15 @@ class TestExportPythonRequestsCommand:
             headers = {'header': 'qvalue', 'host': 'domain:22'}
             body = None
 
-
-            def main():
-                with requests.request(
-                    method='GET', url=url, cookies=cookies, headers=headers, data=body
-                ) as response:
-                    print(response.text)
-
-
-            main()
+            with requests.request(
+                method='GET', url=url, cookies=cookies, headers=headers, data=body
+            ) as response:
+                print(response.text)
             """).lstrip()
             assert export.python_requests_command(get_request) == result
 
             tctx.options.export_preserve_original_ip = True
             result = textwrap.dedent("""
-            from unittest.mock import patch
-
             import requests
             from urllib3.connection import HTTPConnection
 
@@ -403,17 +371,13 @@ class TestExportPythonRequestsCommand:
             headers = {'header': 'qvalue', 'host': 'domain:22'}
             body = None
 
+            setattr(HTTPConnection, "host", "")
+            setattr(HTTPConnection, "_dns_host", '192.168.0.1')
 
-            def main():
-                with requests.request(
-                    method='GET', url=url, cookies=cookies, headers=headers, data=body
-                ) as response:
-                    print(response.text)
-
-
-            with patch.object(HTTPConnection, "host", ""):
-                with patch.object(HTTPConnection, "_dns_host", '192.168.0.1', create=True):
-                    main()
+            with requests.request(
+                method='GET', url=url, cookies=cookies, headers=headers, data=body
+            ) as response:
+                print(response.text)
             """).lstrip()
             assert export.python_requests_command(get_request) == result
 
