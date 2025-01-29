@@ -21,6 +21,8 @@
   ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
 - Flows can now be exported as python requests code.
   ([#7515](https://github.com/mitmproxy/mitmproxy/pull/7515), @Nriver, @sujaldev)
+- Fix a bug where mitmproxy would get stuck in secure web proxy mode when using `ignore_hosts` or `allow_hosts`.
+  ([#7519](https://github.com/mitmproxy/mitmproxy/pull/7519), @mhils)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
