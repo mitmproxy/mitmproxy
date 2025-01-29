@@ -1,8 +1,6 @@
 import json
 import logging
-import re
 import shlex
-import textwrap
 from collections.abc import Callable
 from collections.abc import Sequence
 from pprint import pformat
@@ -124,9 +122,7 @@ def python_requests_command(f: flow.Flow) -> str:
 
     def _pformat(obj, indent=4) -> str:
         # TODO: Set `block_style=True` when https://github.com/python/cpython/pull/129274 is released.
-        return textwrap.indent(
-            pformat(obj, indent=indent, sort_dicts=False), " " * indent
-        )[indent:]
+        return pformat(obj, indent=indent, sort_dicts=False)
 
     cookies = dict(request.cookies.items())
     headers = dict(request.headers.items())
@@ -144,32 +140,27 @@ def python_requests_command(f: flow.Flow) -> str:
                 body = request.content
     body_param = "json" if is_json else "data"
 
-    code = textwrap.dedent(f"""
-    {'from unittest.mock import patch\n' if preserve_ip else '#'}
-    import requests
-    {'from urllib3.connection import HTTPConnection' if preserve_ip else '#'}
+    code = [
+        "import requests",
+        "from urllib3.connection import HTTPConnection" if preserve_ip else None,
+        "",
+        f"url = {request.pretty_url!r}",
+        f"cookies = {_pformat(cookies)}",
+        f"headers = {_pformat(headers)}",
+        f"body = {_pformat(body)}",
+        "",
+        'setattr(HTTPConnection, "host", "")\n'
+        f'setattr(HTTPConnection, "_dns_host", {server_addr!r})\n'
+        if preserve_ip
+        else None,
+        "with requests.request(",
+        f"    method={request.method!r}, url=url, cookies=cookies, headers=headers, {body_param}=body",
+        ") as response:",
+        "    print(response.text)",
+        "",
+    ]
 
-    url = {request.pretty_url!r}
-    cookies = {_pformat(cookies)}
-    headers = {_pformat(headers)}
-    body = {_pformat(body)}
-
-
-    def main():
-        with requests.request(
-            method={request.method!r}, url=url, cookies=cookies, headers=headers, {body_param}=body
-        ) as response:
-            print(response.text)
-
-
-    {'with patch.object(HTTPConnection, "host", ""):' if preserve_ip else '#'}
-        {f'with patch.object(HTTPConnection, "_dns_host", {server_addr!r}, create=True):' if preserve_ip else '#'}
-    {' ' * 8 if preserve_ip else ''}main()
-    """).lstrip("\n")
-
-    code = re.sub(r"^ *#\n", "", code, flags=re.MULTILINE)
-
-    return code
+    return "\n".join([line for line in code if line is not None])
 
 
 def raw_request(f: flow.Flow) -> bytes:
