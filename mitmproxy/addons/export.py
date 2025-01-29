@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import shlex
 import textwrap
 from collections.abc import Callable
@@ -144,10 +145,9 @@ def python_requests_command(f: flow.Flow) -> str:
     body_param = "json" if is_json else "data"
 
     code = textwrap.dedent(f"""
-    {'from unittest.mock import patch' if preserve_ip else ''}
-
+    {'from unittest.mock import patch\n' if preserve_ip else '#'}
     import requests
-    {'from urllib3.connection import HTTPConnection' if preserve_ip else ''}
+    {'from urllib3.connection import HTTPConnection' if preserve_ip else '#'}
 
     url = {request.pretty_url!r}
     cookies = {_pformat(cookies)}
@@ -161,18 +161,15 @@ def python_requests_command(f: flow.Flow) -> str:
         ) as response:
             print(response.text)
 
-    """).replace("import requests\n\n", "import requests\n")
 
-    if preserve_ip:
-        code += textwrap.dedent(f"""
-        with patch.object(HTTPConnection, "host", ""):
-            with patch.object(HTTPConnection, "_dns_host", {server_addr!r}, create=True):
-                main()
-        """)
-    else:
-        code += "\nmain()\n"
+    {'with patch.object(HTTPConnection, "host", ""):' if preserve_ip else '#'}
+        {f'with patch.object(HTTPConnection, "_dns_host", {server_addr!r}, create=True):' if preserve_ip else '#'}
+    {' ' * 8 if preserve_ip else ''}main()
+    """).lstrip("\n")
 
-    return code.lstrip("\n")
+    code = re.sub(r"^ *#\n", "", code, flags=re.MULTILINE)
+
+    return code
 
 
 def raw_request(f: flow.Flow) -> bytes:
