@@ -362,28 +362,60 @@ class TestExportPythonRequestsCommand:
         with pytest.raises(exceptions.CommandError):
             export.python_requests_command(udp_flow)
 
-    def test_correct_host_used(self, export_python_requests, get_request):
-        get_request.request.headers["host"] = "domain:22"
+    # This tests that we always specify the original host in the URL, which is
+    # important for SNI. If option `export_preserve_original_ip` is true, we
+    # ensure that we still connect to the same IP by patching urllib3.
+    def test_correct_host_used(self, get_request):
+        e = export.Export()
+        with taddons.context() as tctx:
+            tctx.configure(e)
 
-        result = textwrap.dedent("""
-        import requests
+            get_request.request.headers["host"] = "domain:22"
+            result = textwrap.dedent("""
+            import requests
 
-        url = 'http://domain:22/path?a=foo&a=bar&b=baz'
-        cookies = {}
-        headers = {'header': 'qvalue', 'host': 'domain:22'}
-        body = None
-
-
-        def main():
-            with requests.request(
-                method='GET', url=url, cookies=cookies, headers=headers, data=body
-            ) as response:
-                print(response.text)
+            url = 'http://domain:22/path?a=foo&a=bar&b=baz'
+            cookies = {}
+            headers = {'header': 'qvalue', 'host': 'domain:22'}
+            body = None
 
 
-        main()
-        """).lstrip()
-        assert export_python_requests(get_request) == result
+            def main():
+                with requests.request(
+                    method='GET', url=url, cookies=cookies, headers=headers, data=body
+                ) as response:
+                    print(response.text)
+
+
+            main()
+            """).lstrip()
+            assert export.python_requests_command(get_request) == result
+
+            tctx.options.export_preserve_original_ip = True
+            result = textwrap.dedent("""
+            from unittest.mock import patch
+
+            import requests
+            from urllib3.connection import HTTPConnection
+
+            url = 'http://domain:22/path?a=foo&a=bar&b=baz'
+            cookies = {}
+            headers = {'header': 'qvalue', 'host': 'domain:22'}
+            body = None
+
+
+            def main():
+                with requests.request(
+                    method='GET', url=url, cookies=cookies, headers=headers, data=body
+                ) as response:
+                    print(response.text)
+
+
+            with patch.object(HTTPConnection, "host", ""):
+                with patch.object(HTTPConnection, "_dns_host", '192.168.0.1', create=True):
+                    main()
+            """).lstrip()
+            assert export.python_requests_command(get_request) == result
 
 
 class TestRaw:
