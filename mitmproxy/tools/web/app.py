@@ -326,9 +326,10 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
-
+    
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
+        self.application = application
         self.filters: dict[str, str] = {}  # Instance-level filters
 
     def broadcast_flow_update(f: mitmproxy.flow.Flow):
