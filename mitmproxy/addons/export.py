@@ -128,17 +128,16 @@ def python_requests_command(f: flow.Flow) -> str:
     headers = dict(request.headers.items())
     headers.pop("cookie", None)
 
-    is_json, body = False, None
+    body_param, body = "data", None
     if request.content:
         try:
             body = json.loads(request.content)
-            is_json = True
+            body_param = "json"
         except ValueError:
             try:
                 body = request.text
             except ValueError:
                 body = request.content
-    body_param = "json" if is_json else "data"
 
     code = [
         "import requests",
