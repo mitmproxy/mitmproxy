@@ -326,8 +326,10 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
-    application: Application
-    filters: dict[str:str] = {}
+    
+    def __init__(self, application: Application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.filters: dict[str, str] = {}  # Instance-level filters
 
     def broadcast_flow_update(f: mitmproxy.flow.Flow):
         pass
@@ -342,20 +344,19 @@ class ClientConnection(WebSocketEventBroadcaster):
 
     def send_matching_flow_ids(self, name: str, expr: str):
         matching_flow_ids = self.get_matching_flow_ids(name)
+        
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "filtersUpdated",
+                "name": name,
+                "expr": expr,
+                "data": matching_flow_ids,
+            },
+            ensure_ascii=False,
+        ).encode("utf8", "surrogateescape")
 
-        self.send(
-            conn=self,
-            message=json.dumps(
-                {
-                    "resource": "flows",
-                    "cmd": "filtersUpdated",
-                    "name": name,
-                    "expr": expr,
-                    "data": matching_flow_ids,
-                },
-                ensure_ascii=False,
-            ).encode("utf8", "surrogateescape"),
-        )
+        self.send(conn=self, message=message)
 
     async def on_message(self, message: str):
         try:
@@ -375,9 +376,6 @@ class ClientConnection(WebSocketEventBroadcaster):
                 self.send_matching_flow_ids(name, expr)
             else:
                 raise APIError(400, "Unsupported command.")
-
-        except json.JSONDecodeError:
-            raise APIError(400, f"Invalid JSON received from {self}: {message}")
         except Exception as e:
             raise APIError(400, f"Error processing message from {self}: {e}")
 
