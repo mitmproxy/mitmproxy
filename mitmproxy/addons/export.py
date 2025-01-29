@@ -53,7 +53,12 @@ def request_content_for_console(request: http.Request) -> str:
         # see https://github.com/python/cpython/pull/10871
         raise exceptions.CommandError("Request content must be valid unicode")
     escape_control_chars = {chr(i): f"\\x{i:02x}" for i in range(32)}
-    return "".join(escape_control_chars.get(x, x) for x in text)
+    escaped_text = "".join(escape_control_chars.get(x, x) for x in text)
+    if any(char in escape_control_chars for char in text):
+        # Escaped chars need to be unescaped by the shell to be properly inperpreted by curl and httpie
+        return f'"$(printf {shlex.quote(escaped_text)})"'
+
+    return shlex.quote(escaped_text)
 
 
 def curl_command(f: flow.Flow) -> str:
@@ -83,9 +88,10 @@ def curl_command(f: flow.Flow) -> str:
 
     args.append(request.pretty_url)
 
+    command = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
-        args += ["-d", request_content_for_console(request)]
-    return " ".join(shlex.quote(arg) for arg in args)
+        command += f" -d {request_content_for_console(request)}"
+    return command
 
 
 def httpie_command(f: flow.Flow) -> str:
@@ -102,7 +108,7 @@ def httpie_command(f: flow.Flow) -> str:
         args.append(f"{k}: {v}")
     cmd = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
-        cmd += " <<< " + shlex.quote(request_content_for_console(request))
+        cmd += " <<< " + request_content_for_console(request)
     return cmd
 
 
