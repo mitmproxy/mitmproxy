@@ -58,7 +58,6 @@ class TestBlockList:
             assert f.metadata["blocklisted"]
 
     def test_mixedcase_header_names(self):
-        # this test is meant to document existing behavior, not advocate for it.
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(bl, block_list=["|~hq User-Agent:\\scurl|401"])
