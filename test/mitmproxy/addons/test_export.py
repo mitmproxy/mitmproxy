@@ -371,8 +371,8 @@ class TestExportPythonRequestsCommand:
             headers = {'header': 'qvalue', 'host': 'domain:22'}
             body = None
 
-            setattr(HTTPConnection, "host", "")
-            setattr(HTTPConnection, "_dns_host", '192.168.0.1')
+            HTTPConnection.host = ""
+            HTTPConnection._dns_host = '192.168.0.1'
 
             with requests.request(
                 method='GET', url=url, cookies=cookies, headers=headers, data=body

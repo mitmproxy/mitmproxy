@@ -148,8 +148,8 @@ def python_requests_command(f: flow.Flow) -> str:
         f"headers = {_pformat(headers)}",
         f"body = {_pformat(body)}",
         "",
-        'setattr(HTTPConnection, "host", "")\n'
-        f'setattr(HTTPConnection, "_dns_host", {server_addr!r})\n'
+        'HTTPConnection.host = ""\n'
+        f'HTTPConnection._dns_host = {server_addr!r}\n'
         if preserve_ip
         else None,
         "with requests.request(",
