@@ -1,7 +1,9 @@
+import json
 import logging
 import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
+from pprint import pformat
 from typing import Any
 
 import pyperclip
@@ -106,6 +108,61 @@ def httpie_command(f: flow.Flow) -> str:
     return cmd
 
 
+def python_requests_command(f: flow.Flow) -> str:
+    request = cleanup_request(f)
+    request = pop_headers(request)
+
+    server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
+
+    preserve_ip = (
+        ctx.options.export_preserve_original_ip
+        and server_addr
+        and request.pretty_host != server_addr
+    )
+
+    def _pformat(obj, indent=4) -> str:
+        # TODO: Set `block_style=True` when https://github.com/python/cpython/pull/129274 is released.
+        return pformat(obj, indent=indent, sort_dicts=False)
+
+    cookies = dict(request.cookies.items())
+    headers = dict(request.headers.items())
+    headers.pop("cookie", None)
+
+    body_param, body = "data", None
+    if request.content:
+        try:
+            body = json.loads(request.content)
+            body_param = "json"
+        except ValueError:
+            try:
+                body = request.text
+            except ValueError:
+                body = request.content
+
+    code = [
+        "import requests",
+        "from urllib3.connection import HTTPConnection" if preserve_ip else None,
+        "",
+        f"url = {request.pretty_url!r}",
+        f"cookies = {_pformat(cookies)}",
+        f"headers = {_pformat(headers)}",
+        f"body = {_pformat(body)}",
+        "",
+        "# Overrides DNS resolution, forcing the original request's IP address.\n"
+        'HTTPConnection.host = ""\n'
+        f"HTTPConnection._dns_host = {server_addr!r}\n"
+        if preserve_ip
+        else None,
+        "with requests.request(",
+        f"    method={request.method!r}, url=url, cookies=cookies, headers=headers, {body_param}=body",
+        ") as response:",
+        "    print(response.text)",
+        "",
+    ]
+
+    return "\n".join([line for line in code if line is not None])
+
+
 def raw_request(f: flow.Flow) -> bytes:
     request = cleanup_request(f)
     if request.raw_content is None:
@@ -147,6 +204,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
     curl=curl_command,
     httpie=httpie_command,
+    python_requests=python_requests_command,
     raw=raw,
     raw_request=raw_request,
     raw_response=raw_response,
