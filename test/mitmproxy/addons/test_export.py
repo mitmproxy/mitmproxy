@@ -371,6 +371,7 @@ class TestExportPythonRequestsCommand:
             headers = {'header': 'qvalue', 'host': 'domain:22'}
             body = None
 
+            # Overrides DNS resolution, forcing the original request's IP address.
             HTTPConnection.host = ""
             HTTPConnection._dns_host = '192.168.0.1'
 
