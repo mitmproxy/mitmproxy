@@ -150,7 +150,7 @@ def python_requests_command(f: flow.Flow) -> str:
         "",
         "# Overrides DNS resolution, forcing the original request's IP address.\n"
         'HTTPConnection.host = ""\n'
-        f'HTTPConnection._dns_host = {server_addr!r}\n'
+        f"HTTPConnection._dns_host = {server_addr!r}\n"
         if preserve_ip
         else None,
         "with requests.request(",
