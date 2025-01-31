@@ -330,18 +330,28 @@ class ClientConnection(WebSocketEventBroadcaster):
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self.application = application
-        self.filters: dict[str, str] = {}  # Instance-level filters
+        self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
 
-    def broadcast_flow_update(f: mitmproxy.flow.Flow):
-        pass
+    def send_flow(self, cmd: str, f: mitmproxy.flow.Flow):
+        matches = [{expr.pattern : bool(flowfilter.match(expr, f))} for expr in self.filters.values()]
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": cmd,
+                "matches": matches,
+                "data": flow_to_json(f)
+            },
+        ).encode("utf8", "surrogateescape")
+        
+        self.send(conn=self, message=message)
+        
 
     def get_matching_flow_ids(self, name: str) -> List[str]:
         expr = self.filters.get(name)
         if not expr:
             return []
-
-        match_expr = flowfilter.parse(expr)
-        return [f.id for f in self.application.master.view if match_expr(f)]
+        
+        return [f.id for f in self.application.master.view if expr(f)]
 
     def send_matching_flow_ids(self, name: str, expr: str):
         matching_flow_ids = self.get_matching_flow_ids(name)
@@ -354,25 +364,24 @@ class ClientConnection(WebSocketEventBroadcaster):
                 "expr": expr,
                 "data": matching_flow_ids,
             },
-            ensure_ascii=False,
         ).encode("utf8", "surrogateescape")
 
-        self.send(conn=self, message=message)
+        self.send(conn=self, message=message) # send message just to the interested ClientConnection
 
     async def on_message(self, message: str):
         try:
             data = json.loads(message)
 
-            resource = data["resource"]
-            command = data["cmd"]
-            name = data["name"]
-            expr = data["expr"]
+            resource: str = data["resource"]
+            command: str = data["cmd"]
+            name: str = data["name"]
+            expr: str = data["expr"]
 
             if resource == "flows" and command == "updateFilter":
-                self.filters[name] = expr
-                if not expr:
+                if expr:
+                    self.filters[name] = flowfilter.parse(expr)
+                else:
                     del self.filters[name]
-                print(self.filters)
 
                 self.send_matching_flow_ids(name, expr)
             else:
