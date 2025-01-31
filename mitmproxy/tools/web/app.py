@@ -333,24 +333,26 @@ class ClientConnection(WebSocketEventBroadcaster):
         self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
 
     def send_flow(self, cmd: str, f: mitmproxy.flow.Flow):
-        matches = [{expr.pattern : bool(flowfilter.match(expr, f))} for expr in self.filters.values()]
+        matches = [
+            {expr.pattern: bool(flowfilter.match(expr, f))}
+            for expr in self.filters.values()
+        ]
         message = json.dumps(
             {
                 "resource": "flows",
                 "cmd": cmd,
                 "matches": matches,
-                "data": flow_to_json(f)
+                "data": flow_to_json(f),
             },
         ).encode("utf8", "surrogateescape")
-        
+
         self.send(conn=self, message=message)
-        
 
     def get_matching_flow_ids(self, name: str) -> List[str]:
         expr = self.filters.get(name)
         if not expr:
             return []
-        
+
         return [f.id for f in self.application.master.view if expr(f)]
 
     def send_matching_flow_ids(self, name: str, expr: str):
@@ -366,7 +368,9 @@ class ClientConnection(WebSocketEventBroadcaster):
             },
         ).encode("utf8", "surrogateescape")
 
-        self.send(conn=self, message=message) # send message just to the interested ClientConnection
+        self.send(
+            conn=self, message=message
+        )  # send message just to the interested ClientConnection
 
     async def on_message(self, message: str):
         try:
