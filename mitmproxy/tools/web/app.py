@@ -11,11 +11,14 @@ from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar
+from typing import List
 
 import tornado.escape
 import tornado.web
 import tornado.websocket
 
+import mitmproxy.addons
+import mitmproxy.addons.view
 import mitmproxy.flow
 import mitmproxy.tools.web.master
 import mitmproxy_rs
@@ -323,6 +326,72 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
+
+    def __init__(self, application: Application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.application = application
+        self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
+
+    def send_flow(self, cmd: str, f: mitmproxy.flow.Flow):
+        matches = [
+            {expr.pattern: bool(flowfilter.match(expr, f))}
+            for expr in self.filters.values()
+        ]
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": cmd,
+                "matches": matches,
+                "data": flow_to_json(f),
+            },
+        ).encode("utf8", "surrogateescape")
+
+        self.send(conn=self, message=message)
+
+    def get_matching_flow_ids(self, name: str) -> List[str]:
+        expr = self.filters.get(name)
+        if not expr:
+            return []
+
+        return [f.id for f in self.application.master.view if expr(f)]
+
+    def send_matching_flow_ids(self, name: str, expr: str):
+        matching_flow_ids = self.get_matching_flow_ids(name)
+
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "filtersUpdated",
+                "name": name,
+                "expr": expr,
+                "data": matching_flow_ids,
+            },
+        ).encode("utf8", "surrogateescape")
+
+        self.send(
+            conn=self, message=message
+        )  # send message just to the interested ClientConnection
+
+    async def on_message(self, message: str):
+        try:
+            data = json.loads(message)
+
+            resource: str = data["resource"]
+            command: str = data["cmd"]
+            name: str = data["name"]
+            expr: str = data["expr"]
+
+            if resource == "flows" and command == "updateFilter":
+                if expr:
+                    self.filters[name] = flowfilter.parse(expr)
+                else:
+                    del self.filters[name]
+
+                self.send_matching_flow_ids(name, expr)
+            else:
+                raise APIError(400, "Unsupported command.")
+        except Exception as e:
+            raise APIError(400, f"Error processing message from {self}: {e}")
 
 
 class Flows(RequestHandler):
