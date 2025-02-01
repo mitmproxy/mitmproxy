@@ -19,22 +19,22 @@ concurrency:
 
 jobs:
   lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/python-tox.yml@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
     with:
       cmd: tox -e lint
 
   filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/python-tox.yml@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
     with:
       cmd: tox -e filename_matching
 
   mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/python-tox.yml@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
     with:
       cmd: tox -e mypy
 
   individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/python-tox.yml@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
     with:
       cmd: tox -e individual_coverage
 
@@ -53,8 +53,8 @@ jobs:
             py: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - run: pip install tox
       - run: tox -e py
         if: matrix.os != 'ubuntu-latest'
@@ -73,8 +73,8 @@ jobs:
   test-old-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - run: pip install tox-uv
       - run: tox -e old-dependencies
 
@@ -95,8 +95,8 @@ jobs:
             platform: linux-arm64
     runs-on: ${{ matrix.image }}
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
@@ -130,7 +130,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/python-build.yml@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
     with:
       python-version-file: .github/python-version.txt
       artifact: binaries.wheel
@@ -143,8 +143,8 @@ jobs:
         startsWith(github.ref, 'refs/tags/')
       )
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
 
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
@@ -159,7 +159,7 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
@@ -185,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wheel
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - uses: actions/download-artifact@v4
         with:
           name: binaries.wheel
@@ -198,8 +198,8 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
@@ -235,7 +235,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@0d7c124ffff22d26be111477a3ed9fadd853a6db
+    uses: mhils/workflows/.github/workflows/alls-green.yml@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -255,12 +255,12 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - uses: actions/download-artifact@v4
         with:
           name: binaries.wheel
           path: release/docker
-      - uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
+      - uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a # v3.3.0
       - uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v1.6.0
 
       - name: Login to Docker Hub
@@ -293,7 +293,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
@@ -333,8 +333,8 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - run: sudo apt-get update
       - run: sudo apt-get install -y awscli
       - if: startsWith(github.ref, 'refs/tags/')
