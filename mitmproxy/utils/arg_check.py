@@ -139,7 +139,7 @@ def check():
             else:
                 new_options = [r]
             print(
-                "{} is deprecated.\n" "Please use `{}` instead.".format(
+                "{} is deprecated.\nPlease use `{}` instead.".format(
                     option, "` or `".join(new_options)
                 )
             )

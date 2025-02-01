@@ -16,7 +16,7 @@ cookie_pairs = [
     ['one="uno,due"', [["one", "uno,due"]]],
     ["one=uno; two; three=tre", [["one", "uno"], ["two", ""], ["three", "tre"]]],
     [
-        "_lvs2=zHai1+Hq+Tc2vmc2r4GAbdOI5Jopg3EwsdUT9g=; " "_rcc2=53VdltWl+Ov6ordflA==;",
+        "_lvs2=zHai1+Hq+Tc2vmc2r4GAbdOI5Jopg3EwsdUT9g=; _rcc2=53VdltWl+Ov6ordflA==;",
         [
             ["_lvs2", "zHai1+Hq+Tc2vmc2r4GAbdOI5Jopg3EwsdUT9g="],
             ["_rcc2", "53VdltWl+Ov6ordflA=="],

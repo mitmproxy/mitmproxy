@@ -25,7 +25,7 @@ tlsdata = data.Data(__name__)
 
 
 def test_record_contents():
-    data = bytes.fromhex("1603010002beef" "1603010001ff")
+    data = bytes.fromhex("1603010002beef1603010001ff")
     assert list(tls.handshake_record_contents(data)) == [b"\xbe\xef", b"\xff"]
     for i in range(6):
         assert list(tls.handshake_record_contents(data[:i])) == []
@@ -768,9 +768,7 @@ class TestClientTLS:
 
 
 def test_dtls_record_contents():
-    data = bytes.fromhex(
-        "16fefd00000000000000000002beef" "16fefd00000000000000000001ff"
-    )
+    data = bytes.fromhex("16fefd00000000000000000002beef16fefd00000000000000000001ff")
     assert list(tls.dtls_handshake_record_contents(data)) == [b"\xbe\xef", b"\xff"]
     for i in range(12):
         assert list(tls.dtls_handshake_record_contents(data[:i])) == []
