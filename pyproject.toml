@@ -38,7 +38,7 @@ dependencies = [
     "flask>=3.0,<=3.1.0",
     "h11>=0.11,<=0.14.0",
     "h2>=4.1,<=4.1.0",
-    "hyperframe>=6.0,<=6.0.1",
+    "hyperframe>=6.0,<=6.1.0",
     "kaitaistruct>=0.10,<=0.10",
     "ldap3>=2.8,<=2.9.1",
     "mitmproxy_rs>=0.11.4,<0.12",  # relaxed upper bound here: we control this
