@@ -76,14 +76,26 @@ test("ViewImage", async () => {
     `const data: ContentViewData = await response.json()` 
     since "raw content" is not valid JSON.
 */
-test("HttpMessage Copy Button", async () => {
-    const lines = [[["text", "data"]], [["text", "additional"]]];
+describe("HttpMessage Copy Button", () => {
+    test("copies valid message content", async () => {
+        const lines = [[["text", "data"]], [["text", "additional"]]];
 
-    fetchMock.mockResponse(JSON.stringify({ lines, description: "Auto" }));
+        fetchMock.mockResponse(JSON.stringify({ lines, description: "Auto" }));
 
-    const tflow = TFlow();
-    render(<HttpMessage flow={tflow} message={tflow.request} />);
+        const tflow = TFlow();
+        render(<HttpMessage flow={tflow} message={tflow.request} />);
 
-    await waitFor(() => screen.getByText("Copy"));
-    fireEvent.click(screen.getByText("Copy"));
+        await waitFor(() => screen.getByText("Copy"));
+        fireEvent.click(screen.getByText("Copy"));
+    });
+
+    test("handles invalid JSON response error", async () => {
+        fetchMock.mockResponse("raw content");
+
+        const tflow = TFlow();
+        render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+        await waitFor(() => screen.getByText("Copy"));
+        fireEvent.click(screen.getByText("Copy"));
+    });
 });
