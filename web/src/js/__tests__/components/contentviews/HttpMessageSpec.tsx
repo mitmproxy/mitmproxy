@@ -77,25 +77,37 @@ test("ViewImage", async () => {
     since "raw content" is not valid JSON.
 */
 describe("HttpMessage Copy Button", () => {
-    test("copies valid message content", async () => {
-        const lines = [[["text", "data"]], [["text", "additional"]]];
+    beforeEach(() => {
+        fetchMock.resetMocks();
+        jest.spyOn(console, "error").mockImplementation(() => {});
+    });
 
+    test("handles successful copy action", async () => {
+        const lines = [[["text", "data"]], [["text", "additional"]]];
         fetchMock.mockResponse(JSON.stringify({ lines, description: "Auto" }));
 
         const tflow = TFlow();
         render(<HttpMessage flow={tflow} message={tflow.request} />);
 
         await waitFor(() => screen.getByText("Copy"));
+
         fireEvent.click(screen.getByText("Copy"));
     });
 
-    test("handles invalid JSON response error", async () => {
-        fetchMock.mockResponse("raw content");
+    test("handles failed fetch with non-ok response", async () => {
+        fetchMock.mockResponse("", {
+            status: 500,
+            statusText: "Internal Server Error",
+        });
 
         const tflow = TFlow();
         render(<HttpMessage flow={tflow} message={tflow.request} />);
 
         await waitFor(() => screen.getByText("Copy"));
         fireEvent.click(screen.getByText("Copy"));
+
+        await waitFor(() =>
+            expect(console.error).toHaveBeenCalledWith(expect.any(Error)),
+        );
     });
 });
