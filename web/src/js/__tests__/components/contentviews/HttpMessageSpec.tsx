@@ -59,7 +59,6 @@ test("HttpMessage", async () => {
 
     await waitFor(() => screen.getByText("Copy"));
     expect(asFragment()).toMatchSnapshot();
-    fireEvent.click(screen.getByText("Copy"));
 });
 
 test("ViewImage", async () => {
@@ -68,4 +67,23 @@ test("ViewImage", async () => {
         <ViewImage flow={flow} message={flow.request} />,
     );
     expect(asFragment()).toMatchSnapshot();
+});
+
+/*
+    This test differs from the one above because clicking the copy button triggers 'handleClickCopyButton'.
+    In the previous test, the response contained "raw content," which caused an "invalid JSON response body" error 
+    when processing the following line: 
+    `const data: ContentViewData = await response.json()` 
+    since "raw content" is not valid JSON.
+*/
+test("HttpMessage Copy Button", async () => {
+    const lines = [[["text", "data"]], [["text", "additional"]]];
+
+    fetchMock.mockResponse(JSON.stringify({ lines, description: "Auto" }));
+
+    const tflow = TFlow();
+    render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+    await waitFor(() => screen.getByText("Copy"));
+    fireEvent.click(screen.getByText("Copy"));
 });
