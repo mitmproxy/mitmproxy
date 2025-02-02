@@ -230,7 +230,7 @@ def test_pipelining(tctx, transfer_encoding):
 
     req = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
     if transfer_encoding == "identity":
-        resp = b"HTTP/1.1 200 OK\r\n" b"Content-Length: 12\r\n" b"\r\n" b"Hello World!"
+        resp = b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello World!"
     else:
         resp = (
             b"HTTP/1.1 200 OK\r\n"
@@ -368,10 +368,10 @@ def test_response_streaming(tctx, why, transfer_encoding):
     )
     assert flow().live
     if transfer_encoding == "identity":
-        playbook >> DataReceived(server, b"Content-Length: 6\r\n\r\n" b"abc")
+        playbook >> DataReceived(server, b"Content-Length: 6\r\n\r\nabc")
     else:
         playbook >> DataReceived(
-            server, b"Transfer-Encoding: chunked\r\n\r\n" b"3\r\nabc\r\n"
+            server, b"Transfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n"
         )
 
     playbook << http.HttpResponseHeadersHook(flow)
@@ -379,7 +379,7 @@ def test_response_streaming(tctx, why, transfer_encoding):
 
     if transfer_encoding == "identity":
         playbook << SendData(
-            tctx.client, b"HTTP/1.1 200 OK\r\n" b"Content-Length: 6\r\n\r\n" b"abc"
+            tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabc"
         )
         playbook >> DataReceived(server, b"def")
         playbook << SendData(tctx.client, b"def")
@@ -388,16 +388,12 @@ def test_response_streaming(tctx, why, transfer_encoding):
             playbook >> DataReceived(server, b"3\r\ndef\r\n")
             playbook << SendData(
                 tctx.client,
-                b"HTTP/1.1 200 OK\r\n"
-                b"Transfer-Encoding: chunked\r\n\r\n"
-                b"6\r\nabcdef\r\n",
+                b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n6\r\nabcdef\r\n",
             )
         else:
             playbook << SendData(
                 tctx.client,
-                b"HTTP/1.1 200 OK\r\n"
-                b"Transfer-Encoding: chunked\r\n\r\n"
-                b"3\r\nabc\r\n",
+                b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n",
             )
             playbook >> DataReceived(server, b"3\r\ndef\r\n")
             playbook << SendData(tctx.client, b"3\r\ndef\r\n")
@@ -494,13 +490,13 @@ def test_request_streaming(tctx, why, transfer_encoding, response):
             flow.request.stream = True
 
     playbook >> DataReceived(
-        tctx.client, b"POST http://example.com/ HTTP/1.1\r\n" b"Host: example.com\r\n"
+        tctx.client, b"POST http://example.com/ HTTP/1.1\r\nHost: example.com\r\n"
     )
     if transfer_encoding == "identity":
-        playbook >> DataReceived(tctx.client, b"Content-Length: 9\r\n\r\n" b"abc")
+        playbook >> DataReceived(tctx.client, b"Content-Length: 9\r\n\r\nabc")
     else:
         playbook >> DataReceived(
-            tctx.client, b"Transfer-Encoding: chunked\r\n\r\n" b"3\r\nabc\r\n"
+            tctx.client, b"Transfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n"
         )
 
     playbook << http.HttpRequestHeadersHook(flow)
@@ -514,20 +510,20 @@ def test_request_streaming(tctx, why, transfer_encoding, response):
 
     playbook << OpenConnection(server)
     playbook >> reply(None)
-    playbook << SendData(server, b"POST / HTTP/1.1\r\n" b"Host: example.com\r\n")
+    playbook << SendData(server, b"POST / HTTP/1.1\r\nHost: example.com\r\n")
 
     if transfer_encoding == "identity":
-        playbook << SendData(server, b"Content-Length: 9\r\n\r\n" b"abc")
+        playbook << SendData(server, b"Content-Length: 9\r\n\r\nabc")
         playbook >> DataReceived(tctx.client, b"def")
         playbook << SendData(server, b"def")
     else:
         if needs_more_data_before_open:
             playbook << SendData(
-                server, b"Transfer-Encoding: chunked\r\n\r\n" b"6\r\nabcdef\r\n"
+                server, b"Transfer-Encoding: chunked\r\n\r\n6\r\nabcdef\r\n"
             )
         else:
             playbook << SendData(
-                server, b"Transfer-Encoding: chunked\r\n\r\n" b"3\r\nabc\r\n"
+                server, b"Transfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n"
             )
             playbook >> DataReceived(tctx.client, b"3\r\ndef\r\n")
             playbook << SendData(server, b"3\r\ndef\r\n")
@@ -633,8 +629,7 @@ def test_body_size_limit(tctx, where, transfer_encoding):
             Playbook(http.HttpLayer(tctx, HTTPMode.regular))
             >> DataReceived(
                 tctx.client,
-                b"POST http://example.com/ HTTP/1.1\r\n"
-                b"Host: example.com\r\n" + body,
+                b"POST http://example.com/ HTTP/1.1\r\nHost: example.com\r\n" + body,
             )
             << http.HttpRequestHeadersHook(flow)
             >> reply()
@@ -652,7 +647,7 @@ def test_body_size_limit(tctx, where, transfer_encoding):
             Playbook(http.HttpLayer(tctx, HTTPMode.regular))
             >> DataReceived(
                 tctx.client,
-                b"GET http://example.com/ HTTP/1.1\r\n" b"Host: example.com\r\n\r\n",
+                b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
             )
             << http.HttpRequestHeadersHook(flow)
             >> reply()
@@ -660,7 +655,7 @@ def test_body_size_limit(tctx, where, transfer_encoding):
             >> reply()
             << OpenConnection(server)
             >> reply(None)
-            << SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
             >> DataReceived(server, b"HTTP/1.1 200 OK\r\n" + body)
             << http.HttpResponseHeadersHook(flow)
             >> reply()
@@ -1101,11 +1096,7 @@ def test_http_client_aborts(tctx, stream):
             >> reply(None)
             << SendData(
                 server,
-                b"POST / HTTP/1.1\r\n"
-                b"Host: example.com\r\n"
-                b"Content-Length: 6\r\n"
-                b"\r\n"
-                b"abc",
+                b"POST / HTTP/1.1\r\nHost: example.com\r\nContent-Length: 6\r\n\r\nabc",
             )
         )
     else:
@@ -1138,7 +1129,7 @@ def test_http_server_aborts(tctx, stream):
         playbook
         >> DataReceived(
             tctx.client,
-            b"GET http://example.com/ HTTP/1.1\r\n" b"Host: example.com\r\n\r\n",
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
         )
         << http.HttpRequestHeadersHook(flow)
         >> reply()
@@ -1146,10 +1137,8 @@ def test_http_server_aborts(tctx, stream):
         >> reply()
         << OpenConnection(server)
         >> reply(None)
-        << SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
-        >> DataReceived(
-            server, b"HTTP/1.1 200 OK\r\n" b"Content-Length: 6\r\n" b"\r\n" b"abc"
-        )
+        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabc")
         << http.HttpResponseHeadersHook(flow)
     )
     if stream:
@@ -1158,7 +1147,7 @@ def test_http_server_aborts(tctx, stream):
             >> reply(side_effect=enable_streaming)
             << SendData(
                 tctx.client,
-                b"HTTP/1.1 200 OK\r\n" b"Content-Length: 6\r\n" b"\r\n" b"abc",
+                b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabc",
             )
         )
     else:
@@ -1325,16 +1314,16 @@ def test_connection_close_header(tctx, client_close, server_close):
         << OpenConnection(server)
         >> reply(None)
         << SendData(
-            server, b"GET / HTTP/1.1\r\n" b"Host: example\r\n" + client_close + b"\r\n"
+            server, b"GET / HTTP/1.1\r\nHost: example\r\n" + client_close + b"\r\n"
         )
         >> DataReceived(
             server,
-            b"HTTP/1.1 200 OK\r\n" b"Content-Length: 0\r\n" + server_close + b"\r\n",
+            b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n" + server_close + b"\r\n",
         )
         << CloseConnection(server)
         << SendData(
             tctx.client,
-            b"HTTP/1.1 200 OK\r\n" b"Content-Length: 0\r\n" + server_close + b"\r\n",
+            b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n" + server_close + b"\r\n",
         )
         << CloseConnection(tctx.client)
     )

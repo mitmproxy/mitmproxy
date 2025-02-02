@@ -13,6 +13,14 @@
   ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
 - Standalone binaries are now compiled with Python 3.13.
   ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
+- Fix console freezing due to DNS queries with an empty question section.
+  ([#7497](https://github.com/mitmproxy/mitmproxy/pull/7497), @sujaldev)
+- Add mitmweb tutorial to docs.
+  ([#7509](https://github.com/mitmproxy/mitmproxy/pull/7509), @EstherRoeth)
+- Fixed a bug that caused mitmproxy to crash when loading prior knowledge h2 flows.
+  ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
+- Fix a bug where mitmproxy would get stuck in secure web proxy mode when using `ignore_hosts` or `allow_hosts`.
+  ([#7519](https://github.com/mitmproxy/mitmproxy/pull/7519), @mhils)
 - Copy request/response data to the clipboard in mitmweb
   ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
 
@@ -28,6 +36,10 @@
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 - Add missing status codes
   ([#7455](https://github.com/mitmproxy/mitmproxy/pull/7455), @jwadolowski)
+- All filter expressions are now case-insensitive by default.
+  Users can opt into case-sensitive filters by setting MITMPROXY_CASE_SENSITIVE_FILTERS=1
+  as an environment variable.
+  ([#7458](https://github.com/mitmproxy/mitmproxy/pull/7458), @mhils, @AdityaPatadiya)
 - Remove filter expression lowercasing in block_list addon
   ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
 - Remove check for status codes in the blocklist add-on.

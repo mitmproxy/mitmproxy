@@ -26,7 +26,7 @@ from mitmproxy.utils import arg_check
         ),
         (
             ["--wfile"],
-            "--wfile is deprecated.\n" "Please use `--save-stream-file` instead.",
+            "--wfile is deprecated.\nPlease use `--save-stream-file` instead.",
         ),
         (["--eventlog"], "--eventlog has been removed."),
         (

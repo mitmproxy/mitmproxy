@@ -247,17 +247,17 @@ class TestReadHeaders:
         return _read_headers(data.splitlines(keepends=True))
 
     def test_read_simple(self):
-        data = b"Header: one\r\n" b"Header2: two\r\n"
+        data = b"Header: one\r\nHeader2: two\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one"), (b"Header2", b"two"))
 
     def test_read_multi(self):
-        data = b"Header: one\r\n" b"Header: two\r\n"
+        data = b"Header: one\r\nHeader: two\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one"), (b"Header", b"two"))
 
     def test_read_continued(self):
-        data = b"Header: one\r\n" b"\ttwo\r\n" b"Header2: three\r\n"
+        data = b"Header: one\r\n\ttwo\r\nHeader2: three\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one\r\n two"), (b"Header2", b"three"))
 

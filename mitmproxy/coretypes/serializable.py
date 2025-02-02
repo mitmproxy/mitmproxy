@@ -130,9 +130,9 @@ def _process(
         return attr_val
     if origin in (UnionType, typing.Union):
         attr_type, nt = typing.get_args(attr_type)
-        assert (
-            nt is NoneType
-        ), f"{attr_name}: only `x | None` union types are supported`"
+        assert nt is NoneType, (
+            f"{attr_name}: only `x | None` union types are supported`"
+        )
         if attr_val is None:
             return None  # type: ignore
         else:

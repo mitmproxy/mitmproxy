@@ -13,8 +13,8 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@0d7c124ffff22d26be111477a3ed9fadd853a6db
-      - uses: mhils/workflows/setup-python@0d7c124ffff22d26be111477a3ed9fadd853a6db
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
 
       - run: pip install -e .[dev]
       - run: ruff check --fix-only .

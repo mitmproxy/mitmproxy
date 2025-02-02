@@ -48,7 +48,6 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.quic import quic_parse_client_hello_from_datagrams
 from mitmproxy.proxy.layers.tls import dtls_parse_client_hello
-from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS
 from mitmproxy.proxy.layers.tls import parse_client_hello
 from mitmproxy.tls import ClientHello
@@ -281,7 +280,7 @@ class NextLayer:
         if context.client.transport_protocol != "tcp" or data_server:
             return None
 
-        host_header_expected = context.client.alpn in HTTP1_ALPNS or re.match(
+        host_header_expected = re.match(
             rb"[A-Z]{3,}.+HTTP/", data_client, re.IGNORECASE
         )
         if host_header_expected:

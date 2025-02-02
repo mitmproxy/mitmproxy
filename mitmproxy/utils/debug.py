@@ -103,7 +103,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
                     f.f_code.co_filename, f.f_lineno, f.f_globals
                 ).strip()
                 line = f"{line}  # at {os.path.basename(f.f_code.co_filename)}:{f.f_lineno}"
-                print(f"{asyncio_utils.task_repr(task)}\n" f"    {line}")
+                print(f"{asyncio_utils.task_repr(task)}\n    {line}")
 
         print("****************************************************")
 
