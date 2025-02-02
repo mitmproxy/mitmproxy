@@ -65,31 +65,28 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
         }
     }, [content]);
 
-    const handleClickCopyButton = () => {
-        const url = MessageUtils.getContentURL(flow, message, contentView); //without the 'maxLines' parameter, so we can get the full content of the content view
+    const handleClickCopyButton = async () => {
+        try {
+            const url = MessageUtils.getContentURL(flow, message, contentView);
+            setIsFetchingFullContent(true);
 
-        setIsFetchingFullContent(true);
+            const response = await fetchApi(url);
+            if (!response.ok) {
+                throw new Error(
+                    `${response.status} ${response.statusText}`.trim(),
+                );
+            }
 
-        fetchApi(url)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(
-                        `${response.status} ${response.statusText}`.trim(),
-                    );
-                }
-                return response.json();
-            })
-            .then((data: ContentViewData) => {
-                copyViewContentDataToClipboard(data);
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
-            })
-            .catch((e) => {
-                console.error(e);
-            })
-            .finally(() => {
-                setIsFetchingFullContent(false);
-            });
+            const data: ContentViewData = await response.json();
+            
+            await copyViewContentDataToClipboard(data);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsFetchingFullContent(false);
+        }
     };
 
     if (isEdited) {

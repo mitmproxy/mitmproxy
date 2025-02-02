@@ -178,7 +178,7 @@ export async function copyToClipboard(
     }
 }
 
-export function copyViewContentDataToClipboard(
+export async function copyViewContentDataToClipboard(
     contentViewData: ContentViewData | undefined,
 ) {
     let p = "";
@@ -186,7 +186,7 @@ export function copyViewContentDataToClipboard(
         line.forEach((el) => (p = p + el[1]));
         p = p + "\n";
     });
-    copyToClipboard(Promise.resolve(p));
+    await copyToClipboard(Promise.resolve(p));
 }
 
 export function rpartition(str: string, sep: string): [string, string] {
