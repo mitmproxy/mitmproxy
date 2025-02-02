@@ -78,7 +78,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             }
 
             const data: ContentViewData = await response.json();
-            
+
             await copyViewContentDataToClipboard(data);
             setIsCopied(true);
             setTimeout(() => setIsCopied(false), 2000);
