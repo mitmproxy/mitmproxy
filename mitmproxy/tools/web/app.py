@@ -372,7 +372,7 @@ class ClientConnection(WebSocketEventBroadcaster):
             conn=self, message=message
         )  # send message just to the interested ClientConnection
 
-    async def on_message(self, message: str):
+    async def on_message(self, message: str | bytes):
         try:
             data = json.loads(message)
 
