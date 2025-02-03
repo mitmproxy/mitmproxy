@@ -329,7 +329,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
-        self.application = application
+        self.application: Application = application
         self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
 
     def send_flow(self, cmd: str, f: mitmproxy.flow.Flow):
