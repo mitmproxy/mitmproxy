@@ -110,6 +110,16 @@ class TestExportCurlCommand:
         assert shlex.split(command)[-2] == "-d"
         assert shlex.split(command)[-1] == "'&#"
 
+    def test_expand_escaped(self, export_curl, post_request):
+        post_request.request.content = b"foo\nbar"
+        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        assert export_curl(post_request) == result
+
+    def test_no_expand_when_no_escaped(self, export_curl, post_request):
+        post_request.request.content = b"foobar"
+        result = "curl -X POST http://address:22/path -d foobar"
+        assert export_curl(post_request) == result
+
     def test_strip_unnecessary(self, export_curl, get_request):
         get_request.request.headers.clear()
         get_request.request.headers["host"] = "address"

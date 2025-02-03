@@ -23,6 +23,8 @@
   ([#7519](https://github.com/mitmproxy/mitmproxy/pull/7519), @mhils)
 - Copy request/response data to the clipboard in mitmweb
   ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
+- Fix a bug where exporting a curl or httpie command with escaped characters would lead to different data being sent.
+  ([#7520](https://github.com/mitmproxy/mitmproxy/pull/7520), @proteusvacuum)
 
 ## 12 January 2025: mitmproxy 11.1.0
 
