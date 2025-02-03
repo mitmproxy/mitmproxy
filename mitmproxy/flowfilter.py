@@ -37,7 +37,8 @@ import functools
 import re
 import sys
 from collections.abc import Sequence
-from typing import ClassVar, Any
+from typing import Any
+from typing import ClassVar
 from typing import Protocol
 
 import pyparsing as pp
