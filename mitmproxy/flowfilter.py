@@ -37,7 +37,7 @@ import functools
 import re
 import sys
 from collections.abc import Sequence
-from typing import ClassVar
+from typing import ClassVar, Any
 from typing import Protocol
 
 import pyparsing as pp
@@ -644,7 +644,9 @@ bnf = _make()
 class TFilter(Protocol):
     pattern: str
 
-    def __call__(self, f: flow.Flow) -> bool: ...  # pragma: no cover
+    # TODO: This should be `-> bool`, but some filters aren't behaving correctly (requiring `bool()` by the caller).
+    #       Correct this when we properly type filters.
+    def __call__(self, f: flow.Flow) -> Any: ...  # pragma: no cover
 
 
 def parse(s: str) -> TFilter:
