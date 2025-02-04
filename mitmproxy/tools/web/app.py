@@ -338,7 +338,10 @@ class ClientConnection(WebSocketEventBroadcaster):
             conn._broadcast_flow(cmd, f, flow_json)
 
     def _broadcast_flow(
-        self, cmd: str, f: mitmproxy.flow.Flow, flow_json: dict # Passing the flow_json dictionary to avoid recalculating it for each client
+        self,
+        cmd: str,
+        f: mitmproxy.flow.Flow,
+        flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
     ) -> None:
         matches = {expr.pattern: bool(expr(f)) for expr in self.filters.values()}
         message = json.dumps(
