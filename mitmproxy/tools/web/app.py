@@ -326,17 +326,22 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
+    application: Application
 
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
-        self.application: Application = application
         self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
+        
+    @classmethod
+    def broadcast_flow(cls, cmd: str, f: mitmproxy.flow.Flow) -> None:
+        for conn in cls.connections:
+            conn._broadcast_flow(cmd, f)
 
-    def send_flow(self, cmd: str, f: mitmproxy.flow.Flow):
-        matches = [
-            {expr.pattern: bool(flowfilter.match(expr, f))}
+    def _broadcast_flow(self, cmd: str, f: mitmproxy.flow.Flow) -> None:
+        matches = {
+            expr.pattern: bool(expr(f))
             for expr in self.filters.values()
-        ]
+        }
         message = json.dumps(
             {
                 "resource": "flows",
@@ -344,20 +349,20 @@ class ClientConnection(WebSocketEventBroadcaster):
                 "matches": matches,
                 "data": flow_to_json(f),
             },
-        ).encode("utf8", "surrogateescape")
+        ).encode()
 
         self.send(conn=self, message=message)
+        
 
-    def get_matching_flow_ids(self, name: str) -> List[str]:
-        expr = self.filters.get(name)
-        if not expr:
-            return []
-
-        return [f.id for f in self.application.master.view if expr(f)]
-
-    def send_matching_flow_ids(self, name: str, expr: str):
-        matching_flow_ids = self.get_matching_flow_ids(name)
-
+    def update_filter(self, name: str, expr: str) -> None:
+        if expr:
+            filt = flowfilter.parse(expr)
+            self.filters[name] = filt
+            matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
+        else:
+            del self.filters[name]
+            matching_flow_ids = []
+        
         message = json.dumps(
             {
                 "resource": "flows",
@@ -366,11 +371,9 @@ class ClientConnection(WebSocketEventBroadcaster):
                 "expr": expr,
                 "data": matching_flow_ids,
             },
-        ).encode("utf8", "surrogateescape")
-
-        self.send(
-            conn=self, message=message
-        )  # send message just to the interested ClientConnection
+        ).encode()
+        
+        self.send(conn=self, message=message) # send message just to the interested ClientConnection
 
     async def on_message(self, message: str | bytes):
         try:
@@ -382,12 +385,7 @@ class ClientConnection(WebSocketEventBroadcaster):
             expr: str = data["expr"]
 
             if resource == "flows" and command == "updateFilter":
-                if expr:
-                    self.filters[name] = flowfilter.parse(expr)
-                else:
-                    del self.filters[name]
-
-                self.send_matching_flow_ids(name, expr)
+                self.update_filter(name, expr)
             else:
                 raise APIError(400, "Unsupported command.")
         except Exception as e:
