@@ -11,7 +11,6 @@ from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar
-from typing import List
 
 import tornado.escape
 import tornado.web
@@ -331,17 +330,14 @@ class ClientConnection(WebSocketEventBroadcaster):
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
-        
+
     @classmethod
     def broadcast_flow(cls, cmd: str, f: mitmproxy.flow.Flow) -> None:
         for conn in cls.connections:
             conn._broadcast_flow(cmd, f)
 
     def _broadcast_flow(self, cmd: str, f: mitmproxy.flow.Flow) -> None:
-        matches = {
-            expr.pattern: bool(expr(f))
-            for expr in self.filters.values()
-        }
+        matches = {expr.pattern: bool(expr(f)) for expr in self.filters.values()}
         message = json.dumps(
             {
                 "resource": "flows",
@@ -352,7 +348,6 @@ class ClientConnection(WebSocketEventBroadcaster):
         ).encode()
 
         self.send(conn=self, message=message)
-        
 
     def update_filter(self, name: str, expr: str) -> None:
         if expr:
@@ -362,7 +357,7 @@ class ClientConnection(WebSocketEventBroadcaster):
         else:
             del self.filters[name]
             matching_flow_ids = []
-        
+
         message = json.dumps(
             {
                 "resource": "flows",
@@ -372,8 +367,10 @@ class ClientConnection(WebSocketEventBroadcaster):
                 "data": matching_flow_ids,
             },
         ).encode()
-        
-        self.send(conn=self, message=message) # send message just to the interested ClientConnection
+
+        self.send(
+            conn=self, message=message
+        )  # send message just to the interested ClientConnection
 
     async def on_message(self, message: str | bytes):
         try:
