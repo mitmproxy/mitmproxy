@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 05 February 2025: mitmproxy 11.1.1
+
 - [CVE-2025-23217](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-wg33-5h85-7q5p):
   mitmweb's API now requires an authentication token by default.
   The mitmweb API is bound to localhost only, but @gronke found that an attacker can circumvent that restriction
