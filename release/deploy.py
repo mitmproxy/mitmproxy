@@ -39,8 +39,8 @@ if __name__ == "__main__":
             f"s3://snapshots.mitmproxy.org/{upload_dir}",
         ]
     )
-    if tag:
-        # We can't scope R2 tokens, so they are only exposed in the deploy env.
+    if True:
+        # We can't scope R2 tokens, so they are only exposed in the deploy and citest envs.
         print(f"Uploading binaries to downloads.mitmproxy.org/{upload_dir}...")
         subprocess.check_call(
             [

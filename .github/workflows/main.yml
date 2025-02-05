@@ -335,8 +335,7 @@ jobs:
     steps:
       - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
-      - run: sudo apt-get update
-      - run: sudo apt-get install -y awscli
+      - run: pip install awscli==1.36.40
       - if: startsWith(github.ref, 'refs/tags/')
         run: sudo apt-get install -y twine
 
@@ -365,12 +364,3 @@ jobs:
       - run: ls release/dist
 
       - run: ./release/deploy.py
-
-      - name: Deploy to Microsoft Store (test flight)
-        if: github.ref == 'refs/heads/citest'
-        run: ./release/deploy-microsoft-store.py release/dist/*.msix
-        env:
-          MSFT_APP_FLIGHT: 174ca570-8cae-4444-9858-c07293f1f13a
-      - name: Deploy to Microsoft Store
-        if: startsWith(github.ref, 'refs/tags/')
-        run: ./release/deploy-microsoft-store.py release/dist/*.msix
