@@ -7,9 +7,6 @@
 
 ## Unreleased: mitmproxy next
 
-
-## 05 February 2025: mitmproxy 11.1.1
-
 - [CVE-2025-23217](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-wg33-5h85-7q5p):
   mitmweb's API now requires an authentication token by default.
   The mitmweb API is bound to localhost only, but @gronke found that an attacker can circumvent that restriction
@@ -38,6 +35,10 @@
   ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
 - Fix a bug where exporting a curl or httpie command with escaped characters would lead to different data being sent.
   ([#7520](https://github.com/mitmproxy/mitmproxy/pull/7520), @proteusvacuum)
+
+## 05 February 2025: mitmproxy 11.1.1
+
+- Yanked. Identical to 11.1.2, but failed to deploy in CI.
 
 ## 12 January 2025: mitmproxy 11.1.0
 

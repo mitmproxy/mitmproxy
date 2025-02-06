@@ -313,7 +313,7 @@ jobs:
     if: github.repository == 'mitmproxy/mitmproxy' && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
     environment: ${{ (github.ref == 'refs/heads/citest' || startsWith(github.ref, 'refs/tags/')) && 'deploy-release' || 'deploy-snapshot' }}
     needs: check
-    runs-on: ubuntu-22.04  # https://bugs.launchpad.net/ubuntu/+source/awscli/+bug/2066199
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       attestations: write
@@ -335,8 +335,7 @@ jobs:
     steps:
       - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
-      - run: sudo apt-get update
-      - run: sudo apt-get install -y awscli
+      - run: pip install -r .github/awscli-requirements.txt
       - if: startsWith(github.ref, 'refs/tags/')
         run: sudo apt-get install -y twine
 
