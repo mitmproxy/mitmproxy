@@ -11,7 +11,8 @@ from tornado import httpclient
 from tornado import websocket
 
 import mitmproxy_rs
-from mitmproxy import flowfilter, log
+from mitmproxy import flowfilter
+from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
@@ -459,7 +460,7 @@ class TestClientConnectionFilters:
             await client.on_message(message)
 
             mock_update_filter.assert_called_once_with("search", "~u example.com")
-    
+
     async def test_on_message_invalid_json(self):
         client = app.ClientConnection(self.mock_app, mock.Mock())
         invalid_message = "not-a-json"
@@ -515,7 +516,7 @@ class TestClientConnectionFilters:
             assert json.loads(sent_message.decode()) == json.loads(
                 expected_message.decode()
             )
-    
+
     def test_update_filters_with_removal(self):
         self.mock_app.master.view = []
         client = app.ClientConnection(self.mock_app, mock.Mock())
@@ -524,7 +525,7 @@ class TestClientConnectionFilters:
         with mock.patch.object(client, "send", return_value=None) as mock_send:
             filter_name = "search"
             client.update_filter(filter_name, "")
-            
+
             expected_message = json.dumps(
                 {
                     "resource": "flows",
@@ -556,15 +557,15 @@ class TestClientConnectionFilters:
 
         for conn in app.ClientConnection.connections:
             conn._broadcast_flow.assert_called_once_with("add", f, app.flow_to_json(f))
-    
+
     def test_broadcast_flow_private(self):
         client = app.ClientConnection(self.mock_app, mock.Mock())
         client.filters = {"search": flowfilter.parse("~bq foo")}
-        
+
         f = tflow.tflow(resp=True)
         f.id = "42"
         f.request.content = b"foo\nbar"
-            
+
         with mock.patch.object(client, "send") as mock_send:
             flow_json = {"id": "42", "content": "foo\nbar"}
             client._broadcast_flow("update", f, flow_json)
@@ -579,4 +580,3 @@ class TestClientConnectionFilters:
             ).encode()
 
             mock_send.assert_called_once_with(conn=client, message=expected_message)
-            
