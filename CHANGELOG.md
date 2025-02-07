@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Add documentation for local capture mode.
 
 ## 06 February 2025: mitmproxy 11.1.2
 
