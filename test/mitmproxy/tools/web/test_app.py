@@ -1,4 +1,3 @@
-import asyncio
 import gzip
 import importlib
 import json
@@ -12,7 +11,7 @@ from tornado import httpclient
 from tornado import websocket
 
 import mitmproxy_rs
-from mitmproxy import flowfilter, log
+from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
@@ -441,29 +440,32 @@ class TestUpdateFilters:
     def setup(self):
         self.mock_app = mock.Mock()
         self.mock_app.ui_methods = {}  # Added to avoid complaints
-    
+
     @pytest.mark.asyncio
     async def test_on_message(self):
         client = app.ClientConnection(self.mock_app, mock.Mock())
 
-        with mock.patch.object(client, 'update_filter', return_value=None) as mock_update_filter:
-            message = json.dumps({
-                "resource": "flows",
-                "cmd": "updateFilter",
-                "name": "search",
-                "expr": "~u example.com",
-            }).encode()
+        with mock.patch.object(
+            client, "update_filter", return_value=None
+        ) as mock_update_filter:
+            message = json.dumps(
+                {
+                    "resource": "flows",
+                    "cmd": "updateFilter",
+                    "name": "search",
+                    "expr": "~u example.com",
+                }
+            ).encode()
 
             await client.on_message(message)
 
             mock_update_filter.assert_called_once_with("search", "~u example.com")
-    
-    
+
     def test_update_filters_no_match(self):
         self.mock_app.master.view = []
         client = app.ClientConnection(self.mock_app, mock.Mock())
 
-        with mock.patch.object(client, 'send', return_value=None) as mock_send:
+        with mock.patch.object(client, "send", return_value=None) as mock_send:
             filter_name = "search"
             filter_expr = "~u example.com"
             client.update_filter(filter_name, filter_expr)
@@ -483,8 +485,10 @@ class TestUpdateFilters:
 
             assert filter_name in client.filters
             assert client.filters[filter_name].pattern == filter_expr
-            assert json.loads(sent_message.decode()) == json.loads(expected_message.decode())
-    
+            assert json.loads(sent_message.decode()) == json.loads(
+                expected_message.decode()
+            )
+
     def test_update_filters_match(self):
         """Test case where some flows match the filter"""
         f = tflow.tflow(resp=True)
@@ -497,7 +501,7 @@ class TestUpdateFilters:
 
         client = app.ClientConnection(self.mock_app, mock.Mock())
 
-        with mock.patch.object(client, 'send', return_value=None) as mock_send:
+        with mock.patch.object(client, "send", return_value=None) as mock_send:
             filter_name = "search"
             filter_expr = "~bq foo"
             client.update_filter(filter_name, filter_expr)
@@ -517,4 +521,6 @@ class TestUpdateFilters:
 
             assert filter_name in client.filters
             assert client.filters[filter_name].pattern == filter_expr
-            assert json.loads(sent_message.decode()) == json.loads(expected_message.decode())
+            assert json.loads(sent_message.decode()) == json.loads(
+                expected_message.decode()
+            )
