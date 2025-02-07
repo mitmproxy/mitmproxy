@@ -4,7 +4,8 @@ from collections.abc import Sequence
 from enum import Enum
 from logging import DEBUG
 from logging import ERROR
-from typing import ClassVar, Any
+from typing import Any
+from typing import ClassVar
 
 import h2.config
 import h2.connection
