@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Add documentation for local capture mode.
+  ([#7540](https://github.com/mitmproxy/mitmproxy/pull/7540), @mhils)
 
 ## 06 February 2025: mitmproxy 11.1.2
 
