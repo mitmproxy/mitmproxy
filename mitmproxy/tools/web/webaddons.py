@@ -34,8 +34,8 @@ class WebAuth:
             "",
             "Password to protect the mitmweb user interface. "
             "Values starting with `$` are interpreted as an argon2 hash, "
-            "everything else is considered a plaintext password."
-            "If not password is provided, a random token is generated on startup.",
+            "everything else is considered a plaintext password. "
+            "If no password is provided, a random token is generated on startup.",
         )
 
     def configure(self, updated) -> None:
