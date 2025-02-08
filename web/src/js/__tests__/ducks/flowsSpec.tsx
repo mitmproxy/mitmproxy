@@ -1,7 +1,7 @@
 import reduceFlows, * as flowActions from "../../ducks/flows";
 import { reduce } from "../../ducks/utils/store";
 import { fetchApi } from "../../utils";
-import { TFlow, TStore } from "./tutils";
+import { TFlow, TStore, TTCPFlow } from "./tutils";
 import FlowColumns from "../../components/FlowTable/FlowColumns";
 
 jest.mock("../../utils");
@@ -32,6 +32,18 @@ describe("flow reducer", () => {
             expect(reduceFlows(state, flowActions.select("2"))).toEqual({
                 ...state,
                 selected: ["2"],
+            });
+        });
+
+        it("should be possible to select multiple flows", () => {
+            expect(
+                reduceFlows(
+                    { ...state, selected: ["2"] },
+                    flowActions.multiSelect("3"),
+                ),
+            ).toEqual({
+                ...state,
+                selected: ["2", "3"],
             });
         });
 
@@ -121,6 +133,11 @@ describe("flow reducer", () => {
 describe("flows actions", () => {
     const store = TStore();
     const tflow = TFlow();
+    const ttcpflow = TTCPFlow();
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
     it("should handle resume action", () => {
         store.dispatch(flowActions.resume(tflow));
@@ -154,6 +171,20 @@ describe("flows actions", () => {
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
             { method: "DELETE" },
         );
+    });
+
+    it("should handle removeMultiple action", async () => {
+        await store.dispatch(
+            flowActions.removeMultiple([tflow.id, ttcpflow.id]),
+        );
+
+        expect(fetchApi).toHaveBeenCalledTimes(2);
+        expect(fetchApi).toHaveBeenCalledWith(`/flows/${tflow.id}`, {
+            method: "DELETE",
+        });
+        expect(fetchApi).toHaveBeenCalledWith(`/flows/${ttcpflow.id}`, {
+            method: "DELETE",
+        });
     });
 
     it("should handle duplicate action", () => {

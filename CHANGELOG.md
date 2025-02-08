@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add multiple flows selection to mitmweb.
+  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000)
 
 ## 06 February 2025: mitmproxy 11.1.2
 
