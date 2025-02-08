@@ -46,6 +46,56 @@ The square brackets signify the source and destination IP addresses.
 Your client explicitly connects to mitmproxy and mitmproxy explicitly
 connects to the target server.
 
+
+## Local Capture
+
+Local capture mode transparently captures traffic from applications running on the same device.
+You can capture everything on the current device, or only a particular process name or process ID (PID):
+
+```shell
+mitmproxy --mode local       # Intercept everything on this machine.
+mitmproxy --mode local:curl  # Intercept cURL only.
+mitmproxy --mode local:42    # Intercept PID 42 only.
+```
+
+Local capture is implemented using low-level operating system APIs, so interception is transparent and the targeted
+application is not aware of being proxied.
+
+If you are curious about implementation details, check out the
+[announcement blog posts](https://mitmproxy.org/tags/local-capture/).
+
+#### Intercept Specs
+
+The target selection can be negated by prepending an exclamation mark:
+
+```shell
+mitmproxy --mode local:!curl  # Intercept everything on this machine but cURL.
+```
+
+It is also possible to provide a comma-separated list:
+
+```shell
+mitmproxy --mode local:curl,wget    # Intercept cURL and wget only.
+mitmproxy --mode local:!curl,!wget  # Intercept everything but cURL and wget.
+```
+
+#### Local Capture Limitations on Linux
+
+- **Egress only:** mitmproxy will capture outbound connections only.
+  For inbound connections, we recommend reverse proxy mode.
+- **Root privileges:** To load the BPF program, mitmproxy needs to spawn a privileged subprocess using `sudo`.
+  For the web UI, this means that mitmweb needs to be started directly with `--mode local` on the command line
+  to get a sudo password prompt.
+- **Kernel compatibility:** Our eBPF instrumentation requires a reasonably recent kernel.
+  We officially support Linux 6.8 and above, which matches Ubuntu 22.04.
+- **Intercept specs:** Program names are matched on the first 16 characters only (based on the kernel's [TASK_COMM_LEN]).
+- **Containers:** Capturing traffic from containers will fail unless they use the host network.
+  For example, containers can be started with `docker/podman run --network host`.
+- **Windows Subsystem for Linux (WSL 1/2):** WSL is unsupported as eBPF is disabled by default.
+
+[TASK_COMM_LEN]: https://github.com/torvalds/linux/blob/fbfd64d25c7af3b8695201ebc85efe90be28c5a3/include/linux/sched.h#L306
+
+
 ## Transparent Proxy
 
 ```shell
