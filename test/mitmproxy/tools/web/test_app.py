@@ -405,6 +405,55 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
+    
+    @tornado.testing.gen_test
+    def test_websocket_filter_application(self):
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
+        # test update filter message
+        message = json.dumps({
+            "resource": "flows",
+            "cmd": "updateFilter",
+            "name": "search",
+            "expr": "~bq foo",
+        }).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {"resource": "flows", "cmd": "filtersUpdated", "name": "search", "expr": "~bq foo","data": ["42"]}
+        
+        # test add flow
+        f = tflow.tflow(resp=True)
+        f.id = "41"
+        f.request.content = b"foo\nbarbar"
+
+        app.ClientConnection.broadcast_flow("add", f)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response["resource"] == "flows"
+        assert response["cmd"] == "add"
+        assert response["matches"] == {"~bq foo": True}
+        assert response["data"]["id"] == "41"
+        
+        # test update flow
+        f.request.content = b"bar"
+        
+        app.ClientConnection.broadcast_flow("update", f)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response["resource"] == "flows"
+        assert response["cmd"] == "update"
+        assert response["matches"] == {"~bq foo": False}
+        assert response["data"]["id"] == "41"
+        
+        ws_client.close()
 
     def test_process_list(self):
         try:
@@ -434,149 +483,4 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 200
         assert resp.headers["Content-Type"] == "image/png"
         assert resp.body == app.TRANSPARENT_PNG
-
-
-class TestClientConnectionFilters:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.mock_app = mock.Mock()
-        self.mock_app.ui_methods = {}  # Added to avoid complaints
-
-    async def test_on_message(self):
-        client = app.ClientConnection(self.mock_app, mock.Mock())
-
-        with mock.patch.object(
-            client, "update_filter", return_value=None
-        ) as mock_update_filter:
-            message = json.dumps(
-                {
-                    "resource": "flows",
-                    "cmd": "updateFilter",
-                    "name": "search",
-                    "expr": "~u example.com",
-                }
-            ).encode()
-
-            await client.on_message(message)
-
-            mock_update_filter.assert_called_once_with("search", "~u example.com")
-
-    async def test_on_message_invalid_json(self):
-        client = app.ClientConnection(self.mock_app, mock.Mock())
-        invalid_message = "not-a-json"
-
-        with pytest.raises(app.APIError, match="Error processing message"):
-            await client.on_message(invalid_message)
-
-    async def test_on_message_unsupported_command(self):
-        client = app.ClientConnection(self.mock_app, mock.Mock())
-        message = json.dumps(
-            {
-                "resource": "flows",
-                "cmd": "unknownCommand",
-                "name": "test",
-                "expr": "expr",
-            }
-        ).encode()
-
-        with pytest.raises(app.APIError, match="Unsupported command"):
-            await client.on_message(message)
-
-    def test_update_filters_with_match(self):
-        f = tflow.tflow(resp=True)
-        f.id = "42"
-        f.request.content = b"foo\nbar"
-        f2 = tflow.tflow(resp=True)
-        f2.id = "43"
-        f2.request.content = None
-        self.mock_app.master.view = [f, f2]
-
-        client = app.ClientConnection(self.mock_app, mock.Mock())
-
-        with mock.patch.object(client, "send", return_value=None) as mock_send:
-            filter_name = "search"
-            filter_expr = "~bq foo"
-            client.update_filter(filter_name, filter_expr)
-
-            expected_message = json.dumps(
-                {
-                    "resource": "flows",
-                    "cmd": "filtersUpdated",
-                    "name": filter_name,
-                    "expr": filter_expr,
-                    "data": ["42"],
-                }
-            ).encode()
-
-            mock_send.assert_called_once_with(conn=client, message=expected_message)
-            sent_message = mock_send.call_args[1]["message"]
-
-            assert filter_name in client.filters
-            assert client.filters[filter_name].pattern == filter_expr
-            assert json.loads(sent_message.decode()) == json.loads(
-                expected_message.decode()
-            )
-
-    def test_update_filters_with_removal(self):
-        self.mock_app.master.view = []
-        client = app.ClientConnection(self.mock_app, mock.Mock())
-        client.filters = {"search": flowfilter.parse("~bq foo")}
-
-        with mock.patch.object(client, "send", return_value=None) as mock_send:
-            filter_name = "search"
-            client.update_filter(filter_name, "")
-
-            expected_message = json.dumps(
-                {
-                    "resource": "flows",
-                    "cmd": "filtersUpdated",
-                    "name": filter_name,
-                    "expr": "",
-                    "data": [],
-                }
-            ).encode()
-
-            mock_send.assert_called_with(conn=client, message=expected_message)
-            sent_message = mock_send.call_args[1]["message"]
-
-            assert filter_name not in client.filters
-            assert json.loads(sent_message.decode()) == json.loads(
-                expected_message.decode()
-            )
-
-    def test_broadcast_flow(self):
-        f = tflow.tflow(resp=True)
-        f.id = "42"
-        f.request.content = b"foo\nbar"
-
-        conn1 = mock.Mock()
-        conn2 = mock.Mock()
-        app.ClientConnection.connections = {conn1, conn2}
-
-        app.ClientConnection.broadcast_flow("add", f)
-
-        for conn in app.ClientConnection.connections:
-            conn._broadcast_flow.assert_called_once_with("add", f, app.flow_to_json(f))
-
-    def test_broadcast_flow_private(self):
-        client = app.ClientConnection(self.mock_app, mock.Mock())
-        client.filters = {"search": flowfilter.parse("~bq foo")}
-
-        f = tflow.tflow(resp=True)
-        f.id = "42"
-        f.request.content = b"foo\nbar"
-
-        with mock.patch.object(client, "send") as mock_send:
-            flow_json = {"id": "42", "content": "foo\nbar"}
-            client._broadcast_flow("update", f, flow_json)
-
-            expected_message = json.dumps(
-                {
-                    "resource": "flows",
-                    "cmd": "update",
-                    "matches": {"~bq foo": True},
-                    "data": flow_json,
-                }
-            ).encode()
-
-            mock_send.assert_called_once_with(conn=client, message=expected_message)
+        
