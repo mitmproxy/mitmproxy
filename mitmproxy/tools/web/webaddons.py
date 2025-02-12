@@ -94,8 +94,13 @@ class WebAddon:
             master: WebMaster = ctx.master  # type: ignore
             success = open_browser(master.web_url)
             if not success:
-                logging.info(
+                logger.info(
                     f"No web browser found. Please open a browser and point it to {master.web_url}",
+                )
+            if not success and not ctx.options.web_password:
+                logger.info(
+                    f"You can configure a fixed authentication token by setting the `web_password` option "
+                    f"(https://docs.mitmproxy.org/stable/concepts-options/#web_password).",
                 )
 
 
