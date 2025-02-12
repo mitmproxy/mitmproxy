@@ -56,25 +56,29 @@ class Valkey:
     def configure(self, updates):
         if "valkey_address" in updates:
             self.valkey_address = ctx.options.valkey_address
+
         if "valkey_port" in updates:
             p = ctx.options.valkey_port
             if p < 0 or p > 65535:
                 raise exceptions.OptionsError("Port is out of range")
             self.valkey_port = p
+
         try: # launching valkey server
-            v = valkey.Valkey(host=self.valkey_address, port=self.valkey_port, db=0)
+            v = valkey.Valkey(host=self.valkey_address, port=self.valkey_port, db=0) # db=0: database #0
             if (v.ping() == True):
                 print(f"Valkey server is online @ IP {self.valkey_address} & port {self.valkey_port}")
             else:
                 raise exceptions.OptionsError("Valkey server was initialized but failed to ping back")
         except:
             raise exceptions.OptionsError("Valkey server configuration failed")
+
         if "whitelist_fp" in updates:
             fp = ctx.options.whitelist_fp
             if fp != None:
                 f = open(fp)
-                # Clean up old entries
-                # TODO: pipe contents as fast as possible into valkey
+                # File is now open. Delete all keys from the old db
+                v.flushall() #TODO: This is not a great way of doing things
+                # Pipe contents as fast as possible into valkey
                 pipe = v.pipeline()
                 for line in f:
                     domain = line.strip()
@@ -85,37 +89,18 @@ class Valkey:
         v = valkey.Valkey(host=self.valkey_address, port=self.valkey_port, db=0)
         if flow.response or flow.error or not flow.live:
             return
-        # print("Debug", flow.request.pretty_host) # TODO: This isn't working...
         domain = flow.request.pretty_host
+        if domain.startswith("www."):
+            domain = domain[4:]
         print(f"Checking domain {domain}")
         if (v.sismember("whitelist", domain)==False):
+            print(f"Domain {domain} was not found in the whitelist...")
             flow.response = http.Response.make(
                 403, 
                 b"Blocked! Go pray! :P\n",
                 {"Content-Type": "text/plain"}
-            ) 
+            )
+        else:
+            print(f"Domain {domain} was found in the whitelist!") 
 
 addons = [Valkey()] # is this line necessary?
-
-# TODO:
-
-# class AddHeader:
-#     def load(self, loader):
-#         loader.add_option(
-#             name="addheader",
-#             typespec=Optional[int],
-#             default=None,
-#             help="Add a header to responses",
-#         )
-
-#     def configure(self, updates):
-#         if "addheader" in updates:
-#             if ctx.options.addheader is not None and ctx.options.addheader > 100:
-#                 raise exceptions.OptionsError("addheader must be <= 100")
-
-#     def response(self, flow):
-#         if ctx.options.addheader is not None:
-#             flow.response.headers["addheader"] = str(ctx.options.addheader)
-
-
-# addons = [AddHeader()]
