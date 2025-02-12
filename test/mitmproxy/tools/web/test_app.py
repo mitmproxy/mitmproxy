@@ -459,7 +459,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert response["cmd"] == "update"
         assert response["matches"] == {"~bq foo": False}
         assert response["data"]["id"] == "41"
-        
+
         # test filter removal
         message = json.dumps(
             {
