@@ -459,6 +459,28 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert response["cmd"] == "update"
         assert response["matches"] == {"~bq foo": False}
         assert response["data"]["id"] == "41"
+        
+        # test filter removal
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "updateFilter",
+                "name": "search",
+                "expr": "",
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "resource": "flows",
+            "cmd": "filtersUpdated",
+            "name": "search",
+            "expr": "",
+            "data": [],
+        }
 
         ws_client.close()
 
