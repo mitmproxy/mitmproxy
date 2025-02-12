@@ -11,6 +11,7 @@
   ([#7540](https://github.com/mitmproxy/mitmproxy/pull/7540), @mhils)
 - Revise documentation on proxy modes.
   ([#7545](https://github.com/mitmproxy/mitmproxy/pull/7545), @mhils)
+- Add a log message to point Docker mitmweb users towards `web_password`.
 
 ## 06 February 2025: mitmproxy 11.1.2
 
