@@ -11,7 +11,6 @@ from tornado import httpclient
 from tornado import websocket
 
 import mitmproxy_rs
-from mitmproxy import flowfilter
 from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.test import tflow
@@ -405,26 +404,34 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
-    
+
     @tornado.testing.gen_test
     def test_websocket_filter_application(self):
         ws_url = f"ws://localhost:{self.get_http_port()}/updates"
         ws_client = yield tornado.websocket.websocket_connect(ws_url)
 
         # test update filter message
-        message = json.dumps({
-            "resource": "flows",
-            "cmd": "updateFilter",
-            "name": "search",
-            "expr": "~bq foo",
-        }).encode()
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "updateFilter",
+                "name": "search",
+                "expr": "~bq foo",
+            }
+        ).encode()
         yield ws_client.write_message(message)
 
         response = yield ws_client.read_message()
         response = json.loads(response)
 
-        assert response == {"resource": "flows", "cmd": "filtersUpdated", "name": "search", "expr": "~bq foo","data": ["42"]}
-        
+        assert response == {
+            "resource": "flows",
+            "cmd": "filtersUpdated",
+            "name": "search",
+            "expr": "~bq foo",
+            "data": ["42"],
+        }
+
         # test add flow
         f = tflow.tflow(resp=True)
         f.id = "41"
@@ -439,10 +446,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert response["cmd"] == "add"
         assert response["matches"] == {"~bq foo": True}
         assert response["data"]["id"] == "41"
-        
+
         # test update flow
         f.request.content = b"bar"
-        
+
         app.ClientConnection.broadcast_flow("update", f)
 
         response = yield ws_client.read_message()
@@ -452,7 +459,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert response["cmd"] == "update"
         assert response["matches"] == {"~bq foo": False}
         assert response["data"]["id"] == "41"
-        
+
         ws_client.close()
 
     def test_process_list(self):
@@ -483,4 +490,3 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 200
         assert resp.headers["Content-Type"] == "image/png"
         assert resp.body == app.TRANSPARENT_PNG
-        
