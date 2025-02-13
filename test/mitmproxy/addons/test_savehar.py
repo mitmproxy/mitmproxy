@@ -186,9 +186,12 @@ def test_flow_entry():
     req_invalid = Request.make("GET", "https://test.test/")
     raw_data = "Fällbäck".encode("utf-8")
     headers = Headers([(b"Content-Type", b"text/plain; charset=ascii")])
-    flow_invalid = tflow.tflow(req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers))
+    flow_invalid = tflow.tflow(
+        req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers)
+    )
 
     from mitmproxy.http import Response as BaseResponse
+
     class DummyResponse(BaseResponse):
         @property
         def content(self):

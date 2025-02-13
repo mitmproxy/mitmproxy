@@ -213,9 +213,7 @@ class SaveHar:
             except ValueError as e:
                 flow.error = f"Invalid content encoding for {flow.id}: {str(e)}"
                 raw = flow.response.raw_content or b""
-                decoded_text = (
-                    raw, flow.response.headers.get("Content-Type", "")
-                )
+                decoded_text = (raw, flow.response.headers.get("Content-Type", ""))
                 if strutils.is_mostly_bin(raw):
                     content = raw
                 else:
