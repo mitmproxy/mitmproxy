@@ -8,6 +8,7 @@ from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
 from mitmproxy.addons.save import Save
+from mitmproxy.addons.savehar import robust_decode
 from mitmproxy.addons.savehar import SaveHar
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import OptionsError
@@ -203,6 +204,19 @@ def test_flow_entry():
 
     assert flow_invalid.error is not None
     assert "Invalid content encoding" in flow_invalid.error
+
+
+def test_robust_decode_invalid_charset():
+    raw_data = b"Test data"
+    content_type = "text/plain; charset=invalid-charset"
+    decoded = robust_decode(raw_data, content_type)
+    assert decoded == "Test data"
+
+def test_robust_decode_bad_utf8():
+    raw_data = b'\xff'
+    content_type = "text/plain"
+    decoded = robust_decode(raw_data, content_type)
+    assert decoded == "ÿ"
 
 
 class TestHardumpOption:

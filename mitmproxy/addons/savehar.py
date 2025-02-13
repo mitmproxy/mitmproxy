@@ -35,25 +35,18 @@ def robust_decode(raw_content: bytes, content_type: str) -> str:
     2. Try decoding as UTF-8 with errors replaced.
     3. Fallback to Latin-1 decoding.
     """
-    # Attempt to extract charset from the Content-Type header.
     match = re.search(r"charset=([\w-]+)", content_type, re.IGNORECASE)
     if match:
         charset = match.group(1)
         try:
             return raw_content.decode(charset)
         except (LookupError, UnicodeDecodeError):
-            # LookupError: unknown encoding
-            # UnicodeDecodeError: error during decoding
             pass
 
-    # Fallback 1: Try UTF-8 with replacement for invalid characters.
     try:
-        return raw_content.decode("utf-8", errors="replace")
+        return raw_content.decode("utf-8")
     except UnicodeDecodeError:
-        pass
-
-    # Fallback 2: Use Latin-1 which maps every byte.
-    return raw_content.decode("latin-1", errors="replace")
+        return raw_content.decode("latin-1")
 
 
 class SaveHar:
