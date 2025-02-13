@@ -212,8 +212,9 @@ def test_robust_decode_invalid_charset():
     decoded = robust_decode(raw_data, content_type)
     assert decoded == "Test data"
 
+
 def test_robust_decode_bad_utf8():
-    raw_data = b'\xff'
+    raw_data = b"\xff"
     content_type = "text/plain"
     decoded = robust_decode(raw_data, content_type)
     assert decoded == "ÿ"
