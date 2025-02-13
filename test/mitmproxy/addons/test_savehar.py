@@ -181,8 +181,25 @@ def test_flow_entry():
     servers_seen: set[Server] = set()
 
     flow_entry = s.flow_entry(flow, servers_seen)
-
     assert flow_entry["request"]["url"].startswith("https")
+
+    req_invalid = Request.make("GET", "https://test.test/")
+    raw_data = "Fällbäck".encode("utf-8")
+    headers = Headers([(b"Content-Type", b"text/plain; charset=ascii")])
+    flow_invalid = tflow.tflow(req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers))
+
+    from mitmproxy.http import Response as BaseResponse
+    class DummyResponse(BaseResponse):
+        @property
+        def content(self):
+            raise ValueError("Simulated invalid encoding")
+
+    flow_invalid.response.__class__ = DummyResponse
+
+    s.flow_entry(flow_invalid, servers_seen)
+
+    assert flow_invalid.error is not None
+    assert "Invalid content encoding" in flow_invalid.error
 
 
 class TestHardumpOption:
