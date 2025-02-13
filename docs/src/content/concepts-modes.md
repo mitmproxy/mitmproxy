@@ -21,6 +21,7 @@ You can use any of the modes with any of the mitmproxy tools (mitmproxy, mitmweb
 ### Advanced Modes
 
 - [Transparent](#transparent-proxy): Capture traffic with custom network routes.
+- [TUN Interface](#tun-interface): Create a virtual network device to capture traffic.
 - [Upstream](#upstream-proxy): Chain two HTTP(S) proxies.
 - [SOCKS](#socks-proxy): Run a SOCKS5 proxy server.
 - [DNS](#dns-server): Run a scriptable DNS server.
@@ -78,7 +79,7 @@ Local capture is implemented using low-level operating system APIs, so intercept
 application is not aware of being proxied.
 
 If you are curious about implementation details, check out the
-[announcement blog posts](https://mitmproxy.org/tags/local-capture/).
+[announcement blog posts](https://mitmproxy.org/tags/local-capture/). Local capture is available on Windows, Linux, and macOS.
 
 #### Intercept Specs
 
@@ -277,8 +278,10 @@ through mitmproxy.
 
 {{% note %}}
 Consider using [WireGuard](#wireguard) and [local capture](#local-capture) mode instead of transparent mode.  
-They are easier to set up, and also intercept everything transparently.
+They are easier to set up and also intercept everything transparently.
 {{% /note %}}
+
+*Availability: Linux, macOS*
 
 In transparent mode, traffic is directed into a proxy at the network
 layer, without any client configuration required. This makes transparent
@@ -371,6 +374,38 @@ and much will depend on the router or packet filter you're using. In
 most cases, the configuration will look like this:
 
 {{< figure src="/schematics/proxy-modes-transparent-3.png" >}}
+
+## TUN Interface
+
+*Availability: Linux, macOS*
+
+```shell
+sudo mitmdump --mode tun
+```
+
+In TUN mode, mitmproxy creates a virtual network interface on the system.
+All traffic routed to this interface  will be intercepted by mitmproxy.
+For example, `curl --interface tun0 http://example.com/` will be transparently
+intercepted. For most applications, you will need to manually configure your local routing table.
+
+You can optionally specify a fixed interface name:
+
+```shell
+sudo mitmdump --mode tun:mitm-tun
+```
+
+This mode requires root privileges (or `CAP_NET_ADMIN` on the Python interpreter) to create the tun interface.
+
+#### Usage with Containers
+
+Mitmproxy's [docker-entrypoint.sh] drops all privileges on startup by default.
+To make TUN mode work in a container on Linux, you can do something like this: 
+
+```shell
+docker run --privileged --network host mitmproxy/mitmproxy bash -c "mitmdump --mode tun"
+```
+
+[docker-entrypoint.sh]: https://github.com/mitmproxy/mitmproxy/blob/main/release/docker/docker-entrypoint.sh
 
 ## Upstream Proxy
 
