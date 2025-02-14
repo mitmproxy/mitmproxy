@@ -483,6 +483,45 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
 
         ws_client.close()
+        
+    @tornado.testing.gen_test
+    def test_websocket_filter_command_error(self):
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
+        # Send a message with an invalid command
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "invalidCommand",
+                "name": "search",
+                "expr": "~bq foo",
+            }
+        )
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        
+        # Connection should be closed
+        self.assertIsNone(response)
+        self.assertEqual(ws_client.close_code, 1003)
+        self.assertEqual(ws_client.close_reason, "Unsupported command.")
+    
+    @tornado.testing.gen_test
+    def test_websocket_filter_internal_server_error(self):
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
+        # Send a message with an invalid json
+        message = "Invalid JSON string"
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        
+        # Connection should be closed
+        self.assertIsNone(response)
+        self.assertEqual(ws_client.close_code, 1011)
+        self.assertEqual(ws_client.close_reason, "Internal server error.")
 
     def test_process_list(self):
         try:

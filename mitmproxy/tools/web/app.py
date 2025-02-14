@@ -47,6 +47,7 @@ TRANSPARENT_PNG = (
     b"\x00\x02\x00\x01\xfc\xa8Q\rh\x00\x00\x00\x00IEND\xaeB`\x82"
 )
 
+logger = logging.getLogger(__name__)
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
@@ -361,7 +362,7 @@ class ClientConnection(WebSocketEventBroadcaster):
             self.filters[name] = filt
             matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
         else:
-            del self.filters[name]
+            self.filters.pop(name, None)
             matching_flow_ids = []
 
         message = json.dumps(
@@ -390,9 +391,11 @@ class ClientConnection(WebSocketEventBroadcaster):
             if resource == "flows" and command == "updateFilter":
                 self.update_filter(name, expr)
             else:
-                raise APIError(400, "Unsupported command.")
+                logger.error("Unsupported command found in incoming message.")
+                self.close(code=1003, reason="Unsupported command.")
         except Exception as e:
-            raise APIError(400, f"Error processing message from {self}: {e}")
+            logger.error(f"Error processing message from {self}: {e}")
+            self.close(code=1011, reason="Internal server error.")
 
 
 class Flows(RequestHandler):
