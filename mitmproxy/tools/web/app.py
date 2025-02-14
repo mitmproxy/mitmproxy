@@ -16,8 +16,6 @@ import tornado.escape
 import tornado.web
 import tornado.websocket
 
-import mitmproxy.addons
-import mitmproxy.addons.view
 import mitmproxy.flow
 import mitmproxy.tools.web.master
 import mitmproxy_rs
