@@ -13,6 +13,7 @@
   ([#7571](https://github.com/mitmproxy/mitmproxy/pull/7571), @mhils)
 - Fix a bug where WebSocket Messages view jumps to top when a message is received
   ([#7572](https://github.com/mitmproxy/mitmproxy/pull/7572), @DenizenB)
+- Add support for TLS 1.3 Post Handshake Authentication.
 - Create content view for Socket.IO over WebSocket transport
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
 
