@@ -45,6 +45,8 @@ TRANSPARENT_PNG = (
     b"\x00\x02\x00\x01\xfc\xa8Q\rh\x00\x00\x00\x00IEND\xaeB`\x82"
 )
 
+logger = logging.getLogger(__name__)
+
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
@@ -323,6 +325,76 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
+    application: Application
+
+    def __init__(self, application: Application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
+
+    @classmethod
+    def broadcast_flow(cls, cmd: str, f: mitmproxy.flow.Flow) -> None:
+        flow_json = flow_to_json(f)
+        for conn in cls.connections:
+            conn._broadcast_flow(cmd, f, flow_json)
+
+    def _broadcast_flow(
+        self,
+        cmd: str,
+        f: mitmproxy.flow.Flow,
+        flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
+    ) -> None:
+        matches = {expr.pattern: bool(expr(f)) for expr in self.filters.values()}
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": cmd,
+                "matches": matches,
+                "data": flow_json,
+            },
+        ).encode()
+
+        self.send(conn=self, message=message)
+
+    def update_filter(self, name: str, expr: str) -> None:
+        if expr:
+            filt = flowfilter.parse(expr)
+            self.filters[name] = filt
+            matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
+        else:
+            self.filters.pop(name, None)
+            matching_flow_ids = []
+
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "filtersUpdated",
+                "name": name,
+                "expr": expr,
+                "data": matching_flow_ids,
+            },
+        ).encode()
+
+        self.send(
+            conn=self, message=message
+        )  # send message just to the interested ClientConnection
+
+    async def on_message(self, message: str | bytes):
+        try:
+            data = json.loads(message)
+
+            resource: str = data["resource"]
+            command: str = data["cmd"]
+            name: str = data["name"]
+            expr: str = data["expr"]
+
+            if resource == "flows" and command == "updateFilter":
+                self.update_filter(name, expr)
+            else:
+                logger.error("Unsupported command found in incoming message.")
+                self.close(code=1003, reason="Unsupported command.")
+        except Exception as e:
+            logger.error(f"Error processing message from {self}: {e}")
+            self.close(code=1011, reason="Internal server error.")
 
 
 class Flows(RequestHandler):

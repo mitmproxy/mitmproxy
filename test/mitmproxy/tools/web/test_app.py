@@ -405,6 +405,124 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
+    @tornado.testing.gen_test
+    def test_websocket_filter_application(self):
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
+        # test update filter message
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "updateFilter",
+                "name": "search",
+                "expr": "~bq foo",
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "resource": "flows",
+            "cmd": "filtersUpdated",
+            "name": "search",
+            "expr": "~bq foo",
+            "data": ["42"],
+        }
+
+        # test add flow
+        f = tflow.tflow(resp=True)
+        f.id = "41"
+        f.request.content = b"foo\nbarbar"
+
+        app.ClientConnection.broadcast_flow("add", f)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response["resource"] == "flows"
+        assert response["cmd"] == "add"
+        assert response["matches"] == {"~bq foo": True}
+        assert response["data"]["id"] == "41"
+
+        # test update flow
+        f.request.content = b"bar"
+
+        app.ClientConnection.broadcast_flow("update", f)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response["resource"] == "flows"
+        assert response["cmd"] == "update"
+        assert response["matches"] == {"~bq foo": False}
+        assert response["data"]["id"] == "41"
+
+        # test filter removal
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "updateFilter",
+                "name": "search",
+                "expr": "",
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "resource": "flows",
+            "cmd": "filtersUpdated",
+            "name": "search",
+            "expr": "",
+            "data": [],
+        }
+
+        ws_client.close()
+
+    @tornado.testing.gen_test
+    def test_websocket_filter_command_error(self):
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
+        # Send a message with an invalid command
+        message = json.dumps(
+            {
+                "resource": "flows",
+                "cmd": "invalidCommand",
+                "name": "search",
+                "expr": "~bq foo",
+            }
+        )
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+
+        # Connection should be closed
+        self.assertIsNone(response)
+        self.assertEqual(ws_client.close_code, 1003)
+        self.assertEqual(ws_client.close_reason, "Unsupported command.")
+
+    @tornado.testing.gen_test
+    def test_websocket_filter_internal_server_error(self):
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
+        # Send a message with an invalid json
+        message = "Invalid JSON string"
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+
+        # Connection should be closed
+        self.assertIsNone(response)
+        self.assertEqual(ws_client.close_code, 1011)
+        self.assertEqual(ws_client.close_reason, "Internal server error.")
+
     def test_process_list(self):
         try:
             mitmproxy_rs.process_info.active_executables()
