@@ -49,6 +49,7 @@ TRANSPARENT_PNG = (
 
 logger = logging.getLogger(__name__)
 
+
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:
     if not certs:
         return None

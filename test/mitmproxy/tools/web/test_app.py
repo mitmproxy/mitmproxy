@@ -483,7 +483,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
 
         ws_client.close()
-        
+
     @tornado.testing.gen_test
     def test_websocket_filter_command_error(self):
         ws_url = f"ws://localhost:{self.get_http_port()}/updates"
@@ -501,12 +501,12 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         yield ws_client.write_message(message)
 
         response = yield ws_client.read_message()
-        
+
         # Connection should be closed
         self.assertIsNone(response)
         self.assertEqual(ws_client.close_code, 1003)
         self.assertEqual(ws_client.close_reason, "Unsupported command.")
-    
+
     @tornado.testing.gen_test
     def test_websocket_filter_internal_server_error(self):
         ws_url = f"ws://localhost:{self.get_http_port()}/updates"
@@ -517,7 +517,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         yield ws_client.write_message(message)
 
         response = yield ws_client.read_message()
-        
+
         # Connection should be closed
         self.assertIsNone(response)
         self.assertEqual(ws_client.close_code, 1011)
