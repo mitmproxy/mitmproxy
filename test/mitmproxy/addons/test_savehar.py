@@ -1,6 +1,9 @@
+import base64
 import json
 import zlib
 from pathlib import Path
+from unittest.mock import patch
+from unittest.mock import PropertyMock
 
 import pytest
 
@@ -175,7 +178,6 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 
 
 def test_flow_entry():
-    """https://github.com/mitmproxy/mitmproxy/issues/6579"""
     s = SaveHar()
     req = Request.make("CONNECT", "https://test.test/")
     flow = tflow.tflow(req=req)
@@ -187,23 +189,20 @@ def test_flow_entry():
     req_invalid = Request.make("GET", "https://test.test/")
     raw_data = "Fällbäck".encode("utf-8")
     headers = Headers([(b"Content-Type", b"text/plain; charset=ascii")])
-    flow_invalid = tflow.tflow(
-        req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers)
-    )
+    flow_invalid = tflow.tflow(req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers))
 
-    from mitmproxy.http import Response as BaseResponse
+    with patch.object(flow_invalid.response.__class__, "content", new_callable=PropertyMock) as mock_content:
+        mock_content.side_effect = ValueError("Simulated invalid encoding")
+        flow_entry = s.flow_entry(flow_invalid, servers_seen)
 
-    class DummyResponse(BaseResponse):
-        @property
-        def content(self):
-            raise ValueError("Simulated invalid encoding")
+    assert flow_invalid.error is not None, "flow.error should be set when content decoding fails"
+    assert "Invalid content encoding" in str(flow_invalid.error)
 
-    flow_invalid.response.__class__ = DummyResponse
-
-    s.flow_entry(flow_invalid, servers_seen)
-
-    assert flow_invalid.error is not None
-    assert "Invalid content encoding" in flow_invalid.error
+    content = flow_entry["response"]["content"]
+    expected = base64.b64encode("Fällbäck".encode("utf-8")).decode()
+    assert "text" in content, "The 'text' key should be present in the content"
+    assert content["text"] == expected, f"Expected {expected!r}, got {content['text']!r}"
+    assert "encoding" in content and content["encoding"] == "base64"
 
 
 def test_robust_decode_invalid_charset():

@@ -21,6 +21,7 @@ from mitmproxy import version
 from mitmproxy.addonmanager import Loader
 from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
+from mitmproxy.flow import Error
 from mitmproxy.log import ALERT
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
@@ -204,9 +205,9 @@ class SaveHar:
             try:
                 content = flow.response.content
             except ValueError as e:
-                flow.error = f"Invalid content encoding for {flow.id}: {str(e)}"
+                flow.error = Error(f"Invalid content encoding for {flow.id}: {e}")
                 raw = flow.response.raw_content or b""
-                decoded_text = (raw, flow.response.headers.get("Content-Type", ""))
+                decoded_text = robust_decode(raw, flow.response.headers.get("Content-Type", ""))
                 if strutils.is_mostly_bin(raw):
                     content = raw
                 else:
@@ -235,14 +236,11 @@ class SaveHar:
                 response["content"]["text"] = base64.b64encode(content).decode()
                 response["content"]["encoding"] = "base64"
             else:
-                # Use the robustly decoded text if available.
                 if decoded_text is not None:
                     response["content"]["text"] = decoded_text
                 else:
                     text_content = flow.response.get_text(strict=False)
-                    response["content"]["text"] = (
-                        text_content if text_content is not None else ""
-                    )
+                    response["content"]["text"] = text_content if text_content is not None else ""
         else:
             response = {
                 "status": 0,
