@@ -189,19 +189,27 @@ def test_flow_entry():
     req_invalid = Request.make("GET", "https://test.test/")
     raw_data = "Fällbäck".encode("utf-8")
     headers = Headers([(b"Content-Type", b"text/plain; charset=ascii")])
-    flow_invalid = tflow.tflow(req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers))
+    flow_invalid = tflow.tflow(
+        req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers)
+    )
 
-    with patch.object(flow_invalid.response.__class__, "content", new_callable=PropertyMock) as mock_content:
+    with patch.object(
+        flow_invalid.response.__class__, "content", new_callable=PropertyMock
+    ) as mock_content:
         mock_content.side_effect = ValueError("Simulated invalid encoding")
         flow_entry = s.flow_entry(flow_invalid, servers_seen)
 
-    assert flow_invalid.error is not None, "flow.error should be set when content decoding fails"
+    assert flow_invalid.error is not None, (
+        "flow.error should be set when content decoding fails"
+    )
     assert "Invalid content encoding" in str(flow_invalid.error)
 
     content = flow_entry["response"]["content"]
     expected = base64.b64encode("Fällbäck".encode("utf-8")).decode()
     assert "text" in content, "The 'text' key should be present in the content"
-    assert content["text"] == expected, f"Expected {expected!r}, got {content['text']!r}"
+    assert content["text"] == expected, (
+        f"Expected {expected!r}, got {content['text']!r}"
+    )
     assert "encoding" in content and content["encoding"] == "base64"
 
 

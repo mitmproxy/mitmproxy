@@ -207,7 +207,9 @@ class SaveHar:
             except ValueError as e:
                 flow.error = Error(f"Invalid content encoding for {flow.id}: {e}")
                 raw = flow.response.raw_content or b""
-                decoded_text = robust_decode(raw, flow.response.headers.get("Content-Type", ""))
+                decoded_text = robust_decode(
+                    raw, flow.response.headers.get("Content-Type", "")
+                )
                 if strutils.is_mostly_bin(raw):
                     content = raw
                 else:
@@ -240,7 +242,9 @@ class SaveHar:
                     response["content"]["text"] = decoded_text
                 else:
                     text_content = flow.response.get_text(strict=False)
-                    response["content"]["text"] = text_content if text_content is not None else ""
+                    response["content"]["text"] = (
+                        text_content if text_content is not None else ""
+                    )
         else:
             response = {
                 "status": 0,
