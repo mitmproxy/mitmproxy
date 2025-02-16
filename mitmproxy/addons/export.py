@@ -188,14 +188,13 @@ class Export:
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
-        func: Any = formats[format]
-        v = func(flow)
+        v = formats[format](flow)
         try:
             with open(path, "wb") as fp:
                 if isinstance(v, bytes):
                     fp.write(v)
                 else:
-                    fp.write(v.encode("utf-8"))
+                    fp.write(v.encode("utf-8", "surrogateescape"))
         except OSError as e:
             logging.error(str(e))
 
@@ -204,8 +203,9 @@ class Export:
         """
         Export a flow to the system clipboard.
         """
+        content = self.export_str(format, f)
         try:
-            pyperclip.copy(self.export_str(format, f))
+            pyperclip.copy(content)
         except pyperclip.PyperclipException as e:
             logging.error(str(e))
 
@@ -216,6 +216,11 @@ class Export:
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
-        func = formats[format]
 
-        return strutils.always_str(func(f), "utf8", "backslashreplace")
+        content = formats[format](f)
+        # The individual formatters may return surrogate-escaped UTF-8, but that may blow up in later steps.
+        # For example, pyperclip on macOS does not like surrogates.
+        # To fix this, We first surrogate-encode and then backslash-decode.
+        content = strutils.always_bytes(content, "utf8", "surrogateescape")
+        content = strutils.always_str(content, "utf8", "backslashreplace")
+        return content
