@@ -9,7 +9,7 @@ test("FlowRow", async () => {
     const { asFragment } = render(
         <table>
             <tbody>
-                <FlowRow flow={tflow} selected highlighted />
+                <FlowRow flow={tflow} isSelected isHighlighted />
             </tbody>
         </table>,
         { store },

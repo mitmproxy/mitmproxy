@@ -7,27 +7,27 @@ import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
     flow: Flow;
-    selected: boolean;
-    highlighted: boolean;
+    isSelected: boolean;
+    isHighlighted: boolean;
 };
 
 export default React.memo(function FlowRow({
     flow,
-    selected,
-    highlighted,
+    isSelected,
+    isHighlighted,
 }: FlowRowProps) {
     const dispatch = useAppDispatch();
     const displayColumnNames = useAppSelector(
         (state) => state.options.web_columns,
     );
+    const selectedFlowsIds = useAppSelector((state) => state.flows.selected); // used for multiple flows selection
     const className = classnames({
-        selected: selected,
-        highlighted: highlighted,
+        selected: isSelected,
+        highlighted: isHighlighted,
         intercepted: flow.intercepted,
         "has-request": flow.type === "http" && flow.request,
         "has-response": flow.type === "http" && flow.response,
     });
-    const selectedFlowsIds = useAppSelector((state) => state.flows.selected);
 
     const onClick = useCallback(
         (e) => {

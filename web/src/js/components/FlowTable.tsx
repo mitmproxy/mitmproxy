@@ -141,8 +141,8 @@ export class PureFlowTable extends React.Component<
                             <FlowRow
                                 key={flow.id}
                                 flow={flow}
-                                selected={selected.includes(flow.id)}
-                                highlighted={isHighlighted(flow)}
+                                isSelected={selected.includes(flow.id)}
+                                isHighlighted={isHighlighted(flow)}
                             />
                         ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
