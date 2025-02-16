@@ -67,16 +67,8 @@ export default function FlowMenu(): JSX.Element {
                             title="[d]elete flow"
                             icon="fa-trash text-danger"
                             onClick={() => {
-                                /*if (selectedFlows.length > 1) {
-                                    dispatch(
-                                        removeMultipleFlows(selectedFlows),
-                                    );
-                                    dispatch(selectFlow(undefined)); // clear flow selection
-                                } else {
-                                    dispatch(removeFlow(flow));
-                                }*/
                                 dispatch(removeFlow(selectedFlows));
-                                dispatch(selectFlow(undefined)); // clear flow selection
+                                dispatch(selectFlow([])); // clear flow selection
                             }}
                         >
                             Delete

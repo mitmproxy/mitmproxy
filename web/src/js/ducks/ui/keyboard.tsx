@@ -47,7 +47,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (getState().ui.modal.activeModal) {
                     dispatch(modalActions.hideModal());
                 } else {
-                    dispatch(flowsActions.select(undefined));
+                    dispatch(flowsActions.select([]));
                 }
                 break;
 

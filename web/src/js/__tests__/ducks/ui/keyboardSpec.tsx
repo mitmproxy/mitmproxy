@@ -15,7 +15,7 @@ describe("onKeyDown", () => {
             data: [],
         });
         store.dispatch(flowsActions.setFilter(""));
-        store.dispatch(flowsActions.select("1"));
+        store.dispatch(flowsActions.select(["1"]));
         for (let i = 1; i <= 12; i++) {
             store.dispatch({
                 type: flowsActions.ADD,
@@ -173,7 +173,7 @@ describe("onKeyDown", () => {
 
     it("should stop on some action with no flow is selected", () => {
         const store = makeStore();
-        store.dispatch(flowsActions.select(undefined));
+        store.dispatch(flowsActions.select([]));
         store.dispatch(createKeyEvent("ArrowLeft"));
         store.dispatch(createKeyEvent("Tab"));
         store.dispatch(createKeyEvent("ArrowRight"));

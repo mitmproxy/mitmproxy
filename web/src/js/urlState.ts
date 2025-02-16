@@ -24,7 +24,7 @@ export function updateStoreFromUrl(store) {
     if (path_components[0] === "flows") {
         if (path_components.length == 3) {
             const [flowId, tab] = path_components.slice(1);
-            store.dispatch(select(flowId));
+            store.dispatch(select([flowId]));
             store.dispatch(selectTab(tab));
         }
     }

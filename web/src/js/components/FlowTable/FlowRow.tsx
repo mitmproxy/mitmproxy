@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import classnames from "classnames";
 import { Flow } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { select, multiSelect } from "../../ducks/flows";
+import { select } from "../../ducks/flows";
 import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
@@ -27,6 +27,7 @@ export default React.memo(function FlowRow({
         "has-request": flow.type === "http" && flow.request,
         "has-response": flow.type === "http" && flow.response,
     });
+    const selectedFlowsIds = useAppSelector((state) => state.flows.selected);
 
     const onClick = useCallback(
         (e) => {
@@ -37,12 +38,20 @@ export default React.memo(function FlowRow({
                 node = node.parentNode;
             }
             if (e.metaKey || e.ctrlKey) {
-                dispatch(multiSelect(flow.id));
+                if (selectedFlowsIds.includes(flow.id)) {
+                    // If the flow is already selected, remove it.
+                    dispatch(
+                        select(selectedFlowsIds.filter((id) => id !== flow.id)),
+                    );
+                } else {
+                    dispatch(select([...selectedFlowsIds, flow.id]));
+                }
             } else {
-                dispatch(select(flow.id));
+                // select only the clicked flow
+                dispatch(select([flow.id]));
             }
         },
-        [flow],
+        [flow, selectedFlowsIds],
     );
 
     const displayColumns = displayColumnNames

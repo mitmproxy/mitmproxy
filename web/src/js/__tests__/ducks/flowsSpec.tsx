@@ -29,21 +29,9 @@ describe("flow reducer", () => {
 
     describe("selections", () => {
         it("should be possible to select a single flow", () => {
-            expect(reduceFlows(state, flowActions.select("2"))).toEqual({
+            expect(reduceFlows(state, flowActions.select(["2"]))).toEqual({
                 ...state,
                 selected: ["2"],
-            });
-        });
-
-        it("should be possible to select multiple flows", () => {
-            expect(
-                reduceFlows(
-                    { ...state, selected: ["2"] },
-                    flowActions.multiSelect("3"),
-                ),
-            ).toEqual({
-                ...state,
-                selected: ["2", "3"],
             });
         });
 
@@ -51,7 +39,7 @@ describe("flow reducer", () => {
             expect(
                 reduceFlows(
                     { ...state, selected: ["1"] },
-                    flowActions.select(),
+                    flowActions.select([]),
                 ),
             ).toEqual({
                 ...state,
@@ -62,13 +50,13 @@ describe("flow reducer", () => {
         it("should be possible to select relative", () => {
             // haven't selected any flow
             expect(flowActions.selectRelative(state, 1)).toEqual(
-                flowActions.select("4"),
+                flowActions.select(["4"]),
             );
 
             // already selected some flows
             expect(
                 flowActions.selectRelative({ ...state, selected: [2] }, 1),
-            ).toEqual(flowActions.select("3"));
+            ).toEqual(flowActions.select(["3"]));
         });
 
         it("should update state.selected on remove", () => {
@@ -174,9 +162,7 @@ describe("flows actions", () => {
     });
 
     it("should handle remove action with multiple flows", async () => {
-        await store.dispatch(
-            flowActions.remove([tflow.id, ttcpflow.id]),
-        );
+        await store.dispatch(flowActions.remove([tflow.id, ttcpflow.id]));
 
         expect(fetchApi).toHaveBeenCalledTimes(2);
         expect(fetchApi).toHaveBeenCalledWith(`/flows/${tflow.id}`, {

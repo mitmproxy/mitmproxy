@@ -21,7 +21,7 @@ describe("FlowTable Component", () => {
         );
         expect(asFragment()).toMatchSnapshot();
 
-        act(() => store.dispatch(select(store.getState().flows.view[3].id)));
+        act(() => store.dispatch(select([store.getState().flows.view[3].id])));
         expect(asFragment()).toMatchSnapshot();
     });
 });

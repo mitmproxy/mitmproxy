@@ -94,7 +94,7 @@ export default function FlowView() {
                 <button
                     data-testid="close-button-id"
                     className="close-button"
-                    onClick={() => dispatch(flowsActions.select(undefined))}
+                    onClick={() => dispatch(flowsActions.select([]))}
                 >
                     <i className="fa fa-times-circle"></i>
                 </button>
