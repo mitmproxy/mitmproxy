@@ -216,7 +216,8 @@ def test_flow_entry():
     raw_data_text = "This is a test string."
     headers_text = Headers([(b"Content-Type", b"text/plain; charset=utf-8")])
     flow_text = tflow.tflow(
-        req=req_invalid, resp=tutils.tresp(content=raw_data_text.encode("utf-8"), headers=headers_text)
+        req=req_invalid,
+        resp=tutils.tresp(content=raw_data_text.encode("utf-8"), headers=headers_text),
     )
 
     with patch.object(
