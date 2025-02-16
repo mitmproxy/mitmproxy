@@ -319,7 +319,7 @@ def test_export(tmp_path) -> None:
         (FileNotFoundError, "No such file or directory"),
     ],
 )
-async def test_export_open(exception, log_message, tmpdir, caplog):
+def test_export_open(exception, log_message, tmpdir, caplog):
     f = str(tmpdir.join("path"))
     e = export.Export()
     with mock.patch("mitmproxy.addons.export.open") as m:
@@ -328,7 +328,21 @@ async def test_export_open(exception, log_message, tmpdir, caplog):
         assert log_message in caplog.text
 
 
-async def test_clip(tmpdir, caplog):
+def test_export_str(tmpdir, caplog):
+    """Test that string export return a str without any UTF-8 surrogates"""
+    e = export.Export()
+    with taddons.context(e):
+        f = tflow.tflow()
+        f.request.headers.fields = (
+            (b"utf8-header", "é".encode("utf-8")),
+            (b"latin1-header", "é".encode("latin1")),
+        )
+        # ensure that we have no surrogates in the return value
+        assert e.export_str("curl", f).encode("utf8", errors="strict")
+        assert e.export_str("raw", f).encode("utf8", errors="strict")
+
+
+def test_clip(tmpdir, caplog):
     e = export.Export()
     with taddons.context() as tctx:
         tctx.configure(e)
