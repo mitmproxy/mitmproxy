@@ -67,6 +67,16 @@ exports[`OptionMenu Component should render correctly 1`] = `
             type="checkbox"
           />
           Use host header for display
+           
+          <a
+            href="https://docs.mitmproxy.org/stable/concepts-options/#showhost"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <i
+              className="fa fa-question-circle"
+            />
+          </a>
         </label>
       </div>
       <div
@@ -79,6 +89,16 @@ exports[`OptionMenu Component should render correctly 1`] = `
             type="checkbox"
           />
           Don't verify server certificates
+           
+          <a
+            href="https://docs.mitmproxy.org/stable/concepts-options/#ssl_insecure"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <i
+              className="fa fa-question-circle"
+            />
+          </a>
         </label>
       </div>
     </div>
