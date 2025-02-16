@@ -200,11 +200,7 @@ export function killAll() {
     return () => fetchApi("/flows/kill", { method: "POST" });
 }
 
-export function remove(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
-}
-
-export function removeMultiple(flowIds: string[]) {
+export function remove(flowIds: string[]) {
     return () =>
         Promise.all(
             flowIds.map((flowId) =>

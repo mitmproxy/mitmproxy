@@ -85,7 +85,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (!flow) {
                     return;
                 }
-                dispatch(flowsActions.remove(flow));
+                dispatch(flowsActions.remove([flow.id]));
                 break;
             }
 

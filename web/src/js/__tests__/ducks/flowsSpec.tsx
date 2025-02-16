@@ -166,16 +166,16 @@ describe("flows actions", () => {
     });
 
     it("should handle remove action", () => {
-        store.dispatch(flowActions.remove(tflow));
+        store.dispatch(flowActions.remove([tflow.id]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
             { method: "DELETE" },
         );
     });
 
-    it("should handle removeMultiple action", async () => {
+    it("should handle remove action with multiple flows", async () => {
         await store.dispatch(
-            flowActions.removeMultiple([tflow.id, ttcpflow.id]),
+            flowActions.remove([tflow.id, ttcpflow.id]),
         );
 
         expect(fetchApi).toHaveBeenCalledTimes(2);
