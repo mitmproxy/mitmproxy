@@ -1,0 +1,217 @@
+[
+  {
+    "id": "hardcoded_for_test",
+    "intercepted": false,
+    "is_replay": null,
+    "type": "http",
+    "modified": false,
+    "marked": "",
+    "comment": "",
+    "timestamp_created": 0,
+    "client_conn": {
+      "id": "hardcoded_for_test",
+      "peername": [
+        "127.0.0.1",
+        0
+      ],
+      "sockname": [
+        "127.0.0.1",
+        0
+      ],
+      "tls_established": false,
+      "cert": null,
+      "sni": null,
+      "cipher": null,
+      "alpn": null,
+      "tls_version": null,
+      "timestamp_start": 1723223641.050195,
+      "timestamp_tls_setup": null,
+      "timestamp_end": 1723223641.2648678
+    },
+    "server_conn": {
+      "id": "hardcoded_for_test",
+      "peername": null,
+      "sockname": null,
+      "address": [
+        "17.248.228.71",
+        443
+      ],
+      "tls_established": false,
+      "cert": null,
+      "sni": null,
+      "cipher": null,
+      "alpn": null,
+      "tls_version": null,
+      "timestamp_start": null,
+      "timestamp_tcp_setup": null,
+      "timestamp_tls_setup": null,
+      "timestamp_end": null
+    },
+    "request": {
+      "method": "POST",
+      "scheme": "https",
+      "host": "fmfmobile.icloud.com",
+      "port": 443,
+      "path": "/fmipservice/friends/%25@/00008101-001C59490C80801E/first/initClient",
+      "http_version": "HTTP/1.1",
+      "headers": [
+        [
+          "Host",
+          "fmfmobile.icloud.com"
+        ],
+        [
+          "X-Apple-Realm-Support",
+          "1.0"
+        ],
+        [
+          "X-Apple-I-MD-RINFO",
+          "67437824"
+        ],
+        [
+          "Accept",
+          "application/json"
+        ],
+        [
+          "User-Agent",
+          "FindMyWidgetIntentsPeople/1 CFNetwork/1498.700.2 Darwin/23.6.0"
+        ],
+        [
+          "Connection",
+          "keep-alive"
+        ],
+        [
+          "Content-Type",
+          "application/json"
+        ],
+        [
+          "X-MME-CLIENT-INFO",
+          "<iPad13,19> <iPhone OS;17.6.1;21G93> <com.apple.AuthKit/1 (com.apple.findmy.FindMyWidgetIntentsPeople/1)>"
+        ],
+        [
+          "Accept-Encoding",
+          "gzip, deflate, br"
+        ],
+        [
+          "Accept-Language",
+          "en-US,en;q=0.9"
+        ],
+        [
+          "X-Apple-I-MD-M",
+          "p+EmzLiqLRHSh8Dqw+iBwGktE2W6nBY7gz4UqhLVechI0NKb6kIxlSnKSQIyeaK5GPDwIJQ4NN1IeUqS"
+        ],
+        [
+          "Content-Length",
+          "494"
+        ],
+        [
+          "X-Apple-Find-API-Ver",
+          "2.0"
+        ],
+        [
+          "X-Apple-I-Client-Time",
+          "2024-08-09T17:14:00Z"
+        ],
+        [
+          "X-Apple-I-MD",
+          "AAAABQAAABBTN/9Qbjqxr488VFKIu48yAAAAAw=="
+        ],
+        [
+          "X-Apple-AuthScheme",
+          "Forever"
+        ],
+        [
+          "X-FMF-Model-Version",
+          "1"
+        ],
+        [
+          "X-Apple-I-TimeZone",
+          "EDT"
+        ],
+        [
+          "X-Apple-I-Locale",
+          "en_US"
+        ]
+      ],
+      "contentLength": 494,
+      "contentHash": "34a6c8b4769e82919756a44bf85e2719f61e7e696f0c3ad4a0b5da190b4c34e2",
+      "timestamp_start": 1723223641.050195,
+      "timestamp_end": 1723223641.2648678,
+      "pretty_host": "fmfmobile.icloud.com"
+    },
+    "response": {
+      "http_version": "HTTP/1.1",
+      "status_code": 401,
+      "reason": "Unauthorized",
+      "headers": [
+        [
+          "Server",
+          "AppleHttpServer/b866cf47a603"
+        ],
+        [
+          "Date",
+          "Fri, 09 Aug 2024 17:14:01 GMT"
+        ],
+        [
+          "Content-Length",
+          "0"
+        ],
+        [
+          "Connection",
+          "keep-alive"
+        ],
+        [
+          "Set-Cookie",
+          "xr_3n2093n1a=57c8oBNPtexnilacE+aGE8hv94Araside5IAwbQqY617VhF29qn2BJEWJH0=; Path=/; Secure; HttpOnly"
+        ],
+        [
+          "X-Responding-Instance",
+          "fmipservice:3:prod-p34-fmipservice--remaining-6f5c7dd784-vf9j8:80:2409B2390:aac3c2df0e31"
+        ],
+        [
+          "content-encoding",
+          "UTF-8"
+        ],
+        [
+          "X-Robots-Tag",
+          "noindex, noarchive, nosnippet, nofollow"
+        ],
+        [
+          "X-Responding-Server",
+          "prod-p34-fmipservice--remaining-6f5c7dd784-vf9j8_99"
+        ],
+        [
+          "X-Responding-Partition",
+          "p34"
+        ],
+        [
+          "Strict-Transport-Security",
+          "max-age=31536000; includeSubDomains;"
+        ],
+        [
+          "x-apple-user-partition",
+          "34"
+        ],
+        [
+          "via",
+          "xrail:mr42p00ic-qujn08142102.me.com:8301:24R333:grp21,631194250daa17e24277dea86cf30319:a57fb501bf4a51059fac6c5879bf060c:usqas5"
+        ],
+        [
+          "X-Apple-Request-UUID",
+          "041b4ac3-bd5b-4934-a25e-4b2205339d36"
+        ],
+        [
+          "access-control-expose-headers",
+          "X-Apple-Request-UUID,Via"
+        ],
+        [
+          "X-Apple-Edge-Response-Time",
+          "54"
+        ]
+      ],
+      "contentLength": 0,
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "timestamp_start": 1723223641.050195,
+      "timestamp_end": 1723223641.2648678
+    }
+  }
+]
