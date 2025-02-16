@@ -2,7 +2,6 @@ import logging
 import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
-from typing import Any
 
 import pyperclip
 

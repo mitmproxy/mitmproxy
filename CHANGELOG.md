@@ -14,6 +14,7 @@
 - Add a log message to point Docker mitmweb users towards `web_password`.
   ([#7554](https://github.com/mitmproxy/mitmproxy/pull/7554), @mhils)
 - Fix a bug where UTF-8 surrogates would crash the export addon.
+  ([#7562](https://github.com/mitmproxy/mitmproxy/pull/7562), @mhils)
 
 ## 06 February 2025: mitmproxy 11.1.2
 
