@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import re
 import zlib
 from collections.abc import Sequence
 from datetime import datetime
@@ -20,11 +21,33 @@ from mitmproxy import version
 from mitmproxy.addonmanager import Loader
 from mitmproxy.connection import Server
 from mitmproxy.coretypes.multidict import _MultiDict
+from mitmproxy.flow import Error
 from mitmproxy.log import ALERT
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
+
+
+def robust_decode(raw_content: bytes, content_type: str) -> str:
+    """
+    Try to decode raw_content using several strategies:
+    1. Use the charset in the Content-Type header (if present)
+    2. Try decoding as UTF-8 with errors replaced.
+    3. Fallback to Latin-1 decoding.
+    """
+    match = re.search(r"charset=([\w-]+)", content_type, re.IGNORECASE)
+    if match:
+        charset = match.group(1)
+        try:
+            return raw_content.decode(charset)
+        except (LookupError, UnicodeDecodeError):
+            pass
+
+    try:
+        return raw_content.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw_content.decode("latin-1")
 
 
 class SaveHar:
@@ -178,10 +201,19 @@ class SaveHar:
         }
 
         if flow.response:
+            decoded_text = None
             try:
                 content = flow.response.content
-            except ValueError:
-                content = flow.response.raw_content
+            except ValueError as e:
+                flow.error = Error(f"Invalid content encoding for {flow.id}: {e}")
+                raw = flow.response.raw_content or b""
+                decoded_text = robust_decode(
+                    raw, flow.response.headers.get("Content-Type", "")
+                )
+                if strutils.is_mostly_bin(raw):
+                    content = raw
+                else:
+                    content = decoded_text.encode("utf-8")
             response_body_size = (
                 len(flow.response.raw_content) if flow.response.raw_content else 0
             )
@@ -206,11 +238,13 @@ class SaveHar:
                 response["content"]["text"] = base64.b64encode(content).decode()
                 response["content"]["encoding"] = "base64"
             else:
-                text_content = flow.response.get_text(strict=False)
-                if text_content is None:
-                    response["content"]["text"] = ""
+                if decoded_text is not None:
+                    response["content"]["text"] = decoded_text
                 else:
-                    response["content"]["text"] = text_content
+                    text_content = flow.response.get_text(strict=False)
+                    response["content"]["text"] = (
+                        text_content if text_content is not None else ""
+                    )
         else:
             response = {
                 "status": 0,
