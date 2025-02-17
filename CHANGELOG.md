@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 17 February 2025: mitmproxy 11.1.3
+
 - Update mitmproxy_rs dependency to fix several bugs in local capture mode.
   ([#7564](https://github.com/mitmproxy/mitmproxy/pull/7564), @mhils)
 - Add documentation for local capture mode.
