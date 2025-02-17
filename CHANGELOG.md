@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Update mitmproxy_rs dependency to fix several bugs in local capture mode.
 - Add documentation for local capture mode.
   ([#7540](https://github.com/mitmproxy/mitmproxy/pull/7540), @mhils)
 - Revise documentation on proxy modes.
