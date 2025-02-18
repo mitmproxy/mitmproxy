@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from typing import Optional
+
 import urwid
 
 from mitmproxy.tools.console import signals
@@ -13,16 +16,41 @@ class Highlight(urwid.AttrMap):
         self.backup = t
 
 
+@dataclass
+class SearchableContext:
+    current_highlight: Optional[int] = None
+    search_term: Optional[str] = None
+    last_search: Optional[str] = None
+    focus: int = 0
+    queued_search_direction: Optional[bool] = None
+
+
 class Searchable(urwid.ListBox):
-    def __init__(self, contents):
+    context: SearchableContext
+
+    def __init__(self, contents, context: Optional[SearchableContext] = None):
         self.walker = urwid.SimpleFocusListWalker(contents)
         urwid.ListBox.__init__(self, self.walker)
-        self.search_offset = 0
-        self.current_highlight = None
-        self.search_term = None
+        self.context = context if context is not None else SearchableContext()
         self.last_search = None
+        if self.context.current_highlight is not None:
+            if len(self.body) > self.context.current_highlight:
+                self.body[self.context.current_highlight] = Highlight(
+                    self.body[self.context.current_highlight]
+                )
+            else:
+                self.context.current_highlight = None
+        try:
+            self.set_focus(self.context.focus)
+        except IndexError:
+            self.context.focus = 0
+
+        if self.context.queued_search_direction is not None:
+            self.find_next(self.context.queued_search_direction)
+        self.walker._modified()
 
     def keypress(self, size, key: str):
+        result: Optional[str] = None
         if key == "/":
             signals.status_prompt.send(
                 prompt="Search for", text="", callback=self.set_search
@@ -33,27 +61,36 @@ class Searchable(urwid.ListBox):
             self.find_next(True)
         elif key == "m_start":
             self.set_focus(0)
+            self.context.focus = 0
             self.walker._modified()
         elif key == "m_end":
             self.set_focus(len(self.walker) - 1)
+            self.context.focus = len(self.walker) - 1
             self.walker._modified()
         else:
-            return super().keypress(size, key)
+            result = super().keypress(size, key)
+
+        try:
+            self.context.focus = self.focus_position
+        except IndexError:
+            self.context.focus = 0
+
+        return result
 
     def set_search(self, text):
-        self.last_search = text
-        self.search_term = text or None
+        self.context.last_search = text
+        self.context.search_term = text or None
         self.find_next(False)
 
     def set_highlight(self, offset):
-        if self.current_highlight is not None:
-            old = self.body[self.current_highlight]
-            self.body[self.current_highlight] = old.backup
+        if self.context.current_highlight is not None:
+            old = self.body[self.context.current_highlight]
+            self.body[self.context.current_highlight] = old.backup
         if offset is None:
-            self.current_highlight = None
+            self.context.current_highlight = None
         else:
             self.body[offset] = Highlight(self.body[offset])
-            self.current_highlight = offset
+            self.context.current_highlight = offset
 
     def get_text(self, w):
         if isinstance(w, urwid.Text):
@@ -63,13 +100,21 @@ class Searchable(urwid.ListBox):
         else:
             return None
 
+    def on_not_found(self):
+        """Called when search process reached end of loaded document and will check
+        from the beginning or end (in case it is backward search).
+        It is intended to be overloaded, return True if search should continue, False otherwise
+        """
+        return True
+
     def find_next(self, backwards: bool):
-        if not self.search_term:
-            if self.last_search:
-                self.search_term = self.last_search
+        if not self.context.search_term:
+            if self.context.last_search:
+                self.context.search_term = self.context.last_search
             else:
                 self.set_highlight(None)
                 return
+        self.context.queued_search_direction = backwards
         # Start search at focus + 1
         if backwards:
             rng = range(len(self.body) - 1, -1, -1)
@@ -77,13 +122,19 @@ class Searchable(urwid.ListBox):
             rng = range(1, len(self.body) + 1)
         for i in rng:
             off = (self.focus_position + i) % len(self.body)
+            if off == 0:
+                if not self.on_not_found():
+                    return
             w = self.body[off]
             txt = self.get_text(w)
-            if txt and self.search_term in txt:
+            if txt and self.context.search_term in txt:
                 self.set_highlight(off)
                 self.set_focus(off, coming_from="above")
+                self.context.focus = off
                 self.body._modified()
-                return
+                break
         else:
             self.set_highlight(None)
             signals.status_message.send(message="Search not found.", expire=1)
+
+        self.context.queued_search_direction = None
