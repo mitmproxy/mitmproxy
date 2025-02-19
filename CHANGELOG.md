@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Enhance homebrew installation command for Brewfile users.
 
 ## 17 February 2025: mitmproxy 11.1.3
 
