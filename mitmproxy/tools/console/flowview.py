@@ -51,6 +51,7 @@ class FlowDetails(tabs.Tabs):
         super().__init__([])
         self.show()
         self.last_displayed_body = None
+        self.last_displayed_websocket_messages = None
         contentviews.on_add.connect(self.contentview_changed)
         contentviews.on_remove.connect(self.contentview_changed)
 
@@ -256,7 +257,14 @@ class FlowDetails(tabs.Tabs):
             0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
         )
 
-        return searchable.Searchable(widget_lines)
+        if (last_view := self.last_displayed_websocket_messages) is not None:
+            last_view.walker[:] = widget_lines
+            view = last_view
+        else:
+            view = searchable.Searchable(widget_lines)
+            self.last_displayed_websocket_messages = view
+
+        return view
 
     def view_message_stream(self) -> urwid.Widget:
         flow = self.flow
