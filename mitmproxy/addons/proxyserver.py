@@ -129,6 +129,10 @@ class Proxyserver(ServerManager):
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
 
+    @command.command("proxyserver.active_connections")
+    def active_connections(self) -> int:
+        return len(self.connections)
+
     @contextmanager
     def register_connection(
         self, connection_id: tuple | str, handler: ProxyConnectionHandler

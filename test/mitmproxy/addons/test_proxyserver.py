@@ -87,6 +87,7 @@ async def test_start_stop(caplog_async):
                 == b"HTTP/1.1 204 No Content\r\n\r\n"
             )
             assert repr(ps) == "Proxyserver(1 active conns)"
+            assert ps.active_connections() == 1
 
             await (
                 ps.setup_servers()
