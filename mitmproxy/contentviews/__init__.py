@@ -33,6 +33,7 @@ from . import multipart
 from . import protobuf
 from . import query
 from . import raw
+from . import socketio
 from . import urlencoded
 from . import wbxml
 from . import xml_html
@@ -249,6 +250,7 @@ add(grpc.ViewGrpcProtobuf())
 add(mqtt.ViewMQTT())
 add(http3.ViewHttp3())
 add(dns.ViewDns())
+add(socketio.ViewSocketIO())
 
 __all__ = [
     "View",
