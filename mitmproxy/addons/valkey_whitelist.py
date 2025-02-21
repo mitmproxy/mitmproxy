@@ -1,32 +1,26 @@
-# Psudocode
+# include <AMDG.h>
+"""
+Usage:
+$ mitmdump -s valkey_whitelist.py --set whitelist_fp="<file path to whitelist.txt>"
+"""
 
-# Application launch:
-
-# if valkey server is not alive:
-#   exit_failure
-# if valkey_rdbfile does not exist:
-#   read whitelist.txt into valkey_server
-# if whitelist_update() == true: 
-#   fetch new deltas from remote
-
-# Incoming http request:
-
-# if domain is an element of set whitelist:
-#   process request
-# else:
-#   bounce request
-#   if (response = ask_for_feedback()):
-#       check_if_valid_domain(response)
-#       add response to set suggestlist
-
+from typing import Optional
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
-from typing import Optional
 import valkey
 
 default_ip = "127.0.0.1"
+# import socket
+# default_ip = socket.gethostname() # TODO: ASK SAM
 default_port = 6379 # Default port for a valkey server
+
+WHITELIST_403 = b"""<div class="lock"></div>
+<div class="message">
+  <h1>Access to this page is restricted</h1>
+  <p>Please check with the site admin if you believe this is a mistake.</p>
+</div>
+"""
 
 class Valkey:
     def __init__(self) -> None:
@@ -65,7 +59,7 @@ class Valkey:
 
         try: # launching valkey server
             v = valkey.Valkey(host=self.valkey_address, port=self.valkey_port, db=0) # db=0: database #0
-            if (v.ping() == True):
+            if (v.ping() is True):
                 print(f"Valkey server is online @ IP {self.valkey_address} & port {self.valkey_port}")
             else:
                 raise exceptions.OptionsError("Valkey server was initialized but failed to ping back")
@@ -74,16 +68,17 @@ class Valkey:
 
         if "whitelist_fp" in updates:
             fp = ctx.options.whitelist_fp
-            if fp != None:
-                f = open(fp)
-                # File is now open. Delete all keys from the old db
-                v.flushall() #TODO: This is not a great way of doing things
-                # Pipe contents as fast as possible into valkey
-                pipe = v.pipeline()
-                for line in f:
-                    domain = line.strip()
-                    pipe.sadd("whitelist", domain) # add domain to the set called whitelist
-                pipe.execute() # run all buffered commands
+            if fp is not None:
+                with open(fp, 'r') as f:
+                    # f = open(fp)
+                    # File is now open. Delete all keys from the old db
+                    v.flushall() #TODO: This is not a great way of doing things
+                    # Pipe contents as fast as possible into valkey
+                    pipe = v.pipeline()
+                    for line in f:
+                        domain = line.strip()
+                        pipe.sadd("whitelist", domain) # add domain to the set called whitelist
+                    pipe.execute() # run all buffered commands
 
     def request(self, flow: http.HTTPFlow):
         v = valkey.Valkey(host=self.valkey_address, port=self.valkey_port, db=0)
@@ -93,12 +88,17 @@ class Valkey:
         if domain.startswith("www."):
             domain = domain[4:]
         print(f"Checking domain {domain}")
-        if (v.sismember("whitelist", domain)==False):
+        if not v.sismember("whitelist", domain):
             print(f"Domain {domain} was not found in the whitelist...")
+            # flow.response = http.Response.make(
+            #     403,
+            #     b"Blocked! Go pray! :P\n",
+            #     {"Content-Type": "text/plain"}
+            # )
             flow.response = http.Response.make(
-                403, 
-                b"Blocked! Go pray! :P\n",
-                {"Content-Type": "text/plain"}
+                403,
+                WHITELIST_403,
+                {"Content-Type": "text/html; charset=utf-8"}
             )
         else:
             print(f"Domain {domain} was found in the whitelist!") 
