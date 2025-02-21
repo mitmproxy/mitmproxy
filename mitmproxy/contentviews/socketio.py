@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Iterable
 
 from mitmproxy.contentviews import base
 from mitmproxy.flow import Flow
@@ -10,6 +9,7 @@ class PacketType(Enum):
 
     def __str__(self):
         return f"{type(self).__name__}.{self.name}"
+
 
 class EngineIO(PacketType):
     # https://github.com/socketio/engine.io-protocol?tab=readme-ov-file#protocol
@@ -28,6 +28,7 @@ class EngineIO(PacketType):
             self.PONG,
         )
 
+
 class SocketIO(PacketType):
     # https://github.com/socketio/socket.io-protocol?tab=readme-ov-file#exchange-protocol
     CONNECT = ord("0")
@@ -40,18 +41,22 @@ class SocketIO(PacketType):
 
     @property
     def visible(self):
-        return self not in (
-            self.ACK,
-            self.BINARY_ACK
-        )
+        return self not in (self.ACK, self.BINARY_ACK)
+
 
 BLANK = "Socket.IO", iter([])
 
+
 def format_text(packet_type: PacketType, data):
-    return "Socket.IO", iter([[
-        ("content_none", f"{packet_type} "),
-        ("text", data),
-    ]])
+    return "Socket.IO", iter(
+        [
+            [
+                ("content_none", f"{packet_type} "),
+                ("text", data),
+            ]
+        ]
+    )
+
 
 class ViewSocketIO(base.View):
     name = "Socket.IO"
