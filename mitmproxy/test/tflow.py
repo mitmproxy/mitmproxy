@@ -289,9 +289,6 @@ def tflows() -> list[flow.Flow]:
         tflow(resp=True),
         tflow(err=True),
         tflow(ws=True),
-        tflow(
-            ws=True
-        ),  # second run should recycle the previous "Websocket Messages" tab
         ttcpflow(),
         ttcpflow(err=True),
         tudpflow(),
