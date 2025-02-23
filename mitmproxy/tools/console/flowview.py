@@ -217,10 +217,6 @@ class FlowDetails(tabs.Tabs):
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
-        if viewmode == "auto" and "/socket.io/?" in flow.request.path:
-            self.master.commands.call("console.flowview.mode.set", "socket.io")
-            viewmode = self.master.commands.call("console.flowview.mode")
-
         widget_lines = []
         for m in flow.websocket.messages:
             _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)

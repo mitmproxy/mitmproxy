@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Tuple
 
 from mitmproxy.contentviews import base
 from mitmproxy.flow import Flow
@@ -41,13 +42,30 @@ class SocketIO(PacketType):
 
     @property
     def visible(self):
-        return self not in (self.ACK, self.BINARY_ACK)
+        return self not in (
+            self.ACK,
+            self.BINARY_ACK,
+        )
 
 
-BLANK = "Socket.IO", iter([])
+def parse_packet(data) -> Tuple[PacketType, bytes | str]:
+    # throws IndexError/ValueError if invalid packet
+    packet_type = EngineIO(data[0])
+    data = data[1:]
+
+    if packet_type is not EngineIO.MESSAGE:
+        return packet_type, data
+
+    packet_type = SocketIO(data[0])
+    data = data[1:]
+
+    return packet_type, data
 
 
-def format_text(packet_type: PacketType, data):
+def format_packet(packet_type: PacketType, data):
+    if not packet_type.visible:
+        return "Socket.IO", iter([])
+
     return "Socket.IO", iter(
         [
             [
@@ -63,29 +81,20 @@ class ViewSocketIO(base.View):
 
     def __call__(self, data, **metadata):
         try:
-            packet_type = EngineIO(data[0])
-            data = data[1:]
+            packet_type, data = parse_packet(data)
         except (IndexError, ValueError):
             return None
 
-        if not packet_type.visible:
-            return BLANK
-
-        if packet_type != EngineIO.MESSAGE:
-            return format_text(packet_type, data)
-
-        try:
-            packet_type = SocketIO(data[0])
-            data = data[1:]
-        except (IndexError, ValueError):
-            return None
-
-        if not packet_type.visible:
-            return BLANK
-
-        return format_text(packet_type, data)
+        return format_packet(packet_type, data)
 
     def render_priority(
         self, data: bytes, *, flow: Flow | None = None, **metadata
     ) -> float:
+        if (
+                data
+                and flow is not None
+                and flow.websocket is not None
+                and "/socket.io/?" in flow.request.path
+        ):
+            return 1
         return 0
