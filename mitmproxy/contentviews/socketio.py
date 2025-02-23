@@ -3,6 +3,7 @@ from typing import Tuple
 
 from mitmproxy.contentviews import base
 from mitmproxy.flow import Flow
+from mitmproxy.http import HTTPFlow
 
 
 class PacketType(Enum):
@@ -50,16 +51,16 @@ class SocketIO(PacketType):
 
 def parse_packet(data) -> Tuple[PacketType, bytes | str]:
     # throws IndexError/ValueError if invalid packet
-    packet_type = EngineIO(data[0])
+    engineio_type = EngineIO(data[0])
     data = data[1:]
 
-    if packet_type is not EngineIO.MESSAGE:
-        return packet_type, data
+    if engineio_type is not EngineIO.MESSAGE:
+        return engineio_type, data
 
-    packet_type = SocketIO(data[0])
+    socketio_type = SocketIO(data[0])
     data = data[1:]
 
-    return packet_type, data
+    return socketio_type, data
 
 
 def format_packet(packet_type: PacketType, data):
@@ -92,7 +93,7 @@ class ViewSocketIO(base.View):
     ) -> float:
         if (
             data
-            and flow is not None
+            and isinstance(flow, HTTPFlow)
             and flow.websocket is not None
             and "/socket.io/?" in flow.request.path
         ):
