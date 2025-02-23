@@ -9,6 +9,7 @@
 
 - Enhance homebrew installation command for Brewfile users.
   ([#7566](https://github.com/mitmproxy/mitmproxy/pull/7566), @AntoineJT)
+- Create content view for Socket.IO over WebSocket transport
 
 ## 17 February 2025: mitmproxy 11.1.3
 
