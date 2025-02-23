@@ -2,14 +2,11 @@ from hypothesis import given
 from hypothesis.strategies import binary
 
 from . import full_eval
-from mitmproxy.contentviews.socketio import (
-    EngineIO,
-    PacketType,
-    SocketIO,
-    ViewSocketIO,
-    format_packet,
-    parse_packet,
-)
+from mitmproxy.contentviews.socketio import EngineIO
+from mitmproxy.contentviews.socketio import format_packet
+from mitmproxy.contentviews.socketio import parse_packet
+from mitmproxy.contentviews.socketio import SocketIO
+from mitmproxy.contentviews.socketio import ViewSocketIO
 from mitmproxy.test import tflow
 
 

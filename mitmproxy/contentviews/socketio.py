@@ -91,10 +91,10 @@ class ViewSocketIO(base.View):
         self, data: bytes, *, flow: Flow | None = None, **metadata
     ) -> float:
         if (
-                data
-                and flow is not None
-                and flow.websocket is not None
-                and "/socket.io/?" in flow.request.path
+            data
+            and flow is not None
+            and flow.websocket is not None
+            and "/socket.io/?" in flow.request.path
         ):
             return 1
         return 0
