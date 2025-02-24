@@ -15,6 +15,7 @@
   ([#7572](https://github.com/mitmproxy/mitmproxy/pull/7572), @DenizenB)
 - Create content view for Socket.IO over WebSocket transport
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
+- Correctly forward HTTP_1_1_REQUIRED errors in HTTP/2 streams.
 
 ## 17 February 2025: mitmproxy 11.1.3
 

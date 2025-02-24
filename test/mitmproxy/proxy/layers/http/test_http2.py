@@ -13,7 +13,6 @@ from mitmproxy.flow import Error
 from mitmproxy.http import Headers
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Request
-from mitmproxy.net.http import status_codes
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import OpenConnection
@@ -23,6 +22,7 @@ from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers.http import ErrorCode
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client
 from mitmproxy.proxy.layers.http._http2 import split_pseudo_headers
@@ -86,9 +86,9 @@ def start_h2_client(tctx: Context, keepalive: int = 0) -> tuple[Playbook, FrameF
 
 
 def make_h2(open_connection: OpenConnection) -> None:
-    assert isinstance(open_connection, OpenConnection), (
-        f"Expected OpenConnection event, not {open_connection}"
-    )
+    assert isinstance(
+        open_connection, OpenConnection
+    ), f"Expected OpenConnection event, not {open_connection}"
     open_connection.connection.alpn = b"h2"
 
 
@@ -1046,7 +1046,7 @@ class TestClient:
             )
             << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
             >> http.RequestProtocolError(
-                1, "cancelled", code=status_codes.CLIENT_CLOSED_REQUEST
+                1, "cancelled", code=ErrorCode.CLIENT_DISCONNECTED
             )
             << SendData(
                 tctx.server,
