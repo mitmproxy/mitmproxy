@@ -123,6 +123,10 @@
   ([#7320](https://github.com/mitmproxy/mitmproxy/pull/7320), @8192bytes)
 - Remove dependency on `protobuf` library as it was no longer being used.
   ([#7327](https://github.com/mitmproxy/mitmproxy/pull/7327), @matthew16550)
+- In `mitmproxy`, when searched text is in part of content that was not loaded
+  due to `fullcontents` setting. User will be notified about that and an option to load
+  all data will be presented.
+  ([#7334](https://github.com/mitmproxy/mitmproxy/pull/7334), @lukant)
 
 ## 02 October 2024: mitmproxy 11.0.0
 
