@@ -818,6 +818,44 @@ def test_cancel_during_response_hook(tctx):
     )
 
 
+def test_http_1_1_required(tctx):
+    """
+    Test that we properly forward an HTTP_1_1_REQUIRED stream error.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    forwarded_request_frames = Placeholder(bytes)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, forwarded_request_frames)
+        >> DataReceived(
+            server,
+            sff.build_rst_stream_frame(1, ErrorCodes.HTTP_1_1_REQUIRED).serialize(),
+        )
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_rst_stream_frame(1, ErrorCodes.HTTP_1_1_REQUIRED).serialize(),
+        )
+    )
+
+
 def test_stream_concurrency(tctx):
     """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
     playbook, cff = start_h2_client(tctx)
