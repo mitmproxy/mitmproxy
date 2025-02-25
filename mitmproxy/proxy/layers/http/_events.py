@@ -123,7 +123,7 @@ class ErrorCode(enum.Enum):
                 | ErrorCode.CANCEL
             ):
                 return None
-            case other:
+            case other:  # pragma: no cover
                 typing.assert_never(other)
 
 
