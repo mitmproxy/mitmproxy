@@ -86,9 +86,9 @@ def start_h2_client(tctx: Context, keepalive: int = 0) -> tuple[Playbook, FrameF
 
 
 def make_h2(open_connection: OpenConnection) -> None:
-    assert isinstance(open_connection, OpenConnection), (
-        f"Expected OpenConnection event, not {open_connection}"
-    )
+    assert isinstance(
+        open_connection, OpenConnection
+    ), f"Expected OpenConnection event, not {open_connection}"
     open_connection.connection.alpn = b"h2"
 
 
@@ -1280,4 +1280,54 @@ def test_alt_svc(tctx):
             server, cff.build_alt_svc_frame(0, b"example.com", b'h3=":443"').serialize()
         )
         << Log("Received HTTP/2 Alt-Svc frame, which will not be forwarded.", DEBUG)
+    )
+
+
+def test_no_empty_data_frame(tctx):
+    """Ensure we don't send extra empty data frames when streaming, https://github.com/mitmproxy/mitmproxy/pull/7480"""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+
+    def enable_streaming(flow: HTTPFlow) -> None:
+        if flow.response:
+            flow.response.stream = True
+        else:
+            flow.request.stream = True
+
+    initial = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client, cff.build_headers_frame(example_request_headers).serialize()
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, initial)
+    )
+    initial_frames = decode_frames(initial())
+    assert [type(x) for x in initial_frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
+
+    assert (
+        playbook
+        >> DataReceived(tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << SendData(server, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+
+        >> DataReceived(server, cff.build_headers_frame(example_response_headers).serialize())
+        << http.HttpResponseHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << SendData(tctx.client, cff.build_headers_frame(example_response_headers).serialize())
+
+        >> DataReceived(server, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client,  cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
     )
