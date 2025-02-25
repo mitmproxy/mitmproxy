@@ -1,6 +1,9 @@
+import base64
 import json
 import zlib
 from pathlib import Path
+from unittest.mock import patch
+from unittest.mock import PropertyMock
 
 import pytest
 
@@ -8,6 +11,7 @@ from mitmproxy import io
 from mitmproxy import types
 from mitmproxy import version
 from mitmproxy.addons.save import Save
+from mitmproxy.addons.savehar import robust_decode
 from mitmproxy.addons.savehar import SaveHar
 from mitmproxy.connection import Server
 from mitmproxy.exceptions import OptionsError
@@ -174,15 +178,79 @@ def test_savehar(log_file: Path, tmp_path: Path, monkeypatch):
 
 
 def test_flow_entry():
-    """https://github.com/mitmproxy/mitmproxy/issues/6579"""
     s = SaveHar()
     req = Request.make("CONNECT", "https://test.test/")
     flow = tflow.tflow(req=req)
     servers_seen: set[Server] = set()
 
     flow_entry = s.flow_entry(flow, servers_seen)
-
     assert flow_entry["request"]["url"].startswith("https")
+
+    req_invalid = Request.make("GET", "https://test.test/")
+    raw_data = "Fällbäck".encode("utf-8")
+    headers = Headers([(b"Content-Type", b"text/plain; charset=ascii")])
+    flow_invalid = tflow.tflow(
+        req=req_invalid, resp=tutils.tresp(content=raw_data, headers=headers)
+    )
+
+    with patch.object(
+        flow_invalid.response.__class__, "content", new_callable=PropertyMock
+    ) as mock_content:
+        mock_content.side_effect = ValueError("Simulated invalid encoding")
+        flow_entry = s.flow_entry(flow_invalid, servers_seen)
+
+    assert flow_invalid.error is not None, (
+        "flow.error should be set when content decoding fails"
+    )
+    assert "Invalid content encoding" in str(flow_invalid.error)
+
+    content = flow_entry["response"]["content"]
+    expected = base64.b64encode("Fällbäck".encode("utf-8")).decode()
+    assert "text" in content, "The 'text' key should be present in the content"
+    assert content["text"] == expected, (
+        f"Expected {expected!r}, got {content['text']!r}"
+    )
+    assert "encoding" in content and content["encoding"] == "base64"
+
+    # Test case for non-binary content
+    raw_data_text = "This is a test string."
+    headers_text = Headers([(b"Content-Type", b"text/plain; charset=utf-8")])
+    flow_text = tflow.tflow(
+        req=req_invalid,
+        resp=tutils.tresp(content=raw_data_text.encode("utf-8"), headers=headers_text),
+    )
+
+    with patch.object(
+        flow_text.response.__class__, "content", new_callable=PropertyMock
+    ) as mock_content:
+        mock_content.side_effect = ValueError("Simulated invalid encoding")
+        flow_entry_text = s.flow_entry(flow_text, servers_seen)
+
+    assert flow_text.error is not None, (
+        "flow.error should be set when content decoding fails"
+    )
+    assert "Invalid content encoding" in str(flow_text.error)
+
+    content_text = flow_entry_text["response"]["content"]
+    assert "text" in content_text, "The 'text' key should be present in the content"
+    assert content_text["text"] == raw_data_text, (
+        f"Expected {raw_data_text!r}, got {content_text['text']!r}"
+    )
+    assert "encoding" not in content_text
+
+
+def test_robust_decode_invalid_charset():
+    raw_data = b"Test data"
+    content_type = "text/plain; charset=invalid-charset"
+    decoded = robust_decode(raw_data, content_type)
+    assert decoded == "Test data"
+
+
+def test_robust_decode_bad_utf8():
+    raw_data = b"\xff"
+    content_type = "text/plain"
+    decoded = robust_decode(raw_data, content_type)
+    assert decoded == "ÿ"
 
 
 class TestHardumpOption:
