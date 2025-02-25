@@ -8,7 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Fix a bug where mitmproxy would incorrectly send empty HTTP/2 data frames.
-  ([#7574](https://github.com/mitmproxy/mitmproxy/pull/7574), @mhils)
+  ([#7574](https://github.com/mitmproxy/mitmproxy/pull/7574), @mhils, @Dieken)
 - Enhance homebrew installation command for Brewfile users.
   ([#7566](https://github.com/mitmproxy/mitmproxy/pull/7566), @AntoineJT)
 - Fix a bug where mitmdump would exit prematurely in server replay mode.
