@@ -5,6 +5,7 @@ from enum import Enum
 from logging import DEBUG
 from logging import ERROR
 from typing import Any
+from typing import assert_never
 from typing import ClassVar
 
 import h2.config
@@ -159,9 +160,31 @@ class Http2Connection(HttpConnection):
                             end_stream=True,
                         )
                     else:
-                        self.h2_conn.reset_stream(
-                            event.stream_id, event.code.h2_code().value
-                        )
+                        match event.code:
+                            case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
+                                error_code = h2.errors.ErrorCodes.CANCEL
+                            case ErrorCode.KILL:
+                                # XXX: Debateable whether this is the best error code.
+                                error_code = h2.errors.ErrorCodes.INTERNAL_ERROR
+                            case ErrorCode.HTTP_1_1_REQUIRED:
+                                error_code = h2.errors.ErrorCodes.HTTP_1_1_REQUIRED
+                            case ErrorCode.PASSTHROUGH_CLOSE:
+                                # FIXME: This probably shouldn't be a protocol error, but an EOM event.
+                                error_code = h2.errors.ErrorCodes.CANCEL
+                            case (
+                                ErrorCode.GENERIC_CLIENT_ERROR
+                                | ErrorCode.GENERIC_SERVER_ERROR
+                                | ErrorCode.REQUEST_TOO_LARGE
+                                | ErrorCode.RESPONSE_TOO_LARGE
+                                | ErrorCode.CONNECT_FAILED
+                                | ErrorCode.DESTINATION_UNKNOWN
+                                | ErrorCode.REQUEST_VALIDATION_FAILED
+                                | ErrorCode.RESPONSE_VALIDATION_FAILED
+                            ):
+                                error_code = h2.errors.ErrorCodes.INTERNAL_ERROR
+                            case other:  # pragma: no cover
+                                assert_never(other)
+                        self.h2_conn.reset_stream(event.stream_id, error_code.value)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
             data_to_send = self.h2_conn.data_to_send()

@@ -1,5 +1,6 @@
 import time
 from abc import abstractmethod
+from typing import assert_never
 
 from aioquic.h3.connection import ErrorCode as H3ErrorCode
 from aioquic.h3.connection import FrameUnexpected as H3FrameUnexpected
@@ -101,9 +102,30 @@ class Http3Connection(HttpConnection):
                             end_stream=True,
                         )
                     else:
-                        self.h3_conn.close_stream(
-                            event.stream_id, event.code.h3_code().value
-                        )
+                        match event.code:
+                            case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
+                                error_code = H3ErrorCode.H3_REQUEST_CANCELLED
+                            case ErrorCode.KILL:
+                                error_code = H3ErrorCode.H3_INTERNAL_ERROR
+                            case ErrorCode.HTTP_1_1_REQUIRED:
+                                error_code = H3ErrorCode.H3_VERSION_FALLBACK
+                            case ErrorCode.PASSTHROUGH_CLOSE:
+                                # FIXME: This probably shouldn't be a protocol error, but an EOM event.
+                                error_code = H3ErrorCode.H3_REQUEST_CANCELLED
+                            case (
+                                ErrorCode.GENERIC_CLIENT_ERROR
+                                | ErrorCode.GENERIC_SERVER_ERROR
+                                | ErrorCode.REQUEST_TOO_LARGE
+                                | ErrorCode.RESPONSE_TOO_LARGE
+                                | ErrorCode.CONNECT_FAILED
+                                | ErrorCode.DESTINATION_UNKNOWN
+                                | ErrorCode.REQUEST_VALIDATION_FAILED
+                                | ErrorCode.RESPONSE_VALIDATION_FAILED
+                            ):
+                                error_code = H3ErrorCode.H3_INTERNAL_ERROR
+                            case other:  # pragma: no cover
+                                assert_never(other)
+                        self.h3_conn.close_stream(event.stream_id, error_code.value)
                 else:  # pragma: no cover
                     raise AssertionError(f"Unexpected event: {event!r}")
 

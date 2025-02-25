@@ -2,9 +2,6 @@ import enum
 import typing
 from dataclasses import dataclass
 
-import aioquic.h3.connection
-import h2.errors
-
 from ._base import HttpEvent
 from mitmproxy import http
 from mitmproxy.http import HTTPFlow
@@ -126,57 +123,6 @@ class ErrorCode(enum.Enum):
                 | ErrorCode.CANCEL
             ):
                 return None
-            case other:
-                typing.assert_never(other)
-
-    def h2_code(self) -> h2.errors.ErrorCodes:
-        match self:
-            case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
-                return h2.errors.ErrorCodes.CANCEL
-            case ErrorCode.KILL:
-                # XXX: Debateable whether this is the best error code.
-                return h2.errors.ErrorCodes.INTERNAL_ERROR
-            case ErrorCode.HTTP_1_1_REQUIRED:
-                return h2.errors.ErrorCodes.HTTP_1_1_REQUIRED
-            case ErrorCode.PASSTHROUGH_CLOSE:
-                # FIXME: This probably shouldn't be a protocol error, but an EOM event.
-                return h2.errors.ErrorCodes.CANCEL
-            case (
-                ErrorCode.GENERIC_CLIENT_ERROR
-                | ErrorCode.GENERIC_SERVER_ERROR
-                | ErrorCode.REQUEST_TOO_LARGE
-                | ErrorCode.RESPONSE_TOO_LARGE
-                | ErrorCode.CONNECT_FAILED
-                | ErrorCode.DESTINATION_UNKNOWN
-                | ErrorCode.REQUEST_VALIDATION_FAILED
-                | ErrorCode.RESPONSE_VALIDATION_FAILED
-            ):
-                return h2.errors.ErrorCodes.INTERNAL_ERROR
-            case other:
-                typing.assert_never(other)
-
-    def h3_code(self) -> aioquic.h3.connection.ErrorCode:
-        match self:
-            case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
-                return aioquic.h3.connection.ErrorCode.H3_REQUEST_CANCELLED
-            case ErrorCode.KILL:
-                return aioquic.h3.connection.ErrorCode.H3_INTERNAL_ERROR
-            case ErrorCode.HTTP_1_1_REQUIRED:
-                return aioquic.h3.connection.ErrorCode.H3_VERSION_FALLBACK
-            case ErrorCode.PASSTHROUGH_CLOSE:
-                # FIXME: This probably shouldn't be a protocol error, but an EOM event.
-                return aioquic.h3.connection.ErrorCode.H3_REQUEST_CANCELLED
-            case (
-                ErrorCode.GENERIC_CLIENT_ERROR
-                | ErrorCode.GENERIC_SERVER_ERROR
-                | ErrorCode.REQUEST_TOO_LARGE
-                | ErrorCode.RESPONSE_TOO_LARGE
-                | ErrorCode.CONNECT_FAILED
-                | ErrorCode.DESTINATION_UNKNOWN
-                | ErrorCode.REQUEST_VALIDATION_FAILED
-                | ErrorCode.RESPONSE_VALIDATION_FAILED
-            ):
-                return aioquic.h3.connection.ErrorCode.H3_INTERNAL_ERROR
             case other:
                 typing.assert_never(other)
 
