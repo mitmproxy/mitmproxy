@@ -86,9 +86,9 @@ def start_h2_client(tctx: Context, keepalive: int = 0) -> tuple[Playbook, FrameF
 
 
 def make_h2(open_connection: OpenConnection) -> None:
-    assert isinstance(
-        open_connection, OpenConnection
-    ), f"Expected OpenConnection event, not {open_connection}"
+    assert isinstance(open_connection, OpenConnection), (
+        f"Expected OpenConnection event, not {open_connection}"
+    )
     open_connection.connection.alpn = b"h2"
 
 
@@ -1316,18 +1316,26 @@ def test_no_empty_data_frame(tctx):
 
     assert (
         playbook
-        >> DataReceived(tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+        >> DataReceived(
+            tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
+        )
         << http.HttpRequestHook(flow)
         >> reply()
         << SendData(server, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
-
-        >> DataReceived(server, cff.build_headers_frame(example_response_headers).serialize())
+        >> DataReceived(
+            server, cff.build_headers_frame(example_response_headers).serialize()
+        )
         << http.HttpResponseHeadersHook(flow)
         >> reply(side_effect=enable_streaming)
-        << SendData(tctx.client, cff.build_headers_frame(example_response_headers).serialize())
-
-        >> DataReceived(server, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+        << SendData(
+            tctx.client, cff.build_headers_frame(example_response_headers).serialize()
+        )
+        >> DataReceived(
+            server, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
+        )
         << http.HttpResponseHook(flow)
         >> reply()
-        << SendData(tctx.client,  cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+        << SendData(
+            tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
+        )
     )

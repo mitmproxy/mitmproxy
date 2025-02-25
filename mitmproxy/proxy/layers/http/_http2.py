@@ -204,10 +204,7 @@ class Http2Connection(HttpConnection):
         if isinstance(event, h2.events.DataReceived):
             state = self.streams.get(event.stream_id, None)
             if state is StreamState.HEADERS_RECEIVED:
-                is_empty_eos_data_frame = (
-                    event.stream_ended and
-                    not event.data
-                )
+                is_empty_eos_data_frame = event.stream_ended and not event.data
                 if not is_empty_eos_data_frame:
                     yield ReceiveHttp(self.ReceiveData(event.stream_id, event.data))
             elif state is StreamState.EXPECTING_HEADERS:
