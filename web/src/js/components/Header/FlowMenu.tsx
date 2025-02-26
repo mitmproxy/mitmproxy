@@ -27,6 +27,11 @@ export default function FlowMenu(): JSX.Element {
 
     const selectedFlows = useAppSelector((state) => state.flows.selected);
 
+    const hasSingleFlowSelected = React.useMemo(
+        () => selectedFlows.length === 1,
+        [selectedFlows],
+    );
+
     if (!flow) return <div />;
     return (
         <div className="flow-menu">
@@ -38,7 +43,7 @@ export default function FlowMenu(): JSX.Element {
                             icon="fa-repeat text-primary"
                             onClick={() => dispatch(replayFlow(flow))}
                             disabled={
-                                !canReplay(flow) || selectedFlows.length > 1
+                                !canReplay(flow) || !hasSingleFlowSelected
                             }
                         >
                             Replay
@@ -47,7 +52,7 @@ export default function FlowMenu(): JSX.Element {
                             title="[D]uplicate flow"
                             icon="fa-copy text-info"
                             onClick={() => dispatch(duplicateFlow(flow))}
-                            disabled={selectedFlows.length > 1}
+                            disabled={!hasSingleFlowSelected}
                         >
                             Duplicate
                         </Button>
@@ -55,7 +60,7 @@ export default function FlowMenu(): JSX.Element {
                             disabled={
                                 !flow ||
                                 !flow.modified ||
-                                selectedFlows.length > 1
+                                !hasSingleFlowSelected
                             }
                             title="revert changes to flow [V]"
                             icon="fa-history text-warning"
@@ -95,7 +100,7 @@ export default function FlowMenu(): JSX.Element {
                             disabled={
                                 !flow ||
                                 !flow.intercepted ||
-                                selectedFlows.length > 1
+                                !hasSingleFlowSelected
                             }
                             title="[a]ccept intercepted flow"
                             icon="fa-play text-success"
@@ -107,7 +112,7 @@ export default function FlowMenu(): JSX.Element {
                             disabled={
                                 !flow ||
                                 !flow.intercepted ||
-                                selectedFlows.length > 1
+                                !hasSingleFlowSelected
                             }
                             title="kill intercepted flow [x]"
                             icon="fa-times text-danger"
@@ -130,8 +135,11 @@ const openInNewTab = (url) => {
 };
 
 function DownloadButton({ flow }: { flow: Flow }) {
-    const selectedFlows = useAppSelector((state) => state.flows.selected);
-    if (selectedFlows.length > 1) return null;
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
+
+    if (!hasSingleFlowSelected) return null;
 
     if (flow.type !== "http")
         return (
@@ -203,7 +211,9 @@ function DownloadButton({ flow }: { flow: Flow }) {
 }
 
 function ExportButton({ flow }: { flow: Flow }) {
-    const selectedFlows = useAppSelector((state) => state.flows.selected);
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
     return (
         <Dropdown
             className=""
@@ -212,7 +222,7 @@ function ExportButton({ flow }: { flow: Flow }) {
                     title="Export flow."
                     icon="fa-clone"
                     onClick={() => 1}
-                    disabled={flow.type !== "http" || selectedFlows.length > 1}
+                    disabled={flow.type !== "http" || !hasSingleFlowSelected}
                 >
                     Export▾
                 </Button>
@@ -248,7 +258,9 @@ const markers = {
 
 function MarkButton({ flow }: { flow: Flow }) {
     const dispatch = useAppDispatch();
-    const selectedFlows = useAppSelector((state) => state.flows.selected);
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    ); // TODO: Enable marking multiple flows with the same mark, allowing users to assign a single mark to multiple flows.
     return (
         <Dropdown
             className=""
@@ -257,7 +269,7 @@ function MarkButton({ flow }: { flow: Flow }) {
                     title="mark flow"
                     icon="fa-paint-brush text-success"
                     onClick={() => 1}
-                    disabled={selectedFlows.length > 1}
+                    disabled={!hasSingleFlowSelected}
                 >
                     Mark▾
                 </Button>
