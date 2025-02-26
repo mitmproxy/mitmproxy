@@ -25,6 +25,7 @@ interface FlowColumn {
     (props: FlowColumnProps): JSX.Element;
 
     headerName: string; // Shown in the UI
+    invisible?: boolean;
 }
 
 export const tls: FlowColumn = ({ flow }) => {
