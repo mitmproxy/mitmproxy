@@ -111,7 +111,7 @@ export default function reducer(
                 ...state,
                 selected: action.flowIds,
             };
-        
+
         default:
             return state;
     }
