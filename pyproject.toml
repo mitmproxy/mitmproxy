@@ -61,7 +61,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "click>=7.0,<=8.1.8",
-    "hypothesis>=6.104.2,<=6.124.9",
+    "hypothesis>=6.104.2,<=6.127.3",
     "pdoc>=14.5.1,<=15.0.1",
     "pyinstaller==6.11.1",
     "pyinstaller-hooks-contrib==2025.1",
