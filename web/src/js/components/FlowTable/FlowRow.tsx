@@ -20,7 +20,7 @@ export default React.memo(function FlowRow({
     const displayColumnNames = useAppSelector(
         (state) => state.options.web_columns,
     );
-    const selectedFlowsIds = useAppSelector((state) => state.flows.selected); // used for multiple flows selection
+    const selectedFlowIds = useAppSelector((state) => state.flows.selected); // used for multiple flows selection
     const className = classnames({
         selected: isSelected,
         highlighted: isHighlighted,
@@ -38,20 +38,20 @@ export default React.memo(function FlowRow({
                 node = node.parentNode;
             }
             if (e.metaKey || e.ctrlKey) {
-                if (selectedFlowsIds.includes(flow.id)) {
+                if (selectedFlowIds.includes(flow.id)) {
                     // If the flow is already selected, remove it.
                     dispatch(
-                        select(selectedFlowsIds.filter((id) => id !== flow.id)),
+                        select(selectedFlowIds.filter((id) => id !== flow.id)),
                     );
                 } else {
-                    dispatch(select([...selectedFlowsIds, flow.id]));
+                    dispatch(select([...selectedFlowIds, flow.id]));
                 }
             } else {
                 // select only the clicked flow
                 dispatch(select([flow.id]));
             }
         },
-        [flow, selectedFlowsIds],
+        [flow, selectedFlowIds],
     );
 
     const displayColumns = displayColumnNames

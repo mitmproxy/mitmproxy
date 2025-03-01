@@ -27,10 +27,7 @@ export default function FlowMenu(): JSX.Element {
 
     const selectedFlows = useAppSelector((state) => state.flows.selected);
 
-    const hasSingleFlowSelected = React.useMemo(
-        () => selectedFlows.length === 1,
-        [selectedFlows],
-    );
+    const hasSingleFlowSelected = selectedFlows.length === 1;
 
     if (!flow) return <div />;
     return (
@@ -139,8 +136,6 @@ function DownloadButton({ flow }: { flow: Flow }) {
         (state) => state.flows.selected.length === 1,
     );
 
-    if (!hasSingleFlowSelected) return null;
-
     if (flow.type !== "http")
         return (
             <Button icon="fa-download" onClick={() => 0} disabled>
@@ -155,6 +150,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                 onClick={() =>
                     openInNewTab(MessageUtils.getContentURL(flow, flow.request))
                 }
+                disabled={!hasSingleFlowSelected}
             >
                 Download
             </Button>
@@ -169,6 +165,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                     onClick={() =>
                         openInNewTab(MessageUtils.getContentURL(flow, response))
                     }
+                    disabled={!hasSingleFlowSelected}
                 >
                     Download
                 </Button>
@@ -178,7 +175,11 @@ function DownloadButton({ flow }: { flow: Flow }) {
             return (
                 <Dropdown
                     text={
-                        <Button icon="fa-download" onClick={() => 1}>
+                        <Button
+                            icon="fa-download"
+                            onClick={() => 1}
+                            disabled={!hasSingleFlowSelected}
+                        >
                             Download▾
                         </Button>
                     }
