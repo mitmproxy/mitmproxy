@@ -1,4 +1,5 @@
 import ssl
+import sys
 import time
 from logging import DEBUG
 from logging import WARNING
@@ -485,7 +486,8 @@ class TestServerTLS:
         assert playbook
 
         assert tctx.server.tls_established
-        assert not tssl.obj.get_verified_chain()
+        if sys.version_info >= (3,13):
+            assert not tssl.obj.get_verified_chain()
 
         tssl.obj.verify_client_post_handshake()
         with pytest.raises(ssl.SSLWantReadError):
@@ -501,7 +503,8 @@ class TestServerTLS:
         tssl.bio_write(client_cert())
         with pytest.raises(ssl.SSLWantReadError):
             tssl.obj.read(42)
-        assert tssl.obj.get_verified_chain()
+        if sys.version_info >= (3,13):
+            assert tssl.obj.get_verified_chain()
 
 
 def make_client_tls_layer(
