@@ -486,7 +486,7 @@ class TestServerTLS:
         assert playbook
 
         assert tctx.server.tls_established
-        if sys.version_info >= (3,13):
+        if sys.version_info >= (3, 13):
             assert not tssl.obj.get_verified_chain()
 
         tssl.obj.verify_client_post_handshake()
@@ -503,7 +503,7 @@ class TestServerTLS:
         tssl.bio_write(client_cert())
         with pytest.raises(ssl.SSLWantReadError):
             tssl.obj.read(42)
-        if sys.version_info >= (3,13):
+        if sys.version_info >= (3, 13):
             assert tssl.obj.get_verified_chain()
 
 
