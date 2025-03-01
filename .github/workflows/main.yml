@@ -55,6 +55,8 @@ jobs:
     steps:
       - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
       - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+        with:
+          python-version: ${{ matrix.py }}
       - run: pip install tox
       - run: tox -e py
         if: matrix.os != 'ubuntu-latest'
