@@ -31,7 +31,7 @@ def sign(cert: str, subject: str, ip: bool):
         authorityKeyIdentifier=keyid,issuer
         basicConstraints=CA:FALSE
         keyUsage = digitalSignature, keyEncipherment
-        subjectAltName = {"IP" if ip else "DNS" }:{subject}
+        subjectAltName = {"IP" if ip else "DNS"}:{subject}
         """
             )
         )
@@ -54,7 +54,7 @@ def mkcert(cert, subject, ip: bool):
         f"openssl req -new -nodes -batch "
         f"-key {cert}.key "
         f"-subj /CN={subject}/O=mitmproxy "
-        f'-addext "subjectAltName = {"IP" if ip else "DNS" }:{subject}" '
+        f'-addext "subjectAltName = {"IP" if ip else "DNS"}:{subject}" '
         f"-out {cert}.csr"
     )
     sign(cert, subject, ip)

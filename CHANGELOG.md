@@ -7,8 +7,66 @@
 
 ## Unreleased: mitmproxy next
 
+- Enhance homebrew installation command for Brewfile users.
+  ([#7566](https://github.com/mitmproxy/mitmproxy/pull/7566), @AntoineJT)
+- Fix a bug where mitmdump would exit prematurely in server replay mode.
+  ([#7571](https://github.com/mitmproxy/mitmproxy/pull/7571), @mhils)
+- Fix a bug where WebSocket Messages view jumps to top when a message is received
+  ([#7572](https://github.com/mitmproxy/mitmproxy/pull/7572), @DenizenB)
+- Create content view for Socket.IO over WebSocket transport
+  ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
 - Add multiple flows selection to mitmweb.
   ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000)
+
+## 17 February 2025: mitmproxy 11.1.3
+
+- Update mitmproxy_rs dependency to fix several bugs in local capture mode.
+  ([#7564](https://github.com/mitmproxy/mitmproxy/pull/7564), @mhils)
+- Add documentation for local capture mode.
+  ([#7540](https://github.com/mitmproxy/mitmproxy/pull/7540), @mhils)
+- Revise documentation on proxy modes.
+  ([#7545](https://github.com/mitmproxy/mitmproxy/pull/7545), @mhils)
+- Add a log message to point Docker mitmweb users towards `web_password`.
+  ([#7554](https://github.com/mitmproxy/mitmproxy/pull/7554), @mhils)
+- Fix a bug where UTF-8 surrogates would crash the export addon.
+  ([#7562](https://github.com/mitmproxy/mitmproxy/pull/7562), @mhils)
+- Add help entries for all options in mitmweb that didn't have them.
+  ([#7563](https://github.com/mitmproxy/mitmproxy/pull/7563), @mhils)
+
+## 06 February 2025: mitmproxy 11.1.2
+
+- [CVE-2025-23217](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-wg33-5h85-7q5p):
+  mitmweb's API now requires an authentication token by default.
+  The mitmweb API is bound to localhost only, but @gronke found that an attacker can circumvent that restriction
+  by tunneling requests through the proxy server itself in an [SSRF](https://en.wikipedia.org/wiki/Server-side_request_forgery)-style attack.
+  ([fa89055](https://github.com/mitmproxy/mitmproxy/commit/fa89055e196d953f11fd241e36ee37858993486a), @mhils)
+- Add (optional) password protection for mitmweb. The `web_password` option replaces the randomly-generated token
+  authentication with a fixed secret that survives mitmproxy restarts.
+  ([0bd573a](https://github.com/mitmproxy/mitmproxy/commit/0bd573a5995f61d82f5157e927b0eb93cdc4ebab), @mhils)
+- mitmweb can now be hosted under arbitrary domains, the previously-used DNS rebind protection is not required anymore.
+  ([62693af](https://github.com/mitmproxy/mitmproxy/commit/62693aff9a38ad0bb36716569fc627f26e489ccc), @mhils)
+- Security Hardening: mitmweb's `xsrf_token` cookie is now `HttpOnly; SameSite=Strict`.
+  ([#7491](https://github.com/mitmproxy/mitmproxy/pull/7491), @mhils)
+- We now provide standalone binaries for Linux arm64.
+  ([#7484](https://github.com/mitmproxy/mitmproxy/pull/7484), @mhils)
+- Standalone binaries are now compiled with Python 3.13.
+  ([#7485](https://github.com/mitmproxy/mitmproxy/pull/7485), @mhils)
+- Fix console freezing due to DNS queries with an empty question section.
+  ([#7497](https://github.com/mitmproxy/mitmproxy/pull/7497), @sujaldev)
+- Add mitmweb tutorial to docs.
+  ([#7509](https://github.com/mitmproxy/mitmproxy/pull/7509), @EstherRoeth)
+- Fixed a bug that caused mitmproxy to crash when loading prior knowledge h2 flows.
+  ([#7514](https://github.com/mitmproxy/mitmproxy/pull/7514), @sujaldev)
+- Fix a bug where mitmproxy would get stuck in secure web proxy mode when using `ignore_hosts` or `allow_hosts`.
+  ([#7519](https://github.com/mitmproxy/mitmproxy/pull/7519), @mhils)
+- Copy request/response data to the clipboard in mitmweb
+  ([#7352](https://github.com/mitmproxy/mitmproxy/pull/7352), @lups2000)
+- Fix a bug where exporting a curl or httpie command with escaped characters would lead to different data being sent.
+  ([#7520](https://github.com/mitmproxy/mitmproxy/pull/7520), @proteusvacuum)
+
+## 05 February 2025: mitmproxy 11.1.1
+
+- Yanked. Identical to 11.1.2, but failed to deploy in CI.
 
 ## 12 January 2025: mitmproxy 11.1.0
 
@@ -22,6 +80,10 @@
   ([#7385](https://github.com/mitmproxy/mitmproxy/pull/7385), @lups2000)
 - Add missing status codes
   ([#7455](https://github.com/mitmproxy/mitmproxy/pull/7455), @jwadolowski)
+- All filter expressions are now case-insensitive by default.
+  Users can opt into case-sensitive filters by setting MITMPROXY_CASE_SENSITIVE_FILTERS=1
+  as an environment variable.
+  ([#7458](https://github.com/mitmproxy/mitmproxy/pull/7458), @mhils, @AdityaPatadiya)
 - Remove filter expression lowercasing in block_list addon
   ([#7456](https://github.com/mitmproxy/mitmproxy/pull/7456), @jwadolowski)
 - Remove check for status codes in the blocklist add-on.

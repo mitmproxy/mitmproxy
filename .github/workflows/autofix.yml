@@ -13,11 +13,9 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: mhils/workflows/checkout@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
+      - uses: mhils/workflows/setup-python@34e9a0dabe3f355d60c385cdb1b1368c9219ecd3
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version-file: .github/python-version.txt
       - run: pip install -e .[dev]
       - run: ruff check --fix-only .
       - run: ruff format .

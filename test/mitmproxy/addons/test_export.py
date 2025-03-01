@@ -110,6 +110,16 @@ class TestExportCurlCommand:
         assert shlex.split(command)[-2] == "-d"
         assert shlex.split(command)[-1] == "'&#"
 
+    def test_expand_escaped(self, export_curl, post_request):
+        post_request.request.content = b"foo\nbar"
+        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        assert export_curl(post_request) == result
+
+    def test_no_expand_when_no_escaped(self, export_curl, post_request):
+        post_request.request.content = b"foobar"
+        result = "curl -X POST http://address:22/path -d foobar"
+        assert export_curl(post_request) == result
+
     def test_strip_unnecessary(self, export_curl, get_request):
         get_request.request.headers.clear()
         get_request.request.headers["host"] = "address"
@@ -309,7 +319,7 @@ def test_export(tmp_path) -> None:
         (FileNotFoundError, "No such file or directory"),
     ],
 )
-async def test_export_open(exception, log_message, tmpdir, caplog):
+def test_export_open(exception, log_message, tmpdir, caplog):
     f = str(tmpdir.join("path"))
     e = export.Export()
     with mock.patch("mitmproxy.addons.export.open") as m:
@@ -318,7 +328,21 @@ async def test_export_open(exception, log_message, tmpdir, caplog):
         assert log_message in caplog.text
 
 
-async def test_clip(tmpdir, caplog):
+def test_export_str(tmpdir, caplog):
+    """Test that string export return a str without any UTF-8 surrogates"""
+    e = export.Export()
+    with taddons.context(e):
+        f = tflow.tflow()
+        f.request.headers.fields = (
+            (b"utf8-header", "é".encode("utf-8")),
+            (b"latin1-header", "é".encode("latin1")),
+        )
+        # ensure that we have no surrogates in the return value
+        assert e.export_str("curl", f).encode("utf8", errors="strict")
+        assert e.export_str("raw", f).encode("utf8", errors="strict")
+
+
+def test_clip(tmpdir, caplog):
     e = export.Export()
     with taddons.context() as tctx:
         tctx.configure(e)
@@ -344,7 +368,7 @@ async def test_clip(tmpdir, caplog):
 
         with mock.patch("pyperclip.copy") as pc:
             log_message = (
-                "Pyperclip could not find a " "copy/paste mechanism for your system."
+                "Pyperclip could not find a copy/paste mechanism for your system."
             )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw_request", tflow.tflow(resp=True))

@@ -291,7 +291,16 @@ exports[`Header 2`] = `
                 <input
                   type="checkbox"
                 />
-                Use host header for display
+                Use host header for display 
+                <a
+                  href="https://docs.mitmproxy.org/stable/concepts-options/#showhost"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <i
+                    class="fa fa-question-circle"
+                  />
+                </a>
               </label>
             </div>
             <div
@@ -301,7 +310,16 @@ exports[`Header 2`] = `
                 <input
                   type="checkbox"
                 />
-                Don't verify server certificates
+                Don't verify server certificates 
+                <a
+                  href="https://docs.mitmproxy.org/stable/concepts-options/#ssl_insecure"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <i
+                    class="fa fa-question-circle"
+                  />
+                </a>
               </label>
             </div>
           </div>
@@ -517,7 +535,16 @@ exports[`Header 3`] = `
                 <input
                   type="checkbox"
                 />
-                Use host header for display
+                Use host header for display 
+                <a
+                  href="https://docs.mitmproxy.org/stable/concepts-options/#showhost"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <i
+                    class="fa fa-question-circle"
+                  />
+                </a>
               </label>
             </div>
             <div
@@ -527,7 +554,16 @@ exports[`Header 3`] = `
                 <input
                   type="checkbox"
                 />
-                Don't verify server certificates
+                Don't verify server certificates 
+                <a
+                  href="https://docs.mitmproxy.org/stable/concepts-options/#ssl_insecure"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <i
+                    class="fa fa-question-circle"
+                  />
+                </a>
               </label>
             </div>
           </div>
