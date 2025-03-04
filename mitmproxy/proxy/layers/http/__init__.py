@@ -16,6 +16,7 @@ from ._base import HttpCommand
 from ._base import HttpConnection
 from ._base import ReceiveHttp
 from ._base import StreamId
+from ._events import ErrorCode
 from ._events import HttpEvent
 from ._events import RequestData
 from ._events import RequestEndOfMessage
@@ -48,7 +49,6 @@ from mitmproxy.connection import Connection
 from mitmproxy.connection import Server
 from mitmproxy.connection import TransportProtocol
 from mitmproxy.net import server_spec
-from mitmproxy.net.http import status_codes
 from mitmproxy.net.http import url
 from mitmproxy.net.http.http1 import expected_http_body_size
 from mitmproxy.net.http.validate import validate_headers
@@ -238,7 +238,7 @@ class HttpStream(layer.Layer):
                     ResponseProtocolError(
                         self.stream_id,
                         "HTTP request has no host header, destination unknown.",
-                        400,
+                        ErrorCode.DESTINATION_UNKNOWN,
                     ),
                     self.context.client,
                 )
@@ -594,7 +594,9 @@ class HttpStream(layer.Layer):
                 yield HttpResponseHeadersHook(self.flow)
 
             err_msg = f"{'Request' if request else 'Response'} body exceeds mitmproxy's body_size_limit."
-            err_code = 413 if request else 502
+            err_code = (
+                ErrorCode.REQUEST_TOO_LARGE if request else ErrorCode.RESPONSE_TOO_LARGE
+            )
 
             self.flow.error = flow.Error(err_msg)
             yield HttpErrorHook(self.flow)
@@ -665,7 +667,9 @@ class HttpStream(layer.Layer):
                 ResponseProtocolError(
                     self.stream_id,
                     err,
-                    status_codes.BAD_REQUEST if request else status_codes.BAD_GATEWAY,
+                    ErrorCode.REQUEST_VALIDATION_FAILED
+                    if request
+                    else ErrorCode.RESPONSE_VALIDATION_FAILED,
                 ),
                 self.context.client,
             )
@@ -693,11 +697,8 @@ class HttpStream(layer.Layer):
         if killed_by_us or killed_by_remote:
             if emit_error_hook:
                 yield HttpErrorHook(self.flow)
-            # Use the special NO_RESPONSE status code to make sure that no error message is sent to the client.
             yield SendHttp(
-                ResponseProtocolError(
-                    self.stream_id, "killed", status_codes.NO_RESPONSE
-                ),
+                ResponseProtocolError(self.stream_id, "killed", ErrorCode.KILL),
                 self.context.client,
             )
             self.flow.live = False
@@ -748,7 +749,7 @@ class HttpStream(layer.Layer):
         )
         if err:
             yield from self.handle_protocol_error(
-                ResponseProtocolError(self.stream_id, err)
+                ResponseProtocolError(self.stream_id, err, ErrorCode.CONNECT_FAILED)
             )
             return False
         else:
@@ -864,7 +865,9 @@ class HttpStream(layer.Layer):
             elif isinstance(command, commands.CloseConnection):
                 if command.connection == self.context.client:
                     yield SendHttp(
-                        ResponseProtocolError(self.stream_id, "EOF"),
+                        ResponseProtocolError(
+                            self.stream_id, "EOF", ErrorCode.PASSTHROUGH_CLOSE
+                        ),
                         self.context.client,
                     )
                 elif (
@@ -872,7 +875,10 @@ class HttpStream(layer.Layer):
                     and self.flow.response.status_code == 101
                 ):
                     yield SendHttp(
-                        RequestProtocolError(self.stream_id, "EOF"), self.context.server
+                        RequestProtocolError(
+                            self.stream_id, "EOF", ErrorCode.PASSTHROUGH_CLOSE
+                        ),
+                        self.context.server,
                     )
                 else:
                     # If we are running TCP over HTTP we want to be consistent with half-closes.

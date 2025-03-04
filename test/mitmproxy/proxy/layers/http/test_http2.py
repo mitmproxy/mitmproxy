@@ -13,7 +13,6 @@ from mitmproxy.flow import Error
 from mitmproxy.http import Headers
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Request
-from mitmproxy.net.http import status_codes
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import OpenConnection
@@ -23,6 +22,7 @@ from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
+from mitmproxy.proxy.layers.http import ErrorCode
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client
 from mitmproxy.proxy.layers.http._http2 import split_pseudo_headers
@@ -818,6 +818,44 @@ def test_cancel_during_response_hook(tctx):
     )
 
 
+def test_http_1_1_required(tctx):
+    """
+    Test that we properly forward an HTTP_1_1_REQUIRED stream error.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    sff = FrameFactory()
+    forwarded_request_frames = Placeholder(bytes)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, forwarded_request_frames)
+        >> DataReceived(
+            server,
+            sff.build_rst_stream_frame(1, ErrorCodes.HTTP_1_1_REQUIRED).serialize(),
+        )
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_rst_stream_frame(1, ErrorCodes.HTTP_1_1_REQUIRED).serialize(),
+        )
+    )
+
+
 def test_stream_concurrency(tctx):
     """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
     playbook, cff = start_h2_client(tctx)
@@ -1046,7 +1084,7 @@ class TestClient:
             )
             << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
             >> http.RequestProtocolError(
-                1, "cancelled", code=status_codes.CLIENT_CLOSED_REQUEST
+                1, "cancelled", code=ErrorCode.CLIENT_DISCONNECTED
             )
             << SendData(
                 tctx.server,
