@@ -7,7 +7,7 @@ menu:
 
 # Proxy Modes
 
-mitmproxy supports different proxy modes to capture traffic. 
+mitmproxy supports different proxy modes to capture traffic.
 You can use any of the modes with any of the mitmproxy tools (mitmproxy, mitmweb, or mitmdump).
 
 
@@ -15,7 +15,7 @@ You can use any of the modes with any of the mitmproxy tools (mitmproxy, mitmweb
 
 - [Regular](#regular-proxy): The default mode. Configure your client(s) to use an HTTP(S) proxy.
 - [Local Capture](#local-capture): Capture applications on the same device.
-- [WireGuard](#wireguard-transparent-proxy): Capture external devices or individual Android apps.
+- [WireGuard](#wireguard): Capture external devices or individual Android apps.
 - [Reverse](#reverse-proxy): Put mitmproxy in front of a server.
 
 ### Advanced Modes
@@ -45,7 +45,7 @@ If your target can be configured to use an HTTP proxy, we recommend you start wi
 1. If you do not see any traffic in mitmproxy, open mitmproxy's event log.
    You should be seeing `client connect` messages in there.
    If you do not see `client connect` messages, your client does not reach the proxy at all:
-      - You have maybe misconfigured the IP address or port. 
+      - You have maybe misconfigured the IP address or port.
       - Alternatively your wireless network may use _client isolation_,
         which prevents clients from communicating with one another.
 2. There are applications that bypass the operating system's HTTP proxy settings -
@@ -115,14 +115,14 @@ mitmproxy --mode local:!curl,!wget  # Intercept everything but cURL and wget.
 
 ## WireGuard
 
-In WireGuard mode, mitmproxy starts a WireGuard VPN server. Devices can be connected using standard WireGuard client 
+In WireGuard mode, mitmproxy starts a WireGuard VPN server. Devices can be connected using standard WireGuard client
 applications and mitmproxy will transparently intercept their traffic.
 
-1. Start `mitmweb --mode wireguard`.  
+1. Start `mitmweb --mode wireguard`.
 2. Install a WireGuard client on target device.
 3. Import the WireGuard client configuration provided by mitmproxy.
 
-No additional routing configuration is required. The WireGuard server runs entirely in userspace, 
+No additional routing configuration is required. The WireGuard server runs entirely in userspace,
 so no administrative privileges are necessary in this mode.
 
 ### Configuration
@@ -277,7 +277,7 @@ through mitmproxy.
 ## Transparent Proxy
 
 {{% note %}}
-Consider using [WireGuard](#wireguard) and [local capture](#local-capture) mode instead of transparent mode.  
+Consider using [WireGuard](#wireguard) and [local capture](#local-capture) mode instead of transparent mode.
 They are easier to set up and also intercept everything transparently.
 {{% /note %}}
 
@@ -399,7 +399,7 @@ This mode requires root privileges (or `CAP_NET_ADMIN` on the Python interpreter
 #### Usage with Containers
 
 Mitmproxy's [docker-entrypoint.sh] drops all privileges on startup by default.
-To make TUN mode work in a container on Linux, you can do something like this: 
+To make TUN mode work in a container on Linux, you can do something like this:
 
 ```shell
 docker run --privileged --network host mitmproxy/mitmproxy bash -c "mitmdump --mode tun"
