@@ -387,7 +387,6 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     async def listen(
         self, host: str, port: int
     ) -> list[mitmproxy_rs.wireguard.WireGuardServer]:
-
         servers: list[mitmproxy_rs.wireguard.WireGuardServer] = []
 
         # error early on invalid keys
@@ -456,6 +455,7 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
 
     def to_json(self) -> dict:
         return {"wireguard_conf": self.client_conf(), **super().to_json()}
+
 
 class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
     _server: ClassVar[mitmproxy_rs.local.LocalRedirector | None] = None
