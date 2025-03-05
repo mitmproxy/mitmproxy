@@ -293,7 +293,6 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             servers.append(await asyncio.start_server(self.handle_stream, host, port))
         if self.mode.transport_protocol in ("udp", "both"):
             # we start two servers for dual-stack support.
-            # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
             if host == "":
                 ipv4 = await mitmproxy_rs.udp.start_udp_server(
                     "0.0.0.0",
@@ -322,8 +321,8 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         return servers
 
 
-class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
-    _server: mitmproxy_rs.wireguard.WireGuardServer | None = None
+class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
+    _servers: list[mitmproxy_rs.wireguard.WireGuardServer]
 
     server_key: str
     client_key: str
@@ -334,18 +333,14 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
         return layers.modes.TransparentProxy(context)
 
     @property
-    def is_running(self) -> bool:
-        return self._server is not None
-
-    @property
     def listen_addrs(self) -> tuple[Address, ...]:
-        if self._server:
-            return (self._server.getsockname(),)
-        else:
-            return tuple()
+        addrs = []
+        for s in self._servers:
+            addrs.append(s.getsockname())
+        return tuple(addrs)
 
     async def _start(self) -> None:
-        assert self._server is None
+        assert not self._servers
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
         assert port is not None
@@ -373,25 +368,71 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
             self.client_key = c["client_key"]
         except Exception as e:
             raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
-        # error early on invalid keys
-        p = mitmproxy_rs.wireguard.pubkey(self.client_key)
-        _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
 
-        self._server = await mitmproxy_rs.wireguard.start_wireguard_server(
-            host or "0.0.0.0",
-            port,
-            self.server_key,
-            [p],
-            self.handle_stream,
-            self.handle_stream,
-        )
+        try:
+            self._servers = await self.listen(host, port)
+        except OSError as e:
+            message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
+            if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
+                assert (
+                    self.mode.custom_listen_host is None
+                )  # since [@ [listen_addr:]listen_port]
+                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
+            raise OSError(e.errno, message, e.filename) from e
 
         conf = self.client_conf()
         assert conf
         logger.info("-" * 60 + "\n" + conf + "\n" + "-" * 60)
 
+    async def listen(
+        self, host: str, port: int
+    ) -> list[mitmproxy_rs.wireguard.WireGuardServer]:
+
+        servers: list[mitmproxy_rs.wireguard.WireGuardServer] = []
+
+        # error early on invalid keys
+        p = mitmproxy_rs.wireguard.pubkey(self.client_key)
+        _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
+
+        # we start two servers for dual-stack support.
+        if host == "":
+            ipv4 = await mitmproxy_rs.wireguard.start_wireguard_server(
+                "0.0.0.0",
+                port,
+                self.server_key,
+                [p],
+                self.handle_stream,
+                self.handle_stream,
+            )
+            servers.append(ipv4)
+            try:
+                ipv6 = await mitmproxy_rs.wireguard.start_wireguard_server(
+                    "[::]",
+                    port,
+                    self.server_key,
+                    [p],
+                    self.handle_stream,
+                    self.handle_stream,
+                )
+                servers.append(ipv6)  # pragma: no cover
+            except Exception:  # pragma: no cover
+                logger.debug("Failed to listen on '::', listening on IPv4 only.")
+        else:
+            servers.append(
+                await mitmproxy_rs.wireguard.start_wireguard_server(
+                    host,
+                    port,
+                    self.server_key,
+                    [p],
+                    self.handle_stream,
+                    self.handle_stream,
+                )
+            )
+
+        return servers
+
     def client_conf(self) -> str | None:
-        if not self._server:
+        if not self._servers:
             return None
         host = (
             self.mode.listen_host(ctx.options.listen_host)
@@ -415,15 +456,6 @@ class WireGuardServerInstance(ServerInstance[mode_specs.WireGuardMode]):
 
     def to_json(self) -> dict:
         return {"wireguard_conf": self.client_conf(), **super().to_json()}
-
-    async def _stop(self) -> None:
-        assert self._server is not None
-        try:
-            self._server.close()
-            await self._server.wait_closed()
-        finally:
-            self._server = None
-
 
 class LocalRedirectorInstance(ServerInstance[mode_specs.LocalMode]):
     _server: ClassVar[mitmproxy_rs.local.LocalRedirector | None] = None
