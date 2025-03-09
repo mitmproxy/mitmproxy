@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="{{ $style.RelPermalink }}">
     {{- $script := resources.Get "version-selector.js" | minify | fingerprint }}
     <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}"></script>
-    <script type="module" src="/searchbox/index-C7zxpy4f.js"></script>
 
     {{ if .Params.has_asciinema }}
         {{- $styles := resources.Get "asciinema-player.css" | minify | fingerprint }}
@@ -43,7 +42,6 @@
         <a class="hide-mobile" href="https://docs.mitmproxy.org/">Docs</a>
         <a class="hide-mobile" href="https://mitmproxy.org/publications/">Publications</a>
         <span style="flex-grow: 1"></span>
-        <div id="docsearch"></div>
         <version-selector version="{{ getenv "DOCS_ARCHIVE" }}" aria-label="Documentation version selector"/>
     </nav>
 </header>
