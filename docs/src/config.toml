@@ -14,3 +14,6 @@ unsafe = true
 
 [security.funcs]
 getenv = ["DOCS_ARCHIVE"]
+
+[outputs]
+home = ["HTML", "JSON"]
