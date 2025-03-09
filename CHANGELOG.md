@@ -19,6 +19,8 @@
   ([#7576](https://github.com/mitmproxy/mitmproxy/pull/7576), @mhils, @cataggar)
 - Create content view for Socket.IO over WebSocket transport
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
+- Add multiple flows selection to mitmweb.
+  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000)
 
 ## 17 February 2025: mitmproxy 11.1.3
 
