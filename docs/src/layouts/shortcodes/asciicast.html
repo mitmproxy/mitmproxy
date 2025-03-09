@@ -1,8 +1,9 @@
 {{ $file := .Get "file" }}
 <div class="asciicast-wrapper">
-    <asciinema-player id="asciinema-player" src="/recordings/{{ $file }}.cast" font-size="13px" poster="npt:{{ .Get "poster" }}" preload></asciinema-player>
+    {{- $cast := resources.Get (print "recordings/" $file ".cast") -}}
+    <asciinema-player id="asciinema-player" src="{{ $cast.RelPermalink }}" font-size="12px" poster="npt:{{ .Get "poster" }}" preload></asciinema-player>
     {{- if .Get "instructions" -}}
-        {{- $instructions_file := print "static/recordings/" $file "_instructions.json" -}}
+        {{- $instructions_file := print "recordings/" $file "_instructions.json" -}}
         {{ $data := resources.Get $instructions_file | transform.Unmarshal }}
         <article class="panel">
             <p class="panel-heading">

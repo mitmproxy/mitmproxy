@@ -1,7 +1,6 @@
 baseURL = ""
 languageCode = "en-us"
 title = "mitmproxy.org docs"
-theme = "mitmproxydocs"
 publishDir = "../public"
 RelativeURLs = true
 pygmentsCodefences = true

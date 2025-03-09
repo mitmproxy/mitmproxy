@@ -1,9 +1,6 @@
 ---
 title: "User Interface"
 weight: 1
-menu:
-  web-tutorial:
-    weight: 1
 ---
 
 # User Interface

@@ -1,9 +1,6 @@
 ---
 title: "Modify Requests"
 weight: 4
-menu:
-  web-tutorial:
-    weight: 4
 ---
 
 # Modify Requests
