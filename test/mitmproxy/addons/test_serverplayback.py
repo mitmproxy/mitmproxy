@@ -313,9 +313,7 @@ def test_ignore_payload_params():
         b = f"--{boundary}\n"
         parts = []
         for k, v in kwargs.items():
-            parts.append(
-                'Content-Disposition: form-data; name="%s"\n\n' "%s\n" % (k, v)
-            )
+            parts.append('Content-Disposition: form-data; name="%s"\n\n%s\n' % (k, v))
         c = b + b.join(parts) + b
         r.request.content = c.encode()
         r.request.headers["content-type"] = "multipart/form-data; boundary=" + boundary

@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import logging
 import os.path
 import re
+import secrets
 import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
 from itertools import islice
 from typing import ClassVar
+from typing import Concatenate
 
 import tornado.escape
 import tornado.web
@@ -30,8 +33,10 @@ from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
+from mitmproxy.net.http import status_codes
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.tcp import TCPMessage
+from mitmproxy.tools.web.webaddons import WebAuth
 from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
@@ -204,7 +209,57 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
-class RequestHandler(tornado.web.RequestHandler):
+class AuthRequestHandler(tornado.web.RequestHandler):
+    AUTH_COOKIE_NAME = "mitmproxy-auth"
+    AUTH_COOKIE_VALUE = b"y"
+
+    def __init_subclass__(cls, **kwargs):
+        """Automatically wrap all request handlers with `_require_auth`."""
+        for method in cls.SUPPORTED_METHODS:
+            method = method.lower()
+            fn = getattr(cls, method)
+            if fn is not tornado.web.RequestHandler._unimplemented_method:
+                setattr(cls, method, AuthRequestHandler._require_auth(fn))
+
+    def auth_fail(self, invalid_password: bool) -> None:
+        """
+        Will be called when returning a 403.
+        May write a login form as the response.
+        """
+
+    @staticmethod
+    def _require_auth[**P, R](
+        fn: Callable[Concatenate[AuthRequestHandler, P], R],
+    ) -> Callable[Concatenate[AuthRequestHandler, P], R | None]:
+        @functools.wraps(fn)
+        def wrapper(
+            self: AuthRequestHandler, *args: P.args, **kwargs: P.kwargs
+        ) -> R | None:
+            if not self.current_user:
+                password = self.get_argument("token", default="")
+                if not self.settings["is_valid_password"](password):
+                    self.set_status(403)
+                    self.auth_fail(bool(password))
+                    return None
+                self.set_signed_cookie(
+                    self.AUTH_COOKIE_NAME,
+                    self.AUTH_COOKIE_VALUE,
+                    expires_days=400,
+                    httponly=True,
+                    samesite="Strict",
+                )
+            return fn(self, *args, **kwargs)
+
+        return wrapper
+
+    def get_current_user(self) -> bool:
+        return (
+            self.get_signed_cookie(self.AUTH_COOKIE_NAME, min_version=2)
+            == self.AUTH_COOKIE_VALUE
+        )
+
+
+class RequestHandler(AuthRequestHandler):
     application: Application
 
     def write(self, chunk: str | bytes | dict | list):
@@ -276,10 +331,27 @@ class RequestHandler(tornado.web.RequestHandler):
 
 
 class IndexHandler(RequestHandler):
+    def _is_fetch_mode_navigate(self) -> bool:
+        # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
+        return self.request.headers.get("Sec-Fetch-Mode", "navigate") == "navigate"
+
+    def auth_fail(self, invalid_password: bool) -> None:
+        # For mitmweb, we only write a login form for IndexHandler,
+        # which has additional Sec-Fetch-Mode protections.
+        if self._is_fetch_mode_navigate():
+            self.render("login.html", invalid_password=invalid_password)
+
     def get(self):
-        token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
-        assert token
-        self.render("index.html")
+        # Forbid access for non-navigate fetch modes so that they can't obtain xsrf_token.
+        if self._is_fetch_mode_navigate():
+            self.render("index.html", xsrf_token=self.xsrf_token)
+        else:
+            raise APIError(
+                status_codes.PRECONDITION_FAILED,
+                f"Unexpected Sec-Fetch-Mode header: {self.request.headers.get('Sec-Fetch-Mode')}",
+            )
+
+    post = get  # login form
 
 
 class FilterHelp(RequestHandler):
@@ -287,7 +359,7 @@ class FilterHelp(RequestHandler):
         self.write(dict(commands=flowfilter.help))
 
 
-class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
+class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
 
@@ -636,15 +708,6 @@ class SaveOptions(RequestHandler):
         pass
 
 
-class DnsRebind(RequestHandler):
-    def get(self):
-        raise tornado.web.HTTPError(
-            403,
-            reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
-        )
-
-
 class State(RequestHandler):
     # Separate method for testability.
     @staticmethod
@@ -706,6 +769,34 @@ class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
     }
 
 
+handlers = [
+    (r"/", IndexHandler),
+    (r"/filter-help(?:\.json)?", FilterHelp),
+    (r"/updates", ClientConnection),
+    (r"/commands(?:\.json)?", Commands),
+    (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
+    (r"/events(?:\.json)?", Events),
+    (r"/flows(?:\.json)?", Flows),
+    (r"/flows/dump", DumpFlows),
+    (r"/flows/resume", ResumeFlows),
+    (r"/flows/kill", KillFlows),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data", FlowContent),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?", FlowContentView),
+    (r"/clear", ClearAll),
+    (r"/options(?:\.json)?", Options),
+    (r"/options/save", SaveOptions),
+    (r"/state(?:\.json)?", State),
+    (r"/processes", ProcessList),
+    (r"/executable-icon", ProcessImage),
+]  # fmt: skip
+
+
 class Application(tornado.web.Application):
     master: mitmproxy.tools.web.master.WebMaster
 
@@ -713,52 +804,16 @@ class Application(tornado.web.Application):
         self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
+        auth_addon: WebAuth = master.addons.get("webauth")
         super().__init__(
-            default_host="dns-rebind-protection",
+            handlers=handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
-            cookie_secret=os.urandom(256),
+            xsrf_cookie_kwargs=dict(httponly=True, samesite="Strict"),
+            cookie_secret=secrets.token_bytes(32),
             debug=debug,
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
-        )
-
-        self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
-        self.add_handlers(
-            # make mitmweb accessible by IP only to prevent DNS rebinding.
-            r"^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$",
-            [
-                (r"/", IndexHandler),
-                (r"/filter-help(?:\.json)?", FilterHelp),
-                (r"/updates", ClientConnection),
-                (r"/commands(?:\.json)?", Commands),
-                (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),  # FIXME
-                (r"/events(?:\.json)?", Events),
-                (r"/flows(?:\.json)?", Flows),
-                (r"/flows/dump", DumpFlows),
-                (r"/flows/resume", ResumeFlows),
-                (r"/flows/kill", KillFlows),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data",
-                    FlowContent,
-                ),
-                (
-                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/"
-                    r"content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?",
-                    FlowContentView,
-                ),
-                (r"/clear", ClearAll),
-                (r"/options(?:\.json)?", Options),  # FIXME
-                (r"/options/save", SaveOptions),
-                (r"/state(?:\.json)?", State),
-                (r"/processes", ProcessList),
-                (r"/executable-icon", ProcessImage),
-            ],
+            is_valid_password=auth_addon.is_valid_password,
         )

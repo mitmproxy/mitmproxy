@@ -32,7 +32,7 @@ export default function Socks() {
             <h4 className="mode-title">SOCKS Proxy</h4>
             <p className="mode-description">
                 You manually configure your client application or device to use
-                a SOCKSv5 proxy.
+                a SOCKS5 proxy.
             </p>
 
             {servers}

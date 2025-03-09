@@ -13,7 +13,7 @@ Most protocols can be disabled by toggling the respective [option]({{< relref "/
 
 ## HTTP/1
 
-HTTP/1.0 and HTTP/1.1 support in mitmproxy is based on our custom HTTP stack based on 
+HTTP/1.0 and HTTP/1.1 support in mitmproxy is based on our custom HTTP stack based on
 [h11](https://github.com/python-hyper/h11), which is particularly robust to HTTP syntax
 errors. Protocol violations are often deliberately forwarded or inserted at the proxy.
 
@@ -36,7 +36,7 @@ server does not speak HTTP/2, mitmproxy seamlessly translates messages to HTTP/1
 ## HTTP/3
 
 HTTP/3 support in mitmproxy is based on [aioquic](https://github.com/aiortc/aioquic). Mitmproxy's HTTP/3 functionality
-is still experimental and only available in reverse proxy mode.
+is available in reverse proxy, local and WireGuard mode.
 
 ##### Known Limitations
 
@@ -64,9 +64,7 @@ DNS support in mitmproxy is based on a custom DNS implementation.
 ##### Known Limitations
 
 - *Replay*: Client or server replay is not possible yet.
-- mitmproxy current does not support DNS over TCP.
 - We have not started any work on DoT/DoH/DoQ (DNS-over-TLS/HTTPS/QUIC) yet. Contributions are welcome.
-- We have not started any work on stripping ESNI or HTTPS RR records yet. Contributions are welcome.
 
 ## Generic TCP/TLS Proxy
 

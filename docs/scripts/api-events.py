@@ -183,7 +183,7 @@ with outfile.open("w") as f, contextlib.redirect_stdout(f):
     )
 
     category(
-        "SOCKSv5",
+        "SOCKS5",
         "",
         [
             modes.Socks5AuthHook,

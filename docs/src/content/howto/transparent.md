@@ -13,7 +13,8 @@ transparent proxying ideal for those situations where you can't change client
 behaviour - proxy-oblivious mobile applications being a common example.
 
 {{% note %}}
-The new [WireGuard mode]({{< relref "/concepts/modes" >}}#wireguard-transparent-proxy)
+The new [WireGuard]({{< relref "/concepts/modes#wireguard" >}})
+and [local capture]({{< relref "/concepts/modes#local-capture" >}}) modes
 provides an alternative implementation for transparent proxying. It is much
 easier to set up, as it does not require setting up IP forwarding or modifying
 routing rules.

@@ -95,6 +95,7 @@ export interface OptionsState {
     web_debug: boolean;
     web_host: string;
     web_open_browser: boolean;
+    web_password: string;
     web_port: number;
     web_static_viewer: string | undefined;
     websocket: boolean;
@@ -198,6 +199,7 @@ export const defaultState: OptionsState = {
     web_debug: false,
     web_host: "127.0.0.1",
     web_open_browser: true,
+    web_password: "",
     web_port: 8081,
     web_static_viewer: "",
     websocket: true,

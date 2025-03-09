@@ -1,4 +1,5 @@
 import ssl
+import sys
 import time
 from logging import DEBUG
 from logging import WARNING
@@ -19,13 +20,14 @@ from mitmproxy.tls import TlsData
 from mitmproxy.utils import data
 from test.mitmproxy.proxy import tutils
 from test.mitmproxy.proxy.tutils import BytesMatching
+from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import StrMatching
 
 tlsdata = data.Data(__name__)
 
 
 def test_record_contents():
-    data = bytes.fromhex("1603010002beef" "1603010001ff")
+    data = bytes.fromhex("1603010002beef1603010001ff")
     assert list(tls.handshake_record_contents(data)) == [b"\xbe\xef", b"\xff"]
     for i in range(6):
         assert list(tls.handshake_record_contents(data[:i])) == []
@@ -90,6 +92,7 @@ class SSLTest:
         alpn: list[str] | None = None,
         sni: bytes | None = b"example.mitmproxy.org",
         max_ver: ssl.TLSVersion | None = None,
+        post_handshake_auth: bool = False,
     ):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
@@ -98,6 +101,7 @@ class SSLTest:
         )
 
         self.ctx.verify_mode = ssl.CERT_OPTIONAL
+        self.ctx.post_handshake_auth = post_handshake_auth
         self.ctx.load_verify_locations(
             cafile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
         )
@@ -212,7 +216,9 @@ def reply_tls_start_client(alpn: bytes | None = None, *args, **kwargs) -> tutils
     return tutils.reply(*args, side_effect=make_client_conn, **kwargs)
 
 
-def reply_tls_start_server(alpn: bytes | None = None, *args, **kwargs) -> tutils.reply:
+def reply_tls_start_server(
+    alpn: bytes | None = None, client_cert: bool = False, *args, **kwargs
+) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start_server hooks.
     """
@@ -230,6 +236,15 @@ def reply_tls_start_server(alpn: bytes | None = None, *args, **kwargs) -> tutils
         if alpn is not None:
             ssl_context.set_alpn_protos([alpn])
         ssl_context.set_verify(SSL.VERIFY_PEER)
+
+        if client_cert:
+            ssl_context.use_privatekey_file(
+                tlsdata.path("../../net/data/verificationcerts/trusted-client-cert.pem")
+            )
+            ssl_context.use_certificate_file(
+                tlsdata.path("../../net/data/verificationcerts/trusted-client-cert.pem")
+            )
+            SSL._lib.SSL_CTX_set_post_handshake_auth(ssl_context._context, 1)
 
         tls_start.ssl_conn = SSL.Connection(ssl_context)
         tls_start.ssl_conn.set_connect_state()
@@ -440,6 +455,56 @@ class TestServerTLS:
             << commands.CloseConnection(tctx.server)
         )
         assert tls_hook_data().conn.error
+
+    def test_post_handshake_authentication(self, tctx):
+        playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
+        tctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.server.state = ConnectionState.OPEN
+        tctx.server.sni = "example.mitmproxy.org"
+
+        tssl = SSLTest(server_side=True, post_handshake_auth=True)
+
+        # send ClientHello, receive ClientHello
+        data = tutils.Placeholder(bytes)
+        assert (
+            playbook
+            << tls.TlsStartServerHook(tutils.Placeholder())
+            >> reply_tls_start_server(client_cert=True)
+            << commands.SendData(tctx.server, data)
+        )
+        tssl.bio_write(data())
+        with pytest.raises(ssl.SSLWantReadError):
+            tssl.do_handshake()
+
+        # finish handshake (mitmproxy)
+        finish_handshake(playbook, tctx.server, tssl)
+
+        # finish handshake (locally)
+        tssl.do_handshake()
+        playbook >> events.DataReceived(tctx.server, tssl.bio_read())
+        playbook << None
+        assert playbook
+
+        assert tctx.server.tls_established
+        if sys.version_info >= (3, 13):
+            assert not tssl.obj.get_verified_chain()
+
+        tssl.obj.verify_client_post_handshake()
+        with pytest.raises(ssl.SSLWantReadError):
+            tssl.obj.read(42)
+        cert_request = tssl.bio_read()
+        assert cert_request
+        client_cert = Placeholder(bytes)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.server, cert_request)
+            << commands.SendData(tctx.server, client_cert)
+        )
+        tssl.bio_write(client_cert())
+        with pytest.raises(ssl.SSLWantReadError):
+            tssl.obj.read(42)
+        if sys.version_info >= (3, 13):
+            assert tssl.obj.get_verified_chain()
 
 
 def make_client_tls_layer(
@@ -768,9 +833,7 @@ class TestClientTLS:
 
 
 def test_dtls_record_contents():
-    data = bytes.fromhex(
-        "16fefd00000000000000000002beef" "16fefd00000000000000000001ff"
-    )
+    data = bytes.fromhex("16fefd00000000000000000002beef16fefd00000000000000000001ff")
     assert list(tls.dtls_handshake_record_contents(data)) == [b"\xbe\xef", b"\xff"]
     for i in range(12):
         assert list(tls.dtls_handshake_record_contents(data[:i])) == []

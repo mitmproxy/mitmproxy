@@ -1,5 +1,6 @@
 import { isEqual } from "lodash";
 import * as React from "react";
+import { ContentViewData } from "./components/contentviews/useContent";
 
 window.React = React;
 
@@ -61,12 +62,7 @@ export function reverseString(s) {
     );
 }
 
-function getCookie(name) {
-    const r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
-    return r ? r[1] : undefined;
-}
-
-const xsrf = getCookie("_xsrf");
+const xsrf = document.currentScript?.getAttribute("data-xsrf");
 
 export function fetchApi(
     url: string,
@@ -180,6 +176,17 @@ export async function copyToClipboard(
     } finally {
         t.remove();
     }
+}
+
+export async function copyViewContentDataToClipboard(
+    contentViewData: ContentViewData | undefined,
+) {
+    let p = "";
+    contentViewData?.lines.forEach((line) => {
+        line.forEach((el) => (p = p + el[1]));
+        p = p + "\n";
+    });
+    await copyToClipboard(Promise.resolve(p));
 }
 
 export function rpartition(str: string, sep: string): [string, string] {

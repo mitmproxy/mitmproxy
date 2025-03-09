@@ -2,7 +2,6 @@ import logging
 import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
-from typing import Any
 
 import pyperclip
 
@@ -53,7 +52,12 @@ def request_content_for_console(request: http.Request) -> str:
         # see https://github.com/python/cpython/pull/10871
         raise exceptions.CommandError("Request content must be valid unicode")
     escape_control_chars = {chr(i): f"\\x{i:02x}" for i in range(32)}
-    return "".join(escape_control_chars.get(x, x) for x in text)
+    escaped_text = "".join(escape_control_chars.get(x, x) for x in text)
+    if any(char in escape_control_chars for char in text):
+        # Escaped chars need to be unescaped by the shell to be properly inperpreted by curl and httpie
+        return f'"$(printf {shlex.quote(escaped_text)})"'
+
+    return shlex.quote(escaped_text)
 
 
 def curl_command(f: flow.Flow) -> str:
@@ -83,9 +87,10 @@ def curl_command(f: flow.Flow) -> str:
 
     args.append(request.pretty_url)
 
+    command = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
-        args += ["-d", request_content_for_console(request)]
-    return " ".join(shlex.quote(arg) for arg in args)
+        command += f" -d {request_content_for_console(request)}"
+    return command
 
 
 def httpie_command(f: flow.Flow) -> str:
@@ -102,7 +107,7 @@ def httpie_command(f: flow.Flow) -> str:
         args.append(f"{k}: {v}")
     cmd = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
-        cmd += " <<< " + shlex.quote(request_content_for_console(request))
+        cmd += " <<< " + request_content_for_console(request)
     return cmd
 
 
@@ -182,14 +187,13 @@ class Export:
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
-        func: Any = formats[format]
-        v = func(flow)
+        v = formats[format](flow)
         try:
             with open(path, "wb") as fp:
                 if isinstance(v, bytes):
                     fp.write(v)
                 else:
-                    fp.write(v.encode("utf-8"))
+                    fp.write(v.encode("utf-8", "surrogateescape"))
         except OSError as e:
             logging.error(str(e))
 
@@ -198,8 +202,9 @@ class Export:
         """
         Export a flow to the system clipboard.
         """
+        content = self.export_str(format, f)
         try:
-            pyperclip.copy(self.export_str(format, f))
+            pyperclip.copy(content)
         except pyperclip.PyperclipException as e:
             logging.error(str(e))
 
@@ -210,6 +215,11 @@ class Export:
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
-        func = formats[format]
 
-        return strutils.always_str(func(f), "utf8", "backslashreplace")
+        content = formats[format](f)
+        # The individual formatters may return surrogate-escaped UTF-8, but that may blow up in later steps.
+        # For example, pyperclip on macOS does not like surrogates.
+        # To fix this, We first surrogate-encode and then backslash-decode.
+        content = strutils.always_bytes(content, "utf8", "surrogateescape")
+        content = strutils.always_str(content, "utf8", "backslashreplace")
+        return content

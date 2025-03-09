@@ -26,6 +26,10 @@ class Dummy:
     def sreplay(self) -> int:
         return 1 if self.val else 0
 
+    @command.command("proxyserver.active_connections")
+    def active_connections(self) -> int:
+        return 1 if self.val else 0
+
 
 class TKS(keepserving.KeepServing):
     _is_shutdown = False
