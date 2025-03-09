@@ -32,8 +32,9 @@
     {{ hugo.Generator }}
 </head>
 <body>
-<header>
-    <nav>
+<a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+<header role="banner">
+    <nav role="navigation" aria-label="Main navigation">
         <a href="https://mitmproxy.org/">
             <img src='{{ (resources.Get "logo-navbar.png").RelPermalink }}' alt="mitmproxy logo" width="123" height="28">
         </a>
@@ -41,13 +42,13 @@
         <a class="hide-mobile" href="https://docs.mitmproxy.org/">Docs</a>
         <a class="hide-mobile" href="https://mitmproxy.org/publications/">Publications</a>
         <span style="flex-grow: 1"></span>
-        <version-selector version="{{ getenv "DOCS_ARCHIVE" }}"/>
+        <version-selector version="{{ getenv "DOCS_ARCHIVE" }}" aria-label="Documentation version selector"/>
     </nav>
 </header>
-<nav>
+<nav role="navigation" aria-label="Documentation navigation">
     {{ partial "sidebar" . }}
 </nav>
-<main>
+<main id="main-content" role="main" tabindex="-1">
     {{- block "main" . }}{{- end }}
 </main>
 
