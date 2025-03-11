@@ -20,6 +20,8 @@
   ([#7576](https://github.com/mitmproxy/mitmproxy/pull/7576), @mhils, @cataggar)
 - Create content view for Socket.IO over WebSocket transport
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
+- Fix a bug where mitmweb would crash when viewing flows with undefined headers.
+  ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 
 ## 17 February 2025: mitmproxy 11.1.3
 
