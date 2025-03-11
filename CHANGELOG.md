@@ -11,6 +11,7 @@
   ([#7566](https://github.com/mitmproxy/mitmproxy/pull/7566), @AntoineJT)
 - Introduce a new theme for docs.mitmproxy.org.
   ([#7593](https://github.com/mitmproxy/mitmproxy/pull/7593), @mhils)
+- Add search functionality to the documentation.
 - Fix a bug where mitmdump would exit prematurely in server replay mode.
   ([#7571](https://github.com/mitmproxy/mitmproxy/pull/7571), @mhils)
 - Fix a bug where WebSocket Messages view jumps to top when a message is received
