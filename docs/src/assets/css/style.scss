@@ -7,6 +7,7 @@ $max-mobile-width: 768px;
 @import "sidebar";
 @import "content";
 
+@import "components/search";
 @import "components/anchors";
 @import "components/asciinema-player";
 @import "components/badges";

@@ -12,18 +12,15 @@
 
     {{ $style := resources.Get "css/style.scss" | toCSS | minify }}
     <link rel="stylesheet" href="{{ $style.RelPermalink }}">
-    {{- $script := resources.Get "version-selector.js" | minify | fingerprint }}
-    <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}"></script>
 
     {{ if .Params.has_asciinema }}
         {{- $styles := resources.Get "asciinema-player.css" | minify | fingerprint }}
-        <link rel="stylesheet" href="{{ $styles.RelPermalink }}" integrity="{{ $styles.Data.Integrity }}" media="screen">
+        <link rel="stylesheet" href="{{ $styles.RelPermalink }}" media="screen">
 
-        {{- $styles := resources.Get "asciinema-player.js" | minify | fingerprint }}
-        <script src="{{ $styles.RelPermalink }}" integrity="{{ $styles.Data.Integrity }}"></script>
-
-        {{- $styles := resources.Get "asciinema-tutorial.js" | minify | fingerprint }}
-        <script src="{{ $styles.RelPermalink }}" integrity="{{ $styles.Data.Integrity }}"></script>
+        {{- $asciinemaPlayer := resources.Get "asciinema-player.js" }}
+        {{- $asciinemaTutorial := resources.Get "asciinema-tutorial.js" }}
+        {{- $asciinemaScripts := slice $asciinemaPlayer $asciinemaTutorial | resources.Concat "asciinema.js" | minify | fingerprint }}
+        <script src="{{ $asciinemaScripts.RelPermalink }}"></script>
     {{ end }}
 
     {{ range .AlternativeOutputFormats -}}
@@ -42,6 +39,8 @@
         <a class="hide-mobile" href="https://docs.mitmproxy.org/">Docs</a>
         <a class="hide-mobile" href="https://mitmproxy.org/publications/">Publications</a>
         <span style="flex-grow: 1"></span>
+        <input type="search" id="search" placeholder="Search">
+        <span style="flex-grow: 1"></span>
         <version-selector version="{{ getenv "DOCS_ARCHIVE" }}" aria-label="Documentation version selector"/>
     </nav>
 </header>
@@ -51,6 +50,9 @@
 <main id="main-content" role="main" tabindex="-1">
     {{- block "main" . }}{{- end }}
 </main>
-
+{{- $versionSelector := resources.Get "version-selector.js" }}
+{{- $search := resources.Get "search.js" }}
+{{- $scripts := slice $versionSelector $search | resources.Concat "bundle.js" | minify | fingerprint }}
+<script src="{{ $scripts.RelPermalink }}"></script>
 </body>
 </html>
