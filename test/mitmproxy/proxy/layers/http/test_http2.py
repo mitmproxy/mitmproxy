@@ -86,9 +86,9 @@ def start_h2_client(tctx: Context, keepalive: int = 0) -> tuple[Playbook, FrameF
 
 
 def make_h2(open_connection: OpenConnection) -> None:
-    assert isinstance(
-        open_connection, OpenConnection
-    ), f"Expected OpenConnection event, not {open_connection}"
+    assert isinstance(open_connection, OpenConnection), (
+        f"Expected OpenConnection event, not {open_connection}"
+    )
     open_connection.connection.alpn = b"h2"
 
 
@@ -476,7 +476,7 @@ def test_http2_client_aborts(tctx, stream, when, how):
             >> reply(side_effect=enable_request_streaming)
             << OpenConnection(server)
             >> reply(None)
-            << SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         )
     else:
         assert playbook >> reply()
@@ -516,7 +516,7 @@ def test_http2_client_aborts(tctx, stream, when, how):
         >> reply()
         << OpenConnection(server)
         >> reply(None)
-        << SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123")
         << http.HttpResponseHeadersHook(flow)
     )

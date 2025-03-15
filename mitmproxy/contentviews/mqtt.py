@@ -90,11 +90,11 @@ class MQTTControlPacket:
             assert self.payload
             s += f"""
 
-Client Id: {self.payload['ClientId']}
-Will Topic: {self.payload.get('WillTopic')}
-Will Message: {strutils.bytes_to_escaped_str(self.payload.get('WillMessage', b'None'))}
-User Name: {self.payload.get('UserName')}
-Password: {strutils.bytes_to_escaped_str(self.payload.get('Password', b'None'))}
+Client Id: {self.payload["ClientId"]}
+Will Topic: {self.payload.get("WillTopic")}
+Will Message: {strutils.bytes_to_escaped_str(self.payload.get("WillMessage", b"None"))}
+User Name: {self.payload.get("UserName")}
+Password: {strutils.bytes_to_escaped_str(self.payload.get("Password", b"None"))}
 """
         elif self.packet_type == self.SUBSCRIBE:
             s += " sent topic filters: "

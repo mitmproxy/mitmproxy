@@ -1,5 +1,6 @@
 import errno
 import logging
+from typing import cast
 
 import tornado.httpserver
 import tornado.ioloop
@@ -41,6 +42,7 @@ class WebMaster(master.Master):
         self.addons.add(*addons.default_addons())
         self.addons.add(
             webaddons.WebAddon(),
+            webaddons.WebAuth(),
             intercept.Intercept(),
             readfile.ReadFileStdin(),
             static_viewer.StaticViewer(),
@@ -89,6 +91,10 @@ class WebMaster(master.Master):
             },
         )
 
+    @property
+    def web_url(self) -> str:
+        return cast(webaddons.WebAuth, self.addons.get("webauth")).web_url
+
     async def running(self):
         # Register tornado with the current event loop
         tornado.ioloop.IOLoop.current()
@@ -105,8 +111,6 @@ class WebMaster(master.Master):
                 message += f"\nTry specifying a different port by using `--set web_port={self.options.web_port + 2}`."
             raise OSError(e.errno, message, e.filename) from e
 
-        logger.info(
-            f"Web server listening at http://{self.options.web_host}:{self.options.web_port}/",
-        )
+        logger.info(f"Web server listening at {self.web_url}")
 
         return await super().running()

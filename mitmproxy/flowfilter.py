@@ -34,6 +34,7 @@ Headers:
 """
 
 import functools
+import os
 import re
 import sys
 from collections.abc import Sequence
@@ -48,6 +49,10 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
+
+maybe_ignore_case = (
+    re.IGNORECASE if os.environ.get("MITMPROXY_CASE_SENSITIVE_FILTERS") != "1" else 0
+)
 
 
 def only(*types):
@@ -181,7 +186,7 @@ class _Rex(_Action):
         if self.is_binary:
             expr = expr.encode()
         try:
-            self.re = re.compile(expr, self.flags)
+            self.re = re.compile(expr, self.flags | maybe_ignore_case)
         except Exception:
             raise ValueError("Cannot compile expression.")
 
@@ -380,7 +385,6 @@ class FBodResponse(_Rex):
 class FMethod(_Rex):
     code = "m"
     help = "Method"
-    flags = re.IGNORECASE
 
     @only(http.HTTPFlow)
     def __call__(self, f):
@@ -390,7 +394,6 @@ class FMethod(_Rex):
 class FDomain(_Rex):
     code = "d"
     help = "Domain"
-    flags = re.IGNORECASE
     is_binary = False
 
     @only(http.HTTPFlow)
@@ -404,7 +407,6 @@ class FUrl(_Rex):
     code = "u"
     help = "URL"
     is_binary = False
-    flags = re.IGNORECASE
 
     # FUrl is special, because it can be "naked".
 
@@ -433,7 +435,7 @@ class FSrc(_Rex):
         if not f.client_conn or not f.client_conn.peername:
             return False
         r = f"{f.client_conn.peername[0]}:{f.client_conn.peername[1]}"
-        return f.client_conn.peername and self.re.search(r)
+        return self.re.search(r)
 
 
 class FDst(_Rex):
@@ -445,7 +447,7 @@ class FDst(_Rex):
         if not f.server_conn or not f.server_conn.address:
             return False
         r = f"{f.server_conn.address[0]}:{f.server_conn.address[1]}"
-        return f.server_conn.address and self.re.search(r)
+        return self.re.search(r)
 
 
 class FReplay(_Action):

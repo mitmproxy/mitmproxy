@@ -45,7 +45,7 @@ async def main():
         else:
             test_file = Path("test") / f.with_name(f"test_{f.name}")
 
-        coverage_file = f".coverage-{str(f).replace('/','-')}"
+        coverage_file = f".coverage-{str(f).replace('/', '-')}"
 
         async with sem:
             try:

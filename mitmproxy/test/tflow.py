@@ -294,5 +294,6 @@ def tflows() -> list[flow.Flow]:
         tudpflow(),
         tudpflow(err=True),
         tdnsflow(resp=True),
+        tdnsflow(req=tdnsreq(questions=[])),
         tdnsflow(err=True),
     ]

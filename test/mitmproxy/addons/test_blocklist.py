@@ -58,7 +58,6 @@ class TestBlockList:
             assert f.metadata["blocklisted"]
 
     def test_mixedcase_header_names(self):
-        # this test is meant to document existing behavior, not advocate for it.
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(bl, block_list=["|~hq User-Agent:\\scurl|401"])
@@ -66,7 +65,7 @@ class TestBlockList:
             f.request.url = "https://example.org/products/123"
             f.request.headers["user-agent"] = "curl/8.11.1"
             bl.request(f)
-            assert not f.response
+            assert f.response
 
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()

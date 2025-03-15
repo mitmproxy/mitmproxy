@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from enum import Enum
 from logging import DEBUG
 from logging import ERROR
+from typing import Any
 from typing import ClassVar
 
 import h2.config
@@ -61,7 +62,7 @@ CATCH_HYPER_H2_ERRORS = (ValueError, IndexError)
 
 class Http2Connection(HttpConnection):
     h2_conf: ClassVar[h2.config.H2Configuration]
-    h2_conf_defaults = dict(
+    h2_conf_defaults: dict[str, Any] = dict(
         header_encoding=False,
         validate_outbound_headers=False,
         # validate_inbound_headers is controlled by the validate_inbound_headers option.
@@ -229,9 +230,10 @@ class Http2Connection(HttpConnection):
                     err_str = h2.errors.ErrorCodes(event.error_code).name
                 except ValueError:
                     err_str = str(event.error_code)
-                err_code = {
-                    h2.errors.ErrorCodes.CANCEL: status_codes.CLIENT_CLOSED_REQUEST,
-                }.get(event.error_code, self.ReceiveProtocolError.code)
+                if event.error_code == h2.errors.ErrorCodes.CANCEL:
+                    err_code = status_codes.CLIENT_CLOSED_REQUEST
+                else:
+                    err_code = self.ReceiveProtocolError.code
                 yield ReceiveHttp(
                     self.ReceiveProtocolError(
                         event.stream_id,
@@ -308,14 +310,14 @@ def normalize_h1_headers(
 ) -> list[tuple[bytes, bytes]]:
     # HTTP/1 servers commonly send capitalized headers (Content-Length vs content-length),
     # which isn't valid HTTP/2. As such we normalize.
-    headers = h2.utilities.normalize_outbound_headers(
-        headers,
-        h2.utilities.HeaderValidationFlags(is_client, False, not is_client, False),
-    )
-    # make sure that this is not just an iterator but an iterable,
+    # Make sure that this is not just an iterator but an iterable,
     # otherwise hyper-h2 will silently drop headers.
-    headers = list(headers)
-    return headers
+    return list(
+        h2.utilities.normalize_outbound_headers(
+            headers,
+            h2.utilities.HeaderValidationFlags(is_client, False, not is_client, False),
+        )
+    )
 
 
 def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator[None]:

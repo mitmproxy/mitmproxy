@@ -683,9 +683,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
             >> tutils.reply(side_effect=enable_request_streaming, to=request_headers)
             << commands.OpenConnection(server)
             >> tutils.reply(None)
-            << commands.SendData(
-                server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n"
-            )
+            << commands.SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         )
     else:
         assert playbook >> tutils.reply(to=request_headers)
@@ -729,7 +727,7 @@ def test_http3_client_aborts(tctx: context.Context, stream: str, when: str, how:
         >> tutils.reply()
         << commands.OpenConnection(server)
         >> tutils.reply(None)
-        << commands.SendData(server, b"GET / HTTP/1.1\r\n" b"Host: example.com\r\n\r\n")
+        << commands.SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         >> events.DataReceived(
             server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123"
         )

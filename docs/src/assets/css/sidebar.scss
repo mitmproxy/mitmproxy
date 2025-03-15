@@ -1,0 +1,96 @@
+body > nav {
+
+  > label {
+    display: none;
+    font-size: 1.5em;
+    padding: .5rem;
+    align-items: center;
+    color: #4a4a4a;
+    > svg {
+      height: 2ex;
+      margin-right: .5ex;
+    }
+    cursor: pointer;
+  }
+
+  > #navtoggle {
+    position: absolute;
+    height: 0;
+    opacity: 0;
+  }
+
+  padding-top: 1rem;
+  border-right: solid #c0c0c0 1px;
+
+  @media (max-width: $max-mobile-width) {
+
+    padding-top: 0;
+    border-right: none;
+
+    > label {
+      display: flex;
+    }
+
+    background: #eee;
+    border-bottom: solid #ccc 1px;
+
+    > #navtoggle + div {
+      display: none;
+    }
+    > #navtoggle:checked + div {
+      display: inherit;
+    }
+  }
+
+  details {
+    margin-bottom: .35rem;
+  }
+
+  summary, a {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    padding: .35rem 0.5rem;
+    &:hover {
+      background: #eee;
+    }
+  }
+
+  summary {
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+
+    &::marker {
+      display: none;
+    }
+    &::after {
+        content: "";
+        flex-shrink: 0;
+        width: 1.25rem;
+        height: 1.25rem;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-size: 1.25rem;
+        transition: transform .1s ease-in-out;
+        transform: rotate(-90deg);
+
+    }
+  }
+  details[open] > summary::after {
+    transform: none;
+  }
+
+  a {
+    display: block;
+    color: #4a4a4a;
+    text-decoration: none;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
