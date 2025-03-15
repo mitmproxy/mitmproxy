@@ -11,6 +11,7 @@ import {
     replay as replayFlow,
     resume as resumeFlow,
     revert as revertFlow,
+    select as selectFlow,
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
@@ -24,6 +25,10 @@ export default function FlowMenu(): JSX.Element {
         (state) => state.flows.byId[state.flows.selected[0]],
     );
 
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
+
+    const hasSingleFlowSelected = selectedFlows.length === 1;
+
     if (!flow) return <div />;
     return (
         <div className="flow-menu">
@@ -34,7 +39,9 @@ export default function FlowMenu(): JSX.Element {
                             title="[r]eplay flow"
                             icon="fa-repeat text-primary"
                             onClick={() => dispatch(replayFlow(flow))}
-                            disabled={!canReplay(flow)}
+                            disabled={
+                                !canReplay(flow) || !hasSingleFlowSelected
+                            }
                         >
                             Replay
                         </Button>
@@ -42,11 +49,16 @@ export default function FlowMenu(): JSX.Element {
                             title="[D]uplicate flow"
                             icon="fa-copy text-info"
                             onClick={() => dispatch(duplicateFlow(flow))}
+                            disabled={!hasSingleFlowSelected}
                         >
                             Duplicate
                         </Button>
                         <Button
-                            disabled={!flow || !flow.modified}
+                            disabled={
+                                !flow ||
+                                !flow.modified ||
+                                !hasSingleFlowSelected
+                            }
                             title="revert changes to flow [V]"
                             icon="fa-history text-warning"
                             onClick={() => dispatch(revertFlow(flow))}
@@ -56,10 +68,14 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             title="[d]elete flow"
                             icon="fa-trash text-danger"
-                            onClick={() => dispatch(removeFlow(flow))}
+                            onClick={() => {
+                                dispatch(removeFlow(selectedFlows));
+                                dispatch(selectFlow([])); // clear flow selection
+                            }}
                         >
                             Delete
                         </Button>
+
                         <MarkButton flow={flow} />
                     </div>
                     <div className="menu-legend">Flow Modification</div>
@@ -78,7 +94,11 @@ export default function FlowMenu(): JSX.Element {
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button
-                            disabled={!flow || !flow.intercepted}
+                            disabled={
+                                !flow ||
+                                !flow.intercepted ||
+                                !hasSingleFlowSelected
+                            }
                             title="[a]ccept intercepted flow"
                             icon="fa-play text-success"
                             onClick={() => dispatch(resumeFlow(flow))}
@@ -86,7 +106,11 @@ export default function FlowMenu(): JSX.Element {
                             Resume
                         </Button>
                         <Button
-                            disabled={!flow || !flow.intercepted}
+                            disabled={
+                                !flow ||
+                                !flow.intercepted ||
+                                !hasSingleFlowSelected
+                            }
                             title="kill intercepted flow [x]"
                             icon="fa-times text-danger"
                             onClick={() => dispatch(killFlow(flow))}
@@ -108,6 +132,10 @@ const openInNewTab = (url) => {
 };
 
 function DownloadButton({ flow }: { flow: Flow }) {
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
+
     if (flow.type !== "http")
         return (
             <Button icon="fa-download" onClick={() => 0} disabled>
@@ -122,6 +150,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                 onClick={() =>
                     openInNewTab(MessageUtils.getContentURL(flow, flow.request))
                 }
+                disabled={!hasSingleFlowSelected}
             >
                 Download
             </Button>
@@ -136,6 +165,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                     onClick={() =>
                         openInNewTab(MessageUtils.getContentURL(flow, response))
                     }
+                    disabled={!hasSingleFlowSelected}
                 >
                     Download
                 </Button>
@@ -145,7 +175,11 @@ function DownloadButton({ flow }: { flow: Flow }) {
             return (
                 <Dropdown
                     text={
-                        <Button icon="fa-download" onClick={() => 1}>
+                        <Button
+                            icon="fa-download"
+                            onClick={() => 1}
+                            disabled={!hasSingleFlowSelected}
+                        >
                             Download▾
                         </Button>
                     }
@@ -178,6 +212,9 @@ function DownloadButton({ flow }: { flow: Flow }) {
 }
 
 function ExportButton({ flow }: { flow: Flow }) {
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
     return (
         <Dropdown
             className=""
@@ -186,7 +223,7 @@ function ExportButton({ flow }: { flow: Flow }) {
                     title="Export flow."
                     icon="fa-clone"
                     onClick={() => 1}
-                    disabled={flow.type !== "http"}
+                    disabled={flow.type !== "http" || !hasSingleFlowSelected}
                 >
                     Export▾
                 </Button>
@@ -222,6 +259,9 @@ const markers = {
 
 function MarkButton({ flow }: { flow: Flow }) {
     const dispatch = useAppDispatch();
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    ); // TODO: Enable marking multiple flows with the same mark, allowing users to assign a single mark to multiple flows.
     return (
         <Dropdown
             className=""
@@ -230,6 +270,7 @@ function MarkButton({ flow }: { flow: Flow }) {
                     title="mark flow"
                     icon="fa-paint-brush text-success"
                     onClick={() => 1}
+                    disabled={!hasSingleFlowSelected}
                 >
                     Mark▾
                 </Button>
