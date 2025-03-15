@@ -4,22 +4,23 @@
 </label>
 <input id="navtoggle" type="checkbox" aria-hidden="true" tabindex="-1">
 <div>
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "overview" "Title" "Overview" "Open" true) }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "web-tutorials" "Title" "Video Tutorials (Web UI)") }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "cli-tutorials" "Title" "Video Tutorials (CLI)") }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "concepts" "Title" "Core Concepts" "Open" true) }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "addons" "Title" "Addon Development" "Open" true) }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "api" "Title" "API Reference") }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "howto" "Title" "HOWTOs" "Open" true) }}
-    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "tutorials" "Title" "Tutorials" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "overview" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "web-tutorials") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "cli-tutorials") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "concepts" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "addons" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "api") }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "howto" "Open" true) }}
+    {{ partial "sidebar/menu" (dict "Ctx" . "Section" "tutorials" "Open" true) }}
 </div>
 
 
 {{ define "partials/sidebar/menu" }}
     {{ $section := (where .Ctx.Site.RegularPages "Section" .Section).ByWeight }}
-{{ $open := and (or .Open (eq .Ctx.Page.Section .Section)) "open"  }}
+    {{ $open := and (or .Open (eq .Ctx.Page.Section .Section)) "open"  }}
+    {{ $sectionPage := .Ctx.Site.GetPage (printf "/%s" .Section) }}
     <details {{ $open }}>
-    <summary>{{ .Title }}</summary>
+    <summary>{{ $sectionPage.Title }}</summary>
 
     {{ range $section }}
         <a href="{{ .Permalink }}">

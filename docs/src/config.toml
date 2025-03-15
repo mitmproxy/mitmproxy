@@ -14,3 +14,15 @@ unsafe = true
 
 [security.funcs]
 getenv = ["DOCS_ARCHIVE"]
+
+[outputs]
+home = ["HTML", "SEARCHINDEX"]
+
+[mediaTypes]
+[mediaTypes."application/javascript"]
+suffixes = ["js"]
+
+[outputFormats.SEARCHINDEX]
+mediaType = "application/javascript"
+baseName = "searchindex"
+isPlainText = true
