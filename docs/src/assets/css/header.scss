@@ -1,0 +1,31 @@
+body > header {
+  background-color: #363636;
+
+  // Match what the main website does.
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+
+  > nav {
+    display: flex;
+    align-items: stretch;
+
+    a {
+      text-decoration: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      $pad: .75rem;
+      padding: 0 $pad;
+      &:first-child {
+        margin-left: -$pad;
+      }
+      &:hover {
+        background: #292929;
+      }
+    }
+
+    version-selector {
+      align-self: center;
+    }
+  }
+}

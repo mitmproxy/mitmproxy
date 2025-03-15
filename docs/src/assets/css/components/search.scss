@@ -1,0 +1,20 @@
+#search {
+    align-self: center;
+    padding: .5rem;
+    border-radius: .25rem;
+    border: none;
+    width: 400px;
+    margin: 0 2rem;
+    text-align: center;
+    background-color: #f0f0f0;
+    &:focus {
+        background-color: #fff;
+    }
+}
+
+.search-result {
+    padding-bottom: .25rem;
+    &.focused {
+        background-color: #f0f0f0;
+    }
+}

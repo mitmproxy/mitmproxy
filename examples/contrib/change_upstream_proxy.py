@@ -25,7 +25,7 @@ def proxy_address(flow: http.HTTPFlow) -> tuple[str, int]:
 def request(flow: http.HTTPFlow) -> None:
     address = proxy_address(flow)
 
-    is_proxy_change = address != flow.server_conn.via.address
+    is_proxy_change = address != flow.server_conn.via[1]
     server_connection_already_open = flow.server_conn.timestamp_start is not None
     if is_proxy_change and server_connection_already_open:
         # server_conn already refers to an existing connection (which cannot be modified),
