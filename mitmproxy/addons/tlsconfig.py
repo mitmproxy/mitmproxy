@@ -625,11 +625,13 @@ class TlsConfig:
         if not flow.live or flow.error or flow.response:
             return
         # Check if a request has a magic CRL token at the end
-        magic_token = str(self.certstore.default_ca.serial) + '.crl'
+        magic_token = str(self.certstore.default_ca.serial) + ".crl"
         if flow.request.path.endswith(magic_token):
-            #Serve CRL
+            # Serve CRL
             flow.response = http.Response.make(
-                200, self.certstore.default_crl, {'Content-Type': 'application/pkix-crl'}
+                200,
+                self.certstore.default_crl,
+                {"Content-Type": "application/pkix-crl"},
             )
 
 
