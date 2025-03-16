@@ -220,7 +220,10 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer] | list[mitmproxy_rs.wireguard.WireGuardServer]
+    _servers: (
+        list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
+        | list[mitmproxy_rs.wireguard.WireGuardServer]
+    )
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -234,7 +237,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def listen_addrs(self) -> tuple[Address, ...]:
         addrs = []
         for s in self._servers:
-            if isinstance(s, (mitmproxy_rs.udp.UdpServer, mitmproxy_rs.wireguard.WireGuardServer)):
+            if isinstance(
+                s, (mitmproxy_rs.udp.UdpServer, mitmproxy_rs.wireguard.WireGuardServer)
+            ):
                 addrs.append(s.getsockname())
             else:
                 try:
@@ -272,7 +277,10 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer] | list[mitmproxy_rs.wireguard.WireGuardServer]:
+    ) -> (
+        list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
+        | list[mitmproxy_rs.wireguard.WireGuardServer]
+    ):
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
