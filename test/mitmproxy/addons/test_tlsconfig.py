@@ -21,6 +21,7 @@ from mitmproxy.proxy.layers import tls as proxy_tls
 from mitmproxy.test import taddons
 from test.mitmproxy.proxy.layers import test_tls
 from test.mitmproxy.proxy.layers.quic import test__stream_layers as test_quic
+from test.mitmproxy.test_flow import tflow
 
 
 def test_alpn_select_callback():
@@ -511,6 +512,48 @@ class TestTlsConfig:
         with taddons.context(ta):
             ta.configure(["confdir"])
             assert "The mitmproxy certificate authority has expired" in caplog.text
+
+    async def test_crl_no_substitution(self):
+        private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
+
+        ta = tlsconfig.TlsConfig()
+        ta.certstore = certs.CertStore(private_key, certs.Cert(test_ca_cert), None,
+                    default_crl=certs.dummy_crl(private_key, test_ca_cert), dhparams=None)
+
+        # Should not populate response/substitute if flow is not live
+        f = tflow.tflow(live=False)
+        await ta.request(f)
+        assert not f.response
+
+        # Should not substitute if flow has an error
+        f = tflow.tflow(err=True)
+        await ta.request(f)
+        assert not f.response
+
+        # Should not substitute if flow has a response already
+        f = tflow.tflow(resp=True)
+        await ta.request(f)
+        assert f.response.get_state() == tflow.tresp().get_state()
+
+        # Should not substitute if flow path does not end with `str(certstore.default_ca.serial) + ".crl"`
+        f = tflow.tflow()
+        f.request.path = "shouldNotSubstitute.crl"
+        await ta.request(f)
+        assert not f.response
+
+    async def test_crl_substitute(self):
+        private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
+
+        ta = tlsconfig.TlsConfig()
+        ta.certstore = certs.CertStore(private_key, certs.Cert(test_ca_cert), None,
+                    default_crl=certs.dummy_crl(private_key, test_ca_cert), dhparams=None)
+
+        # Should substitute with crl as it meets all preconditions         
+        f = tflow.tflow()
+        f.request.path = str(ta.certstore.default_ca.serial) + ".crl"
+        await ta.request(f)
+        assert f.response
+
 
 
 def test_default_ciphers():
