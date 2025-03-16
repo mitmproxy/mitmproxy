@@ -219,7 +219,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
+    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer] | list[mitmproxy_rs.wireguard.WireGuardServer]
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -233,7 +233,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
     def listen_addrs(self) -> tuple[Address, ...]:
         addrs = []
         for s in self._servers:
-            if isinstance(s, mitmproxy_rs.udp.UdpServer):
+            if isinstance(s, (mitmproxy_rs.udp.UdpServer, mitmproxy_rs.wireguard.WireGuardServer)):
                 addrs.append(s.getsockname())
             else:
                 try:
@@ -271,7 +271,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer]:
+    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer] | list[mitmproxy_rs.wireguard.WireGuardServer]:
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
@@ -303,7 +303,6 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     await asyncio.start_server(self.handle_stream, host, port)
                 )
         if self.mode.transport_protocol in ("udp", "both"):
-            # we start two servers for dual-stack support.
             if host == "":
                 ipv4 = await mitmproxy_rs.udp.start_udp_server(
                     "0.0.0.0",
@@ -333,8 +332,6 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
 
 class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
-    _servers: list[mitmproxy_rs.wireguard.WireGuardServer]
-
     server_key: str
     client_key: str
 
@@ -343,19 +340,7 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     ) -> Layer:  # pragma: no cover on platforms without wg-test-client
         return layers.modes.TransparentProxy(context)
 
-    @property
-    def listen_addrs(self) -> tuple[Address, ...]:
-        addrs = []
-        for s in self._servers:
-            addrs.append(s.getsockname())
-        return tuple(addrs)
-
     async def _start(self) -> None:
-        assert not self._servers
-        host = self.mode.listen_host(ctx.options.listen_host)
-        port = self.mode.listen_port(ctx.options.listen_port)
-        assert port is not None
-
         if self.mode.data:
             conf_path = Path(self.mode.data).expanduser()
         else:
@@ -380,16 +365,7 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
         except Exception as e:
             raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
 
-        try:
-            self._servers = await self.listen(host, port)
-        except OSError as e:
-            message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
-            if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
-                assert (
-                    self.mode.custom_listen_host is None
-                )  # since [@ [listen_addr:]listen_port]
-                message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
-            raise OSError(e.errno, message, e.filename) from e
+        await super()._start()
 
         conf = self.client_conf()
         assert conf
