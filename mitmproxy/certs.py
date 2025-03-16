@@ -4,10 +4,11 @@ import ipaddress
 import logging
 import os
 import sys
+import urllib.parse
 import warnings
 from collections.abc import Iterable
-import urllib.parse
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import cast
 from typing import NewType

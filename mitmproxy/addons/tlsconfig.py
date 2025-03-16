@@ -17,8 +17,8 @@ from mitmproxy import certs
 from mitmproxy import connection
 from mitmproxy import ctx
 from mitmproxy import exceptions
-from mitmproxy import tls
 from mitmproxy import http
+from mitmproxy import tls
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
