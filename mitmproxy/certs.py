@@ -202,8 +202,10 @@ class Cert(serializable.Serializable):
             return []
         else:
             return [
-                dist_point.full_name[0].value for dist_point in ext
-                if dist_point.full_name and isinstance(dist_point.full_name[0], x509.UniformResourceIdentifier)
+                dist_point.full_name[0].value
+                for dist_point in ext
+                if dist_point.full_name
+                and isinstance(dist_point.full_name[0], x509.UniformResourceIdentifier)
             ]
 
 
@@ -365,11 +367,17 @@ def dummy_cert(
     for upstream_distribution_point in revocation.crl_distribution_points:
         upstream_url = urllib.parse.urlparse(upstream_distribution_point)
         # Replace original URL path with the CA cert serial number, which acts as a magic token
-        fake_url = upstream_url._replace(path=str(cacert.serial_number) + '.crl').geturl()
-        fake_distribution_points.append(x509.DistributionPoint(
-            [x509.UniformResourceIdentifier(fake_url)],
-            relative_name=None, crl_issuer=None, reasons=None
-        ))
+        fake_url = upstream_url._replace(
+            path=str(cacert.serial_number) + ".crl"
+        ).geturl()
+        fake_distribution_points.append(
+            x509.DistributionPoint(
+                [x509.UniformResourceIdentifier(fake_url)],
+                relative_name=None,
+                crl_issuer=None,
+                reasons=None,
+            )
+        )
     if fake_distribution_points:
         builder = builder.add_extension(
             x509.CRLDistributionPoints(fake_distribution_points), critical=False
@@ -398,7 +406,7 @@ def dummy_crl(
     builder = builder.last_update(now)
     builder = builder.next_update(now + CRL_EXPIRY)
 
-    builder = builder.add_extension(x509.CRLNumber(1000), False) # meaningless number
+    builder = builder.add_extension(x509.CRLNumber(1000), False)  # meaningless number
     crl = builder.sign(private_key=privkey, algorithm=hashes.SHA256())
     return crl.public_bytes(serialization.Encoding.DER)
 
