@@ -517,8 +517,13 @@ class TestTlsConfig:
         private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
 
         ta = tlsconfig.TlsConfig()
-        ta.certstore = certs.CertStore(private_key, certs.Cert(test_ca_cert), None,
-                    default_crl=certs.dummy_crl(private_key, test_ca_cert), dhparams=None)
+        ta.certstore = certs.CertStore(
+            private_key,
+            certs.Cert(test_ca_cert),
+            None,
+            default_crl=certs.dummy_crl(private_key, test_ca_cert),
+            dhparams=None,
+        )
 
         # Should not populate response/substitute if flow is not live
         f = tflow.tflow(live=False)
@@ -545,15 +550,19 @@ class TestTlsConfig:
         private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
 
         ta = tlsconfig.TlsConfig()
-        ta.certstore = certs.CertStore(private_key, certs.Cert(test_ca_cert), None,
-                    default_crl=certs.dummy_crl(private_key, test_ca_cert), dhparams=None)
+        ta.certstore = certs.CertStore(
+            private_key,
+            certs.Cert(test_ca_cert),
+            None,
+            default_crl=certs.dummy_crl(private_key, test_ca_cert),
+            dhparams=None,
+        )
 
-        # Should substitute with crl as it meets all preconditions         
+        # Should substitute with crl as it meets all preconditions
         f = tflow.tflow()
         f.request.path = str(ta.certstore.default_ca.serial) + ".crl"
         await ta.request(f)
         assert f.response
-
 
 
 def test_default_ciphers():
