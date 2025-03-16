@@ -393,19 +393,19 @@ class TestCert:
         assert (certs._name_to_keyval(subject)) == expected
 
     def test_cert_with_no_crl_distribution_points(self):
-        private_key, ca = certs.create_ca('Test', 'test', 4096)
+        private_key, ca = certs.create_ca("Test", "test", 4096)
         certificate = certs.dummy_cert(
             privkey=private_key,
             cacert=ca,
-            commonname='test-cert',
+            commonname="test-cert",
             sans=[],
         )
 
         assert len(certificate.crl_distribution_points) == 0
 
     def test_cert_with_crl_distribution_points(self):
-        private_key, ca = certs.create_ca('Test', 'test', 4096)
-        
+        private_key, ca = certs.create_ca("Test", "test", 4096)
+
         baseDomain = "http://example.com/"
         url = baseDomain + "totallyLegitCrl.crl"
         revocation = certs.RevocationInfo()
@@ -414,10 +414,13 @@ class TestCert:
         certificate = certs.dummy_cert(
             privkey=private_key,
             cacert=ca,
-            commonname='test-cert',
+            commonname="test-cert",
             sans=[],
-            revocation=revocation
+            revocation=revocation,
         )
-            
+
         assert len(certificate.crl_distribution_points) == 1
-        assert certificate.crl_distribution_points[0] == baseDomain + str(ca.serial_number) + ".crl"
+        assert (
+            certificate.crl_distribution_points[0]
+            == baseDomain + str(ca.serial_number) + ".crl"
+        )
