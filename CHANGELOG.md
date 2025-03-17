@@ -33,7 +33,7 @@
 - Introduce a new theme for docs.mitmproxy.org.
   ([#7593](https://github.com/mitmproxy/mitmproxy/pull/7593), @mhils)
 - Add CRL entries to dummy cert when exists in upstream certificate.
-  ([#7609](https://github.com/mitmproxy/mitmproxy/pull/7609), @JordanPlayz158)
+  ([#7609](https://github.com/mitmproxy/mitmproxy/pull/7609), @Yepoleb, @JordanPlayz158)
 - Fix a bug where mitmproxy would incorrectly send empty HTTP/2 data frames.
   ([#7574](https://github.com/mitmproxy/mitmproxy/pull/7574), @mhils, @Dieken)
 - Enhance homebrew installation command for Brewfile users.
