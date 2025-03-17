@@ -9,6 +9,7 @@ import { Store } from "redux";
 import { RootState } from "../ducks";
 import { PayloadAction } from "@reduxjs/toolkit";
 import { BackendState } from "../ducks/backendState";
+import { serverFlowUpdate } from "../ducks/flows";
 
 const CMD_RESET = "reset";
 
@@ -16,6 +17,8 @@ interface WebSocketMessage {
     cmd: string;
     resource: string;
     data?: any;
+    expr?: string;
+    matches?: Record<string, boolean>;
 }
 
 export default class WebsocketBackend {
@@ -73,11 +76,27 @@ export default class WebsocketBackend {
     }
 
     onMessage(msg: WebSocketMessage) {
+        console.log(msg);
         if (msg.cmd === CMD_RESET) {
             return this.fetchData(msg.resource);
         }
         if (msg.resource in this.activeFetches) {
             this.activeFetches[msg.resource].push(msg);
+            return;
+        }
+
+        if (msg.resource === "flows") {
+            if (msg.cmd === "update" || msg.cmd === "add") {
+                console.log(msg.matches);
+                if (msg.matches) {
+                    this.store.dispatch(
+                        serverFlowUpdate(msg.data, msg.matches),
+                    );
+                }
+            } else {
+                const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
+                this.store.dispatch({ type, ...msg });
+            }
         } else {
             const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
             this.store.dispatch({ type, ...msg });

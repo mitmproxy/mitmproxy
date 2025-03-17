@@ -1,7 +1,6 @@
 import { fetchApi } from "../utils";
 
 import * as store from "./utils/store";
-import Filt from "../filt/filt";
 import { Flow } from "../flow";
 import { sortFunctions } from "../flow/utils";
 
@@ -14,6 +13,9 @@ export const SET_FILTER = "FLOWS_SET_FILTER";
 export const SET_SORT = "FLOWS_SET_SORT";
 export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
 
+export const SERVER_UPDATE = "FLOWS_SERVER_UPDATE";
+export const FILTERS_UPDATED = "FLOWS_FILTERSUPDATED";
+
 interface FlowSortFn extends store.SortFn<Flow> {}
 
 interface FlowFilterFn extends store.FilterFn<Flow> {}
@@ -21,6 +23,7 @@ interface FlowFilterFn extends store.FilterFn<Flow> {}
 export interface FlowsState extends store.State<Flow> {
     highlight?: string;
     filter?: string;
+    matchedIds?: string[];
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: string[];
 }
@@ -30,6 +33,7 @@ export const defaultState: FlowsState = {
     filter: undefined,
     sort: { column: undefined, desc: false },
     selected: [],
+    matchedIds: undefined,
     ...store.defaultState,
 };
 
@@ -44,7 +48,7 @@ export default function reducer(
         case RECEIVE: {
             const storeAction = store[action.cmd](
                 action.data,
-                makeFilter(state.filter),
+                makeFilter(state.matchedIds),
                 makeSort(state.sort),
             );
 
@@ -84,14 +88,61 @@ export default function reducer(
             return {
                 ...state,
                 filter: action.filter,
+            };
+
+        case FILTERS_UPDATED: {
+            console.log("FILTERS_UPDATED");
+            const matchedIds = action.expr !== "" ? action.data : undefined;
+            return {
+                ...state,
+                filter: action.expr,
+                matchedIds: matchedIds,
                 ...store.reduce(
                     state,
-                    store.setFilter(
-                        makeFilter(action.filter),
+                    store.setFilter<Flow>(
+                        makeFilter(matchedIds),
                         makeSort(state.sort),
                     ),
                 ),
             };
+        }
+
+        case SERVER_UPDATE: {
+            const flow: Flow = action.data;
+            const matches: Record<string, boolean> = action.matches;
+            const currentFilter = state.filter;
+
+            const newMatchedIds = state.matchedIds ? [...state.matchedIds] : [];
+
+            if (
+                Object.keys(matches).length === 0 ||
+                (currentFilter && matches[currentFilter])
+            ) {
+                if (!newMatchedIds.includes(flow.id)) {
+                    newMatchedIds.push(flow.id);
+                }
+            } else {
+                const index = newMatchedIds.indexOf(flow.id);
+                if (index > -1) {
+                    newMatchedIds.splice(index, 1);
+                }
+            }
+
+            const isKnown = flow.id in state.byId;
+            const cmd = isKnown ? store.update : store.add;
+
+            const storeAction = cmd<Flow>(
+                flow,
+                makeFilter(newMatchedIds),
+                makeSort(state.sort),
+            );
+
+            return {
+                ...state,
+                matchedIds: newMatchedIds,
+                ...store.reduce(state, storeAction),
+            };
+        }
 
         case SET_HIGHLIGHT:
             return {
@@ -117,11 +168,12 @@ export default function reducer(
     }
 }
 
-export function makeFilter(filter?: string): FlowFilterFn | undefined {
-    if (!filter) {
+export function makeFilter(matchedIds?: string[]): FlowFilterFn | undefined {
+    if (!matchedIds) {
         return;
     }
-    return Filt.parse(filter);
+    const idSet = new Set(matchedIds);
+    return (flow) => idSet.has(flow.id);
 }
 
 export function makeSort({
@@ -147,6 +199,14 @@ export function makeSort({
             return desc ? 1 : -1;
         }
         return 0;
+    };
+}
+
+export function serverFlowUpdate(flow: Flow, matches: Record<string, boolean>) {
+    return {
+        type: SERVER_UPDATE,
+        data: flow,
+        matches,
     };
 }
 
