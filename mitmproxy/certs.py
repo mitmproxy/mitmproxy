@@ -358,12 +358,18 @@ def dummy_cert(
 
     if crl_url:
         builder = builder.add_extension(
-            x509.CRLDistributionPoints([x509.DistributionPoint(
-            [x509.UniformResourceIdentifier(crl_url)],
-            relative_name=None,
-            crl_issuer=None,
-            reasons=None,
-        )]), critical=False)
+            x509.CRLDistributionPoints(
+                [
+                    x509.DistributionPoint(
+                        [x509.UniformResourceIdentifier(crl_url)],
+                        relative_name=None,
+                        crl_issuer=None,
+                        reasons=None,
+                    )
+                ]
+            ),
+            critical=False,
+        )
 
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
