@@ -7,7 +7,6 @@ import sys
 import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
-from dataclasses import field
 from pathlib import Path
 from typing import cast
 from typing import NewType
@@ -299,18 +298,13 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.Gener
         return x509.GeneralNames(sans)
 
 
-@dataclass
-class RevocationInfo:
-    crl_distribution_points: list[str] = field(default_factory=list)
-
-
 def dummy_cert(
     privkey: rsa.RSAPrivateKey,
     cacert: x509.Certificate,
     commonname: str | None,
     sans: Iterable[x509.GeneralName],
     organization: str | None = None,
-    crl_urls: list[str] | None = None,
+    crl_url: str | None = None,
 ) -> Cert:
     """
     Generates a dummy certificate.
@@ -320,7 +314,7 @@ def dummy_cert(
     commonname: Common name for the generated certificate.
     sans: A list of Subject Alternate Names.
     organization: Organization name for the generated certificate.
-    crl_urls: URLs of CRL distribution points
+    crl_url: URL of CRL distribution point
 
     Returns cert if operation succeeded, None if not.
     """
@@ -362,20 +356,14 @@ def dummy_cert(
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2 states
     # that SKI is optional for the leaf cert, so we skip that.
 
-    if crl_urls:
-        fake_distribution_points = [
-            x509.DistributionPoint(
-                [x509.UniformResourceIdentifier(crl_url)],
-                relative_name=None,
-                crl_issuer=None,
-                reasons=None,
-            )
-            for crl_url in crl_urls
-        ]
-        if fake_distribution_points:
-            builder = builder.add_extension(
-                x509.CRLDistributionPoints(fake_distribution_points), critical=False
-            )
+    if crl_url:
+        builder = builder.add_extension(
+            x509.CRLDistributionPoints([x509.DistributionPoint(
+            [x509.UniformResourceIdentifier(crl_url)],
+            relative_name=None,
+            crl_issuer=None,
+            reasons=None,
+        )]), critical=False)
 
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
@@ -660,7 +648,7 @@ class CertStore:
         commonname: str | None,
         sans: Iterable[x509.GeneralName],
         organization: str | None = None,
-        crl_urls: list[str] | None = None,
+        crl_url: str | None = None,
     ) -> CertStoreEntry:
         """
         commonname: Common name for the generated certificate. Must be a
@@ -670,7 +658,7 @@ class CertStore:
 
         organization: Organization name for the generated certificate.
 
-        crl_urls: URLs of CRL distribution points
+        crl_url: URL of CRL distribution point
         """
         sans = _fix_legacy_sans(sans)
 
@@ -693,7 +681,7 @@ class CertStore:
                     commonname,
                     sans,
                     organization,
-                    crl_urls,
+                    crl_url,
                 ),
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file,

@@ -600,7 +600,7 @@ class TlsConfig:
         """
         altnames: list[x509.GeneralName] = []
         organization: str | None = None
-        crl_distribution_points: list[str] = []
+        crl_distribution_point: str | None = None
 
         # Use upstream certificate if available.
         if ctx.options.upstream_cert and conn_context.server.certificate_list:
@@ -612,19 +612,17 @@ class TlsConfig:
                 organization = upstream_cert.organization
 
             # Replace original URL path with the CA cert serial number, which acts as a magic token
-            for url in upstream_cert.crl_distribution_points:
-                urlParts = list(parse(url))
+            if len(upstream_cert.crl_distribution_points) > 0:
+                urlParts = list(parse(upstream_cert.crl_distribution_points[0]))
                 urlParts[3] = self.crl_path
 
                 # I hope I am just doing something stupid and that this is not the intended way to actually go about doing this
-                crl_distribution_points.append(
-                    unparse(
+                crl_distribution_point = unparse(
                         urlParts[0].decode("ascii"),
                         urlParts[1].decode("idna"),
                         urlParts[2],
                         urlParts[3],
                     )
-                )
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
@@ -643,7 +641,7 @@ class TlsConfig:
         # In other words, the Common Name is irrelevant then.
         cn = next((str(x.value) for x in altnames), None)
         return self.certstore.get_cert(
-            cn, altnames, organization, crl_distribution_points
+            cn, altnames, organization, crl_distribution_point
         )
 
     async def request(self, flow: http.HTTPFlow):
