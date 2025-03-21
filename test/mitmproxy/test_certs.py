@@ -402,5 +402,5 @@ class TestCert:
         private_key, ca = certs.create_ca("test", "test", 2048)
         crlList = ["http://example.com/cert.crl"]
         cert = certs.dummy_cert(private_key, ca, None, [], None, crlList)
-        
+
         assert cert.crl_distribution_points == crlList
