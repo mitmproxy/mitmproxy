@@ -363,7 +363,15 @@ def dummy_cert(
     # that SKI is optional for the leaf cert, so we skip that.
 
     if crl_urls:
-        fake_distribution_points = [x509.DistributionPoint([x509.UniformResourceIdentifier(crl_url)], relative_name=None, crl_issuer=None, reasons=None) for crl_url in crl_urls]
+        fake_distribution_points = [
+            x509.DistributionPoint(
+                [x509.UniformResourceIdentifier(crl_url)],
+                relative_name=None,
+                crl_issuer=None,
+                reasons=None,
+            )
+            for crl_url in crl_urls
+        ]
         if fake_distribution_points:
             builder = builder.add_extension(
                 x509.CRLDistributionPoints(fake_distribution_points), critical=False
