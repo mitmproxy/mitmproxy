@@ -588,7 +588,7 @@ class TlsConfig:
 
     @property
     def crl_path(self) -> str:
-        if (not self.certstore):
+        if not self.certstore:
             return ""
 
         return "/" + str(self.certstore.default_ca.serial) + ".crl"
@@ -617,8 +617,14 @@ class TlsConfig:
                 urlParts[3] = self.crl_path
 
                 # I hope I am just doing something stupid and that this is not the intended way to actually go about doing this
-                crl_distribution_points.append(unparse(urlParts[0].decode('ascii'),
-                                urlParts[1].decode("idna"), urlParts[2], urlParts[3]))
+                crl_distribution_points.append(
+                    unparse(
+                        urlParts[0].decode("ascii"),
+                        urlParts[1].decode("idna"),
+                        urlParts[2],
+                        urlParts[3],
+                    )
+                )
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
@@ -636,7 +642,9 @@ class TlsConfig:
         # RFC 2818: If a subjectAltName extension of type dNSName is present, that MUST be used as the identity.
         # In other words, the Common Name is irrelevant then.
         cn = next((str(x.value) for x in altnames), None)
-        return self.certstore.get_cert(cn, altnames, organization, crl_distribution_points)
+        return self.certstore.get_cert(
+            cn, altnames, organization, crl_distribution_points
+        )
 
     async def request(self, flow: http.HTTPFlow):
         if not flow.live or flow.error or flow.response:

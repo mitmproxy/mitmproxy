@@ -526,15 +526,20 @@ class TestTlsConfig:
         )
 
         ctx = context.Context(client=tflow.tclient_conn(), options=options.Options)
-        #conn = tflow.tserver_conn()
+        # conn = tflow.tserver_conn()
 
         originalCrls = ["http://example.com/original.crl"]
-        originalCert = certs.dummy_cert(privkey=ta.certstore.default_privatekey, \
-            cacert=ta.certstore.default_ca._cert, commonname=None, sans=[], organization=None, \
-                crl_urls=originalCrls)
+        originalCert = certs.dummy_cert(
+            privkey=ta.certstore.default_privatekey,
+            cacert=ta.certstore.default_ca._cert,
+            commonname=None,
+            sans=[],
+            organization=None,
+            crl_urls=originalCrls,
+        )
 
         ctx.server.certificate_list = [originalCert]
-        
+
         newCert = ta.get_cert(ctx)
 
         assert newCert.cert.crl_distribution_points != originalCrls
