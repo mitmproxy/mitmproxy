@@ -4,7 +4,6 @@ import ipaddress
 import logging
 import os
 import sys
-import urllib.parse
 import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -311,7 +310,7 @@ def dummy_cert(
     commonname: str | None,
     sans: Iterable[x509.GeneralName],
     organization: str | None = None,
-    revocation: RevocationInfo = RevocationInfo(),
+    crl_urls: list[str] | None = None,
 ) -> Cert:
     """
     Generates a dummy certificate.
@@ -321,7 +320,7 @@ def dummy_cert(
     commonname: Common name for the generated certificate.
     sans: A list of Subject Alternate Names.
     organization: Organization name for the generated certificate.
-    crl_distribution_points: URIs of CRL distribution points
+    crl_urls: URLs of CRL distribution points
 
     Returns cert if operation succeeded, None if not.
     """
@@ -363,25 +362,12 @@ def dummy_cert(
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.2 states
     # that SKI is optional for the leaf cert, so we skip that.
 
-    fake_distribution_points = []
-    for upstream_distribution_point in revocation.crl_distribution_points:
-        upstream_url = urllib.parse.urlparse(upstream_distribution_point)
-        # Replace original URL path with the CA cert serial number, which acts as a magic token
-        fake_url = upstream_url._replace(
-            path=str(cacert.serial_number) + ".crl"
-        ).geturl()
-        fake_distribution_points.append(
-            x509.DistributionPoint(
-                [x509.UniformResourceIdentifier(fake_url)],
-                relative_name=None,
-                crl_issuer=None,
-                reasons=None,
+    if crl_urls:
+        fake_distribution_points = [x509.DistributionPoint([x509.UniformResourceIdentifier(crl_url)], relative_name=None, crl_issuer=None, reasons=None) for crl_url in crl_urls]
+        if fake_distribution_points:
+            builder = builder.add_extension(
+                x509.CRLDistributionPoints(fake_distribution_points), critical=False
             )
-        )
-    if fake_distribution_points:
-        builder = builder.add_extension(
-            x509.CRLDistributionPoints(fake_distribution_points), critical=False
-        )
 
     cert = builder.sign(private_key=privkey, algorithm=hashes.SHA256())  # type: ignore
     return Cert(cert)
@@ -403,7 +389,7 @@ def dummy_crl(
     builder = builder.issuer_name(cacert.issuer)
 
     now = datetime.datetime.now()
-    builder = builder.last_update(now)
+    builder = builder.last_update(now - datetime.timedelta(days=2))
     builder = builder.next_update(now + CRL_EXPIRY)
 
     builder = builder.add_extension(x509.CRLNumber(1000), False)  # meaningless number
@@ -666,7 +652,7 @@ class CertStore:
         commonname: str | None,
         sans: Iterable[x509.GeneralName],
         organization: str | None = None,
-        revocation: RevocationInfo = RevocationInfo(),
+        crl_urls: list[str] | None = None,
     ) -> CertStoreEntry:
         """
         commonname: Common name for the generated certificate. Must be a
@@ -675,6 +661,8 @@ class CertStore:
         sans: A list of Subject Alternate Names.
 
         organization: Organization name for the generated certificate.
+
+        crl_urls: URLs of CRL distribution points
         """
         sans = _fix_legacy_sans(sans)
 
@@ -697,7 +685,7 @@ class CertStore:
                     commonname,
                     sans,
                     organization,
-                    revocation,
+                    crl_urls,
                 ),
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file,

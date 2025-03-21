@@ -513,6 +513,32 @@ class TestTlsConfig:
             ta.configure(["confdir"])
             assert "The mitmproxy certificate authority has expired" in caplog.text
 
+    async def test_cert_crl_substitution(self):
+        private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
+
+        ta = tlsconfig.TlsConfig()
+        ta.certstore = certs.CertStore(
+            private_key,
+            certs.Cert(test_ca_cert),
+            None,
+            default_crl=certs.dummy_crl(private_key, test_ca_cert),
+            dhparams=None,
+        )
+
+        ctx = context.Context(client=tflow.tclient_conn(), options=options.Options)
+        #conn = tflow.tserver_conn()
+
+        originalCrls = ["http://example.com/original.crl"]
+        originalCert = certs.dummy_cert(privkey=ta.certstore.default_privatekey, \
+            cacert=ta.certstore.default_ca._cert, commonname=None, sans=[], organization=None, \
+                crl_urls=originalCrls)
+
+        ctx.server.certificate_list = [originalCert]
+        
+        newCert = ta.get_cert(ctx)
+
+        assert newCert.cert.crl_distribution_points != originalCrls
+
     async def test_crl_no_substitution(self):
         private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
 
@@ -560,7 +586,7 @@ class TestTlsConfig:
 
         # Should substitute with crl as it meets all preconditions
         f = tflow.tflow()
-        f.request.path = str(ta.certstore.default_ca.serial) + ".crl"
+        f.request.path = ta.crl_path
         await ta.request(f)
         assert f.response
 
