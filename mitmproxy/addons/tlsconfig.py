@@ -613,15 +613,14 @@ class TlsConfig:
 
             # Replace original URL path with the CA cert serial number, which acts as a magic token
             if len(upstream_cert.crl_distribution_points) > 0:
-                urlParts = list(parse(upstream_cert.crl_distribution_points[0]))
-                urlParts[3] = self.crl_path
+                scheme, host, port, _ = parse(upstream_cert.crl_distribution_points[0])
 
                 # I hope I am just doing something stupid and that this is not the intended way to actually go about doing this
                 crl_distribution_point = unparse(
-                        urlParts[0].decode("ascii"),
-                        urlParts[1].decode("idna"),
-                        urlParts[2],
-                        urlParts[3],
+                        scheme.decode("ascii"),
+                        host.decode("idna"),
+                        port,
+                        self.crl_path,
                     )
 
         # Add SNI or our local IP address.
