@@ -617,11 +617,11 @@ class TlsConfig:
 
                 # I hope I am just doing something stupid and that this is not the intended way to actually go about doing this
                 crl_distribution_point = unparse(
-                        scheme.decode("ascii"),
-                        host.decode("idna"),
-                        port,
-                        self.crl_path,
-                    )
+                    scheme.decode("ascii"),
+                    host.decode("idna"),
+                    port,
+                    self.crl_path,
+                )
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
