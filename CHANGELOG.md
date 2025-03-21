@@ -23,6 +23,8 @@
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
+- Add CRL entries to dummy cert when the upstream certificate has some.
+  ([#7609](https://github.com/mitmproxy/mitmproxy/pull/7609), @Yepoleb, @JordanPlayz158)
 
 ## 17 February 2025: mitmproxy 11.1.3
 

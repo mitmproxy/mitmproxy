@@ -391,3 +391,16 @@ class TestCert:
             ("O", "PyCA"),
         ]
         assert (certs._name_to_keyval(subject)) == expected
+
+    def test_cert_with_no_crl_distribution_points(self):
+        private_key, ca = certs.create_ca("test", "test", 2048)
+        cert = certs.dummy_cert(private_key, ca, None, [])
+
+        assert cert.crl_distribution_points == []
+
+    def test_cert_with_crl_distribution_points(self):
+        private_key, ca = certs.create_ca("test", "test", 2048)
+        crl = "http://example.com/cert.crl"
+        cert = certs.dummy_cert(private_key, ca, None, [], None, crl)
+
+        assert cert.crl_distribution_points == [crl]
