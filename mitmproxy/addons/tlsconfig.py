@@ -591,7 +591,7 @@ class TlsConfig:
         if not self.certstore:
             return ""
 
-        return "/" + str(self.certstore.default_ca.serial) + ".crl"
+        return "/mitmproxy-" + str(self.certstore.default_ca.serial) + ".crl"
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """
