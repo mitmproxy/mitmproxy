@@ -20,6 +20,8 @@ from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import tls
 from mitmproxy.net import tls as net_tls
+from mitmproxy.net.http.url import parse
+from mitmproxy.net.http.url import unparse
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
@@ -584,6 +586,13 @@ class TlsConfig:
                 f"for insecure TLS versions to work."
             )
 
+    @property
+    def crl_path(self) -> str:
+        if (not self.certstore):
+            return ""
+
+        return "/" + str(self.certstore.default_ca.serial) + ".crl"
+
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
@@ -591,17 +600,25 @@ class TlsConfig:
         """
         altnames: list[x509.GeneralName] = []
         organization: str | None = None
-        revocation: certs.RevocationInfo = certs.RevocationInfo()
+        crl_distribution_points: list[str] = []
 
         # Use upstream certificate if available.
         if ctx.options.upstream_cert and conn_context.server.certificate_list:
-            upstream_cert = conn_context.server.certificate_list[0]
+            upstream_cert: certs.Cert = conn_context.server.certificate_list[0]
             if upstream_cert.cn:
                 altnames.append(_ip_or_dns_name(upstream_cert.cn))
             altnames.extend(upstream_cert.altnames)
             if upstream_cert.organization:
                 organization = upstream_cert.organization
-            revocation.crl_distribution_points = upstream_cert.crl_distribution_points
+
+            # Replace original URL path with the CA cert serial number, which acts as a magic token
+            for url in upstream_cert.crl_distribution_points:
+                urlParts = list(parse(url))
+                urlParts[3] = self.crl_path
+
+                # I hope I am just doing something stupid and that this is not the intended way to actually go about doing this
+                crl_distribution_points.append(unparse(urlParts[0].decode('ascii'),
+                                urlParts[1].decode("idna"), urlParts[2], urlParts[3]))
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
@@ -619,14 +636,13 @@ class TlsConfig:
         # RFC 2818: If a subjectAltName extension of type dNSName is present, that MUST be used as the identity.
         # In other words, the Common Name is irrelevant then.
         cn = next((str(x.value) for x in altnames), None)
-        return self.certstore.get_cert(cn, altnames, organization, revocation)
+        return self.certstore.get_cert(cn, altnames, organization, crl_distribution_points)
 
     async def request(self, flow: http.HTTPFlow):
         if not flow.live or flow.error or flow.response:
             return
         # Check if a request has a magic CRL token at the end
-        magic_token = str(self.certstore.default_ca.serial) + ".crl"
-        if flow.request.path.endswith(magic_token):
+        if flow.request.path.endswith(self.crl_path):
             # Serve CRL
             flow.response = http.Response.make(
                 200,
