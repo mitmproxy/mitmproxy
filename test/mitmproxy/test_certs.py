@@ -400,7 +400,7 @@ class TestCert:
 
     def test_cert_with_crl_distribution_points(self):
         private_key, ca = certs.create_ca("test", "test", 2048)
-        crlList = ["http://example.com/cert.crl"]
-        cert = certs.dummy_cert(private_key, ca, None, [], None, crlList)
+        crl = "http://example.com/cert.crl"
+        cert = certs.dummy_cert(private_key, ca, None, [], None, crl)
 
-        assert cert.crl_distribution_points == crlList
+        assert cert.crl_distribution_points == [crl]
