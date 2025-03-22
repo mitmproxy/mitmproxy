@@ -51,47 +51,22 @@ export default function reducer(
                 matches,
             }: { data: Flow; matches: Record<string, boolean> } = action;
 
-            const currentFilter = state.filter;
-            const currentHighlight = state.highlight;
+            const { filter, highlight, filterMatchedIds, highlightMatchedIds } =
+                state;
 
-            const newFilterMatchedIds = state.filterMatchedIds
-                ? [...state.filterMatchedIds]
-                : [];
-            const newHighlightMatchedIds = state.highlightMatchedIds
-                ? [...state.highlightMatchedIds]
-                : [];
-
-            // Update filterMatchedIds
-            if (
-                Object.keys(matches).length === 0 ||
-                (currentFilter && matches[currentFilter])
-            ) {
-                if (!newFilterMatchedIds.includes(flow.id)) {
-                    newFilterMatchedIds.push(flow.id);
-                }
-            } else {
-                // remove the id if the flow no longer matches
-                const index = newFilterMatchedIds.indexOf(flow.id);
-                if (index > -1) {
-                    newFilterMatchedIds.splice(index, 1);
-                }
-            }
-
-            // Update highlightMatchedIds
-            if (
-                Object.keys(matches).length === 0 ||
-                (currentHighlight && matches[currentHighlight])
-            ) {
-                if (!newHighlightMatchedIds.includes(flow.id)) {
-                    newHighlightMatchedIds.push(flow.id);
-                }
-            } else {
-                // remove the id if the flow no longer matches
-                const index = newHighlightMatchedIds.indexOf(flow.id);
-                if (index > -1) {
-                    newHighlightMatchedIds.splice(index, 1);
-                }
-            }
+            // Update matched IDs
+            const newFilterMatchedIds = updateMatchedIds(
+                filterMatchedIds,
+                flow.id,
+                matches,
+                filter,
+            );
+            const newHighlightMatchedIds = updateMatchedIds(
+                highlightMatchedIds,
+                flow.id,
+                matches,
+                highlight,
+            );
 
             const isKnown = flow.id in state.byId;
             const cmd = isKnown ? store.update : store.add;
@@ -353,4 +328,28 @@ export function select(id?: string) {
         type: SELECT,
         flowIds: id ? [id] : [],
     };
+}
+
+function updateMatchedIds(
+    matchedIds: string[] | undefined,
+    flowId: string,
+    matches: Record<string, boolean>,
+    currentFilter: string | undefined,
+): string[] | undefined {
+    if (!matchedIds) return;
+
+    let updatedIds = [...matchedIds];
+
+    if (
+        Object.keys(matches).length === 0 ||
+        (currentFilter && matches[currentFilter])
+    ) {
+        if (!updatedIds.includes(flowId)) {
+            updatedIds.push(flowId);
+        }
+    } else {
+        updatedIds = updatedIds.filter((id) => id !== flowId);
+    }
+
+    return updatedIds;
 }
