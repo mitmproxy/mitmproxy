@@ -91,7 +91,7 @@ describe("flow reducer", () => {
                     cmd: "remove",
                 },
             );
-            expect(next.selected).toEqual(["2", "4"]);
+            expect(next.selected).toEqual([]);
         });
     });
 

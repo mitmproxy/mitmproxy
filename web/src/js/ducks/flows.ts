@@ -54,7 +54,8 @@ export default function reducer(
                 state.selected.includes(action.data)
             ) {
                 if (state.selected.length > 1) {
-                    selected = selected.filter((x) => x !== action.data);
+                    console.log(action.data);
+                    selected = []; // clear selection when multiple flows are selected and removed, no `nextSelection` logic in this case
                 } else {
                     selected = [];
                     if (

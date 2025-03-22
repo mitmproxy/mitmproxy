@@ -11,7 +11,7 @@ import {
     replay as replayFlow,
     resume as resumeFlow,
     revert as revertFlow,
-    select as selectFlow,
+    //select as selectFlow,
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
@@ -70,7 +70,6 @@ export default function FlowMenu(): JSX.Element {
                             icon="fa-trash text-danger"
                             onClick={() => {
                                 dispatch(removeFlow(selectedFlows));
-                                dispatch(selectFlow([])); // clear flow selection
                             }}
                         >
                             Delete
