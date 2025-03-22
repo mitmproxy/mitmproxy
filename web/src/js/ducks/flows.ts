@@ -22,18 +22,20 @@ interface FlowFilterFn extends store.FilterFn<Flow> {}
 
 export interface FlowsState extends store.State<Flow> {
     highlight?: string;
+    highlightMatchedIds?: string[];
     filter?: string;
-    matchedIds?: string[];
+    filterMatchedIds?: string[];
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: string[];
 }
 
 export const defaultState: FlowsState = {
     highlight: undefined,
+    highlightMatchedIds: undefined,
     filter: undefined,
+    filterMatchedIds: undefined,
     sort: { column: undefined, desc: false },
     selected: [],
-    matchedIds: undefined,
     ...store.defaultState,
 };
 
@@ -43,12 +45,75 @@ export default function reducer(
 ): FlowsState {
     switch (action.type) {
         case ADD:
-        case UPDATE:
+        case UPDATE: {
+            const {
+                data: flow,
+                matches,
+            }: { data: Flow; matches: Record<string, boolean> } = action;
+
+            const currentFilter = state.filter;
+            const currentHighlight = state.highlight;
+
+            const newFilterMatchedIds = state.filterMatchedIds
+                ? [...state.filterMatchedIds]
+                : [];
+            const newHighlightMatchedIds = state.highlightMatchedIds
+                ? [...state.highlightMatchedIds]
+                : [];
+
+            // Update filterMatchedIds
+            if (
+                Object.keys(matches).length === 0 ||
+                (currentFilter && matches[currentFilter])
+            ) {
+                if (!newFilterMatchedIds.includes(flow.id)) {
+                    newFilterMatchedIds.push(flow.id);
+                }
+            } else {
+                // remove the id if the flow no longer matches
+                const index = newFilterMatchedIds.indexOf(flow.id);
+                if (index > -1) {
+                    newFilterMatchedIds.splice(index, 1);
+                }
+            }
+
+            // Update highlightMatchedIds
+            if (
+                Object.keys(matches).length === 0 ||
+                (currentHighlight && matches[currentHighlight])
+            ) {
+                if (!newHighlightMatchedIds.includes(flow.id)) {
+                    newHighlightMatchedIds.push(flow.id);
+                }
+            } else {
+                // remove the id if the flow no longer matches
+                const index = newHighlightMatchedIds.indexOf(flow.id);
+                if (index > -1) {
+                    newHighlightMatchedIds.splice(index, 1);
+                }
+            }
+
+            const isKnown = flow.id in state.byId;
+            const cmd = isKnown ? store.update : store.add;
+
+            const storeAction = cmd<Flow>(
+                flow,
+                makeFilter(newFilterMatchedIds),
+                makeSort(state.sort),
+            );
+
+            return {
+                ...state,
+                filterMatchedIds: newFilterMatchedIds,
+                highlightMatchedIds: newHighlightMatchedIds,
+                ...store.reduce(state, storeAction),
+            };
+        }
         case REMOVE:
         case RECEIVE: {
             const storeAction = store[action.cmd](
                 action.data,
-                makeFilter(state.matchedIds),
+                makeFilter(state.filterMatchedIds),
                 makeSort(state.sort),
             );
 
@@ -84,65 +149,55 @@ export default function reducer(
                 ...store.reduce(state, storeAction),
             };
         }
-        case SET_FILTER:
-            return {
-                ...state,
-                filter: action.filter,
-            };
 
         case FILTERS_UPDATED: {
-            console.log("FILTERS_UPDATED");
-            const matchedIds = action.expr !== "" ? action.data : undefined;
+            const {
+                name: filterName,
+                expr,
+                data,
+            }: { name: string; expr: string; data: string[] } = action;
+            let updatedState = { ...state };
+
+            switch (filterName) {
+                case "search": {
+                    const matchedIds = expr !== "" ? data : undefined;
+                    updatedState = {
+                        ...updatedState,
+                        filter: expr,
+                        filterMatchedIds: matchedIds,
+                    };
+                    break;
+                }
+                case "highlight": {
+                    const matchedIds = expr !== "" ? data : undefined;
+                    updatedState = {
+                        ...updatedState,
+                        highlight: expr,
+                        highlightMatchedIds: matchedIds,
+                    };
+                    break;
+                }
+                default:
+                    return state;
+            }
+
             return {
-                ...state,
-                filter: action.expr,
-                matchedIds: matchedIds,
+                ...updatedState,
                 ...store.reduce(
                     state,
                     store.setFilter<Flow>(
-                        makeFilter(matchedIds),
+                        makeFilter(updatedState.filterMatchedIds),
                         makeSort(state.sort),
                     ),
                 ),
             };
         }
 
-        case SERVER_UPDATE: {
-            const flow: Flow = action.data;
-            const matches: Record<string, boolean> = action.matches;
-            const currentFilter = state.filter;
-
-            const newMatchedIds = state.matchedIds ? [...state.matchedIds] : [];
-
-            if (
-                Object.keys(matches).length === 0 ||
-                (currentFilter && matches[currentFilter])
-            ) {
-                if (!newMatchedIds.includes(flow.id)) {
-                    newMatchedIds.push(flow.id);
-                }
-            } else {
-                const index = newMatchedIds.indexOf(flow.id);
-                if (index > -1) {
-                    newMatchedIds.splice(index, 1);
-                }
-            }
-
-            const isKnown = flow.id in state.byId;
-            const cmd = isKnown ? store.update : store.add;
-
-            const storeAction = cmd<Flow>(
-                flow,
-                makeFilter(newMatchedIds),
-                makeSort(state.sort),
-            );
-
+        case SET_FILTER:
             return {
                 ...state,
-                matchedIds: newMatchedIds,
-                ...store.reduce(state, storeAction),
+                filter: action.filter,
             };
-        }
 
         case SET_HIGHLIGHT:
             return {
@@ -199,14 +254,6 @@ export function makeSort({
             return desc ? 1 : -1;
         }
         return 0;
-    };
-}
-
-export function serverFlowUpdate(flow: Flow, matches: Record<string, boolean>) {
-    return {
-        type: SERVER_UPDATE,
-        data: flow,
-        matches,
     };
 }
 
