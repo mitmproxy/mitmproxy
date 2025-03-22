@@ -47,7 +47,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (getState().ui.modal.activeModal) {
                     dispatch(modalActions.hideModal());
                 } else {
-                    dispatch(flowsActions.select(undefined));
+                    dispatch(flowsActions.select([]));
                 }
                 break;
 
@@ -85,7 +85,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (!flow) {
                     return;
                 }
-                dispatch(flowsActions.remove(flow));
+                dispatch(flowsActions.remove([flow.id]));
                 break;
             }
 

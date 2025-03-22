@@ -54,7 +54,7 @@ export default function reducer(
                 state.selected.includes(action.data)
             ) {
                 if (state.selected.length > 1) {
-                    selected = selected.filter((x) => x !== action.data);
+                    selected = []; // clear selection when multiple flows are selected and removed, no `nextSelection` logic in this case
                 } else {
                     selected = [];
                     if (
@@ -175,7 +175,7 @@ export function selectRelative(flows, shift) {
         newIndex = window.Math.min(newIndex, maxIndex);
     }
     const flow = flows.view[newIndex];
-    return select(flow ? flow.id : undefined);
+    return select(flow ? [flow.id] : []);
 }
 
 export function resume(flow: Flow) {
@@ -194,8 +194,13 @@ export function killAll() {
     return () => fetchApi("/flows/kill", { method: "POST" });
 }
 
-export function remove(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}`, { method: "DELETE" });
+export function remove(flowIds: string[]) {
+    return () =>
+        Promise.all(
+            flowIds.map((flowId) =>
+                fetchApi(`/flows/${flowId}`, { method: "DELETE" }),
+            ),
+        );
 }
 
 export function duplicate(flow: Flow) {
@@ -235,9 +240,9 @@ export function upload(file) {
     return () => fetchApi("/flows/dump", { method: "POST", body });
 }
 
-export function select(id?: string) {
+export function select(flowIds: string[]) {
     return {
         type: SELECT,
-        flowIds: id ? [id] : [],
+        flowIds: flowIds,
     };
 }
