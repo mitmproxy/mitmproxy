@@ -10,6 +10,7 @@ import { RootState } from "../ducks";
 
 type FlowTableProps = {
     flows: Flow[];
+    flowIndexes: { [id: string]: number };
     rowHeight: number;
     highlight: string;
     selected: string[];
@@ -57,21 +58,22 @@ export class PureFlowTable extends React.Component<
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
-        this.onViewportUpdate();
+        if (!shallowEqual(this.props.flowIndexes, prevProps.flowIndexes)) {
+            this.onViewportUpdate();
+        }
 
         const selectedNewFlow =
             this.props.selected[0] &&
             this.props.selected[0] !== prevProps.selected[0];
         if (selectedNewFlow) {
-            const { rowHeight, flows, selected } = this.props;
+            const { rowHeight, flowIndexes, selected } = this.props;
             const viewport = this.viewport.current!;
             const head = this.head.current;
 
             const headHeight = head ? head.offsetHeight : 0;
 
-            const selectedFlowIndex = flows.findIndex(
-                (flow) => flow.id === selected[0],
-            );
+            const selectedFlowIndex = flowIndexes[selected[0]];
+
             const rowTop = selectedFlowIndex * rowHeight + headHeight;
             const rowBottom = rowTop + rowHeight;
 
@@ -155,6 +157,7 @@ export class PureFlowTable extends React.Component<
 
 export default connect((state: RootState) => ({
     flows: state.flows.view,
+    flowIndexes: state.flows.listIndex,
     highlight: state.flows.highlight,
     selected: state.flows.selected,
 }))(PureFlowTable);
