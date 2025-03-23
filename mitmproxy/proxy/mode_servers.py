@@ -220,10 +220,7 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: (
-        list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
-        | list[mitmproxy_rs.wireguard.WireGuardServer]
-    )
+    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer]
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -277,10 +274,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> (
-        list[asyncio.Server | mitmproxy_rs.udp.UdpServer]
-        | list[mitmproxy_rs.wireguard.WireGuardServer]
-    ):
+    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer]:
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
@@ -296,41 +290,34 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                 )
 
-        servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer] = []
+        servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer] = []
         if self.mode.transport_protocol in ("tcp", "both"):
             servers.append(await asyncio.start_server(self.handle_stream, host, port))
         if self.mode.transport_protocol in ("udp", "both"):
             if host == "":
-                ipv4 = await mitmproxy_rs.udp.start_udp_server(
-                    "0.0.0.0",
-                    port,
-                    self.handle_stream,
-                )
+                ipv4 = await self.start_udp_based_server("0.0.0.0", port)
                 servers.append(ipv4)
                 try:
-                    ipv6 = await mitmproxy_rs.udp.start_udp_server(
-                        "[::]",
-                        ipv4.getsockname()[1],
-                        self.handle_stream,
-                    )
+                    ipv6 = await self.start_udp_based_server("[::]", ipv4.getsockname()[1])
                     servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
             else:
-                servers.append(
-                    await mitmproxy_rs.udp.start_udp_server(
-                        host,
-                        port,
-                        self.handle_stream,
-                    )
-                )
+                servers.append(await self.start_udp_based_server(host, port))
 
         return servers
 
+    async def start_udp_based_server(self, host, port) -> mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer:
+        return await mitmproxy_rs.udp.start_udp_server(
+                    host,
+                    port,
+                    self.handle_stream,
+                )
 
 class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     server_key: str
     client_key: str
+    pubkey: str
 
     def make_top_layer(
         self, context: Context
@@ -362,57 +349,25 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
         except Exception as e:
             raise ValueError(f"Invalid configuration file ({conf_path}): {e}") from e
 
+        # error early on invalid keys
+        self.pubkey = mitmproxy_rs.wireguard.pubkey(self.client_key)
+        _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
+
         await super()._start()
 
         conf = self.client_conf()
         assert conf
         logger.info("-" * 60 + "\n" + conf + "\n" + "-" * 60)
 
-    async def listen(
-        self, host: str, port: int
-    ) -> list[mitmproxy_rs.wireguard.WireGuardServer]:
-        servers: list[mitmproxy_rs.wireguard.WireGuardServer] = []
-
-        # error early on invalid keys
-        p = mitmproxy_rs.wireguard.pubkey(self.client_key)
-        _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
-
-        # we start two servers for dual-stack support.
-        if host == "":
-            ipv4 = await mitmproxy_rs.wireguard.start_wireguard_server(
-                "0.0.0.0",
+    async def start_udp_based_server(self, host, port) -> mitmproxy_rs.wireguard.WireGuardServer:
+        return await mitmproxy_rs.wireguard.start_wireguard_server(
+                host,
                 port,
                 self.server_key,
-                [p],
+                [self.pubkey],
                 self.handle_stream,
                 self.handle_stream,
             )
-            servers.append(ipv4)
-            try:
-                ipv6 = await mitmproxy_rs.wireguard.start_wireguard_server(
-                    "[::]",
-                    port,
-                    self.server_key,
-                    [p],
-                    self.handle_stream,
-                    self.handle_stream,
-                )
-                servers.append(ipv6)  # pragma: no cover
-            except Exception:  # pragma: no cover
-                logger.debug("Failed to listen on '::', listening on IPv4 only.")
-        else:
-            servers.append(
-                await mitmproxy_rs.wireguard.start_wireguard_server(
-                    host,
-                    port,
-                    self.server_key,
-                    [p],
-                    self.handle_stream,
-                    self.handle_stream,
-                )
-            )
-
-        return servers
 
     def client_conf(self) -> str | None:
         if not self._servers:
