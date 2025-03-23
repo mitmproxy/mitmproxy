@@ -220,7 +220,11 @@ class ServerInstance(Generic[M], metaclass=ABCMeta):
 
 
 class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
-    _servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer]
+    _servers: list[
+        asyncio.Server
+        | mitmproxy_rs.udp.UdpServer
+        | mitmproxy_rs.wireguard.WireGuardServer
+    ]
 
     def __init__(self, *args, **kwargs) -> None:
         self._servers = []
@@ -274,7 +278,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
     async def listen(
         self, host: str, port: int
-    ) -> list[asyncio.Server | mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer]:
+    ) -> list[
+        asyncio.Server
+        | mitmproxy_rs.udp.UdpServer
+        | mitmproxy_rs.wireguard.WireGuardServer
+    ]:
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
@@ -290,7 +298,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     f"Failed to listen on a single port ({e!r}), falling back to default behavior."
                 )
 
-        servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer] = []
+        servers: list[
+            asyncio.Server
+            | mitmproxy_rs.udp.UdpServer
+            | mitmproxy_rs.wireguard.WireGuardServer
+        ] = []
         if self.mode.transport_protocol in ("tcp", "both"):
             servers.append(await asyncio.start_server(self.handle_stream, host, port))
         if self.mode.transport_protocol in ("udp", "both"):
@@ -298,7 +310,9 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 ipv4 = await self.start_udp_based_server("0.0.0.0", port)
                 servers.append(ipv4)
                 try:
-                    ipv6 = await self.start_udp_based_server("[::]", ipv4.getsockname()[1])
+                    ipv6 = await self.start_udp_based_server(
+                        "[::]", ipv4.getsockname()[1]
+                    )
                     servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
                     logger.debug("Failed to listen on '::', listening on IPv4 only.")
@@ -307,12 +321,15 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
 
         return servers
 
-    async def start_udp_based_server(self, host, port) -> mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer:
+    async def start_udp_based_server(
+        self, host, port
+    ) -> mitmproxy_rs.udp.UdpServer | mitmproxy_rs.wireguard.WireGuardServer:
         return await mitmproxy_rs.udp.start_udp_server(
-                    host,
-                    port,
-                    self.handle_stream,
-                )
+            host,
+            port,
+            self.handle_stream,
+        )
+
 
 class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     server_key: str
@@ -359,15 +376,17 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
         assert conf
         logger.info("-" * 60 + "\n" + conf + "\n" + "-" * 60)
 
-    async def start_udp_based_server(self, host, port) -> mitmproxy_rs.wireguard.WireGuardServer:
+    async def start_udp_based_server(
+        self, host, port
+    ) -> mitmproxy_rs.wireguard.WireGuardServer:
         return await mitmproxy_rs.wireguard.start_wireguard_server(
-                host,
-                port,
-                self.server_key,
-                [self.pubkey],
-                self.handle_stream,
-                self.handle_stream,
-            )
+            host,
+            port,
+            self.server_key,
+            [self.pubkey],
+            self.handle_stream,
+            self.handle_stream,
+        )
 
     def client_conf(self) -> str | None:
         if not self._servers:
