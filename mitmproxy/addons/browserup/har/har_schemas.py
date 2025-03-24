@@ -27,18 +27,18 @@ class ErrorSchema(Schema):
     )
 
 
-class CounterSchema(Schema):
+class MetricSchema(Schema):
     name = fields.Str(
         metadata={
             "optional": False,
-            "description": "Name of Custom Counter to add to the page under _counters",
+            "description": "Name of Custom Metric to add to the page under _metrics",
         }
     )
     value = fields.Number(
         metadata={
             "optional": False,
             "format": "double",
-            "description": "Value for the counter",
+            "description": "Value for the metric",
         }
     )
 

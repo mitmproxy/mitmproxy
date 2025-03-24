@@ -337,30 +337,30 @@
         }
       }
     },
-    "/har/counters": {
+    "/har/metrics": {
       "post": {
-        "description": "Add Custom Counter to the captured traffic har",
-        "operationId": "addCounter",
+        "description": "Add Custom Metric to the captured traffic har",
+        "operationId": "addMetric",
         "tags": [
           "BrowserUpProxy"
         ],
         "requestBody": {
-          "description": "Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key",
+          "description": "Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key",
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Counter"
+                "$ref": "#/components/schemas/Metric"
               }
             }
           }
         },
         "responses": {
           "204": {
-            "description": "The counter was added."
+            "description": "The metric was added."
           },
           "422": {
-            "description": "The counter was invalid."
+            "description": "The metric was invalid."
           }
         }
       }
@@ -594,17 +594,17 @@
           }
         }
       },
-      "Counter": {
+      "Metric": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Name of Custom Counter to add to the page under _counters"
+            "description": "Name of Custom Metric to add to the page under _metrics"
           },
           "value": {
             "type": "number",
             "format": "double",
-            "description": "Value for the counter"
+            "description": "Value for the metric"
           }
         }
       },
@@ -633,6 +633,77 @@
             "default": ""
           }
         }
+      },
+      "WebSocketMessage": {
+        "type": "object",
+        "required": [
+          "type",
+          "opcode",
+          "data",
+          "time"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "opcode": {
+            "type": "number"
+          },
+          "data": {
+            "type": "string"
+          },
+          "time": {
+            "type": "number"
+          }
+        }
+      },
+      "Header": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "Action": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "xpath": {
+            "type": "string"
+          },
+          "dataAttributes": {
+            "type": "string"
+          },
+          "formName": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "PageTimings": {
         "type": "object",
@@ -708,28 +779,6 @@
             "format": "int64",
             "minimum": -1,
             "default": -1
-          },
-          "comment": {
-            "type": "string"
-          }
-        }
-      },
-      "CustomHarData": {
-        "type": "object",
-        "minProperties": 1
-      },
-      "Header": {
-        "type": "object",
-        "required": [
-          "name",
-          "value"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
           },
           "comment": {
             "type": "string"
@@ -813,59 +862,6 @@
             }
           }
         }
-      },
-      "WebSocketMessage": {
-        "type": "object",
-        "required": [
-          "type",
-          "opcode",
-          "data",
-          "time"
-        ],
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "opcode": {
-            "type": "number"
-          },
-          "data": {
-            "type": "string"
-          },
-          "time": {
-            "type": "number"
-          }
-        }
-      },
-      "Action": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "className": {
-            "type": "string"
-          },
-          "tagName": {
-            "type": "string"
-          },
-          "xpath": {
-            "type": "string"
-          },
-          "dataAttributes": {
-            "type": "string"
-          },
-          "formName": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
       },
       "HarEntry": {
         "type": "object",
@@ -1326,6 +1322,10 @@
           }
         }
       },
+      "CustomHarData": {
+        "type": "object",
+        "minProperties": 1
+      },
       "Page": {
         "type": "object",
         "required": [
@@ -1353,10 +1353,10 @@
             },
             "default": []
           },
-          "_counters": {
+          "_metrics": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Counter"
+              "$ref": "#/components/schemas/Metric"
             },
             "default": []
           },

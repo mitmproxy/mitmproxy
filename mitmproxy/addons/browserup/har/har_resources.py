@@ -8,7 +8,7 @@ import falcon
 from marshmallow import ValidationError
 
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
-from mitmproxy.addons.browserup.har.har_schemas import CounterSchema
+from mitmproxy.addons.browserup.har.har_schemas import MetricSchema
 from mitmproxy.addons.browserup.har.har_schemas import ErrorSchema
 from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema
 from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
@@ -508,41 +508,41 @@ class SLAResource(
             self.respond_with_bool(resp, result)
 
 
-class CounterResource:
+class MetricResource:
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
         self.HarCaptureAddon = HarCaptureAddon
 
     def addon_path(self):
-        return "har/counters"
+        return "har/metrics"
 
     def apispec(self, spec):
         spec.path(resource=self)
 
     def on_post(self, req, resp):
-        """Adds a custom counter to the har page/step under _counters
+        """Adds a custom metric to the har page/step under _metrics
         ---
-        description: Add Custom Counter to the captured traffic har
-        operationId: addCounter
+        description: Add Custom Metric to the captured traffic har
+        operationId: addMetric
         tags:
           - BrowserUpProxy
         requestBody:
-          description: Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+          description: Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key
           required: true
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Counter"
+                $ref: "#/components/schemas/Metric"
         responses:
           204:
-            description: The counter was added.
+            description: The metric was added.
           422:
-            description: The counter was invalid.
+            description: The metric was invalid.
         """
         try:
-            counter = req.media
-            CounterSchema().load(counter)
-            self.HarCaptureAddon.add_counter_to_har(counter)
+            metric = req.media
+            MetricSchema().load(metric)
+            self.HarCaptureAddon.add_metric_to_har(metric)
         except ValidationError as err:
             resp.status = falcon.HTTP_422
             resp.content_type = falcon.MEDIA_JSON

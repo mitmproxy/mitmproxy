@@ -25,10 +25,10 @@
       },
       "default": []
     },
-    "_counters": {
+    "_metrics": {
       "type": "array",
       "items": {
-        "$ref": "#/components/schemas/Counter"
+        "$ref": "#/components/schemas/Metric"
       },
       "default": []
     },

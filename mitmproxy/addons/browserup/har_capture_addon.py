@@ -4,7 +4,7 @@ import mitmproxy.http
 from mitmproxy.addons.browserup.har import flow_har_entry_patch
 from mitmproxy.addons.browserup.har.flow_capture import FlowCaptureMixin
 from mitmproxy.addons.browserup.har.har_manager import HarManagerMixin
-from mitmproxy.addons.browserup.har.har_resources import CounterResource
+from mitmproxy.addons.browserup.har.har_resources import MetricResource
 from mitmproxy.addons.browserup.har.har_resources import ErrorResource
 from mitmproxy.addons.browserup.har.har_resources import HarCaptureTypesResource
 from mitmproxy.addons.browserup.har.har_resources import HarPageResource
@@ -33,7 +33,7 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
             SizeResource(self),
             SLAResource(self),
             ErrorResource(self),
-            CounterResource(self),
+            MetricResource(self),
             HealthCheckResource(),
         ]
 

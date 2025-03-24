@@ -109,8 +109,8 @@ class HarManagerMixin:
             {"name": verification_name, "type": verification_type, "result": result},
         )
 
-    def add_counter_to_har(self, counter_dict):
-        self.add_custom_value_to_har("_counters", counter_dict)
+    def add_metric_to_har(self, metric_dict):
+        self.add_custom_value_to_har("_metrics", metric_dict)
 
     def add_error_to_har(self, error_dict):
         self.add_custom_value_to_har("_errors", error_dict)

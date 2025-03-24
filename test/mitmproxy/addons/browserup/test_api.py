@@ -67,26 +67,26 @@ class TestAPI:
         )
         assert response.status == falcon.HTTP_422
 
-    def test_add_float_counter(self, hc):
+    def test_add_float_metric(self, hc):
         response = self.client().simulate_post(
-            "/har/counters", json={"name": "fooAmount", "value": 5.0}
+            "/har/metrics", json={"name": "fooAmount", "value": 5.0}
         )
         assert response.status == falcon.HTTP_204
 
-    def test_add_integer_counter(self, hc):
+    def test_add_integer_metric(self, hc):
         response = self.client().simulate_post(
-            "/har/counters", json={"name": "fooAmount", "value": 5}
+            "/har/metrics", json={"name": "fooAmount", "value": 5}
         )
         assert response.status == falcon.HTTP_204
 
-    def test_add_counter_schema_wrong_string_instead_of_number(self, hc):
+    def test_add_metric_schema_wrong_string_instead_of_number(self, hc):
         response = self.client().simulate_post(
-            "/har/counters", json={"name": 3, "value": "nope"}
+            "/har/metrics", json={"name": 3, "value": "nope"}
         )
         assert response.status == falcon.HTTP_422
 
-    def test_add_counter_schema_wrong(self, hc):
-        response = self.client().simulate_post("/har/counters", json={"name": 3})
+    def test_add_metric_schema_wrong(self, hc):
+        response = self.client().simulate_post("/har/metrics", json={"name": 3})
         assert response.status == falcon.HTTP_422
 
     def test_add_error(self, hc):
