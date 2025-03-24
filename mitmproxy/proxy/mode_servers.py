@@ -38,6 +38,7 @@ from mitmproxy import flow
 from mitmproxy import platform
 from mitmproxy.connection import Address
 from mitmproxy.net import local_ip
+from mitmproxy.net.free_port import get_free_port
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layers
 from mitmproxy.proxy import mode_specs
@@ -275,33 +276,23 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         if self.mode.transport_protocol not in ("tcp", "udp", "both"):
             raise AssertionError(self.mode.transport_protocol)
 
+        # workaround for https://github.com/python/cpython/issues/89856:
+        # We want both IPv4 and IPv6 sockets to bind to the same port.
+        # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
+        # so we try to cover the 99% case and then give up and fall back to what asyncio does.
+        if port == 0:
+            try:
+                return await self.listen(host, get_free_port())
+            except Exception as e:
+                logger.debug(
+                    f"Failed to listen on a single port ({e!r}), falling back to default behavior."
+                )
+
         servers: list[asyncio.Server | mitmproxy_rs.udp.UdpServer] = []
         if self.mode.transport_protocol in ("tcp", "both"):
-            # workaround for https://github.com/python/cpython/issues/89856:
-            # We want both IPv4 and IPv6 sockets to bind to the same port.
-            # This may fail (https://github.com/mitmproxy/mitmproxy/pull/5542#issuecomment-1222803291),
-            # so we try to cover the 99% case and then give up and fall back to what asyncio does.
-            if port == 0:
-                try:
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.bind(("", 0))
-                    port = s.getsockname()[1]
-                    s.close()
-                    servers.append(
-                        await asyncio.start_server(self.handle_stream, host, port)
-                    )
-                except Exception as e:
-                    logger.debug(
-                        f"Failed to listen on a single port ({e!r}), falling back to default behavior."
-                    )
-                    port = 0
-                    servers.append(
-                        await asyncio.start_server(self.handle_stream, host, port)
-                    )
-            else:
-                servers.append(
-                    await asyncio.start_server(self.handle_stream, host, port)
-                )
+            servers.append(
+                await asyncio.start_server(self.handle_stream, host, port)
+            )
         if self.mode.transport_protocol in ("udp", "both"):
             # we start two servers for dual-stack support.
             # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
