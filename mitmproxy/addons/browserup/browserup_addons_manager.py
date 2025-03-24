@@ -20,6 +20,7 @@ from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema
 from mitmproxy.addons.browserup.har.har_schemas import PageTimingSchema
 from mitmproxy.addons.browserup.har.har_schemas import VerifyResultSchema
 from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
+from mitmproxy.addons.browserup.har_dummy_traffic_addon import HarDummyTrafficAddon
 
 # https://marshmallow.readthedocs.io/en/stable/quickstart.html
 
@@ -168,8 +169,11 @@ ___
 
 har_capture_addon = HarCaptureAddOn()
 
+har_dummy_traffic_addon = HarDummyTrafficAddon()
+
 addons = [
     har_capture_addon,
     BrowserDataAddOn(har_capture_addon),
+    har_dummy_traffic_addon,
     BrowserUpAddonsManagerAddOn(),
 ]
