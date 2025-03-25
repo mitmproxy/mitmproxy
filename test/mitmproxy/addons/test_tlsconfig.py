@@ -591,7 +591,7 @@ class TestTlsConfig:
 
         # Should substitute with crl as it meets all preconditions
         f = tflow.tflow()
-        f.request.path = ta.crl_path
+        f.request.path = ta.crl_path()
         await ta.request(f)
         assert f.response
 

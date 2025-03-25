@@ -586,11 +586,7 @@ class TlsConfig:
                 f"for insecure TLS versions to work."
             )
 
-    @property
     def crl_path(self) -> str:
-        if not self.certstore:
-            return ""
-
         return "/mitmproxy-" + str(self.certstore.default_ca.serial) + ".crl"
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
@@ -620,7 +616,7 @@ class TlsConfig:
                     scheme.decode("ascii"),
                     host.decode("idna"),
                     port,
-                    self.crl_path,
+                    self.crl_path(),
                 )
 
         # Add SNI or our local IP address.
@@ -647,7 +643,7 @@ class TlsConfig:
         if not flow.live or flow.error or flow.response:
             return
         # Check if a request has a magic CRL token at the end
-        if flow.request.path.endswith(self.crl_path):
+        if flow.request.path.endswith(self.crl_path()):
             # Serve CRL
             flow.response = http.Response.make(
                 200,
