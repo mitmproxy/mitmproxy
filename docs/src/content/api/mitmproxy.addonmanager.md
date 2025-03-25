@@ -3,9 +3,7 @@
 title: "mitmproxy.addonmanager"
 url: "api/mitmproxy/addonmanager.html"
 
-menu:
-    addons:
-        parent: 'Event Hooks & API'
+menu: api
 ---
 
 {{< readfile file="/generated/api/mitmproxy/addonmanager.html" >}}

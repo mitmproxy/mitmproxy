@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" type="image/png" href="/favicon.ico">
+    <title>{{ .Title }}</title>
+    {{ with .Site.Params.description }}
+    <meta name="description" content="{{ . }}">
+    {{ end }}
+
+    {{ $style := resources.Get "css/style.scss" | toCSS | minify }}
+    <link rel="stylesheet" href="{{ $style.RelPermalink }}">
+
+    {{ if .Params.has_asciinema }}
+        {{- $styles := resources.Get "asciinema-player.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $styles.RelPermalink }}" media="screen">
+
+        {{- $asciinemaPlayer := resources.Get "asciinema-player.js" }}
+        {{- $asciinemaTutorial := resources.Get "asciinema-tutorial.js" }}
+        {{- $asciinemaScripts := slice $asciinemaPlayer $asciinemaTutorial | resources.Concat "asciinema.js" | minify | fingerprint }}
+        <script src="{{ $asciinemaScripts.RelPermalink }}"></script>
+    {{ end }}
+
+    {{ range .AlternativeOutputFormats -}}
+    {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .RelPermalink $.Site.Title | safeHTML }}
+    {{ end -}}
+    {{ hugo.Generator }}
+</head>
+<body>
+<a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+<header role="banner">
+    <nav role="navigation" aria-label="Main navigation">
+        <a href="https://mitmproxy.org/">
+            <img src='{{ (resources.Get "logo-navbar.png").RelPermalink }}' alt="mitmproxy logo" width="123" height="28">
+        </a>
+        <a class="hide-mobile" href="https://mitmproxy.org/posts/">Blog</a>
+        <a class="hide-mobile" href="https://docs.mitmproxy.org/">Docs</a>
+        <a class="hide-mobile" href="https://mitmproxy.org/publications/">Publications</a>
+        <span style="flex-grow: 1"></span>
+        <input type="search" id="search" placeholder="Search">
+        <span style="flex-grow: 1"></span>
+        <version-selector version="{{ getenv "DOCS_ARCHIVE" }}" aria-label="Documentation version selector"/>
+    </nav>
+</header>
+<nav role="navigation" aria-label="Documentation navigation">
+    {{ partial "sidebar" . }}
+</nav>
+<main id="main-content" role="main" tabindex="-1">
+    {{- block "main" . }}{{- end }}
+</main>
+{{- $versionSelector := resources.Get "version-selector.js" }}
+{{- $search := resources.Get "search.js" }}
+{{- $scripts := slice $versionSelector $search | resources.Concat "bundle.js" | minify | fingerprint }}
+<script src="{{ $scripts.RelPermalink }}"></script>
+</body>
+</html>

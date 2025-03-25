@@ -1,0 +1,48 @@
+body {
+  display: grid;
+
+  $main-page-header-width: 1360px;
+  $sidebar-width: 250px;
+  $content-width: 900px;
+  $pad: 0.5rem;
+
+  grid-template:
+        ". header header ."
+        ". nav main ."
+        / 1fr $sidebar-width minmax(500px, $main-page-header-width - $sidebar-width) 1fr;
+
+  @media (max-width: $max-mobile-width) {
+    grid-template:
+        "header"
+        "nav"
+        "main"
+        / 100%;
+  }
+
+  > header {
+    grid-area: 1 / 1 / 1 / end;
+    height: 3.25rem;
+    display: grid;
+    grid-template-columns: subgrid;
+
+    > nav {
+      grid-area: header;
+      padding: 0 $pad;
+      max-width: $content-width + $sidebar-width;
+    }
+  }
+
+  > nav {
+    grid-area: nav;
+  }
+
+  > main {
+    grid-area: main;
+    max-width: $content-width;
+    padding: 0.75rem 0 2rem 1.5rem;
+    @media (max-width: $max-mobile-width) {
+      padding: 0 $pad 2rem;
+    }
+  }
+}
+
