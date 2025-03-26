@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.HarEntryTimings
+# BrowserUpMitmProxyClient.Model.HarEntryTimings
 
 ## Properties
 

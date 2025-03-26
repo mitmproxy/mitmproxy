@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.HarEntryCache
+# BrowserUpMitmProxyClient.Model.HarEntryCache
 
 ## Properties
 

@@ -8,7 +8,7 @@
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
 |**method** | **String** |  |  |
-|**url** | **URI** |  |  |
+|**url** | **String** |  |  |
 |**httpVersion** | **String** |  |  |
 |**cookies** | [**List&lt;HarEntryRequestCookiesInner&gt;**](HarEntryRequestCookiesInner.md) |  |  |
 |**headers** | [**List&lt;Header&gt;**](Header.md) |  |  |

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo><!-- setting GenerateAssemblyInfo to false causes this bug https://github.com/dotnet/project-system/issues/3934 -->
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>BrowserUpMitmProxyClient</AssemblyName>
+    <PackageId>BrowserUpMitmProxyClient</PackageId>
+    <OutputType>Library</OutputType>
+    <Authors>OpenAPI</Authors>
+    <Company>OpenAPI</Company>
+    <AssemblyTitle>OpenAPI Library</AssemblyTitle>
+    <Description>A library generated from a OpenAPI doc</Description>
+    <Copyright>No Copyright</Copyright>
+    <RootNamespace>BrowserUpMitmProxyClient</RootNamespace>
+    <Version>1.0.0</Version>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\BrowserUpMitmProxyClient.xml</DocumentationFile>
+    <RepositoryUrl>https://github.com/GIT_USER_ID/GIT_REPO_ID.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>Minor update</PackageReleaseNotes>
+    <Nullable>annotations</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonSubTypes" Version="1.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="RestSharp" Version="108.0.2" />
+    <PackageReference Include="Polly" Version="7.2.3" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Web" />
+  </ItemGroup>
+</Project>

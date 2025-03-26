@@ -4,7 +4,7 @@ apply plugin: 'java'
 apply plugin: 'com.diffplug.spotless'
 
 group = 'com.browserup'
-version = '1.1.5-SNAPSHOT'
+version = '1.1.4-SNAPSHOT'
 
 buildscript {
     repositories {
@@ -88,9 +88,51 @@ if(hasProperty('target') && target == 'android') {
 
     publishing {
         publications {
-            maven(MavenPublication) {
-               artifactId = 'browserup-mitmproxy-client'
-               from components.java
+            PubToSonatype(MavenPublication) {
+                groupId = 'com.browserup'
+                artifactId = 'browserup-mitmproxy-client'
+                version = project.version
+                from components.java
+
+                pom {
+                    name = 'browserup-mitmproxy-client'
+                    description = 'BrowserUp Proxy Client'
+                    url = 'https://github.com/browserup/mitmproxy'
+                    packaging = 'jar'
+
+                    scm {
+                        connection = 'scm:git:git.com:browserup/mitmproxy.git'
+                        developerConnection = 'scm:git:git.com:browserup/mitmproxy.git'
+                        url = 'https://github.com/browserup/mitmproxy/tree/main/clients/java'
+                    }
+                    licenses {
+                        license {
+                            name = 'The Apache Software License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution = 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'browserup'
+                            name = 'BrowserUp, Inc.'
+                            email = 'developers.com'
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                if (project.hasProperty("ossrhUsername") && project.hasProperty("ossrhPassword")) {
+                    credentials {
+                        username = ossrhUsername
+                        password = ossrhPassword
+                    }
+                    def releaseRepository = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                    def snapshotRepository = uri("https://oss.sonatype.org/content/repositories/snapshots")
+                    url = version.endsWith('SNAPSHOT') ? snapshotRepository : releaseRepository
+                }
             }
         }
     }
@@ -114,7 +156,7 @@ dependencies {
     implementation 'io.gsonfire:gson-fire:1.8.5'
     implementation 'javax.ws.rs:jsr311-api:1.1.1'
     implementation 'javax.ws.rs:javax.ws.rs-api:2.1.1'
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.4'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
     implementation "jakarta.annotation:jakarta.annotation-api:$jakarta_annotation_version"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'

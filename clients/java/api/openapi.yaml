@@ -7,7 +7,7 @@ info:
     captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
     ___
   title: BrowserUp MitmProxy
-  version: 1.0.0
+  version: "1.24"
   x-logo:
     url: logo.png
 servers:
@@ -250,23 +250,23 @@ paths:
       - BrowserUpProxy
       x-content-type: application/json
       x-accepts: application/json
-  /har/counters:
+  /har/metrics:
     post:
-      description: Add Custom Counter to the captured traffic har
-      operationId: addCounter
+      description: Add Custom Metric to the captured traffic har
+      operationId: addMetric
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Counter'
-        description: "Receives a new counter to add. The counter is stored, under\
-          \ the hood, in an array in the har under the _counters key"
+              $ref: '#/components/schemas/Metric'
+        description: "Receives a new metric to add. The metric is stored, under the\
+          \ hood, in an array in the har under the _metrics key"
         required: true
       responses:
         "204":
-          description: The counter was added.
+          description: The metric was added.
         "422":
-          description: The counter was invalid.
+          description: The metric was invalid.
       tags:
       - BrowserUpProxy
       x-content-type: application/json
@@ -336,15 +336,15 @@ components:
         A set of criteria for filtering HTTP Requests and Responses.
                                  Criteria are AND based, and use python regular expressions for string comparison
       example:
-        request_cookie: ""
-        response_cookie: ""
+        request_cookie: null
+        response_cookie: null
         json_path: json_path
         error_if_no_traffic: true
         url: url
         content: content
-        response_header: ""
+        response_header: null
         content_type: content_type
-        request_header: ""
+        request_header: null
         json_schema: json_schema
         json_valid: true
         page: page
@@ -388,29 +388,13 @@ components:
             url: https://docs.python.org/3/howto/regex.html
           type: string
         request_header:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         request_cookie:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         response_header:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         response_cookie:
-          allOf:
-          - $ref: '#/components/schemas/NameValuePair'
-          externalDocs:
-            description: Python Regex
-            url: https://docs.python.org/3/howto/regex.html
+          $ref: '#/components/schemas/MatchCriteria_request_header'
         json_valid:
           description: Is valid JSON
           type: boolean
@@ -453,16 +437,16 @@ components:
           description: Short details of the error
           type: string
       type: object
-    Counter:
+    Metric:
       example:
         name: name
         value: 0.8008281904610115
       properties:
         name:
-          description: Name of Custom Counter to add to the page under _counters
+          description: Name of Custom Metric to add to the page under _metrics
           type: string
         value:
-          description: Value for the counter
+          description: Value for the metric
           format: double
           type: number
       type: object
@@ -494,9 +478,9 @@ components:
     WebSocketMessage:
       example:
         data: data
-        time: 7.058770351582356
+        time: 0.8851374739011653
         type: type
-        opcode: 0.8851374739011653
+        opcode: 7.143538047012306
       properties:
         type:
           type: string
@@ -674,7 +658,7 @@ components:
                   comment: comment
                   value: value
                   contentType: contentType
-              url: https://openapi-generator.tech
+              url: url
               cookies:
               - path: path
                 expires: expires
@@ -693,28 +677,18 @@ components:
                 secure: true
                 value: value
             cache:
-              afterRequest:
-                expires: expires
-                hitCount: 2
-                lastAccess: lastAccess
-                eTag: eTag
-                comment: comment
+              afterRequest: null
               comment: comment
-              beforeRequest:
-                expires: expires
-                hitCount: 2
-                lastAccess: lastAccess
-                eTag: eTag
-                comment: comment
+              beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 7.058770351582356
+              time: 0.8851374739011653
               type: type
-              opcode: 0.8851374739011653
+              opcode: 7.143538047012306
             - data: data
-              time: 7.058770351582356
+              time: 0.8851374739011653
               type: type
-              opcode: 0.8851374739011653
+              opcode: 7.143538047012306
             response:
               headers:
               - name: name
@@ -811,7 +785,7 @@ components:
                   comment: comment
                   value: value
                   contentType: contentType
-              url: https://openapi-generator.tech
+              url: url
               cookies:
               - path: path
                 expires: expires
@@ -830,28 +804,18 @@ components:
                 secure: true
                 value: value
             cache:
-              afterRequest:
-                expires: expires
-                hitCount: 2
-                lastAccess: lastAccess
-                eTag: eTag
-                comment: comment
+              afterRequest: null
               comment: comment
-              beforeRequest:
-                expires: expires
-                hitCount: 2
-                lastAccess: lastAccess
-                eTag: eTag
-                comment: comment
+              beforeRequest: null
             _webSocketMessages:
             - data: data
-              time: 7.058770351582356
+              time: 0.8851374739011653
               type: type
-              opcode: 0.8851374739011653
+              opcode: 7.143538047012306
             - data: data
-              time: 7.058770351582356
+              time: 0.8851374739011653
               type: type
-              opcode: 0.8851374739011653
+              opcode: 7.143538047012306
             response:
               headers:
               - name: name
@@ -943,7 +907,7 @@ components:
               name: name
               type: type
             title: title
-            _counters:
+            _metrics:
             - name: name
               value: 0.8008281904610115
             - name: name
@@ -982,7 +946,7 @@ components:
               name: name
               type: type
             title: title
-            _counters:
+            _metrics:
             - name: name
               value: 0.8008281904610115
             - name: name
@@ -1041,7 +1005,7 @@ components:
               comment: comment
               value: value
               contentType: contentType
-          url: https://openapi-generator.tech
+          url: url
           cookies:
           - path: path
             expires: expires
@@ -1060,28 +1024,18 @@ components:
             secure: true
             value: value
         cache:
-          afterRequest:
-            expires: expires
-            hitCount: 2
-            lastAccess: lastAccess
-            eTag: eTag
-            comment: comment
+          afterRequest: null
           comment: comment
-          beforeRequest:
-            expires: expires
-            hitCount: 2
-            lastAccess: lastAccess
-            eTag: eTag
-            comment: comment
+          beforeRequest: null
         _webSocketMessages:
         - data: data
-          time: 7.058770351582356
+          time: 0.8851374739011653
           type: type
-          opcode: 0.8851374739011653
+          opcode: 7.143538047012306
         - data: data
-          time: 7.058770351582356
+          time: 0.8851374739011653
           type: type
-          opcode: 0.8851374739011653
+          opcode: 7.143538047012306
         response:
           headers:
           - name: name
@@ -1214,7 +1168,7 @@ components:
           name: name
           type: type
         title: title
-        _counters:
+        _metrics:
         - name: name
           value: 0.8008281904610115
         - name: name
@@ -1237,10 +1191,10 @@ components:
           items:
             $ref: '#/components/schemas/VerifyResult'
           type: array
-        _counters:
+        _metrics:
           default: []
           items:
-            $ref: '#/components/schemas/Counter'
+            $ref: '#/components/schemas/Metric'
           type: array
         _errors:
           default: []
@@ -1257,6 +1211,12 @@ components:
       - startedDateTime
       - title
       type: object
+    MatchCriteria_request_header:
+      allOf:
+      - $ref: '#/components/schemas/NameValuePair'
+      externalDocs:
+        description: Python Regex
+        url: https://docs.python.org/3/howto/regex.html
     Har_log_creator:
       example:
         name: name
@@ -1315,7 +1275,7 @@ components:
                 comment: comment
                 value: value
                 contentType: contentType
-            url: https://openapi-generator.tech
+            url: url
             cookies:
             - path: path
               expires: expires
@@ -1334,28 +1294,18 @@ components:
               secure: true
               value: value
           cache:
-            afterRequest:
-              expires: expires
-              hitCount: 2
-              lastAccess: lastAccess
-              eTag: eTag
-              comment: comment
+            afterRequest: null
             comment: comment
-            beforeRequest:
-              expires: expires
-              hitCount: 2
-              lastAccess: lastAccess
-              eTag: eTag
-              comment: comment
+            beforeRequest: null
           _webSocketMessages:
           - data: data
-            time: 7.058770351582356
+            time: 0.8851374739011653
             type: type
-            opcode: 0.8851374739011653
+            opcode: 7.143538047012306
           - data: data
-            time: 7.058770351582356
+            time: 0.8851374739011653
             type: type
-            opcode: 0.8851374739011653
+            opcode: 7.143538047012306
           response:
             headers:
             - name: name
@@ -1452,7 +1402,7 @@ components:
                 comment: comment
                 value: value
                 contentType: contentType
-            url: https://openapi-generator.tech
+            url: url
             cookies:
             - path: path
               expires: expires
@@ -1471,28 +1421,18 @@ components:
               secure: true
               value: value
           cache:
-            afterRequest:
-              expires: expires
-              hitCount: 2
-              lastAccess: lastAccess
-              eTag: eTag
-              comment: comment
+            afterRequest: null
             comment: comment
-            beforeRequest:
-              expires: expires
-              hitCount: 2
-              lastAccess: lastAccess
-              eTag: eTag
-              comment: comment
+            beforeRequest: null
           _webSocketMessages:
           - data: data
-            time: 7.058770351582356
+            time: 0.8851374739011653
             type: type
-            opcode: 0.8851374739011653
+            opcode: 7.143538047012306
           - data: data
-            time: 7.058770351582356
+            time: 0.8851374739011653
             type: type
-            opcode: 0.8851374739011653
+            opcode: 7.143538047012306
           response:
             headers:
             - name: name
@@ -1584,7 +1524,7 @@ components:
             name: name
             type: type
           title: title
-          _counters:
+          _metrics:
           - name: name
             value: 0.8008281904610115
           - name: name
@@ -1623,7 +1563,7 @@ components:
             name: name
             type: type
           title: title
-          _counters:
+          _metrics:
           - name: name
             value: 0.8008281904610115
           - name: name
@@ -1794,7 +1734,7 @@ components:
             comment: comment
             value: value
             contentType: contentType
-        url: https://openapi-generator.tech
+        url: url
         cookies:
         - path: path
           expires: expires
@@ -1816,7 +1756,6 @@ components:
         method:
           type: string
         url:
-          format: uri
           type: string
         httpVersion:
           type: string
@@ -2008,14 +1947,7 @@ components:
       - status
       - statusText
       type: object
-    HarEntry_cache_beforeRequest:
-      example:
-        expires: expires
-        hitCount: 2
-        lastAccess: lastAccess
-        eTag: eTag
-        comment: comment
-      nullable: true
+    HarEntry_cache_beforeRequest_oneOf:
       properties:
         expires:
           type: string
@@ -2032,21 +1964,15 @@ components:
       - hitCount
       - lastAccess
       type: object
+    HarEntry_cache_beforeRequest:
+      oneOf:
+      - type: "null"
+      - $ref: '#/components/schemas/HarEntry_cache_beforeRequest_oneOf'
     HarEntry_cache:
       example:
-        afterRequest:
-          expires: expires
-          hitCount: 2
-          lastAccess: lastAccess
-          eTag: eTag
-          comment: comment
+        afterRequest: null
         comment: comment
-        beforeRequest:
-          expires: expires
-          hitCount: 2
-          lastAccess: lastAccess
-          eTag: eTag
-          comment: comment
+        beforeRequest: null
       properties:
         beforeRequest:
           $ref: '#/components/schemas/HarEntry_cache_beforeRequest'

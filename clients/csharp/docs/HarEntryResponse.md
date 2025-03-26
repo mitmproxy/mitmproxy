@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.HarEntryResponse
+# BrowserUpMitmProxyClient.Model.HarEntryResponse
 
 ## Properties
 

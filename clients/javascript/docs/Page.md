@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **id** | **String** |  | 
 **title** | **String** |  | 
 **verifications** | [**[VerifyResult]**](VerifyResult.md) |  | [optional] 
-**counters** | [**[Counter]**](Counter.md) |  | [optional] 
+**metrics** | [**[Metric]**](Metric.md) |  | [optional] 
 **errors** | [**[Error]**](Error.md) |  | [optional] 
 **pageTimings** | [**PageTimings**](PageTimings.md) |  | 
 **comment** | **String** |  | [optional] 

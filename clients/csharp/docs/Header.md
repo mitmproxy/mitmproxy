@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.Header
+# BrowserUpMitmProxyClient.Model.Header
 
 ## Properties
 

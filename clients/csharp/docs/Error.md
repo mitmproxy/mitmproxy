@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.Error
+# BrowserUpMitmProxyClient.Model.Error
 
 ## Properties
 

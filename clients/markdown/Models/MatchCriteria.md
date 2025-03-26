@@ -9,10 +9,10 @@
 | **content** | **String** | Body content regexp content to match | [optional] [default to null] |
 | **content\_type** | **String** | Content type | [optional] [default to null] |
 | **websocket\_message** | **String** | Websocket message text to match | [optional] [default to null] |
-| **request\_header** | [**NameValuePair**](NameValuePair.md) |  | [optional] [default to null] |
-| **request\_cookie** | [**NameValuePair**](NameValuePair.md) |  | [optional] [default to null] |
-| **response\_header** | [**NameValuePair**](NameValuePair.md) |  | [optional] [default to null] |
-| **response\_cookie** | [**NameValuePair**](NameValuePair.md) |  | [optional] [default to null] |
+| **request\_header** | [**MatchCriteria_request_header**](MatchCriteria_request_header.md) |  | [optional] [default to null] |
+| **request\_cookie** | [**MatchCriteria_request_header**](MatchCriteria_request_header.md) |  | [optional] [default to null] |
+| **response\_header** | [**MatchCriteria_request_header**](MatchCriteria_request_header.md) |  | [optional] [default to null] |
+| **response\_cookie** | [**MatchCriteria_request_header**](MatchCriteria_request_header.md) |  | [optional] [default to null] |
 | **json\_valid** | **Boolean** | Is valid JSON | [optional] [default to null] |
 | **json\_path** | **String** | Has JSON path | [optional] [default to null] |
 | **json\_schema** | **String** | Validates against passed JSON schema | [optional] [default to null] |

@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:48088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
 [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
+[**addMetric**](BrowserUpProxyApi.md#addMetric) | **POST** /har/metrics | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
@@ -15,51 +15,6 @@ Method | HTTP request | Description
 [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
 [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
-
-
-## addCounter
-
-> addCounter(counter)
-
-
-
-Add Custom Counter to the captured traffic har
-
-### Example
-
-```javascript
-import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
-
-let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
-let counter = new BrowserUpMitmProxyClient.Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
-apiInstance.addCounter(counter, (error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key | 
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
 
 
 ## addError
@@ -92,6 +47,51 @@ apiInstance.addError(error, (error, data, response) => {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **error** | [**Error**](Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key | 
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+
+## addMetric
+
+> addMetric(metric)
+
+
+
+Add Custom Metric to the captured traffic har
+
+### Example
+
+```javascript
+import BrowserUpMitmProxyClient from 'browserup-mitmproxy-client';
+
+let apiInstance = new BrowserUpMitmProxyClient.BrowserUpProxyApi();
+let metric = new BrowserUpMitmProxyClient.Metric(); // Metric | Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key
+apiInstance.addMetric(metric, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **metric** | [**Metric**](Metric.md)| Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key | 
 
 ### Return type
 

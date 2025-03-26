@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.HarEntryRequestPostDataParamsInner
+# BrowserUpMitmProxyClient.Model.HarEntryRequestPostDataParamsInner
 
 ## Properties
 

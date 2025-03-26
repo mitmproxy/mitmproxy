@@ -1,11 +1,12 @@
+.openapi-generator-ignore
 Apis/BrowserUpProxyApi.md
 Models/Action.md
-Models/Counter.md
 Models/Error.md
 Models/Har.md
 Models/HarEntry.md
 Models/HarEntry_cache.md
 Models/HarEntry_cache_beforeRequest.md
+Models/HarEntry_cache_beforeRequest_oneOf.md
 Models/HarEntry_request.md
 Models/HarEntry_request_cookies_inner.md
 Models/HarEntry_request_postData.md
@@ -19,6 +20,8 @@ Models/Har_log_creator.md
 Models/Header.md
 Models/LargestContentfulPaint.md
 Models/MatchCriteria.md
+Models/MatchCriteria_request_header.md
+Models/Metric.md
 Models/NameValuePair.md
 Models/Page.md
 Models/PageTiming.md

@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.MatchCriteriaRequestHeader
+# BrowserUpMitmProxyClient.Model.MatchCriteriaRequestHeader
 
 ## Properties
 

@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:48088*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters |  |
 | [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors |  |
+| [**addMetric**](BrowserUpProxyApi.md#addMetric) | **POST** /har/metrics |  |
 | [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har |  |
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
 | [**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page |  |
@@ -16,69 +16,7 @@ All URIs are relative to *http://localhost:48088*
 | [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} |  |
 
 
-<a id="addCounter"></a>
-# **addCounter**
-> addCounter(counter)
-
-
-
-Add Custom Counter to the captured traffic har
-
-### Example
-```java
-// Import classes:
-import com.browserup.proxy_client.ApiClient;
-import com.browserup.proxy_client.ApiException;
-import com.browserup.proxy_client.Configuration;
-import com.browserup.proxy_client.models.*;
-import com.browserup.proxy.api.BrowserUpProxyApi;
-
-public class Example {
-  public static void main(String[] args) {
-    ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:48088");
-
-    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Counter counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
-    try {
-      apiInstance.addCounter(counter);
-    } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#addCounter");
-      System.err.println("Status code: " + e.getCode());
-      System.err.println("Reason: " + e.getResponseBody());
-      System.err.println("Response headers: " + e.getResponseHeaders());
-      e.printStackTrace();
-    }
-  }
-}
-```
-
-### Parameters
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **counter** | [**Counter**](Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key | |
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **204** | The counter was added. |  -  |
-| **422** | The counter was invalid. |  -  |
-
-<a id="addError"></a>
+<a name="addError"></a>
 # **addError**
 > addError(error)
 
@@ -140,7 +78,69 @@ No authorization required
 | **204** | The Error was added. |  -  |
 | **422** | The Error was invalid. |  -  |
 
-<a id="getHarLog"></a>
+<a name="addMetric"></a>
+# **addMetric**
+> addMetric(metric)
+
+
+
+Add Custom Metric to the captured traffic har
+
+### Example
+```java
+// Import classes:
+import com.browserup.proxy_client.ApiClient;
+import com.browserup.proxy_client.ApiException;
+import com.browserup.proxy_client.Configuration;
+import com.browserup.proxy_client.models.*;
+import com.browserup.proxy.api.BrowserUpProxyApi;
+
+public class Example {
+  public static void main(String[] args) {
+    ApiClient defaultClient = Configuration.getDefaultApiClient();
+    defaultClient.setBasePath("http://localhost:48088");
+
+    BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    Metric metric = new Metric(); // Metric | Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key
+    try {
+      apiInstance.addMetric(metric);
+    } catch (ApiException e) {
+      System.err.println("Exception when calling BrowserUpProxyApi#addMetric");
+      System.err.println("Status code: " + e.getCode());
+      System.err.println("Reason: " + e.getResponseBody());
+      System.err.println("Response headers: " + e.getResponseHeaders());
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+### Parameters
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **metric** | [**Metric**](Metric.md)| Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key | |
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **204** | The metric was added. |  -  |
+| **422** | The metric was invalid. |  -  |
+
+<a name="getHarLog"></a>
 # **getHarLog**
 > Har getHarLog()
 
@@ -198,7 +198,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | The current Har file. |  -  |
 
-<a id="healthcheck"></a>
+<a name="healthcheck"></a>
 # **healthcheck**
 > healthcheck()
 
@@ -255,7 +255,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | OK means all is well. |  -  |
 
-<a id="newPage"></a>
+<a name="newPage"></a>
 # **newPage**
 > Har newPage(title)
 
@@ -317,7 +317,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | The current Har file. |  -  |
 
-<a id="resetHarLog"></a>
+<a name="resetHarLog"></a>
 # **resetHarLog**
 > Har resetHarLog()
 
@@ -375,7 +375,7 @@ No authorization required
 |-------------|-------------|------------------|
 | **200** | The current Har file. |  -  |
 
-<a id="verifyNotPresent"></a>
+<a name="verifyNotPresent"></a>
 # **verifyNotPresent**
 > VerifyResult verifyNotPresent(name, matchCriteria)
 
@@ -440,7 +440,7 @@ No authorization required
 | **200** | The traffic had no matching items |  -  |
 | **422** | The MatchCriteria are invalid. |  -  |
 
-<a id="verifyPresent"></a>
+<a name="verifyPresent"></a>
 # **verifyPresent**
 > VerifyResult verifyPresent(name, matchCriteria)
 
@@ -505,7 +505,7 @@ No authorization required
 | **200** | The traffic conformed to the time criteria. |  -  |
 | **422** | The MatchCriteria are invalid. |  -  |
 
-<a id="verifySLA"></a>
+<a name="verifySLA"></a>
 # **verifySLA**
 > VerifyResult verifySLA(time, name, matchCriteria)
 
@@ -572,7 +572,7 @@ No authorization required
 | **200** | The traffic conformed to the time criteria. |  -  |
 | **422** | The MatchCriteria are invalid. |  -  |
 
-<a id="verifySize"></a>
+<a name="verifySize"></a>
 # **verifySize**
 > VerifyResult verifySize(size, name, matchCriteria)
 

@@ -1,11 +1,11 @@
-# BrowserUp.Mitmproxy.Client.Api.BrowserUpProxyApi
+# BrowserUpMitmProxyClient.Api.BrowserUpProxyApi
 
 All URIs are relative to *http://localhost:48088*
 
 | Method | HTTP request | Description |
 |--------|--------------|-------------|
-| [**AddCounter**](BrowserUpProxyApi.md#addcounter) | **POST** /har/counters |  |
 | [**AddError**](BrowserUpProxyApi.md#adderror) | **POST** /har/errors |  |
+| [**AddMetric**](BrowserUpProxyApi.md#addmetric) | **POST** /har/metrics |  |
 | [**GetHarLog**](BrowserUpProxyApi.md#getharlog) | **GET** /har |  |
 | [**Healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
 | [**NewPage**](BrowserUpProxyApi.md#newpage) | **POST** /har/page |  |
@@ -15,93 +15,7 @@ All URIs are relative to *http://localhost:48088*
 | [**VerifySLA**](BrowserUpProxyApi.md#verifysla) | **POST** /verify/sla/{time}/{name} |  |
 | [**VerifySize**](BrowserUpProxyApi.md#verifysize) | **POST** /verify/size/{size}/{name} |  |
 
-<a id="addcounter"></a>
-# **AddCounter**
-> void AddCounter (Counter counter)
-
-
-
-Add Custom Counter to the captured traffic har
-
-### Example
-```csharp
-using System.Collections.Generic;
-using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
-
-namespace Example
-{
-    public class AddCounterExample
-    {
-        public static void Main()
-        {
-            Configuration config = new Configuration();
-            config.BasePath = "http://localhost:48088";
-            var apiInstance = new BrowserUpProxyApi(config);
-            var counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
-
-            try
-            {
-                apiInstance.AddCounter(counter);
-            }
-            catch (ApiException  e)
-            {
-                Debug.Print("Exception when calling BrowserUpProxyApi.AddCounter: " + e.Message);
-                Debug.Print("Status Code: " + e.ErrorCode);
-                Debug.Print(e.StackTrace);
-            }
-        }
-    }
-}
-```
-
-#### Using the AddCounterWithHttpInfo variant
-This returns an ApiResponse object which contains the response data, status code and headers.
-
-```csharp
-try
-{
-    apiInstance.AddCounterWithHttpInfo(counter);
-}
-catch (ApiException e)
-{
-    Debug.Print("Exception when calling BrowserUpProxyApi.AddCounterWithHttpInfo: " + e.Message);
-    Debug.Print("Status Code: " + e.ErrorCode);
-    Debug.Print(e.StackTrace);
-}
-```
-
-### Parameters
-
-| Name | Type | Description | Notes |
-|------|------|-------------|-------|
-| **counter** | [**Counter**](Counter.md) | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |  |
-
-### Return type
-
-void (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: Not defined
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **204** | The counter was added. |  -  |
-| **422** | The counter was invalid. |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-<a id="adderror"></a>
+<a name="adderror"></a>
 # **AddError**
 > void AddError (Error error)
 
@@ -113,9 +27,9 @@ Add Custom Error to the captured traffic har
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -187,7 +101,93 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="getharlog"></a>
+<a name="addmetric"></a>
+# **AddMetric**
+> void AddMetric (Metric metric)
+
+
+
+Add Custom Metric to the captured traffic har
+
+### Example
+```csharp
+using System.Collections.Generic;
+using System.Diagnostics;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
+
+namespace Example
+{
+    public class AddMetricExample
+    {
+        public static void Main()
+        {
+            Configuration config = new Configuration();
+            config.BasePath = "http://localhost:48088";
+            var apiInstance = new BrowserUpProxyApi(config);
+            var metric = new Metric(); // Metric | Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key
+
+            try
+            {
+                apiInstance.AddMetric(metric);
+            }
+            catch (ApiException  e)
+            {
+                Debug.Print("Exception when calling BrowserUpProxyApi.AddMetric: " + e.Message);
+                Debug.Print("Status Code: " + e.ErrorCode);
+                Debug.Print(e.StackTrace);
+            }
+        }
+    }
+}
+```
+
+#### Using the AddMetricWithHttpInfo variant
+This returns an ApiResponse object which contains the response data, status code and headers.
+
+```csharp
+try
+{
+    apiInstance.AddMetricWithHttpInfo(metric);
+}
+catch (ApiException e)
+{
+    Debug.Print("Exception when calling BrowserUpProxyApi.AddMetricWithHttpInfo: " + e.Message);
+    Debug.Print("Status Code: " + e.ErrorCode);
+    Debug.Print(e.StackTrace);
+}
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+|------|------|-------------|-------|
+| **metric** | [**Metric**](Metric.md) | Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key |  |
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **204** | The metric was added. |  -  |
+| **422** | The metric was invalid. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+<a name="getharlog"></a>
 # **GetHarLog**
 > Har GetHarLog ()
 
@@ -199,9 +199,9 @@ Get the current HAR.
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -271,7 +271,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="healthcheck"></a>
+<a name="healthcheck"></a>
 # **Healthcheck**
 > void Healthcheck ()
 
@@ -283,9 +283,9 @@ Get the healthcheck
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -351,7 +351,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="newpage"></a>
+<a name="newpage"></a>
 # **NewPage**
 > Har NewPage (string title)
 
@@ -363,9 +363,9 @@ Starts a fresh HAR Page (Step) in the current active HAR to group requests.
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -440,7 +440,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="resetharlog"></a>
+<a name="resetharlog"></a>
 # **ResetHarLog**
 > Har ResetHarLog ()
 
@@ -452,9 +452,9 @@ Starts a fresh HAR capture session.
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -524,7 +524,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="verifynotpresent"></a>
+<a name="verifynotpresent"></a>
 # **VerifyNotPresent**
 > VerifyResult VerifyNotPresent (string name, MatchCriteria matchCriteria)
 
@@ -536,9 +536,9 @@ Verify no matching items are present in the captured traffic
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -616,7 +616,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="verifypresent"></a>
+<a name="verifypresent"></a>
 # **VerifyPresent**
 > VerifyResult VerifyPresent (string name, MatchCriteria matchCriteria)
 
@@ -628,9 +628,9 @@ Verify at least one matching item is present in the captured traffic
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -708,7 +708,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="verifysla"></a>
+<a name="verifysla"></a>
 # **VerifySLA**
 > VerifyResult VerifySLA (int time, string name, MatchCriteria matchCriteria)
 
@@ -720,9 +720,9 @@ Verify each traffic item matching the criteria meets is below SLA time
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {
@@ -802,7 +802,7 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-<a id="verifysize"></a>
+<a name="verifysize"></a>
 # **VerifySize**
 > VerifyResult VerifySize (int size, string name, MatchCriteria matchCriteria)
 
@@ -814,9 +814,9 @@ Verify matching items in the captured traffic meet the size criteria
 ```csharp
 using System.Collections.Generic;
 using System.Diagnostics;
-using BrowserUp.Mitmproxy.Client.Api;
-using BrowserUp.Mitmproxy.Client.Client;
-using BrowserUp.Mitmproxy.Client.Model;
+using BrowserUpMitmProxyClient.Api;
+using BrowserUpMitmProxyClient.Client;
+using BrowserUpMitmProxyClient.Model;
 
 namespace Example
 {

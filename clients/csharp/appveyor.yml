@@ -6,4 +6,4 @@ build_script:
 - dotnet build -c Release
 - dotnet test -c Release
 after_build:
-- dotnet pack .\src\BrowserUp.Mitmproxy.Client\BrowserUp.Mitmproxy.Client.csproj -o ../../output -c Release --no-build
+- dotnet pack .\src\BrowserUpMitmProxyClient\BrowserUpMitmProxyClient.csproj -o ../../output -c Release --no-build

@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:48088*
 
 | Method | HTTP request | Description |
 | ------ | ------------ | ----------- |
-| [**add_counter**](BrowserUpProxyApi.md#add_counter) | **POST** /har/counters |  |
 | [**add_error**](BrowserUpProxyApi.md#add_error) | **POST** /har/errors |  |
+| [**add_metric**](BrowserUpProxyApi.md#add_metric) | **POST** /har/metrics |  |
 | [**get_har_log**](BrowserUpProxyApi.md#get_har_log) | **GET** /har |  |
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
 | [**new_page**](BrowserUpProxyApi.md#new_page) | **POST** /har/page |  |
@@ -14,69 +14,6 @@ All URIs are relative to *http://localhost:48088*
 | [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} |  |
 | [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} |  |
 | [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} |  |
-
-
-## add_counter
-
-> add_counter(counter)
-
-
-
-Add Custom Counter to the captured traffic har
-
-### Examples
-
-```ruby
-require 'time'
-require 'browserup_mitmproxy_client'
-
-api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
-counter = BrowserupMitmProxy::Counter.new # Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
-
-begin
-  
-  api_instance.add_counter(counter)
-rescue BrowserupMitmProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->add_counter: #{e}"
-end
-```
-
-#### Using the add_counter_with_http_info variant
-
-This returns an Array which contains the response data (`nil` in this case), status code and headers.
-
-> <Array(nil, Integer, Hash)> add_counter_with_http_info(counter)
-
-```ruby
-begin
-  
-  data, status_code, headers = api_instance.add_counter_with_http_info(counter)
-  p status_code # => 2xx
-  p headers # => { ... }
-  p data # => nil
-rescue BrowserupMitmProxy::ApiError => e
-  puts "Error when calling BrowserUpProxyApi->add_counter_with_http_info: #{e}"
-end
-```
-
-### Parameters
-
-| Name | Type | Description | Notes |
-| ---- | ---- | ----------- | ----- |
-| **counter** | [**Counter**](Counter.md) | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key |  |
-
-### Return type
-
-nil (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
 
 
 ## add_error
@@ -127,6 +64,69 @@ end
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
 | **error** | [**Error**](Error.md) | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key |  |
+
+### Return type
+
+nil (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+
+## add_metric
+
+> add_metric(metric)
+
+
+
+Add Custom Metric to the captured traffic har
+
+### Examples
+
+```ruby
+require 'time'
+require 'browserup_mitmproxy_client'
+
+api_instance = BrowserupMitmProxy::BrowserUpProxyApi.new
+metric = BrowserupMitmProxy::Metric.new # Metric | Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key
+
+begin
+  
+  api_instance.add_metric(metric)
+rescue BrowserupMitmProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_metric: #{e}"
+end
+```
+
+#### Using the add_metric_with_http_info variant
+
+This returns an Array which contains the response data (`nil` in this case), status code and headers.
+
+> <Array(nil, Integer, Hash)> add_metric_with_http_info(metric)
+
+```ruby
+begin
+  
+  data, status_code, headers = api_instance.add_metric_with_http_info(metric)
+  p status_code # => 2xx
+  p headers # => { ... }
+  p data # => nil
+rescue BrowserupMitmProxy::ApiError => e
+  puts "Error when calling BrowserUpProxyApi->add_metric_with_http_info: #{e}"
+end
+```
+
+### Parameters
+
+| Name | Type | Description | Notes |
+| ---- | ---- | ----------- | ----- |
+| **metric** | [**Metric**](Metric.md) | Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key |  |
 
 ### Return type
 

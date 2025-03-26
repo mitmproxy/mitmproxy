@@ -7,8 +7,8 @@ All URIs are relative to *http://localhost:48088*
 
 | Class | Method | HTTP request | Description |
 |------------ | ------------- | ------------- | -------------|
-| *BrowserUpProxyApi* | [**addCounter**](Apis/BrowserUpProxyApi.md#addcounter) | **POST** /har/counters | Add Custom Counter to the captured traffic har |
-*BrowserUpProxyApi* | [**addError**](Apis/BrowserUpProxyApi.md#adderror) | **POST** /har/errors | Add Custom Error to the captured traffic har |
+| *BrowserUpProxyApi* | [**addError**](Apis/BrowserUpProxyApi.md#adderror) | **POST** /har/errors | Add Custom Error to the captured traffic har |
+*BrowserUpProxyApi* | [**addMetric**](Apis/BrowserUpProxyApi.md#addmetric) | **POST** /har/metrics | Add Custom Metric to the captured traffic har |
 *BrowserUpProxyApi* | [**getHarLog**](Apis/BrowserUpProxyApi.md#getharlog) | **GET** /har | Get the current HAR. |
 *BrowserUpProxyApi* | [**healthcheck**](Apis/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | Get the healthcheck |
 *BrowserUpProxyApi* | [**newPage**](Apis/BrowserUpProxyApi.md#newpage) | **POST** /har/page | Starts a fresh HAR Page (Step) in the current active HAR to group requests. |
@@ -23,12 +23,12 @@ All URIs are relative to *http://localhost:48088*
 ## Documentation for Models
 
  - [Action](./Models/Action.md)
- - [Counter](./Models/Counter.md)
  - [Error](./Models/Error.md)
  - [Har](./Models/Har.md)
  - [HarEntry](./Models/HarEntry.md)
  - [HarEntry_cache](./Models/HarEntry_cache.md)
  - [HarEntry_cache_beforeRequest](./Models/HarEntry_cache_beforeRequest.md)
+ - [HarEntry_cache_beforeRequest_oneOf](./Models/HarEntry_cache_beforeRequest_oneOf.md)
  - [HarEntry_request](./Models/HarEntry_request.md)
  - [HarEntry_request_cookies_inner](./Models/HarEntry_request_cookies_inner.md)
  - [HarEntry_request_postData](./Models/HarEntry_request_postData.md)
@@ -42,6 +42,8 @@ All URIs are relative to *http://localhost:48088*
  - [Header](./Models/Header.md)
  - [LargestContentfulPaint](./Models/LargestContentfulPaint.md)
  - [MatchCriteria](./Models/MatchCriteria.md)
+ - [MatchCriteria_request_header](./Models/MatchCriteria_request_header.md)
+ - [Metric](./Models/Metric.md)
  - [NameValuePair](./Models/NameValuePair.md)
  - [Page](./Models/Page.md)
  - [PageTiming](./Models/PageTiming.md)

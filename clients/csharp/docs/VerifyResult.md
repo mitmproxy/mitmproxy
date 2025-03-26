@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.VerifyResult
+# BrowserUpMitmProxyClient.Model.VerifyResult
 
 ## Properties
 

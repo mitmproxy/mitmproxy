@@ -3,8 +3,8 @@
 .openapi-generator-ignore
 .travis.yml
 README.md
+docs/Action.md
 docs/BrowserUpProxyApi.md
-docs/Counter.md
 docs/Error.md
 docs/Har.md
 docs/HarEntry.md
@@ -25,6 +25,7 @@ docs/Header.md
 docs/LargestContentfulPaint.md
 docs/MatchCriteria.md
 docs/MatchCriteriaRequestHeader.md
+docs/Metric.md
 docs/NameValuePair.md
 docs/Page.md
 docs/PageTiming.md
@@ -37,7 +38,7 @@ package.json
 src/BrowserUpMitmProxyClient/ApiClient.js
 src/BrowserUpMitmProxyClient/browserup-mitmproxy-client/BrowserUpProxyApi.js
 src/BrowserUpMitmProxyClient/index.js
-src/BrowserUpMitmProxyClient/model/Counter.js
+src/BrowserUpMitmProxyClient/model/Action.js
 src/BrowserUpMitmProxyClient/model/Error.js
 src/BrowserUpMitmProxyClient/model/Har.js
 src/BrowserUpMitmProxyClient/model/HarEntry.js
@@ -58,6 +59,7 @@ src/BrowserUpMitmProxyClient/model/Header.js
 src/BrowserUpMitmProxyClient/model/LargestContentfulPaint.js
 src/BrowserUpMitmProxyClient/model/MatchCriteria.js
 src/BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader.js
+src/BrowserUpMitmProxyClient/model/Metric.js
 src/BrowserUpMitmProxyClient/model/NameValuePair.js
 src/BrowserUpMitmProxyClient/model/Page.js
 src/BrowserUpMitmProxyClient/model/PageTiming.js
@@ -65,7 +67,7 @@ src/BrowserUpMitmProxyClient/model/PageTimings.js
 src/BrowserUpMitmProxyClient/model/VerifyResult.js
 src/BrowserUpMitmProxyClient/model/WebSocketMessage.js
 test/BrowserUpMitmProxyClient/api/BrowserUpProxyApi.spec.js
-test/BrowserUpMitmProxyClient/model/Counter.spec.js
+test/BrowserUpMitmProxyClient/model/Action.spec.js
 test/BrowserUpMitmProxyClient/model/Error.spec.js
 test/BrowserUpMitmProxyClient/model/Har.spec.js
 test/BrowserUpMitmProxyClient/model/HarEntry.spec.js
@@ -86,6 +88,7 @@ test/BrowserUpMitmProxyClient/model/Header.spec.js
 test/BrowserUpMitmProxyClient/model/LargestContentfulPaint.spec.js
 test/BrowserUpMitmProxyClient/model/MatchCriteria.spec.js
 test/BrowserUpMitmProxyClient/model/MatchCriteriaRequestHeader.spec.js
+test/BrowserUpMitmProxyClient/model/Metric.spec.js
 test/BrowserUpMitmProxyClient/model/NameValuePair.spec.js
 test/BrowserUpMitmProxyClient/model/Page.spec.js
 test/BrowserUpMitmProxyClient/model/PageTiming.spec.js

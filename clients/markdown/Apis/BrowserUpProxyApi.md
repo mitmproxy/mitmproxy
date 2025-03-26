@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost:48088*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**addCounter**](BrowserUpProxyApi.md#addCounter) | **POST** /har/counters |  |
 | [**addError**](BrowserUpProxyApi.md#addError) | **POST** /har/errors |  |
+| [**addMetric**](BrowserUpProxyApi.md#addMetric) | **POST** /har/metrics |  |
 | [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har |  |
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
 | [**newPage**](BrowserUpProxyApi.md#newPage) | **POST** /har/page |  |
@@ -15,33 +15,6 @@ All URIs are relative to *http://localhost:48088*
 | [**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} |  |
 | [**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} |  |
 
-
-<a name="addCounter"></a>
-# **addCounter**
-> addCounter(Counter)
-
-
-
-    Add Custom Counter to the captured traffic har
-
-### Parameters
-
-|Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **Counter** | [**Counter**](../Models/Counter.md)| Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key | |
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
 
 <a name="addError"></a>
 # **addError**
@@ -56,6 +29,33 @@ No authorization required
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **Error** | [**Error**](../Models/Error.md)| Receives an error to track. Internally, the error is stored in an array in the har under the _errors key | |
+
+### Return type
+
+null (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: Not defined
+
+<a name="addMetric"></a>
+# **addMetric**
+> addMetric(Metric)
+
+
+
+    Add Custom Metric to the captured traffic har
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **Metric** | [**Metric**](../Models/Metric.md)| Receives a new metric to add. The metric is stored, under the hood, in an array in the har under the _metrics key | |
 
 ### Return type
 

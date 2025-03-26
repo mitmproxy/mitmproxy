@@ -4,7 +4,7 @@
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
 | **method** | **String** |  | [default to null] |
-| **url** | **URI** |  | [default to null] |
+| **url** | **String** |  | [default to null] |
 | **httpVersion** | **String** |  | [default to null] |
 | **cookies** | [**List**](HarEntry_request_cookies_inner.md) |  | [default to null] |
 | **headers** | [**List**](Header.md) |  | [default to null] |

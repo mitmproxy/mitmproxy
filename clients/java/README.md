@@ -1,7 +1,7 @@
 # browserup-mitmproxy-client
 
 BrowserUp MitmProxy
-- API version: 1.0.0
+- API version: 1.24
 
 ___
 This is the REST API for controlling the BrowserUp MitmProxy.
@@ -96,11 +96,11 @@ public class Example {
     defaultClient.setBasePath("http://localhost:48088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Counter counter = new Counter(); // Counter | Receives a new counter to add. The counter is stored, under the hood, in an array in the har under the _counters key
+    Error error = new Error(); // Error | Receives an error to track. Internally, the error is stored in an array in the har under the _errors key
     try {
-      apiInstance.addCounter(counter);
+      apiInstance.addError(error);
     } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#addCounter");
+      System.err.println("Exception when calling BrowserUpProxyApi#addError");
       System.err.println("Status code: " + e.getCode());
       System.err.println("Reason: " + e.getResponseBody());
       System.err.println("Response headers: " + e.getResponseHeaders());
@@ -117,8 +117,8 @@ All URIs are relative to *http://localhost:48088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*BrowserUpProxyApi* | [**addCounter**](docs/BrowserUpProxyApi.md#addCounter) | **POST** /har/counters | 
 *BrowserUpProxyApi* | [**addError**](docs/BrowserUpProxyApi.md#addError) | **POST** /har/errors | 
+*BrowserUpProxyApi* | [**addMetric**](docs/BrowserUpProxyApi.md#addMetric) | **POST** /har/metrics | 
 *BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**newPage**](docs/BrowserUpProxyApi.md#newPage) | **POST** /har/page | 
@@ -132,12 +132,12 @@ Class | Method | HTTP request | Description
 ## Documentation for Models
 
  - [Action](docs/Action.md)
- - [Counter](docs/Counter.md)
  - [Error](docs/Error.md)
  - [Har](docs/Har.md)
  - [HarEntry](docs/HarEntry.md)
  - [HarEntryCache](docs/HarEntryCache.md)
  - [HarEntryCacheBeforeRequest](docs/HarEntryCacheBeforeRequest.md)
+ - [HarEntryCacheBeforeRequestOneOf](docs/HarEntryCacheBeforeRequestOneOf.md)
  - [HarEntryRequest](docs/HarEntryRequest.md)
  - [HarEntryRequestCookiesInner](docs/HarEntryRequestCookiesInner.md)
  - [HarEntryRequestPostData](docs/HarEntryRequestPostData.md)
@@ -151,6 +151,8 @@ Class | Method | HTTP request | Description
  - [Header](docs/Header.md)
  - [LargestContentfulPaint](docs/LargestContentfulPaint.md)
  - [MatchCriteria](docs/MatchCriteria.md)
+ - [MatchCriteriaRequestHeader](docs/MatchCriteriaRequestHeader.md)
+ - [Metric](docs/Metric.md)
  - [NameValuePair](docs/NameValuePair.md)
  - [Page](docs/Page.md)
  - [PageTiming](docs/PageTiming.md)
@@ -159,11 +161,10 @@ Class | Method | HTTP request | Description
  - [WebSocketMessage](docs/WebSocketMessage.md)
 
 
-<a id="documentation-for-authorization"></a>
 ## Documentation for Authorization
 
-Endpoints do not require authorization.
-
+All endpoints do not require authorization.
+Authentication schemes defined for the API:
 
 ## Recommendation
 

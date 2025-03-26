@@ -1,10 +1,10 @@
-# BrowserUp.Mitmproxy.Client.Model.HarLog
+# BrowserUpMitmProxyClient.Model.HarLog
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**VarVersion** | **string** |  | 
+**_Version** | **string** |  | 
 **Creator** | [**HarLogCreator**](HarLogCreator.md) |  | 
 **Browser** | [**HarLogCreator**](HarLogCreator.md) |  | [optional] 
 **Pages** | [**List&lt;Page&gt;**](Page.md) |  | 

@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.Page
+# BrowserUpMitmProxyClient.Model.Page
 
 ## Properties
 
@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **Id** | **string** |  | 
 **Title** | **string** |  | 
 **Verifications** | [**List&lt;VerifyResult&gt;**](VerifyResult.md) |  | [optional] 
-**Counters** | [**List&lt;Counter&gt;**](Counter.md) |  | [optional] 
+**Metrics** | [**List&lt;Metric&gt;**](Metric.md) |  | [optional] 
 **Errors** | [**List&lt;Error&gt;**](Error.md) |  | [optional] 
 **PageTimings** | [**PageTimings**](PageTimings.md) |  | 
 **Comment** | **string** |  | [optional] 

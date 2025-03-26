@@ -1,4 +1,4 @@
-# BrowserUp.Mitmproxy.Client.Model.PageTiming
+# BrowserUpMitmProxyClient.Model.PageTiming
 
 ## Properties
 
