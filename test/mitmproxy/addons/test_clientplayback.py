@@ -14,7 +14,6 @@ from mitmproxy.exceptions import OptionsError
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
-
 @asynccontextmanager
 async def tcp_server(handle_conn, **server_args) -> Address:
     """TCP server context manager that...
