@@ -7,22 +7,23 @@ import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
     flow: Flow;
-    selected: boolean;
-    highlighted: boolean;
+    isSelected: boolean;
+    isHighlighted: boolean;
 };
 
 export default React.memo(function FlowRow({
     flow,
-    selected,
-    highlighted,
+    isSelected,
+    isHighlighted,
 }: FlowRowProps) {
     const dispatch = useAppDispatch();
     const displayColumnNames = useAppSelector(
         (state) => state.options.web_columns,
     );
+    const selectedFlowIds = useAppSelector((state) => state.flows.selected); // used for multiple flows selection
     const className = classnames({
-        selected: selected,
-        highlighted: highlighted,
+        selected: isSelected,
+        highlighted: isHighlighted,
         intercepted: flow.intercepted,
         "has-request": flow.type === "http" && flow.request,
         "has-response": flow.type === "http" && flow.response,
@@ -36,9 +37,21 @@ export default React.memo(function FlowRow({
                 if (node.classList.contains("col-quickactions")) return;
                 node = node.parentNode;
             }
-            dispatch(select(flow.id));
+            if (e.metaKey || e.ctrlKey) {
+                if (selectedFlowIds.includes(flow.id)) {
+                    // If the flow is already selected, remove it.
+                    dispatch(
+                        select(selectedFlowIds.filter((id) => id !== flow.id)),
+                    );
+                } else {
+                    dispatch(select([...selectedFlowIds, flow.id]));
+                }
+            } else {
+                // select only the clicked flow
+                dispatch(select([flow.id]));
+            }
         },
-        [flow],
+        [flow, selectedFlowIds],
     );
 
     const displayColumns = displayColumnNames
