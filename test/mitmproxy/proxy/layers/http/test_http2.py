@@ -1283,8 +1283,8 @@ def test_alt_svc(tctx):
     )
 
 
-def test_no_empty_data_frame(tctx):
-    """Ensure we don't send extra empty data frames when streaming, https://github.com/mitmproxy/mitmproxy/pull/7480"""
+def test_no_extra_empty_data_frame(tctx):
+    """Ensure we don't send empty data frames without EOS bit set when streaming, https://github.com/mitmproxy/mitmproxy/pull/7480"""
     playbook, cff = start_h2_client(tctx)
     flow = Placeholder(HTTPFlow)
     server = Placeholder(Server)
@@ -1338,4 +1338,50 @@ def test_no_empty_data_frame(tctx):
         << SendData(
             tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
         )
+    )
+
+
+def test_forward_empty_data_frame(tctx):
+    """Ensure that we preserve empty data frames, https://github.com/mitmproxy/mitmproxy/pull/7480"""
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+
+    def enable_streaming(flow: HTTPFlow) -> None:
+        if flow.response:
+            flow.response.stream = True
+        else:
+            flow.request.stream = True
+
+    initial = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client, cff.build_headers_frame(example_request_headers).serialize()
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h2)
+        << SendData(server, initial)
+        # Empty data frame from client
+        >> DataReceived(tctx.client, cff.build_data_frame(b"").serialize())
+        << SendData(server, cff.build_data_frame(b"").serialize())
+        >> DataReceived(
+            tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize()
+        )
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << SendData(server, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+        >> DataReceived(
+            server, cff.build_headers_frame(example_response_headers).serialize()
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << SendData(
+            tctx.client, cff.build_headers_frame(example_response_headers).serialize()
+        )
+        # Empty data frame from server
+        >> DataReceived(server, cff.build_data_frame(b"").serialize())
+        << SendData(tctx.client, cff.build_data_frame(b"").serialize())
     )
