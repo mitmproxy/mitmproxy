@@ -1,15 +1,9 @@
 """
-Mitmproxy Content Views
-=======================
-
 mitmproxy includes a set of content views which can be used to
-format/decode/highlight data. While they are mostly used for HTTP message
+format/decode/highlight/reencode data. While they are mostly used for HTTP message
 bodies, the may be used in other contexts, e.g. to decode WebSocket messages.
 
-Thus, the View API is very minimalistic. The only arguments are `data` and
-`**metadata`, where `data` is the actual content (as bytes). The contents on
-metadata depend on the protocol in use. Known attributes can be found in
-`base.View`.
+See "Custom Contentviews" in the mitmproxy documentation for more information.
 """
 
 import traceback
@@ -42,6 +36,9 @@ from .base import format_text
 from .base import KEY_MAX
 from .base import TViewResult
 from .base import View
+from .api import Contentview
+from .api import InteractiveContentview
+from .api import Metadata
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
@@ -68,7 +65,7 @@ def get(name: str) -> View | None:
     return None
 
 
-def add(view: View) -> None:
+def add(view: Contentview) -> None:
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
@@ -78,7 +75,7 @@ def add(view: View) -> None:
     on_add.send(view)
 
 
-def remove(view: View) -> None:
+def remove(view: Contentview) -> None:
     views.remove(view)
     on_remove.send(view)
 
@@ -253,14 +250,9 @@ add(dns.ViewDns())
 add(socketio.ViewSocketIO())
 
 __all__ = [
-    "View",
-    "KEY_MAX",
-    "format_text",
-    "format_dict",
-    "TViewResult",
-    "get",
+    "Contentview",
+    "InteractiveContentview",
+    "Metadata",
     "add",
     "remove",
-    "get_content_view",
-    "get_message_content_view",
 ]
