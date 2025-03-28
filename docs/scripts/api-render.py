@@ -27,6 +27,7 @@ modules = [
     "mitmproxy.addonmanager",
     "mitmproxy.certs",
     "mitmproxy.connection",
+    "mitmproxy.contentviews",
     "mitmproxy.coretypes.multidict",
     "mitmproxy.dns",
     "mitmproxy.flow",
