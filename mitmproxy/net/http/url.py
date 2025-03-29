@@ -4,6 +4,7 @@ import re
 import urllib.parse
 from collections.abc import Sequence
 from typing import AnyStr
+from typing import overload
 
 from mitmproxy.net import check
 from mitmproxy.net.check import is_valid_host
@@ -17,7 +18,7 @@ from mitmproxy.utils.strutils import always_str
 _authority_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
-def parse(url):
+def parse(url: str | bytes) -> tuple[bytes, bytes, int, bytes]:
     """
     URL-parsing function that checks that
         - port is an integer 0-65535
@@ -45,47 +46,53 @@ def parse(url):
     if isinstance(url, bytes):
         url = url.decode()
         if not ascii_check(url):
-            url = urllib.parse.urlsplit(url)
-            url = list(url)
-            url[3] = urllib.parse.quote(url[3])
-            url = urllib.parse.urlunsplit(url)
+            url = urllib.parse.urlsplit(url)  # type: ignore
+            url = list(url)  # type: ignore
+            url[3] = urllib.parse.quote(url[3])  # type: ignore
+            url = urllib.parse.urlunsplit(url)  # type: ignore
 
-    parsed = urllib.parse.urlparse(url)
+    parsed: urllib.parse.ParseResult = urllib.parse.urlparse(url)
     if not parsed.hostname:
         raise ValueError("No hostname given")
-
     else:
         host = parsed.hostname.encode("idna")
-        if isinstance(parsed, urllib.parse.ParseResult):
-            parsed = parsed.encode("ascii")
 
-    port = parsed.port
+    parsed_b: urllib.parse.ParseResultBytes = parsed.encode("ascii")  # type: ignore
+
+    port = parsed_b.port
     if not port:
-        port = 443 if parsed.scheme == b"https" else 80
+        port = 443 if parsed_b.scheme == b"https" else 80
 
-    full_path = urllib.parse.urlunparse(
-        (b"", b"", parsed.path, parsed.params, parsed.query, parsed.fragment)
+    full_path: bytes = urllib.parse.urlunparse(
+        (b"", b"", parsed_b.path, parsed_b.params, parsed_b.query, parsed_b.fragment)  # type: ignore
     )
     if not full_path.startswith(b"/"):
-        full_path = b"/" + full_path
+        full_path = b"/" + full_path  # type: ignore
 
     if not check.is_valid_host(host):
         raise ValueError("Invalid Host")
 
-    return parsed.scheme, host, port, full_path
+    return parsed_b.scheme, host, port, full_path
 
 
-def unparse(scheme: str, host: str, port: int, path: str = "") -> str:
+@overload
+def unparse(scheme: str, host: str, port: int, path) -> str: ...
+
+
+@overload
+def unparse(scheme: bytes, host: bytes, port: int, path) -> bytes: ...
+
+
+def unparse(scheme, host, port, path):
     """
     Returns a URL string, constructed from the specified components.
-
-    Args:
-        All args must be str.
     """
-    if path == "*":
-        path = ""
     authority = hostport(scheme, host, port)
-    return f"{scheme}://{authority}{path}"
+
+    if isinstance(scheme, str):
+        return f"{scheme}://{authority}{path}"
+    else:
+        return b"%s://%s%s" % (scheme, authority, path)
 
 
 def encode(s: Sequence[tuple[str, str]], similar_to: str | None = None) -> str:

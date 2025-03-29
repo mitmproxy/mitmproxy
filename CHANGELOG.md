@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a bug where mitmproxy would incorrectly send empty HTTP/2 data frames.
+  ([#7574](https://github.com/mitmproxy/mitmproxy/pull/7574), @mhils, @Dieken)
 - Enhance homebrew installation command for Brewfile users.
   ([#7566](https://github.com/mitmproxy/mitmproxy/pull/7566), @AntoineJT)
 - Introduce a new theme for docs.mitmproxy.org.
@@ -21,6 +23,8 @@
   ([#7576](https://github.com/mitmproxy/mitmproxy/pull/7576), @mhils, @cataggar)
 - Create content view for Socket.IO over WebSocket transport
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
+- Correctly forward HTTP_1_1_REQUIRED errors in HTTP/2 streams.
+  ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 - Add CRL entries to dummy cert when the upstream certificate has some.
