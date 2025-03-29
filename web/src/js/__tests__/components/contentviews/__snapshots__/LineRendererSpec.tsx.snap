@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LineRenderer 1`] = `
+exports[`ContentRenderer 1`] = `
 <DocumentFragment>
   <pre>
     <div>
       <span
         class="header"
       >
-        foo: 
+        foo:
       </span>
       <span
         class="text"

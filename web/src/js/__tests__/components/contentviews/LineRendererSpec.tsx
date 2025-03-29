@@ -1,5 +1,5 @@
 import * as React from "react";
-import LineRenderer from "../../../components/contentviews/LineRenderer";
+import ContentRenderer from "../../../components/contentviews/ContentRenderer";
 import { fireEvent, render, screen } from "../../test-utils";
 
 test("LineRenderer", async () => {
@@ -16,7 +16,7 @@ test("LineRenderer", async () => {
 
     const showMore = jest.fn();
     const { asFragment } = render(
-        <LineRenderer lines={lines} maxLines={1} showMore={showMore} />,
+        <ContentRenderer lines={lines} maxLines={1} showMore={showMore} />,
     );
     expect(asFragment()).toMatchSnapshot();
     fireEvent.click(screen.getByText("Show more"));
@@ -25,7 +25,7 @@ test("LineRenderer", async () => {
 
 test("No lines", async () => {
     const { asFragment } = render(
-        <LineRenderer lines={[]} maxLines={1} showMore={() => 0} />,
+        <ContentRenderer lines={[]} maxLines={1} showMore={() => 0} />,
     );
     expect(asFragment()).toMatchSnapshot();
 });

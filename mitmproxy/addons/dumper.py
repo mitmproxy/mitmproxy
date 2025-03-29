@@ -4,6 +4,7 @@ import itertools
 import logging
 import shutil
 import sys
+import textwrap
 from typing import IO
 from typing import Optional
 
@@ -119,25 +120,22 @@ class Dumper:
         message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
         flow: http.HTTPFlow | TCPFlow | UDPFlow,
     ):
-        _, lines, error = contentviews.get_message_content_view(
+        _, content, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview, message, flow
         )
         if error:
             logging.debug(error)
 
         if ctx.options.flow_detail == 3:
-            lines_to_echo = itertools.islice(
-                lines, ctx.options.content_view_lines_cutoff
-            )
+            content_to_echo = strutils.cut_after_n_newlines(content, ctx.options.content_view_lines_cutoff)
         else:
-            lines_to_echo = lines
+            content_to_echo = content
 
-        content = "\r\n".join("".join(self._colorful(line)) for line in lines_to_echo)
-        if content:
+        if content_to_echo:
             self.echo("")
-            self.echo(content)
+            self.echo(content, ident=4)
 
-        if next(lines, None):
+        if len(content_to_echo) < len(content):
             self.echo("(cut off)", ident=4, dim=True)
 
         if ctx.options.flow_detail >= 2:

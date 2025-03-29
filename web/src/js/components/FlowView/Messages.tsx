@@ -7,7 +7,7 @@ import { MessageUtils } from "../../flow/utils";
 import ViewSelector from "../contentviews/ViewSelector";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { formatTimeStamp } from "../../utils";
-import LineRenderer from "../contentviews/LineRenderer";
+import ContentRenderer from "../contentviews/ContentRenderer";
 
 type MessagesPropTypes = {
     flow: Flow;
@@ -40,7 +40,7 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                     const err: ContentViewData[] = [
                         {
                             description: "Network Error",
-                            lines: [[["error", `${content}`]]],
+                            content,
                         },
                     ];
                     return err;
@@ -78,14 +78,14 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                                 {d.timestamp && formatTimeStamp(d.timestamp)}
                             </span>
                         </small>
-                        <LineRenderer
-                            lines={d.lines}
+                        <ContentRenderer
+                            content={d.content}
                             maxLines={remainingLines}
                             showMore={showMore}
                         />
                     </div>
                 );
-                remainingLines -= d.lines.length;
+                remainingLines -= d.content.split("\n").length;
                 return renderer;
             })}
         </div>
