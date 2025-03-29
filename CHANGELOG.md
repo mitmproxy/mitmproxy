@@ -28,6 +28,7 @@
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 - Fix a bug where mitmproxy does not listen on IPv4 and IPv6 by default in wireguard mode.
+  ([#7589](https://github.com/mitmproxy/mitmproxy/pull/7589), @errorxyz)
 
 ## 17 February 2025: mitmproxy 11.1.3
 
