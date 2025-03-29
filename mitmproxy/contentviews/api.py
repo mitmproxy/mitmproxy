@@ -1,9 +1,15 @@
 from __future__ import annotations
 
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC
+from abc import ABCMeta
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, Literal
-from mitmproxy import http, tcp, udp
+from typing import ClassVar
+from typing import Literal
+
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy.flow import Flow
 from mitmproxy.websocket import WebSocketMessage
 
@@ -14,11 +20,11 @@ class Contentview(ABC):
     @property
     def name(self) -> str:
         """
-        The name of this contentview, e.g. "XML/HTML". 
+        The name of this contentview, e.g. "XML/HTML".
         Inferred from the class name by default.
         """
         return type(self).__name__.removesuffix("Contentview")
-    
+
     @abstractmethod
     def prettify(
         self,
@@ -59,7 +65,8 @@ class InteractiveContentview(Contentview, metaclass=ABCMeta):
         """
         Reencode the given (modified) `prettified` output into the original data format.
         """
-    
+
+
 @dataclass
 class Metadata:
     """
@@ -67,6 +74,7 @@ class Metadata:
 
     Implementations must not rely on any given attribute to be present.
     """
+
     content_type: str | None = None
     """The HTTP content type of the data."""
     flow: Flow | None = None

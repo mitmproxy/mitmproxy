@@ -1,12 +1,15 @@
-from __future__ import  annotations
+from __future__ import annotations
+
 import typing
 from typing import Iterator
 
-from mitmproxy.contentviews.api import Contentview, Metadata
+from mitmproxy.contentviews.api import Contentview
+from mitmproxy.contentviews.api import Metadata
 from mitmproxy.utils.strutils import always_str
 
 if typing.TYPE_CHECKING:
     from mitmproxy.contentviews.base import TViewLine
+
 
 class LegacyContentview(Contentview):
     @property
@@ -22,7 +25,7 @@ class LegacyContentview(Contentview):
             data=data,
             content_type=metadata.content_type,
             flow=metadata.flow,
-            http_message=metadata.http_message
+            http_message=metadata.http_message,
         )
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
@@ -31,16 +34,12 @@ class LegacyContentview(Contentview):
             data,
             content_type=metadata.content_type,
             flow=metadata.flow,
-            http_message=metadata.http_message
+            http_message=metadata.http_message,
         )
         return "\n".join(
-            "".join(
-                always_str(text, "utf8", "backslashescape")
-                for tag, text in line
-            )
+            "".join(always_str(text, "utf8", "backslashescape") for tag, text in line)
             for line in lines
         )
 
     def __init__(self, contentview: mitmproxy.contentviews.View):
         self.contentview = contentview
-

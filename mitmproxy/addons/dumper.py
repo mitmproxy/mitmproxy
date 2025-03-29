@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import itertools
 import logging
 import shutil
 import sys
-import textwrap
 from typing import IO
 from typing import Optional
 
@@ -127,7 +125,9 @@ class Dumper:
             logging.debug(error)
 
         if ctx.options.flow_detail == 3:
-            content_to_echo = strutils.cut_after_n_newlines(content, ctx.options.content_view_lines_cutoff)
+            content_to_echo = strutils.cut_after_n_newlines(
+                content, ctx.options.content_view_lines_cutoff
+            )
         else:
             content_to_echo = content
 

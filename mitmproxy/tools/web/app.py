@@ -11,7 +11,6 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from itertools import islice
 from typing import ClassVar
 from typing import Concatenate
 
@@ -41,7 +40,8 @@ from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
-from mitmproxy.utils.strutils import always_str, cut_after_n_newlines
+from mitmproxy.utils.strutils import always_str
+from mitmproxy.utils.strutils import cut_after_n_newlines
 from mitmproxy.websocket import WebSocketMessage
 
 TRANSPARENT_PNG = (

@@ -1,5 +1,4 @@
 import logging
-import math
 import sys
 from functools import lru_cache
 
@@ -341,9 +340,7 @@ class FlowDetails(tabs.Tabs):
 
         cut_off = strutils.cut_after_n_newlines(content, max_lines)
 
-        text_objects = [
-            urwid.Text(cut_off)
-        ]
+        text_objects = [urwid.Text(cut_off)]
         if len(cut_off) < len(content):
             text_objects.append(
                 urwid.Text(

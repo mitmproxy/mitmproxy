@@ -10,7 +10,6 @@ import traceback
 from typing import overload
 from warnings import deprecated
 
-from ._compat import LegacyContentview
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
@@ -34,14 +33,15 @@ from . import socketio
 from . import urlencoded
 from . import wbxml
 from . import xml_html
+from ._compat import LegacyContentview
+from .api import Contentview
+from .api import InteractiveContentview
+from .api import Metadata
 from .base import format_dict
 from .base import format_text
 from .base import KEY_MAX
 from .base import TViewResult
 from .base import View
-from .api import Contentview
-from .api import InteractiveContentview
-from .api import Metadata
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
@@ -60,6 +60,7 @@ on_add = signals.SyncSignal(_update)
 on_remove = signals.SyncSignal(_update)
 """A contentview has been removed."""
 
+
 def get(name: str) -> Contentview | None:
     for i in views:
         if i.name.lower() == name.lower():
@@ -69,15 +70,14 @@ def get(name: str) -> Contentview | None:
 
 @overload
 @deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
-def add(view: View) -> None:
-    ...
+def add(view: View) -> None: ...
+
 
 @overload
-def add(view: Contentview) -> None:
-    ...
+def add(view: Contentview) -> None: ...
+
 
 def add(view) -> None:
-
     if not isinstance(view, Contentview):
         view = LegacyContentview(view)
 
@@ -92,12 +92,11 @@ def add(view) -> None:
 
 @overload
 @deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
-def remove(view: View) -> None:
-    ...
+def remove(view: View) -> None: ...
+
 
 @overload
-def remove(view: Contentview) -> None:
-    ...
+def remove(view: Contentview) -> None: ...
 
 
 def remove(view: Contentview) -> None:
@@ -110,7 +109,6 @@ def remove(view: Contentview) -> None:
     assert isinstance(view, Contentview)
     views.remove(view)
     on_remove.send(view)
-
 
 
 def get_message_content_view(
@@ -142,7 +140,6 @@ def get_message_content_view(
     if content is None:
         return "", "content missing", None
 
-
     metadata = Metadata(flow=flow)
 
     if isinstance(message, http.Message):
@@ -172,11 +169,7 @@ def get_message_content_view(
     return description, lines, error
 
 
-def get_content_view(
-    viewmode: Contentview,
-    data: bytes,
-    metadata: Metadata
-):
+def get_content_view(viewmode: Contentview, data: bytes, metadata: Metadata):
     """
     Args:
         viewmode: the view to use.
@@ -189,10 +182,7 @@ def get_content_view(
         In contrast to calling the views directly, text is always safe-to-print unicode.
     """
     try:
-        ret = viewmode.prettify(
-            data,
-            metadata
-        )
+        ret = viewmode.prettify(data, metadata)
         if ret is None:
             ret = (
                 "Couldn't parse: falling back to Raw",
