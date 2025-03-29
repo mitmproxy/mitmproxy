@@ -306,6 +306,8 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         if self.mode.transport_protocol in ("tcp", "both"):
             servers.append(await asyncio.start_server(self.handle_stream, host, port))
         if self.mode.transport_protocol in ("udp", "both"):
+            # we start two servers for dual-stack support.
+            # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
             if host == "":
                 ipv4 = await self.start_udp_based_server("0.0.0.0", port)
                 servers.append(ipv4)
