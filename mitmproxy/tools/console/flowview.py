@@ -330,7 +330,7 @@ class FlowDetails(tabs.Tabs):
     def _get_content_view(self, viewmode, max_lines, _):
         message = self._get_content_view_message
         self._get_content_view_message = None
-        description, lines, error = contentviews.get_message_content_view(
+        description, content, error = contentviews.get_message_content_view(
             viewmode, message, self.flow
         )
         if error:
@@ -339,40 +339,25 @@ class FlowDetails(tabs.Tabs):
         if description == "No content" and isinstance(message, http.Request):
             description = "No request content"
 
-        # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
-        chars_per_line = 80
-        max_chars = max_lines * chars_per_line
-        total_chars = 0
-        text_objects = []
-        for line in lines:
-            txt = []
-            for style, text in line:
-                if total_chars + len(text) > max_chars:
-                    text = text[: max_chars - total_chars]
-                txt.append((style, text))
-                total_chars += len(text)
-                if total_chars == max_chars:
-                    break
+        cut_off = strutils.cut_after_n_newlines(content, max_lines)
 
-            # round up to the next line.
-            total_chars = int(math.ceil(total_chars / chars_per_line) * chars_per_line)
-
-            text_objects.append(urwid.Text(txt))
-            if total_chars == max_chars:
-                text_objects.append(
-                    urwid.Text(
-                        [
-                            (
-                                "highlight",
-                                "Stopped displaying data after %d lines. Press "
-                                % max_lines,
-                            ),
-                            ("key", "f"),
-                            ("highlight", " to load all data."),
-                        ]
-                    )
+        text_objects = [
+            urwid.Text(cut_off)
+        ]
+        if len(cut_off) < len(content):
+            text_objects.append(
+                urwid.Text(
+                    [
+                        (
+                            "highlight",
+                            "Stopped displaying data after %d lines. Press "
+                            % max_lines,
+                        ),
+                        ("key", "f"),
+                        ("highlight", " to load all data."),
+                    ]
                 )
-                break
+            )
 
         return description, text_objects
 

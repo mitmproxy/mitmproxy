@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass
 from typing import ClassVar, Literal
-from mitmproxy import http
+from mitmproxy import http, tcp, udp
 from mitmproxy.flow import Flow
+from mitmproxy.websocket import WebSocketMessage
 
 
 class Contentview(ABC):
@@ -71,6 +73,9 @@ class Metadata:
     """The flow that the data belongs to."""
     http_message: http.Message | None = None
     """The HTTP message that the data belongs to."""
+    tcp_message: tcp.TCPMessage | None = None
+    udp_message: udp.UDPMessage | None = None
+    websocket_message: WebSocketMessage | None = None
 
 
 Metadata.__init__.__doc__ = "@private"

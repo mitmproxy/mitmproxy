@@ -41,7 +41,7 @@ from mitmproxy.udp import UDPFlow
 from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
-from mitmproxy.utils.strutils import always_str
+from mitmproxy.utils.strutils import always_str, cut_after_n_newlines
 from mitmproxy.websocket import WebSocketMessage
 
 TRANSPARENT_PNG = (
@@ -594,16 +594,16 @@ class FlowContentView(RequestHandler):
         flow: HTTPFlow | TCPFlow | UDPFlow,
         max_lines: int | None = None,
     ):
-        description, lines, error = contentviews.get_message_content_view(
+        description, content, error = contentviews.get_message_content_view(
             viewname, message, flow
         )
         if error:
             logging.error(error)
         if max_lines:
-            lines = islice(lines, max_lines)
+            content = cut_after_n_newlines(content, max_lines)
 
         return dict(
-            lines=list(lines),
+            content=content,
             description=description,
         )
 
