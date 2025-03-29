@@ -9,7 +9,7 @@ import * as flowActions from "../../ducks/flows";
 import { uploadContent } from "../../ducks/flows";
 import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
-import LineRenderer from "./LineRenderer";
+import ContentRenderer from "./ContentRenderer";
 import ViewSelector from "./ViewSelector";
 import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
 
@@ -56,7 +56,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             } catch (e) {
                 const err: ContentViewData = {
                     description: "Network Error",
-                    lines: [[["error", `${content}`]]],
+                    content,
                 };
                 return err;
             }
@@ -126,7 +126,7 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             <div className="contentview" key="view">
                 <div className="controls">
                     <h5>{desc}</h5>
-                    {contentViewData && contentViewData?.lines.length > 0 && (
+                    {contentViewData && contentViewData?.content.length > 0 && (
                         <Button
                             onClick={handleClickCopyButton}
                             icon="fa-clipboard"
@@ -170,8 +170,8 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
                 {ViewImage.matches(message) && (
                     <ViewImage flow={flow} message={message} />
                 )}
-                <LineRenderer
-                    lines={contentViewData?.lines || []}
+                <ContentRenderer
+                    content={contentViewData?.content ?? ""}
                     maxLines={maxLines}
                     showMore={showMore}
                 />

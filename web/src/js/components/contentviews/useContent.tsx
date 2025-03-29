@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchApi } from "../../utils";
 
 export type ContentViewData = {
-    lines: [style: string, text: string][][];
+    content: string;
     description: string;
     from_client?: boolean;
     timestamp?: number;

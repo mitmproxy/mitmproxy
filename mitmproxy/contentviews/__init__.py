@@ -7,7 +7,10 @@ See "Custom Contentviews" in the mitmproxy documentation for more information.
 """
 
 import traceback
+from typing import overload
+from warnings import deprecated
 
+from ._compat import LegacyContentview
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
@@ -46,10 +49,10 @@ from mitmproxy import udp
 from mitmproxy.utils import signals
 from mitmproxy.utils import strutils
 
-views: list[View] = []
+views: list[Contentview] = []
 
 
-def _update(view: View) -> None: ...
+def _update(view: Contentview) -> None: ...
 
 
 on_add = signals.SyncSignal(_update)
@@ -57,15 +60,27 @@ on_add = signals.SyncSignal(_update)
 on_remove = signals.SyncSignal(_update)
 """A contentview has been removed."""
 
-
-def get(name: str) -> View | None:
+def get(name: str) -> Contentview | None:
     for i in views:
         if i.name.lower() == name.lower():
             return i
     return None
 
 
+@overload
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
+def add(view: View) -> None:
+    ...
+
+@overload
 def add(view: Contentview) -> None:
+    ...
+
+def add(view) -> None:
+
+    if not isinstance(view, Contentview):
+        view = LegacyContentview(view)
+
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
@@ -75,30 +90,34 @@ def add(view: Contentview) -> None:
     on_add.send(view)
 
 
+@overload
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
+def remove(view: View) -> None:
+    ...
+
+@overload
 def remove(view: Contentview) -> None:
+    ...
+
+
+def remove(view: Contentview) -> None:
+    if isinstance(view, View):
+        view = next(
+            v
+            for v in views
+            if isinstance(v, LegacyContentview) and v.contentview == view
+        )
+    assert isinstance(view, Contentview)
     views.remove(view)
     on_remove.send(view)
 
-
-def safe_to_print(lines, encoding="utf8"):
-    """
-    Wraps a content generator so that each text portion is a *safe to print* unicode string.
-    """
-    for line in lines:
-        clean_line = []
-        for style, text in line:
-            if isinstance(text, bytes):
-                text = text.decode(encoding, "replace")
-            text = strutils.escape_control_characters(text)
-            clean_line.append((style, text))
-        yield clean_line
 
 
 def get_message_content_view(
     viewname: str,
     message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
     flow: flow.Flow,
-):
+) -> tuple[str, str, str | None]:
     """
     Like get_content_view, but also handles message encoding.
     """
@@ -121,37 +140,30 @@ def get_message_content_view(
             enc = ""
 
     if content is None:
-        return "", iter([[("error", "content missing")]]), None
+        return "", "content missing", None
 
-    content_type = None
-    http_message = None
+
+    metadata = Metadata(flow=flow)
+
     if isinstance(message, http.Message):
-        http_message = message
+        metadata.http_message = message
         if ctype := message.headers.get("content-type"):
             if ct := http.parse_content_type(ctype):
-                content_type = f"{ct[0]}/{ct[1]}"
+                metadata.content_type = f"{ct[0]}/{ct[1]}"
 
-    tcp_message = None
     if isinstance(message, TCPMessage):
-        tcp_message = message
+        metadata.tcp_message = message
 
-    udp_message = None
     if isinstance(message, UDPMessage):
-        udp_message = message
+        metadata.udp_message = message
 
-    websocket_message = None
     if isinstance(message, WebSocketMessage):
-        websocket_message = message
+        metadata.websocket_message = message
 
     description, lines, error = get_content_view(
         viewmode,
         content,
-        content_type=content_type,
-        flow=flow,
-        http_message=http_message,
-        tcp_message=tcp_message,
-        udp_message=udp_message,
-        websocket_message=websocket_message,
+        metadata=metadata,
     )
 
     if enc:
@@ -161,15 +173,9 @@ def get_message_content_view(
 
 
 def get_content_view(
-    viewmode: View,
+    viewmode: Contentview,
     data: bytes,
-    *,
-    content_type: str | None = None,
-    flow: flow.Flow | None = None,
-    http_message: http.Message | None = None,
-    tcp_message: tcp.TCPMessage | None = None,
-    udp_message: udp.UDPMessage | None = None,
-    websocket_message: WebSocketMessage | None = None,
+    metadata: Metadata
 ):
     """
     Args:
@@ -177,53 +183,35 @@ def get_content_view(
         data, **metadata: arguments passed to View instance.
 
     Returns:
-        A (description, content generator, error) tuple.
+        A (description, content, error) tuple.
         If the content view raised an exception generating the view,
         the exception is returned in error and the flow is formatted in raw mode.
         In contrast to calling the views directly, text is always safe-to-print unicode.
     """
     try:
-        ret = viewmode(
+        ret = viewmode.prettify(
             data,
-            content_type=content_type,
-            flow=flow,
-            http_message=http_message,
-            tcp_message=tcp_message,
-            udp_message=udp_message,
-            websocket_message=websocket_message,
+            metadata
         )
         if ret is None:
             ret = (
                 "Couldn't parse: falling back to Raw",
-                get("Raw")(
-                    data,
-                    content_type=content_type,
-                    flow=flow,
-                    http_message=http_message,
-                    tcp_message=tcp_message,
-                    udp_message=udp_message,
-                    websocket_message=websocket_message,
-                )[1],
+                get("Raw").prettify(data, metadata),
             )
-        desc, content = ret
+        content = ret
+        desc = viewmode.name
         error = None
     # Third-party viewers can fail in unexpected ways...
     except Exception:
         desc = "Couldn't parse: falling back to Raw"
         raw = get("Raw")
         assert raw
-        content = raw(
-            data,
-            content_type=content_type,
-            flow=flow,
-            http_message=http_message,
-            tcp_message=tcp_message,
-            udp_message=udp_message,
-            websocket_message=websocket_message,
-        )[1]
+        content = raw.prettify(data, metadata)
         error = f"{getattr(viewmode, 'name')} content viewer failed: \n{traceback.format_exc()}"
 
-    return desc, safe_to_print(content), error
+    content = strutils.escape_control_characters(content)
+
+    return desc, content, error
 
 
 # The order in which ContentViews are added is important!
