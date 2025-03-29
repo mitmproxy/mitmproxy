@@ -313,7 +313,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                 servers.append(ipv4)
                 try:
                     ipv6 = await self.start_udp_based_server(
-                        "[::]", ipv4.getsockname()[1]
+                        "::", ipv4.getsockname()[1]
                     )
                     servers.append(ipv6)  # pragma: no cover
                 except Exception:  # pragma: no cover
