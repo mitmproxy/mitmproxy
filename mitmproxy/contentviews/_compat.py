@@ -6,7 +6,7 @@ from mitmproxy.contentviews.api import Contentview, Metadata
 from mitmproxy.utils.strutils import always_str
 
 if typing.TYPE_CHECKING:
-    from mitmproxy.contentviews.base import TViewLine
+    from mitmproxy.contentviews.base import TViewLine, View
 
 class LegacyContentview(Contentview):
     @property
@@ -41,6 +41,6 @@ class LegacyContentview(Contentview):
             for line in lines
         )
 
-    def __init__(self, contentview: mitmproxy.contentviews.View):
+    def __init__(self, contentview: View):
         self.contentview = contentview
 

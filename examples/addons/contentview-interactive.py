@@ -14,7 +14,6 @@ class InteractiveSwapCase(InteractiveContentview):
     def reencode(
         self, 
         prettified: str, 
-        original_data: bytes, 
         metadata: Metadata,
     ) -> bytes:
         return prettified.encode().swapcase()

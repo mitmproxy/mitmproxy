@@ -18,7 +18,7 @@ class ViewHexDump(base.View):
 
 
 class ViewHexStream(base.View):
-    name = "Raw Hex Stream"
+    name = "Hex Stream"
 
     def __call__(self, data, **metadata):
         return "Raw Hex Stream", base.format_text(data.hex())
