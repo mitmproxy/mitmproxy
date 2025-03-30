@@ -38,8 +38,10 @@ class Contentview(ABC):
         If this view does not support the given data, return a float < 0.
         """
 
-    syntax_highlight: ClassVar[Literal["yaml", "none"]] = "none"
-    """Optional syntax highlighting that should be applied to the prettified output."""
+    @property
+    def syntax_highlight(self) -> Literal["yaml", "none"]:
+        """Optional syntax highlighting that should be applied to the prettified output."""
+        return "none"
 
     def __lt__(self, other):
         assert isinstance(other, Contentview)
@@ -53,7 +55,6 @@ class InteractiveContentview(Contentview, metaclass=ABCMeta):
     def reencode(
         self,
         prettified: str,
-        original_data: bytes,
         metadata: Metadata,
     ) -> bytes:
         """
@@ -67,15 +68,22 @@ class Metadata:
 
     Implementations must not rely on any given attribute to be present.
     """
-    content_type: str | None = None
-    """The HTTP content type of the data."""
     flow: Flow | None = None
-    """The flow that the data belongs to."""
+    """The flow that the data belongs to, if any."""
+
+    content_type: str | None = None
+    """The HTTP content type of the data, if any."""
     http_message: http.Message | None = None
-    """The HTTP message that the data belongs to."""
+    """The HTTP message that the data belongs to, if any."""
     tcp_message: tcp.TCPMessage | None = None
+    """The TCP message that the data belongs to, if any."""
     udp_message: udp.UDPMessage | None = None
+    """The UDP message that the data belongs to, if any."""
     websocket_message: WebSocketMessage | None = None
+    """The websocket message that the data belongs to, if any."""
+
+    original_data: bytes | None = None
+    """When reencoding: The original data that was prettified."""
 
 
 Metadata.__init__.__doc__ = "@private"

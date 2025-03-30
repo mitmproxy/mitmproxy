@@ -7,11 +7,13 @@ See "Custom Contentviews" in the mitmproxy documentation for more information.
 """
 
 import traceback
-from typing import overload
+from typing import overload, cast
 from warnings import deprecated
+import mitmproxy_rs.contentviews
 
 from ._compat import LegacyContentview
 from ..tcp import TCPMessage
+from ..tools.main import mitmproxy
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
 from . import auto
@@ -78,7 +80,7 @@ def add(view: Contentview) -> None:
 
 def add(view) -> None:
 
-    if not isinstance(view, Contentview):
+    if not isinstance(view, (Contentview, mitmproxy_rs.contentviews.Contentview)):
         view = LegacyContentview(view)
 
     # TODO: auto-select a different name (append an integer?)
@@ -100,7 +102,7 @@ def remove(view: Contentview) -> None:
     ...
 
 
-def remove(view: Contentview) -> None:
+def remove(view):
     if isinstance(view, View):
         view = next(
             v
@@ -202,7 +204,7 @@ def get_content_view(
         desc = viewmode.name
         error = None
     # Third-party viewers can fail in unexpected ways...
-    except Exception:
+    except Exception as e:
         desc = "Couldn't parse: falling back to Raw"
         raw = get("Raw")
         assert raw
@@ -217,8 +219,8 @@ def get_content_view(
 # The order in which ContentViews are added is important!
 add(auto.ViewAuto())
 add(raw.ViewRaw())
-add(hex.ViewHexStream())
-add(hex.ViewHexDump())
+# FIXME remove add(hex.ViewHexStream())
+# FIXME remove add(hex.ViewHexDump())
 add(graphql.ViewGraphQL())
 add(json.ViewJSON())
 add(xml_html.ViewXmlHtml())
@@ -229,13 +231,18 @@ add(urlencoded.ViewURLEncoded())
 add(multipart.ViewMultipart())
 add(image.ViewImage())
 add(query.ViewQuery())
-add(protobuf.ViewProtobuf())
-add(msgpack.ViewMsgPack())
+# FIXME remove add(protobuf.ViewProtobuf())
+# FIXME remove add(msgpack.ViewMsgPack())
 add(grpc.ViewGrpcProtobuf())
 add(mqtt.ViewMQTT())
 add(http3.ViewHttp3())
 add(dns.ViewDns())
 add(socketio.ViewSocketIO())
+
+for name in mitmproxy_rs.contentviews.__all__:
+    cv = cast(Contentview, getattr(mitmproxy_rs.contentviews, name))
+    add(cv)
+
 
 __all__ = [
     "Contentview",
