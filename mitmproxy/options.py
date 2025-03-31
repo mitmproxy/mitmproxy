@@ -16,6 +16,12 @@ class Options(optmanager.OptManager):
             "server", bool, True, "Start a proxy server. Enabled by default."
         )
         self.add_option(
+            "store_streamed_bodies",
+            bool,
+            False,
+            "Store HTTP request and response bodies when streamed. "
+        )
+        self.add_option(
             "showhost",
             bool,
             False,

@@ -145,6 +145,12 @@ class Proxyserver(ServerManager):
 
     def load(self, loader):
         loader.add_option(
+            "store_streamed_bodies",
+            bool,
+            False,
+            "Store HTTP request and response bodies when streamed.",
+        )
+        loader.add_option(
             "connection_strategy",
             str,
             "eager",
