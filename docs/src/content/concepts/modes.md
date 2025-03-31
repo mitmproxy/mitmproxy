@@ -278,7 +278,7 @@ through mitmproxy.
 
 {{% note %}}
 Consider using [WireGuard](#wireguard) and [local capture](#local-capture) mode instead of transparent mode.
-They are easier to set up and also intercept everything transparently.
+They are easier to set up and also support UDP (which transparent mode currently does not).
 {{% /note %}}
 
 *Availability: Linux, macOS*
