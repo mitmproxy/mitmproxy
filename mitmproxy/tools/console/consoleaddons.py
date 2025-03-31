@@ -1,6 +1,8 @@
 import csv
 import logging
+import re
 from collections.abc import Sequence
+from typing import cast
 
 import mitmproxy.types
 from mitmproxy import command
@@ -14,6 +16,7 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import tcp
 from mitmproxy import udp
+from mitmproxy.exceptions import CommandError
 from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
@@ -419,6 +422,11 @@ class ConsoleAddon:
                 "set-cookies",
                 "url",
             ]
+            viewname = self.master.commands.call("console.flowview.mode")
+            cv = contentviews.get(viewname)
+            if cv and hasattr(cv, "reencode"):
+                focus_options.append(f"request-body ({viewname})")
+                focus_options.append(f"response-body ({viewname})")
             if flow.websocket:
                 focus_options.append("websocket-message")
         elif isinstance(flow, dns.DNSFlow):
@@ -463,6 +471,33 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_request_headers")
         elif flow_part == "response-headers":
             self.master.switch_view("edit_focus_response_headers")
+        elif m := re.match(r"(?P<part>request|response)-body \((?P<contentview>.+)\)", flow_part):
+            if m["part"] == "request":
+                message = flow.request
+            else:
+                message = flow.response
+
+            cv = cast(contentviews.InteractiveContentview, contentviews.get(m["contentview"]))
+            if not cv or not hasattr(cv, "reencode"):
+                raise CommandError(f"Contentview {m['contentview']} is not bidirectional.")
+
+            description, content, error = contentviews.get_message_content_view(
+                m["contentview"],
+                message,
+                flow
+            )
+            if error:
+                raise CommandError(f"Contentview {m['contentview']} errored: {error}.")
+
+            prettified = self.master.spawn_editor(content)
+
+            reencoded = cv.reencode(
+                prettified,
+                contentviews.Metadata()  # FIXME: Use proper metadata.
+            )
+
+            message.content = reencoded
+
         elif flow_part in ("request-body", "response-body"):
             if flow_part == "request-body":
                 message = flow.request

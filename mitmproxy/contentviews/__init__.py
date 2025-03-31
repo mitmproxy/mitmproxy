@@ -80,7 +80,7 @@ def add(view: Contentview) -> None:
 
 def add(view) -> None:
 
-    if not isinstance(view, (Contentview, mitmproxy_rs.contentviews.Contentview)):
+    if not hasattr(view, "prettify"):
         view = LegacyContentview(view)
 
     # TODO: auto-select a different name (append an integer?)
