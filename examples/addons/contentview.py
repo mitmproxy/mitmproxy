@@ -1,5 +1,5 @@
 from mitmproxy import contentviews
-from mitmproxy.contentviews.api import Contentview, Metadata
+from mitmproxy.contentviews._api import Contentview, Metadata
 from mitmproxy.addonmanager import Loader
 
 

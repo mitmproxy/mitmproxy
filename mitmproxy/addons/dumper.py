@@ -70,7 +70,7 @@ class Dumper:
             str,
             "auto",
             "The default content view mode.",
-            choices=[i.name.lower() for i in contentviews.views],
+            choices=contentviews.registry.keys(),
         )
         loader.add_option(
             "dumper_filter", Optional[str], None, "Limit which flows are dumped."

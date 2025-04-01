@@ -5,18 +5,20 @@ bodies, the may be used in other contexts, e.g. to decode WebSocket messages.
 
 See "Custom Contentviews" in the mitmproxy documentation for more information.
 """
-
+import logging
 import traceback
+import warnings
+from dataclasses import dataclass
 from typing import overload, cast
 from warnings import deprecated
 import mitmproxy_rs.contentviews
 
-from ._compat import LegacyContentview
+from ._compat import LegacyContentview, get, add, remove
+from ..flow import Flow
 from ..tcp import TCPMessage
 from ..tools.main import mitmproxy
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
-from . import auto
 from . import css
 from . import dns
 from . import graphql
@@ -41,9 +43,10 @@ from .base import format_text
 from .base import KEY_MAX
 from .base import TViewResult
 from .base import View
-from .api import Contentview
-from .api import InteractiveContentview
-from .api import Metadata
+from ._api import Contentview, SyntaxHighlight
+from ._api import InteractiveContentview
+from ._api import Metadata
+from ._registry import ContentviewRegistry
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
@@ -51,69 +54,142 @@ from mitmproxy import udp
 from mitmproxy.utils import signals
 from mitmproxy.utils import strutils
 
-views: list[Contentview] = []
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class ContentviewResult:
+    prettified: str | None
+    syntax_highlight: SyntaxHighlight
+    view_name: str | None
+    description: str
 
 
-def _update(view: Contentview) -> None: ...
+def _make_metadata(
+    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    flow: Flow,
+) -> Metadata:
+    metadata = Metadata(flow=flow)
+
+    match message:
+        case http.Message():
+            metadata.http_message = message
+            if ctype := message.headers.get("content-type"):
+                if ct := http.parse_content_type(ctype):
+                    metadata.content_type = f"{ct[0]}/{ct[1]}"
+        case TCPMessage():
+            metadata.tcp_message = message
+        case UDPMessage():
+            metadata.udp_message = message
+        case WebSocketMessage():
+            metadata.websocket_message = message
+
+    return metadata
 
 
-on_add = signals.SyncSignal(_update)
-"""A new contentview has been added."""
-on_remove = signals.SyncSignal(_update)
-"""A contentview has been removed."""
+def _get_view(
+    data: bytes,
+    metadata: Metadata,
+    view_name: str | None
+) -> Contentview:
+    if view_name:
+        try:
+            return registry[view_name.lower()]
+        except KeyError:
+            logger.warning(f"Unknown contentview {view_name!r}, falling back to `auto`.")
 
-def get(name: str) -> Contentview | None:
-    for i in views:
-        if i.name.lower() == name.lower():
-            return i
-    return None
+    return max(
+        registry,
+        key=lambda cv: cv.render_priority(data, metadata)
+    )
 
+def _get_data(
+    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+) -> tuple[bytes | None, str]:
+    content: bytes | None
+    try:
+        content = message.content
+    except ValueError:
+        assert isinstance(message, http.Message)
+        content = message.raw_content
+        enc = "[cannot decode]"
+    else:
+        if isinstance(message, http.Message) and content != message.raw_content:
+            enc = "[decoded {}]".format(message.headers.get("content-encoding"))
+        else:
+            enc = ""
 
-@overload
-@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
-def add(view: View) -> None:
-    ...
-
-@overload
-def add(view: Contentview) -> None:
-    ...
-
-def add(view) -> None:
-
-    if not hasattr(view, "prettify"):
-        view = LegacyContentview(view)
-
-    # TODO: auto-select a different name (append an integer?)
-    for i in views:
-        if i.name == view.name:
-            raise ValueError("Duplicate view: " + view.name)
-
-    views.append(view)
-    on_add.send(view)
-
-
-@overload
-@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
-def remove(view: View) -> None:
-    ...
-
-@overload
-def remove(view: Contentview) -> None:
-    ...
+    return content, enc
 
 
-def remove(view):
-    if isinstance(view, View):
-        view = next(
-            v
-            for v in views
-            if isinstance(v, LegacyContentview) and v.contentview == view
+def prettify_message(
+    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    flow: flow.Flow,
+    view_name: str | None,
+) -> ContentviewResult:
+    if view_name == "auto":
+        warnings.warn(
+            "The 'auto' view is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
         )
-    assert isinstance(view, Contentview)
-    views.remove(view)
-    on_remove.send(view)
+        view_name = None
+
+    data, enc = _get_data(message)
+    if data is None:
+        return ContentviewResult(
+            prettified="Content is missing.",
+            syntax_highlight="error",
+            description="",
+            view_name=None,
+        )
+
+    # Determine the correct view
+    metadata = _make_metadata(message, flow)
+    view = _get_view(data, metadata, view_name)
+
+    # Finally, we can pretty-print!
+    try:
+        ret = ContentviewResult(
+            prettified=view.prettify(data, metadata),
+            syntax_highlight=view.syntax_highlight,
+            view_name=view.name,
+            description=enc,
+        )
+    except Exception as e:
+        logger.warning(f"Contentview failed: {e}", exc_info=True)
+        if view_name:
+            # If the contentview has been set explicitly, we display a hard error.
+            ret = ContentviewResult(
+                prettified=f"Couldn't parse as {view.name}:\n{traceback.format_exc()}",
+                syntax_highlight="error",
+                view_name=view.name,
+                description=enc,
+            )
+        else:
+            # If the contentview was chosen as the best matching one, fall back to raw.
+            ret = ContentviewResult(
+                prettified=registry["raw"].prettify(data, metadata),
+                syntax_highlight=registry["raw"].syntax_highlight,
+                view_name=registry["raw"].name,
+                description=f"{enc}[failed to parse as {view.name}]",
+            )
+
+    ret.prettified = strutils.escape_control_characters(ret.prettified)
+    return ret
 
 
+def reencode_message(
+    prettified: str,
+    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    flow: flow.Flow,
+    view_name: str,
+) -> bytes:
+    metadata = _make_metadata(message, flow)
+    view = registry[view_name.lower()]
+    if not isinstance(view, InteractiveContentview):
+        raise ValueError(f"Contentview {view.name} is not interactive.")
+    return view.reencode(prettified, metadata)
 
 def get_message_content_view(
     viewname: str,
@@ -144,23 +220,6 @@ def get_message_content_view(
     if content is None:
         return "", "content missing", None
 
-
-    metadata = Metadata(flow=flow)
-
-    if isinstance(message, http.Message):
-        metadata.http_message = message
-        if ctype := message.headers.get("content-type"):
-            if ct := http.parse_content_type(ctype):
-                metadata.content_type = f"{ct[0]}/{ct[1]}"
-
-    if isinstance(message, TCPMessage):
-        metadata.tcp_message = message
-
-    if isinstance(message, UDPMessage):
-        metadata.udp_message = message
-
-    if isinstance(message, WebSocketMessage):
-        metadata.websocket_message = message
 
     description, lines, error = get_content_view(
         viewmode,
@@ -216,38 +275,47 @@ def get_content_view(
     return desc, content, error
 
 
-# The order in which ContentViews are added is important!
-add(auto.ViewAuto())
-add(raw.ViewRaw())
-# FIXME remove add(hex.ViewHexStream())
-# FIXME remove add(hex.ViewHexDump())
-add(graphql.ViewGraphQL())
-add(json.ViewJSON())
-add(xml_html.ViewXmlHtml())
-add(wbxml.ViewWBXML())
-add(javascript.ViewJavaScript())
-add(css.ViewCSS())
-add(urlencoded.ViewURLEncoded())
-add(multipart.ViewMultipart())
-add(image.ViewImage())
-add(query.ViewQuery())
-# FIXME remove add(protobuf.ViewProtobuf())
-# FIXME remove add(msgpack.ViewMsgPack())
-add(grpc.ViewGrpcProtobuf())
-add(mqtt.ViewMQTT())
-add(http3.ViewHttp3())
-add(dns.ViewDns())
-add(socketio.ViewSocketIO())
+registry = ContentviewRegistry()
+# Legacy contentviews need to be registered explicitly.
+_legacy_views = [
+    raw.ViewRaw,
+    graphql.ViewGraphQL,
+    json.ViewJSON,
+    xml_html.ViewXmlHtml,
+    wbxml.ViewWBXML,
+    javascript.ViewJavaScript,
+    css.ViewCSS,
+    urlencoded.ViewURLEncoded,
+    multipart.ViewMultipart,
+    image.ViewImage,
+    query.ViewQuery,
+    grpc.ViewGrpcProtobuf,
+    mqtt.ViewMQTT,
+    http3.ViewHttp3,
+    dns.ViewDns,
+    socketio.ViewSocketIO
+]
+for View in _legacy_views:
+    registry.register(LegacyContentview(View()))
 
 for name in mitmproxy_rs.contentviews.__all__:
-    cv = cast(Contentview, getattr(mitmproxy_rs.contentviews, name))
-    add(cv)
+    cv = getattr(mitmproxy_rs.contentviews, name)
+    if isinstance(cv, Contentview):
+        registry.register(cv)
+
 
 
 __all__ = [
+    # Public Contentview API
     "Contentview",
     "InteractiveContentview",
     "Metadata",
+    # Deprecated as of 2025-04:
+    "get",
     "add",
     "remove",
+    # Internal API
+    "registry",
+    "prettify_message",
+    "ContentviewResult",
 ]
