@@ -8,4 +8,4 @@ class ViewRaw(base.View):
         return "Raw", base.format_text(data)
 
     def render_priority(self, data: bytes, **metadata) -> float:
-        return 0.1 * float(bool(data))
+        return 0.1

@@ -1,8 +1,10 @@
 from __future__ import  annotations
 import typing
 from typing import Iterator
+from warnings import deprecated
 
-from mitmproxy.contentviews.api import Contentview, Metadata
+from mitmproxy import contentviews
+from mitmproxy.contentviews._api import Contentview, Metadata
 from mitmproxy.utils.strutils import always_str
 
 if typing.TYPE_CHECKING:
@@ -44,3 +46,20 @@ class LegacyContentview(Contentview):
     def __init__(self, contentview: View):
         self.contentview = contentview
 
+
+@deprecated("Use `mitmproxy.contentviews.registry` instead.")
+def get(name: str) -> Contentview | None:
+    try:
+        contentviews.registry[name.lower()]
+    except KeyError:
+        return None
+
+
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
+def add(view: View) -> None:
+    view = LegacyContentview(view)
+    contentviews.registry.register(view)
+
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
+def remove(view: View):
+    pass

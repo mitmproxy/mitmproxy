@@ -52,8 +52,7 @@ class FlowDetails(tabs.Tabs):
         self.show()
         self.last_displayed_body = None
         self.last_displayed_websocket_messages = None
-        contentviews.on_add.connect(self.contentview_changed)
-        contentviews.on_remove.connect(self.contentview_changed)
+        contentviews.registry.on_change.connect(self.contentview_changed)
 
     @property
     def view(self):

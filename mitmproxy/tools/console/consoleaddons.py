@@ -65,7 +65,7 @@ class ConsoleAddon:
             str,
             "auto",
             "The default content view mode.",
-            choices=[i.name.lower() for i in contentviews.views],
+            choices=contentviews.registry.keys(),
         )
         loader.add_option(
             "console_eventlog_verbosity",
@@ -611,7 +611,7 @@ class ConsoleAddon:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
 
-        if mode not in [i.name.lower() for i in contentviews.views]:
+        if mode.lower() not in contentviews.registry:
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
@@ -626,7 +626,7 @@ class ConsoleAddon:
         """
         Returns the valid options for the flowview mode.
         """
-        return [i.name.lower() for i in contentviews.views]
+        return contentviews.registry.keys()
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:
