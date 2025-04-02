@@ -628,14 +628,16 @@ def _make():
     parts.append(f)
 
     atom = pp.MatchFirst(parts)
-    expr = pp.OneOrMore(pp.infixNotation(
-        atom,
-        [
-            (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
-            (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
-            (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
-        ],
-    ))
+    expr = pp.OneOrMore(
+        pp.infixNotation(
+            atom,
+            [
+                (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
+                (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
+                (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
+            ],
+        )
+    )
     return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
 
 
