@@ -9,3 +9,6 @@ class ViewRaw(base.View):
 
     def render_priority(self, data: bytes, **metadata) -> float:
         return 0.1
+
+
+raw_view = ViewRaw()

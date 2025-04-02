@@ -255,5 +255,5 @@ def cut_after_n_newlines(content: str, n: int) -> str:
         pos = content.find("\n", pos + 1)
         n -= 1
     if pos >= 0:
-        content = content[:pos+1]
+        content = content[: pos + 1]
     return content

@@ -2,21 +2,17 @@ from __future__ import annotations
 
 import logging
 import typing
-from abc import ABC, ABCMeta, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, Literal
-from mitmproxy import http, tcp, udp
+from typing import Literal
+
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy import udp
 from mitmproxy.flow import Flow
-from mitmproxy.tcp import TCPMessage
-from mitmproxy.udp import UDPMessage
-from mitmproxy.utils import signals
 from mitmproxy.websocket import WebSocketMessage
 
 logger = logging.getLogger(__name__)
-
-def _init_subclass_callback(view: Contentview) -> None: ...
-
-on_init_subclass = signals.SyncSignal(_init_subclass_callback)
 
 
 type SyntaxHighlight = Literal["yaml", "xml", "error", "none"]
@@ -29,11 +25,11 @@ class Contentview(typing.Protocol):
     @property
     def name(self) -> str:
         """
-        The name of this contentview, e.g. "XML/HTML". 
+        The name of this contentview, e.g. "XML/HTML".
         Inferred from the class name by default.
         """
         return type(self).__name__.removesuffix("Contentview")
-    
+
     @abstractmethod
     def prettify(
         self,
@@ -63,16 +59,7 @@ class Contentview(typing.Protocol):
         return "none"
 
     def __lt__(self, other):
-        assert isinstance(other, Contentview)
         return self.name.__lt__(other.name)
-
-    def __init_subclass__(cls, **kwargs):
-        try:
-            instance = cls()
-            on_init_subclass.send(instance)
-        except TypeError:
-            if not cls.__qualname__.startswith("mitmproxy."):
-                logger.exception(f"Failed to register {cls} contentview.")
 
 
 @typing.runtime_checkable
@@ -89,7 +76,8 @@ class InteractiveContentview(Contentview, typing.Protocol):
         Reencode the given (modified) `prettified` output into the original data format.
         May raise a `ValueError` if reencoding failed.
         """
-    
+
+
 @dataclass
 class Metadata:
     """
@@ -97,6 +85,7 @@ class Metadata:
 
     Implementations must not rely on any given attribute to be present.
     """
+
     flow: Flow | None = None
     """The flow that the data belongs to, if any."""
 
