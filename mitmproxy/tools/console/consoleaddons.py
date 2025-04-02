@@ -471,20 +471,24 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_request_headers")
         elif flow_part == "response-headers":
             self.master.switch_view("edit_focus_response_headers")
-        elif m := re.match(r"(?P<part>request|response)-body \((?P<contentview>.+)\)", flow_part):
+        elif m := re.match(
+            r"(?P<part>request|response)-body \((?P<contentview>.+)\)", flow_part
+        ):
             if m["part"] == "request":
                 message = flow.request
             else:
                 message = flow.response
 
-            cv = cast(contentviews.InteractiveContentview, contentviews.get(m["contentview"]))
+            cv = cast(
+                contentviews.InteractiveContentview, contentviews.get(m["contentview"])
+            )
             if not cv or not hasattr(cv, "reencode"):
-                raise CommandError(f"Contentview {m['contentview']} is not bidirectional.")
+                raise CommandError(
+                    f"Contentview {m['contentview']} is not bidirectional."
+                )
 
             description, content, error = contentviews.get_message_content_view(
-                m["contentview"],
-                message,
-                flow
+                m["contentview"], message, flow
             )
             if error:
                 raise CommandError(f"Contentview {m['contentview']} errored: {error}.")
@@ -493,7 +497,7 @@ class ConsoleAddon:
 
             reencoded = cv.reencode(
                 prettified,
-                contentviews.Metadata()  # FIXME: Use proper metadata.
+                contentviews.Metadata(),  # FIXME: Use proper metadata.
             )
 
             message.content = reencoded

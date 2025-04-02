@@ -1,14 +1,18 @@
-from __future__ import  annotations
+from __future__ import annotations
+
 import typing
 from typing import Iterator
 from warnings import deprecated
 
 from mitmproxy import contentviews
-from mitmproxy.contentviews._api import Contentview, Metadata
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils.strutils import always_str
 
 if typing.TYPE_CHECKING:
-    from mitmproxy.contentviews.base import TViewLine, View
+    from mitmproxy.contentviews.base import TViewLine
+    from mitmproxy.contentviews.base import View
+
 
 class LegacyContentview(Contentview):
     @property
@@ -24,7 +28,7 @@ class LegacyContentview(Contentview):
             data=data,
             content_type=metadata.content_type,
             flow=metadata.flow,
-            http_message=metadata.http_message
+            http_message=metadata.http_message,
         )
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
@@ -33,13 +37,10 @@ class LegacyContentview(Contentview):
             data,
             content_type=metadata.content_type,
             flow=metadata.flow,
-            http_message=metadata.http_message
+            http_message=metadata.http_message,
         )
         return "\n".join(
-            "".join(
-                always_str(text, "utf8", "backslashescape")
-                for tag, text in line
-            )
+            "".join(always_str(text, "utf8", "backslashescape") for tag, text in line)
             for line in lines
         )
 
@@ -59,6 +60,7 @@ def get(name: str) -> Contentview | None:
 def add(view: View) -> None:
     view = LegacyContentview(view)
     contentviews.registry.register(view)
+
 
 @deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def remove(view: View):

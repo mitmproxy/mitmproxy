@@ -23,6 +23,7 @@ class View(ABC):
     """
     Deprecated, do not use.
     """
+
     name: ClassVar[str]
 
     @abstractmethod
