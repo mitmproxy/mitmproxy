@@ -60,6 +60,8 @@ class ConsoleMaster(master.Master):
 
         self.window: window.Window | None = None
 
+        self.loop = asyncio.get_event_loop()  # Ensure `loop` is defined
+
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
         signals.update_settings.send()
