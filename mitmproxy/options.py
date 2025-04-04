@@ -19,7 +19,7 @@ class Options(optmanager.OptManager):
             "store_streamed_bodies",
             bool,
             False,
-            "Store HTTP request and response bodies when streamed. "
+            "Store HTTP request and response bodies when streamed. ",
         )
         self.add_option(
             "showhost",

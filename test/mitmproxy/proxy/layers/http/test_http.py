@@ -410,6 +410,7 @@ def test_response_streaming(tctx, why, transfer_encoding, store_streamed_bodies)
     assert playbook
     assert not flow().live
 
+
 @pytest.mark.parametrize("store_streamed_bodies", [True, False])
 def test_stream_modify(tctx, store_streamed_bodies):
     """Test HTTP stream modification"""
@@ -476,7 +477,9 @@ def test_stream_modify(tctx, store_streamed_bodies):
     "response", ["normal response", "early response", "early close", "early kill"]
 )
 @pytest.mark.parametrize("store_streamed_bodies", [True, False])
-def test_request_streaming(tctx, why, transfer_encoding, response, store_streamed_bodies):
+def test_request_streaming(
+    tctx, why, transfer_encoding, response, store_streamed_bodies
+):
     """
     Test HTTP request streaming
 
