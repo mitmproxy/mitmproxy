@@ -11,6 +11,7 @@ import traceback
 import warnings
 from dataclasses import dataclass
 
+from .raw import raw_contentview
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
@@ -22,7 +23,7 @@ from . import hex
 from . import http3
 from . import image
 from . import javascript
-from . import json
+from .json import json_contentview
 from . import mqtt
 from . import msgpack
 from . import multipart
@@ -55,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ContentviewResult:
-    prettified: str | None
+    text: str | None
     syntax_highlight: SyntaxHighlight
     view_name: str | None
     description: str
@@ -77,7 +78,7 @@ def prettify_message(
     data, enc = get_data(message)
     if data is None:
         return ContentviewResult(
-            prettified="Content is missing.",
+            text="Content is missing.",
             syntax_highlight="error",
             description="",
             view_name=None,
@@ -90,17 +91,17 @@ def prettify_message(
     # Finally, we can pretty-print!
     try:
         ret = ContentviewResult(
-            prettified=view.prettify(data, metadata),
+            text=view.prettify(data, metadata),
             syntax_highlight=view.syntax_highlight,
             view_name=view.name,
             description=enc,
         )
     except Exception as e:
-        logger.warning(f"Contentview failed: {e}", exc_info=True)
+        logger.debug(f"Contentview failed: {e}", exc_info=True)
         if view_name:
             # If the contentview has been set explicitly, we display a hard error.
             ret = ContentviewResult(
-                prettified=f"Couldn't parse as {view.name}:\n{traceback.format_exc()}",
+                text=f"Couldn't parse as {view.name}:\n{traceback.format_exc()}",
                 syntax_highlight="error",
                 view_name=view.name,
                 description=enc,
@@ -108,13 +109,13 @@ def prettify_message(
         else:
             # If the contentview was chosen as the best matching one, fall back to raw.
             ret = ContentviewResult(
-                prettified=registry["raw"].prettify(data, metadata),
+                text=registry["raw"].prettify(data, metadata),
                 syntax_highlight=registry["raw"].syntax_highlight,
                 view_name=registry["raw"].name,
                 description=f"{enc}[failed to parse as {view.name}]",
             )
 
-    ret.prettified = strutils.escape_control_characters(ret.prettified)
+    ret.text = strutils.escape_control_characters(ret.text)
     return ret
 
 
@@ -134,9 +135,7 @@ def reencode_message(
 registry = ContentviewRegistry()
 # Legacy contentviews need to be registered explicitly.
 _legacy_views = [
-    raw.ViewRaw,
     graphql.ViewGraphQL,
-    json.ViewJSON,
     xml_html.ViewXmlHtml,
     wbxml.ViewWBXML,
     javascript.ViewJavaScript,
@@ -154,6 +153,12 @@ _legacy_views = [
 for ViewCls in _legacy_views:
     registry.register(LegacyContentview(ViewCls()))
 
+_views: list[Contentview] = [
+    json_contentview,
+    raw_contentview,
+]
+for view in _views:
+    registry.register(view)
 for name in mitmproxy_rs.contentviews.__all__:
     cv = getattr(mitmproxy_rs.contentviews, name)
     if isinstance(cv, Contentview):
@@ -165,6 +170,7 @@ __all__ = [
     "Contentview",
     "InteractiveContentview",
     "Metadata",
+    "SyntaxHighlight",
     # Deprecated as of 2025-04:
     "get",
     "add",

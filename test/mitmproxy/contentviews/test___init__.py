@@ -60,7 +60,7 @@ class TestPrettifyMessage:
         f = tflow.tflow()
         f.request.content = None
         result = prettify_message(f.request, f, None)
-        assert result.prettified == "Content is missing."
+        assert result.text == "Content is missing."
         assert result.syntax_highlight == "error"
         assert result.view_name is None
 
@@ -68,7 +68,7 @@ class TestPrettifyMessage:
         f = tflow.tflow()
         f.request.content = b"content"
         result = prettify_message(f.request, f, "hex stream")
-        assert result.prettified == "636f6e74656e74"  # hex representation of "content"
+        assert result.text == "636f6e74656e74"  # hex representation of "content"
         assert result.syntax_highlight == "none"
         assert result.view_name == "Hex Stream"
 
@@ -82,7 +82,7 @@ class TestPrettifyMessage:
         registry.register(raw_view)
 
         result = prettify_message(f.request, f, None)
-        assert result.prettified == "content"
+        assert result.text == "content"
         assert result.syntax_highlight == "none"
         assert result.view_name == "Raw"
         assert "[failed to parse as Failing]" in result.description
@@ -95,6 +95,6 @@ class TestPrettifyMessage:
         registry.register(failing_view)
 
         result = prettify_message(f.request, f, "failing")
-        assert "Couldn't parse as Failing" in result.prettified
+        assert "Couldn't parse as Failing" in result.text
         assert result.syntax_highlight == "error"
         assert result.view_name == "Failing"

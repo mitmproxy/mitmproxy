@@ -248,7 +248,7 @@ def unescape_special_areas(data: str):
     return re.sub(r"[\ue000-\ue0ff]", _restore_from_private_code_plane, data)
 
 
-def cut_after_n_newlines(content: str, n: int) -> str:
+def cut_after_n_lines(content: str, n: int) -> str:
     assert n > 0
     pos = content.find("\n")
     while pos >= 0 and n > 1:
