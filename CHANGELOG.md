@@ -27,6 +27,8 @@
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
+- Add a new feature to store streamed bodies for requests and responses.
+  ([#7637](https://github.com/mitmproxy/mitmproxy/pull/7637), @mkiami)
 
 ## 17 February 2025: mitmproxy 11.1.3
 
