@@ -338,8 +338,10 @@ def test_disconnect_while_intercept(tctx):
 
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
 @pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
-def test_response_streaming(tctx, why, transfer_encoding):
+@pytest.mark.parametrize("store_streamed_bodies", [True, False])
+def test_response_streaming(tctx, why, transfer_encoding, store_streamed_bodies):
     """Test HTTP response streaming"""
+    tctx.options.store_streamed_bodies = store_streamed_bodies
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
@@ -408,9 +410,10 @@ def test_response_streaming(tctx, why, transfer_encoding):
     assert playbook
     assert not flow().live
 
-
-def test_stream_modify(tctx):
+@pytest.mark.parametrize("store_streamed_bodies", [True, False])
+def test_stream_modify(tctx, store_streamed_bodies):
     """Test HTTP stream modification"""
+    tctx.options.store_streamed_bodies = store_streamed_bodies
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
 
@@ -472,12 +475,14 @@ def test_stream_modify(tctx):
 @pytest.mark.parametrize(
     "response", ["normal response", "early response", "early close", "early kill"]
 )
-def test_request_streaming(tctx, why, transfer_encoding, response):
+@pytest.mark.parametrize("store_streamed_bodies", [True, False])
+def test_request_streaming(tctx, why, transfer_encoding, response, store_streamed_bodies):
     """
     Test HTTP request streaming
 
     This is a bit more contrived as we may receive server data while we are still sending the request.
     """
+    tctx.options.store_streamed_bodies = store_streamed_bodies
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
@@ -1067,8 +1072,10 @@ def test_http_expect(tctx):
 
 
 @pytest.mark.parametrize("stream", [True, False])
-def test_http_client_aborts(tctx, stream):
+@pytest.mark.parametrize("store_streamed_bodies", [True, False])
+def test_http_client_aborts(tctx, stream, store_streamed_bodies):
     """Test handling of the case where a client aborts during request transmission."""
+    tctx.options.store_streamed_bodies = store_streamed_bodies
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=True)
@@ -1116,8 +1123,10 @@ def test_http_client_aborts(tctx, stream):
 
 
 @pytest.mark.parametrize("stream", [True, False])
-def test_http_server_aborts(tctx, stream):
+@pytest.mark.parametrize("store_streamed_bodies", [True, False])
+def test_http_server_aborts(tctx, stream, store_streamed_bodies):
     """Test handling of the case where a server aborts during response transmission."""
+    tctx.options.store_streamed_bodies = store_streamed_bodies
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
