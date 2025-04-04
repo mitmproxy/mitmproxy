@@ -5,6 +5,7 @@ from typing import Iterator
 from warnings import deprecated
 
 from mitmproxy import contentviews
+from mitmproxy.contentviews import SyntaxHighlight
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils.strutils import always_str
@@ -18,6 +19,10 @@ class LegacyContentview(Contentview):
     @property
     def name(self) -> str:
         return self.contentview.name
+
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return getattr(self.contentview, "syntax_highlight", "none")
 
     def render_priority(
         self,

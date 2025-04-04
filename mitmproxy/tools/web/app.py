@@ -41,7 +41,7 @@ from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
-from mitmproxy.utils.strutils import cut_after_n_newlines
+from mitmproxy.utils.strutils import cut_after_n_lines
 from mitmproxy.websocket import WebSocketMessage
 
 TRANSPARENT_PNG = (
@@ -600,7 +600,7 @@ class FlowContentView(RequestHandler):
         if error:
             logging.error(error)
         if max_lines:
-            content = cut_after_n_newlines(content, max_lines)
+            content = cut_after_n_lines(content, max_lines)
 
         return dict(
             content=content,

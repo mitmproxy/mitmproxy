@@ -1,14 +1,18 @@
-from . import base
+from ._api import Metadata
+from ._api import Contentview
 
 
-class ViewRaw(base.View):
-    name = "Raw"
+class RawContentview(Contentview):
 
-    def __call__(self, data, **metadata):
-        return "Raw", base.format_text(data)
+    def prettify(self, data: bytes, metadata: Metadata) -> str:
+        return data.decode("utf-8", "backslashreplace")
 
-    def render_priority(self, data: bytes, **metadata) -> float:
+    def render_priority(
+        self,
+        data: bytes,
+        metadata: Metadata,
+    ) -> float:
         return 0.1
 
 
-raw_view = ViewRaw()
+raw_contentview = RawContentview()

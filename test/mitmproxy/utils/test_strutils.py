@@ -149,4 +149,4 @@ def test_escape_special_areas():
     ],
 )
 def test_cut_after_n_newlines(content, n, expected):
-    assert strutils.cut_after_n_newlines(content, n) == expected
+    assert strutils.cut_after_n_lines(content, n) == expected
