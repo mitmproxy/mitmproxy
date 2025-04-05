@@ -84,7 +84,7 @@ describe("updateUrlFromStore", () => {
     });
 
     it("should update url", () => {
-        const flows = reduceFlows(undefined, flowsActions.select("123"));
+        const flows = reduceFlows(undefined, flowsActions.select(["123"]));
         const state = {
             ...initialState,
             flows: reduceFlows(flows, flowsActions.setFilter("~u foo")),

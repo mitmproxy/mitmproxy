@@ -5,7 +5,70 @@ exports[`FlowRow 1`] = `
   <table>
     <tbody>
       <tr
-        class="selected highlighted"
+        class="intercepted has-request has-response"
+      >
+        <td
+          class="col-tls col-tls-https"
+        />
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-websocket"
+          />
+        </td>
+        <td
+          class="col-path"
+        >
+          <i
+            class="fa fa-fw fa-pause pull-right"
+          />
+          <i
+            class="fa fa-fw fa-exclamation pull-right"
+          />
+          <span
+            class="marker pull-right"
+          />
+          http://address:22/path
+        </td>
+        <td
+          class="col-method"
+        >
+          WSS
+        </td>
+        <td
+          class="col-status"
+          style="color: darkgreen;"
+        >
+          200
+        </td>
+        <td
+          class="col-size"
+        >
+          43b
+        </td>
+        <td
+          class="col-time"
+        >
+          5s
+        </td>
+        <td
+          class="col-quickactions"
+        >
+          <div>
+            <a
+              class="quickaction"
+              href="#"
+            >
+              <i
+                class="fa fa-fw fa-play text-success"
+              />
+            </a>
+          </div>
+        </td>
+      </tr>
+      <tr
+        class=""
       >
         <td
           class="col-tls col-tls-https"

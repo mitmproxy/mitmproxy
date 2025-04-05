@@ -27,6 +27,8 @@
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
+- Enable the deletion of multiple flows in mitmweb by allowing users to select them with Ctrl+Click.
+  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000)
 
 ## 17 February 2025: mitmproxy 11.1.3
 

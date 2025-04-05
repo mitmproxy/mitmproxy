@@ -31,7 +31,7 @@ test("FlowView", async () => {
     expect(asFragment()).toMatchSnapshot();
 
     act(() =>
-        store.dispatch(flowActions.select(store.getState().flows.list[2].id)),
+        store.dispatch(flowActions.select([store.getState().flows.list[2].id])),
     );
 
     fireEvent.click(screen.getByText("Stream Data"));
@@ -41,7 +41,7 @@ test("FlowView", async () => {
     expect(asFragment()).toMatchSnapshot();
 
     act(() =>
-        store.dispatch(flowActions.select(store.getState().flows.list[3].id)),
+        store.dispatch(flowActions.select([store.getState().flows.list[3].id])),
     );
 
     fireEvent.click(screen.getByText("Request"));
@@ -54,7 +54,7 @@ test("FlowView", async () => {
     expect(asFragment()).toMatchSnapshot();
 
     act(() =>
-        store.dispatch(flowActions.select(store.getState().flows.list[4].id)),
+        store.dispatch(flowActions.select([store.getState().flows.list[4].id])),
     );
 
     fireEvent.click(screen.getByText("Datagrams"));
