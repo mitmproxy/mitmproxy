@@ -14,6 +14,8 @@ from io import BytesIO
 from itertools import islice
 from typing import ClassVar
 from typing import Concatenate
+from typing import ParamSpec
+from typing import TypeVar
 
 import tornado.escape
 import tornado.web
@@ -227,8 +229,11 @@ class AuthRequestHandler(tornado.web.RequestHandler):
         May write a login form as the response.
         """
 
+    P = ParamSpec("P")
+    R = TypeVar("R")
+
     @staticmethod
-    def _require_auth[**P, R](
+    def _require_auth(
         fn: Callable[Concatenate[AuthRequestHandler, P], R],
     ) -> Callable[Concatenate[AuthRequestHandler, P], R | None]:
         @functools.wraps(fn)
