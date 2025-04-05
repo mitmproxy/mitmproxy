@@ -1,31 +1,20 @@
 from mitmproxy import contentviews
-from mitmproxy.addonmanager import Loader
-from mitmproxy.contentviews._api import InteractiveContentview
-from mitmproxy.contentviews._api import Metadata
 
 
-class InteractiveSwapCase(InteractiveContentview):
+class InteractiveSwapCase(contentviews.InteractiveContentview):
     def prettify(
         self,
         data: bytes,
-        metadata: Metadata,
+        metadata: contentviews.Metadata,
     ) -> str:
         return data.swapcase().decode()
 
     def reencode(
         self,
         prettified: str,
-        metadata: Metadata,
+        metadata: contentviews.Metadata,
     ) -> bytes:
         return prettified.encode().swapcase()
 
 
-view = InteractiveSwapCase()
-
-
-def load(loader: Loader):
-    contentviews.add(view)
-
-
-def done():
-    contentviews.remove(view)
+contentviews.add(InteractiveSwapCase)

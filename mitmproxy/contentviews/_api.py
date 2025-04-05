@@ -30,6 +30,11 @@ class Contentview(typing.Protocol):
         """
         return type(self).__name__.removesuffix("Contentview")
 
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        """Optional syntax highlighting that should be applied to the prettified output."""
+        return "none"
+
     @abstractmethod
     def prettify(
         self,
@@ -52,11 +57,6 @@ class Contentview(typing.Protocol):
         If this view does not support the given data, return a float < 0.
         """
         return 0
-
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        """Optional syntax highlighting that should be applied to the prettified output."""
-        return "none"
 
     def __lt__(self, other):
         return self.name.__lt__(other.name)
