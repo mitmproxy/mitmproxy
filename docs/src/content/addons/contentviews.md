@@ -12,15 +12,14 @@ Contentviews pretty-print binary message data that would otherwise be unreadable
 
 ### Simple Example
 
-All contentviews implement the [`Contentview`] base class:
+All contentviews implement the [Contentview] base class:
 
 {{< example src="examples/addons/contentview.py" lang="py" >}}
 
-### Render Priority
+The view with the highest priority will be auto-selected. Builtin views return a priority between 0 and 1.
 
-The following example demonstrates how to control the order of contentviews using [`render_priority`] and [`Metadata`]. Views with higher priority values appear first in the list of available views:
 
-{{< example src="examples/addons/contentview-priority.py" lang="py" >}}
+See [`mitmproxy.contentviews`] for the full API documentation.
 
 
 ### Interactive Contentviews
@@ -29,6 +28,5 @@ The following example implements an interactive contentview that allows users to
 
 {{< example src="examples/addons/contentview-interactive.py" lang="py" >}}
 
-[`render_priority`]: {{< relref "api/mitmproxy.contentviews.md#Contentview.render_priority" >}}
-[`Metadata`]: {{< relref "api/mitmproxy.contentviews.md#Metadata" >}}
-[`Contentview`]: {{< relref "api/mitmproxy.contentviews.md#Contentview" >}}
+[`mitmproxy.contentviews`]: {{< relref "api/mitmproxy.contentviews.md" >}}
+[Contentview]: {{< relref "api/mitmproxy.contentviews.md#Contentview" >}}

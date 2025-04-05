@@ -8,6 +8,7 @@ See "Custom Contentviews" in the mitmproxy documentation for more information.
 
 import logging
 import traceback
+import typing
 import warnings
 from dataclasses import dataclass
 
@@ -163,20 +164,27 @@ for name in mitmproxy_rs.contentviews.__all__:
         registry.register(cv)
 
 
+def add(contentview: Contentview | type[Contentview]) -> None:
+    """
+    Register a contentview for use in mitmproxy.
+
+    You may pass a `Contentview` instance or the class itself.
+    """
+    if isinstance(contentview, View):
+        warnings.warn(
+            f"`mitmproxy.contentviews.View` is deprecated since mitmproxy 12, "
+            f"migrate {contentview.__class__.__name__} to `mitmproxy.contentviews.Contentview` instead.",
+            stacklevel=2
+        )
+        contentview = LegacyContentview(contentview)
+    registry.register(contentview)
+
+
 __all__ = [
     # Public Contentview API
     "Contentview",
     "InteractiveContentview",
     "Metadata",
     "SyntaxHighlight",
-    # Deprecated as of 2025-04:
-    "get",
     "add",
-    "remove",
-    "View",
-    # Internal API
-    "registry",
-    "prettify_message",
-    "reencode_message",
-    "ContentviewResult",
 ]
