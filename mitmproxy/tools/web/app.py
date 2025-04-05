@@ -228,7 +228,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
         """
 
     @staticmethod
-    def _require_auth[**P, R](
+    def _require_auth(
         fn: Callable[Concatenate[AuthRequestHandler, P], R],
     ) -> Callable[Concatenate[AuthRequestHandler, P], R | None]:
         @functools.wraps(fn)
