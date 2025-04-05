@@ -1,5 +1,6 @@
+import json
+
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import format_json
 from mitmproxy.dns import Message
 
 
@@ -12,7 +13,7 @@ class ViewDns(base.View):
         except Exception:
             pass
         else:
-            return "DoH", format_json(message.to_json())
+            return "DoH", json.dumps(message.to_json(), indent=4)
 
     def render_priority(
         self, data: bytes, *, content_type: str | None = None, **metadata

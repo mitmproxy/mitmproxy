@@ -1,8 +1,8 @@
 import logging
-import math
 import sys
 from functools import lru_cache
 
+import mitmproxy_rs.syntax_highlight
 import urwid
 
 import mitmproxy.flow
@@ -52,8 +52,7 @@ class FlowDetails(tabs.Tabs):
         self.show()
         self.last_displayed_body = None
         self.last_displayed_websocket_messages = None
-        contentviews.on_add.connect(self.contentview_changed)
-        contentviews.on_remove.connect(self.contentview_changed)
+        contentviews.registry.on_change.connect(self.contentview_changed)
 
     @property
     def view(self):
@@ -220,15 +219,16 @@ class FlowDetails(tabs.Tabs):
 
         widget_lines = []
         for m in flow.websocket.messages:
-            _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
-
-            for line in lines:
-                if m.from_client:
-                    line.insert(0, self.FROM_CLIENT_MARKER)
-                else:
-                    line.insert(0, self.TO_CLIENT_MARKER)
-
-                widget_lines.append(urwid.Text(line))
+            pretty = contentviews.prettify_message(m, flow, viewmode)
+            chunks = mitmproxy_rs.syntax_highlight.highlight(
+                pretty.text,
+                language=pretty.syntax_highlight,
+            )
+            if m.from_client:
+                marker = self.FROM_CLIENT_MARKER
+            else:
+                marker = self.TO_CLIENT_MARKER
+            widget_lines.append(urwid.Text([marker, *chunks]))
 
         if flow.websocket.closed_by_client is not None:
             widget_lines.append(
@@ -277,15 +277,17 @@ class FlowDetails(tabs.Tabs):
 
         widget_lines = []
         for m in flow.messages:
-            _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
-
-            for line in lines:
-                if m.from_client:
-                    line.insert(0, self.FROM_CLIENT_MARKER)
-                else:
-                    line.insert(0, self.TO_CLIENT_MARKER)
-
-                widget_lines.append(urwid.Text(line))
+            if m.from_client:
+                marker = self.FROM_CLIENT_MARKER
+            else:
+                marker = self.TO_CLIENT_MARKER
+            pretty = contentviews.prettify_message(m, flow, viewmode)
+            chunks = mitmproxy_rs.syntax_highlight.highlight(
+                pretty.text,
+                language=pretty.syntax_highlight,
+            )
+            
+            widget_lines.append(urwid.Text([marker, *chunks]))
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
@@ -300,10 +302,14 @@ class FlowDetails(tabs.Tabs):
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
 
-    def content_view(self, viewmode, message):
+    def content_view(self, viewmode: str, message: http.Message) -> tuple[str, list[urwid.Text]]:
         if message.raw_content is None:
-            msg, body = "", [urwid.Text([("error", "[content missing]")])]
-            return msg, body
+            return "", [urwid.Text([("error", "[content missing]")])]
+        elif message.raw_content == b"":
+            if isinstance(message, http.Request):
+                return "", [urwid.Text("No request content")]
+            else:
+                return "", [urwid.Text("No content")]
         else:
             full = self.master.commands.execute(
                 "view.settings.getval @focus fullcontents false"
@@ -327,54 +333,37 @@ class FlowDetails(tabs.Tabs):
             )
 
     @lru_cache(maxsize=200)
-    def _get_content_view(self, viewmode, max_lines, _):
-        message = self._get_content_view_message
+    def _get_content_view(self, viewmode: str, max_lines: int, _) -> tuple[str, list[urwid.Text]]:
+        message: http.Message = self._get_content_view_message
         self._get_content_view_message = None
-        description, lines, error = contentviews.get_message_content_view(
-            viewmode, message, self.flow
+
+        pretty = contentviews.prettify_message(
+            message, self.flow, viewmode
         )
-        if error:
-            logging.debug(error)
-        # Give hint that you have to tab for the response.
-        if description == "No content" and isinstance(message, http.Request):
-            description = "No request content"
+        cut_off = strutils.cut_after_n_lines(pretty.text, max_lines)
 
-        # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
-        chars_per_line = 80
-        max_chars = max_lines * chars_per_line
-        total_chars = 0
-        text_objects = []
-        for line in lines:
-            txt = []
-            for style, text in line:
-                if total_chars + len(text) > max_chars:
-                    text = text[: max_chars - total_chars]
-                txt.append((style, text))
-                total_chars += len(text)
-                if total_chars == max_chars:
-                    break
+        chunks = mitmproxy_rs.syntax_highlight.highlight(
+            cut_off,
+            language=pretty.syntax_highlight,
+        )
 
-            # round up to the next line.
-            total_chars = int(math.ceil(total_chars / chars_per_line) * chars_per_line)
-
-            text_objects.append(urwid.Text(txt))
-            if total_chars == max_chars:
-                text_objects.append(
-                    urwid.Text(
-                        [
-                            (
-                                "highlight",
-                                "Stopped displaying data after %d lines. Press "
-                                % max_lines,
-                            ),
-                            ("key", "f"),
-                            ("highlight", " to load all data."),
-                        ]
-                    )
+        text_objects = [urwid.Text(chunks)]
+        if len(cut_off) < len(pretty.text):
+            text_objects.append(
+                urwid.Text(
+                    [
+                        (
+                            "highlight",
+                            "Stopped displaying data after %d lines. Press "
+                            % max_lines,
+                        ),
+                        ("key", "f"),
+                        ("highlight", " to load all data."),
+                    ]
                 )
-                break
+            )
 
-        return description, text_objects
+        return pretty.description, text_objects
 
     def conn_text(self, conn):
         if conn:

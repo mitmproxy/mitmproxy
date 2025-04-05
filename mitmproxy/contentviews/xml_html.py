@@ -247,6 +247,8 @@ class ViewXmlHtml(base.View):
     name = "XML/HTML"
     __content_types = ("text/xml", "text/html")
 
+    syntax_highlight = "xml"
+
     def __call__(self, data, **metadata):
         # TODO:
         # We should really have the message text as str here,
