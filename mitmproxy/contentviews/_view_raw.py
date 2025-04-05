@@ -15,4 +15,4 @@ class RawContentview(Contentview):
         return 0.1
 
 
-raw_contentview = RawContentview()
+raw = RawContentview()
