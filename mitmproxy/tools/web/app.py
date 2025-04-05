@@ -14,8 +14,8 @@ from io import BytesIO
 from itertools import islice
 from typing import ClassVar
 from typing import Concatenate
-from typing import TypeVar
 from typing import ParamSpec
+from typing import TypeVar
 
 import tornado.escape
 import tornado.web
