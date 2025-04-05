@@ -65,7 +65,7 @@ class ConsoleAddon:
             str,
             "auto",
             "The default content view mode.",
-            choices=contentviews.registry.keys(),
+            choices=list(contentviews.registry.keys()),
         )
         loader.add_option(
             "console_eventlog_verbosity",
@@ -423,10 +423,20 @@ class ConsoleAddon:
                 "url",
             ]
             viewname = self.master.commands.call("console.flowview.mode")
-            cv = contentviews.get(viewname)
-            if cv and hasattr(cv, "reencode"):
-                focus_options.append(f"request-body ({viewname})")
-                focus_options.append(f"response-body ({viewname})")
+            request_cv = contentviews.registry.get_view(
+                contentviews.get_data(flow.request)[0] or b"",
+                contentviews.make_metadata(flow.request, flow),
+                viewname,
+            )
+            if isinstance(request_cv, contentviews.InteractiveContentview):
+                focus_options.append(f"request-body ({request_cv.name})")
+            response_cv = contentviews.registry.get_view(
+                contentviews.get_data(flow.response)[0] or b"",
+                contentviews.make_metadata(flow.response, flow),
+                viewname,
+            )
+            if isinstance(response_cv, contentviews.InteractiveContentview):
+                focus_options.append(f"response-body ({response_cv.name})")
             if flow.websocket:
                 focus_options.append("websocket-message")
         elif isinstance(flow, dns.DNSFlow):
@@ -479,28 +489,21 @@ class ConsoleAddon:
             else:
                 message = flow.response
 
-            cv = cast(
-                contentviews.InteractiveContentview, contentviews.get(m["contentview"])
-            )
-            if not cv or not hasattr(cv, "reencode"):
+            cv = contentviews.registry.get(m["contentview"])
+            if not cv or not isinstance(cv, contentviews.InteractiveContentview):
                 raise CommandError(
                     f"Contentview {m['contentview']} is not bidirectional."
                 )
 
-            description, content, error = contentviews.get_message_content_view(
-                m["contentview"], message, flow
-            )
-            if error:
-                raise CommandError(f"Contentview {m['contentview']} errored: {error}.")
+            pretty = contentviews.prettify_message(message, flow, cv.name)
+            prettified = self.master.spawn_editor(pretty.text)
 
-            prettified = self.master.spawn_editor(content)
-
-            reencoded = cv.reencode(
+            message.content = contentviews.reencode_message(
                 prettified,
-                contentviews.Metadata(),  # FIXME: Use proper metadata.
+                message,
+                flow,
+                cv.name,
             )
-
-            message.content = reencoded
 
         elif flow_part in ("request-body", "response-body"):
             if flow_part == "request-body":
@@ -630,7 +633,7 @@ class ConsoleAddon:
         """
         Returns the valid options for the flowview mode.
         """
-        return contentviews.registry.keys()
+        return list(contentviews.registry.keys())
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:

@@ -11,7 +11,7 @@ import traceback
 import warnings
 from dataclasses import dataclass
 
-from .raw import raw_contentview
+from ._view_raw import raw
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
@@ -29,7 +29,6 @@ from . import msgpack
 from . import multipart
 from . import protobuf
 from . import query
-from . import raw
 from . import socketio
 from . import urlencoded
 from . import wbxml
@@ -144,7 +143,6 @@ _legacy_views = [
     multipart.ViewMultipart,
     image.ViewImage,
     query.ViewQuery,
-    grpc.ViewGrpcProtobuf,
     mqtt.ViewMQTT,
     http3.ViewHttp3,
     dns.ViewDns,
@@ -155,13 +153,13 @@ for ViewCls in _legacy_views:
 
 _views: list[Contentview] = [
     json_contentview,
-    raw_contentview,
+    raw,
 ]
 for view in _views:
     registry.register(view)
 for name in mitmproxy_rs.contentviews.__all__:
     cv = getattr(mitmproxy_rs.contentviews, name)
-    if isinstance(cv, Contentview):
+    if isinstance(cv, Contentview) and not isinstance(cv, type):
         registry.register(cv)
 
 
@@ -175,9 +173,10 @@ __all__ = [
     "get",
     "add",
     "remove",
+    "View",
     # Internal API
     "registry",
     "prettify_message",
+    "reencode_message",
     "ContentviewResult",
-    "View",
 ]
