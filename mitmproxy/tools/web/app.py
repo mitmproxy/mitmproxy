@@ -14,6 +14,8 @@ from io import BytesIO
 from itertools import islice
 from typing import ClassVar
 from typing import Concatenate
+from typing import TypeVar
+from typing import ParamSpec
 
 import tornado.escape
 import tornado.web
@@ -226,6 +228,9 @@ class AuthRequestHandler(tornado.web.RequestHandler):
         Will be called when returning a 403.
         May write a login form as the response.
         """
+
+    P = ParamSpec("P")
+    R = TypeVar("R")
 
     @staticmethod
     def _require_auth(
