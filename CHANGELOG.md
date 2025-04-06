@@ -27,6 +27,8 @@
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
+- Adjust popover placement for browsers that support anchor positioning (Chrome, Edge)
+  ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
 
 ## 17 February 2025: mitmproxy 11.1.3
 
