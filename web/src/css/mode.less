@@ -4,7 +4,7 @@
 @import (reference) "../../node_modules/bootstrap/less/labels.less";
 
 .modes {
-    padding: 1em 2em;
+    padding: 1em 2em 2em 2em;
     overflow-y: auto;
     height: 100%;
     width: 100vw;
@@ -193,10 +193,8 @@
                 > div {
                     margin: 0;
                     position: absolute;
-                    left: 0;
-                    top: calc(anchor(bottom) + 10px);
-                    justify-self: anchor-center;
-                    align-self: auto;
+                    top: 10px;
+                    position-area: bottom;
                 }
             }
 
@@ -281,8 +279,7 @@
             > div {
                 margin: 0;
                 position: absolute;
-                left: calc(anchor(right) + 5px);
-                align-self: anchor-center;
+                position-area: right;
             }
         }
 
