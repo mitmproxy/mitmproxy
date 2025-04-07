@@ -510,7 +510,7 @@ if __name__ == "__main__":  # pragma: no cover
         "store_streamed_bodies",
         bool,
         False,
-        "Store HTTP request and response bodies when streamed.",
+        "",
     )
     opts.add_option(
         "connection_strategy",
