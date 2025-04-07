@@ -335,6 +335,7 @@ def test_disconnect_while_intercept(tctx):
     assert flow().server_conn == server2()
     assert not flow().live
 
+
 @pytest.mark.parametrize("store_streamed_bodies", [False, True])
 def test_store_streamed_bodies(tctx, store_streamed_bodies):
     """Test HTTP stream modification"""
@@ -399,6 +400,7 @@ def test_store_streamed_bodies(tctx, store_streamed_bodies):
     else:
         assert flow().request.data.content is None
         assert flow().response.data.content is None
+
 
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
 @pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
@@ -529,6 +531,7 @@ def test_stream_modify(tctx):
         >> reply()
         << SendData(tctx.client, b"0\r\n\r\n")
     )
+
 
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
 @pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
