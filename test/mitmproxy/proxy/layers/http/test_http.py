@@ -472,6 +472,7 @@ def test_response_streaming(tctx, why, transfer_encoding):
     assert playbook
     assert not flow().live
 
+
 def test_stream_modify(tctx):
     """Test HTTP stream modification"""
     server = Placeholder(Server)
@@ -527,6 +528,7 @@ def test_stream_modify(tctx):
         << http.HttpResponseHook(flow)
         >> reply()
         << SendData(tctx.client, b"0\r\n\r\n")
+    )
 
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
 @pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
