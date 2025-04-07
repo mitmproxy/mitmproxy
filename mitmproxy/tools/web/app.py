@@ -11,7 +11,6 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from itertools import islice
 from typing import ClassVar
 from typing import Concatenate
 
@@ -42,6 +41,7 @@ from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.utils.strutils import cut_after_n_lines
 from mitmproxy.websocket import WebSocketMessage
 
 TRANSPARENT_PNG = (
@@ -594,16 +594,16 @@ class FlowContentView(RequestHandler):
         flow: HTTPFlow | TCPFlow | UDPFlow,
         max_lines: int | None = None,
     ):
-        description, lines, error = contentviews.get_message_content_view(
+        description, content, error = contentviews.get_message_content_view(
             viewname, message, flow
         )
         if error:
             logging.error(error)
         if max_lines:
-            lines = islice(lines, max_lines)
+            content = cut_after_n_lines(content, max_lines)
 
         return dict(
-            lines=list(lines),
+            content=content,
             description=description,
         )
 
@@ -714,7 +714,9 @@ class State(RequestHandler):
     def get_json(master: mitmproxy.tools.web.master.WebMaster):
         return {
             "version": version.VERSION,
-            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
+            "contentViews": [
+                v.name for v in contentviews.registry if v.name != "Query"
+            ],
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },

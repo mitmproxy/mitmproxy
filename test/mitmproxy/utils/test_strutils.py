@@ -137,3 +137,16 @@ def test_escape_special_areas():
     esc = strutils.escape_special_areas('foo "b*r" b*z', ESCAPE_QUOTES, "*")
     assert esc == 'foo "b\ue02ar" b*z'
     assert strutils.unescape_special_areas(esc) == 'foo "b*r" b*z'
+
+
+@pytest.mark.parametrize(
+    "content,n,expected",
+    [
+        ("foo\nbar\nbaz", 1, "foo\n"),
+        ("foo\nbar\nbaz", 2, "foo\nbar\n"),
+        ("foo\nbar", 100, "foo\nbar"),
+        ("\nbar", 1, "\n"),
+    ],
+)
+def test_cut_after_n_newlines(content, n, expected):
+    assert strutils.cut_after_n_lines(content, n) == expected
