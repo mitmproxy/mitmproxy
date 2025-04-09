@@ -29,6 +29,8 @@
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 - Add a new feature to store streamed bodies for requests and responses.
   ([#7637](https://github.com/mitmproxy/mitmproxy/pull/7637), @mkiami)
+- Adjust popover placement for browsers that support anchor positioning (Chrome, Edge)
+  ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
 
 ## 17 February 2025: mitmproxy 11.1.3
 
