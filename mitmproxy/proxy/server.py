@@ -507,6 +507,12 @@ if __name__ == "__main__":  # pragma: no cover
     opts = moptions.Options()
     # options duplicated here to simplify testing setup
     opts.add_option(
+        "store_streamed_bodies",
+        bool,
+        False,
+        "",
+    )
+    opts.add_option(
         "connection_strategy",
         str,
         "lazy",

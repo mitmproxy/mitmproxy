@@ -145,6 +145,13 @@ class Proxyserver(ServerManager):
 
     def load(self, loader):
         loader.add_option(
+            "store_streamed_bodies",
+            bool,
+            False,
+            "Store HTTP request and response bodies when streamed (see `stream_large_bodies`). "
+            "This increases memory consumption, but makes it possible to inspect streamed bodies.",
+        )
+        loader.add_option(
             "connection_strategy",
             str,
             "eager",
@@ -159,10 +166,10 @@ class Proxyserver(ServerManager):
             Optional[str],
             None,
             """
-            Stream data to the client if response body exceeds the given
+            Stream data to the client if request or response body exceeds the given
             threshold. If streamed, the body will not be stored in any way,
             and such responses cannot be modified. Understands k/m/g
-            suffixes, i.e. 3m for 3 megabytes.
+            suffixes, i.e. 3m for 3 megabytes. To store streamed bodies, see `store_streamed_bodies`.
             """,
         )
         loader.add_option(
