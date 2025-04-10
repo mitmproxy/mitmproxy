@@ -587,6 +587,26 @@ class FlowContent(RequestHandler):
 
 
 class FlowContentView(RequestHandler):
+    # def message_to_json(
+    #     self,
+    #     viewname: str,
+    #     message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    #     flow: HTTPFlow | TCPFlow | UDPFlow,
+    #     max_lines: int | None = None,
+    # ):
+    #     description, lines, error = contentviews.get_message_content_view(
+    #         viewname, message, flow
+    #     )
+    #     if error:
+    #         logging.error(error)
+    #     if max_lines:
+    #         lines = islice(lines, max_lines)
+
+    #     return dict(
+    #         lines=list(lines),
+    #         description=description,
+    #     )
+
     def message_to_json(
         self,
         viewname: str,
@@ -599,11 +619,23 @@ class FlowContentView(RequestHandler):
         )
         if error:
             logging.error(error)
+
+        # Convert lines to a list so we can reliably check if it's empty
+        lines = list(lines)
+
+        if not lines or all(not part for line in lines for part in line):
+            try:
+                raw_text = message.content.decode("utf-8", errors="replace")
+            except Exception:
+                raw_text = repr(message.content)
+            lines = [[["text", raw_text]]]
+            description = "Raw"
+
         if max_lines:
-            lines = islice(lines, max_lines)
+            lines = list(islice(lines, max_lines))
 
         return dict(
-            lines=list(lines),
+            lines=lines,
             description=description,
         )
 
