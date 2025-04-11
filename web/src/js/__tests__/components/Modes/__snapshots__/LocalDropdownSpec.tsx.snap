@@ -10,7 +10,7 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
     >
       <input
         class="autocomplete-input"
-        placeholder="(all applications)"
+        placeholder="all applications"
         type="text"
         value=""
       />
@@ -35,6 +35,30 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
           <ul
             class="dropdown-list"
           >
+            <li
+              class="dropdown-item selected"
+              role="menuitem"
+            >
+              <div
+                class="process-details"
+              >
+                <div
+                  class="process-icon"
+                />
+                <span
+                  class="process-name"
+                >
+                  All applications
+                </span>
+              </div>
+              <i
+                aria-hidden="true"
+                class="fa fa-check"
+              />
+            </li>
+            <hr
+              class="process-separator"
+            />
             <li
               class="dropdown-item "
               role="menuitem"

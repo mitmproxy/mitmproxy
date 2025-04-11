@@ -109,7 +109,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     placeholder={
                         selectedProcesses && selectedProcesses?.length > 0
                             ? "Add more"
-                            : "(all applications)"
+                            : "all applications"
                     }
                     value={currentSearch}
                     onChange={handleInputChange}
@@ -127,6 +127,32 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                         <i className="fa fa-spinner" aria-hidden="true"></i>
                     ) : filteredProcesses.length > 0 ? (
                         <ul className="dropdown-list">
+                            <li
+                                className={`dropdown-item ${selectedProcesses === "" ? "selected" : ""}`}
+                                onClick={() => {
+                                    dispatch(
+                                        setSelectedProcesses({
+                                            server,
+                                            value: "",
+                                        }),
+                                    );
+                                }}
+                                role="menuitem"
+                            >
+                                <div className="process-details">
+                                    <div className="process-icon" />
+                                    <span className="process-name">
+                                        All applications
+                                    </span>
+                                </div>
+                                {selectedProcesses === "" && (
+                                    <i
+                                        className="fa fa-check"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                            </li>
+                            <hr className="process-separator" />
                             {filteredProcesses.map((option, index) => (
                                 <li
                                     key={index}
@@ -146,6 +172,12 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                                             {extractProcessName(option)}
                                         </span>
                                     </div>
+                                    {isSelected(option) && (
+                                        <i
+                                            className="fa fa-check"
+                                            aria-hidden="true"
+                                        />
+                                    )}
                                 </li>
                             ))}
                         </ul>
