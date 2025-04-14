@@ -2,7 +2,6 @@ import csv
 import logging
 import re
 from collections.abc import Sequence
-from typing import cast
 
 import mitmproxy.types
 from mitmproxy import command

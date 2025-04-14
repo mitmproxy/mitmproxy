@@ -1,12 +1,11 @@
-import logging
 import sys
 from functools import lru_cache
 
-import mitmproxy_rs.syntax_highlight
 import urwid
 
 import mitmproxy.flow
 import mitmproxy.tools.console.master
+import mitmproxy_rs.syntax_highlight
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns
@@ -286,7 +285,7 @@ class FlowDetails(tabs.Tabs):
                 pretty.text,
                 language=pretty.syntax_highlight,
             )
-            
+
             widget_lines.append(urwid.Text([marker, *chunks]))
 
         if flow.intercepted:
@@ -302,7 +301,9 @@ class FlowDetails(tabs.Tabs):
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
 
-    def content_view(self, viewmode: str, message: http.Message) -> tuple[str, list[urwid.Text]]:
+    def content_view(
+        self, viewmode: str, message: http.Message
+    ) -> tuple[str, list[urwid.Text]]:
         if message.raw_content is None:
             return "", [urwid.Text([("error", "[content missing]")])]
         elif message.raw_content == b"":
@@ -333,13 +334,13 @@ class FlowDetails(tabs.Tabs):
             )
 
     @lru_cache(maxsize=200)
-    def _get_content_view(self, viewmode: str, max_lines: int, _) -> tuple[str, list[urwid.Text]]:
+    def _get_content_view(
+        self, viewmode: str, max_lines: int, _
+    ) -> tuple[str, list[urwid.Text]]:
         message: http.Message = self._get_content_view_message
         self._get_content_view_message = None
 
-        pretty = contentviews.prettify_message(
-            message, self.flow, viewmode
-        )
+        pretty = contentviews.prettify_message(message, self.flow, viewmode)
         cut_off = strutils.cut_after_n_lines(pretty.text, max_lines)
 
         chunks = mitmproxy_rs.syntax_highlight.highlight(

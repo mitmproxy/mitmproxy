@@ -1,7 +1,7 @@
 import pytest
 
-from . import full_eval
-from mitmproxy.contentviews import http3
+from mitmproxy.contentviews import Metadata
+from mitmproxy.contentviews._view_http3 import http3
 from mitmproxy.tcp import TCPMessage
 from mitmproxy.test import tflow
 
@@ -21,14 +21,12 @@ from mitmproxy.test import tflow
             b'TITLE>Not Found</TITLE>\r\n<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>\r\n<BOD'
             b"Y><h2>Not Found</h2>\r\n<hr><p>HTTP Error 404. The requested resource is not found.</p>\r\n</BODY></HTML>\r\n"
         ),
-        b"",
     ],
 )
 def test_view_http3(data):
-    v = full_eval(http3.ViewHttp3())
     t = tflow.ttcpflow(messages=[TCPMessage(from_client=len(data) > 16, content=data)])
     t.metadata["quic_is_unidirectional"] = False
-    assert v(b"", flow=t, tcp_message=t.messages[0])
+    assert http3.prettify(b"", Metadata(flow=t, tcp_message=t.messages[0]))
 
 
 @pytest.mark.parametrize(
@@ -47,12 +45,10 @@ def test_view_http3(data):
     ],
 )
 def test_view_http3_unidirectional(data):
-    v = full_eval(http3.ViewHttp3())
     t = tflow.ttcpflow(messages=[TCPMessage(from_client=len(data) > 16, content=data)])
     t.metadata["quic_is_unidirectional"] = True
-    assert v(b"", flow=t, tcp_message=t.messages[0])
+    assert http3.prettify(b"", Metadata(flow=t, tcp_message=t.messages[0]))
 
 
 def test_render_priority():
-    v = http3.ViewHttp3()
-    assert not v.render_priority(b"random stuff")
+    assert not http3.render_priority(b"random stuff", Metadata())

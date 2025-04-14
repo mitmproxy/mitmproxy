@@ -1,11 +1,10 @@
 import io
 import shutil
-import typing
 from unittest import mock
 
-import mitmproxy_rs.syntax_highlight
 import pytest
 
+import mitmproxy_rs.syntax_highlight
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
 from mitmproxy.addons.dumper import CONTENTVIEW_STYLES
@@ -14,7 +13,6 @@ from mitmproxy.net.dns import response_codes
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
-from mitmproxy.contentviews import SyntaxHighlight
 
 
 def test_configure():
@@ -334,6 +332,7 @@ def test_styling():
     with taddons.context(d):
         d.response(tflow.tflow(resp=True))
         assert "\x1b[" in sio.getvalue()
+
 
 def test_has_styles_for_tags():
     missing = set(mitmproxy_rs.syntax_highlight.tags()) - set(CONTENTVIEW_STYLES)

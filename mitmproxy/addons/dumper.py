@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import logging
 import shutil
 import sys
 from typing import IO
 from typing import Optional
 
-import mitmproxy_rs
 from wsproto.frame_protocol import CloseReason
 
+import mitmproxy_rs
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import dns
@@ -131,14 +130,16 @@ class Dumper:
 
         if content_to_echo:
             highlighted = mitmproxy_rs.syntax_highlight.highlight(
-                pretty.text,
-                pretty.syntax_highlight
+                pretty.text, pretty.syntax_highlight
             )
             self.echo("")
-            self.echo("".join(
-                self.style(chunk, **CONTENTVIEW_STYLES.get(tag, {}))
-                for tag, chunk in highlighted
-            ), ident=4)
+            self.echo(
+                "".join(
+                    self.style(chunk, **CONTENTVIEW_STYLES.get(tag, {}))
+                    for tag, chunk in highlighted
+                ),
+                ident=4,
+            )
 
         if len(content_to_echo) < len(pretty.text):
             self.echo("(cut off)", ident=4, dim=True)

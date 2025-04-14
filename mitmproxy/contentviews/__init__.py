@@ -11,23 +11,15 @@ import traceback
 import warnings
 from dataclasses import dataclass
 
-from ._view_raw import raw
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
-from . import css
 from . import dns
 from . import graphql
-from . import grpc
-from . import hex
-from . import http3
 from . import image
 from . import javascript
-from .json import json_contentview
 from . import mqtt
-from . import msgpack
 from . import multipart
-from . import protobuf
 from . import query
 from . import socketio
 from . import urlencoded
@@ -37,14 +29,17 @@ from ._api import Contentview
 from ._api import InteractiveContentview
 from ._api import Metadata
 from ._api import SyntaxHighlight
-from ._compat import add
-from ._compat import get
+from ._compat import get  # noqa: F401
 from ._compat import LegacyContentview
-from ._compat import remove
+from ._compat import remove  # noqa: F401
 from ._registry import ContentviewRegistry
 from ._utils import get_data
 from ._utils import make_metadata
+from ._view_css import css
+from ._view_http3 import http3
+from ._view_raw import raw
 from .base import View
+from .json import json_contentview
 import mitmproxy_rs.contentviews
 from mitmproxy import flow
 from mitmproxy import http
@@ -138,13 +133,11 @@ _legacy_views = [
     xml_html.ViewXmlHtml,
     wbxml.ViewWBXML,
     javascript.ViewJavaScript,
-    css.ViewCSS,
     urlencoded.ViewURLEncoded,
     multipart.ViewMultipart,
     image.ViewImage,
     query.ViewQuery,
     mqtt.ViewMQTT,
-    http3.ViewHttp3,
     dns.ViewDns,
     socketio.ViewSocketIO,
 ]
@@ -154,6 +147,8 @@ for ViewCls in _legacy_views:
 _views: list[Contentview] = [
     json_contentview,
     raw,
+    css,
+    http3,
 ]
 for view in _views:
     registry.register(view)
@@ -174,7 +169,7 @@ def add(contentview: Contentview | type[Contentview]) -> None:
         warnings.warn(
             f"`mitmproxy.contentviews.View` is deprecated since mitmproxy 12, "
             f"migrate {contentview.__class__.__name__} to `mitmproxy.contentviews.Contentview` instead.",
-            stacklevel=2
+            stacklevel=2,
         )
         contentview = LegacyContentview(contentview)
     registry.register(contentview)

@@ -13,7 +13,6 @@ from typing import Any
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import hooks
-from mitmproxy.contentviews import Contentview, registry
 
 logger = logging.getLogger(__name__)
 

@@ -235,7 +235,7 @@ class Options(optmanager.OptManager):
             "protobuf_definitions",
             Optional[str],
             None,
-            "Path to a .proto file that's used to resolve Protobuf field names when pretty-printing."
+            "Path to a .proto file that's used to resolve Protobuf field names when pretty-printing.",
         )
 
         self.update(**kwargs)

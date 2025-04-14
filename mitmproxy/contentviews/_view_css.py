@@ -1,7 +1,8 @@
 import re
 import time
 
-from mitmproxy.contentviews import base
+from ._api import Contentview
+from ._api import Metadata
 from mitmproxy.utils import strutils
 
 """
@@ -48,18 +49,20 @@ def beautify(data: str, indent: str = "    "):
     return data.rstrip("\n") + "\n"
 
 
-class ViewCSS(base.View):
-    name = "CSS"
-
-    def __call__(self, data, **metadata):
+class ViewCSS(Contentview):
+    def prettify(self, data: bytes, metadata: Metadata) -> str:
         data = data.decode("utf8", "surrogateescape")
-        beautified = beautify(data)
-        return "CSS", base.format_text(beautified)
+        return beautify(data)
 
     def render_priority(
-        self, data: bytes, *, content_type: str | None = None, **metadata
+        self,
+        data: bytes,
+        metadata: Metadata,
     ) -> float:
-        return float(bool(data) and content_type == "text/css")
+        return float(bool(data) and metadata.content_type == "text/css")
+
+
+css = ViewCSS()
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -1,9 +1,10 @@
-
 import json
 from functools import lru_cache
 from typing import Any
 
-from mitmproxy.contentviews._api import Contentview, SyntaxHighlight, Metadata
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 
 PARSE_ERROR = object()
 
@@ -42,5 +43,6 @@ class JSONContentview(Contentview):
     @property
     def syntax_highlight(self) -> SyntaxHighlight:
         return "yaml"
+
 
 json_contentview = JSONContentview()

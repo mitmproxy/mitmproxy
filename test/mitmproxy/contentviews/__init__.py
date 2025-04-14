@@ -1,3 +1,7 @@
+from warnings import deprecated
+
+
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def full_eval(instance):
     def call(data, **metadata):
         x = instance(data, **metadata)

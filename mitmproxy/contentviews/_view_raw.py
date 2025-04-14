@@ -1,9 +1,8 @@
-from ._api import Metadata
 from ._api import Contentview
+from ._api import Metadata
 
 
 class RawContentview(Contentview):
-
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         return data.decode("utf-8", "backslashreplace")
 

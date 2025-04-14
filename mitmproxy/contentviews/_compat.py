@@ -62,11 +62,5 @@ def get(name: str) -> Contentview | None:
 
 
 @deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
-def add(view: View) -> None:
-    view = LegacyContentview(view)
-    contentviews.registry.register(view)
-
-
-@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def remove(view: View):
     pass
