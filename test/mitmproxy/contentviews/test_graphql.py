@@ -1,7 +1,4 @@
-from hypothesis import given
-from hypothesis.strategies import binary
 
-from . import full_eval
 from mitmproxy.contentviews import graphql
 
 
@@ -35,9 +32,3 @@ def test_view_graphql():
     v = graphql.ViewGraphQL()
     assert v(b"""{"query": "query P { \\n }"}""", content_type="application/json")
     assert v(b"""[{"query": "query P { \\n }"}]""", content_type="application/json")
-
-
-@given(binary())
-def test_view_graphql_doesnt_crash(data):
-    v = full_eval(graphql.ViewGraphQL())
-    v(data)

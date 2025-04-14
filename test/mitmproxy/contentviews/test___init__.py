@@ -3,7 +3,6 @@ from mitmproxy.contentviews import Metadata
 from mitmproxy.contentviews import prettify_message
 from mitmproxy.contentviews import raw
 from mitmproxy.contentviews import registry
-from mitmproxy.contentviews._compat import LegacyContentview
 from mitmproxy.test import tflow
 
 
@@ -77,9 +76,8 @@ class TestPrettifyMessage:
         f.request.content = b"content"
 
         failing_view = FailingContentview()
-        raw_view = LegacyContentview(raw.ViewRaw())
         registry.register(failing_view)
-        registry.register(raw_view)
+        registry.register(raw)
 
         result = prettify_message(f.request, f, None)
         assert result.text == "content"

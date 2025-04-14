@@ -39,9 +39,9 @@ from ._utils import get_data
 from ._utils import make_metadata
 from ._view_css import css
 from ._view_http3 import http3
+from ._view_json import json_view
 from ._view_raw import raw
 from .base import View
-from .json import json_contentview
 import mitmproxy_rs.contentviews
 from mitmproxy import flow
 from mitmproxy import http
@@ -98,7 +98,9 @@ def prettify_message(
             # Cut the exception traceback for display.
             exc, value, tb = sys.exc_info()
             tb_cut = cut_traceback(tb, "prettify_message")
-            if tb_cut == tb:  # If there are no extra frames, just skip displaying the traceback.
+            if (
+                tb_cut == tb
+            ):  # If there are no extra frames, just skip displaying the traceback.
                 tb_cut = None
             # If the contentview has been set explicitly, we display a hard error.
             err = "".join(traceback.format_exception(exc, value=value, tb=tb_cut))
@@ -153,7 +155,7 @@ for ViewCls in _legacy_views:
     registry.register(LegacyContentview(ViewCls()))  # type: ignore[abstract]
 
 _views: list[Contentview] = [
-    json_contentview,
+    json_view,
     raw,
     css,
     http3,

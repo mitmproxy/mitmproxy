@@ -421,11 +421,14 @@ class ConsoleAddon:
                 "set-cookies",
                 "url",
             ]
-            viewname = self.master.commands.call("console.flowview.mode")
+            try:
+                view_name = self.master.commands.call("console.flowview.mode")
+            except CommandError:
+                view_name = None
             request_cv = contentviews.registry.get_view(
                 contentviews.get_data(flow.request)[0] or b"",
                 contentviews.make_metadata(flow.request, flow),
-                viewname,
+                view_name,
             )
             if isinstance(request_cv, contentviews.InteractiveContentview):
                 focus_options.append(f"request-body ({request_cv.name})")
@@ -433,7 +436,7 @@ class ConsoleAddon:
                 response_cv = contentviews.registry.get_view(
                     contentviews.get_data(flow.response)[0] or b"",
                     contentviews.make_metadata(flow.response, flow),
-                    viewname,
+                    view_name,
                 )
                 if isinstance(response_cv, contentviews.InteractiveContentview):
                     focus_options.append(f"response-body ({response_cv.name})")

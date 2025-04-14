@@ -1,5 +1,5 @@
-from mitmproxy.contentviews._view_raw import raw
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._view_raw import raw
 
 
 def test_view_raw():
@@ -12,4 +12,4 @@ def test_view_raw():
 
 
 def test_render_priority():
-    assert raw.render_priority(b"data", Metadata()) == 0
+    assert raw.render_priority(b"data", Metadata()) == 0.1

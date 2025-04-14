@@ -1,27 +1,13 @@
 import json
-from functools import lru_cache
-from typing import Any
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.contentviews._api import SyntaxHighlight
 
-PARSE_ERROR = object()
-
-
-@lru_cache(1)
-def parse_json(s: bytes) -> Any:
-    try:
-        return json.loads(s.decode("utf-8"))
-    except ValueError:
-        return PARSE_ERROR
-
 
 class JSONContentview(Contentview):
     def prettify(self, data: bytes, metadata: Metadata) -> str:
-        data = parse_json(data)
-        if data is PARSE_ERROR:
-            raise ValueError("Invalid JSON")
+        data = json.loads(data)
         return json.dumps(data, indent=4)
 
     def render_priority(self, data: bytes, metadata: Metadata) -> float:
@@ -45,4 +31,4 @@ class JSONContentview(Contentview):
         return "yaml"
 
 
-json_contentview = JSONContentview()
+json_view = JSONContentview()

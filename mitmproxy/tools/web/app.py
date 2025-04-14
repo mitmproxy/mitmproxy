@@ -634,16 +634,16 @@ class FlowContentView(RequestHandler):
             msgs = []
             for m in messages:
                 d = self.message_to_json(
-                    content_view,
-                    m,
-                    flow,
-                    max_lines,
+                    view_name=content_view,
+                    message=m,
+                    flow=flow,
+                    max_lines=max_lines,
                     from_client=m.from_client,
-                    timestamp=m.timestamp
+                    timestamp=m.timestamp,
                 )
                 msgs.append(d)
                 if max_lines:
-                    max_lines -= len(d["lines"])
+                    max_lines -= d["text"].count("\n") + 1
                     if max_lines <= 0:
                         break
             self.write(msgs)
@@ -726,9 +726,7 @@ class State(RequestHandler):
     def get_json(master: mitmproxy.tools.web.master.WebMaster):
         return {
             "version": version.VERSION,
-            "contentViews": [
-                v for v in contentviews.registry if v != "query"
-            ],
+            "contentViews": [v for v in contentviews.registry if v != "query"],
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },

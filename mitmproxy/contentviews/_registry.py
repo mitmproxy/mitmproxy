@@ -44,7 +44,20 @@ class ContentviewRegistry(Mapping[str, Contentview]):
                     f"Unknown contentview {view_name!r}, selecting best match instead."
                 )
 
-        return max(self.values(), key=lambda cv: cv.render_priority(data, metadata))
+        max_prio: tuple[float, Contentview] | None = None
+        for name, view in self._by_name.items():
+            try:
+                priority = view.render_priority(data, metadata)
+                assert isinstance(priority, (int, float)), (
+                    f"Render_priority for {view.name} did not return a number."
+                )
+            except Exception:
+                logger.exception("Error in render_priority")
+            else:
+                if max_prio is None or max_prio[0] < priority:
+                    max_prio = (priority, view)
+        assert max_prio
+        return max_prio[1]
 
     def __iter__(self) -> typing.Iterator[str]:
         return iter(self._by_name)

@@ -29,12 +29,15 @@ class LegacyContentview(Contentview):
         data: bytes,
         metadata: Metadata,
     ) -> float:
-        return self.contentview.render_priority(
-            data=data,
-            content_type=metadata.content_type,
-            flow=metadata.flow,
-            http_message=metadata.http_message,
-        ) or 0.0
+        return (
+            self.contentview.render_priority(
+                data=data,
+                content_type=metadata.content_type,
+                flow=metadata.flow,
+                http_message=metadata.http_message,
+            )
+            or 0.0
+        )
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         lines: Iterator[TViewLine]

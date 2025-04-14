@@ -29,7 +29,10 @@ class Frame:
         elif self.type == 1:
             try:
                 hdrs = pylsqpack.Decoder(4096, 16).feed_header(0, self.data)[1]
-                return f"HEADERS Frame\n" + "\n".join(f"{k.decode(errors="backslashreplace")}: {v.decode(errors="backslashreplace")}" for k, v in hdrs)
+                return f"HEADERS Frame\n" + "\n".join(
+                    f"{k.decode(errors='backslashreplace')}: {v.decode(errors='backslashreplace')}"
+                    for k, v in hdrs
+                )
             except Exception as e:
                 frame_name = f"HEADERS Frame (error: {e})"
         elif self.type == 4:

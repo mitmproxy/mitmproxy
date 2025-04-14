@@ -67,7 +67,9 @@ def save_flows_content(path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
             t = time.time()
             if message:
                 pretty = contentviews.prettify_message(
-                    message, flow=f, view_name=None,
+                    message,
+                    flow=f,
+                    view_name=None,
                 )
             else:
                 pretty = contentviews.ContentviewResult(
@@ -80,15 +82,17 @@ def save_flows_content(path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
                 logging.info(
                     f"Slow content view: {pretty.view_name} took {round(time.time() - t, 1)}s",
                 )
-            with (message_path / "content" / "Auto.json").open("w") as content_view_file:
+            with (message_path / "content" / "Auto.json").open(
+                "w"
+            ) as content_view_file:
                 json.dump(
                     dict(
                         text=pretty.text,
                         syntax_highlight=pretty.syntax_highlight,
                         view_name=pretty.view_name,
-                        description=pretty.description
+                        description=pretty.description,
                     ),
-                    content_view_file
+                    content_view_file,
                 )
 
 

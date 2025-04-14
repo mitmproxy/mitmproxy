@@ -1,98 +1,21 @@
-from unittest import mock
-
-import pytest
-
-from mitmproxy import contentviews
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
+from mitmproxy.contentviews import raw
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
+from mitmproxy_rs.contentviews import msgpack
 
 
-class TestContentView(contentviews.View):
-    name = "test"
-
-    def __call__(self, *args, **kwargs):
-        pass
-
-    def should_render(self, content_type):
-        return content_type == "test/123"
+class TestContentview(Contentview):
+    def prettify(self, data: bytes, metadata: Metadata) -> str:
+        return "test"
 
 
-def test_add_remove():
-    tcv = TestContentView()
-    contentviews.add(tcv)
-    assert tcv in contentviews.views
-
-    # repeated addition causes exception
-    with pytest.raises(ValueError, match="Duplicate view"):
-        contentviews.add(tcv)
-
-    contentviews.remove(tcv)
-    assert tcv not in contentviews.views
-
-
-def test_get_content_view():
-    desc, lines, err = contentviews.get_content_view(
-        contentviews.get("Raw"),
-        b"[1, 2, 3]",
-    )
-    assert "Raw" in desc
-    assert list(lines)
-    assert not err
-
-    desc, lines, err = contentviews.get_content_view(
-        contentviews.get("Auto"),
-        b"[1, 2, 3]",
-        content_type="application/json",
-    )
-    assert desc == "JSON"
-    assert list(lines)
-
-    desc, lines, err = contentviews.get_content_view(
-        contentviews.get("JSON"),
-        b"[1, 2",
-    )
-    assert "Couldn't parse" in desc
-
-    with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as view_auto:
-        view_auto.side_effect = ValueError
-
-        desc, lines, err = contentviews.get_content_view(
-            contentviews.get("Auto"),
-            b"[1, 2",
-        )
-        assert err
-        assert "Couldn't parse" in desc
-
-
-def test_get_message_content_view():
-    f = tflow.tflow()
-    r = tutils.treq()
-    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
-    assert desc == "Raw"
-
-    desc, lines, err = contentviews.get_message_content_view("unknown", r, f)
-    assert desc == "Raw"
-
-    r.encode("gzip")
-    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
-    assert desc == "[decoded gzip] Raw"
-
-    r.headers["content-encoding"] = "deflate"
-    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
-    assert desc == "[cannot decode] Raw"
-
-    del r.headers["content-encoding"]
-    r.headers["content-type"] = "multipart/form-data; boundary=AaB03x"
-    r.content = b"""
---AaB03x
-Content-Disposition: form-data; name="submit-name"
-
-Larry
---AaB03x
-        """.strip()
-    desc, lines, err = contentviews.get_message_content_view("multipart form", r, f)
-    assert desc == "Multipart form"
-
-    r.content = None
-    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
-    assert list(lines) == [[("error", "content missing")]]
+def test_default_impls():
+    t = TestContentview()
+    assert t.name == "Test"
+    assert t.syntax_highlight == "none"
+    assert t.render_priority(b"data", Metadata()) == 0
+    assert raw < t
+    assert not t < raw
+    assert msgpack < raw
+    assert not raw < msgpack
+    assert not msgpack < msgpack
