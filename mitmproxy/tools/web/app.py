@@ -733,7 +733,7 @@ class ProcessList(RequestHandler):
         return [
             {
                 "is_visible": process.is_visible,
-                "executable": process.executable,
+                "executable": str(process.executable),
                 "is_system": process.is_system,
                 "display_name": process.display_name,
             }

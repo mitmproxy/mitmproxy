@@ -191,6 +191,38 @@ async def test_wireguard(tdata, monkeypatch, caplog):
         assert "stopped" in caplog.text
 
 
+@pytest.mark.parametrize("host", ["127.0.0.1", "::1"])
+async def test_wireguard_dual_stack(host, caplog_async):
+    caplog_async.set_level("DEBUG")
+
+    system = platform.system()
+    if system not in ("Linux", "Darwin", "Windows"):
+        return pytest.skip("Unsupported platform for wg-test-client.")
+
+    arch = platform.machine()
+    if arch != "AMD64" and arch != "x86_64":
+        return pytest.skip("Unsupported architecture for wg-test-client.")
+
+    with taddons.context(Proxyserver()):
+        inst = WireGuardServerInstance.make(f"wireguard@0", MagicMock())
+
+        await inst.start()
+        assert await caplog_async.await_log("WireGuard server listening")
+
+        _, port = inst.listen_addrs[0]
+
+        assert inst.is_running
+
+        stream = await mitmproxy_rs.udp.open_udp_connection(host, port)
+        stream.write(b"\x00\x00\x01")
+        assert await caplog_async.await_log("Received invalid WireGuard packet")
+        stream.close()
+        await stream.wait_closed()
+
+        await inst.stop()
+        assert await caplog_async.await_log("stopped")
+
+
 async def test_wireguard_generate_conf(tmp_path):
     with taddons.context(Proxyserver()) as tctx:
         tctx.options.confdir = str(tmp_path)

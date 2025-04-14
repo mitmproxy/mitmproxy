@@ -27,6 +27,8 @@
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
+- Fix a bug where mitmproxy does not listen on IPv4 and IPv6 by default in wireguard mode.
+  ([#7589](https://github.com/mitmproxy/mitmproxy/pull/7589), @errorxyz)
 - Add a new feature to store streamed bodies for requests and responses.
   ([#7637](https://github.com/mitmproxy/mitmproxy/pull/7637), @mkiami)
 - Adjust popover placement for browsers that support anchor positioning (Chrome, Edge)
