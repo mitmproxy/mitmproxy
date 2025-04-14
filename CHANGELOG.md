@@ -29,6 +29,12 @@
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 - Fix a bug where mitmproxy does not listen on IPv4 and IPv6 by default in wireguard mode.
   ([#7589](https://github.com/mitmproxy/mitmproxy/pull/7589), @errorxyz)
+- Add a new feature to store streamed bodies for requests and responses.
+  ([#7637](https://github.com/mitmproxy/mitmproxy/pull/7637), @mkiami)
+- Adjust popover placement for browsers that support anchor positioning (Chrome, Edge)
+  ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
+- Fix mitmweb crash when searching or highlighting using ~h, ~hq, or ~hs.
+  ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
 
 ## 17 February 2025: mitmproxy 11.1.3
 

@@ -74,6 +74,7 @@ export interface OptionsState {
     ssl_verify_upstream_trusted_confdir: string | undefined;
     stickyauth: string | undefined;
     stickycookie: string | undefined;
+    store_streamed_bodies: boolean;
     stream_large_bodies: string | undefined;
     strip_ech: boolean;
     tcp_hosts: string[];
@@ -178,6 +179,7 @@ export const defaultState: OptionsState = {
     ssl_verify_upstream_trusted_confdir: undefined,
     stickyauth: undefined,
     stickycookie: undefined,
+    store_streamed_bodies: false,
     stream_large_bodies: undefined,
     strip_ech: true,
     tcp_hosts: [],

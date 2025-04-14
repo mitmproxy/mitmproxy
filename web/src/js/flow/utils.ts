@@ -47,6 +47,7 @@ export class MessageUtils {
 
     static match_header(message, regex) {
         const headers = message.headers;
+        if (!headers) return false;
         let i = headers.length;
         while (i--) {
             if (regex.test(headers[i].join(" "))) {
