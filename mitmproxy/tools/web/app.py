@@ -3,7 +3,6 @@ from __future__ import annotations
 import functools
 import hashlib
 import json
-import logging
 import os.path
 import re
 import secrets
@@ -11,7 +10,8 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from typing import ClassVar, Any
+from typing import Any
+from typing import ClassVar
 from typing import Concatenate
 
 import tornado.escape

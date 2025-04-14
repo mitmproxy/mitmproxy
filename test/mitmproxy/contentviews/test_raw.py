@@ -1,23 +1,15 @@
-from . import full_eval
-from mitmproxy.contentviews import raw
+from mitmproxy.contentviews._view_raw import raw
+from mitmproxy.contentviews._api import Metadata
 
 
 def test_view_raw():
-    v = full_eval(raw.ViewRaw())
-    assert v(b"foo")
+    meta = Metadata()
+    assert raw.prettify(b"foo", meta)
     # unicode
-    assert v("🫠".encode()) == (
-        "Raw",
-        [[("text", "🫠".encode())]],
-    )
+    assert raw.prettify("🫠".encode(), meta) == "🫠"
     # invalid utf8
-    assert v(b"\xff") == (
-        "Raw",
-        [[("text", b"\xff")]],
-    )
+    assert raw.prettify(b"\xff", meta) == r"\xff"
 
 
 def test_render_priority():
-    v = raw.ViewRaw()
-    assert v.render_priority(b"anything")
-    assert not v.render_priority(b"")
+    assert raw.render_priority(b"data", Metadata()) == 0
