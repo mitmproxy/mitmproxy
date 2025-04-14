@@ -4,6 +4,7 @@ import logging
 import typing
 from abc import abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 from mitmproxy import http
@@ -20,7 +21,9 @@ type SyntaxHighlight = Literal["yaml", "xml", "error", "none"]
 
 @typing.runtime_checkable
 class Contentview(typing.Protocol):
-    """A contentview that prettifies raw data."""
+    """
+    Base class for all contentviews.
+    """
 
     @property
     def name(self) -> str:
@@ -43,7 +46,7 @@ class Contentview(typing.Protocol):
     ) -> str:
         """
         Transform raw data into human-readable output.
-        May raise a `ValueError` if data cannot be prettified.
+        May raise an exception (e.g. `ValueError`) if data cannot be prettified.
         """
 
     def render_priority(
@@ -83,7 +86,7 @@ class Metadata:
     """
     Metadata about the data that is being prettified.
 
-    Implementations must not rely on any given attribute to be present.
+    Do not rely on any given attribute to be present.
     """
 
     flow: Flow | None = None
@@ -99,6 +102,9 @@ class Metadata:
     """The UDP message that the data belongs to, if any."""
     websocket_message: WebSocketMessage | None = None
     """The websocket message that the data belongs to, if any."""
+
+    protobuf_definitions: Path | None = None
+    """Path to a .proto file that's used to resolve Protobuf field names."""
 
     original_data: bytes | None = None
     """When reencoding: The original data that was prettified."""

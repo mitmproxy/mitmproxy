@@ -3,12 +3,11 @@ mitmproxy includes a set of content views which can be used to
 format/decode/highlight/reencode data. While they are mostly used for HTTP message
 bodies, the may be used in other contexts, e.g. to decode WebSocket messages.
 
-See "Custom Contentviews" in the mitmproxy documentation for more information.
+See "Custom Contentviews" in the mitmproxy documentation for examples.
 """
 
 import logging
 import traceback
-import typing
 import warnings
 from dataclasses import dataclass
 
@@ -169,6 +168,7 @@ def add(contentview: Contentview | type[Contentview]) -> None:
     Register a contentview for use in mitmproxy.
 
     You may pass a `Contentview` instance or the class itself.
+    When passing the class, its constructor will be invoked with no arguments.
     """
     if isinstance(contentview, View):
         warnings.warn(

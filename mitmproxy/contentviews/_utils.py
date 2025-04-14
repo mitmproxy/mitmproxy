@@ -1,4 +1,6 @@
-from .. import http
+from pathlib import Path
+
+from .. import http, ctx
 from ..flow import Flow
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
@@ -10,7 +12,10 @@ def make_metadata(
     message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
     flow: Flow,
 ) -> Metadata:
-    metadata = Metadata(flow=flow)
+    metadata = Metadata(
+        flow=flow,
+        protobuf_definitions=Path(ctx.options.protobuf_definitions),
+    )
 
     match message:
         case http.Message():
