@@ -32,10 +32,12 @@ export class MessageUtils {
         const regexStr = regex.toString();
         if (!(regexStr in msg._headerLookups)) {
             let header: HTTPHeader | undefined = undefined;
-            for (let i = 0; i < msg.headers.length; i++) {
-                if (msg.headers[i][0].match(regex)) {
-                    header = msg.headers[i];
-                    break;
+            if (msg.headers) {
+                for (let i = 0; i < msg.headers.length; i++) {
+                    if (msg.headers[i][0].match(regex)) {
+                        header = msg.headers[i];
+                        break;
+                    }
                 }
             }
             msg._headerLookups[regexStr] = header ? header[1] : undefined;
@@ -45,6 +47,7 @@ export class MessageUtils {
 
     static match_header(message, regex) {
         const headers = message.headers;
+        if (!headers) return false;
         let i = headers.length;
         while (i--) {
             if (regex.test(headers[i].join(" "))) {

@@ -354,9 +354,9 @@ class Dumper:
                     quic_type = "dgrams"
                 # TODO: This should not be metadata, this should be typed attributes.
                 flow_type = (
-                    f"quic {quic_type} {f.metadata.get('quic_stream_id_client','')} "
+                    f"quic {quic_type} {f.metadata.get('quic_stream_id_client', '')} "
                     f"{direction} mitmproxy {direction} "
-                    f"quic {quic_type} {f.metadata.get('quic_stream_id_server','')}"
+                    f"quic {quic_type} {f.metadata.get('quic_stream_id_server', '')}"
                 )
             else:
                 flow_type = f.type

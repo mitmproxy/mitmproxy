@@ -51,7 +51,7 @@ def test_assemble_content_type():
         # css charset
         (
             "text/css",
-            b'@charset "gb2312";' b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}',
+            b'@charset "gb2312";#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}',
             "gb18030",
         ),
     ],

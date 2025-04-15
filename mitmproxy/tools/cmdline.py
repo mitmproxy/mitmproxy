@@ -67,6 +67,7 @@ def common_options(parser, opts):
     opts.make_parser(group, "tcp_hosts", metavar="HOST")
     opts.make_parser(group, "upstream_auth", metavar="USER:PASS")
     opts.make_parser(group, "proxyauth", metavar="SPEC")
+    opts.make_parser(group, "store_streamed_bodies")
     opts.make_parser(group, "rawtcp")
     opts.make_parser(group, "http2")
 

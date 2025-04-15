@@ -19,6 +19,7 @@ usermod -o \
     >/dev/null  # hide "usermod: no changes"
 
 if [[ "$1" = "mitmdump" || "$1" = "mitmproxy" || "$1" = "mitmweb" ]]; then
+  # Drop privileges if we are starting one of the mitmproxy tools.
   exec gosu mitmproxy "$@"
 else
   exec "$@"

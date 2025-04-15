@@ -4,6 +4,8 @@ from collections.abc import Sequence
 from enum import Enum
 from logging import DEBUG
 from logging import ERROR
+from typing import Any
+from typing import assert_never
 from typing import ClassVar
 
 import h2.config
@@ -27,6 +29,7 @@ from ...events import Start
 from ...events import Wakeup
 from ...layer import CommandGenerator
 from ...utils import expect
+from . import ErrorCode
 from . import RequestData
 from . import RequestEndOfMessage
 from . import RequestHeaders
@@ -61,7 +64,7 @@ CATCH_HYPER_H2_ERRORS = (ValueError, IndexError)
 
 class Http2Connection(HttpConnection):
     h2_conf: ClassVar[h2.config.H2Configuration]
-    h2_conf_defaults = dict(
+    h2_conf_defaults: dict[str, Any] = dict(
         header_encoding=False,
         validate_outbound_headers=False,
         # validate_inbound_headers is controlled by the validate_inbound_headers option.
@@ -135,32 +138,53 @@ class Http2Connection(HttpConnection):
                     self.h2_conn.end_stream(event.stream_id)
             elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
                 if not self.is_closed(event.stream_id):
-                    code = {
-                        status_codes.CLIENT_CLOSED_REQUEST: h2.errors.ErrorCodes.CANCEL,
-                    }.get(event.code, h2.errors.ErrorCodes.INTERNAL_ERROR)
                     stream: h2.stream.H2Stream = self.h2_conn.streams[event.stream_id]
-                    send_error_message = (
+                    status = event.code.http_status_code()
+                    if (
                         isinstance(event, ResponseProtocolError)
                         and self.is_open_for_us(event.stream_id)
                         and not stream.state_machine.headers_sent
-                        and event.code != status_codes.NO_RESPONSE
-                    )
-                    if send_error_message:
+                        and status is not None
+                    ):
                         self.h2_conn.send_headers(
                             event.stream_id,
                             [
-                                (b":status", b"%d" % event.code),
+                                (b":status", b"%d" % status),
                                 (b"server", version.MITMPROXY.encode()),
                                 (b"content-type", b"text/html"),
                             ],
                         )
                         self.h2_conn.send_data(
                             event.stream_id,
-                            format_error(event.code, event.message),
+                            format_error(status, event.message),
                             end_stream=True,
                         )
                     else:
-                        self.h2_conn.reset_stream(event.stream_id, code)
+                        match event.code:
+                            case ErrorCode.CANCEL | ErrorCode.CLIENT_DISCONNECTED:
+                                error_code = h2.errors.ErrorCodes.CANCEL
+                            case ErrorCode.KILL:
+                                # XXX: Debateable whether this is the best error code.
+                                error_code = h2.errors.ErrorCodes.INTERNAL_ERROR
+                            case ErrorCode.HTTP_1_1_REQUIRED:
+                                error_code = h2.errors.ErrorCodes.HTTP_1_1_REQUIRED
+                            case ErrorCode.PASSTHROUGH_CLOSE:
+                                # FIXME: This probably shouldn't be a protocol error, but an EOM event.
+                                error_code = h2.errors.ErrorCodes.CANCEL
+                            case (
+                                ErrorCode.GENERIC_CLIENT_ERROR
+                                | ErrorCode.GENERIC_SERVER_ERROR
+                                | ErrorCode.REQUEST_TOO_LARGE
+                                | ErrorCode.RESPONSE_TOO_LARGE
+                                | ErrorCode.CONNECT_FAILED
+                                | ErrorCode.DESTINATION_UNKNOWN
+                                | ErrorCode.REQUEST_VALIDATION_FAILED
+                                | ErrorCode.RESPONSE_VALIDATION_FAILED
+                            ):
+                                error_code = h2.errors.ErrorCodes.INTERNAL_ERROR
+                            case other:  # pragma: no cover
+                                assert_never(other)
+                        self.h2_conn.reset_stream(event.stream_id, error_code.value)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
             data_to_send = self.h2_conn.data_to_send()
@@ -203,7 +227,9 @@ class Http2Connection(HttpConnection):
         if isinstance(event, h2.events.DataReceived):
             state = self.streams.get(event.stream_id, None)
             if state is StreamState.HEADERS_RECEIVED:
-                yield ReceiveHttp(self.ReceiveData(event.stream_id, event.data))
+                is_empty_eos_data_frame = event.stream_ended and not event.data
+                if not is_empty_eos_data_frame:
+                    yield ReceiveHttp(self.ReceiveData(event.stream_id, event.data))
             elif state is StreamState.EXPECTING_HEADERS:
                 yield from self.protocol_error(
                     f"Received HTTP/2 data frame, expected headers."
@@ -229,9 +255,13 @@ class Http2Connection(HttpConnection):
                     err_str = h2.errors.ErrorCodes(event.error_code).name
                 except ValueError:
                     err_str = str(event.error_code)
-                err_code = {
-                    h2.errors.ErrorCodes.CANCEL: status_codes.CLIENT_CLOSED_REQUEST,
-                }.get(event.error_code, self.ReceiveProtocolError.code)
+                match event.error_code:
+                    case h2.errors.ErrorCodes.CANCEL:
+                        err_code = ErrorCode.CANCEL
+                    case h2.errors.ErrorCodes.HTTP_1_1_REQUIRED:
+                        err_code = ErrorCode.HTTP_1_1_REQUIRED
+                    case _:
+                        err_code = self.ReceiveProtocolError.code
                 yield ReceiveHttp(
                     self.ReceiveProtocolError(
                         event.stream_id,
@@ -294,7 +324,11 @@ class Http2Connection(HttpConnection):
     def close_connection(self, msg: str) -> CommandGenerator[None]:
         yield CloseConnection(self.conn)
         for stream_id in self.streams:
-            yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
+            yield ReceiveHttp(
+                self.ReceiveProtocolError(
+                    stream_id, msg, self.ReceiveProtocolError.code
+                )
+            )
         self.streams.clear()
         self._handle_event = self.done  # type: ignore
 
@@ -308,14 +342,14 @@ def normalize_h1_headers(
 ) -> list[tuple[bytes, bytes]]:
     # HTTP/1 servers commonly send capitalized headers (Content-Length vs content-length),
     # which isn't valid HTTP/2. As such we normalize.
-    headers = h2.utilities.normalize_outbound_headers(
-        headers,
-        h2.utilities.HeaderValidationFlags(is_client, False, not is_client, False),
-    )
-    # make sure that this is not just an iterator but an iterable,
+    # Make sure that this is not just an iterator but an iterable,
     # otherwise hyper-h2 will silently drop headers.
-    headers = list(headers)
-    return headers
+    return list(
+        h2.utilities.normalize_outbound_headers(
+            headers,
+            h2.utilities.HeaderValidationFlags(is_client, False, not is_client, False),
+        )
+    )
 
 
 def normalize_h2_headers(headers: list[tuple[bytes, bytes]]) -> CommandGenerator[None]:

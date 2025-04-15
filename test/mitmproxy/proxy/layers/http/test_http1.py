@@ -21,9 +21,7 @@ class TestServer:
     def test_simple(self, tctx, pipeline):
         hdrs1 = Placeholder(RequestHeaders)
         hdrs2 = Placeholder(RequestHeaders)
-        req2 = (
-            b"GET http://example.com/two HTTP/1.1\r\n" b"Host: example.com\r\n" b"\r\n"
-        )
+        req2 = b"GET http://example.com/two HTTP/1.1\r\nHost: example.com\r\n\r\n"
         playbook = Playbook(Http1Server(tctx))
         (
             playbook

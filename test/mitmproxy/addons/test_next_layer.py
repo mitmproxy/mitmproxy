@@ -489,6 +489,23 @@ explicit_proxy_configs = [
     ),
     pytest.param(
         TConf(
+            before=[
+                modes.HttpProxy,
+                ClientTLSLayer,
+                partial(HttpLayer, mode=HTTPMode.regular),
+                partial(HttpStream, stream_id=1),
+            ],
+            after=[modes.HttpProxy, ClientTLSLayer, HttpLayer, HttpStream, TCPLayer],
+            server_address=("192.0.2.1", 443),
+            ignore_hosts=[".+"],
+            ignore_conn=True,
+            data_client=client_hello_with_extensions,
+            alpn=b"http/1.1",
+        ),
+        id=f"explicit proxy: ignore_hosts over established secure web proxy",
+    ),
+    pytest.param(
+        TConf(
             before=[modes.HttpUpstreamProxy],
             after=[modes.HttpUpstreamProxy, HttpLayer],
         ),

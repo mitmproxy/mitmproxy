@@ -15,11 +15,7 @@ from mitmproxy.test.tutils import tresp
 
 def test_assemble_request():
     assert assemble_request(treq()) == (
-        b"GET /path HTTP/1.1\r\n"
-        b"header: qvalue\r\n"
-        b"content-length: 7\r\n"
-        b"\r\n"
-        b"content"
+        b"GET /path HTTP/1.1\r\nheader: qvalue\r\ncontent-length: 7\r\n\r\ncontent"
     )
 
     with pytest.raises(ValueError):

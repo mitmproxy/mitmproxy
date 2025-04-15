@@ -408,7 +408,6 @@ class TLSLayer(tunnel.TunnelLayer):
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:
         if data:
             self.tls.bio_write(data)
-        yield from self.tls_interact()
 
         plaintext = bytearray()
         close = False
@@ -428,6 +427,12 @@ class TLSLayer(tunnel.TunnelLayer):
                 # already fired out `tls_established_client` hook.
                 yield commands.Log(f"TLS Error: {e}", WARNING)
                 break
+
+        # Can we send something?
+        # Note that this must happen after `recv()`, which may have advanced the state machine.
+        # https://github.com/mitmproxy/mitmproxy/discussions/7550
+        yield from self.tls_interact()
+
         if plaintext:
             yield from self.event_to_child(
                 events.DataReceived(self.conn, bytes(plaintext))
