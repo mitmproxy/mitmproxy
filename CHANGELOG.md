@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Added valkey_allowlist.py to examples/contrib -- This script enforces an allowlist using a valkey (Redis) database.
+
 
 ## 12 January 2025: mitmproxy 11.1.0
 
