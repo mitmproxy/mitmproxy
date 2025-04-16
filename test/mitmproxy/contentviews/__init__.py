@@ -1,6 +1,6 @@
 import sys
 
-if sys.version_info < (3, 13):
+if sys.version_info < (3, 13):  # pragma: no cover
     from typing_extensions import deprecated
 else:
     from warnings import deprecated

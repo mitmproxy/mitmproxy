@@ -1,4 +1,4 @@
-from .test__api import FailingContentview
+from .test__api import FailingPrettifyContentview
 from mitmproxy.contentviews import Metadata
 from mitmproxy.contentviews import prettify_message
 from mitmproxy.contentviews import raw
@@ -77,7 +77,7 @@ class TestPrettifyMessage:
             f = tflow.tflow()
             f.request.content = b"content"
 
-            failing_view = FailingContentview()
+            failing_view = FailingPrettifyContentview()
             registry.register(failing_view)
             registry.register(raw)
 
@@ -85,16 +85,16 @@ class TestPrettifyMessage:
             assert result.text == "content"
             assert result.syntax_highlight == "none"
             assert result.view_name == "Raw"
-            assert "[failed to parse as Failing]" in result.description
+            assert "[failed to parse as FailingPrettify]" in result.description
 
     def test_view_failure_explicit(self):
         f = tflow.tflow()
         f.request.content = b"content"
 
-        failing_view = FailingContentview()
+        failing_view = FailingPrettifyContentview()
         registry.register(failing_view)
 
         result = prettify_message(f.request, f, "failing")
-        assert "Couldn't parse as Failing" in result.text
+        assert "Couldn't parse as FailingPrettify" in result.text
         assert result.syntax_highlight == "error"
-        assert result.view_name == "Failing"
+        assert result.view_name == "FailingPrettify"

@@ -10,7 +10,7 @@ from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils.strutils import always_str
 
-if sys.version_info < (3, 13):
+if sys.version_info < (3, 13):  # pragma: no cover
     from typing_extensions import deprecated
 else:
     from warnings import deprecated

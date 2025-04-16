@@ -13,9 +13,17 @@ class ExampleContentview(InteractiveContentview):
         return prettified.encode()
 
 
-class FailingContentview(Contentview):
+class FailingPrettifyContentview(Contentview):
     def prettify(self, data, metadata):
         raise ValueError("prettify error")
+
+    def render_priority(self, data: bytes, metadata: Metadata) -> float:
+        return 1
+
+
+class FailingRenderPriorityContentview(Contentview):
+    def prettify(self, data, metadata):
+        return data.decode()
 
     def render_priority(self, data: bytes, metadata: Metadata) -> float:
         raise ValueError("render_priority error")

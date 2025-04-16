@@ -3,7 +3,7 @@ from unittest import mock
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.contentviews._registry import ContentviewRegistry
 from test.mitmproxy.contentviews.test__api import ExampleContentview
-from test.mitmproxy.contentviews.test__api import FailingContentview
+from test.mitmproxy.contentviews.test__api import FailingRenderPriorityContentview
 
 
 def test_register_triggers_on_change():
@@ -61,7 +61,7 @@ def test_get_view_unknown_name(caplog):
 
 def test_render_priority_error(caplog):
     registry = ContentviewRegistry()
-    view = FailingContentview()
+    view = FailingRenderPriorityContentview()
     registry.register(view)
     registry.register(ExampleContentview)
 
