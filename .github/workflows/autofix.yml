@@ -15,9 +15,8 @@ jobs:
     steps:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/uv-sync@main
 
-      - run: uv sync
-      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - run: ruff check --fix-only .
       - run: ruff format .
 
