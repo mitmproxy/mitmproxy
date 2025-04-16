@@ -6,7 +6,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
     - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
     - uses: mhils/workflows/uv-sync@main
       with:
