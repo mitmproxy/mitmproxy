@@ -364,7 +364,7 @@ class FlowDetails(tabs.Tabs):
                 )
             )
 
-        return pretty.description, text_objects
+        return f"{pretty.view_name} {pretty.description}", text_objects
 
     def conn_text(self, conn):
         if conn:
