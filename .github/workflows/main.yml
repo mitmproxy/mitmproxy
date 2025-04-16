@@ -106,7 +106,7 @@ jobs:
           apt-get install --no-install-recommends -y git ca-certificates
       - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
       - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - run: python3 -m pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
