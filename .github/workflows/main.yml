@@ -54,10 +54,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/setup-python@42ac4652123201e0b4646175b78b25819cf6bfaf
-        with:
-          python-version: ${{ matrix.py }}
-      - run: pip install tox
+      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/uv-sync@main
+
       - run: tox -e py
         if: matrix.os != 'ubuntu-latest'
       - name: Run tox -e py (without internet)
@@ -76,8 +75,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/setup-python@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - run: pip install tox-uv
+      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/uv-sync@main
       - run: tox -e old-dependencies
 
   build:
@@ -108,7 +107,7 @@ jobs:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/uv-sync@main
-      - run: uv pip install .
+      - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
@@ -154,9 +153,9 @@ jobs:
       )
     steps:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/setup-python@42ac4652123201e0b4646175b78b25819cf6bfaf
-
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/uv-sync@main
+      - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
         env:
           CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
@@ -209,12 +208,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/setup-python@42ac4652123201e0b4646175b78b25819cf6bfaf
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
-      - run: pip install -e .[dev]
+      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/uv-sync@main
       - run: ./docs/build.py
       - uses: actions/upload-artifact@v4
         with:
