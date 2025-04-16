@@ -297,7 +297,8 @@ commands = [
 ]
 
 [tool.tox.env.test-offline]
-commands = [["python", "test/run-tests-offline.sh"]]
+commands = [["bash", "test/run-tests-offline.sh"]]
+allowlist_externals = ["bash"]
 
 [tool.tox.env.lint]
 commands = [["ruff", "check",  "."]]
