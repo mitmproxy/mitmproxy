@@ -91,10 +91,9 @@ jobs:
             platform: macos-x86_64
           - image: windows-2019
             platform: windows
-          - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
-            platform: linux-x86_64
           - image: ubuntu-latest  # Oldest available version so we get oldest glibc possible.
-            container: debian:oldstable
+            platform: linux-x86_64
+            container: debian:11
           - image: ubuntu-22.04-arm  # Oldest available version so we get oldest glibc possible.
             platform: linux-arm64
     runs-on: ${{ matrix.image }}
@@ -108,6 +107,7 @@ jobs:
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/uv-sync@main
+      - run: uv pip install .
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
