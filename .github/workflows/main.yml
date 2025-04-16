@@ -30,6 +30,7 @@ jobs:
       - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
         with:
           args: --only-group tox
+
       - run: tox -e ${{ matrix.env }}
 
   test:
@@ -51,17 +52,9 @@ jobs:
       - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
       - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
         with:
-          args: --python ${{ matrix.py }}
+          args: --only-group tox
 
-      - run: tox -e py
-        if: matrix.os != 'ubuntu-latest'
-      - name: Run tox -e py (without internet)
-        run: |
-          # install dependencies (requires internet connectivity)
-          tox -e py --notest  
-          # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
-          sudo unshare --net -- sh -c "ip link set lo up; UV_OFFLINE=1 $(which tox) -e py"
-        if: matrix.os == 'ubuntu-latest'
+      - run: tox -e py${{ matrix.py }}
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -298,9 +298,8 @@ commands = [
 
 [tool.tox.env.test-offline]
 commands = [
-    ["sudo", "unshare", "--net", "--", "sh", "-c", "ip link set lo up; $(which pytest)"]
+    [["python", "test/run-tests-offline.sh"]]
 ]
-allowlist_externals = ["sudo"]
 
 [tool.tox.env.lint]
 commands = [["ruff", "check",  "."]]
