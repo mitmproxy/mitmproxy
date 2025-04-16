@@ -58,7 +58,35 @@ dependencies = [
     "zstandard>=0.15,<=0.23.0",
 ]
 
+
+
 [project.optional-dependencies]
+dev = [
+    "click>=7.0,<=8.1.8",
+    "hypothesis>=6.104.2,<=6.130.6",
+    "pdoc>=14.5.1,<=15.0.1",
+    "pyinstaller==6.12.0",
+    "pyinstaller-hooks-contrib==2025.2",
+    "pytest-asyncio>=0.23.6,<=0.26.0",
+    "pytest-cov>=5.0.0,<=6.1.0",
+    "pytest-timeout>=2.3.1,<=2.3.1",
+    "pytest-xdist>=3.5.0,<=3.6.1",
+    "pytest>=8.2.2,<=8.3.5",
+    "requests>=2.9.1,<=2.32.3",
+    "tox>=4.15.1,<=4.25.0",
+    "wheel>=0.36.2,<=0.45.1",
+    "build>=0.10.0,<=1.2.2.post1",
+    "mypy>=1.10.1,<=1.15.0",
+    "ruff>=0.5.0,<=0.11.2",
+    "types-certifi>=2021.10.8.3,<=2021.10.8.3",
+    "types-Flask>=1.1.6,<=1.1.6",
+    "types-Werkzeug>=1.0.9,<=1.0.9",
+    "types-requests>=2.32.0.20240622,<=2.32.0.20250328",
+    "types-cryptography>=3.3.23.2,<=3.3.23.2",
+    "types-pyOpenSSL>=23.3.0.0,<=24.1.0.20240722",
+]
+
+[dependency-groups]
 dev = [
     "click>=7.0,<=8.1.8",
     "hypothesis>=6.104.2,<=6.130.6",

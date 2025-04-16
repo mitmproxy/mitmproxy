@@ -598,6 +598,32 @@ dev = [
     { name = "wheel" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "click" },
+    { name = "hypothesis" },
+    { name = "mypy" },
+    { name = "pdoc" },
+    { name = "pyinstaller" },
+    { name = "pyinstaller-hooks-contrib" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "requests" },
+    { name = "ruff" },
+    { name = "tox" },
+    { name = "types-certifi" },
+    { name = "types-cryptography" },
+    { name = "types-flask" },
+    { name = "types-pyopenssl" },
+    { name = "types-requests" },
+    { name = "types-werkzeug" },
+    { name = "wheel" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "aioquic", specifier = ">=1.1.0,<=1.2.0" },
@@ -648,6 +674,32 @@ requires-dist = [
     { name = "wheel", marker = "extra == 'dev'", specifier = ">=0.36.2,<=0.45.1" },
     { name = "wsproto", specifier = ">=1.0,<=1.2.0" },
     { name = "zstandard", specifier = ">=0.15,<=0.23.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=0.10.0,<=1.2.2.post1" },
+    { name = "click", specifier = ">=7.0,<=8.1.8" },
+    { name = "hypothesis", specifier = ">=6.104.2,<=6.130.6" },
+    { name = "mypy", specifier = ">=1.10.1,<=1.15.0" },
+    { name = "pdoc", specifier = ">=14.5.1,<=15.0.1" },
+    { name = "pyinstaller", specifier = "==6.12.0" },
+    { name = "pyinstaller-hooks-contrib", specifier = "==2025.2" },
+    { name = "pytest", specifier = ">=8.2.2,<=8.3.5" },
+    { name = "pytest-asyncio", specifier = ">=0.23.6,<=0.26.0" },
+    { name = "pytest-cov", specifier = ">=5.0.0,<=6.1.0" },
+    { name = "pytest-timeout", specifier = ">=2.3.1,<=2.3.1" },
+    { name = "pytest-xdist", specifier = ">=3.5.0,<=3.6.1" },
+    { name = "requests", specifier = ">=2.9.1,<=2.32.3" },
+    { name = "ruff", specifier = ">=0.5.0,<=0.11.2" },
+    { name = "tox", specifier = ">=4.15.1,<=4.25.0" },
+    { name = "types-certifi", specifier = ">=2021.10.8.3,<=2021.10.8.3" },
+    { name = "types-cryptography", specifier = ">=3.3.23.2,<=3.3.23.2" },
+    { name = "types-flask", specifier = ">=1.1.6,<=1.1.6" },
+    { name = "types-pyopenssl", specifier = ">=23.3.0.0,<=24.1.0.20240722" },
+    { name = "types-requests", specifier = ">=2.32.0.20240622,<=2.32.0.20250328" },
+    { name = "types-werkzeug", specifier = ">=1.0.9,<=1.0.9" },
+    { name = "wheel", specifier = ">=0.36.2,<=0.45.1" },
 ]
 
 [[package]]

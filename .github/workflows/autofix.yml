@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@1c6257dd0457212e47b70113e1f3c4d450582c25
-      - uses: mhils/workflows/setup-python@1c6257dd0457212e47b70113e1f3c4d450582c25
+      - uses: mhils/workflows/setup-uv@1c6257dd0457212e47b70113e1f3c4d450582c25
 
-      - run: pip install -e .[dev]
+      - run: uv sync
+      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - run: ruff check --fix-only .
       - run: ruff format .
 
