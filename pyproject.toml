@@ -58,8 +58,6 @@ dependencies = [
     "zstandard>=0.15,<=0.23.0",
 ]
 
-
-
 [project.optional-dependencies]
 dev = [
     "click>=7.0,<=8.1.8",
