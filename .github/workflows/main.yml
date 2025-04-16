@@ -93,13 +93,21 @@ jobs:
             platform: windows
           - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
             platform: linux-x86_64
+          - image: ubuntu-latest  # Oldest available version so we get oldest glibc possible.
+            container: debian:oldstable
           - image: ubuntu-22.04-arm  # Oldest available version so we get oldest glibc possible.
             platform: linux-arm64
     runs-on: ${{ matrix.image }}
+    container:
+      image: ${{ matrix.container }}
     steps:
+      - if: matrix.container
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y git ca-certificates
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/setup-python@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/uv-sync@main
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
