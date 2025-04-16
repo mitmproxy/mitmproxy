@@ -277,51 +277,35 @@ section-order = ["future", "standard-library", "third-party", "local-folder","fi
 no-lines-before = ["first-party"]
 known-first-party = ["test", "mitmproxy", "mitmproxy_rs"]
 
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py, lint, mypy
-skipsdist = True
-toxworkdir={env:TOX_WORK_DIR:.tox}
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+package = "editable"
+dependency_groups = ["dev"]
+commands = [
+    ["mitmdump", "--version"],
+    ["pytest",
+        "-vv",
+        "--cov-report", "xml",
+        "--continue-on-collection-errors",
+        "--cov=mitmproxy",
+        "--cov=release",
+        { replace = "posargs", default = ["--timeout", "60"], extend = true }
+    ],
+]
 
-[testenv]
-deps =
-  -e .[dev]
-setenv = HOME = {envtmpdir}
-commands =
-  mitmdump --version
-  pytest --timeout 60 -vv \
-    --cov-report xml \
-    --continue-on-collection-errors \
-    --cov=mitmproxy --cov=release \
-    {posargs}
+[tool.tox.env.lint]
+commands = [["ruff", "check",  "."]]
+package = "skip"
 
-[testenv:old-dependencies]
-uv_resolution = lowest-direct
+[tool.tox.env.filename_matching]
+commands = [["python", "./test/filename_matching.py"]]
+package = "skip"
 
-[testenv:lint]
-commands =
-  ruff check .
+[tool.tox.env.mypy]
+commands = [["mypy"]]
 
-[testenv:filename_matching]
-deps =
-commands =
-  python ./test/filename_matching.py
+[tool.tox.env.individual_coverage]
+commands = [["python", { default = ["./test/individual_coverage.py"], replace = "posargs", extend = true }]]
 
-[testenv:mypy]
-commands =
-  mypy {posargs}
-
-[testenv:individual_coverage]
-commands =
-  python ./test/individual_coverage.py {posargs}
-
-[testenv:wheeltest]
-recreate = True
-deps =
-commands =
-  pip install {posargs}
-  mitmproxy --version
-  mitmdump --version
-  mitmweb --version
-"""
+[tool.tox.env.old-dependencies]
+uv_resolution = "lowest-direct"
