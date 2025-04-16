@@ -13,9 +13,7 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
-      - uses: mhils/workflows/uv-sync@main
+      - uses: ./.github/actions/setup
 
       - run: ruff check --fix-only .
       - run: ruff format .

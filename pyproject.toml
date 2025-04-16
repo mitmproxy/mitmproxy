@@ -112,6 +112,10 @@ dev = [
     "types-cryptography>=3.3.23.2,<=3.3.23.2",
     "types-pyOpenSSL>=23.3.0.0,<=24.1.0.20240722",
 ]
+deploy = [
+    "awscli",
+    "twine",
+]
 
 [project.urls]
 Homepage = "https://mitmproxy.org"
