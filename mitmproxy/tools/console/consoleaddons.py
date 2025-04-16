@@ -429,13 +429,14 @@ class ConsoleAddon:
             )
             if isinstance(request_cv, contentviews.InteractiveContentview):
                 focus_options.append(f"request-body ({request_cv.name})")
-            response_cv = contentviews.registry.get_view(
-                contentviews.get_data(flow.response)[0] or b"",
-                contentviews.make_metadata(flow.response, flow),
-                viewname,
-            )
-            if isinstance(response_cv, contentviews.InteractiveContentview):
-                focus_options.append(f"response-body ({response_cv.name})")
+            if flow.response:
+                response_cv = contentviews.registry.get_view(
+                    contentviews.get_data(flow.response)[0] or b"",
+                    contentviews.make_metadata(flow.response, flow),
+                    viewname,
+                )
+                if isinstance(response_cv, contentviews.InteractiveContentview):
+                    focus_options.append(f"response-body ({response_cv.name})")
             if flow.websocket:
                 focus_options.append("websocket-message")
         elif isinstance(flow, dns.DNSFlow):

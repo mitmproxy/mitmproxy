@@ -11,7 +11,7 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from typing import ClassVar
+from typing import ClassVar, Any
 from typing import Concatenate
 
 import tornado.escape
@@ -589,23 +589,30 @@ class FlowContent(RequestHandler):
 class FlowContentView(RequestHandler):
     def message_to_json(
         self,
-        viewname: str,
+        view_name: str | None,
         message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
         flow: HTTPFlow | TCPFlow | UDPFlow,
         max_lines: int | None = None,
+        from_client: bool | None = None,
+        timestamp: float | None = None,
     ):
-        description, content, error = contentviews.get_message_content_view(
-            viewname, message, flow
-        )
-        if error:
-            logging.error(error)
+        if view_name and view_name.lower() == "auto":
+            view_name = None
+        pretty = contentviews.prettify_message(message, flow, view_name=view_name)
         if max_lines:
-            content = cut_after_n_lines(content, max_lines)
+            pretty.text = cut_after_n_lines(pretty.text, max_lines)
 
-        return dict(
-            content=content,
-            description=description,
+        ret: dict[str, Any] = dict(
+            text=pretty.text,
+            view_name=pretty.view_name,
+            syntax_highlight=pretty.syntax_highlight,
+            description=pretty.description,
         )
+        if from_client is not None:
+            ret["from_client"] = from_client
+        if timestamp is not None:
+            ret["timestamp"] = timestamp
+        return ret
 
     def get(self, flow_id, message, content_view) -> None:
         flow = self.flow
@@ -626,9 +633,14 @@ class FlowContentView(RequestHandler):
                 raise APIError(400, f"This flow has no messages.")
             msgs = []
             for m in messages:
-                d = self.message_to_json(content_view, m, flow, max_lines)
-                d["from_client"] = m.from_client
-                d["timestamp"] = m.timestamp
+                d = self.message_to_json(
+                    content_view,
+                    m,
+                    flow,
+                    max_lines,
+                    from_client=m.from_client,
+                    timestamp=m.timestamp
+                )
                 msgs.append(d)
                 if max_lines:
                     max_lines -= len(d["lines"])
@@ -715,7 +727,7 @@ class State(RequestHandler):
         return {
             "version": version.VERSION,
             "contentViews": [
-                v.name for v in contentviews.registry if v.name != "Query"
+                v for v in contentviews.registry if v != "query"
             ],
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers

@@ -51,8 +51,8 @@ def beautify(data: str, indent: str = "    "):
 
 class ViewCSS(Contentview):
     def prettify(self, data: bytes, metadata: Metadata) -> str:
-        data = data.decode("utf8", "surrogateescape")
-        return beautify(data)
+        data_str = data.decode("utf8", "surrogateescape")
+        return beautify(data_str)
 
     def render_priority(
         self,

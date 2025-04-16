@@ -28,13 +28,13 @@ class LegacyContentview(Contentview):
         self,
         data: bytes,
         metadata: Metadata,
-    ) -> float | None:
+    ) -> float:
         return self.contentview.render_priority(
             data=data,
             content_type=metadata.content_type,
             flow=metadata.flow,
             http_message=metadata.http_message,
-        )
+        ) or 0.0
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         lines: Iterator[TViewLine]
@@ -56,7 +56,7 @@ class LegacyContentview(Contentview):
 @deprecated("Use `mitmproxy.contentviews.registry` instead.")
 def get(name: str) -> Contentview | None:
     try:
-        contentviews.registry[name.lower()]
+        return contentviews.registry[name.lower()]
     except KeyError:
         return None
 

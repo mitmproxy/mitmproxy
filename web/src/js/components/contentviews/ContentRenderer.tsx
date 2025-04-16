@@ -30,9 +30,7 @@ const ContentRenderer = React.memo(function ContentRenderer({
                         Show more
                     </button>
                 ) : (
-                    <div key={i}>
-                        {line}
-                    </div>
+                    <div key={i}>{line}</div>
                 ),
             )}
         </pre>

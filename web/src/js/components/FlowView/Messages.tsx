@@ -2,8 +2,7 @@ import { Flow, MessagesMeta } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as React from "react";
 import { useCallback, useMemo, useState } from "react";
-import { ContentViewData, useContent } from "../contentviews/useContent";
-import { MessageUtils } from "../../flow/utils";
+import {ContentViewData, useContentView} from "../contentviews/useContentView";
 import ViewSelector from "../contentviews/ViewSelector";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { formatTimeStamp } from "../../utils";
@@ -27,26 +26,13 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
         () => setMaxLines(Math.max(1024, maxLines * 2)),
         [maxLines],
     );
-    const content = useContent(
-        MessageUtils.getContentURL(flow, "messages", contentView, maxLines + 1),
+    const messages = useContentView(
+        flow,
+        "messages",
+        contentView,
+        maxLines + 1,
         flow.id + messages_meta.count,
-    );
-    const messages =
-        useMemo<ContentViewData[] | undefined>(() => {
-            if (content) {
-                try {
-                    return JSON.parse(content);
-                } catch (e) {
-                    const err: ContentViewData[] = [
-                        {
-                            description: "Network Error",
-                            content,
-                        },
-                    ];
-                    return err;
-                }
-            }
-        }, [content]) || [];
+    ) ?? [];
 
     let remainingLines = maxLines;
 
@@ -79,13 +65,13 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                             </span>
                         </small>
                         <ContentRenderer
-                            content={d.content}
+                            content={d.text}
                             maxLines={remainingLines}
                             showMore={showMore}
                         />
                     </div>
                 );
-                remainingLines -= d.content.split("\n").length;
+                remainingLines -= d.text.split("\n").length;
                 return renderer;
             })}
         </div>

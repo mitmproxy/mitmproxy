@@ -7,10 +7,12 @@ See "Custom Contentviews" in the mitmproxy documentation for examples.
 """
 
 import logging
+import sys
 import traceback
 import warnings
 from dataclasses import dataclass
 
+from ..addonmanager import cut_traceback
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
 from ..websocket import WebSocketMessage
@@ -50,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ContentviewResult:
-    text: str | None
+    text: str
     syntax_highlight: SyntaxHighlight
     view_name: str | None
     description: str
@@ -93,9 +95,15 @@ def prettify_message(
     except Exception as e:
         logger.debug(f"Contentview failed: {e}", exc_info=True)
         if view_name:
+            # Cut the exception traceback for display.
+            exc, value, tb = sys.exc_info()
+            tb_cut = cut_traceback(tb, "prettify_message")
+            if tb_cut == tb:  # If there are no extra frames, just skip displaying the traceback.
+                tb_cut = None
             # If the contentview has been set explicitly, we display a hard error.
+            err = "".join(traceback.format_exception(exc, value=value, tb=tb_cut))
             ret = ContentviewResult(
-                text=f"Couldn't parse as {view.name}:\n{traceback.format_exc()}",
+                text=f"Couldn't parse as {view.name}:\n{err}",
                 syntax_highlight="error",
                 view_name=view.name,
                 description=enc,
@@ -142,7 +150,7 @@ _legacy_views = [
     socketio.ViewSocketIO,
 ]
 for ViewCls in _legacy_views:
-    registry.register(LegacyContentview(ViewCls()))
+    registry.register(LegacyContentview(ViewCls()))  # type: ignore[abstract]
 
 _views: list[Contentview] = [
     json_contentview,

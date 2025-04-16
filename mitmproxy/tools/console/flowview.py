@@ -338,7 +338,7 @@ class FlowDetails(tabs.Tabs):
         self, viewmode: str, max_lines: int, _
     ) -> tuple[str, list[urwid.Text]]:
         message: http.Message = self._get_content_view_message
-        self._get_content_view_message = None
+        self._get_content_view_message = None  # type: ignore[assignment]
 
         pretty = contentviews.prettify_message(message, self.flow, viewmode)
         cut_off = strutils.cut_after_n_lines(pretty.text, max_lines)

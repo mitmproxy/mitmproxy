@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../../utils";
 
-export type ContentViewData = {
-    content: string;
-    description: string;
-    from_client?: boolean;
-    timestamp?: number;
-};
-
 export function useContent(url: string, hash?: string): string | undefined {
     const [content, setContent] = useState<string>();
     const [abort, setAbort] = useState<AbortController>();
