@@ -104,7 +104,7 @@ jobs:
       - if: matrix.container
         run: |
           apt-get update
-          apt-get install --no-install-recommends -y git ca-certificates
+          apt-get install --no-install-recommends -y git ca-certificates binutils
       - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
       - uses: mhils/workflows/uv-sync@main
