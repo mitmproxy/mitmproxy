@@ -115,12 +115,13 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
     );
 
     let desc: string;
-    if(message.contentLength === 0) {
+    if (message.contentLength === 0) {
         desc = "No content";
     } else if (contentViewData === undefined) {
         desc = "Loading...";
     } else {
-        desc = `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
+        desc =
+            `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
     }
 
     return (
