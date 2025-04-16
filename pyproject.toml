@@ -301,6 +301,7 @@ commands = [
 commands = [
     ["sudo", "unshare", "--net", "--", "sh", "-c", "ip link set lo up; pytest"]
 ]
+allowlist_externals = ["sudo"]
 
 [tool.tox.env.lint]
 commands = [["ruff", "check",  "."]]
