@@ -114,7 +114,14 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
         message.contentHash,
     );
 
-    const desc = contentViewData ? contentViewData.description : "Loading...";
+    let desc: string;
+    if(message.contentLength === 0) {
+        desc = "No content";
+    } else if (contentViewData === undefined) {
+        desc = "Loading...";
+    } else {
+        desc = `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
+    }
 
     return (
         <div className="contentview" key="view">

@@ -14,7 +14,7 @@ test("HttpMessage", async () => {
     const text = "data\n".repeat(512) + "additional\n".repeat(512);
 
     const cvd = {
-        view_name: "",
+        view_name: "Raw",
         description: "",
         syntax_highlight: "none",
     };
@@ -30,6 +30,7 @@ test("HttpMessage", async () => {
         }),
         JSON.stringify({
             text: "rawdata\n".repeat(5),
+            ...cvd,
         }),
         "raw content",
         JSON.stringify({
