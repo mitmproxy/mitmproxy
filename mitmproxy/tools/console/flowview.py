@@ -221,6 +221,7 @@ class FlowDetails(tabs.Tabs):
         widget_lines = []
         for m in flow.websocket.messages:
             _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
+            # FIXME: Make websockets work.
 
             for line in lines:
                 if m.from_client:
