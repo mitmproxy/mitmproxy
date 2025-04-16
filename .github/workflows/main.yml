@@ -100,6 +100,9 @@ jobs:
     container:
       image: ${{ matrix.container }}
     steps:
+      - if: matrix.container
+        run: |
+          apt-get install --no-install-recommends -y git
       - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
       - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
       - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
