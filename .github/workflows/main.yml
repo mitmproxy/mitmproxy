@@ -134,7 +134,6 @@ jobs:
   build-wheel:
     uses: mhils/workflows/.github/workflows/python-build.yml@1c6257dd0457212e47b70113e1f3c4d450582c25
     with:
-      python-version-file: .github/python-version.txt
       artifact: binaries.wheel
 
   build-windows-installer:
