@@ -13,8 +13,8 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@1c6257dd0457212e47b70113e1f3c4d450582c25
-      - uses: mhils/workflows/setup-uv@1c6257dd0457212e47b70113e1f3c4d450582c25
+      - uses: mhils/workflows/checkout@42ac4652123201e0b4646175b78b25819cf6bfaf
+      - uses: mhils/workflows/setup-uv@42ac4652123201e0b4646175b78b25819cf6bfaf
 
       - run: uv sync
       - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
