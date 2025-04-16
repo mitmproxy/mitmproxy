@@ -102,6 +102,7 @@ jobs:
     steps:
       - if: matrix.container
         run: |
+          apt-get update
           apt-get install --no-install-recommends -y git
       - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
       - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
