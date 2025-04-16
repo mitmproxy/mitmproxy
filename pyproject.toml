@@ -75,6 +75,7 @@ dev = [
     "build==1.2.2.post1",
     "mypy==1.15.0",
     "ruff==0.11.2",
+    "setuptools==78.1.0",
     "types-certifi==2021.10.8.3",
     "types-Flask==1.1.6",
     "types-Werkzeug==1.0.9",
@@ -294,6 +295,11 @@ commands = [
         "--cov=release",
         { replace = "posargs", default = ["--timeout", "60"], extend = true }
     ],
+]
+
+[tool.tox.env.test-offline]
+commands = [
+    ["sudo", "unshare", "--net", "--", "sh", "-c", "ip link set lo up; pytest"]
 ]
 
 [tool.tox.env.lint]

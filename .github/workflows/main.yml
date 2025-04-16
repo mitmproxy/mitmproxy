@@ -21,7 +21,7 @@ jobs:
   tox:
     strategy:
       matrix:
-        env: [lint, filename_matching, mypy, individual_coverage, old-dependencies]
+        env: [lint, filename_matching, mypy, individual_coverage, old-dependencies, test-offline]
     name: ${{ matrix.env }}
     runs-on: ubuntu-latest
     steps:
@@ -60,7 +60,7 @@ jobs:
           # install dependencies (requires internet connectivity)
           tox -e py --notest  
           # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
-          sudo unshare --net -- sh -c "ip link set lo up; UV_OFFLINE=1 $(which tox) -e py --runner uv-venv-runner"
+          sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
         if: matrix.os == 'ubuntu-latest'
       - uses: codecov/codecov-action@v5
         with:
