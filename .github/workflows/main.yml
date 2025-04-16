@@ -91,11 +91,12 @@ jobs:
             platform: macos-x86_64
           - image: windows-2019
             platform: windows
-          - image: ubuntu-latest  # Oldest available version so we get oldest glibc possible.
+          - image: ubuntu-latest
             platform: linux-x86_64
-            container: debian:11
-          - image: ubuntu-22.04-arm  # Oldest available version so we get oldest glibc possible.
+            container: debian:11  # Old version so we get oldest glibc possible.
+          - image: ubuntu-22.04-arm
             platform: linux-arm64
+            container: debian:11  # Old version so we get oldest glibc possible.
     runs-on: ${{ matrix.image }}
     container:
       image: ${{ matrix.container }}
