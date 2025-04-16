@@ -56,7 +56,7 @@ class ContentviewRegistry(Mapping[str, Contentview]):
             else:
                 if max_prio is None or max_prio[0] < priority:
                     max_prio = (priority, view)
-        assert max_prio
+        assert max_prio, "At least one view needs to have a working `render_priority`."
         return max_prio[1]
 
     def __iter__(self) -> typing.Iterator[str]:

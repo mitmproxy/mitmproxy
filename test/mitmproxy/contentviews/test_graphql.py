@@ -1,4 +1,3 @@
-
 from mitmproxy.contentviews import graphql
 
 

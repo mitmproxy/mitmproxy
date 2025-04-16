@@ -21,12 +21,13 @@ from mitmproxy.test import tflow
             b'TITLE>Not Found</TITLE>\r\n<META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>\r\n<BOD'
             b"Y><h2>Not Found</h2>\r\n<hr><p>HTTP Error 404. The requested resource is not found.</p>\r\n</BODY></HTML>\r\n"
         ),
+        b"",
     ],
 )
 def test_view_http3(data):
     t = tflow.ttcpflow(messages=[TCPMessage(from_client=len(data) > 16, content=data)])
     t.metadata["quic_is_unidirectional"] = False
-    assert http3.prettify(b"", Metadata(flow=t, tcp_message=t.messages[0]))
+    assert http3.prettify(b"", Metadata(flow=t, tcp_message=t.messages[0])) or not data
 
 
 @pytest.mark.parametrize(

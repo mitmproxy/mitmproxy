@@ -14,6 +14,7 @@ def test_view_json():
     assert json_view.prettify(b'{"foo" : 3}', meta)
     assert json_view.prettify(b'{"foo": true, "nullvalue": null}', meta)
     assert json_view.prettify(b"[]", meta)
+    assert json_view.syntax_highlight == "yaml"
 
 
 def test_render_priority():
