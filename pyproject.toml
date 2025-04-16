@@ -85,7 +85,7 @@ dev = [
 ]
 deploy = [
     "awscli==1.38.34",
-    "twine=6.1.0",
+    "twine==6.1.0",
 ]
 tox = [
     "tox==4.25.0",
