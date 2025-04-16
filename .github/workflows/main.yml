@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         env: [lint, filename_matching, mypy, individual_coverage, old-dependencies]
-    name: tox -e ${{ matrix.env }}
+    name: ${{ matrix.env }}
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
