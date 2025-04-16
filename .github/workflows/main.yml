@@ -18,25 +18,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-    with:
-      cmd: tox -e lint
-
-  filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-    with:
-      cmd: tox -e filename_matching
-
-  mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-    with:
-      cmd: tox -e mypy
-
-  individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-    with:
-      cmd: tox -e individual_coverage
+  tox:
+    strategy:
+      matrix:
+        env: [lint, filename_matching, mypy, individual_coverage, old-dependencies]
+    name: tox -e ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+        with:
+          args: --only-group tox
+      - run: tox -e ${{ matrix.env }}
 
   test:
     strategy:
@@ -72,14 +66,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
-
-  test-old-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
-      - run: tox -e old-dependencies
 
   build:
     strategy:
@@ -235,13 +221,9 @@ jobs:
   check:
     if: always()
     needs:
-    - lint
-    - filename-matching
-    - mypy
-    - individual-coverage
+    - tox
     - test
     - test-docker
-    - test-old-dependencies
     - test-web-ui
     - build
     - build-wheel

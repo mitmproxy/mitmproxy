@@ -71,8 +71,6 @@ dev = [
     "pytest-xdist>=3.5.0,<=3.6.1",
     "pytest>=8.2.2,<=8.3.5",
     "requests>=2.9.1,<=2.32.3",
-    "tox>=4.15.1,<=4.25.0",
-    "tox-uv>=1.25.0,<=1.25.0",
     "wheel>=0.36.2,<=0.45.1",
     "build>=0.10.0,<=1.2.2.post1",
     "mypy>=1.10.1,<=1.15.0",
@@ -83,10 +81,15 @@ dev = [
     "types-requests>=2.32.0.20240622,<=2.32.0.20250328",
     "types-cryptography>=3.3.23.2,<=3.3.23.2",
     "types-pyOpenSSL>=23.3.0.0,<=24.1.0.20240722",
+    {include-group = "tox"},
 ]
 deploy = [
     "awscli",
     "twine",
+]
+tox = [
+    "tox>=4.15.1,<=4.25.0",
+    "tox-uv>=1.25.0,<=1.25.0",
 ]
 
 [project.urls]

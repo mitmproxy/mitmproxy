@@ -744,6 +744,10 @@ dev = [
     { name = "types-werkzeug" },
     { name = "wheel" },
 ]
+tox = [
+    { name = "tox" },
+    { name = "tox-uv" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -804,6 +808,10 @@ dev = [
     { name = "types-requests", specifier = ">=2.32.0.20240622,<=2.32.0.20250328" },
     { name = "types-werkzeug", specifier = ">=1.0.9,<=1.0.9" },
     { name = "wheel", specifier = ">=0.36.2,<=0.45.1" },
+]
+tox = [
+    { name = "tox", specifier = ">=4.15.1,<=4.25.0" },
+    { name = "tox-uv", specifier = ">=1.25.0,<=1.25.0" },
 ]
 
 [[package]]
