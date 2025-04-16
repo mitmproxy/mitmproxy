@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
-import {HTTPFlow, HTTPMessage} from "../../flow";
+import { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { ContentViewData, useContentView } from "./useContentView";
@@ -106,7 +106,13 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
         [maxLines],
     );
 
-    const contentViewData = useContentView(flow, message, contentView, maxLines+1, message.contentHash);
+    const contentViewData = useContentView(
+        flow,
+        message,
+        contentView,
+        maxLines + 1,
+        message.contentHash,
+    );
 
     const desc = contentViewData ? contentViewData.description : "Loading...";
 

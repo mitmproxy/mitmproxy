@@ -3,6 +3,7 @@ from mitmproxy.contentviews import Metadata
 from mitmproxy.contentviews import prettify_message
 from mitmproxy.contentviews import raw
 from mitmproxy.contentviews import registry
+from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
@@ -72,18 +73,19 @@ class TestPrettifyMessage:
         assert result.view_name == "Hex Stream"
 
     def test_view_failure_auto(self):
-        f = tflow.tflow()
-        f.request.content = b"content"
+        with taddons.context():
+            f = tflow.tflow()
+            f.request.content = b"content"
 
-        failing_view = FailingContentview()
-        registry.register(failing_view)
-        registry.register(raw)
+            failing_view = FailingContentview()
+            registry.register(failing_view)
+            registry.register(raw)
 
-        result = prettify_message(f.request, f, None)
-        assert result.text == "content"
-        assert result.syntax_highlight == "none"
-        assert result.view_name == "Raw"
-        assert "[failed to parse as Failing]" in result.description
+            result = prettify_message(f.request, f, None)
+            assert result.text == "content"
+            assert result.syntax_highlight == "none"
+            assert result.view_name == "Raw"
+            assert "[failed to parse as Failing]" in result.description
 
     def test_view_failure_explicit(self):
         f = tflow.tflow()

@@ -1,4 +1,5 @@
 # Default view cutoff *in lines*
+import sys
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
@@ -6,10 +7,14 @@ from collections.abc import Iterator
 from collections.abc import Mapping
 from typing import ClassVar
 from typing import Union
-from warnings import deprecated
 
 from mitmproxy import flow
 from mitmproxy import http
+
+if sys.version_info < (3, 13):
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
 
 KEY_MAX = 30
 

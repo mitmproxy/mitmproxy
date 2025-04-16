@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import sys
 import typing
 from typing import Iterator
-from warnings import deprecated
 
 from mitmproxy import contentviews
 from mitmproxy.contentviews import SyntaxHighlight
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils.strutils import always_str
+
+if sys.version_info < (3, 13):
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
 
 if typing.TYPE_CHECKING:
     from mitmproxy.contentviews.base import TViewLine

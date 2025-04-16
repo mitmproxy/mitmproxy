@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { fetchApi } from "../../utils";
+import { useMemo } from "react";
 import { useContent } from "./useContent";
-import {Flow, HTTPFlow, HTTPMessage} from "../../flow";
-import {MessageUtils} from "../../flow/utils";
+import { Flow, HTTPFlow, HTTPMessage } from "../../flow";
+import { MessageUtils } from "../../flow/utils";
 
 export type ContentViewData = {
     text: string;
@@ -18,15 +17,15 @@ export function useContentView(
     part: "messages",
     view?: string,
     lines?: number,
-    hash?: string
+    hash?: string,
 ): ContentViewData[] | undefined;
 
 export function useContentView(
     flow: HTTPFlow,
-    part:  HTTPMessage | "request" | "response",
+    part: HTTPMessage | "request" | "response",
     view?: string,
     lines?: number,
-    hash?: string
+    hash?: string,
 ): ContentViewData | undefined;
 
 export function useContentView(
@@ -43,7 +42,7 @@ export function useContentView(
             try {
                 return JSON.parse(cv_json);
             } catch (e) {
-                let err: ContentViewData = {
+                const err: ContentViewData = {
                     text: cv_json,
                     description: "Network Error",
                     syntax_highlight: "error",

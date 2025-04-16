@@ -644,7 +644,7 @@ class FlowContentView(RequestHandler):
                 msgs.append(d)
                 if max_lines:
                     max_lines -= d["text"].count("\n") + 1
-                    assert max_lines
+                    assert max_lines is not None
                     if max_lines <= 0:
                         break
             self.write(msgs)

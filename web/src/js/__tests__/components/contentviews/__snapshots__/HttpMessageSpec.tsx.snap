@@ -8,9 +8,7 @@ exports[`HttpMessage 1`] = `
     <div
       class="controls"
     >
-      <h5>
-        Raw
-      </h5>
+      <h5 />
       <button
         class="btn-xs btn btn-default"
       >
@@ -65,40 +63,21 @@ exports[`HttpMessage 1`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
+      <div />
     </pre>
   </div>
 </DocumentFragment>
@@ -148,9 +127,7 @@ exports[`HttpMessage 3`] = `
     <div
       class="controls"
     >
-      <h5>
-        Raw
-      </h5>
+      <h5 />
       <button
         class="btn-xs btn btn-default"
       >
@@ -205,40 +182,21 @@ exports[`HttpMessage 3`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
+      <div />
     </pre>
   </div>
 </DocumentFragment>
@@ -252,9 +210,7 @@ exports[`HttpMessage 4`] = `
     <div
       class="controls"
     >
-      <h5>
-        Raw
-      </h5>
+      <h5 />
       <button
         class="btn-xs btn btn-default"
       >
@@ -309,40 +265,21 @@ exports[`HttpMessage 4`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
+      <div />
     </pre>
   </div>
 </DocumentFragment>

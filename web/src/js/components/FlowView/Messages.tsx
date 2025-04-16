@@ -1,8 +1,11 @@
 import { Flow, MessagesMeta } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as React from "react";
-import { useCallback, useMemo, useState } from "react";
-import {ContentViewData, useContentView} from "../contentviews/useContentView";
+import { useCallback, useState } from "react";
+import {
+    ContentViewData,
+    useContentView,
+} from "../contentviews/useContentView";
 import ViewSelector from "../contentviews/ViewSelector";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { formatTimeStamp } from "../../utils";
@@ -26,13 +29,14 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
         () => setMaxLines(Math.max(1024, maxLines * 2)),
         [maxLines],
     );
-    const messages = useContentView(
-        flow,
-        "messages",
-        contentView,
-        maxLines + 1,
-        flow.id + messages_meta.count,
-    ) ?? [];
+    const messages =
+        useContentView(
+            flow,
+            "messages",
+            contentView,
+            maxLines + 1,
+            flow.id + messages_meta.count,
+        ) ?? [];
 
     let remainingLines = maxLines;
 

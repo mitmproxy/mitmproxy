@@ -1,4 +1,9 @@
-from warnings import deprecated
+import sys
+
+if sys.version_info < (3, 13):
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
 
 
 @deprecated("Use `mitmproxy.contentviews.Contentview` instead.")

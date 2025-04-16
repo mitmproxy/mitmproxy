@@ -58,6 +58,13 @@ exports[`ViewSelector 2`] = `
       <a
         href="#"
       >
+        auto
+      </a>
+    </li>
+    <li>
+      <a
+        href="#"
+      >
         raw
       </a>
     </li>
