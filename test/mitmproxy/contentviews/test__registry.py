@@ -44,6 +44,7 @@ def test_dunder_methods():
     assert registry["example"] == view
     assert registry["EXAMPLE"] == view
     assert len(registry) == 1
+    assert registry.available_views() == ["auto", "example"]
 
 
 def test_get_view_unknown_name(caplog):
