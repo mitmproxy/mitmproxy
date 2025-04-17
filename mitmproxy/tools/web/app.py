@@ -589,7 +589,7 @@ class FlowContent(RequestHandler):
 class FlowContentView(RequestHandler):
     def message_to_json(
         self,
-        view_name: str | None,
+        view_name: str,
         message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
         flow: HTTPFlow | TCPFlow | UDPFlow,
         max_lines: int | None = None,
@@ -597,7 +597,7 @@ class FlowContentView(RequestHandler):
         timestamp: float | None = None,
     ):
         if view_name and view_name.lower() == "auto":
-            view_name = None
+            view_name = "auto"
         pretty = contentviews.prettify_message(message, flow, view_name=view_name)
         if max_lines:
             pretty.text = cut_after_n_lines(pretty.text, max_lines)
@@ -727,7 +727,9 @@ class State(RequestHandler):
     def get_json(master: mitmproxy.tools.web.master.WebMaster):
         return {
             "version": version.VERSION,
-            "contentViews": [v for v in contentviews.registry if v != "query"],
+            "contentViews": [
+                v for v in contentviews.registry.available_views() if v != "query"
+            ],
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },

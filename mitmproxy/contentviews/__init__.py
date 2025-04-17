@@ -61,16 +61,8 @@ class ContentviewResult:
 def prettify_message(
     message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
     flow: flow.Flow,
-    view_name: str | None,
+    view_name: str = "auto",
 ) -> ContentviewResult:
-    if view_name == "auto":  # pragma: no cover
-        warnings.warn(
-            "The 'auto' view is deprecated.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        view_name = None
-
     data, enc = get_data(message)
     if data is None:
         return ContentviewResult(
@@ -94,7 +86,15 @@ def prettify_message(
         )
     except Exception as e:
         logger.debug(f"Contentview failed: {e}", exc_info=True)
-        if view_name:
+        if view_name == "auto":
+            # If the contentview was chosen as the best matching one, fall back to raw.
+            ret = ContentviewResult(
+                text=raw.prettify(data, metadata),
+                syntax_highlight=raw.syntax_highlight,
+                view_name=raw.name,
+                description=f"{enc}[failed to parse as {view.name}]",
+            )
+        else:
             # Cut the exception traceback for display.
             exc, value, tb = sys.exc_info()
             tb_cut = cut_traceback(tb, "prettify_message")
@@ -109,14 +109,6 @@ def prettify_message(
                 syntax_highlight="error",
                 view_name=view.name,
                 description=enc,
-            )
-        else:
-            # If the contentview was chosen as the best matching one, fall back to raw.
-            ret = ContentviewResult(
-                text=registry["raw"].prettify(data, metadata),
-                syntax_highlight=registry["raw"].syntax_highlight,
-                view_name=registry["raw"].name,
-                description=f"{enc}[failed to parse as {view.name}]",
             )
 
     ret.text = strutils.escape_control_characters(ret.text)

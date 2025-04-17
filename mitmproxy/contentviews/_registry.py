@@ -28,15 +28,19 @@ class ContentviewRegistry(Mapping[str, Contentview]):
         self._by_name[name] = instance
         self.on_change.send(instance)
 
+    def available_views(self) -> list[str]:
+        return ["auto", *self._by_name.keys()]
+
     def get_view(
-        self, data: bytes, metadata: Metadata, view_name: str | None
+        self, data: bytes, metadata: Metadata, view_name: str = "auto"
     ) -> Contentview:
         """
         Get the best contentview for the given data and metadata.
 
-        If the provided view_name is not found, we fall back gracefully to using `render_priority`.
+        If `view_name` is "auto" or the provided view not found,
+        the best matching contentview based on `render_priority` will be returned.
         """
-        if view_name:
+        if view_name != "auto":
             try:
                 return self[view_name.lower()]
             except KeyError:

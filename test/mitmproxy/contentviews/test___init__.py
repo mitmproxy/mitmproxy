@@ -8,58 +8,49 @@ from mitmproxy.test import tflow
 
 
 def test_view_selection():
-    assert registry.get_view(b"foo", Metadata(), None).name == "Raw"
+    assert registry.get_view(b"foo", Metadata()).name == "Raw"
 
     assert (
-        registry.get_view(
-            b"<html></html>", Metadata(content_type="text/html"), None
-        ).name
+        registry.get_view(b"<html></html>", Metadata(content_type="text/html")).name
         == "XML/HTML"
     )
 
     assert (
-        registry.get_view(b"foo", Metadata(content_type="text/flibble"), None).name
-        == "Raw"
+        registry.get_view(b"foo", Metadata(content_type="text/flibble")).name == "Raw"
     )
 
     assert (
-        registry.get_view(
-            b"<xml></xml>", Metadata(content_type="text/flibble"), None
-        ).name
+        registry.get_view(b"<xml></xml>", Metadata(content_type="text/flibble")).name
         == "XML/HTML"
     )
 
     assert (
-        registry.get_view(
-            b"<svg></svg>", Metadata(content_type="image/svg+xml"), None
-        ).name
+        registry.get_view(b"<svg></svg>", Metadata(content_type="image/svg+xml")).name
         == "XML/HTML"
     )
 
     assert (
-        registry.get_view(
-            b"{}", Metadata(content_type="application/acme+json"), None
-        ).name
+        registry.get_view(b"{}", Metadata(content_type="application/acme+json")).name
         == "JSON"
     )
 
     assert (
         registry.get_view(
-            b"verybinary", Metadata(content_type="image/new-magic-image-format"), None
+            b"verybinary", Metadata(content_type="image/new-magic-image-format")
         ).name
         == "Image"
     )
 
-    assert registry.get_view(b"\xff" * 30, Metadata(), None).name == "Hex Dump"
+    assert registry.get_view(b"\xff" * 30, Metadata()).name == "Hex Dump"
 
-    assert registry.get_view(b"", Metadata(), None).name == "Raw"
+    assert registry.get_view(b"", Metadata()).name == "Raw"
 
 
 class TestPrettifyMessage:
     def test_empty_content(self):
         f = tflow.tflow()
         f.request.content = None
-        result = prettify_message(f.request, f, None)
+        result = prettify_message(f.request, f)
         assert result.text == "Content is missing."
         assert result.syntax_highlight == "error"
         assert result.view_name is None
@@ -81,7 +72,7 @@ class TestPrettifyMessage:
             registry.register(failing_view)
             registry.register(raw)
 
-            result = prettify_message(f.request, f, None)
+            result = prettify_message(f.request, f)
             assert result.text == "content"
             assert result.syntax_highlight == "none"
             assert result.view_name == "Raw"

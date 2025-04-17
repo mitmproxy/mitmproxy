@@ -4,7 +4,7 @@ export function TBackendState(): Required<BackendState> {
     return {
         "available": true,
         "contentViews": [
-            "Auto",
+            "auto",
             "Raw"
         ],
         "localModeUnavailable": null,

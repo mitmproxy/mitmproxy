@@ -8,10 +8,7 @@ type ViewSelectorProps = {
 };
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
-    const contentViews = [
-        "auto",
-        ...useAppSelector((state) => state.backendState.contentViews || []),
-    ];
+    const contentViews = useAppSelector((state) => state.backendState.contentViews || []);
 
     const inner = (
         <span>

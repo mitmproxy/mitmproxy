@@ -65,6 +65,6 @@ def test_render_priority_error(caplog):
     registry.register(view)
     registry.register(ExampleContentview)
 
-    v = registry.get_view(b"data", Metadata(), None)
+    v = registry.get_view(b"data", Metadata())
     assert v.name == "Example"
     assert "Error in render_priority" in caplog.text

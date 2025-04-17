@@ -22,12 +22,10 @@ class ConsoleTestContentView(contentviews.Contentview):
 async def test_contentview_flowview(console, monkeypatch):
     monkeypatch.setattr(contentviews.registry, "_by_name", {"raw": raw})
     assert "Flows" in console.screen_contents()
-    flow = tflow.tflow()
-    flow.request.headers["content-type"] = "text/html"
-    await console.load_flow(flow)
+    await console.load_flow(tflow.tflow())
     assert ">>" in console.screen_contents()
     console.type("<enter>")
-    assert "XML" in console.screen_contents()
+    assert "Raw" in console.screen_contents()
 
     view = ConsoleTestContentView("test1")
     contentviews.add(view)

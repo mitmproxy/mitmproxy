@@ -67,9 +67,8 @@ def save_flows_content(path: pathlib.Path, flows: Iterable[flow.Flow]) -> None:
             t = time.time()
             if message:
                 pretty = contentviews.prettify_message(
-                    message,
+                    message=message,
                     flow=f,
-                    view_name=None,
                 )
             else:
                 pretty = contentviews.ContentviewResult(

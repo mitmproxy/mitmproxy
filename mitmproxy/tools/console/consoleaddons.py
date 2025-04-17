@@ -20,7 +20,6 @@ from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console.flowview import _view_auto_is_none
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
@@ -65,7 +64,7 @@ class ConsoleAddon:
             str,
             "auto",
             "The default content view mode.",
-            choices=list(contentviews.registry.keys()),
+            choices=contentviews.registry.available_views(),
         )
         loader.add_option(
             "console_eventlog_verbosity",
@@ -423,11 +422,9 @@ class ConsoleAddon:
                 "url",
             ]
             try:
-                view_name = _view_auto_is_none(
-                    self.master.commands.call("console.flowview.mode")
-                )
+                view_name = self.master.commands.call("console.flowview.mode")
             except CommandError:
-                view_name = None
+                view_name = "auto"
             request_cv = contentviews.registry.get_view(
                 contentviews.get_data(flow.request)[0] or b"",
                 contentviews.make_metadata(flow.request, flow),
@@ -639,7 +636,7 @@ class ConsoleAddon:
         """
         Returns the valid options for the flowview mode.
         """
-        return list(contentviews.registry.keys())
+        return contentviews.registry.available_views()
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:
