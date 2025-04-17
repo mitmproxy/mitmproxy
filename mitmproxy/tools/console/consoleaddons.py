@@ -423,7 +423,9 @@ class ConsoleAddon:
                 "url",
             ]
             try:
-                view_name = _view_auto_is_none(self.master.commands.call("console.flowview.mode"))
+                view_name = _view_auto_is_none(
+                    self.master.commands.call("console.flowview.mode")
+                )
             except CommandError:
                 view_name = None
             request_cv = contentviews.registry.get_view(

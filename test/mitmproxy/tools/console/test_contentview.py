@@ -1,5 +1,6 @@
 from mitmproxy import contentviews
 from mitmproxy.contentviews import Metadata
+from mitmproxy.contentviews import raw
 from mitmproxy.test import tflow
 
 
@@ -18,7 +19,8 @@ class ConsoleTestContentView(contentviews.Contentview):
         return 2
 
 
-async def test_contentview_flowview(console):
+async def test_contentview_flowview(console, monkeypatch):
+    monkeypatch.setattr(contentviews.registry, "_by_name", {"raw": raw})
     assert "Flows" in console.screen_contents()
     flow = tflow.tflow()
     flow.request.headers["content-type"] = "text/html"

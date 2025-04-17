@@ -318,3 +318,9 @@ commands = [["python", { default = ["./test/individual_coverage.py"], replace = 
 [tool.tox.env.old-dependencies]
 uv_resolution = "lowest-direct"
 runner = "uv-venv-runner"
+
+[tool.tox.env.fix]
+commands = [
+    ["ruff", "check", "--fix-only", "."],
+    ["ruff", "format", "."],
+]
