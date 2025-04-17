@@ -58,10 +58,14 @@ class ContentviewResult:
     description: str
 
 
+registry = ContentviewRegistry()
+
+
 def prettify_message(
     message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
     flow: flow.Flow,
     view_name: str = "auto",
+    registry: ContentviewRegistry = registry,
 ) -> ContentviewResult:
     data, enc = get_data(message)
     if data is None:
@@ -85,7 +89,7 @@ def prettify_message(
             description=enc,
         )
     except Exception as e:
-        logger.debug(f"Contentview failed: {e}", exc_info=True)
+        logger.debug(f"Contentview {view.name!r} failed: {e}", exc_info=True)
         if view_name == "auto":
             # If the contentview was chosen as the best matching one, fall back to raw.
             ret = ContentviewResult(
@@ -128,7 +132,6 @@ def reencode_message(
     return view.reencode(prettified, metadata)
 
 
-registry = ContentviewRegistry()
 # Legacy contentviews need to be registered explicitly.
 _legacy_views = [
     graphql.ViewGraphQL,
