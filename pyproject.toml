@@ -75,7 +75,6 @@ dev = [
     "wheel==0.45.1",
     "build==1.2.2.post1",
     "mypy==1.15.0",
-    "ruff==0.11.2",
     "types-certifi==2021.10.8.3",
     "types-Flask==1.1.6",
     "types-Werkzeug==1.0.9",
@@ -83,14 +82,18 @@ dev = [
     "types-cryptography==3.3.23.2",
     "types-pyOpenSSL==24.1.0.20240722",
     {include-group = "tox"},
-]
-deploy = [
-    "awscli==1.38.34",
-    "twine==6.1.0",
+    {include-group = "ruff"},
 ]
 tox = [
     "tox==4.25.0",
     "tox-uv==1.25.0",
+]
+ruff = [
+    "ruff==0.11.2",
+]
+deploy = [
+    "awscli==1.38.34",
+    "twine==6.1.0",
 ]
 
 [project.urls]
@@ -303,11 +306,11 @@ allowlist_externals = ["bash"]
 
 [tool.tox.env.lint]
 commands = [["ruff", "check",  "."]]
-package = "skip"
+dependency_groups = ["ruff"]
 
 [tool.tox.env.filename_matching]
 commands = [["python", "./test/filename_matching.py"]]
-package = "skip"
+dependency_groups = []
 
 [tool.tox.env.mypy]
 commands = [["mypy"]]
@@ -324,3 +327,4 @@ commands = [
     ["ruff", "check", "--fix-only", "."],
     ["ruff", "format", "."],
 ]
+dependency_groups = ["ruff"]

@@ -745,6 +745,9 @@ dev = [
     { name = "types-werkzeug" },
     { name = "wheel" },
 ]
+ruff = [
+    { name = "ruff" },
+]
 tox = [
     { name = "tox" },
     { name = "tox-uv" },
@@ -811,6 +814,7 @@ dev = [
     { name = "types-werkzeug", specifier = "==1.0.9" },
     { name = "wheel", specifier = "==0.45.1" },
 ]
+ruff = [{ name = "ruff", specifier = "==0.11.2" }]
 tox = [
     { name = "tox", specifier = "==4.25.0" },
     { name = "tox-uv", specifier = "==1.25.0" },
