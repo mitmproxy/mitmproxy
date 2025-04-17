@@ -77,7 +77,7 @@ class InteractiveContentview(Contentview, typing.Protocol):
     ) -> bytes:
         """
         Reencode the given (modified) `prettified` output into the original data format.
-        May raise a `ValueError` if reencoding failed.
+        May raise an exception (e.g. `ValueError`) if reencoding failed.
         """
 
 

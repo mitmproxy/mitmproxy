@@ -184,7 +184,7 @@ __all__ = [
     # Public Contentview API
     "Contentview",
     "InteractiveContentview",
-    "Metadata",
     "SyntaxHighlight",
     "add",
+    "Metadata",
 ]
