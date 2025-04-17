@@ -218,7 +218,7 @@ class FlowDetails(tabs.Tabs):
 
         widget_lines = []
         for m in flow.websocket.messages:
-            pretty = contentviews.prettify_message(m, flow, viewmode)
+            pretty = contentviews.prettify_message(m, flow, _view_auto_is_none(viewmode))
             chunks = mitmproxy_rs.syntax_highlight.highlight(
                 pretty.text,
                 language=pretty.syntax_highlight,
@@ -340,7 +340,7 @@ class FlowDetails(tabs.Tabs):
         message: http.Message = self._get_content_view_message
         self._get_content_view_message = None  # type: ignore[assignment]
 
-        pretty = contentviews.prettify_message(message, self.flow, viewmode)
+        pretty = contentviews.prettify_message(message, self.flow, _view_auto_is_none(viewmode))
         cut_off = strutils.cut_after_n_lines(pretty.text, max_lines)
 
         chunks = mitmproxy_rs.syntax_highlight.highlight(
@@ -489,3 +489,9 @@ class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
     def focus_changed(self, *args, **kwargs):
         self.body.focus_changed()
         self.header.focus_changed()
+
+
+def _view_auto_is_none(view_name: str) -> str | None:
+    if view_name == "auto":
+        return None
+    return view_name

@@ -20,6 +20,7 @@ from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console.flowview import _view_auto_is_none
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
@@ -422,7 +423,7 @@ class ConsoleAddon:
                 "url",
             ]
             try:
-                view_name = self.master.commands.call("console.flowview.mode")
+                view_name = _view_auto_is_none(self.master.commands.call("console.flowview.mode"))
             except CommandError:
                 view_name = None
             request_cv = contentviews.registry.get_view(
