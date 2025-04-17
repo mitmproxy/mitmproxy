@@ -11,27 +11,31 @@ jest.mock("../../../contrib/CodeMirror");
 enableFetchMocks();
 
 test("HttpMessage", async () => {
-    const lines = Array(512)
-        .fill([["text", "data"]])
-        .concat(Array(512).fill([["text", "additional"]]));
+    const text = "data\n".repeat(512) + "additional\n".repeat(512);
+
+    const cvd = {
+        view_name: "Raw",
+        description: "",
+        syntax_highlight: "none",
+    };
 
     fetchMock.mockResponses(
         JSON.stringify({
-            lines: lines.slice(0, 512 + 1),
-            description: "Auto",
+            text: "data\n".repeat(512) + "additional\n",
+            ...cvd,
         }),
         JSON.stringify({
-            lines,
-            description: "Auto",
+            text,
+            ...cvd,
         }),
         JSON.stringify({
-            lines: Array(5).fill([["text", "rawdata"]]),
-            description: "Raw",
+            text: "rawdata\n".repeat(5),
+            ...cvd,
         }),
         "raw content",
         JSON.stringify({
-            lines: Array(5).fill([["text", "rawdata"]]),
-            description: "Raw",
+            text: "rawdata\n".repeat(5),
+            ...cvd,
         }),
     );
 
@@ -71,9 +75,9 @@ test("ViewImage", async () => {
 
 /*
     This test differs from the one above because clicking the copy button triggers 'handleClickCopyButton'.
-    In the previous test, the response contained "raw content," which caused an "invalid JSON response body" error 
-    when processing the following line: 
-    `const data: ContentViewData = await response.json()` 
+    In the previous test, the response contained "raw content," which caused an "invalid JSON response body" error
+    when processing the following line:
+    `const data: ContentViewData = await response.json()`
     since "raw content" is not valid JSON.
 */
 describe("HttpMessage Copy Button", () => {
@@ -83,8 +87,8 @@ describe("HttpMessage Copy Button", () => {
     });
 
     test("handles successful copy action", async () => {
-        const lines = [[["text", "data"]], [["text", "additional"]]];
-        fetchMock.mockResponse(JSON.stringify({ lines, description: "Auto" }));
+        const text = "data\nadditional\n";
+        fetchMock.mockResponse(JSON.stringify({ text, description: "Auto" }));
 
         const tflow = TFlow();
         render(<HttpMessage flow={tflow} message={tflow.request} />);

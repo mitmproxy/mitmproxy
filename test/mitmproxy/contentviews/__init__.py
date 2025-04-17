@@ -1,3 +1,12 @@
+import sys
+
+if sys.version_info < (3, 13):  # pragma: no cover
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
+
+
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def full_eval(instance):
     def call(data, **metadata):
         x = instance(data, **metadata)

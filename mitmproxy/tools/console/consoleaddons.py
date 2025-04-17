@@ -1,5 +1,6 @@
 import csv
 import logging
+import re
 from collections.abc import Sequence
 
 import mitmproxy.types
@@ -14,6 +15,7 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import tcp
 from mitmproxy import udp
+from mitmproxy.exceptions import CommandError
 from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
@@ -62,7 +64,7 @@ class ConsoleAddon:
             str,
             "auto",
             "The default content view mode.",
-            choices=[i.name.lower() for i in contentviews.views],
+            choices=contentviews.registry.available_views(),
         )
         loader.add_option(
             "console_eventlog_verbosity",
@@ -419,6 +421,25 @@ class ConsoleAddon:
                 "set-cookies",
                 "url",
             ]
+            try:
+                view_name = self.master.commands.call("console.flowview.mode")
+            except CommandError:
+                view_name = "auto"
+            request_cv = contentviews.registry.get_view(
+                contentviews.get_data(flow.request)[0] or b"",
+                contentviews.make_metadata(flow.request, flow),
+                view_name,
+            )
+            if isinstance(request_cv, contentviews.InteractiveContentview):
+                focus_options.append(f"request-body ({request_cv.name})")
+            if flow.response:
+                response_cv = contentviews.registry.get_view(
+                    contentviews.get_data(flow.response)[0] or b"",
+                    contentviews.make_metadata(flow.response, flow),
+                    view_name,
+                )
+                if isinstance(response_cv, contentviews.InteractiveContentview):
+                    focus_options.append(f"response-body ({response_cv.name})")
             if flow.websocket:
                 focus_options.append("websocket-message")
         elif isinstance(flow, dns.DNSFlow):
@@ -463,6 +484,30 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_request_headers")
         elif flow_part == "response-headers":
             self.master.switch_view("edit_focus_response_headers")
+        elif m := re.match(
+            r"(?P<part>request|response)-body \((?P<contentview>.+)\)", flow_part
+        ):
+            if m["part"] == "request":
+                message = flow.request
+            else:
+                message = flow.response
+
+            cv = contentviews.registry.get(m["contentview"])
+            if not cv or not isinstance(cv, contentviews.InteractiveContentview):
+                raise CommandError(
+                    f"Contentview {m['contentview']} is not bidirectional."
+                )
+
+            pretty = contentviews.prettify_message(message, flow, cv.name)
+            prettified = self.master.spawn_editor(pretty.text)
+
+            message.content = contentviews.reencode_message(
+                prettified,
+                message,
+                flow,
+                cv.name,
+            )
+
         elif flow_part in ("request-body", "response-body"):
             if flow_part == "request-body":
                 message = flow.request
@@ -576,7 +621,7 @@ class ConsoleAddon:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
 
-        if mode not in [i.name.lower() for i in contentviews.views]:
+        if mode.lower() not in contentviews.registry:
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
@@ -591,7 +636,7 @@ class ConsoleAddon:
         """
         Returns the valid options for the flowview mode.
         """
-        return [i.name.lower() for i in contentviews.views]
+        return contentviews.registry.available_views()
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:

@@ -1,7 +1,7 @@
 import pytest
 
-from . import full_eval
-from mitmproxy.contentviews import css
+from mitmproxy.contentviews import Metadata
+from mitmproxy.contentviews._view_css import css
 
 
 @pytest.mark.parametrize(
@@ -21,28 +21,24 @@ from mitmproxy.contentviews import css
 )
 def test_beautify(filename, tdata):
     path = tdata.path("mitmproxy/contentviews/test_css_data/" + filename)
-    with open(path) as f:
+    with open(path, "rb") as f:
         input = f.read()
     with open("-formatted.".join(path.rsplit(".", 1))) as f:
         expected = f.read()
-    formatted = css.beautify(input)
+    formatted = css.prettify(input, Metadata())
     assert formatted == expected
 
 
 def test_simple():
-    v = full_eval(css.ViewCSS())
-    assert v(b"#foo{color:red}") == (
-        "CSS",
-        [[("text", "#foo {")], [("text", "    color: red")], [("text", "}")]],
-    )
-    assert v(b"") == ("CSS", [[("text", "")]])
-    assert v(b"console.log('not really css')") == (
-        "CSS",
-        [[("text", "console.log('not really css')")]],
+    meta = Metadata()
+    assert css.prettify(b"#foo{color:red}", meta) == "#foo {\n    color: red\n}\n"
+    assert css.prettify(b"", meta) == "\n"
+    assert (
+        css.prettify(b"console.log('not really css')", meta)
+        == "console.log('not really css')\n"
     )
 
 
 def test_render_priority():
-    v = css.ViewCSS()
-    assert v.render_priority(b"data", content_type="text/css")
-    assert not v.render_priority(b"data", content_type="text/plain")
+    assert css.render_priority(b"data", Metadata(content_type="text/css"))
+    assert not css.render_priority(b"data", Metadata(content_type="text/plain"))

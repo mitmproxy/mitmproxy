@@ -332,27 +332,35 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_flow_contentview(self):
         assert get_json(self.fetch("/flows/42/request/content/raw")) == {
-            "lines": [[["text", "foo"]], [["text", "bar"]]],
-            "description": "Raw",
+            "description": "",
+            "syntax_highlight": "none",
+            "text": "foo\nbar",
+            "view_name": "Raw",
         }
         assert get_json(self.fetch("/flows/42/request/content/raw?lines=1")) == {
-            "lines": [[["text", "foo"]]],
-            "description": "Raw",
+            "description": "",
+            "syntax_highlight": "none",
+            "text": "foo\n",
+            "view_name": "Raw",
         }
         assert self.fetch("/flows/42/messages/content/raw").code == 400
 
     def test_flow_contentview_websocket(self):
         assert get_json(self.fetch("/flows/43/messages/content/raw?lines=2")) == [
             {
-                "description": "Raw",
+                "text": "hello binary",
+                "view_name": "Raw",
+                "syntax_highlight": "none",
+                "description": "",
                 "from_client": True,
-                "lines": [[["text", "hello binary"]]],
                 "timestamp": 946681203,
             },
             {
-                "description": "Raw",
+                "text": "hello text",
+                "view_name": "Raw",
+                "syntax_highlight": "none",
+                "description": "",
                 "from_client": True,
-                "lines": [[["text", "hello text"]]],
                 "timestamp": 946681204,
             },
         ]

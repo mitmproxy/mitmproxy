@@ -1,22 +1,22 @@
 import React from "react";
 
-type ContentLinesRendererProps = {
-    lines: [style: string, text: string][][];
+type ContentRendererProps = {
+    content: string;
     maxLines: number;
     showMore: () => void;
 };
 
-const LineRenderer = React.memo(function LineRenderer({
-    lines,
+const ContentRenderer = React.memo(function ContentRenderer({
+    content,
     maxLines,
     showMore,
-}: ContentLinesRendererProps) {
-    if (lines.length === 0) {
+}: ContentRendererProps) {
+    if (content.length === 0) {
         return null;
     }
     return (
         <pre>
-            {lines.map((line, i) =>
+            {content.split("\n").map((line, i) =>
                 i === maxLines ? (
                     <button
                         key="showmore"
@@ -30,16 +30,10 @@ const LineRenderer = React.memo(function LineRenderer({
                         Show more
                     </button>
                 ) : (
-                    <div key={i}>
-                        {line.map(([style, text], j) => (
-                            <span key={j} className={style}>
-                                {text}
-                            </span>
-                        ))}
-                    </div>
+                    <div key={i}>{line}</div>
                 ),
             )}
         </pre>
     );
 });
-export default LineRenderer;
+export default ContentRenderer;

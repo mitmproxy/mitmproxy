@@ -2,13 +2,15 @@ import * as React from "react";
 import { render, screen, waitFor } from "../test-utils";
 import ProxyApp from "../../components/ProxyApp";
 import { enableFetchMocks } from "jest-fetch-mock";
-import { ContentViewData } from "../../components/contentviews/useContent";
+import { ContentViewData } from "../../components/contentviews/useContentView";
 
 enableFetchMocks();
 
 test("ProxyApp", async () => {
     const cv: ContentViewData = {
-        lines: [[["text", "my data"]]],
+        text: "my data",
+        view_name: "raw",
+        syntax_highlight: "none",
         description: "",
     };
     fetchMock.doMockOnceIf(

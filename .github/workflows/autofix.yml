@@ -20,6 +20,8 @@ jobs:
       - run: ruff check --fix-only .
       - run: ruff format .
 
+      - run: uv lock
+
       - run: web/gen/all
 
       - uses: actions/setup-node@v4

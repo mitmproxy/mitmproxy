@@ -1,19 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LineRenderer 1`] = `
+exports[`ContentRenderer 1`] = `
 <DocumentFragment>
   <pre>
     <div>
-      <span
-        class="header"
-      >
-        foo: 
-      </span>
-      <span
-        class="text"
-      >
-        42
-      </span>
+      foo: 42
     </div>
     <button
       class="btn btn-xs btn-info"
@@ -24,8 +15,9 @@ exports[`LineRenderer 1`] = `
       />
        Show more
     </button>
+    <div />
   </pre>
 </DocumentFragment>
 `;
 
-exports[`No lines 1`] = `<DocumentFragment />`;
+exports[`No content 1`] = `<DocumentFragment />`;

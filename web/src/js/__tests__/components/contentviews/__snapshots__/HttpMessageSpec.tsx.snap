@@ -65,40 +65,21 @@ exports[`HttpMessage 1`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
+      <div />
     </pre>
   </div>
 </DocumentFragment>
@@ -205,40 +186,21 @@ exports[`HttpMessage 3`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
+      <div />
     </pre>
   </div>
 </DocumentFragment>
@@ -309,40 +271,21 @@ exports[`HttpMessage 4`] = `
     </div>
     <pre>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
       <div>
-        <span
-          class="text"
-        >
-          rawdata
-        </span>
+        rawdata
       </div>
+      <div />
     </pre>
   </div>
 </DocumentFragment>
