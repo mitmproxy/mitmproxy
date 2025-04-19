@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Added valkey_allowlist.py to examples/contrib -- This script enforces an allowlist using a valkey (Redis) database.
+  ([#7573](https://github.com/mitmproxy/mitmproxy/pull/7573), @FalafelGood)
 - Fix a bug where mitmproxy would incorrectly send empty HTTP/2 data frames.
   ([#7574](https://github.com/mitmproxy/mitmproxy/pull/7574), @mhils, @Dieken)
 - Enhance homebrew installation command for Brewfile users.
