@@ -231,5 +231,11 @@ class Options(optmanager.OptManager):
             TLS key size for certificates and CA.
             """,
         )
+        self.add_option(
+            "protobuf_definitions",
+            Optional[str],
+            None,
+            "Path to a .proto file that's used to resolve Protobuf field names when pretty-printing.",
+        )
 
         self.update(**kwargs)

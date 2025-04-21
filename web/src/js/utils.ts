@@ -1,6 +1,6 @@
 import { isEqual } from "lodash";
 import * as React from "react";
-import { ContentViewData } from "./components/contentviews/useContent";
+import { ContentViewData } from "./components/contentviews/useContentView";
 
 window.React = React;
 
@@ -181,12 +181,7 @@ export async function copyToClipboard(
 export async function copyViewContentDataToClipboard(
     contentViewData: ContentViewData | undefined,
 ) {
-    let p = "";
-    contentViewData?.lines.forEach((line) => {
-        line.forEach((el) => (p = p + el[1]));
-        p = p + "\n";
-    });
-    await copyToClipboard(Promise.resolve(p));
+    await copyToClipboard(Promise.resolve(contentViewData?.text || ""));
 }
 
 export function rpartition(str: string, sep: string): [string, string] {
