@@ -180,6 +180,16 @@ def add(contentview: Contentview | type[Contentview]) -> None:
     registry.register(contentview)
 
 
+# hack: docstring where pdoc finds it.
+SyntaxHighlight = SyntaxHighlight
+"""
+Syntax highlighting formats currently supported by mitmproxy.
+Note that YAML is a superset of JSON; so if you'd like to highlight JSON, pick the YAML highlighter.
+
+*If you have a concrete use case for additional formats, please open an issue.*
+"""
+
+
 __all__ = [
     # Public Contentview API
     "Contentview",
