@@ -73,7 +73,12 @@ h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
 shutil.copyfile("trusted-root.crt", f"{h}.0")
 
 # create trusted leaf certs.
-mkcert("trusted-leaf", SUBJECT, f"subjectAltName = DNS:{SUBJECT}")
+mkcert(
+    "trusted-leaf",
+    SUBJECT,
+    f"subjectAltName = DNS:{SUBJECT}",
+    "crlDistributionPoints = URI:https://trusted-root/example.crl",
+)
 mkcert("trusted-leaf-ip", "192.0.2.42", f"subjectAltName = IP:192.0.2.42")
 mkcert(
     "trusted-client-cert",
@@ -123,3 +128,6 @@ with (
 with open(f"trusted-leaf.pem") as crt1, open(f"trusted-chain-invalid.pem", "w") as pem:
     pem.write(crt1.read())
     pem.write("-----BEGIN CERTIFICATE-----\nnotacert\n-----END CERTIFICATE-----\n")
+
+mkcert("invalid-crl", SUBJECT, "crlDistributionPoints = URI://[")
+os.remove("invalid-crl.key")

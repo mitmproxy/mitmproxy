@@ -20,6 +20,7 @@ concurrency:
 jobs:
   tox:
     strategy:
+      fail-fast: false
       matrix:
         env: [lint, filename_matching, mypy, individual_coverage, old-dependencies, test-offline]
     name: ${{ matrix.env }}
