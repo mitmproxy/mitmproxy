@@ -153,6 +153,7 @@ class TestDummyCert:
                 x509.DNSName("bücher.example".encode("idna").decode("ascii")),
             ],
             "Foo Ltd.",
+            crl_url="https://example.com/example.crl",
         )
         assert r.cn == "foo.com"
         assert r.altnames == x509.GeneralNames(
@@ -165,13 +166,15 @@ class TestDummyCert:
             ]
         )
         assert r.organization == "Foo Ltd."
+        assert r.crl_distribution_points == ["https://example.com/example.crl"]
 
         r = certs.dummy_cert(
-            tstore.default_privatekey, tstore.default_ca._cert, None, [], None
+            tstore.default_privatekey, tstore.default_ca._cert, None, [], None, None
         )
         assert r.cn is None
         assert r.organization is None
         assert r.altnames == x509.GeneralNames([])
+        assert r.crl_distribution_points == []
 
 
 class TestCert:
@@ -392,15 +395,27 @@ class TestCert:
         ]
         assert (certs._name_to_keyval(subject)) == expected
 
-    def test_cert_with_no_crl_distribution_points(self):
-        private_key, ca = certs.create_ca("test", "test", 2048)
-        cert = certs.dummy_cert(private_key, ca, None, [])
-
-        assert cert.crl_distribution_points == []
-
-    def test_cert_with_crl_distribution_points(self):
-        private_key, ca = certs.create_ca("test", "test", 2048)
-        crl = "http://example.com/cert.crl"
-        cert = certs.dummy_cert(private_key, ca, None, [], None, crl)
-
-        assert cert.crl_distribution_points == [crl]
+    @pytest.mark.parametrize(
+        "filename,crls",
+        [
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/trusted-leaf.crt",
+                ["https://trusted-root/example.crl"],
+                id="with-crl",
+            ),
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/invalid-crl.crt",
+                ["//["],
+                id="invalid-crl",
+            ),
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/trusted-root.crt",
+                [],
+                id="without-crl",
+            ),
+        ],
+    )
+    def test_crl_distribution_points(self, tdata, filename, crls):
+        pem = Path(tdata.path(filename)).read_bytes()
+        cert = certs.Cert.from_pem(pem)
+        assert cert.crl_distribution_points == crls

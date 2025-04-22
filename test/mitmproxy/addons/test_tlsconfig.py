@@ -513,87 +513,57 @@ class TestTlsConfig:
             ta.configure(["confdir"])
             assert "The mitmproxy certificate authority has expired" in caplog.text
 
-    async def test_cert_crl_substitution(self):
-        private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
-
+    @pytest.mark.parametrize(
+        "cert,expect_crl",
+        [
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/trusted-leaf.crt",
+                True,
+                id="with-crl",
+            ),
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/trusted-root.crt",
+                False,
+                id="without-crl",
+            ),
+            pytest.param(
+                "mitmproxy/net/data/verificationcerts/invalid-crl.crt",
+                False,
+                id="invalid-crl",
+            ),
+        ],
+    )
+    def test_crl_substitution(self, tdata, cert, expect_crl) -> None:
         ta = tlsconfig.TlsConfig()
-        ta.certstore = certs.CertStore(
-            private_key,
-            certs.Cert(test_ca_cert),
-            None,
-            default_crl=certs.dummy_crl(private_key, test_ca_cert),
-            dhparams=None,
-        )
+        with taddons.context(ta) as tctx:
+            ta.configure(["confdir"])
+            ctx = _ctx(tctx.options)
+            with open(tdata.path(cert), "rb") as f:
+                ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
 
-        ctx = context.Context(client=tflow.tclient_conn(), options=options.Options)
-        # conn = tflow.tserver_conn()
+            crt = ta.get_cert(ctx)
 
-        originalCrl = "http://example.com/original.crl"
-        originalCert = certs.dummy_cert(
-            privkey=ta.certstore.default_privatekey,
-            cacert=ta.certstore.default_ca._cert,
-            commonname=None,
-            sans=[],
-            organization=None,
-            crl_url=originalCrl,
-        )
+            if expect_crl:
+                assert crt.cert.crl_distribution_points[0].endswith(ta.crl_path())
+            else:
+                assert not crt.cert.crl_distribution_points
 
-        ctx.server.certificate_list = [originalCert]
-
-        newCert = ta.get_cert(ctx)
-
-        assert newCert.cert.crl_distribution_points != [originalCrl]
-
-    async def test_crl_no_substitution(self):
-        private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
-
+    def test_crl_request(self):
         ta = tlsconfig.TlsConfig()
-        ta.certstore = certs.CertStore(
-            private_key,
-            certs.Cert(test_ca_cert),
-            None,
-            default_crl=certs.dummy_crl(private_key, test_ca_cert),
-            dhparams=None,
-        )
+        with taddons.context(ta):
+            ta.configure(["confdir"])
 
-        # Should not populate response/substitute if flow is not live
-        f = tflow.tflow(live=False)
-        await ta.request(f)
-        assert not f.response
+            f = tflow.tflow(req=tflow.treq(path="/other.crl"))
+            ta.request(f)
+            assert not f.response
 
-        # Should not substitute if flow has an error
-        f = tflow.tflow(err=True)
-        await ta.request(f)
-        assert not f.response
+            f = tflow.tflow(req=tflow.treq(path=ta.crl_path()))
+            ta.request(f)
+            assert f.response
 
-        # Should not substitute if flow has a response already
-        f = tflow.tflow(resp=True)
-        await ta.request(f)
-        assert f.response.get_state() == tflow.tresp().get_state()
-
-        # Should not substitute if flow path does not end with `str(certstore.default_ca.serial) + ".crl"`
-        f = tflow.tflow()
-        f.request.path = "shouldNotSubstitute.crl"
-        await ta.request(f)
-        assert not f.response
-
-    async def test_crl_substitute(self):
-        private_key, test_ca_cert = certs.create_ca("Test", "test", 4096)
-
-        ta = tlsconfig.TlsConfig()
-        ta.certstore = certs.CertStore(
-            private_key,
-            certs.Cert(test_ca_cert),
-            None,
-            default_crl=certs.dummy_crl(private_key, test_ca_cert),
-            dhparams=None,
-        )
-
-        # Should substitute with crl as it meets all preconditions
-        f = tflow.tflow()
-        f.request.path = ta.crl_path()
-        await ta.request(f)
-        assert f.response
+            f = tflow.tflow(req=tflow.treq(path=ta.crl_path()), live=False)
+            ta.request(f)
+            assert not f.response
 
 
 def test_default_ciphers():
