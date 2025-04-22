@@ -2,6 +2,7 @@ import ipaddress
 import logging
 import os
 import ssl
+import urllib.parse
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -20,8 +21,6 @@ from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import tls
 from mitmproxy.net import tls as net_tls
-from mitmproxy.net.http.url import parse
-from mitmproxy.net.http.url import unparse
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import modes
@@ -587,7 +586,7 @@ class TlsConfig:
             )
 
     def crl_path(self) -> str:
-        return "/mitmproxy-" + str(self.certstore.default_ca.serial) + ".crl"
+        return f"/mitmproxy-{self.certstore.default_ca.serial}.crl"
 
     def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """
@@ -608,16 +607,16 @@ class TlsConfig:
                 organization = upstream_cert.organization
 
             # Replace original URL path with the CA cert serial number, which acts as a magic token
-            if len(upstream_cert.crl_distribution_points) > 0:
-                scheme, host, port, _ = parse(upstream_cert.crl_distribution_points[0])
-
-                # I hope I am just doing something stupid and that this is not the intended way to actually go about doing this
-                crl_distribution_point = unparse(
-                    scheme.decode("ascii"),
-                    host.decode("idna"),
-                    port,
-                    self.crl_path(),
-                )
+            if crls := upstream_cert.crl_distribution_points:
+                try:
+                    scheme, netloc, *_ = urllib.parse.urlsplit(crls[0])
+                except ValueError:
+                    logger.info(f"Failed to parse CRL URL: {crls[0]!r}")
+                else:
+                    # noinspection PyTypeChecker
+                    crl_distribution_point = urllib.parse.urlunsplit(
+                        (scheme, netloc, self.crl_path(), None, None)
+                    )
 
         # Add SNI or our local IP address.
         if conn_context.client.sni:
@@ -639,12 +638,11 @@ class TlsConfig:
             cn, altnames, organization, crl_distribution_point
         )
 
-    async def request(self, flow: http.HTTPFlow):
+    def request(self, flow: http.HTTPFlow):
         if not flow.live or flow.error or flow.response:
             return
         # Check if a request has a magic CRL token at the end
         if flow.request.path.endswith(self.crl_path()):
-            # Serve CRL
             flow.response = http.Response.make(
                 200,
                 self.certstore.default_crl,
