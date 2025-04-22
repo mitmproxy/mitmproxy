@@ -776,7 +776,7 @@ tox = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aioquic", specifier = ">=1.1.0,<=1.2.0" },
+    { name = "aioquic", specifier = "<=1.2.0,>=1.2.0" },
     { name = "argon2-cffi", specifier = "<=23.1.0,>=23.1.0" },
     { name = "asgiref", specifier = ">=3.2.10,<=3.8.1" },
     { name = "brotli", specifier = ">=1.0,<=1.1.0" },
