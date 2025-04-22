@@ -26,6 +26,8 @@
 
 - Add a new feature to store streamed bodies for requests and responses.
   ([#7637](https://github.com/mitmproxy/mitmproxy/pull/7637), @mkiami)
+- Add store_streamed_bodies ad relevant options for programmatic use, this is an enhancement for [#7637](https://github.com/mitmproxy/mitmproxy/pull/7637)
+  ([#7665](https://github.com/mitmproxy/mitmproxy/pull/7665), @nth347)
 - Add support for TLS 1.3 Post Handshake Authentication.
   ([#7576](https://github.com/mitmproxy/mitmproxy/pull/7576), @mhils, @cataggar)
 - Add search functionality to the documentation.
