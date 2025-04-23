@@ -10,16 +10,8 @@ test("FlowRow", async () => {
     const { asFragment } = render(
         <table>
             <tbody>
-                <FlowRow
-                    flow={tflow0}
-                    selected={false}
-                    highlighted={false}
-                />
-                <FlowRow
-                    flow={tflow3}
-                    selected={false}
-                    highlighted={false}
-                />
+                <FlowRow flow={tflow0} selected={false} highlighted={false} />
+                <FlowRow flow={tflow3} selected={false} highlighted={false} />
             </tbody>
         </table>,
         { store },

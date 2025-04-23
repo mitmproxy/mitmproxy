@@ -3,9 +3,9 @@ import { fetchApi } from "../utils";
 import * as store from "./utils/store";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
-import {canResumeOrKill, canRevert, sortFunctions} from "../flow/utils";
-import {AppDispatch, RootState} from "./store";
-import {State} from "./utils/store";
+import { canResumeOrKill, canRevert, sortFunctions } from "../flow/utils";
+import { AppDispatch, RootState } from "./store";
+import { State } from "./utils/store";
 
 export const ADD = "FLOWS_ADD";
 export const UPDATE = "FLOWS_UPDATE";
@@ -25,7 +25,7 @@ export interface FlowsState extends store.State<Flow> {
     filter?: string;
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: Flow[];
-    selectedIndex: {[id: string]: number};
+    selectedIndex: { [id: string]: number };
 }
 
 export const defaultState: FlowsState = {
@@ -42,37 +42,45 @@ function updateSelected(
     newStoreState: State<Flow>,
     action,
 ): Pick<FlowsState, "selected" | "selectedIndex"> {
-    let {selected, selectedIndex} = state;
+    let { selected, selectedIndex } = state;
     switch (action.type) {
         case UPDATE:
-            if(selectedIndex[action.data.id] === undefined) {
+            if (selectedIndex[action.data.id] === undefined) {
                 break;
             }
-            selected = selected.map(f => f.id === action.data.id ? action.data : f);
+            selected = selected.map((f) =>
+                f.id === action.data.id ? action.data : f,
+            );
             break;
         case RECEIVE:
-            selected = selected.map(f => newStoreState.byId[f.id]).filter(f => f !== undefined);
-            selectedIndex = Object.fromEntries(selected.map(((f, i) => [f.id, i])));
+            selected = selected
+                .map((f) => newStoreState.byId[f.id])
+                .filter((f) => f !== undefined);
+            selectedIndex = Object.fromEntries(
+                selected.map((f, i) => [f.id, i]),
+            );
             break;
         case REMOVE:
-            if(selectedIndex[action.data] === undefined) {
+            if (selectedIndex[action.data] === undefined) {
                 break;
             }
             if (selected.length > 1) {
-                selected = selected.filter(f => f.id !== action.data);
+                selected = selected.filter((f) => f.id !== action.data);
             } else if (!(action.data in state.viewIndex)) {
                 selected = [];
             } else {
                 const currentIndex = state.viewIndex[action.data];
                 selected = [
-                    state.view[currentIndex + 1]
-                    ?? state.view[currentIndex - 1]  // last element
+                    state.view[currentIndex + 1] ??
+                        state.view[currentIndex - 1], // last element
                 ];
             }
-            selectedIndex = Object.fromEntries(selected.map(((f, i) => [f.id, i])));
+            selectedIndex = Object.fromEntries(
+                selected.map((f, i) => [f.id, i]),
+            );
             break;
     }
-    return {selected, selectedIndex};
+    return { selected, selectedIndex };
 }
 
 export default function reducer(
@@ -127,7 +135,9 @@ export default function reducer(
             return {
                 ...state,
                 selected,
-                selectedIndex: Object.fromEntries(selected.map(((f, i) => [f.id, i]))),
+                selectedIndex: Object.fromEntries(
+                    selected.map((f, i) => [f.id, i]),
+                ),
             };
         }
         default:
@@ -181,7 +191,8 @@ export function setSort(column: string, desc: boolean) {
 }
 
 export function selectRelative(flows: FlowsState, shift: number) {
-    const currentSelectionIndex: number | undefined = flows.viewIndex[flows.selected[flows.selected.length - 1]?.id];
+    const currentSelectionIndex: number | undefined =
+        flows.viewIndex[flows.selected[flows.selected.length - 1]?.id];
     const minIndex = 0;
     const maxIndex = flows.view.length - 1;
     let newIndex: number;
@@ -236,7 +247,7 @@ export function remove(flows: Flow[]) {
 export function duplicate(flows: Flow[]) {
     return () =>
         Promise.all(
-            flows.map(flow =>
+            flows.map((flow) =>
                 fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" }),
             ),
         );
@@ -250,7 +261,7 @@ export function revert(flows: Flow[]) {
     flows = flows.filter(canRevert);
     return () =>
         Promise.all(
-            flows.map(flow =>
+            flows.map((flow) =>
                 fetchApi(`/flows/${flow.id}/revert`, { method: "POST" }),
             ),
         );
@@ -291,33 +302,33 @@ export function select(flows: Flow[]) {
 /** Toggle selection for one particular flow. */
 export function selectToggle(flow: Flow) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
-        const {flows} = getState();
+        const { flows } = getState();
         if (flow.id in flows.selectedIndex) {
-            dispatch(select(flows.selected.filter(f => flow.id !== f.id)));
+            dispatch(select(flows.selected.filter((f) => flow.id !== f.id)));
         } else {
             dispatch(select([...flows.selected, flow]));
         }
-    }
+    };
 }
 
 /** Select a range of flows with shift + click. */
 export function selectRange(flow: Flow) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
-        const {flows} = getState();
+        const { flows } = getState();
         const prev = flows.selected[flows.selected.length - 1];
 
         const thisIndex = flows.viewIndex[flow.id];
         const prevIndex = flows.viewIndex[prev?.id];
-        if(thisIndex === undefined || prevIndex === undefined) {
+        if (thisIndex === undefined || prevIndex === undefined) {
             return dispatch(select([flow]));
         }
         let newSelection: Flow[];
-        if(thisIndex <= prevIndex) {
+        if (thisIndex <= prevIndex) {
             newSelection = flows.view.slice(thisIndex, prevIndex + 1);
         } else {
             newSelection = flows.view.slice(prevIndex + 1, thisIndex + 1);
-            newSelection.push(prev);  // Keep this at the end if the user shift-clicks again.
+            newSelection.push(prev); // Keep this at the end if the user shift-clicks again.
         }
         return dispatch(select(newSelection));
-    }
+    };
 }

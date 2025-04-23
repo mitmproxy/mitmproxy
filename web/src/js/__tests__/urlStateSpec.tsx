@@ -9,8 +9,8 @@ import reduceEventLog from "../ducks/eventLog";
 import reduceCommandBar from "../ducks/commandBar";
 
 import configureStore from "redux-mock-store";
-import {testState} from "./ducks/tutils";
-import {RootStore} from "../ducks/store";
+import { testState } from "./ducks/tutils";
+import { RootStore } from "../ducks/store";
 
 const mockStore = configureStore();
 history.replaceState = jest.fn();

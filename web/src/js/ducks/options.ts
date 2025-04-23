@@ -43,7 +43,12 @@ export async function pureSendUpdate(option: Option, value, dispatch) {
             throw await response.text();
         }
     } catch (error) {
-        dispatch(optionsEditorActions.updateError({ option, error: error.toString() }));
+        dispatch(
+            optionsEditorActions.updateError({
+                option,
+                error: error.toString(),
+            }),
+        );
     }
 }
 

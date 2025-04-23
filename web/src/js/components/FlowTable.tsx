@@ -55,7 +55,11 @@ export class PureFlowTable extends React.Component<
         return autoscroll.isAtBottom(this.viewport);
     }
 
-    componentDidUpdate(prevProps: FlowTableProps, prevState: FlowTableState, snapshot) {
+    componentDidUpdate(
+        prevProps: FlowTableProps,
+        prevState: FlowTableState,
+        snapshot,
+    ) {
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
@@ -71,7 +75,8 @@ export class PureFlowTable extends React.Component<
 
             const headHeight = head ? head.offsetHeight : 0;
 
-            const rowTop = flowViewIndex[flowSelection[0].id] * rowHeight + headHeight;
+            const rowTop =
+                flowViewIndex[flowSelection[0].id] * rowHeight + headHeight;
             const rowBottom = rowTop + rowHeight;
 
             const viewportTop = viewport.scrollTop;
@@ -136,14 +141,16 @@ export class PureFlowTable extends React.Component<
                     </thead>
                     <tbody>
                         <tr style={{ height: vScroll.paddingTop }} />
-                        {flowView.slice(vScroll.start, vScroll.end).map((flow) => (
-                            <FlowRow
-                                key={flow.id}
-                                flow={flow}
-                                selected={flow.id in flowSelectionIndex}
-                                highlighted={isHighlighted(flow)}
-                            />
-                        ))}
+                        {flowView
+                            .slice(vScroll.start, vScroll.end)
+                            .map((flow) => (
+                                <FlowRow
+                                    key={flow.id}
+                                    flow={flow}
+                                    selected={flow.id in flowSelectionIndex}
+                                    highlighted={isHighlighted(flow)}
+                                />
+                            ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
                     </tbody>
                 </table>

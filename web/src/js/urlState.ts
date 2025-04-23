@@ -9,7 +9,7 @@ import { select, setFilter, setHighlight } from "./ducks/flows";
 import { selectTab } from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
 import * as commandBarActions from "./ducks/commandBar";
-import {RootStore} from "./ducks/store";
+import { RootStore } from "./ducks/store";
 
 const Query = {
     SEARCH: "s",
@@ -29,11 +29,11 @@ export function updateStoreFromUrl(store: RootStore) {
 
             const selectFlowOnceAvailable = () => {
                 const flow = store.getState().flows.byId[flowId];
-                if(flow !== undefined) {
+                if (flow !== undefined) {
                     unsubscribe();
                     store.dispatch(select([flow]));
                 }
-            }
+            };
             const unsubscribe = store.subscribe(selectFlowOnceAvailable);
             selectFlowOnceAvailable();
         }

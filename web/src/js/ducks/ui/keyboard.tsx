@@ -3,7 +3,7 @@ import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
 import { tabsForFlow } from "../../components/FlowView";
 import { runCommand } from "../../utils";
-import {AppDispatch, RootState} from "../store";
+import { AppDispatch, RootState } from "../store";
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
@@ -13,7 +13,7 @@ export function onKeyDown(e: KeyboardEvent) {
     const key = e.key;
     e.preventDefault();
     return (dispatch: AppDispatch, getState: () => RootState) => {
-        const {flows} = getState();
+        const { flows } = getState();
         const selectedFlows = flows.selected;
         const flow = selectedFlows[0];
 

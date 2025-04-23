@@ -1,6 +1,11 @@
 import * as React from "react";
 import Button from "../common/Button";
-import {canReplay, canResumeOrKill, canRevert, MessageUtils} from "../../flow/utils";
+import {
+    canReplay,
+    canResumeOrKill,
+    canRevert,
+    MessageUtils,
+} from "../../flow/utils";
 import HideInStatic from "../common/HideInStatic";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as flowActions from "../../ducks/flows";
@@ -21,10 +26,12 @@ FlowMenu.title = "Flow";
 export default function FlowMenu(): JSX.Element {
     const dispatch = useAppDispatch();
 
-    const selectedFlows = useAppSelector(state => state.flows.selected);
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
     const flow = selectedFlows[0];
 
-    const hasSingleFlowSelected = useAppSelector((state) => state.flows.selected.length === 1)
+    const hasSingleFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
     const canResumeOrKillAny = selectedFlows.some(canResumeOrKill);
 
     if (selectedFlows.length === 0) return <div />;
@@ -46,7 +53,9 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             title="[D]uplicate flow"
                             icon="fa-copy text-info"
-                            onClick={() => dispatch(duplicateFlows(selectedFlows))}
+                            onClick={() =>
+                                dispatch(duplicateFlows(selectedFlows))
+                            }
                         >
                             Duplicate
                         </Button>

@@ -131,7 +131,9 @@ describe("reverseSlice", () => {
         const firstServer = store.getState().modes.reverse[0];
         await store.dispatch(setActive({ value: true, server: firstServer }));
 
-        const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+        const consoleSpy = jest
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
         await store.dispatch(removeServer(store.getState().modes.reverse[0]));
 
         expect(store.getState().modes.reverse.length).toBe(1);

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {act, fireEvent, render, screen, waitFor} from "../../test-utils";
+import { act, fireEvent, render, screen, waitFor } from "../../test-utils";
 import LocalDropdown from "../../../components/Modes/LocalDropdown";
 import { TStore } from "../../ducks/tutils";
 import { Provider } from "react-redux";
@@ -43,7 +43,9 @@ test("LocalDropdown - no matching processes", async () => {
     );
 
     const input = screen.getByPlaceholderText("all applications");
-    await act(() => fireEvent.change(input, { target: { value: "nonexistent" } }));
+    await act(() =>
+        fireEvent.change(input, { target: { value: "nonexistent" } }),
+    );
 
     await waitFor(() => {
         expect(screen.getByText(/Press/i)).toBeInTheDocument();

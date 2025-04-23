@@ -8,7 +8,9 @@ import Modes from "./Modes";
 import { Tab } from "../ducks/ui/tabs";
 
 export default function MainView() {
-    const hasOneFlowSelected = useAppSelector((state) => state.flows.selected.length === 1);
+    const hasOneFlowSelected = useAppSelector(
+        (state) => state.flows.selected.length === 1,
+    );
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
     const currentTab = useAppSelector((state) => state.ui.tabs.current);
 

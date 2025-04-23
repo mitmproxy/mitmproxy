@@ -66,9 +66,7 @@ export function tabsForFlow(flow: Flow): string[] {
 
 export default function FlowView() {
     const dispatch = useAppDispatch();
-    const flow = useAppSelector(
-        (state) => state.flows.selected[0],
-    );
+    const flow = useAppSelector((state) => state.flows.selected[0]);
     let active = useAppSelector((state) => state.ui.flow.tab);
 
     if (flow == undefined) {

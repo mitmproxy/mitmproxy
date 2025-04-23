@@ -79,7 +79,7 @@ export const testState: RootState = {
     options: defaultOptions,
     flows: {
         selected: [tflow1],
-        selectedIndex: {[tflow1.id]: 0},
+        selectedIndex: { [tflow1.id]: 0 },
         byId: {
             [tflow0.id]: tflow0,
             [tflow1.id]: tflow1,
@@ -144,7 +144,7 @@ export const testState: RootState = {
             {
                 active: false,
                 selectedProcesses: "",
-                ui_id: 2
+                ui_id: 2,
             },
         ],
         wireguard: [

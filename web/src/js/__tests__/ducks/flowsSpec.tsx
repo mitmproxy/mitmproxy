@@ -16,32 +16,32 @@ describe("flow reducer", () => {
     }
     const state = s;
     const [_f0, f1, f2, f3, f4] = state.list;
-    const alreadySelected = { ...state, selected: [f1], selectedIndex: {"1": 0}, };
-
+    const alreadySelected = {
+        ...state,
+        selected: [f1],
+        selectedIndex: { "1": 0 },
+    };
 
     describe("selections", () => {
         it("should be possible to select a single flow", () => {
             expect(reduceFlows(state, flowActions.select([f1]))).toEqual({
                 ...state,
                 selected: [f1],
-                selectedIndex: {"1": 0},
+                selectedIndex: { "1": 0 },
             });
         });
 
         it("should be possible to select multiple flows", () => {
-            expect(reduceFlows(state, flowActions.select([f1,f2]))).toEqual({
+            expect(reduceFlows(state, flowActions.select([f1, f2]))).toEqual({
                 ...state,
-                selected: [f1,f2],
-                selectedIndex: {"1": 0, "2": 1},
+                selected: [f1, f2],
+                selectedIndex: { "1": 0, "2": 1 },
             });
         });
 
         it("should be possible to deselect a flow", () => {
             expect(
-                reduceFlows(
-                    alreadySelected,
-                    flowActions.select([]),
-                ),
+                reduceFlows(alreadySelected, flowActions.select([])),
             ).toEqual({
                 ...state,
                 selected: [],
@@ -56,9 +56,9 @@ describe("flow reducer", () => {
             );
 
             // already selected some flows
-            expect(
-                flowActions.selectRelative(alreadySelected, 1),
-            ).toEqual(flowActions.select([f2]));
+            expect(flowActions.selectRelative(alreadySelected, 1)).toEqual(
+                flowActions.select([f2]),
+            );
         });
 
         it("should be possible to toggle selections", () => {
@@ -66,16 +66,22 @@ describe("flow reducer", () => {
             const [tflow0, tflow1] = store.getState().flows.list;
             store.dispatch(flowActions.selectToggle(tflow0));
             expect(store.getState().flows.selected).toEqual([tflow1, tflow0]);
-            expect(store.getState().flows.selectedIndex).toEqual({[tflow1.id]: 0, [tflow0.id]: 1});
+            expect(store.getState().flows.selectedIndex).toEqual({
+                [tflow1.id]: 0,
+                [tflow0.id]: 1,
+            });
 
             store.dispatch(flowActions.selectToggle(tflow1));
             expect(store.getState().flows.selected).toEqual([tflow0]);
-            expect(store.getState().flows.selectedIndex).toEqual({[tflow0.id]: 0});
+            expect(store.getState().flows.selectedIndex).toEqual({
+                [tflow0.id]: 0,
+            });
         });
 
         it("should be possible to do range selections", () => {
             const store = TStore();
-            const [_tflow0, tflow1, tflow2, tflow3] = store.getState().flows.list;
+            const [_tflow0, tflow1, tflow2, tflow3] =
+                store.getState().flows.list;
             store.dispatch(flowActions.select([tflow2]));
 
             store.dispatch(flowActions.selectRange(tflow1));
@@ -87,19 +93,16 @@ describe("flow reducer", () => {
 
         it("should update state.selected on remove", () => {
             let next;
-            next = reduceFlows(
-                alreadySelected,
-                {
-                    type: flowActions.REMOVE,
-                    data: "1",
-                    cmd: "remove",
-                },
-            );
+            next = reduceFlows(alreadySelected, {
+                type: flowActions.REMOVE,
+                data: "1",
+                cmd: "remove",
+            });
             expect(next.selected).toEqual([f2]);
 
             //last row
             next = reduceFlows(
-                { ...state, selected: [f4], selectedIndex: {"4": 0} },
+                { ...state, selected: [f4], selectedIndex: { "4": 0 } },
                 {
                     type: flowActions.REMOVE,
                     data: "4",
@@ -110,7 +113,11 @@ describe("flow reducer", () => {
 
             //multiple selection
             next = reduceFlows(
-                { ...state, selected: [f2, f3], selectedIndex: {"2": 0, "3": 1}},
+                {
+                    ...state,
+                    selected: [f2, f3],
+                    selectedIndex: { "2": 0, "3": 1 },
+                },
                 {
                     type: flowActions.REMOVE,
                     data: "3",

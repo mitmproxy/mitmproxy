@@ -98,9 +98,7 @@ const Message: React.FC<{
 );
 
 export function Request() {
-    const flow = useAppSelector(
-        (state) => state.flows.selected[0],
-    ) as DNSFlow;
+    const flow = useAppSelector((state) => state.flows.selected[0]) as DNSFlow;
     return <Message type="request" message={flow.request} />;
 }
 
