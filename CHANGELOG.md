@@ -46,6 +46,8 @@
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
 - Correctly forward HTTP_1_1_REQUIRED errors in HTTP/2 streams.
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
+- Fix a bug where HAR export would crash for malformed flows.
+  ([#7666](https://github.com/mitmproxy/mitmproxy/pull/7666), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 - Fix a bug where mitmproxy does not listen on IPv4 and IPv6 by default in wireguard mode.

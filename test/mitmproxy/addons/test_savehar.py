@@ -239,6 +239,18 @@ class TestHardumpOption:
             out = json.loads(zlib.decompress((tmp_path / "out.zhar").read_bytes()))
             assert len(out["log"]["entries"]) == 1
 
+def test_content_raises():
+    flow = tflow.tflow(
+        req=tutils.treq(content=b"foo", headers=((b"content-encoding", b"utf8"),)),
+        resp=tutils.tresp(content=b"foo", headers=((b"content-encoding", b"utf8"),)),
+    )
+    with pytest.raises(ValueError):
+        _ = flow.request.content
+    with pytest.raises(ValueError):
+        _ = flow.response.content
+    # should not raise
+    assert SaveHar().make_har([flow])
+
 
 if __name__ == "__main__":
     version.VERSION = "1.2.3"
