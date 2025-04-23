@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import classnames from "classnames";
 import { Flow } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {select, toggleSelect} from "../../ducks/flows";
+import {select, selectRange, selectToggle} from "../../ducks/flows";
 import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
@@ -29,15 +29,18 @@ export default React.memo(function FlowRow({
     });
 
     const onClick = useCallback(
-        (e) => {
+        (e: React.MouseEvent<HTMLTableRowElement>) => {
             // a bit of a hack to disable row selection for quickactions.
-            let node = e.target;
+            let node = e.target as HTMLElement;
             while (node.parentNode) {
                 if (node.classList.contains("col-quickactions")) return;
-                node = node.parentNode;
+                node = node.parentNode as HTMLElement;
             }
             if (e.metaKey || e.ctrlKey) {
-                dispatch(toggleSelect(flow));
+                dispatch(selectToggle(flow));
+            } else if (e.shiftKey) {
+                window.getSelection()?.empty();
+                dispatch(selectRange(flow));
             } else {
                 dispatch(select([flow]));
             }

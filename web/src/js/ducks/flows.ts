@@ -289,7 +289,7 @@ export function select(flows: Flow[]) {
 }
 
 /** Toggle selection for one particular flow. */
-export function toggleSelect(flow: Flow) {
+export function selectToggle(flow: Flow) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
         const {flows} = getState();
         if (flow.id in flows.selectedIndex) {
@@ -297,5 +297,27 @@ export function toggleSelect(flow: Flow) {
         } else {
             dispatch(select([...flows.selected, flow]));
         }
+    }
+}
+
+/** Select a range of flows with shift + click. */
+export function selectRange(flow: Flow) {
+    return (dispatch: AppDispatch, getState: () => RootState) => {
+        const {flows} = getState();
+        const prev = flows.selected[flows.selected.length - 1];
+
+        const thisIndex = flows.viewIndex[flow.id];
+        const prevIndex = flows.viewIndex[prev?.id];
+        if(thisIndex === undefined || prevIndex === undefined) {
+            return dispatch(select([flow]));
+        }
+        let newSelection: Flow[];
+        if(thisIndex <= prevIndex) {
+            newSelection = flows.view.slice(thisIndex, prevIndex + 1);
+        } else {
+            newSelection = flows.view.slice(prevIndex + 1, thisIndex + 1);
+            newSelection.push(prev);  // Keep this at the end if the user shift-clicks again.
+        }
+        return dispatch(select(newSelection));
     }
 }

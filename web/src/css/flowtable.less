@@ -56,25 +56,32 @@
     tr {
         cursor: pointer;
 
-        background-color: white;
-
-        &:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        &.selected {
-            background-color: #e0ebf5 !important;
-        }
-        &.selected.highlighted {
-            background-color: #7bbefc !important;
+        & {
+            background-color: hsl(0, 0%, 100%);
+            &:nth-child(even) {
+                background-color: hsl(0, 0%, 95%);
+            }
         }
 
         &.highlighted {
-            background-color: #ffeb99;
+            background-color: hsl(48, 100%, 80%);
+            &:nth-child(even) {
+                background-color: hsl(48, 100%, 75%);
+            }
         }
 
-        &.highlighted:nth-child(even) {
-            background-color: #ffe57f;
+        &.selected {
+            background-color: hsl(209, 51%, 92%) !important;
+            &:nth-child(even) {
+                background-color: hsl(209, 51%, 86%) !important;
+            }
+        }
+
+        &.selected.highlighted {
+            background-color: hsl(209, 96%, 74%) !important;
+            &:nth-child(even) {
+                background-color: hsl(209, 96%, 68%) !important;
+            }
         }
     }
 

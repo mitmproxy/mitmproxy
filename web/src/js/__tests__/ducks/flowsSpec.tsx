@@ -15,10 +15,7 @@ describe("flow reducer", () => {
         });
     }
     const state = s;
-    const f1 = state.list[1];
-    const f2 = state.list[2];
-    const f3 = state.list[3];
-    const f4 = state.list[4];
+    const [_f0, f1, f2, f3, f4] = state.list;
     const alreadySelected = { ...state, selected: [f1], selectedIndex: {"1": 0}, };
 
 
@@ -62,6 +59,30 @@ describe("flow reducer", () => {
             expect(
                 flowActions.selectRelative(alreadySelected, 1),
             ).toEqual(flowActions.select([f2]));
+        });
+
+        it("should be possible to toggle selections", () => {
+            const store = TStore();
+            const [tflow0, tflow1] = store.getState().flows.list;
+            store.dispatch(flowActions.selectToggle(tflow0));
+            expect(store.getState().flows.selected).toEqual([tflow1, tflow0]);
+            expect(store.getState().flows.selectedIndex).toEqual({[tflow1.id]: 0, [tflow0.id]: 1});
+
+            store.dispatch(flowActions.selectToggle(tflow1));
+            expect(store.getState().flows.selected).toEqual([tflow0]);
+            expect(store.getState().flows.selectedIndex).toEqual({[tflow0.id]: 0});
+        });
+
+        it("should be possible to do range selections", () => {
+            const store = TStore();
+            const [_tflow0, tflow1, tflow2, tflow3] = store.getState().flows.list;
+            store.dispatch(flowActions.select([tflow2]));
+
+            store.dispatch(flowActions.selectRange(tflow1));
+            expect(store.getState().flows.selected).toEqual([tflow1, tflow2]);
+
+            store.dispatch(flowActions.selectRange(tflow3));
+            expect(store.getState().flows.selected).toEqual([tflow3, tflow2]);
         });
 
         it("should update state.selected on remove", () => {
