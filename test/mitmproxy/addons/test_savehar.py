@@ -239,6 +239,7 @@ class TestHardumpOption:
             out = json.loads(zlib.decompress((tmp_path / "out.zhar").read_bytes()))
             assert len(out["log"]["entries"]) == 1
 
+
 def test_content_raises():
     flow = tflow.tflow(
         req=tutils.treq(content=b"foo", headers=((b"content-encoding", b"utf8"),)),
