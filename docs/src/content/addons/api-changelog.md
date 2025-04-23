@@ -9,7 +9,13 @@ aliases:
 
 We try to avoid them, but this page lists breaking changes in the mitmproxy addon API.
 
-## mitmproxy >= 9.1
+## mitmproxy 12
+
+The Contentviews API has drastically simplified, see the new [contentview documentation] for details.
+
+[contentview documentation]: {{< relref "/addons/contentviews" >}}
+
+## mitmproxy 9.1
 
 `mitmproxy.connection.Client` and `mitmproxy.connection.Server` now accept keyword arguments only.
 
