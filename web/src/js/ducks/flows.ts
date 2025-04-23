@@ -3,7 +3,8 @@ import { fetchApi } from "../utils";
 import * as store from "./utils/store";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
-import { sortFunctions } from "../flow/utils";
+import {canResumeOrKill, canRevert, sortFunctions} from "../flow/utils";
+import {AppDispatch, RootState} from "./store";
 
 export const ADD = "FLOWS_ADD";
 export const UPDATE = "FLOWS_UPDATE";
@@ -162,11 +163,11 @@ export function setSort(column: string, desc: boolean) {
     return { type: SET_SORT, sort: { column, desc } };
 }
 
-export function selectRelative(flows, shift) {
-    const currentSelectionIndex = flows.viewIndex[flows.selected[0]];
+export function selectRelative(flows, shift: number) {
+    const currentSelectionIndex = flows.viewIndex[flows.selected[flows.selected.length - 1]];
     const minIndex = 0;
     const maxIndex = flows.view.length - 1;
-    let newIndex;
+    let newIndex: number;
     if (currentSelectionIndex === undefined) {
         newIndex = shift < 0 ? minIndex : maxIndex;
     } else {
@@ -178,41 +179,64 @@ export function selectRelative(flows, shift) {
     return select(flow ? [flow.id] : []);
 }
 
-export function resume(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}/resume`, { method: "POST" });
+export function resume(flows: Flow[]) {
+    flows = flows.filter(canResumeOrKill);
+    return () =>
+        Promise.all(
+            flows.map((flow) =>
+                fetchApi(`/flows/${flow.id}/resume`, { method: "POST" }),
+            ),
+        );
 }
 
 export function resumeAll() {
     return () => fetchApi("/flows/resume", { method: "POST" });
 }
 
-export function kill(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}/kill`, { method: "POST" });
+export function kill(flows: Flow[]) {
+    flows = flows.filter(canResumeOrKill);
+    return () =>
+        Promise.all(
+            flows.map((flow) =>
+                fetchApi(`/flows/${flow.id}/kill`, { method: "POST" }),
+            ),
+        );
 }
 
 export function killAll() {
     return () => fetchApi("/flows/kill", { method: "POST" });
 }
 
-export function remove(flowIds: string[]) {
+export function remove(flows: Flow[]) {
     return () =>
         Promise.all(
-            flowIds.map((flowId) =>
-                fetchApi(`/flows/${flowId}`, { method: "DELETE" }),
+            flows.map((flow) =>
+                fetchApi(`/flows/${flow.id}`, { method: "DELETE" }),
             ),
         );
 }
 
-export function duplicate(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" });
+export function duplicate(flows: Flow[]) {
+    return () =>
+        Promise.all(
+            flows.map(flow =>
+                fetchApi(`/flows/${flow.id}/duplicate`, { method: "POST" }),
+            ),
+        );
 }
 
 export function replay(flow: Flow) {
     return () => fetchApi(`/flows/${flow.id}/replay`, { method: "POST" });
 }
 
-export function revert(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}/revert`, { method: "POST" });
+export function revert(flows: Flow[]) {
+    flows = flows.filter(canRevert);
+    return () =>
+        Promise.all(
+            flows.map(flow =>
+                fetchApi(`/flows/${flow.id}/revert`, { method: "POST" }),
+            ),
+        );
 }
 
 export function update(flow: Flow, data) {
@@ -245,4 +269,16 @@ export function select(flowIds: string[]) {
         type: SELECT,
         flowIds: flowIds,
     };
+}
+
+/** Toggle selection for one particular flow. */
+export function toggleSelect(flowId: string) {
+    return (dispatch: AppDispatch, getState: () => RootState) => {
+        const flowIds = getState().flows.selected;
+        if (flowIds.includes(flowId)) {
+            dispatch(select(flowIds.filter(id => id !== flowId)));
+        } else {
+            dispatch(select([...flowIds, flowId]));
+        }
+    }
 }

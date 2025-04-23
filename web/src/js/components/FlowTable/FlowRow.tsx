@@ -2,28 +2,27 @@ import React, { useCallback } from "react";
 import classnames from "classnames";
 import { Flow } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { select } from "../../ducks/flows";
+import {select, toggleSelect} from "../../ducks/flows";
 import * as columns from "./FlowColumns";
 
 type FlowRowProps = {
     flow: Flow;
-    isSelected: boolean;
-    isHighlighted: boolean;
+    selected: boolean;
+    highlighted: boolean;
 };
 
 export default React.memo(function FlowRow({
     flow,
-    isSelected,
-    isHighlighted,
+    selected,
+    highlighted,
 }: FlowRowProps) {
     const dispatch = useAppDispatch();
     const displayColumnNames = useAppSelector(
         (state) => state.options.web_columns,
     );
-    const selectedFlowIds = useAppSelector((state) => state.flows.selected); // used for multiple flows selection
     const className = classnames({
-        selected: isSelected,
-        highlighted: isHighlighted,
+        selected,
+        highlighted,
         intercepted: flow.intercepted,
         "has-request": flow.type === "http" && flow.request,
         "has-response": flow.type === "http" && flow.response,
@@ -38,20 +37,12 @@ export default React.memo(function FlowRow({
                 node = node.parentNode;
             }
             if (e.metaKey || e.ctrlKey) {
-                if (selectedFlowIds.includes(flow.id)) {
-                    // If the flow is already selected, remove it.
-                    dispatch(
-                        select(selectedFlowIds.filter((id) => id !== flow.id)),
-                    );
-                } else {
-                    dispatch(select([...selectedFlowIds, flow.id]));
-                }
+                dispatch(toggleSelect(flow.id));
             } else {
-                // select only the clicked flow
                 dispatch(select([flow.id]));
             }
         },
-        [flow, selectedFlowIds],
+        [flow],
     );
 
     const displayColumns = displayColumnNames

@@ -1,17 +1,16 @@
 import * as React from "react";
 import Button from "../common/Button";
-import { canReplay, MessageUtils } from "../../flow/utils";
+import {canReplay, canResumeOrKill, canRevert, MessageUtils} from "../../flow/utils";
 import HideInStatic from "../common/HideInStatic";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as flowActions from "../../ducks/flows";
 import {
-    duplicate as duplicateFlow,
-    kill as killFlow,
-    remove as removeFlow,
+    duplicate as duplicateFlows,
+    kill as killFlows,
+    remove as removeFlows,
     replay as replayFlow,
-    resume as resumeFlow,
-    revert as revertFlow,
-    //select as selectFlow,
+    resume as resumeFlows,
+    revert as revertFlows,
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
@@ -21,15 +20,16 @@ FlowMenu.title = "Flow";
 
 export default function FlowMenu(): JSX.Element {
     const dispatch = useAppDispatch();
-    const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
-    );
 
-    const selectedFlows = useAppSelector((state) => state.flows.selected);
+    const selectedFlows = useAppSelector(({flows}) =>
+        flows.selected.map(flowId => flows.byId[flowId]).filter(x => x !== undefined)
+    )
+    const flow = selectedFlows[0];
 
-    const hasSingleFlowSelected = selectedFlows.length === 1;
+    const hasSingleFlowSelected = useAppSelector((state) => state.flows.selected.length === 1)
+    const canResumeOrKillAny = selectedFlows.some(canResumeOrKill);
 
-    if (!flow) return <div />;
+    if (selectedFlows.length === 0) return <div />;
     return (
         <div className="flow-menu">
             <HideInStatic>
@@ -48,20 +48,15 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             title="[D]uplicate flow"
                             icon="fa-copy text-info"
-                            onClick={() => dispatch(duplicateFlow(flow))}
-                            disabled={!hasSingleFlowSelected}
+                            onClick={() => dispatch(duplicateFlows(selectedFlows))}
                         >
                             Duplicate
                         </Button>
                         <Button
-                            disabled={
-                                !flow ||
-                                !flow.modified ||
-                                !hasSingleFlowSelected
-                            }
+                            disabled={!selectedFlows.some(canRevert)}
                             title="revert changes to flow [V]"
                             icon="fa-history text-warning"
-                            onClick={() => dispatch(revertFlow(flow))}
+                            onClick={() => dispatch(revertFlows(selectedFlows))}
                         >
                             Revert
                         </Button>
@@ -69,7 +64,7 @@ export default function FlowMenu(): JSX.Element {
                             title="[d]elete flow"
                             icon="fa-trash text-danger"
                             onClick={() => {
-                                dispatch(removeFlow(selectedFlows));
+                                dispatch(removeFlows(selectedFlows));
                             }}
                         >
                             Delete
@@ -93,26 +88,18 @@ export default function FlowMenu(): JSX.Element {
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button
-                            disabled={
-                                !flow ||
-                                !flow.intercepted ||
-                                !hasSingleFlowSelected
-                            }
+                            disabled={!canResumeOrKillAny}
                             title="[a]ccept intercepted flow"
                             icon="fa-play text-success"
-                            onClick={() => dispatch(resumeFlow(flow))}
+                            onClick={() => dispatch(resumeFlows(selectedFlows))}
                         >
                             Resume
                         </Button>
                         <Button
-                            disabled={
-                                !flow ||
-                                !flow.intercepted ||
-                                !hasSingleFlowSelected
-                            }
+                            disabled={!canResumeOrKillAny}
                             title="kill intercepted flow [x]"
                             icon="fa-times text-danger"
-                            onClick={() => dispatch(killFlow(flow))}
+                            onClick={() => dispatch(killFlows(selectedFlows))}
                         >
                             Abort
                         </Button>

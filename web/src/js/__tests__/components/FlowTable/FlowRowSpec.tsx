@@ -12,13 +12,13 @@ test("FlowRow", async () => {
             <tbody>
                 <FlowRow
                     flow={tflow0}
-                    isSelected={false}
-                    isHighlighted={false}
+                    selected={false}
+                    highlighted={false}
                 />
                 <FlowRow
                     flow={tflow3}
-                    isSelected={false}
-                    isHighlighted={false}
+                    selected={false}
+                    highlighted={false}
                 />
             </tbody>
         </table>,

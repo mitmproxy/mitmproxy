@@ -121,6 +121,8 @@ describe("flow reducer", () => {
 describe("flows actions", () => {
     const store = TStore();
     const tflow = TFlow();
+    tflow.intercepted = true;
+    tflow.modified = true;
     const ttcpflow = TTCPFlow();
 
     beforeEach(() => {
@@ -128,7 +130,7 @@ describe("flows actions", () => {
     });
 
     it("should handle resume action", () => {
-        store.dispatch(flowActions.resume(tflow));
+        store.dispatch(flowActions.resume([tflow]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/resume",
             { method: "POST" },
@@ -141,7 +143,7 @@ describe("flows actions", () => {
     });
 
     it("should handle kill action", () => {
-        store.dispatch(flowActions.kill(tflow));
+        store.dispatch(flowActions.kill([tflow]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/kill",
             { method: "POST" },
@@ -154,7 +156,7 @@ describe("flows actions", () => {
     });
 
     it("should handle remove action", () => {
-        store.dispatch(flowActions.remove([tflow.id]));
+        store.dispatch(flowActions.remove([tflow]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
             { method: "DELETE" },
@@ -162,7 +164,7 @@ describe("flows actions", () => {
     });
 
     it("should handle remove action with multiple flows", async () => {
-        await store.dispatch(flowActions.remove([tflow.id, ttcpflow.id]));
+        await store.dispatch(flowActions.remove([tflow, ttcpflow]));
 
         expect(fetchApi).toHaveBeenCalledTimes(2);
         expect(fetchApi).toHaveBeenCalledWith(`/flows/${tflow.id}`, {
@@ -174,7 +176,7 @@ describe("flows actions", () => {
     });
 
     it("should handle duplicate action", () => {
-        store.dispatch(flowActions.duplicate(tflow));
+        store.dispatch(flowActions.duplicate([tflow]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/duplicate",
             { method: "POST" },
@@ -190,7 +192,7 @@ describe("flows actions", () => {
     });
 
     it("should handle revert action", () => {
-        store.dispatch(flowActions.revert(tflow));
+        store.dispatch(flowActions.revert([tflow]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/revert",
             { method: "POST" },

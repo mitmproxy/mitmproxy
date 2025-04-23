@@ -162,7 +162,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
             <a
                 href="#"
                 className="quickaction"
-                onClick={() => dispatch(flowActions.resume(flow))}
+                onClick={() => dispatch(flowActions.resume([flow]))}
             >
                 <i className="fa fa-fw fa-play text-success" />
             </a>

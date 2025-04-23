@@ -192,6 +192,8 @@ export const getTotalSize = (flow: Flow): number => {
 export const canReplay = (flow: Flow): boolean => {
     return flow.type === "http" && !flow.websocket;
 };
+export const canRevert = (flow: Flow): boolean => flow.modified;
+export const canResumeOrKill = (flow: Flow): boolean => flow.intercepted;
 
 export const getIcon = (flow: Flow): string => {
     if (flow.type !== "http") {

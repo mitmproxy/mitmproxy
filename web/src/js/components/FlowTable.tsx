@@ -10,10 +10,10 @@ import { RootState } from "../ducks";
 
 type FlowTableProps = {
     flows: Flow[];
-    flowIndexes: { [id: string]: number };
+    flowViewIndex: { [id: string]: number };
     rowHeight: number;
     highlight: string;
-    selected: string[];
+    selectedFlows: string[];
 };
 
 type FlowTableState = {
@@ -58,23 +58,19 @@ export class PureFlowTable extends React.Component<
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
-        if (!shallowEqual(this.props.flowIndexes, prevProps.flowIndexes)) {
-            this.onViewportUpdate();
-        }
+        this.onViewportUpdate();
 
-        const selectedNewFlow =
-            this.props.selected[0] &&
-            this.props.selected[0] !== prevProps.selected[0];
-        if (selectedNewFlow) {
-            const { rowHeight, flowIndexes, selected } = this.props;
+        const selectedPotentiallyOffscreenFlow =
+            this.props.selectedFlows.length === 1 &&
+            this.props.selectedFlows[0] !== prevProps.selectedFlows[0];
+        if (selectedPotentiallyOffscreenFlow) {
+            const { rowHeight, flowViewIndex, selectedFlows } = this.props;
             const viewport = this.viewport.current!;
             const head = this.head.current;
 
             const headHeight = head ? head.offsetHeight : 0;
 
-            const selectedFlowIndex = flowIndexes[selected[0]];
-
-            const rowTop = selectedFlowIndex * rowHeight + headHeight;
+            const rowTop = flowViewIndex[selectedFlows[0]] * rowHeight + headHeight;
             const rowBottom = rowTop + rowHeight;
 
             const viewportTop = viewport.scrollTop;
@@ -121,7 +117,8 @@ export class PureFlowTable extends React.Component<
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flows, selected, highlight } = this.props;
+        const { flows, selectedFlows, highlight } = this.props;
+        const selected = new Set(selectedFlows);
         const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
 
         return (
@@ -143,8 +140,8 @@ export class PureFlowTable extends React.Component<
                             <FlowRow
                                 key={flow.id}
                                 flow={flow}
-                                isSelected={selected.includes(flow.id)}
-                                isHighlighted={isHighlighted(flow)}
+                                selected={selected.has(flow.id)}
+                                highlighted={isHighlighted(flow)}
                             />
                         ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
@@ -157,7 +154,7 @@ export class PureFlowTable extends React.Component<
 
 export default connect((state: RootState) => ({
     flows: state.flows.view,
-    flowIndexes: state.flows.listIndex,
+    flowViewIndex: state.flows.viewIndex,
     highlight: state.flows.highlight,
-    selected: state.flows.selected,
+    selectedFlows: state.flows.selected,
 }))(PureFlowTable);

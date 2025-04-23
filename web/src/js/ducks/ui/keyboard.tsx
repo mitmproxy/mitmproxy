@@ -3,6 +3,7 @@ import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
 import { tabsForFlow } from "../../components/FlowView";
 import { runCommand } from "../../utils";
+import {AppDispatch, RootState} from "../store";
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
@@ -11,9 +12,10 @@ export function onKeyDown(e: KeyboardEvent) {
     }
     const key = e.key;
     e.preventDefault();
-    return (dispatch, getState) => {
+    return (dispatch: AppDispatch, getState: () => RootState) => {
         const flows = getState().flows;
-        const flow = flows.byId[getState().flows.selected[0]];
+        const selectedFlows = flows.selected.map(flowId => flows.byId[flowId]).filter(x => x !== undefined)
+        const flow = selectedFlows[0];
 
         switch (key) {
             case "k":
@@ -82,10 +84,7 @@ export function onKeyDown(e: KeyboardEvent) {
 
             case "Delete":
             case "d": {
-                if (!flow) {
-                    return;
-                }
-                dispatch(flowsActions.remove([flow.id]));
+                dispatch(flowsActions.remove(selectedFlows));
                 break;
             }
 
@@ -95,16 +94,11 @@ export function onKeyDown(e: KeyboardEvent) {
             }
 
             case "D": {
-                if (!flow) {
-                    return;
-                }
-                dispatch(flowsActions.duplicate(flow));
+                dispatch(flowsActions.duplicate(selectedFlows));
                 break;
             }
             case "a": {
-                if (flow && flow.intercepted) {
-                    dispatch(flowsActions.resume(flow));
-                }
+                dispatch(flowsActions.resume(selectedFlows));
                 break;
             }
             case "A": {
@@ -113,23 +107,19 @@ export function onKeyDown(e: KeyboardEvent) {
             }
 
             case "r": {
-                if (flow) {
+                if (selectedFlows.length === 1) {
                     dispatch(flowsActions.replay(flow));
                 }
                 break;
             }
 
             case "v": {
-                if (flow && flow.modified) {
-                    dispatch(flowsActions.revert(flow));
-                }
+                dispatch(flowsActions.revert(selectedFlows));
                 break;
             }
 
             case "x": {
-                if (flow && flow.intercepted) {
-                    dispatch(flowsActions.kill(flow));
-                }
+                dispatch(flowsActions.kill(selectedFlows));
                 break;
             }
 
