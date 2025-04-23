@@ -37,9 +37,9 @@ export default React.memo(function FlowRow({
                 node = node.parentNode;
             }
             if (e.metaKey || e.ctrlKey) {
-                dispatch(toggleSelect(flow.id));
+                dispatch(toggleSelect(flow));
             } else {
-                dispatch(select([flow.id]));
+                dispatch(select([flow]));
             }
         },
         [flow],

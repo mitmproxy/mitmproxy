@@ -21,9 +21,7 @@ FlowMenu.title = "Flow";
 export default function FlowMenu(): JSX.Element {
     const dispatch = useAppDispatch();
 
-    const selectedFlows = useAppSelector(({flows}) =>
-        flows.selected.map(flowId => flows.byId[flowId]).filter(x => x !== undefined)
-    )
+    const selectedFlows = useAppSelector(state => state.flows.selected);
     const flow = selectedFlows[0];
 
     const hasSingleFlowSelected = useAppSelector((state) => state.flows.selected.length === 1)

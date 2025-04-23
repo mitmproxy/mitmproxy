@@ -1,5 +1,4 @@
 import reduceFlows, * as flowActions from "../../ducks/flows";
-import { reduce } from "../../ducks/utils/store";
 import { fetchApi } from "../../utils";
 import { TFlow, TStore, TTCPFlow } from "./tutils";
 import FlowColumns from "../../components/FlowTable/FlowColumns";
@@ -8,7 +7,7 @@ jest.mock("../../utils");
 
 describe("flow reducer", () => {
     let s;
-    for (const i of ["1", "2", "3", "4"]) {
+    for (const i of ["0", "1", "2", "3", "4"]) {
         s = reduceFlows(s, {
             type: flowActions.ADD,
             data: { id: i },
@@ -16,82 +15,88 @@ describe("flow reducer", () => {
         });
     }
     const state = s;
+    const f1 = state.list[1];
+    const f2 = state.list[2];
+    const f3 = state.list[3];
+    const f4 = state.list[4];
+    const alreadySelected = { ...state, selected: [f1], selectedIndex: {"1": 0}, };
 
-    it("should return initial state", () => {
-        expect(reduceFlows(undefined, {})).toEqual({
-            highlight: undefined,
-            filter: undefined,
-            sort: { column: undefined, desc: false },
-            selected: [],
-            ...reduce(undefined, {}),
-        });
-    });
 
     describe("selections", () => {
         it("should be possible to select a single flow", () => {
-            expect(reduceFlows(state, flowActions.select(["2"]))).toEqual({
+            expect(reduceFlows(state, flowActions.select([f1]))).toEqual({
                 ...state,
-                selected: ["2"],
+                selected: [f1],
+                selectedIndex: {"1": 0},
+            });
+        });
+
+        it("should be possible to select multiple flows", () => {
+            expect(reduceFlows(state, flowActions.select([f1,f2]))).toEqual({
+                ...state,
+                selected: [f1,f2],
+                selectedIndex: {"1": 0, "2": 1},
             });
         });
 
         it("should be possible to deselect a flow", () => {
             expect(
                 reduceFlows(
-                    { ...state, selected: ["1"] },
+                    alreadySelected,
                     flowActions.select([]),
                 ),
             ).toEqual({
                 ...state,
                 selected: [],
+                selectedIndex: {},
             });
         });
 
         it("should be possible to select relative", () => {
             // haven't selected any flow
             expect(flowActions.selectRelative(state, 1)).toEqual(
-                flowActions.select(["4"]),
+                flowActions.select([f4]),
             );
 
             // already selected some flows
             expect(
-                flowActions.selectRelative({ ...state, selected: [2] }, 1),
-            ).toEqual(flowActions.select(["3"]));
+                flowActions.selectRelative(alreadySelected, 1),
+            ).toEqual(flowActions.select([f2]));
         });
 
         it("should update state.selected on remove", () => {
             let next;
             next = reduceFlows(
-                { ...state, selected: ["2"] },
+                alreadySelected,
                 {
                     type: flowActions.REMOVE,
-                    data: "2",
+                    data: "1",
                     cmd: "remove",
                 },
             );
-            expect(next.selected).toEqual(["3"]);
+            expect(next.selected).toEqual([f2]);
 
             //last row
             next = reduceFlows(
-                { ...state, selected: ["4"] },
+                { ...state, selected: [f4], selectedIndex: {"4": 0} },
                 {
                     type: flowActions.REMOVE,
                     data: "4",
                     cmd: "remove",
                 },
             );
-            expect(next.selected).toEqual(["3"]);
+            expect(next.selected).toEqual([f3]);
 
             //multiple selection
             next = reduceFlows(
-                { ...state, selected: ["2", "3", "4"] },
+                { ...state, selected: [f2, f3], selectedIndex: {"2": 0, "3": 1}},
                 {
                     type: flowActions.REMOVE,
                     data: "3",
                     cmd: "remove",
                 },
             );
-            expect(next.selected).toEqual([]);
+            expect(next.selected).toEqual([f2]);
         });
     });
 

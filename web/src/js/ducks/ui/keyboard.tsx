@@ -13,8 +13,8 @@ export function onKeyDown(e: KeyboardEvent) {
     const key = e.key;
     e.preventDefault();
     return (dispatch: AppDispatch, getState: () => RootState) => {
-        const flows = getState().flows;
-        const selectedFlows = flows.selected.map(flowId => flows.byId[flowId]).filter(x => x !== undefined)
+        const {flows} = getState();
+        const selectedFlows = flows.selected;
         const flow = selectedFlows[0];
 
         switch (key) {

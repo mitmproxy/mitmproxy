@@ -57,6 +57,8 @@
 - Fix mitmweb crash when searching or highlighting using ~h, ~hq, or ~hs.
   ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
 
+[tree-sitter]: https://tree-sitter.github.io/tree-sitter/
+
 ## 17 February 2025: mitmproxy 11.1.3
 
 - Update mitmproxy_rs dependency to fix several bugs in local capture mode.

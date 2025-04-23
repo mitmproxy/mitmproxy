@@ -187,7 +187,7 @@ const Message = React.memo(function Message({
 
 export function Request() {
     const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
+        (state) => state.flows.selected[0],
     ) as HTTPFlow;
     return <Message flow={flow} message={flow.request} />;
 }
@@ -195,7 +195,7 @@ Request.displayName = "Request";
 
 export function Response() {
     const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
+        (state) => state.flows.selected[0],
     ) as HTTPFlow & { response: HTTPResponse };
     return <Message flow={flow} message={flow.response} />;
 }

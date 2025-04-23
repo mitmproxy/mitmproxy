@@ -26,18 +26,18 @@ test("FlowRow", async () => {
     );
 
     expect(asFragment()).toMatchSnapshot();
-    expect(store.getState().flows.selected).not.toContain(tflow3.id);
+    expect(store.getState().flows.selected).not.toContain(tflow3);
 
     // Click once to select `tflow3`
     fireEvent.click(screen.getByText("QUERY"));
-    expect(store.getState().flows.selected).toEqual([tflow3.id]);
+    expect(store.getState().flows.selected).toEqual([tflow3]);
 
     // Ctrl+Click to select `tflow0` as well
     fireEvent.click(screen.getByText("http://address:22/path"), {
         ctrlKey: true,
     });
     expect(store.getState().flows.selected).toEqual(
-        expect.arrayContaining([tflow0.id, tflow3.id]),
+        expect.arrayContaining([tflow0, tflow3]),
     );
 
     // Ctrl+Click to select `tflow0` again --> deselect `tflow0`
@@ -45,6 +45,6 @@ test("FlowRow", async () => {
         ctrlKey: true,
     });
     expect(store.getState().flows.selected).toEqual(
-        expect.arrayContaining([tflow3.id]),
+        expect.arrayContaining([tflow3]),
     );
 });

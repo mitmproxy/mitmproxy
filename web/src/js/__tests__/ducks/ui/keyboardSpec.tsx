@@ -15,7 +15,6 @@ describe("onKeyDown", () => {
             data: [],
         });
         store.dispatch(flowsActions.setFilter(""));
-        store.dispatch(flowsActions.select(["1"]));
         for (let i = 1; i <= 12; i++) {
             store.dispatch({
                 type: flowsActions.ADD,
@@ -30,6 +29,7 @@ describe("onKeyDown", () => {
                 },
             });
         }
+        store.dispatch(flowsActions.select([store.getState().flows.list[0]]));
         return store;
     };
 
@@ -47,29 +47,29 @@ describe("onKeyDown", () => {
         const store = makeStore();
         // down
         store.dispatch(createKeyEvent("j"));
-        expect(store.getState().flows.selected).toEqual(["2"]);
+        expect(store.getState().flows.selected[0].id).toEqual("2");
         store.dispatch(createKeyEvent("ArrowDown"));
-        expect(store.getState().flows.selected).toEqual(["3"]);
+        expect(store.getState().flows.selected[0].id).toEqual("3");
 
         // up
         store.dispatch(createKeyEvent("k"));
-        expect(store.getState().flows.selected).toEqual(["2"]);
+        expect(store.getState().flows.selected[0].id).toEqual("2");
         store.dispatch(createKeyEvent("ArrowUp"));
-        expect(store.getState().flows.selected).toEqual(["1"]);
+        expect(store.getState().flows.selected[0].id).toEqual("1");
         store.dispatch(createKeyEvent("ArrowUp"));
-        expect(store.getState().flows.selected).toEqual(["1"]);
+        expect(store.getState().flows.selected[0].id).toEqual("1");
     });
 
     it("should handle scrolling", () => {
         const store = makeStore();
         store.dispatch(createKeyEvent("PageDown"));
-        expect(store.getState().flows.selected).toEqual(["11"]);
+        expect(store.getState().flows.selected[0].id).toEqual("11");
         store.dispatch(createKeyEvent("End"));
-        expect(store.getState().flows.selected).toEqual(["12"]);
+        expect(store.getState().flows.selected[0].id).toEqual("12");
         store.dispatch(createKeyEvent("PageUp"));
-        expect(store.getState().flows.selected).toEqual(["2"]);
+        expect(store.getState().flows.selected[0].id).toEqual("2");
         store.dispatch(createKeyEvent("Home"));
-        expect(store.getState().flows.selected).toEqual(["1"]);
+        expect(store.getState().flows.selected[0].id).toEqual("1");
     });
 
     it("should handle deselect", () => {
@@ -118,19 +118,18 @@ describe("onKeyDown", () => {
         });
     });
 
-    it("should handle resume action", () => {
+    it("should handle resume action", async () => {
         const store = makeStore();
-        // resume all
-        store.dispatch(createKeyEvent("A"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", {
+        await store.dispatch(createKeyEvent("a"));
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", {
             method: "POST",
         });
-        // resume
-        store.getState().flows.byId[
-            store.getState().flows.selected[0]
-        ].intercepted = true;
-        store.dispatch(createKeyEvent("a"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", {
+    });
+
+    it("should handle resume all action", async () => {
+        const store = makeStore();
+        await store.dispatch(createKeyEvent("A"));
+        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", {
             method: "POST",
         });
     });

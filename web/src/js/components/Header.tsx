@@ -9,7 +9,6 @@ import FlowListMenu from "./Header/FlowListMenu";
 import OptionMenu from "./Header/OptionMenu";
 import FlowMenu from "./Header/FlowMenu";
 import { Menu } from "./ProxyApp";
-import { shallowEqual } from "react-redux";
 import { Tab, setCurrent } from "../ducks/ui/tabs";
 
 const tabs: { [key in Tab]: Menu } = {
@@ -22,10 +21,7 @@ const tabs: { [key in Tab]: Menu } = {
 export default function Header() {
     const dispatch = useAppDispatch();
     const currentTab = useAppSelector((state) => state.ui.tabs.current);
-    const selectedFlows = useAppSelector(
-        (state) => state.flows.selected.filter((id) => id in state.flows.byId),
-        shallowEqual,
-    );
+    const selectedFlows = useAppSelector((state) => state.flows.selected);
     const [wasFlowSelected, setWasFlowSelected] = useState(false);
     const hasFlows = useAppSelector((state) => state.flows.list.length > 0);
     const isInitialTab = useAppSelector((state) => state.ui.tabs.isInitial);

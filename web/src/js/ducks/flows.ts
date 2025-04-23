@@ -5,6 +5,7 @@ import Filt from "../filt/filt";
 import { Flow } from "../flow";
 import {canResumeOrKill, canRevert, sortFunctions} from "../flow/utils";
 import {AppDispatch, RootState} from "./store";
+import {State} from "./utils/store";
 
 export const ADD = "FLOWS_ADD";
 export const UPDATE = "FLOWS_UPDATE";
@@ -23,7 +24,8 @@ export interface FlowsState extends store.State<Flow> {
     highlight?: string;
     filter?: string;
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
-    selected: string[];
+    selected: Flow[];
+    selectedIndex: {[id: string]: number};
 }
 
 export const defaultState: FlowsState = {
@@ -31,8 +33,47 @@ export const defaultState: FlowsState = {
     filter: undefined,
     sort: { column: undefined, desc: false },
     selected: [],
+    selectedIndex: {},
     ...store.defaultState,
 };
+
+function updateSelected(
+    state: FlowsState = defaultState,
+    newStoreState: State<Flow>,
+    action,
+): Pick<FlowsState, "selected" | "selectedIndex"> {
+    let {selected, selectedIndex} = state;
+    switch (action.type) {
+        case UPDATE:
+            if(selectedIndex[action.data.id] === undefined) {
+                break;
+            }
+            selected = selected.map(f => f.id === action.data.id ? action.data : f);
+            break;
+        case RECEIVE:
+            selected = selected.map(f => newStoreState.byId[f.id]).filter(f => f !== undefined);
+            selectedIndex = Object.fromEntries(selected.map(((f, i) => [f.id, i])));
+            break;
+        case REMOVE:
+            if(selectedIndex[action.data] === undefined) {
+                break;
+            }
+            if (selected.length > 1) {
+                selected = selected.filter(f => f.id !== action.data);
+            } else if (!(action.data in state.viewIndex)) {
+                selected = [];
+            } else {
+                const currentIndex = state.viewIndex[action.data];
+                selected = [
+                    state.view[currentIndex + 1]
+                    ?? state.view[currentIndex - 1]  // last element
+                ];
+            }
+            selectedIndex = Object.fromEntries(selected.map(((f, i) => [f.id, i])));
+            break;
+    }
+    return {selected, selectedIndex};
+}
 
 export default function reducer(
     state: FlowsState = defaultState,
@@ -48,37 +89,11 @@ export default function reducer(
                 makeFilter(state.filter),
                 makeSort(state.sort),
             );
-
-            let selected = state.selected;
-            if (
-                action.type === REMOVE &&
-                state.selected.includes(action.data)
-            ) {
-                if (state.selected.length > 1) {
-                    selected = []; // clear selection when multiple flows are selected and removed, no `nextSelection` logic in this case
-                } else {
-                    selected = [];
-                    if (
-                        action.data in state.viewIndex &&
-                        state.view.length > 1
-                    ) {
-                        const currentIndex = state.viewIndex[action.data];
-                        let nextSelection;
-                        if (currentIndex === state.view.length - 1) {
-                            // last row
-                            nextSelection = state.view[currentIndex - 1];
-                        } else {
-                            nextSelection = state.view[currentIndex + 1];
-                        }
-                        selected.push(nextSelection.id);
-                    }
-                }
-            }
-
+            const newStoreState = store.reduce(state, storeAction);
             return {
                 ...state,
-                selected,
-                ...store.reduce(state, storeAction),
+                ...newStoreState,
+                ...updateSelected(state, newStoreState, action),
             };
         }
         case SET_FILTER:
@@ -107,12 +122,14 @@ export default function reducer(
                 ...store.reduce(state, store.setSort(makeSort(action.sort))),
             };
 
-        case SELECT:
+        case SELECT: {
+            const selected: Flow[] = action.flows;
             return {
                 ...state,
-                selected: action.flowIds,
+                selected,
+                selectedIndex: Object.fromEntries(selected.map(((f, i) => [f.id, i]))),
             };
-
+        }
         default:
             return state;
     }
@@ -163,8 +180,8 @@ export function setSort(column: string, desc: boolean) {
     return { type: SET_SORT, sort: { column, desc } };
 }
 
-export function selectRelative(flows, shift: number) {
-    const currentSelectionIndex = flows.viewIndex[flows.selected[flows.selected.length - 1]];
+export function selectRelative(flows: FlowsState, shift: number) {
+    const currentSelectionIndex: number | undefined = flows.viewIndex[flows.selected[flows.selected.length - 1]?.id];
     const minIndex = 0;
     const maxIndex = flows.view.length - 1;
     let newIndex: number;
@@ -176,7 +193,7 @@ export function selectRelative(flows, shift: number) {
         newIndex = window.Math.min(newIndex, maxIndex);
     }
     const flow = flows.view[newIndex];
-    return select(flow ? [flow.id] : []);
+    return select(flow ? [flow] : []);
 }
 
 export function resume(flows: Flow[]) {
@@ -264,21 +281,21 @@ export function upload(file) {
     return () => fetchApi("/flows/dump", { method: "POST", body });
 }
 
-export function select(flowIds: string[]) {
+export function select(flows: Flow[]) {
     return {
         type: SELECT,
-        flowIds: flowIds,
+        flows,
     };
 }
 
 /** Toggle selection for one particular flow. */
-export function toggleSelect(flowId: string) {
+export function toggleSelect(flow: Flow) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
-        const flowIds = getState().flows.selected;
-        if (flowIds.includes(flowId)) {
-            dispatch(select(flowIds.filter(id => id !== flowId)));
+        const {flows} = getState();
+        if (flow.id in flows.selectedIndex) {
+            dispatch(select(flows.selected.filter(f => flow.id !== f.id)));
         } else {
-            dispatch(select([...flowIds, flowId]));
+            dispatch(select([...flows.selected, flow]));
         }
     }
 }

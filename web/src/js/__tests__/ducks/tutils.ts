@@ -78,7 +78,8 @@ export const testState: RootState = {
     },
     options: defaultOptions,
     flows: {
-        selected: [tflow1.id],
+        selected: [tflow1],
+        selectedIndex: {[tflow1.id]: 0},
         byId: {
             [tflow0.id]: tflow0,
             [tflow1.id]: tflow1,
