@@ -47,7 +47,7 @@ async def make() -> str:
     await m.done()
 
     data.update(available=True)
-    data["contentViews"] = ["Auto", "Raw"]
+    data["contentViews"] = ["auto", "Raw"]
     data["version"] = "1.2.3"
     data["platform"] = "darwin"
     data["localModeUnavailable"] = None

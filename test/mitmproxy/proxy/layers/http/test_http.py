@@ -336,6 +336,72 @@ def test_disconnect_while_intercept(tctx):
     assert not flow().live
 
 
+@pytest.mark.parametrize("store_streamed_bodies", [False, True])
+def test_store_streamed_bodies(tctx, store_streamed_bodies):
+    """Test HTTP stream modification"""
+    tctx.options.store_streamed_bodies = store_streamed_bodies
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+
+    def enable_streaming(flow: HTTPFlow):
+        if flow.response is None:
+            flow.request.stream = lambda x: b"[" + x + b"]"
+        else:
+            flow.response.stream = lambda x: b"[" + x + b"]"
+
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(
+            tctx.client,
+            b"POST http://example.com/ HTTP/1.1\r\n"
+            b"Host: example.com\r\n"
+            b"Transfer-Encoding: chunked\r\n\r\n"
+            b"3\r\nabc\r\n"
+            b"0\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"POST / HTTP/1.1\r\n"
+            b"Host: example.com\r\n"
+            b"Transfer-Encoding: chunked\r\n\r\n"
+            b"5\r\n[abc]\r\n"
+            b"2\r\n[]\r\n",
+        )
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << SendData(server, b"0\r\n\r\n")
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 200 OK\r\n"
+            b"Transfer-Encoding: chunked\r\n\r\n"
+            b"3\r\ndef\r\n"
+            b"0\r\n\r\n",
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply(side_effect=enable_streaming)
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 200 OK\r\n"
+            b"Transfer-Encoding: chunked\r\n\r\n"
+            b"5\r\n[def]\r\n"
+            b"2\r\n[]\r\n",
+        )
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, b"0\r\n\r\n")
+    )
+    if store_streamed_bodies:
+        assert flow().request.data.content == b"[abc][]"
+        assert flow().response.data.content == b"[def][]"
+    else:
+        assert flow().request.data.content is None
+        assert flow().response.data.content is None
+
+
 @pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
 @pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
 def test_response_streaming(tctx, why, transfer_encoding):

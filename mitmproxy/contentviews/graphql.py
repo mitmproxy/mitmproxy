@@ -2,8 +2,6 @@ import json
 from typing import Any
 
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import PARSE_ERROR
-from mitmproxy.contentviews.json import parse_json
 
 
 def format_graphql(data):
@@ -42,12 +40,11 @@ class ViewGraphQL(base.View):
     name = "GraphQL"
 
     def __call__(self, data, **metadata):
-        data = parse_json(data)
-        if data is not PARSE_ERROR:
-            if is_graphql_query(data):
-                return "GraphQL", base.format_text(format_graphql(data))
-            elif is_graphql_batch_query(data):
-                return "GraphQL", base.format_text(format_query_list(data))
+        data = json.loads(data)
+        if is_graphql_query(data):
+            return "GraphQL", base.format_text(format_graphql(data))
+        elif is_graphql_batch_query(data):
+            return "GraphQL", base.format_text(format_query_list(data))
 
     def render_priority(
         self, data: bytes, *, content_type: str | None = None, **metadata
@@ -55,10 +52,11 @@ class ViewGraphQL(base.View):
         if content_type != "application/json" or not data:
             return 0
 
-        data = parse_json(data)
-
-        if data is not PARSE_ERROR:
+        try:
+            data = json.loads(data)
             if is_graphql_query(data) or is_graphql_batch_query(data):
                 return 2
+        except ValueError:
+            pass
 
         return 0

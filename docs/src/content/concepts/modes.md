@@ -112,6 +112,10 @@ mitmproxy --mode local:!curl,!wget  # Intercept everything but cURL and wget.
 
 [TASK_COMM_LEN]: https://github.com/torvalds/linux/blob/fbfd64d25c7af3b8695201ebc85efe90be28c5a3/include/linux/sched.h#L306
 
+#### Local Capture Limitations on macOS
+
+- **Egress only:** mitmproxy will capture outbound connections only.
+  For inbound connections, we recommend reverse proxy mode.
 
 ## WireGuard
 
@@ -278,7 +282,7 @@ through mitmproxy.
 
 {{% note %}}
 Consider using [WireGuard](#wireguard) and [local capture](#local-capture) mode instead of transparent mode.
-They are easier to set up and also intercept everything transparently.
+They are easier to set up and also support UDP-based protocols (which transparent mode currently does not).
 {{% /note %}}
 
 *Availability: Linux, macOS*

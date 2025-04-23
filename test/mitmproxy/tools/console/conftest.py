@@ -34,11 +34,6 @@ class ConsoleTestMaster(ConsoleMaster):
 
 
 @pytest.fixture
-def console(monkeypatch) -> ConsoleTestMaster:
-    """Stupid workaround for https://youtrack.jetbrains.com/issue/PY-30279/"""
-
-
-@pytest.fixture
 async def console(monkeypatch) -> ConsoleTestMaster:  # noqa
     # monkeypatch.setattr(window.Screen, "get_cols_rows", lambda self: (120, 120))
     monkeypatch.setattr(window.Screen, "start", lambda *_: True)

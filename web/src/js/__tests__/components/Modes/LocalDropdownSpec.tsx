@@ -16,7 +16,7 @@ test("LocalDropdown - initial render and filtering", async () => {
     );
     expect(asFragment()).toMatchSnapshot();
 
-    const input = screen.getByPlaceholderText("(all applications)");
+    const input = screen.getByPlaceholderText("all applications");
     expect(input).toBeInTheDocument();
 
     fireEvent.change(input, { target: { value: "curl" } });
@@ -42,7 +42,7 @@ test("LocalDropdown - no matching processes", async () => {
         </Provider>,
     );
 
-    const input = screen.getByPlaceholderText("(all applications)");
+    const input = screen.getByPlaceholderText("all applications");
     fireEvent.change(input, { target: { value: "nonexistent" } });
 
     await waitFor(() => {
@@ -62,7 +62,7 @@ test("LocalDropdown - toggle process selection", async () => {
         </Provider>,
     );
 
-    const input = screen.getByPlaceholderText("(all applications)");
+    const input = screen.getByPlaceholderText("all applications");
     fireEvent.change(input, { target: { value: "curl" } });
 
     await waitFor(() =>

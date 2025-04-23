@@ -18,25 +18,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@84f586083d4f70fef0b1f18ff2dced74004b40df
-    with:
-      cmd: tox -e lint
+  tox:
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [lint, filename_matching, mypy, individual_coverage, old-dependencies, test-offline]
+    name: ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+        with:
+          args: --only-group tox
 
-  filename-matching:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@84f586083d4f70fef0b1f18ff2dced74004b40df
-    with:
-      cmd: tox -e filename_matching
-
-  mypy:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@84f586083d4f70fef0b1f18ff2dced74004b40df
-    with:
-      cmd: tox -e mypy
-
-  individual-coverage:
-    uses: mhils/workflows/.github/workflows/python-tox.yml@84f586083d4f70fef0b1f18ff2dced74004b40df
-    with:
-      cmd: tox -e individual_coverage
+      - run: tox -e ${{ matrix.env }}
 
   test:
     strategy:
@@ -53,32 +49,17 @@ jobs:
             py: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
         with:
-          python-version: ${{ matrix.py }}
-      - run: pip install tox
-      - run: tox -e py
-        if: matrix.os != 'ubuntu-latest'
-      - name: Run tox -e py (without internet)
-        run: |
-          # install dependencies (requires internet connectivity)
-          tox -e py --notest  
-          # run tests with loopback only. We need to sudo for unshare, which means we need an absolute path for tox.
-          sudo unshare --net -- sh -c "ip link set lo up; $(which tox) -e py"
-        if: matrix.os == 'ubuntu-latest'
+          args: --only-group tox
+
+      - run: tox -e py${{ matrix.py }}
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
-
-  test-old-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - run: pip install tox-uv
-      - run: tox -e old-dependencies
 
   build:
     strategy:
@@ -91,20 +72,29 @@ jobs:
             platform: macos-x86_64
           - image: windows-2019
             platform: windows
-          - image: ubuntu-20.04  # Oldest available version so we get oldest glibc possible.
+          - image: ubuntu-latest
             platform: linux-x86_64
-          - image: ubuntu-22.04-arm  # Oldest available version so we get oldest glibc possible.
+            container: debian:11  # Old version so we get oldest glibc possible.
+          - image: ubuntu-24.04-arm
             platform: linux-arm64
+            container: debian:11  # Old version so we get oldest glibc possible.
     runs-on: ${{ matrix.image }}
+    container:
+      image: ${{ matrix.container }}
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - if: matrix.container
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y git ca-certificates binutils
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
-        uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d
+        uses: apple-actions/import-codesign-certs@cfd6eb39a2c848ead8836bda6b56813585404ba7
         with:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
@@ -132,9 +122,8 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@84f586083d4f70fef0b1f18ff2dced74004b40df
+    uses: mhils/workflows/.github/workflows/python-build.yml@0880de3f0d9875bfccf8ddd50c6c991d709bc812
     with:
-      python-version-file: .github/python-version.txt
       artifact: binaries.wheel
 
   build-windows-installer:
@@ -145,10 +134,10 @@ jobs:
         startsWith(github.ref, 'refs/tags/')
       )
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
-
-      - run: pip install .[dev]  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
         env:
           CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
@@ -161,7 +150,7 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
       - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
@@ -187,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wheel
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
       - uses: actions/download-artifact@v4
         with:
           name: binaries.wheel
@@ -200,13 +189,14 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
-      - run: pip install -e .[dev]
+
       - run: ./docs/build.py
       - uses: actions/upload-artifact@v4
         with:
@@ -225,19 +215,15 @@ jobs:
   check:
     if: always()
     needs:
-    - lint
-    - filename-matching
-    - mypy
-    - individual-coverage
+    - tox
     - test
     - test-docker
-    - test-old-dependencies
     - test-web-ui
     - build
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@84f586083d4f70fef0b1f18ff2dced74004b40df
+    uses: mhils/workflows/.github/workflows/alls-green.yml@0880de3f0d9875bfccf8ddd50c6c991d709bc812
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -257,7 +243,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
       - uses: actions/download-artifact@v4
         with:
           name: binaries.wheel
@@ -266,12 +252,12 @@ jobs:
       - uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v1.6.0
 
       - name: Login to Docker Hub
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           username: mitmbot
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -335,11 +321,11 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
-      - uses: mhils/workflows/checkout@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - uses: mhils/workflows/setup-python@84f586083d4f70fef0b1f18ff2dced74004b40df
-      - run: pip install -r .github/awscli-requirements.txt
-      - if: startsWith(github.ref, 'refs/tags/')
-        run: sudo apt-get install -y twine
+      - uses: mhils/workflows/checkout@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/setup-uv@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+      - uses: mhils/workflows/uv-sync@0880de3f0d9875bfccf8ddd50c6c991d709bc812
+        with:
+          args: --only-group deploy
 
       - uses: actions/download-artifact@v4
         with:

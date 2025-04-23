@@ -1,5 +1,4 @@
 from collections import defaultdict
-from collections.abc import Iterator
 from dataclasses import dataclass
 from dataclasses import field
 
@@ -10,10 +9,10 @@ from aioquic.h3.connection import parse_settings
 from aioquic.h3.connection import Setting
 
 from ..proxy.layers.http import is_h3_alpn
-from . import base
-from .hex import ViewHexDump
-from mitmproxy import flow
 from mitmproxy import tcp
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
+from mitmproxy_rs.contentviews import hex_dump
 
 
 @dataclass(frozen=True)
@@ -23,14 +22,17 @@ class Frame:
     type: int
     data: bytes
 
-    def pretty(self):
+    def pretty(self) -> str:
         frame_name = f"0x{self.type:x} Frame"
         if self.type == 0:
             frame_name = "DATA Frame"
         elif self.type == 1:
             try:
                 hdrs = pylsqpack.Decoder(4096, 16).feed_header(0, self.data)[1]
-                return [[("header", "HEADERS Frame")], *base.format_pairs(hdrs)]
+                return f"HEADERS Frame\n" + "\n".join(
+                    f"{k.decode(errors='backslashreplace')}: {v.decode(errors='backslashreplace')}"
+                    for k, v in hdrs
+                )
             except Exception as e:
                 frame_name = f"HEADERS Frame (error: {e})"
         elif self.type == 4:
@@ -45,12 +47,9 @@ class Frame:
                         key = Setting(k).name
                     except ValueError:
                         key = f"0x{k:x}"
-                    settings.append((key, f"0x{v:x}"))
-                return [[("header", "SETTINGS Frame")], *base.format_pairs(settings)]
-        return [
-            [("header", frame_name)],
-            *ViewHexDump._format(self.data),
-        ]
+                    settings.append(f"{key}: 0x{v:x}")
+                return "SETTINGS Frame\n" + "\n".join(settings)
+        return f"{frame_name}\n" + hex_dump.prettify(self.data, Metadata())
 
 
 @dataclass(frozen=True)
@@ -59,14 +58,14 @@ class StreamType:
 
     type: int
 
-    def pretty(self):
+    def pretty(self) -> str:
         stream_type = {
             0x00: "Control Stream",
             0x01: "Push Stream",
             0x02: "QPACK Encoder Stream",
             0x03: "QPACK Decoder Stream",
         }.get(self.type, f"0x{self.type:x} Stream")
-        return [[("header", stream_type)]]
+        return stream_type
 
 
 @dataclass
@@ -77,21 +76,19 @@ class ConnectionState:
     server_buf: bytearray = field(default_factory=bytearray)
 
 
-class ViewHttp3(base.View):
-    name = "HTTP/3 Frames"
-
+class Http3Contentview(Contentview):
     def __init__(self) -> None:
         self.connections: defaultdict[tcp.TCPFlow, ConnectionState] = defaultdict(
             ConnectionState
         )
 
-    def __call__(
-        self,
-        data,
-        flow: flow.Flow | None = None,
-        tcp_message: tcp.TCPMessage | None = None,
-        **metadata,
-    ):
+    @property
+    def name(self) -> str:
+        return "HTTP/3 Frames"
+
+    def prettify(self, data: bytes, metadata: Metadata) -> str:
+        flow = metadata.flow
+        tcp_message = metadata.tcp_message
         assert isinstance(flow, tcp.TCPFlow)
         assert tcp_message
 
@@ -136,16 +133,16 @@ class ViewHttp3(base.View):
 
         frames = state.frames.get(flow.messages.index(tcp_message), [])
         if not frames:
-            return (
-                "HTTP/3",
-                [],
-            )  # base.format_text(f"(no complete frames here, {state=})")
+            return ""
         else:
-            return "HTTP/3", fmt_frames(frames)
+            return "\n\n".join(frame.pretty() for frame in frames)
 
     def render_priority(
-        self, data: bytes, flow: flow.Flow | None = None, **metadata
+        self,
+        data: bytes,
+        metadata: Metadata,
     ) -> float:
+        flow = metadata.flow
         return (
             2
             * float(bool(flow and is_h3_alpn(flow.client_conn.alpn)))
@@ -153,8 +150,4 @@ class ViewHttp3(base.View):
         )
 
 
-def fmt_frames(frames: list[Frame | StreamType]) -> Iterator[base.TViewLine]:
-    for i, frame in enumerate(frames):
-        if i > 0:
-            yield [("text", "")]
-        yield from frame.pretty()
+http3 = Http3Contentview()

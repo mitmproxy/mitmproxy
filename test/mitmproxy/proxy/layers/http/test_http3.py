@@ -396,7 +396,7 @@ def test_fail_without_header(tctx: context.Context):
         >> cff.receive_init()
         << cff.send_encoder()
         >> cff.receive_encoder()
-        >> http.ResponseProtocolError(0, "first message", http.status_codes.NO_RESPONSE)
+        >> http.ResponseProtocolError(0, "first message", http.ErrorCode.KILL)
         << cff.send_reset(ErrorCode.H3_INTERNAL_ERROR)
         << cff.send_stop(ErrorCode.H3_INTERNAL_ERROR)
     )
@@ -1086,7 +1086,7 @@ class TestClient:
             << http.ReceiveHttp(tutils.Placeholder(http.ResponseHeaders))
             << frame_factory.send_decoder()  # for receive_headers
             >> http.RequestProtocolError(
-                1, "cancelled", code=http.status_codes.CLIENT_CLOSED_REQUEST
+                1, "cancelled", code=http.ErrorCode.CLIENT_DISCONNECTED
             )
             << frame_factory.send_reset(ErrorCode.H3_REQUEST_CANCELLED)
             << frame_factory.send_stop(ErrorCode.H3_REQUEST_CANCELLED)
