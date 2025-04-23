@@ -137,17 +137,20 @@ export const testState: RootState = {
         regular: [
             {
                 active: true,
+                ui_id: 1,
             },
         ],
         local: [
             {
                 active: false,
                 selectedProcesses: "",
+                ui_id: 2
             },
         ],
         wireguard: [
             {
                 active: false,
+                ui_id: 3,
             },
         ],
         reverse: [
@@ -155,28 +158,33 @@ export const testState: RootState = {
                 active: false,
                 protocol: ReverseProxyProtocols.HTTPS,
                 destination: "example.com",
+                ui_id: 4,
             },
             defaultReverseState(),
         ],
         transparent: [
             {
                 active: false,
+                ui_id: 5,
             },
         ],
         socks: [
             {
                 active: false,
+                ui_id: 6,
             },
         ],
         upstream: [
             {
                 active: false,
                 destination: "example.com",
+                ui_id: 7,
             },
         ],
         dns: [
             {
                 active: false,
+                ui_id: 8,
             },
         ],
     },

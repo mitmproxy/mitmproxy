@@ -21,6 +21,7 @@ describe("upstreamSlice", () => {
         expect(store.getState().modes.upstream[0]).toEqual({
             active: false,
             destination: "example.com",
+            ui_id: store.getState().modes.upstream[0].ui_id,
         });
 
         await store.dispatch(
@@ -53,6 +54,7 @@ describe("upstreamSlice", () => {
             listen_host: "127.0.0.1",
             listen_port: 4444,
             destination: "example.com:8085",
+            ui_id: store.getState().modes.upstream[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(4);

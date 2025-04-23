@@ -19,6 +19,7 @@ describe("transparentSlice", () => {
 
         expect(store.getState().modes.transparent[0]).toEqual({
             active: false,
+            ui_id: store.getState().modes.transparent[0].ui_id,
         });
 
         const server = store.getState().modes.transparent[0];
@@ -30,6 +31,7 @@ describe("transparentSlice", () => {
             active: true,
             listen_host: "127.0.0.1",
             listen_port: 4444,
+            ui_id: store.getState().modes.transparent[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(3);

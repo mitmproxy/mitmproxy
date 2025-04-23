@@ -26,6 +26,7 @@ describe("reverseSlice", () => {
             active: false,
             protocol: ReverseProxyProtocols.HTTPS,
             destination: "example.com",
+            ui_id: store.getState().modes.reverse[0].ui_id,
         });
 
         const firstServer = store.getState().modes.reverse[0];
@@ -52,6 +53,7 @@ describe("reverseSlice", () => {
             listen_port: 4444,
             protocol: ReverseProxyProtocols.HTTPS,
             destination: "example.com:8085",
+            ui_id: store.getState().modes.reverse[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(5);
@@ -129,7 +131,7 @@ describe("reverseSlice", () => {
         const firstServer = store.getState().modes.reverse[0];
         await store.dispatch(setActive({ value: true, server: firstServer }));
 
-        const consoleSpy = jest.spyOn(console, "error");
+        const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
         await store.dispatch(removeServer(store.getState().modes.reverse[0]));
 
         expect(store.getState().modes.reverse.length).toBe(1);

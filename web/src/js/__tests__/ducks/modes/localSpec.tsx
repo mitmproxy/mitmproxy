@@ -24,6 +24,7 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: false,
             selectedProcesses: "",
+            ui_id: store.getState().modes.local[0].ui_id,
         });
 
         const server = store.getState().modes.local[0];
@@ -33,6 +34,7 @@ describe("localSlice", () => {
         expect(store.getState().modes.local[0]).toEqual({
             active: true,
             selectedProcesses: "curl",
+            ui_id: store.getState().modes.local[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
