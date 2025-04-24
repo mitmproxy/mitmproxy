@@ -115,8 +115,8 @@ class DnsResolver:
 
     async def resolve(
         self,
-        message: dns.Message,
-    ) -> dns.Message:
+        message: dns.DNSMessage,
+    ) -> dns.DNSMessage:
         q = message.question
         assert q
         try:

@@ -254,9 +254,9 @@ class XmlHtmlContentview(Contentview):
         data: bytes,
         metadata: Metadata,
     ) -> str:
-        try:
-            data_str = metadata.http_message.text
-        except Exception:
+        if metadata.http_message:
+            data_str = metadata.http_message.get_text(strict=False) or ""
+        else:
             data_str = data.decode("utf8", "xmlcharrefreplace")
         tokens = tokenize(data_str)
         return format_xml(tokens)

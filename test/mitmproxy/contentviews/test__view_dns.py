@@ -22,7 +22,6 @@ truncation: false
 recursion_desired: true
 recursion_available: true
 response_code: NOERROR
-status_code: 200
 questions:
 - name: tls-ech.dev
   type: HTTPS
@@ -32,10 +31,11 @@ answers:
   type: HTTPS
   class: IN
   ttl: 60
-  data: "priority: 1 target_name: '' {ech: '\\x00I\\xfe\\r\\x00E+\\x00 \\x00 \\x01X\\
-    x81\\xd4\\x1a>.\\xf8\\xf2 \\x81\\x85\\xdcG\\x92E\\xd2\\x06$\\xdd\\xd0\\x91\\x8a\\\
-    x80V\\xf2\\xe2j\\xf4~&(\\x00\\x08\\x00\\x01\\x00\\x01\\x00\\x01\\x00\\x03@\\x12public.tls-ech.dev\\\
-    x00\\x00'}"
+  data:
+    target_name: ''
+    priority: 1
+    ech: \x00I\xfe\r\x00E+\x00 \x00 \x01X\x81\xd4\x1a>.\xf8\xf2 
+      \x81\x85\xdcG\x92E\xd2\x06$\xdd\xd0\x91\x8a\x80V\xf2\xe2j\xf4~&(\x00\x08\x00\x01\x00\x01\x00\x01\x00\x03@\x12public.tls-ech.dev\x00\x00
 authorities: []
 additionals:
 - name: ''

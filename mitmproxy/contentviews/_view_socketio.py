@@ -3,6 +3,7 @@ from enum import Enum
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.http import HTTPFlow
+from mitmproxy.utils import strutils
 
 
 class PacketType(Enum):
@@ -48,7 +49,7 @@ class SocketIO(PacketType):
         )
 
 
-def parse_packet(data) -> tuple[PacketType, bytes | str]:
+def parse_packet(data: bytes) -> tuple[PacketType, bytes]:
     # throws IndexError/ValueError if invalid packet
     engineio_type = EngineIO(data[0])
     data = data[1:]
@@ -70,10 +71,10 @@ class SocketIOContentview(Contentview):
         data: bytes,
         metadata: Metadata,
     ) -> str:
-        packet_type, data = parse_packet(data)
+        packet_type, msg = parse_packet(data)
         if not packet_type.visible:
             return ""
-        return f"{packet_type} {data}"
+        return f"{packet_type} {strutils.bytes_to_escaped_str(msg)}"
 
     def render_priority(
         self,

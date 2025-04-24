@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from wsproto.frame_protocol import Opcode
@@ -123,8 +124,8 @@ def tdnsflow(
     *,
     client_conn: connection.Client | None = None,
     server_conn: connection.Server | None = None,
-    req: dns.Message | None = None,
-    resp: bool | dns.Message = False,
+    req: dns.DNSMessage | None = None,
+    resp: bool | dns.DNSMessage = False,
     err: bool | flow.Error = False,
     live: bool = True,
 ) -> dns.DNSFlow:
@@ -144,11 +145,11 @@ def tdnsflow(
     if err is True:
         err = terr()
 
-    assert resp is False or isinstance(resp, dns.Message)
+    assert resp is False or isinstance(resp, dns.DNSMessage)
     assert err is False or isinstance(err, flow.Error)
 
     f = dns.DNSFlow(client_conn, server_conn)
-    f.timestamp_created = req.timestamp
+    f.timestamp_created = req.timestamp or time.time()
     f.request = req
     f.response = resp or None
     f.error = err or None

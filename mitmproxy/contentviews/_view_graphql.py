@@ -43,11 +43,11 @@ class GraphQLContentview(Contentview):
         data: bytes,
         metadata: Metadata,
     ) -> str:
-        data = json.loads(data)
-        if is_graphql_query(data):
-            return format_graphql(data)
-        elif is_graphql_batch_query(data):
-            return format_query_list(data)
+        gql = json.loads(data)
+        if is_graphql_query(gql):
+            return format_graphql(gql)
+        elif is_graphql_batch_query(gql):
+            return format_query_list(gql)
         else:
             raise ValueError("Not a GraphQL message.")
 

@@ -320,9 +320,9 @@ class FBod(_Rex):
                 if msg.content is not None and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
-            if f.request and self.re.search(f.request.content):
+            if f.request and self.re.search(str(f.request).encode()):
                 return True
-            if f.response and self.re.search(f.response.content):
+            if f.response and self.re.search(str(f.response).encode()):
                 return True
         return False
 
@@ -350,7 +350,7 @@ class FBodRequest(_Rex):
                 if msg.from_client and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
-            if f.request and self.re.search(f.request.content):
+            if f.request and self.re.search(str(f.request).encode()):
                 return True
 
 
@@ -377,7 +377,7 @@ class FBodResponse(_Rex):
                 if not msg.from_client and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
-            if f.response and self.re.search(f.response.content):
+            if f.response and self.re.search(str(f.response).encode()):
                 return True
 
 

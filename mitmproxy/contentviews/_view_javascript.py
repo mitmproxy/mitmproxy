@@ -53,8 +53,8 @@ class JavaScriptContentview(Contentview):
         data: bytes,
         metadata: Metadata,
     ) -> str:
-        data = data.decode("utf-8", "replace")
-        return beautify(data)
+        data_str = data.decode("utf-8", "replace")
+        return beautify(data_str)
 
     def render_priority(
         self,

@@ -132,7 +132,7 @@ export interface DNSResourceRecord {
     type: string;
     class: string;
     ttl: number;
-    data: string;
+    data: string | {[key: string | number]: string};
 }
 
 export interface DNSMessage {

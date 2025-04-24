@@ -285,6 +285,9 @@ section-order = ["future", "standard-library", "third-party", "local-folder","fi
 no-lines-before = ["first-party"]
 known-first-party = ["test", "mitmproxy", "mitmproxy_rs"]
 
+[tool.tox]
+env_list = ["lint", "mypy", "py"]
+
 [tool.tox.env_run_base]
 runner = "uv-venv-lock-runner"
 package = "editable"

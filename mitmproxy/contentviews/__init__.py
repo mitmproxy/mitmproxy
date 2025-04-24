@@ -13,9 +13,6 @@ import warnings
 from dataclasses import dataclass
 
 from ..addonmanager import cut_traceback
-from ..tcp import TCPMessage
-from ..udp import UDPMessage
-from ..websocket import WebSocketMessage
 from ._api import Contentview
 from ._api import InteractiveContentview
 from ._api import Metadata
@@ -24,6 +21,7 @@ from ._compat import get  # noqa: F401
 from ._compat import LegacyContentview
 from ._compat import remove  # noqa: F401
 from ._registry import ContentviewRegistry
+from ._utils import ContentviewMessage
 from ._utils import get_data
 from ._utils import make_metadata
 from ._view_css import css
@@ -44,7 +42,6 @@ from ._view_xml_html import xml_html
 from .base import View
 import mitmproxy_rs.contentviews
 from mitmproxy import flow
-from mitmproxy import http
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
@@ -62,7 +59,7 @@ registry = ContentviewRegistry()
 
 
 def prettify_message(
-    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    message: ContentviewMessage,
     flow: flow.Flow,
     view_name: str = "auto",
     registry: ContentviewRegistry = registry,
@@ -121,7 +118,7 @@ def prettify_message(
 
 def reencode_message(
     prettified: str,
-    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    message: ContentviewMessage,
     flow: flow.Flow,
     view_name: str,
 ) -> bytes:

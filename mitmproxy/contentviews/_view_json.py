@@ -22,7 +22,7 @@ class JSONContentview(Contentview):
         if (
             metadata.content_type
             and metadata.content_type.startswith("application/")
-            and metadata.content_type.endswith("+json")
+            and metadata.content_type.endswith("json")
         ):
             return 1
         return 0
