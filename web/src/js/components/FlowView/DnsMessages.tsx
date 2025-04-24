@@ -63,7 +63,7 @@ const ResourceRecords: React.FC<{
                             <td>{rr.type}</td>
                             <td>{rr.class}</td>
                             <td>{rr.ttl}</td>
-                            <td>{rr.data}</td>
+                            <td>{JSON.stringify(rr.data).replace(/^"|"$/g, "")}</td>
                         </tr>
                     ))}
                 </tbody>
