@@ -1,8 +1,7 @@
 from enum import Enum
-from typing import Tuple
 
-from mitmproxy.contentviews import base
-from mitmproxy.flow import Flow
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.http import HTTPFlow
 
 
@@ -49,7 +48,7 @@ class SocketIO(PacketType):
         )
 
 
-def parse_packet(data) -> Tuple[PacketType, bytes | str]:
+def parse_packet(data) -> tuple[PacketType, bytes | str]:
     # throws IndexError/ValueError if invalid packet
     engineio_type = EngineIO(data[0])
     data = data[1:]
@@ -63,39 +62,32 @@ def parse_packet(data) -> Tuple[PacketType, bytes | str]:
     return socketio_type, data
 
 
-def format_packet(packet_type: PacketType, data):
-    if not packet_type.visible:
-        return "Socket.IO", iter([])
-
-    return "Socket.IO", iter(
-        [
-            [
-                ("content_none", f"{packet_type} "),
-                ("text", data),
-            ]
-        ]
-    )
-
-
-class ViewSocketIO(base.View):
+class SocketIOContentview(Contentview):
     name = "Socket.IO"
 
-    def __call__(self, data, **metadata):
-        try:
-            packet_type, data = parse_packet(data)
-        except (IndexError, ValueError):
-            return None
-
-        return format_packet(packet_type, data)
+    def prettify(
+        self,
+        data: bytes,
+        metadata: Metadata,
+    ) -> str:
+        packet_type, data = parse_packet(data)
+        if not packet_type.visible:
+            return ""
+        return f"{packet_type} {data}"
 
     def render_priority(
-        self, data: bytes, *, flow: Flow | None = None, **metadata
+        self,
+        data: bytes,
+        metadata: Metadata,
     ) -> float:
-        if (
-            data
-            and isinstance(flow, HTTPFlow)
-            and flow.websocket is not None
-            and "/socket.io/?" in flow.request.path
-        ):
-            return 1
-        return 0
+        return float(
+            bool(
+                data
+                and isinstance(metadata.flow, HTTPFlow)
+                and metadata.flow.websocket is not None
+                and "/socket.io/?" in metadata.flow.request.path
+            )
+        )
+
+
+socket_io = SocketIOContentview()

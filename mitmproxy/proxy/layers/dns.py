@@ -1,4 +1,5 @@
 import struct
+import time
 from dataclasses import dataclass
 from typing import List
 from typing import Literal
@@ -114,7 +115,7 @@ class DNSLayer(layer.Layer):
         buf = self.req_buf if from_client else self.resp_buf
 
         if self.context.client.transport_protocol == "udp":
-            msgs.append(dns.Message.unpack(data))
+            msgs.append(dns.Message.unpack(data, timestamp=time.time()))
         elif self.context.client.transport_protocol == "tcp":
             buf.extend(data)
             size = len(buf)
@@ -134,7 +135,7 @@ class DNSLayer(layer.Layer):
 
                 data = bytes(buf[offset : expected_size + offset])
                 offset += expected_size
-                msgs.append(dns.Message.unpack(data))
+                msgs.append(dns.Message.unpack(data, timestamp=time.time()))
 
             del buf[:offset]
         return msgs

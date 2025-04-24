@@ -1,0 +1,56 @@
+import pytest
+
+from mitmproxy.contentviews import Metadata
+from mitmproxy.contentviews._view_dns import dns
+
+DNS_HTTPS_RECORD_RESPONSE = bytes.fromhex(
+    "00008180000100010000000107746c732d656368036465760000410001c00c004100010000003c00520001000005004b0049fe0d00"
+    "452b00200020015881d41a3e2ef8f2208185dc479245d20624ddd0918a8056f2e26af47e2628000800010001000100034012707562"
+    "6c69632e746c732d6563682e646576000000002904d0000000000000"
+)
+
+
+def test_simple():
+    print(dns.prettify(DNS_HTTPS_RECORD_RESPONSE, Metadata()))
+    assert (
+        dns.prettify(DNS_HTTPS_RECORD_RESPONSE, Metadata())
+        == r"""id: 0
+query: false
+op_code: QUERY
+authoritative_answer: false
+truncation: false
+recursion_desired: true
+recursion_available: true
+response_code: NOERROR
+status_code: 200
+questions:
+- name: tls-ech.dev
+  type: HTTPS
+  class: IN
+answers:
+- name: tls-ech.dev
+  type: HTTPS
+  class: IN
+  ttl: 60
+  data: "priority: 1 target_name: '' {ech: '\\x00I\\xfe\\r\\x00E+\\x00 \\x00 \\x01X\\
+    x81\\xd4\\x1a>.\\xf8\\xf2 \\x81\\x85\\xdcG\\x92E\\xd2\\x06$\\xdd\\xd0\\x91\\x8a\\\
+    x80V\\xf2\\xe2j\\xf4~&(\\x00\\x08\\x00\\x01\\x00\\x01\\x00\\x01\\x00\\x03@\\x12public.tls-ech.dev\\\
+    x00\\x00'}"
+authorities: []
+additionals:
+- name: ''
+  type: OPT
+  class: CLASS(1232)
+  ttl: 0
+  data: 0x
+size: 82
+"""
+    )
+    with pytest.raises(Exception):
+        dns.prettify(b"foobar", Metadata())
+
+
+def test_render_priority():
+    assert dns.render_priority(b"", Metadata(content_type="application/dns-message"))
+    assert not dns.render_priority(b"", Metadata(content_type="text/plain"))
+    assert not dns.render_priority(b"", Metadata())

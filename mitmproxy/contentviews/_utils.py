@@ -1,10 +1,16 @@
+import io
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
+
+from ruamel.yaml import YAML
 
 from .. import ctx
 from .. import http
 from ..flow import Flow
 from ..tcp import TCPMessage
 from ..udp import UDPMessage
+from ..utils import strutils
 from ..websocket import WebSocketMessage
 from ._api import Metadata
 
@@ -53,3 +59,34 @@ def get_data(
             enc = ""
 
     return content, enc
+
+
+def yaml_dumps(d: Any) -> str:
+    if not d:
+        return ""
+    out = io.StringIO()
+    YAML(typ="rt", pure=True).dump(d, out)
+    return out.getvalue()
+
+
+def merge_repeated_keys(items: Iterable[tuple[str, str]]) -> dict[str, str | list[str]]:
+    """
+    Helper function that takes a list of pairs and merges repeated keys.
+    """
+    ret: dict[str, str | list[str]] = {}
+    for key, value in items:
+        if existing := ret.get(key):
+            if isinstance(existing, list):
+                existing.append(value)
+            else:
+                ret[key] = [existing, value]
+        else:
+            ret[key] = value
+    return ret
+
+
+def byte_pairs_to_str_pairs(
+    items: Iterable[tuple[bytes, bytes]],
+) -> Iterable[tuple[str, str]]:
+    for key, value in items:
+        yield (strutils.bytes_to_escaped_str(key), strutils.bytes_to_escaped_str(value))

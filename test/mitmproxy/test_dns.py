@@ -40,7 +40,7 @@ class TestResourceRecord:
         record = dns.https_records.HTTPSRecord(1, "example.com", params)
         assert (
             str(dns.ResourceRecord.HTTPS("example.com", record))
-            == "priority: 1 target_name: 'example.com' {'mandatory': b'\\x00', 'alpn': b'\\x01', 'no_default_alpn': b'', 'port': b'\\x02', 'ipv4hint': b'\\x03', 'ech': b'\\x04', 'ipv6hint': b'\\x05'}"
+            == "priority: 1 target_name: 'example.com' {mandatory: '\\x00', alpn: '\\x01', no_default_alpn: '', port: '\\x02', ipv4hint: '\\x03', ech: '\\x04', ipv6hint: '\\x05'}"
         )
         assert (
             str(
@@ -166,8 +166,7 @@ class TestMessage:
 
     def test_packing(self):
         def assert_eq(m: dns.Message, b: bytes) -> None:
-            m_b = dns.Message.unpack(b)
-            m_b.timestamp = m.timestamp
+            m_b = dns.Message.unpack(b, m.timestamp)
             assert m_b == m
             assert m_b.packed == m.packed
 

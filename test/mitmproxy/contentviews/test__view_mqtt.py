@@ -1,7 +1,7 @@
 import pytest
 
-from . import full_eval
-from mitmproxy.contentviews import mqtt
+from mitmproxy.contentviews import Metadata
+from mitmproxy.contentviews._view_mqtt import mqtt
 
 
 @pytest.mark.parametrize(
@@ -33,38 +33,26 @@ from mitmproxy.contentviews import mqtt
             b"""\x10\xba\x01\x00\x04MQTT\x04\x06\x00\x1e\x00\x1156:6F:5E:6A:01:05\x00-"""
             b"""xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out"""
             b"""\x00l{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"disconnected","type":"event"}}""",
-            [
-                "[CONNECT]",
-                "",
-                "Client Id: 56:6F:5E:6A:01:05",
-                "Will Topic: xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out",
-                """Will Message: {"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","""
-                """"messageId":"disconnected","type":"event"}}""",
-                "User Name: None",
-                "Password: None",
-            ],
+            (
+                "[CONNECT]\n"
+                "\n"
+                "Client Id: 56:6F:5E:6A:01:05\n"
+                "Will Topic: xxxx/yy/zzzzzz/56:6F:5E:6A:01:05/messages/out\n"
+                "Will Message: "
+                '{"body":{"parameters":null},"header":{"from":"56:6F:5E:6A:01:05","messageId":"disconnected","type":"event"}}\n'
+                "User Name: None\n"
+                "Password: None\n"
+            ),
             id="CONNECT",
         ),
     ],
 )
 def test_view_mqtt(data, expected_text):
     """testing helper for single line messages"""
-    v = full_eval(mqtt.ViewMQTT())
-    content_type, output = v(data)
-    assert content_type == "MQTT"
-    if isinstance(expected_text, list):
-        assert output == [[("text", text)] for text in expected_text]
-    else:
-        assert output == [[("text", expected_text)]]
+    assert mqtt.prettify(data, Metadata()) == expected_text
 
 
 @pytest.mark.parametrize("data", [b"\xc0\xff\xff\xff\xff"])
 def test_mqtt_malformed(data):
-    v = full_eval(mqtt.ViewMQTT())
     with pytest.raises(Exception):
-        v(data)
-
-
-def test_render_priority():
-    # missing: good MQTT heuristics.
-    assert mqtt.ViewMQTT().render_priority(b"") == 0
+        mqtt.prettify(data, Metadata())

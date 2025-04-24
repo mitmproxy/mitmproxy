@@ -150,7 +150,7 @@ export interface DNSMessage {
     authorities: DNSResourceRecord[];
     additionals: DNSResourceRecord[];
     size: number;
-    timestamp: number;
+    timestamp?: number;
 }
 
 export interface DNSFlow extends _Flow {

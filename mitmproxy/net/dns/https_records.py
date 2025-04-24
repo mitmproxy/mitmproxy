@@ -2,6 +2,7 @@ import enum
 import struct
 from dataclasses import dataclass
 
+from ...utils import strutils
 from . import domain_names
 
 """
@@ -43,8 +44,9 @@ class HTTPSRecord:
                 name = SVCParamKeys(param_type).name.lower()
             except ValueError:
                 name = f"key{param_type}"
-            params[name] = param_value
-        return f"priority: {self.priority} target_name: '{self.target_name}' {params}"
+            params[name] = strutils.bytes_to_escaped_str(param_value)
+        params = "{" + ", ".join(f"{k}: '{v}'" for k, v in params.items()) + "}"
+        return f"priority: {self.priority} target_name: {self.target_name!r} {params}"
 
 
 def _unpack_params(data: bytes, offset: int) -> dict[int, bytes]:

@@ -206,8 +206,6 @@ class ResourceRecord(serializable.SerializableDataclass):
 class Message(serializable.SerializableDataclass):
     HEADER: ClassVar[struct.Struct] = struct.Struct("!HHHHHH")
 
-    timestamp: float
-    """The time at which the message was sent or received."""
     id: int
     """An identifier assigned by the program that generates any kind of query."""
     query: bool
@@ -246,6 +244,9 @@ class Message(serializable.SerializableDataclass):
     """Second resource record section."""
     additionals: list[ResourceRecord]
     """Third resource record section."""
+
+    timestamp: float | None = None
+    """The time at which the message was sent or received."""
 
     def __str__(self) -> str:
         return "\r\n".join(
@@ -319,15 +320,17 @@ class Message(serializable.SerializableDataclass):
         )
 
     @classmethod
-    def unpack(cls, buffer: bytes) -> Message:
+    def unpack(cls, buffer: bytes, timestamp: float | None = None) -> Message:
         """Converts the entire given buffer into a DNS message."""
-        length, msg = cls.unpack_from(buffer, 0)
+        length, msg = cls.unpack_from(buffer, 0, timestamp)
         if length != len(buffer):
             raise struct.error(f"unpack requires a buffer of {length} bytes")
         return msg
 
     @classmethod
-    def unpack_from(cls, buffer: bytes | bytearray, offset: int) -> tuple[int, Message]:
+    def unpack_from(
+        cls, buffer: bytes | bytearray, offset: int, timestamp: float | None = None
+    ) -> tuple[int, Message]:
         """Converts the buffer from a given offset into a DNS message and also returns its length."""
         (
             id,
@@ -338,7 +341,7 @@ class Message(serializable.SerializableDataclass):
             len_additionals,
         ) = Message.HEADER.unpack_from(buffer, offset)
         msg = Message(
-            timestamp=time.time(),
+            timestamp=timestamp,
             id=id,
             query=(flags & (1 << 15)) == 0,
             op_code=(flags >> 11) & 0b1111,
@@ -463,7 +466,7 @@ class Message(serializable.SerializableDataclass):
         Converts the message into json for mitmweb.
         Sync with web/src/flow.ts.
         """
-        return {
+        ret = {
             "id": self.id,
             "query": self.query,
             "op_code": op_codes.to_str(self.op_code),
@@ -478,8 +481,10 @@ class Message(serializable.SerializableDataclass):
             "authorities": [rr.to_json() for rr in self.authorities],
             "additionals": [rr.to_json() for rr in self.additionals],
             "size": self.size,
-            "timestamp": self.timestamp,
         }
+        if self.timestamp:
+            ret["timestamp"] = self.timestamp
+        return ret
 
     def copy(self) -> Message:
         # we keep the copy semantics but change the ID generation
