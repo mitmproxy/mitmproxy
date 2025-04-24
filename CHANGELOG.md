@@ -56,6 +56,8 @@
   ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
 - Fix mitmweb crash when searching or highlighting using ~h, ~hq, or ~hs.
   ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
+- `mitmproxy.dns.Message` has been renamed to `mitmproxy.dns.DNSMessage`
+  ([#7670](https://github.com/mitmproxy/mitmproxy/pull/7670), @mhils)
 
 [tree-sitter]: https://tree-sitter.github.io/tree-sitter/
 
