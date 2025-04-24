@@ -26,6 +26,7 @@ def test_view():
         socket_io.prettify(b"4", Metadata())
     assert socket_io.prettify(b"42", Metadata())
     assert socket_io.prettify(b"42eventdata", Metadata())
+    assert socket_io.prettify(b"2", Metadata()) == ""
 
 
 def test_render_priority():

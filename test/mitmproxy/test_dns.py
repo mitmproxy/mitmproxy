@@ -5,6 +5,7 @@ import pytest
 
 from mitmproxy import dns
 from mitmproxy import flowfilter
+from mitmproxy.dns import DNSMessage
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
@@ -113,7 +114,11 @@ class TestResourceRecord:
 
 
 class TestMessage:
-    def test_json(self):
+    def test_content_alias(self):
+        m = tutils.tdnsresp()
+        assert m.content == m.packed
+
+    def test_to_json(self):
         resp = tutils.tdnsresp()
         json = resp.to_json()
         assert json["id"] == resp.id
@@ -121,6 +126,62 @@ class TestMessage:
         assert json["questions"][0]["name"] == resp.questions[0].name
         assert len(json["answers"]) == len(resp.answers)
         assert json["answers"][0]["data"] == str(resp.answers[0])
+
+        assert DNSMessage.from_json(resp.to_json()) == resp
+
+    def test_from_json(self):
+        assert DNSMessage.from_json(
+            {
+                **tutils.tdnsresp().to_json(),
+                "answers": [
+                    {
+                        "name": "dns.google",
+                        "type": "A",
+                        "class": "IN",
+                        "ttl": 32,
+                        "data": "8.8.8.8",
+                    },
+                    {
+                        "name": "dns.google",
+                        "type": "AAAA",
+                        "class": "IN",
+                        "ttl": 32,
+                        "data": "::1",
+                    },
+                    {
+                        "name": "dns.google",
+                        "type": "CNAME",
+                        "class": "IN",
+                        "ttl": 32,
+                        "data": "alias.google",
+                    },
+                    {
+                        "name": "dns.google",
+                        "type": "TXT",
+                        "class": "IN",
+                        "ttl": 32,
+                        "data": "random text",
+                    },
+                    {
+                        "name": "dns.google",
+                        "type": "HTTPS",
+                        "class": "IN",
+                        "ttl": 32,
+                        "data": {
+                            "target_name": "dns.google",
+                            "priority": 42,
+                        },
+                    },
+                    {
+                        "name": "dns.google",
+                        "type": "TYPE(42)",
+                        "class": "IN",
+                        "ttl": 32,
+                        "data": "0xffff",
+                    },
+                ],
+            }
+        )
 
     def test_responses(self):
         req = tutils.tdnsreq()

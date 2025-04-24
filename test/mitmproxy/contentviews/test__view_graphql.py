@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy.contentviews import Metadata
 from mitmproxy.contentviews._view_graphql import format_graphql
 from mitmproxy.contentviews._view_graphql import format_query_list
@@ -39,3 +41,5 @@ def test_view_graphql():
     assert graphql.prettify(
         b"""[{"query": "query P { \\n }"}]""", Metadata(content_type="application/json")
     )
+    with pytest.raises(ValueError):
+        assert graphql.prettify(b'"valid json"', Metadata())

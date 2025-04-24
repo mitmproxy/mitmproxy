@@ -1,5 +1,6 @@
 import pytest
 
+from mitmproxy import http
 from mitmproxy.contentviews import Metadata
 from mitmproxy.contentviews._view_xml_html import tokenize
 from mitmproxy.contentviews._view_xml_html import xml_html
@@ -17,6 +18,17 @@ def test_simple(tdata):
         input = f.read()
     tokens = tokenize(input)
     assert str(next(tokens)) == "Tag(<!DOCTYPE html>)"
+
+
+def test_use_text():
+    meta1 = Metadata()
+    meta2 = Metadata(
+        http_message=http.Response.make(
+            content=b"\xf8",
+        )
+    )
+    assert xml_html.prettify(b"\xf8", meta1) != "ø\n"
+    assert xml_html.prettify(b"\xf8", meta2) == "ø\n"
 
 
 @pytest.mark.parametrize(
