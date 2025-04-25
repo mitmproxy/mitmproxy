@@ -65,8 +65,7 @@ function updateSelected(
                 break;
             }
             if (selected.length > 1) {
-                // clear selection when multiple flows are selected and removed
-                selected = [];
+                selected = selected.filter((f) => f.id !== action.data);
             } else if (!(action.data in state.viewIndex)) {
                 selected = [];
             } else {
