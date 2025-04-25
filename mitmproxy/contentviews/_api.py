@@ -10,6 +10,7 @@ from typing import Literal
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
+from mitmproxy.dns import DNSMessage
 from mitmproxy.flow import Flow
 from mitmproxy.websocket import WebSocketMessage
 
@@ -102,6 +103,8 @@ class Metadata:
     """The UDP message that the data belongs to, if any."""
     websocket_message: WebSocketMessage | None = None
     """The websocket message that the data belongs to, if any."""
+    dns_message: DNSMessage | None = None
+    """The DNS message that the data belongs to, if any."""
 
     protobuf_definitions: Path | None = None
     """Path to a .proto file that's used to resolve Protobuf field names."""

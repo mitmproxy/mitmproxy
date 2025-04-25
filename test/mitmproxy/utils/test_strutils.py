@@ -55,6 +55,7 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"\r\n\t") == "\\r\\n\\t"
     assert strutils.bytes_to_escaped_str(b"\r\n\t", True) == "\r\n\t"
 
+    assert strutils.bytes_to_escaped_str(b"\n", False) == r"\n"
     assert strutils.bytes_to_escaped_str(b"\n", True) == "\n"
     assert strutils.bytes_to_escaped_str(b"\\n", True) == "\\ \\ n".replace(" ", "")
     assert strutils.bytes_to_escaped_str(b"\\\n", True) == "\\ \\ \n".replace(" ", "")

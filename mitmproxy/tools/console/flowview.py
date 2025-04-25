@@ -12,6 +12,7 @@ from mitmproxy import dns
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
+from mitmproxy.dns import DNSMessage
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import layoutwidget
@@ -394,25 +395,7 @@ class FlowDetails(tabs.Tabs):
             viewmode = self.master.commands.call("console.flowview.mode")
             msg, body = self.content_view(viewmode, conn)
 
-            cols = [
-                urwid.Text(
-                    [
-                        ("heading", msg),
-                    ]
-                ),
-                urwid.Text(
-                    [
-                        " ",
-                        ("heading", "["),
-                        ("heading_key", "m"),
-                        ("heading", (":%s]" % viewmode)),
-                    ],
-                    align="right",
-                ),
-            ]
-            title = urwid.AttrMap(urwid.Columns(cols), "heading")
-
-            txt.append(title)
+            txt.append(self._contentview_status_bar(msg, viewmode))
             txt.extend(body)
         else:
             txt = [
@@ -428,8 +411,26 @@ class FlowDetails(tabs.Tabs):
         return searchable.Searchable(txt)
 
     def dns_message_text(
-        self, type: str, message: dns.Message | None
+        self, type: str, message: DNSMessage | None
     ) -> searchable.Searchable:
+        """
+        Alternative:
+        if not message:
+            return searchable.Searchable([urwid.Text(("highlight", f"No {typ}."))])
+
+        viewmode = self.master.commands.call("console.flowview.mode")
+        pretty = contentviews.prettify_message(message, flow, viewmode)
+        chunks = mitmproxy_rs.syntax_highlight.highlight(
+            pretty.text,
+            language=pretty.syntax_highlight,
+        )
+
+        widget_lines = [
+            self._contentview_status_bar(viewmode.capitalize(), viewmode),
+            urwid.Text(chunks)
+        ]
+        return searchable.Searchable(widget_lines)
+        """
         # Keep in sync with web/src/js/components/FlowView/DnsMessages.tsx
         if message:
 

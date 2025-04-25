@@ -132,7 +132,7 @@ export interface DNSResourceRecord {
     type: string;
     class: string;
     ttl: number;
-    data: string;
+    data: string | { [key: string | number]: string };
 }
 
 export interface DNSMessage {
@@ -150,7 +150,7 @@ export interface DNSMessage {
     authorities: DNSResourceRecord[];
     additionals: DNSResourceRecord[];
     size: number;
-    timestamp: number;
+    timestamp?: number;
 }
 
 export interface DNSFlow extends _Flow {

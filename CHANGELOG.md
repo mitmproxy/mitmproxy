@@ -46,6 +46,8 @@
   ([#7570](https://github.com/mitmproxy/mitmproxy/pull/7570), @DenizenB)
 - Correctly forward HTTP_1_1_REQUIRED errors in HTTP/2 streams.
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
+- Fix a bug where HAR export would crash for malformed flows.
+  ([#7666](https://github.com/mitmproxy/mitmproxy/pull/7666), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
 - Fix a bug where mitmproxy does not listen on IPv4 and IPv6 by default in wireguard mode.
@@ -54,6 +56,8 @@
   ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
 - Fix mitmweb crash when searching or highlighting using ~h, ~hq, or ~hs.
   ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
+- `mitmproxy.dns.Message` has been renamed to `mitmproxy.dns.DNSMessage`
+  ([#7670](https://github.com/mitmproxy/mitmproxy/pull/7670), @mhils)
 - Added support for selecting multiple flows in mitmweb using Ctrl+Click and Shift+Click. Multi-selection is now supported for deleting, duplicating, marking, reverting, resuming, and aborting flows.
   ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000, @mhils)
 

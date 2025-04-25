@@ -68,4 +68,4 @@ def test_render_priority_error(caplog):
 
     v = registry.get_view(b"data", Metadata())
     assert v.name == "Example"
-    assert "Error in render_priority" in caplog.text
+    assert "Error in FailingRenderPriority.render_priority" in caplog.text

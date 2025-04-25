@@ -1,6 +1,10 @@
 from mitmproxy import tcp
+from mitmproxy.contentviews._utils import byte_pairs_to_str_pairs
 from mitmproxy.contentviews._utils import get_data
 from mitmproxy.contentviews._utils import make_metadata
+from mitmproxy.contentviews._utils import merge_repeated_keys
+from mitmproxy.contentviews._utils import yaml_dumps
+from mitmproxy.contentviews._utils import yaml_loads
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -45,6 +49,14 @@ class TestMetadata:
             assert metadata.websocket_message == msg
             assert metadata.flow == f
 
+    def test_make_metadata_dns(self):
+        with taddons.context():
+            f = tflow.tdnsflow()
+            msg = f.request
+            metadata = make_metadata(msg, f)
+            assert metadata.dns_message == msg
+            assert metadata.flow == f
+
 
 class TestGetData:
     def test_get_data_regular_content(self):
@@ -69,3 +81,34 @@ class TestGetData:
         content, enc = get_data(f.request)
         assert content == b"invalid"
         assert enc == "[cannot decode]"
+
+
+def test_yaml_dumps():
+    assert yaml_dumps({}) == ""
+    assert yaml_dumps({"foo": "bar"}) == "foo: bar\n"
+
+
+def test_yaml_loads():
+    assert yaml_loads("") is None
+    assert yaml_loads("foo: bar\n") == {"foo": "bar"}
+
+
+def test_merge_repeated_keys():
+    assert merge_repeated_keys([]) == {}
+    assert merge_repeated_keys([("foo", "bar")]) == {"foo": "bar"}
+    assert merge_repeated_keys([("foo", "bar"), ("foo", "baz")]) == {
+        "foo": ["bar", "baz"]
+    }
+    assert merge_repeated_keys(
+        [
+            ("foo", "bar"),
+            ("foo", "baz"),
+            ("foo", "qux"),
+            ("bar", "quux"),
+        ]
+    ) == {"foo": ["bar", "baz", "qux"], "bar": "quux"}
+
+
+def test_byte_pairs_to_str_pairs():
+    assert list(byte_pairs_to_str_pairs([(b"foo", b"bar")])) == [("foo", "bar")]
+    assert list(byte_pairs_to_str_pairs([(b"\xfa", b"\xff")])) == [(r"\xfa", r"\xff")]

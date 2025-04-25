@@ -40,6 +40,7 @@ _STRINGS = {
     NOTZONE: "NOTZONE",
     DSOTYPENI: "DSOTYPENI",
 }
+_INTS = {v: k for k, v in _STRINGS.items()}
 
 
 def http_equiv_status_code(response_code: int) -> int:
@@ -48,3 +49,10 @@ def http_equiv_status_code(response_code: int) -> int:
 
 def to_str(response_code: int) -> str:
     return _STRINGS.get(response_code, f"RCODE({response_code})")
+
+
+def from_str(response_code: str) -> int:
+    try:
+        return _INTS[response_code]
+    except KeyError:
+        return int(response_code.removeprefix("RCODE(").removesuffix(")"))

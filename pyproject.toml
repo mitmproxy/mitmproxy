@@ -37,7 +37,7 @@ dependencies = [
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
     "cryptography>=42.0,<44.1",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.1.0",
-    "h11>=0.11,<=0.14.0",
+    "h11>=0.16.0,<=0.16.0",
     "h2>=4.1,<=4.1.0",
     "hyperframe>=6.0,<=6.1.0",
     "kaitaistruct>=0.10,<=0.10",
@@ -49,7 +49,7 @@ dependencies = [
     "pyOpenSSL>=22.1,<=25.0.0",
     "pyparsing>=2.4.2,<=3.2.3",
     "pyperclip<=1.9.0,>=1.9.0",
-    "ruamel.yaml>=0.16,<=0.18.10",
+    "ruamel.yaml>=0.18.10,<=0.18.10",
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado>=6.4.1,<=6.4.2",
     "typing-extensions>=4.13.2,<=4.14; python_version < '3.13'",
@@ -284,6 +284,9 @@ order-by-type = false
 section-order = ["future", "standard-library", "third-party", "local-folder","first-party"]
 no-lines-before = ["first-party"]
 known-first-party = ["test", "mitmproxy", "mitmproxy_rs"]
+
+[tool.tox]
+env_list = ["lint", "mypy", "py"]
 
 [tool.tox.env_run_base]
 runner = "uv-venv-lock-runner"

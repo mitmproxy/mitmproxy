@@ -1,6 +1,7 @@
 import struct
 
-from mitmproxy.contentviews import base
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils import strutils
 
 # from https://github.com/nikitastupin/mitmproxy-mqtt-script
@@ -263,15 +264,14 @@ Password: {strutils.bytes_to_escaped_str(self.payload.get("Password", b"None"))}
         self.packet_identifier = self._packet[offset : offset + 2]
 
 
-class ViewMQTT(base.View):
-    name = "MQTT"
-
-    def __call__(self, data, **metadata):
+class MQTTContentview(Contentview):
+    def prettify(
+        self,
+        data: bytes,
+        metadata: Metadata,
+    ) -> str:
         mqtt_packet = MQTTControlPacket(data)
-        text = mqtt_packet.pprint()
-        return "MQTT", base.format_text(text)
+        return mqtt_packet.pprint()
 
-    def render_priority(
-        self, data: bytes, *, content_type: str | None = None, **metadata
-    ) -> float:
-        return 0
+
+mqtt = MQTTContentview()

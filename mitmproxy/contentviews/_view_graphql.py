@@ -1,7 +1,8 @@
 import json
 from typing import Any
 
-from mitmproxy.contentviews import base
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 
 
 def format_graphql(data):
@@ -36,20 +37,26 @@ def is_graphql_batch_query(data):
     )
 
 
-class ViewGraphQL(base.View):
-    name = "GraphQL"
-
-    def __call__(self, data, **metadata):
-        data = json.loads(data)
-        if is_graphql_query(data):
-            return "GraphQL", base.format_text(format_graphql(data))
-        elif is_graphql_batch_query(data):
-            return "GraphQL", base.format_text(format_query_list(data))
+class GraphQLContentview(Contentview):
+    def prettify(
+        self,
+        data: bytes,
+        metadata: Metadata,
+    ) -> str:
+        gql = json.loads(data)
+        if is_graphql_query(gql):
+            return format_graphql(gql)
+        elif is_graphql_batch_query(gql):
+            return format_query_list(gql)
+        else:
+            raise ValueError("Not a GraphQL message.")
 
     def render_priority(
-        self, data: bytes, *, content_type: str | None = None, **metadata
+        self,
+        data: bytes,
+        metadata: Metadata,
     ) -> float:
-        if content_type != "application/json" or not data:
+        if metadata.content_type != "application/json" or not data:
             return 0
 
         try:
@@ -60,3 +67,6 @@ class ViewGraphQL(base.View):
             pass
 
         return 0
+
+
+graphql = GraphQLContentview()

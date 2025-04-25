@@ -246,7 +246,9 @@ class SaveHar:
                 "headers": self.format_multidict(flow.request.headers),
                 "queryString": self.format_multidict(flow.request.query),
                 "headersSize": len(str(flow.request.headers)),
-                "bodySize": len(flow.request.content) if flow.request.content else 0,
+                "bodySize": len(flow.request.raw_content)
+                if flow.request.raw_content
+                else 0,
             },
             "response": response,
             "cache": {},

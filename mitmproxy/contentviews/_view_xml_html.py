@@ -3,7 +3,8 @@ import re
 import textwrap
 from collections.abc import Iterable
 
-from mitmproxy.contentviews import base
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils import sliding_window
 from mitmproxy.utils import strutils
 
@@ -243,37 +244,35 @@ def format_xml(tokens: Iterable[Token]) -> str:
     return out.getvalue()
 
 
-class ViewXmlHtml(base.View):
-    name = "XML/HTML"
+class XmlHtmlContentview(Contentview):
     __content_types = ("text/xml", "text/html")
-
+    name = "XML/HTML"
     syntax_highlight = "xml"
 
-    def __call__(self, data, **metadata):
-        # TODO:
-        # We should really have the message text as str here,
-        # not the message content as bytes.
-        # https://github.com/mitmproxy/mitmproxy/issues/1662#issuecomment-266192578
-        data = data.decode("utf8", "xmlcharrefreplace")
-        tokens = tokenize(data)
-        # TODO:
-        # Performance: Don't render the whole document right away.
-        # Let's wait with this until we have a sequence-like interface,
-        # this thing is reasonably fast right now anyway.
-        pretty = base.format_text(format_xml(tokens))
-        if "html" in data.lower():
-            t = "HTML"
+    def prettify(
+        self,
+        data: bytes,
+        metadata: Metadata,
+    ) -> str:
+        if metadata.http_message:
+            data_str = metadata.http_message.get_text(strict=False) or ""
         else:
-            t = "XML"
-        return t, pretty
+            data_str = data.decode("utf8", "backslashreplace")
+        tokens = tokenize(data_str)
+        return format_xml(tokens)
 
     def render_priority(
-        self, data: bytes, *, content_type: str | None = None, **metadata
+        self,
+        data: bytes,
+        metadata: Metadata,
     ) -> float:
         if not data:
             return 0
-        if content_type in self.__content_types:
+        if metadata.content_type in self.__content_types:
             return 1
         elif strutils.is_xml(data):
             return 0.4
         return 0
+
+
+xml_html = XmlHtmlContentview()
