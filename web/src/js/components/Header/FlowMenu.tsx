@@ -8,7 +8,6 @@ import {
 } from "../../flow/utils";
 import HideInStatic from "../common/HideInStatic";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import * as flowActions from "../../ducks/flows";
 import {
     duplicate as duplicateFlows,
     kill as killFlows,
@@ -16,6 +15,7 @@ import {
     replay as replayFlow,
     resume as resumeFlows,
     revert as revertFlows,
+    mark as markFlows,
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
@@ -77,7 +77,7 @@ export default function FlowMenu(): JSX.Element {
                             Delete
                         </Button>
 
-                        <MarkButton flow={flow} />
+                        <MarkButton flows={selectedFlows} />
                     </div>
                     <div className="menu-legend">Flow Modification</div>
                 </div>
@@ -250,11 +250,8 @@ const markers = {
     ":brown_circle:": "🟤",
 };
 
-function MarkButton({ flow }: { flow: Flow }) {
+function MarkButton({ flows }: { flows: Flow[] }) {
     const dispatch = useAppDispatch();
-    const hasSingleFlowSelected = useAppSelector(
-        (state) => state.flows.selected.length === 1,
-    ); // TODO: Enable marking multiple flows with the same mark, allowing users to assign a single mark to multiple flows.
     return (
         <Dropdown
             className=""
@@ -263,26 +260,19 @@ function MarkButton({ flow }: { flow: Flow }) {
                     title="mark flow"
                     icon="fa-paint-brush text-success"
                     onClick={() => 1}
-                    disabled={!hasSingleFlowSelected}
                 >
                     Mark▾
                 </Button>
             }
             options={{ placement: "bottom-start" }}
         >
-            <MenuItem
-                onClick={() =>
-                    dispatch(flowActions.update(flow, { marked: "" }))
-                }
-            >
+            <MenuItem onClick={() => dispatch(markFlows(flows, ""))}>
                 ⚪ (no marker)
             </MenuItem>
             {Object.entries(markers).map(([name, sym]) => (
                 <MenuItem
                     key={name}
-                    onClick={() =>
-                        dispatch(flowActions.update(flow, { marked: name }))
-                    }
+                    onClick={() => dispatch(markFlows(flows, name))}
                 >
                     {sym} {name.replace(/[:_]/g, " ")}
                 </MenuItem>

@@ -54,7 +54,7 @@
   ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
 - Fix mitmweb crash when searching or highlighting using ~h, ~hq, or ~hs.
   ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
-- Added support for selecting multiple flows in mitmweb using Ctrl+Click and Shift+Click. Multi-selection is now supported for deleting, duplicating, reverting, resuming, and aborting flows.
+- Added support for selecting multiple flows in mitmweb using Ctrl+Click and Shift+Click. Multi-selection is now supported for deleting, duplicating, marking, reverting, resuming, and aborting flows.
   ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000, @mhils)
 
 [tree-sitter]: https://tree-sitter.github.io/tree-sitter/

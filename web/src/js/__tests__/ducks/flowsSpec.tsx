@@ -232,6 +232,16 @@ describe("flows actions", () => {
         );
     });
 
+    it("should handle mark action", async () => {
+        store.dispatch(flowActions.mark([tflow, ttcpflow], ":red_circle:"));
+        expect(fetchApi.put).toHaveBeenCalledWith(`/flows/${tflow.id}`, {
+            marked: ":red_circle:",
+        });
+        expect(fetchApi.put).toHaveBeenCalledWith(`/flows/${ttcpflow.id}`, {
+            marked: ":red_circle:",
+        });
+    });
+
     it("should handle update action", () => {
         store.dispatch(flowActions.update(tflow, "foo"));
         expect(fetchApi.put).toBeCalledWith(

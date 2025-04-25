@@ -269,6 +269,10 @@ export function revert(flows: Flow[]) {
         );
 }
 
+export function mark(flows: Flow[], marked: string) {
+    return () => Promise.all(flows.map((flow) => update(flow, { marked })()));
+}
+
 export function update(flow: Flow, data) {
     return () => fetchApi.put(`/flows/${flow.id}`, data);
 }
