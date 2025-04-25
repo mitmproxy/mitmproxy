@@ -64,16 +64,16 @@ function updateSelected(
             if (selectedIndex[action.data] === undefined) {
                 break;
             }
-            if (selected.length > 1) {
-                selected = selected.filter((f) => f.id !== action.data);
-            } else if (!(action.data in state.viewIndex)) {
+            if (selected.length > 1 || !(action.data in state.viewIndex)) {
                 selected = [];
             } else {
                 const currentIndex = state.viewIndex[action.data];
-                selected = [
+                // Try to select the next item in view, or fallback to the previous one
+                const fallback =
                     state.view[currentIndex + 1] ??
-                        state.view[currentIndex - 1], // last element
-                ];
+                    state.view[currentIndex - 1]; // last element
+                // If fallback is undefined (e.g. removed last remaining flow)
+                selected = fallback ? [fallback] : [];
             }
             selectedIndex = Object.fromEntries(
                 selected.map((f, i) => [f.id, i]),
