@@ -48,14 +48,14 @@
   ([#7575](https://github.com/mitmproxy/mitmproxy/pull/7575), @mhils)
 - Fix a bug where mitmweb would crash when viewing flows with undefined headers.
   ([#7595](https://github.com/mitmproxy/mitmproxy/pull/7595), @emanuele-em)
-- Enable the deletion of multiple flows in mitmweb by allowing users to select them with Ctrl+Click.
-  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000)
 - Fix a bug where mitmproxy does not listen on IPv4 and IPv6 by default in wireguard mode.
   ([#7589](https://github.com/mitmproxy/mitmproxy/pull/7589), @errorxyz)
 - Adjust popover placement for browsers that support anchor positioning (Chrome, Edge)
   ([#7642](https://github.com/mitmproxy/mitmproxy/pull/7642), @lups2000)
 - Fix mitmweb crash when searching or highlighting using ~h, ~hq, or ~hs.
   ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
+- Added support for selecting multiple flows in mitmweb using Ctrl+Click and Shift+Click. Multi-selection is now supported for deleting, duplicating, reverting, resuming, and aborting flows.
+  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000, @mhils)
 
 [tree-sitter]: https://tree-sitter.github.io/tree-sitter/
 
