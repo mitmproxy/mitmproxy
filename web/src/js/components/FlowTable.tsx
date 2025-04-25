@@ -65,9 +65,6 @@ export class PureFlowTable extends React.Component<
         }
         this.onViewportUpdate();
 
-        console.log(this.props.flowSelection);
-        console.log(prevProps.flowSelection)
-
         const currentSelection = this.props.flowSelection;
         const prevSelection = prevProps.flowSelection;
 
