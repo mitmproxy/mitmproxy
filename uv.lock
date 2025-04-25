@@ -783,7 +783,7 @@ requires-dist = [
     { name = "certifi", specifier = ">=2019.9.11" },
     { name = "cryptography", specifier = ">=42.0,<44.1" },
     { name = "flask", specifier = ">=3.0,<=3.1.0" },
-    { name = "h11", specifier = ">=0.16.0,<1" },
+    { name = "h11", specifier = "<=0.16.0,>=0.16.0" },
     { name = "h2", specifier = "<=4.1.0,>=4.1" },
     { name = "hyperframe", specifier = ">=6.0,<=6.1.0" },
     { name = "kaitaistruct", specifier = "<=0.10,>=0.10" },
