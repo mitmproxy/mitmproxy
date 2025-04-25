@@ -13,20 +13,6 @@ import warnings
 from dataclasses import dataclass
 
 from ..addonmanager import cut_traceback
-from ..tcp import TCPMessage
-from ..udp import UDPMessage
-from ..websocket import WebSocketMessage
-from . import dns
-from . import graphql
-from . import image
-from . import javascript
-from . import mqtt
-from . import multipart
-from . import query
-from . import socketio
-from . import urlencoded
-from . import wbxml
-from . import xml_html
 from ._api import Contentview
 from ._api import InteractiveContentview
 from ._api import Metadata
@@ -35,16 +21,27 @@ from ._compat import get  # noqa: F401
 from ._compat import LegacyContentview
 from ._compat import remove  # noqa: F401
 from ._registry import ContentviewRegistry
+from ._utils import ContentviewMessage
 from ._utils import get_data
 from ._utils import make_metadata
 from ._view_css import css
+from ._view_dns import dns
+from ._view_graphql import graphql
 from ._view_http3 import http3
+from ._view_image import image
+from ._view_javascript import javascript
 from ._view_json import json_view
+from ._view_mqtt import mqtt
+from ._view_multipart import multipart
+from ._view_query import query
 from ._view_raw import raw
+from ._view_socketio import socket_io
+from ._view_urlencoded import urlencoded
+from ._view_wbxml import wbxml
+from ._view_xml_html import xml_html
 from .base import View
 import mitmproxy_rs.contentviews
 from mitmproxy import flow
-from mitmproxy import http
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
@@ -62,7 +59,7 @@ registry = ContentviewRegistry()
 
 
 def prettify_message(
-    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    message: ContentviewMessage,
     flow: flow.Flow,
     view_name: str = "auto",
     registry: ContentviewRegistry = registry,
@@ -121,7 +118,7 @@ def prettify_message(
 
 def reencode_message(
     prettified: str,
-    message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
+    message: ContentviewMessage,
     flow: flow.Flow,
     view_name: str,
 ) -> bytes:
@@ -132,28 +129,22 @@ def reencode_message(
     return view.reencode(prettified, metadata)
 
 
-# Legacy contentviews need to be registered explicitly.
-_legacy_views = [
-    graphql.ViewGraphQL,
-    xml_html.ViewXmlHtml,
-    wbxml.ViewWBXML,
-    javascript.ViewJavaScript,
-    urlencoded.ViewURLEncoded,
-    multipart.ViewMultipart,
-    image.ViewImage,
-    query.ViewQuery,
-    mqtt.ViewMQTT,
-    dns.ViewDns,
-    socketio.ViewSocketIO,
-]
-for ViewCls in _legacy_views:
-    registry.register(LegacyContentview(ViewCls()))  # type: ignore[abstract]
-
 _views: list[Contentview] = [
-    json_view,
-    raw,
     css,
+    dns,
+    graphql,
     http3,
+    image,
+    javascript,
+    json_view,
+    mqtt,
+    multipart,
+    query,
+    raw,
+    socket_io,
+    urlencoded,
+    wbxml,
+    xml_html,
 ]
 for view in _views:
     registry.register(view)

@@ -1,7 +1,8 @@
 import io
 import re
 
-from mitmproxy.contentviews import base
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils import strutils
 
 DELIMITERS = "{};\n"
@@ -40,20 +41,27 @@ def beautify(data):
     return data
 
 
-class ViewJavaScript(base.View):
-    name = "JavaScript"
+class JavaScriptContentview(Contentview):
     __content_types = (
         "application/x-javascript",
         "application/javascript",
         "text/javascript",
     )
 
-    def __call__(self, data, **metadata):
-        data = data.decode("utf-8", "replace")
-        res = beautify(data)
-        return "JavaScript", base.format_text(res)
+    def prettify(
+        self,
+        data: bytes,
+        metadata: Metadata,
+    ) -> str:
+        data_str = data.decode("utf-8", "replace")
+        return beautify(data_str)
 
     def render_priority(
-        self, data: bytes, *, content_type: str | None = None, **metadata
+        self,
+        data: bytes,
+        metadata: Metadata,
     ) -> float:
-        return float(bool(data) and content_type in self.__content_types)
+        return float(bool(data) and metadata.content_type in self.__content_types)
+
+
+javascript = JavaScriptContentview()

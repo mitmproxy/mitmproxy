@@ -2,11 +2,7 @@ from mitmproxy import dns
 from mitmproxy import http
 
 
-def tdnsreq(**kwargs) -> dns.Message:
-    """
-    Returns:
-        mitmproxy.dns.Message
-    """
+def tdnsreq(**kwargs) -> dns.DNSMessage:
     default = dict(
         timestamp=946681200,
         id=42,
@@ -24,14 +20,10 @@ def tdnsreq(**kwargs) -> dns.Message:
         additionals=[],
     )
     default.update(kwargs)
-    return dns.Message(**default)  # type: ignore
+    return dns.DNSMessage(**default)  # type: ignore
 
 
-def tdnsresp(**kwargs) -> dns.Message:
-    """
-    Returns:
-        mitmproxy.dns.Message
-    """
+def tdnsresp(**kwargs) -> dns.DNSMessage:
     default = dict(
         timestamp=946681201,
         id=42,
@@ -56,7 +48,7 @@ def tdnsresp(**kwargs) -> dns.Message:
         additionals=[],
     )
     default.update(kwargs)
-    return dns.Message(**default)  # type: ignore
+    return dns.DNSMessage(**default)  # type: ignore
 
 
 def treq(**kwargs) -> http.Request:

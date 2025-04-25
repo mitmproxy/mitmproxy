@@ -7,10 +7,10 @@ from mitmproxy.contrib.kaitaistruct import ico
 from mitmproxy.contrib.kaitaistruct import jpeg
 from mitmproxy.contrib.kaitaistruct import png
 
-Metadata = list[tuple[str, str]]
+type ImageMetadata = list[tuple[str, str]]
 
 
-def parse_png(data: bytes) -> Metadata:
+def parse_png(data: bytes) -> ImageMetadata:
     img = png.Png(KaitaiStream(io.BytesIO(data)))
     parts = [
         ("Format", "Portable network graphics"),
@@ -34,7 +34,7 @@ def parse_png(data: bytes) -> Metadata:
     return parts
 
 
-def parse_gif(data: bytes) -> Metadata:
+def parse_gif(data: bytes) -> ImageMetadata:
     img = gif.Gif(KaitaiStream(io.BytesIO(data)))
     descriptor = img.logical_screen_descriptor
     parts = [
@@ -60,7 +60,7 @@ def parse_gif(data: bytes) -> Metadata:
     return parts
 
 
-def parse_jpeg(data: bytes) -> Metadata:
+def parse_jpeg(data: bytes) -> ImageMetadata:
     img = jpeg.Jpeg(KaitaiStream(io.BytesIO(data)))
     parts = [("Format", "JPEG (ISO 10918)")]
     for segment in img.segments:
@@ -83,7 +83,7 @@ def parse_jpeg(data: bytes) -> Metadata:
             )
             parts.append(("jfif_unit", str(segment.data.density_units._value_)))
         if segment.marker._name_ == "com":
-            parts.append(("comment", str(segment.data)))
+            parts.append(("comment", segment.data.decode("utf8", "backslashreplace")))
         if segment.marker._name_ == "app1":
             if hasattr(segment.data, "body"):
                 for field in segment.data.body.data.body.ifd0.fields:
@@ -94,7 +94,7 @@ def parse_jpeg(data: bytes) -> Metadata:
     return parts
 
 
-def parse_ico(data: bytes) -> Metadata:
+def parse_ico(data: bytes) -> ImageMetadata:
     img = ico.Ico(KaitaiStream(io.BytesIO(data)))
     parts = [
         ("Format", "ICO"),

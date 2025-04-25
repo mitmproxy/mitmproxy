@@ -15,6 +15,8 @@ The Contentviews API has drastically simplified, see the new [contentview docume
 
 [contentview documentation]: {{< relref "/addons/contentviews" >}}
 
+`mitmproxy.dns.Message` has been renamed to `mitmproxy.dns.DNSMessage`.
+
 ## mitmproxy 9.1
 
 `mitmproxy.connection.Client` and `mitmproxy.connection.Server` now accept keyword arguments only.

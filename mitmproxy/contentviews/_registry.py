@@ -53,10 +53,10 @@ class ContentviewRegistry(Mapping[str, Contentview]):
             try:
                 priority = view.render_priority(data, metadata)
                 assert isinstance(priority, (int, float)), (
-                    f"Render_priority for {view.name} did not return a number."
+                    f"render_priority for {view.name} did not return a number."
                 )
             except Exception:
-                logger.exception("Error in render_priority")
+                logger.exception(f"Error in {view.name}.render_priority")
             else:
                 if max_prio is None or max_prio[0] < priority:
                     max_prio = (priority, view)
