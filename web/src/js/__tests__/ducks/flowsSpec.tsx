@@ -126,6 +126,105 @@ describe("flow reducer", () => {
             );
             expect(next.selected).toEqual([f2]);
         });
+
+        it("should keep only selected flows that exist in byId during RECEIVE", () => {
+            const store = TStore();
+            const originalState = store.getState().flows;
+
+            // Simulate selected flows: one valid, one missing from byId
+            const stillExists = originalState.list[1];
+            const removedFlow = { ...stillExists, id: "missing-id" };
+
+            const modifiedState = {
+                ...originalState,
+                selected: [stillExists, removedFlow],
+                selectedIndex: {
+                    [stillExists.id]: 0,
+                    [removedFlow.id]: 1,
+                },
+                byId: {
+                    [stillExists.id]: stillExists,
+                },
+            };
+
+            const next = reduceFlows(modifiedState, {
+                type: flowActions.RECEIVE,
+                data: [stillExists],
+                cmd: "receive",
+            });
+
+            expect(next.selected).toEqual([stillExists]);
+            expect(next.selectedIndex).toEqual({ [stillExists.id]: 0 });
+        });
+
+        it("should not update the flow in state.selected if the id doesn't exist in selectedIndex", () => {
+            const store = TStore();
+            const originalSelected = store.getState().flows.selected;
+
+            const unrelatedFlow = {
+                ...originalSelected[0],
+                id: "nonexistent-id",
+            };
+
+            const next = reduceFlows(store.getState().flows, {
+                type: flowActions.UPDATE,
+                data: unrelatedFlow,
+                cmd: "update",
+            });
+            expect(next.selected).toEqual(originalSelected);
+        });
+
+        it("should update the flow in state.selected if the id exists in selectedIndex", () => {
+            const store = TStore();
+            const [tflow1] = store.getState().flows.selected;
+
+            const updatedFlow = {
+                ...tflow1,
+                comment: "I'm a modified comment!",
+            };
+
+            const next = reduceFlows(store.getState().flows, {
+                type: flowActions.UPDATE,
+                data: updatedFlow,
+                cmd: "update",
+            });
+            const updatedSelected = next.selected;
+            expect(updatedSelected[0]).toBe(updatedFlow);
+        });
+
+        it("should not update state.selected on remove if action.data is undefined", () => {
+            const next = reduceFlows(state, {
+                type: flowActions.REMOVE,
+                data: undefined,
+                cmd: "remove",
+            });
+            expect(next).toEqual(state);
+        });
+
+        it("should clear selected when the flow id doesn't exist in viewIndex during REMOVE", () => {
+            const store = TStore();
+            const originalState = store.getState().flows;
+
+            const selectedFlow = originalState.list[0];
+
+            const modifiedState = {
+                ...originalState,
+                selected: [selectedFlow],
+                selectedIndex: {
+                    [selectedFlow.id]: 0,
+                },
+                viewIndex: {},
+            };
+
+            const next = reduceFlows(modifiedState, {
+                type: flowActions.REMOVE,
+                cmd: "remove",
+                data: selectedFlow.id,
+            });
+
+            expect(next.selected).toEqual([]);
+            expect(next.selectedIndex).toEqual({});
+        });
     });
 
     it("should be possible to set filter", () => {
