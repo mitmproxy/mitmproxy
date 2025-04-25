@@ -70,8 +70,7 @@ export class PureFlowTable extends React.Component<
 
         const selectedPotentiallyOffscreenFlow =
             currentSelection.length === 1 &&
-            prevSelection.length === 1 &&
-            currentSelection[0]?.id !== prevSelection[0]?.id;
+            currentSelection[0].id !== prevSelection[0]?.id;
 
         if (selectedPotentiallyOffscreenFlow) {
             const { rowHeight, flowViewIndex, flowSelection } = this.props;
