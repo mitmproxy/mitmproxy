@@ -64,7 +64,10 @@ function updateSelected(
             if (selectedIndex[action.data] === undefined) {
                 break;
             }
-            if (selected.length > 1 || !(action.data in state.viewIndex)) {
+            if (selected.length > 1) {
+                // clear selection when multiple flows are selected and removed
+                selected = [];
+            } else if (!(action.data in state.viewIndex)) {
                 selected = [];
             } else {
                 const currentIndex = state.viewIndex[action.data];
