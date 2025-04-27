@@ -19,6 +19,7 @@ describe("regularSlice", () => {
 
         expect(store.getState().modes.regular[0]).toEqual({
             active: true,
+            ui_id: store.getState().modes.regular[0].ui_id,
         });
 
         const server = store.getState().modes.regular[0];
@@ -30,6 +31,7 @@ describe("regularSlice", () => {
             active: false,
             listen_host: "127.0.0.1",
             listen_port: 4444,
+            ui_id: store.getState().modes.regular[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(3);

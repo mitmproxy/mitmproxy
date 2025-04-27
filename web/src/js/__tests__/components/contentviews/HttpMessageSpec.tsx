@@ -87,6 +87,8 @@ describe("HttpMessage Copy Button", () => {
     });
 
     test("handles successful copy action", async () => {
+        jest.spyOn(console, "warn").mockImplementation(() => {});
+
         const text = "data\nadditional\n";
         fetchMock.mockResponse(JSON.stringify({ text, description: "Auto" }));
 

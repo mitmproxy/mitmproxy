@@ -58,6 +58,8 @@
   ([#7652](https://github.com/mitmproxy/mitmproxy/pull/7652), @lups2000)
 - `mitmproxy.dns.Message` has been renamed to `mitmproxy.dns.DNSMessage`
   ([#7670](https://github.com/mitmproxy/mitmproxy/pull/7670), @mhils)
+- Added support for selecting multiple flows in mitmweb using Ctrl+Click and Shift+Click. Multi-selection is now supported for deleting, duplicating, marking, reverting, resuming, and aborting flows.
+  ([#7319](https://github.com/mitmproxy/mitmproxy/pull/7319), @lups2000, @mhils)
 
 [tree-sitter]: https://tree-sitter.github.io/tree-sitter/
 

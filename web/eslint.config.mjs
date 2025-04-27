@@ -36,7 +36,7 @@ export default [
         },
     },
     {
-        files: ["jest.config.js", "gulpfile.js"],
+        files: ["jest.config.js", "gulpfile.js", "setup-jest.js"],
         languageOptions: { globals: globals.node },
     },
     {

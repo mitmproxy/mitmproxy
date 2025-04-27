@@ -9,6 +9,7 @@ import { select, setFilter, setHighlight } from "./ducks/flows";
 import { selectTab } from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
 import * as commandBarActions from "./ducks/commandBar";
+import { RootStore } from "./ducks/store";
 
 const Query = {
     SEARCH: "s",
@@ -17,15 +18,24 @@ const Query = {
     SHOW_COMMANDBAR: "c",
 };
 
-export function updateStoreFromUrl(store) {
+export function updateStoreFromUrl(store: RootStore) {
     const [path, query] = window.location.hash.substr(1).split("?", 2);
     const path_components = path.substr(1).split("/");
 
     if (path_components[0] === "flows") {
         if (path_components.length == 3) {
             const [flowId, tab] = path_components.slice(1);
-            store.dispatch(select(flowId));
             store.dispatch(selectTab(tab));
+
+            const selectFlowOnceAvailable = () => {
+                const flow = store.getState().flows.byId[flowId];
+                if (flow !== undefined) {
+                    unsubscribe();
+                    store.dispatch(select([flow]));
+                }
+            };
+            const unsubscribe = store.subscribe(selectFlowOnceAvailable);
+            selectFlowOnceAvailable();
         }
     }
 
@@ -55,7 +65,7 @@ export function updateStoreFromUrl(store) {
     }
 }
 
-export function updateUrlFromStore(store) {
+export function updateUrlFromStore(store: RootStore) {
     const state = store.getState();
     const query = {
         [Query.SEARCH]: state.flows.filter,
@@ -65,12 +75,12 @@ export function updateUrlFromStore(store) {
     };
     const queryStr = Object.keys(query)
         .filter((k) => query[k])
-        .map((k) => `${k}=${encodeURIComponent(query[k])}`)
+        .map((k) => `${k}=${encodeURIComponent(query[k]!)}`)
         .join("&");
 
     let url;
     if (state.flows.selected.length > 0) {
-        url = `/flows/${state.flows.selected[0]}/${state.ui.flow.tab}`;
+        url = `/flows/${state.flows.selected[0].id}/${state.ui.flow.tab}`;
     } else {
         url = "/flows";
     }

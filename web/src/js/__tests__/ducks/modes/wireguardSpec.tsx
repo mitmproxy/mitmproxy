@@ -20,6 +20,7 @@ describe("wireguardSlice", () => {
 
         expect(store.getState().modes.wireguard[0]).toEqual({
             active: false,
+            ui_id: store.getState().modes.wireguard[0].ui_id,
         });
 
         const server = store.getState().modes.wireguard[0];
@@ -33,6 +34,7 @@ describe("wireguardSlice", () => {
             listen_host: "127.0.0.1",
             listen_port: 4444,
             file_path: "/path/example",
+            ui_id: store.getState().modes.wireguard[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(4);

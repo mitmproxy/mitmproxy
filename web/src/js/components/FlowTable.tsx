@@ -9,10 +9,12 @@ import { Flow } from "../flow";
 import { RootState } from "../ducks";
 
 type FlowTableProps = {
-    flows: Flow[];
+    flowView: Flow[];
+    flowViewIndex: { [id: string]: number };
     rowHeight: number;
     highlight: string;
-    selected: Flow;
+    flowSelection: Flow[];
+    flowSelectionIndex: { [id: string]: number };
 };
 
 type FlowTableState = {
@@ -53,22 +55,32 @@ export class PureFlowTable extends React.Component<
         return autoscroll.isAtBottom(this.viewport);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(
+        prevProps: FlowTableProps,
+        prevState: FlowTableState,
+        snapshot,
+    ) {
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
         this.onViewportUpdate();
 
-        const selectedNewFlow =
-            this.props.selected && this.props.selected !== prevProps.selected;
-        if (selectedNewFlow) {
-            const { rowHeight, flows, selected } = this.props;
+        const currentSelection = this.props.flowSelection;
+        const prevSelection = prevProps.flowSelection;
+
+        const selectedPotentiallyOffscreenFlow =
+            currentSelection.length === 1 &&
+            currentSelection[0].id !== prevSelection[0]?.id;
+
+        if (selectedPotentiallyOffscreenFlow) {
+            const { rowHeight, flowViewIndex, flowSelection } = this.props;
             const viewport = this.viewport.current!;
             const head = this.head.current;
 
             const headHeight = head ? head.offsetHeight : 0;
 
-            const rowTop = flows.indexOf(selected) * rowHeight + headHeight;
+            const rowTop =
+                flowViewIndex[flowSelection[0].id] * rowHeight + headHeight;
             const rowBottom = rowTop + rowHeight;
 
             const viewportTop = viewport.scrollTop;
@@ -91,7 +103,7 @@ export class PureFlowTable extends React.Component<
         const vScroll = calcVScroll({
             viewportTop,
             viewportHeight: viewport.offsetHeight || 0,
-            itemCount: this.props.flows.length,
+            itemCount: this.props.flowView.length,
             rowHeight: this.props.rowHeight,
         });
 
@@ -115,7 +127,7 @@ export class PureFlowTable extends React.Component<
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flows, selected, highlight } = this.props;
+        const { flowView, flowSelectionIndex, highlight } = this.props;
         const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
 
         return (
@@ -133,14 +145,16 @@ export class PureFlowTable extends React.Component<
                     </thead>
                     <tbody>
                         <tr style={{ height: vScroll.paddingTop }} />
-                        {flows.slice(vScroll.start, vScroll.end).map((flow) => (
-                            <FlowRow
-                                key={flow.id}
-                                flow={flow}
-                                selected={flow === selected}
-                                highlighted={isHighlighted(flow)}
-                            />
-                        ))}
+                        {flowView
+                            .slice(vScroll.start, vScroll.end)
+                            .map((flow) => (
+                                <FlowRow
+                                    key={flow.id}
+                                    flow={flow}
+                                    selected={flow.id in flowSelectionIndex}
+                                    highlighted={isHighlighted(flow)}
+                                />
+                            ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
                     </tbody>
                 </table>
@@ -150,7 +164,9 @@ export class PureFlowTable extends React.Component<
 }
 
 export default connect((state: RootState) => ({
-    flows: state.flows.view,
+    flowView: state.flows.view,
+    flowViewIndex: state.flows.viewIndex,
     highlight: state.flows.highlight,
-    selected: state.flows.byId[state.flows.selected[0]],
+    flowSelection: state.flows.selected,
+    flowSelectionIndex: state.flows.selectedIndex,
 }))(PureFlowTable);
