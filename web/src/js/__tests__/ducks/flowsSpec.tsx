@@ -316,7 +316,7 @@ describe("flows actions", () => {
     });
 
     it("should handle replay action", () => {
-        store.dispatch(flowActions.replay(tflow));
+        store.dispatch(flowActions.replay([tflow]));
         expect(fetchApi).toBeCalledWith(
             "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/replay",
             { method: "POST" },

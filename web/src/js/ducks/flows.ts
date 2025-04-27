@@ -255,8 +255,13 @@ export function duplicate(flows: Flow[]) {
         );
 }
 
-export function replay(flow: Flow) {
-    return () => fetchApi(`/flows/${flow.id}/replay`, { method: "POST" });
+export function replay(flows: Flow[]) {
+    return () =>
+        Promise.all(
+            flows.map((flow) =>
+                fetchApi(`/flows/${flow.id}/replay`, { method: "POST" }),
+            ),
+        );
 }
 
 export function revert(flows: Flow[]) {
