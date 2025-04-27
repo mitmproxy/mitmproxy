@@ -107,9 +107,7 @@ export function onKeyDown(e: KeyboardEvent) {
             }
 
             case "r": {
-                if (selectedFlows.length === 1) {
-                    dispatch(flowsActions.replay(selectedFlows));
-                }
+                dispatch(flowsActions.replay(selectedFlows));
                 break;
             }
 
