@@ -3,7 +3,12 @@ import { fetchApi } from "../utils";
 import * as store from "./utils/store";
 import Filt from "../filt/filt";
 import { Flow } from "../flow";
-import { canResumeOrKill, canRevert, sortFunctions } from "../flow/utils";
+import {
+    canReplay,
+    canResumeOrKill,
+    canRevert,
+    sortFunctions,
+} from "../flow/utils";
 import { AppDispatch, RootState } from "./store";
 import { State } from "./utils/store";
 
@@ -256,6 +261,7 @@ export function duplicate(flows: Flow[]) {
 }
 
 export function replay(flows: Flow[]) {
+    flows = flows.filter(canReplay);
     return () =>
         Promise.all(
             flows.map((flow) =>
