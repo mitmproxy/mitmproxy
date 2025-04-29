@@ -29,7 +29,7 @@ class ContentviewRegistry(Mapping[str, Contentview]):
         self.on_change.send(instance)
 
     def available_views(self) -> list[str]:
-        return ["auto", *self._by_name.keys()]
+        return ["auto", *sorted(self._by_name.keys())]
 
     def get_view(
         self, data: bytes, metadata: Metadata, view_name: str = "auto"
