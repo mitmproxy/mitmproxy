@@ -255,6 +255,8 @@ describe("flows actions", () => {
     const tflow = TFlow();
     tflow.intercepted = true;
     tflow.modified = true;
+    // @ts-expect-error TFlow is Required<> for other tests.
+    tflow.websocket = undefined;
     const ttcpflow = TTCPFlow();
 
     beforeEach(() => {
