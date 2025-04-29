@@ -149,6 +149,8 @@ _views: list[Contentview] = [
 for view in _views:
     registry.register(view)
 for name in mitmproxy_rs.contentviews.__all__:
+    if name.startswith("_"):
+        continue
     cv = getattr(mitmproxy_rs.contentviews, name)
     if isinstance(cv, Contentview) and not isinstance(cv, type):
         registry.register(cv)

@@ -1,7 +1,13 @@
+from pathlib import Path
+
+from ruamel.yaml import YAML
+
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import InteractiveContentview
 from mitmproxy.contentviews._api import Metadata
 from mitmproxy.contentviews._view_raw import raw
+from mitmproxy.test import tflow
+from mitmproxy_rs.contentviews import _test_inspect_metadata
 from mitmproxy_rs.contentviews import msgpack
 
 
@@ -44,6 +50,32 @@ def test_default_impls():
     assert t.render_priority(b"data", Metadata()) == 0
     assert t < raw
     assert not raw < t
-    assert msgpack < raw
-    assert not raw < msgpack
-    assert not msgpack < msgpack
+
+
+class TestRustInterop:
+    def test_compare(self):
+        assert msgpack < raw
+        assert not raw < msgpack
+        assert not msgpack < msgpack
+
+    def test_metadata(self):
+        """Ensure that metadata roundtrips properly."""
+        f = tflow.tflow()
+        f.request.headers["HoSt"] = "example.com"
+        meta = Metadata(
+            content_type="text/html",
+            flow=f,
+            http_message=f.request,
+            protobuf_definitions=Path("/tmp/foo"),
+        )
+
+        out = _test_inspect_metadata.prettify(b"", meta)
+        actual = YAML(typ="safe", pure=True).load(out)
+
+        assert actual == {
+            "content_type": "text/html",
+            "headers": {"host": "example.com"},
+            "is_http_request": True,
+            "path": "/path",
+            "protobuf_definitions": "/tmp/foo",
+        }
