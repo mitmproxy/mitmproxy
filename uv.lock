@@ -788,7 +788,7 @@ requires-dist = [
     { name = "hyperframe", specifier = ">=6.0,<=6.1.0" },
     { name = "kaitaistruct", specifier = "<=0.10,>=0.10" },
     { name = "ldap3", specifier = ">=2.8,<=2.9.1" },
-    { name = "mitmproxy-rs", specifier = ">=0.12,<0.13" },
+    { name = "mitmproxy-rs", specifier = ">=0.12.1,<0.13" },
     { name = "msgpack", specifier = ">=1.0.0,<=1.1.0" },
     { name = "passlib", specifier = ">=1.6.5,<=1.7.4" },
     { name = "publicsuffix2", specifier = ">=2.20190812,<=2.20191221" },
@@ -844,45 +844,45 @@ tox = [
 
 [[package]]
 name = "mitmproxy-linux"
-version = "0.12.0"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/32/79/53f4e3f2b2e67b524bb15b4bb50bb49ea4450ffee59cfa0397076d49424b/mitmproxy_linux-0.12.0.tar.gz", hash = "sha256:9e3717d91393635de56efb2d37809be17b94ba458764b592ec802dae2b5d5f12", size = 1287742 }
+sdist = { url = "https://files.pythonhosted.org/packages/33/08/dc3428d86aa5f7f6018ca128eb33e4bd3656496e834c2e1f30c2359cde6b/mitmproxy_linux-0.12.1.tar.gz", hash = "sha256:eabdbe65b67cd9d64d45c75941c29143bef76471f29423de54a2e62e8ad55ffa", size = 1287632 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/c8/f2c1bf8d455343c2d69a161773496cb5305a1e3b9408b8f138188eb4633a/mitmproxy_linux-0.12.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5f8bae4defa815087572851367d6d8dcef09a3bc33629952987804753eb4321c", size = 948826 },
-    { url = "https://files.pythonhosted.org/packages/22/d1/d037a217a011c429dd1f75f364e81c115a7ec6a8316acd1c918b90aeb079/mitmproxy_linux-0.12.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c8afd5a356b884f0c5e761d0cf5aec66701d950889751adf9a0ad63dd715b014", size = 1030368 },
+    { url = "https://files.pythonhosted.org/packages/85/14/a52ef2b4a4af36c0ed5ae78af8d0ade625a1ddcbb85bfe3d920244104f4f/mitmproxy_linux-0.12.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:09aad57b894a6029435ac41d4d0c8190489b88292480cd75da03c9aaecf2495d", size = 951095 },
+    { url = "https://files.pythonhosted.org/packages/96/2f/4ce8718a72cce8779299a133526a500fa424048d98317101bc51dc3e016e/mitmproxy_linux-0.12.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cda9bb62e4370ea2cff19395add5146d1c8c3d3cab9b9840ac4ef41702683bff", size = 1032532 },
 ]
 
 [[package]]
 name = "mitmproxy-macos"
-version = "0.12.0"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/9c/1faefc13700490338790573dc8f95c3fe7667b90c18fa27c432c0d30635e/mitmproxy_macos-0.12.0-py3-none-any.whl", hash = "sha256:ab1943ca99fde86211901ff955cf090ec87c61665c0f5d351ff33c6e8cd789ff", size = 2658238 },
+    { url = "https://files.pythonhosted.org/packages/cc/7e/abd76d523dd1b45e400a857803333185c8bb37b4f7793535909070db2c5d/mitmproxy_macos-0.12.1-py3-none-any.whl", hash = "sha256:682098c13d9ad75b3ea1a932dc108a6357eba9b0d32b33d866ad0cc4dd3e960c", size = 2658279 },
 ]
 
 [[package]]
 name = "mitmproxy-rs"
-version = "0.12.0"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mitmproxy-linux", marker = "sys_platform == 'linux'" },
     { name = "mitmproxy-macos", marker = "sys_platform == 'darwin'" },
     { name = "mitmproxy-windows", marker = "os_name == 'nt'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/7b/4c3405bcbc539b88252ed1d0b07062b798188b93e499fd226c322083aa33/mitmproxy_rs-0.12.0.tar.gz", hash = "sha256:b4dfa7227d1dc063b0678a63ae93a5a6ea27d7d8bdab24d41ddfdad6e03ba400", size = 1317235 }
+sdist = { url = "https://files.pythonhosted.org/packages/b7/ce/82c8760dbb3f68a8a054cbc418fda0592c84cb678813335f4bcdbe7245f5/mitmproxy_rs-0.12.1.tar.gz", hash = "sha256:cee1ccffc8e82099227d2a2bed3934250cb53d755560a979d7ecc6d02b44de12", size = 1318264 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e7/93/8e87f07de4ec93e3c69b3ceb061509f623949f043fe3ae323f3f7427a030/mitmproxy_rs-0.12.0-cp312-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:a06ad2b35694087e34bb8698586535a69ca925bef6badd112ab0023fa48df686", size = 6952069 },
-    { url = "https://files.pythonhosted.org/packages/2d/57/6945162426b2434d6d9b3a4bfe5e7a6e92d5f8fe446ab95ca674b5d8ee2c/mitmproxy_rs-0.12.0-cp312-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:53a77879fb0a500ab23b6d5fb04444cab62f34ed370dcb81d05d316bf1d6cf29", size = 2917180 },
-    { url = "https://files.pythonhosted.org/packages/2e/4e/4e6ec5ef41a41c6bb7d468e160c3ed9c80fea1cf8a09c84966dd7c2a8d1a/mitmproxy_rs-0.12.0-cp312-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4f1c30992e3ff498b00866bee62e496f7c41fdc0310f22cfbaf151a0b07537c5", size = 3114029 },
-    { url = "https://files.pythonhosted.org/packages/9e/28/0d0abbf61a9505caf383a1d0a0a469b25d4ae703890204c84edf38ef803b/mitmproxy_rs-0.12.0-cp312-abi3-win_amd64.whl", hash = "sha256:86e2a4d35b386a286eb58af1a5def491530e60dbd21883e6bcb7be7877b61c5f", size = 3188715 },
+    { url = "https://files.pythonhosted.org/packages/17/a1/fcff3442b6af951e4e63b98aafeebe70db79856ca9b33395e96116ebebaf/mitmproxy_rs-0.12.1-cp312-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:1cb2f42738308e6bb3dbaa61bcf687a48496ff9fe8e40bd340c4944fd4850f3e", size = 6974724 },
+    { url = "https://files.pythonhosted.org/packages/c2/37/5e336f522e6b3f3f056935ccacbc8079b14a4e60900def89934440e07ba0/mitmproxy_rs-0.12.1-cp312-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3723b551c8daccfe542255b33d31c4379a1eca9a1312b1fd0c33d181a5567b54", size = 2927266 },
+    { url = "https://files.pythonhosted.org/packages/13/75/1e99824ba471e1f56372fc47cd0448c4bc59b2a9ce406ff54d23dfa73218/mitmproxy_rs-0.12.1-cp312-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c20c01c0e917c0bcb90ef0cc472df62679703446c44769f54248fd65a84ecdba", size = 3125842 },
+    { url = "https://files.pythonhosted.org/packages/3a/07/02ef6e9661d66bee1d1eacd05199768e7f7a3455663be8811eef9b53a1a6/mitmproxy_rs-0.12.1-cp312-abi3-win_amd64.whl", hash = "sha256:2531870f324576be17eb808a98c4c1039babeb03fc814d711e1f9511858be1d5", size = 3199532 },
 ]
 
 [[package]]
 name = "mitmproxy-windows"
-version = "0.12.0"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/7a/64f10de693968646fe1fb4069d74f7bd8f53459bdabbc896b8cb04277a83/mitmproxy_windows-0.12.0-py3-none-any.whl", hash = "sha256:56bd7e45cecbd9c1397ba2a18a9e49f232971b89bfdfd554fb5e131f7f852599", size = 475927 },
+    { url = "https://files.pythonhosted.org/packages/ab/77/8d50f2a7eb5729d87a5c5d7b6a14160a1322ac07548e453223e4d2bd676e/mitmproxy_windows-0.12.1-py3-none-any.whl", hash = "sha256:a9b73f453c392d11d2c4a317dbe44b445412848bc0d4930c53bfbcd894703d66", size = 478791 },
 ]
 
 [[package]]
