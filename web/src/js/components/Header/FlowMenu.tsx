@@ -12,7 +12,7 @@ import {
     duplicate as duplicateFlows,
     kill as killFlows,
     remove as removeFlows,
-    replay as replayFlow,
+    replay as replayFlows,
     resume as resumeFlows,
     revert as revertFlows,
     mark as markFlows,
@@ -29,9 +29,6 @@ export default function FlowMenu(): JSX.Element {
     const selectedFlows = useAppSelector((state) => state.flows.selected);
     const flow = selectedFlows[0];
 
-    const hasSingleFlowSelected = useAppSelector(
-        (state) => state.flows.selected.length === 1,
-    );
     const canResumeOrKillAny = selectedFlows.some(canResumeOrKill);
 
     if (selectedFlows.length === 0) return <div />;
@@ -43,10 +40,8 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             title="[r]eplay flow"
                             icon="fa-repeat text-primary"
-                            onClick={() => dispatch(replayFlow(flow))}
-                            disabled={
-                                !canReplay(flow) || !hasSingleFlowSelected
-                            }
+                            onClick={() => dispatch(replayFlows(selectedFlows))}
+                            disabled={!selectedFlows.some(canReplay)}
                         >
                             Replay
                         </Button>

@@ -172,7 +172,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
             <a
                 href="#"
                 className="quickaction"
-                onClick={() => dispatch(flowActions.replay(flow))}
+                onClick={() => dispatch(flowActions.replay([flow]))}
             >
                 <i className="fa fa-fw fa-repeat text-primary" />
             </a>
