@@ -66,7 +66,7 @@ class TestRustInterop:
             content_type="text/html",
             flow=f,
             http_message=f.request,
-            protobuf_definitions=Path("/tmp/foo"),
+            protobuf_definitions=Path("example.proto"),
         )
 
         out = _test_inspect_metadata.prettify(b"", meta)
@@ -77,5 +77,5 @@ class TestRustInterop:
             "headers": {"host": "example.com"},
             "is_http_request": True,
             "path": "/path",
-            "protobuf_definitions": "/tmp/foo",
+            "protobuf_definitions": "example.proto",
         }
