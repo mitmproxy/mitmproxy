@@ -27,7 +27,7 @@ def make_metadata(
 ) -> Metadata:
     metadata = Metadata(
         flow=flow,
-        protobuf_definitions=Path(ctx.options.protobuf_definitions)
+        protobuf_definitions=Path(ctx.options.protobuf_definitions).expanduser()
         if ctx.options.protobuf_definitions
         else None,
     )
