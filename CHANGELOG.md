@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 29 April 2025: mitmproxy 12.0.0
+
 ### New Contentview System ([#7623](https://github.com/mitmproxy/mitmproxy/pull/7623), @mhils)
 
 - Contentviews can now be interactive and re-encode prettified data.
