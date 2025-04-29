@@ -1,3 +1,4 @@
+import logging
 import re
 
 import urwid
@@ -304,6 +305,10 @@ class Window(urwid.Frame):
 
 
 class Screen(urwid.raw_display.Screen):
+    def __init__(self) -> None:
+        super().__init__()
+        self.logger = logging.getLogger("urwid")
+
     def write(self, data):
         if common.IS_WINDOWS_OR_WSL:
             # replace urwid's SI/SO, which produce artifacts under WSL.
