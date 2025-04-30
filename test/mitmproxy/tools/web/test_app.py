@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 import tornado.testing
 from tornado import httpclient
+from tornado import httputil
 from tornado import websocket
 from tornado.web import create_signed_value
 
@@ -479,6 +480,27 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "/", headers={"Sec-Fetch-Mode": "navigate", "Cookie": ""}
             ).body
         )
+
+    def login_test_helper(self, url, headers):
+        resp = self.fetch(url, headers=headers)
+        assert resp.code == 200
+        assert len(resp.headers.get_list("set-cookie")) > 0
+
+        set_cookies = {}
+        for cookie in resp.headers.get_list("set-cookie"):
+            set_cookies.update(httputil.parse_cookie(cookie.split(";", 1)[0]))
+
+        for key, value in httputil.parse_cookie(self.auth_cookie).items():
+            assert key in set_cookies
+            assert set_cookies[key] == value
+
+    def test_login_with_token_header(self):
+        web_password = self.master.addons.get("webauth")._password
+        self.login_test_helper("/", headers={"Cookie": "", "X-token": web_password})
+
+    def test_login_with_token_param(self):
+        web_password = self.master.addons.get("webauth")._password
+        self.login_test_helper(f"/?token={web_password}", headers={"Cookie": ""})
 
     def test_unauthorized_api(self):
         assert self.fetch("/", headers={"Cookie": ""}).code == 403

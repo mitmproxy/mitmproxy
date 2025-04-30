@@ -5,6 +5,8 @@
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
 -->
 
+- Added an option to pass the web token as X-Token header
+
 ## Unreleased: mitmproxy next
 
 
