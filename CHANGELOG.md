@@ -9,6 +9,7 @@
 ## Unreleased: mitmproxy next
 
 - Added an option to pass the web token as X-Token header
+  ([#7681](https://github.com/mitmproxy/mitmproxy/pull/7681), @gschaer)
 
 ## 29 April 2025: mitmproxy 12.0.0
 
