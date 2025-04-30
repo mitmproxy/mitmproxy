@@ -236,9 +236,16 @@ class AuthRequestHandler(tornado.web.RequestHandler):
             self: AuthRequestHandler, *args: P.args, **kwargs: P.kwargs
         ) -> R | None:
             if not self.current_user:
-                password = self.get_argument("token", default="")
+                password = ""
+                auth_header = self.request.headers.get("Authorization", None)
+                if auth_header:
+                    auth_parts = auth_header.split(" ", 1)
+                    if len(auth_parts) == 2 and auth_parts[0] == "Bearer":
+                        password = auth_parts[1]
+
                 if not password:
-                    password = self.request.headers.get("X-Token") or ""
+                    password = self.get_argument("token", default="")
+
                 if not self.settings["is_valid_password"](password):
                     self.set_status(403)
                     self.auth_fail(bool(password))
