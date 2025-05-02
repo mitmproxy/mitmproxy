@@ -1,5 +1,5 @@
 # Release History
-
+* Switch position of dns resolver and script in addon init.py to be able to intercept DNS requests properly.
 <!--
 ✨ Please add a bullet point describing your change.                                                             ✨
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
