@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-from OpenSSL import crypto
 from OpenSSL import SSL
 
 from mitmproxy import certs

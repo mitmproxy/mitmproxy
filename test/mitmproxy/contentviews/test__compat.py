@@ -5,8 +5,8 @@ import pytest
 from mitmproxy.contentviews import _compat
 from mitmproxy.contentviews.base import View
 
-
 with pytest.deprecated_call():
+
     class MockView(View):
         def __init__(self, name: str = "mock"):
             self._name = name
@@ -19,7 +19,9 @@ with pytest.deprecated_call():
         def name(self) -> str:
             return self._name
 
-        def render_priority(self, data, content_type=None, flow=None, http_message=None):
+        def render_priority(
+            self, data, content_type=None, flow=None, http_message=None
+        ):
             return 1.0
 
 
