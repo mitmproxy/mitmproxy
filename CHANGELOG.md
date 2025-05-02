@@ -7,7 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
-* Switch position of dns resolver and script in addon init.py to be able to intercept DNS requests properly.
+* In DNS proxy mode, user-provided addons now trigger before DNS resolution has taken place.
   ([#7685](https://github.com/mitmproxy/mitmproxy/pull/7685), @Florigolo)
 
 ## 29 April 2025: mitmproxy 12.0.0
