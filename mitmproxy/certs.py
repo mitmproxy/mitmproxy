@@ -12,6 +12,7 @@ from typing import cast
 from typing import NewType
 from typing import Optional
 from typing import Union
+from warnings import deprecated
 
 import OpenSSL
 from cryptography import x509
@@ -93,8 +94,12 @@ class Cert(serializable.Serializable):
     def from_pyopenssl(self, x509: OpenSSL.crypto.X509) -> "Cert":
         return Cert(x509.to_cryptography())
 
-    def to_pyopenssl(self) -> OpenSSL.crypto.X509:
+    @deprecated("Use `to_cryptography` instead.")
+    def to_pyopenssl(self) -> OpenSSL.crypto.X509:  # pragma: no cover
         return OpenSSL.crypto.X509.from_cryptography(self._cert)
+
+    def to_cryptography(self) -> x509.Certificate:
+        return self._cert
 
     def public_key(self) -> CertificatePublicKeyTypes:
         return self._cert.public_key()
