@@ -20,8 +20,8 @@ import os
 import socket
 import sys
 import textwrap
-import typing
 import traceback
+import typing
 from abc import ABCMeta
 from abc import abstractmethod
 from contextlib import contextmanager

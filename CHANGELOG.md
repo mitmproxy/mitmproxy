@@ -10,6 +10,7 @@
 * In DNS proxy mode, user-provided addons now trigger before DNS resolution has taken place.
   ([#7685](https://github.com/mitmproxy/mitmproxy/pull/7685), @Florigolo)
 * Improve error message for WireGuard port conflict.
+  ([#7688](https://github.com/mitmproxy/mitmproxy/pull/7688), @turboOrange)
 
 ## 29 April 2025: mitmproxy 12.0.0
 
