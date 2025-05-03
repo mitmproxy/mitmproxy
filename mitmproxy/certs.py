@@ -27,6 +27,11 @@ from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
 
+if sys.version_info < (3, 13):  # pragma: no cover
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
+
 logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
@@ -93,8 +98,12 @@ class Cert(serializable.Serializable):
     def from_pyopenssl(self, x509: OpenSSL.crypto.X509) -> "Cert":
         return Cert(x509.to_cryptography())
 
-    def to_pyopenssl(self) -> OpenSSL.crypto.X509:
+    @deprecated("Use `to_cryptography` instead.")
+    def to_pyopenssl(self) -> OpenSSL.crypto.X509:  # pragma: no cover
         return OpenSSL.crypto.X509.from_cryptography(self._cert)
+
+    def to_cryptography(self) -> x509.Certificate:
+        return self._cert
 
     def public_key(self) -> CertificatePublicKeyTypes:
         return self._cert.public_key()
@@ -295,7 +304,7 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.Gener
                 ss.append(x509.IPAddress(ip))
         return x509.GeneralNames(ss)
     else:
-        return x509.GeneralNames(sans)
+        return x509.GeneralNames(cast(Iterable[x509.GeneralName], sans))
 
 
 def dummy_cert(
@@ -348,7 +357,7 @@ def dummy_cert(
 
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
     builder = builder.add_extension(
-        x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),
+        x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),  # type: ignore
         critical=False,
     )
     # If CA and leaf cert have the same Subject Key Identifier, SChannel breaks in funny ways,
