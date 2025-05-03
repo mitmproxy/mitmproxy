@@ -16,6 +16,8 @@ interface WebSocketMessage {
     cmd: string;
     resource: string;
     data?: any;
+    expr?: string;
+    matches?: Record<string, boolean>;
 }
 
 export default class WebsocketBackend {
@@ -78,10 +80,11 @@ export default class WebsocketBackend {
         }
         if (msg.resource in this.activeFetches) {
             this.activeFetches[msg.resource].push(msg);
-        } else {
-            const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
-            this.store.dispatch({ type, ...msg });
+            return;
         }
+
+        const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
+        this.store.dispatch({ type, ...msg });
     }
 
     receive(resource: string, data: any) {

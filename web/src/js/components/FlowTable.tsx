@@ -4,14 +4,14 @@ import * as autoscroll from "./helpers/AutoScroll";
 import { calcVScroll, VScroll } from "./helpers/VirtualScroll";
 import FlowTableHead from "./FlowTable/FlowTableHead";
 import FlowRow from "./FlowTable/FlowRow";
-import Filt from "../filt/filt";
 import { Flow } from "../flow";
 import { RootState } from "../ducks";
+import { makeFilter } from "../ducks/flows";
 
 type FlowTableProps = {
     flows: Flow[];
     rowHeight: number;
-    highlight: string;
+    highlightMatchedIds: string[];
     selected: Flow;
 };
 
@@ -115,8 +115,8 @@ export class PureFlowTable extends React.Component<
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flows, selected, highlight } = this.props;
-        const isHighlighted = highlight ? Filt.parse(highlight) : () => false;
+        const { flows, selected, highlightMatchedIds } = this.props;
+        const isHighlighted = makeFilter(highlightMatchedIds) ?? (() => false);
 
         return (
             <div
@@ -151,6 +151,6 @@ export class PureFlowTable extends React.Component<
 
 export default connect((state: RootState) => ({
     flows: state.flows.view,
-    highlight: state.flows.highlight,
+    highlightMatchedIds: state.flows.highlightMatchedIds,
     selected: state.flows.byId[state.flows.selected[0]],
 }))(PureFlowTable);
