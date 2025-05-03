@@ -788,7 +788,7 @@ requires-dist = [
     { name = "passlib", specifier = ">=1.6.5,<=1.7.4" },
     { name = "publicsuffix2", specifier = ">=2.20190812,<=2.20191221" },
     { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=2.1.0" },
-    { name = "pyopenssl", specifier = ">=22.1,<=25.0.0" },
+    { name = "pyopenssl", specifier = ">=24.3,<=25.0.0" },
     { name = "pyparsing", specifier = ">=2.4.2,<=3.2.3" },
     { name = "pyperclip", specifier = "<=1.9.0,>=1.9.0" },
     { name = "ruamel-yaml", specifier = "<=0.18.10,>=0.18.10" },

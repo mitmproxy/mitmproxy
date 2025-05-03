@@ -8,7 +8,7 @@ def _raise(*_, **__):
 
 
 def test_get_free_port():
-    assert free_port.get_free_port()
+    assert free_port.get_free_port() is not None
 
 
 def test_never_raises(monkeypatch):
