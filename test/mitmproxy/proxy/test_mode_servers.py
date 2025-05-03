@@ -4,6 +4,7 @@ import socket
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 from unittest.mock import Mock
+from unittest.mock import patch
 
 import pytest
 
@@ -190,6 +191,27 @@ async def test_wireguard(tdata, monkeypatch, caplog):
         await inst.stop()
         assert "stopped" in caplog.text
 
+async def test_wireguard_port_unavailable(tdata, monkeypatch, caplog):
+    caplog.set_level("DEBUG")
+    monkeypatch.setattr(ConnectionHandler, "handle_client", _echo_server)
+    system = platform.system()
+    if system not in ["Linux", "Darwin", "Windows"]:
+        return pytest.skip("Unsupported platform for wg-test-client.")
+
+    arch = platform.machine()
+    if arch not in ["AMD64", "x86_64"]:
+        return pytest.skip("Unsupported architecture for wg-test-client.")
+
+    test_conf = tdata.path(f"wg-test-client/test.conf")
+    with patch('mitmproxy_rs.wireguard.start_wireguard_server') as mock_start:
+        mock_start.side_effect = RuntimeError("Forced failure")
+
+        inst = WireGuardServerInstance.make(f"wireguard:{test_conf}@0", MagicMock())
+
+        with pytest.raises(RuntimeError):
+            await inst.start()
+
+        assert "WireGuard failed to start" in caplog.text
 
 @pytest.mark.parametrize("host", ["127.0.0.1", "::1"])
 async def test_wireguard_dual_stack(host, caplog_async):
