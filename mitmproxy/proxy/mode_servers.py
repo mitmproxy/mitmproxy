@@ -21,6 +21,7 @@ import socket
 import sys
 import textwrap
 import typing
+import traceback
 from abc import ABCMeta
 from abc import abstractmethod
 from contextlib import contextmanager
@@ -381,14 +382,18 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     async def start_udp_based_server(
         self, host, port
     ) -> mitmproxy_rs.wireguard.WireGuardServer:
-        return await mitmproxy_rs.wireguard.start_wireguard_server(
-            host,
-            port,
-            self.server_key,
-            [self.pubkey],
-            self.handle_stream,
-            self.handle_stream,
-        )
+        try:
+            return await mitmproxy_rs.wireguard.start_wireguard_server(
+                host,
+                port,
+                self.server_key,
+                [self.pubkey],
+                self.handle_stream,
+                self.handle_stream,
+            )
+        except Exception as e:
+            traceback.print_exc()
+            raise RuntimeError("WireGuard failed to start") from e
 
     def client_conf(self) -> str | None:
         if not self._servers:
