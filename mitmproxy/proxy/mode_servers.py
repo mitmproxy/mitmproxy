@@ -22,18 +22,28 @@ import sys
 import textwrap
 import traceback
 import typing
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar, cast, get_args
+from typing import cast
+from typing import ClassVar
+from typing import Generic
+from typing import get_args
+from typing import TYPE_CHECKING
+from typing import TypeVar
 
 import mitmproxy_rs
-
-from mitmproxy import ctx, flow, platform
+from mitmproxy import ctx
+from mitmproxy import flow
+from mitmproxy import platform
 from mitmproxy.connection import Address
 from mitmproxy.net import local_ip
 from mitmproxy.net.free_port import get_free_port
-from mitmproxy.proxy import commands, layers, mode_specs, server
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import layers
+from mitmproxy.proxy import mode_specs
+from mitmproxy.proxy import server
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layer import Layer
 from mitmproxy.utils import human
