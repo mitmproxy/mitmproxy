@@ -373,7 +373,7 @@ class TlsConfig:
             raise ValueError("Cannot validate certificate hostname without SNI")
 
         if server.alpn_offers:
-            tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
+            tls_start.ssl_conn.set_alpn_protos(list(server.alpn_offers))
 
         tls_start.ssl_conn.set_connect_state()
 

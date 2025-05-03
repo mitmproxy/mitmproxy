@@ -12,7 +12,6 @@ from typing import cast
 from typing import NewType
 from typing import Optional
 from typing import Union
-from warnings import deprecated
 
 import OpenSSL
 from cryptography import x509
@@ -27,6 +26,11 @@ from cryptography.x509 import ExtendedKeyUsageOID
 from cryptography.x509 import NameOID
 
 from mitmproxy.coretypes import serializable
+
+if sys.version_info < (3, 13):  # pragma: no cover
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +304,7 @@ def _fix_legacy_sans(sans: Iterable[x509.GeneralName] | list[str]) -> x509.Gener
                 ss.append(x509.IPAddress(ip))
         return x509.GeneralNames(ss)
     else:
-        return x509.GeneralNames(sans)
+        return x509.GeneralNames(cast(Iterable[x509.GeneralName], sans))
 
 
 def dummy_cert(
@@ -353,7 +357,7 @@ def dummy_cert(
 
     # https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.1
     builder = builder.add_extension(
-        x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),
+        x509.AuthorityKeyIdentifier.from_issuer_public_key(cacert.public_key()),  # type: ignore
         critical=False,
     )
     # If CA and leaf cert have the same Subject Key Identifier, SChannel breaks in funny ways,
