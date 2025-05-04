@@ -4,13 +4,9 @@ import transparentReducer, {
     setListenPort,
     setActive,
 } from "./../../../ducks/modes/transparent";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("transparentSlice", () => {
     it("should have working setters", async () => {
@@ -77,24 +73,21 @@ describe("transparentSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active transparent proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "transparent@localhost:8081": {
-                        description: "Transparent Proxy",
-                        full_spec: "transparent@localhost:8081",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8081],
-                            ["::1", 8081],
-                        ],
-                        type: "transparent",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "transparent@localhost:8081": {
+                    description: "Transparent Proxy",
+                    full_spec: "transparent@localhost:8081",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8081],
+                        ["::1", 8081],
+                    ],
+                    type: "transparent",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = transparentReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -107,12 +100,7 @@ describe("transparentSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active transparent proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = transparentReducer(initialState, action);
         expect(newState).toEqual([
             {

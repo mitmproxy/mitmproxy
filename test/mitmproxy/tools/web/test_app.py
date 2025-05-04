@@ -414,9 +414,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         r1 = yield ws_client.read_message()
         response = json.loads(r1)
         assert response == {
-            "resource": "options",
-            "cmd": "update",
-            "data": {
+            "type": "options/update",
+            "payload": {
                 "anticomp": {
                     "value": True,
                     "choices": None,

@@ -4,13 +4,9 @@ import dnsReducer, {
     setListenPort,
     setActive,
 } from "./../../../ducks/modes/dns";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("dnsSlice", () => {
     it("should have working setters", async () => {
@@ -71,24 +67,21 @@ describe("dnsSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active dns proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "dns@localhost:8081": {
-                        description: "HTTP(S) proxy",
-                        full_spec: "dns@localhost:8081",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8081],
-                            ["::1", 8081],
-                        ],
-                        type: "dns",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "dns@localhost:8081": {
+                    description: "HTTP(S) proxy",
+                    full_spec: "dns@localhost:8081",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8081],
+                        ["::1", 8081],
+                    ],
+                    type: "dns",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = dnsReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -101,12 +94,7 @@ describe("dnsSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active dns proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = dnsReducer(initialState, action);
         expect(newState).toEqual([
             {

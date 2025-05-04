@@ -4,13 +4,9 @@ import socksReducer, {
     setListenPort,
     setActive,
 } from "./../../../ducks/modes/socks";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("socksSlice", () => {
     it("should have working setters", async () => {
@@ -71,24 +67,21 @@ describe("socksSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active socks proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "socks5@localhost:8081": {
-                        description: "SOCKS v5 proxy",
-                        full_spec: "socks5@localhost:8081",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8081],
-                            ["::1", 8081],
-                        ],
-                        type: "socks5",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "socks5@localhost:8081": {
+                    description: "SOCKS v5 proxy",
+                    full_spec: "socks5@localhost:8081",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8081],
+                        ["::1", 8081],
+                    ],
+                    type: "socks5",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = socksReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -101,12 +94,7 @@ describe("socksSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active socks proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = socksReducer(initialState, action);
         expect(newState).toEqual([
             {

@@ -4,7 +4,7 @@ import { reduce } from "../../ducks/utils/store";
 
 describe("event log reducer", () => {
     it("should return initial state", () => {
-        expect(reduceEventLog(undefined, {})).toEqual({
+        expect(reduceEventLog(undefined, { type: "unknown" })).toEqual({
             visible: false,
             filters: {
                 debug: false,
@@ -29,7 +29,7 @@ describe("event log reducer", () => {
     });
 
     it("should be possible to toggle visibility", () => {
-        const state = reduceEventLog(undefined, {});
+        const state = reduceEventLog(undefined, { type: "unknown" });
         expect(
             reduceEventLog(state, eventLogActions.toggleVisibility()),
         ).toEqual({

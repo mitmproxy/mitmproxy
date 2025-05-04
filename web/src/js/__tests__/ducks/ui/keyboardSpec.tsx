@@ -2,32 +2,26 @@ import * as flowsActions from "../../../ducks/flows";
 import { onKeyDown } from "../../../ducks/ui/keyboard";
 import * as modalActions from "../../../ducks/ui/modal";
 import { fetchApi, runCommand } from "../../../utils";
-import { TStore } from "../tutils";
+import { TFlow, TStore } from "../tutils";
 
 jest.mock("../../../utils");
 
 describe("onKeyDown", () => {
     const makeStore = () => {
         const store = TStore();
-        store.dispatch({
-            type: flowsActions.RECEIVE,
-            cmd: "receive",
-            data: [],
-        });
+        store.dispatch(flowsActions.FLOWS_RECEIVE([]));
         store.dispatch(flowsActions.setFilter(""));
         for (let i = 1; i <= 12; i++) {
-            store.dispatch({
-                type: flowsActions.ADD,
-                cmd: "add",
-                data: {
+            store.dispatch(
+                flowsActions.FLOWS_ADD({
+                    ...TFlow(),
                     id: i + "",
-                    request: true,
-                    response: true,
-                    type: "http",
+                    websocket: undefined,
+                    error: undefined,
                     intercepted: true,
                     modified: true,
-                },
-            });
+                }),
+            );
         }
         store.dispatch(flowsActions.select([store.getState().flows.list[0]]));
         return store;

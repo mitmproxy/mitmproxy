@@ -11,15 +11,17 @@ import {
 } from "../flow/utils";
 import { AppDispatch, RootState } from "./store";
 import { State } from "./utils/store";
+import {
+    Action,
+    createAction,
+    createSlice,
+    PayloadAction,
+} from "@reduxjs/toolkit";
 
-export const ADD = "FLOWS_ADD";
-export const UPDATE = "FLOWS_UPDATE";
-export const REMOVE = "FLOWS_REMOVE";
-export const RECEIVE = "FLOWS_RECEIVE";
-export const SELECT = "FLOWS_SELECT";
-export const SET_FILTER = "FLOWS_SET_FILTER";
-export const SET_SORT = "FLOWS_SET_SORT";
-export const SET_HIGHLIGHT = "FLOWS_SET_HIGHLIGHT";
+export const FLOWS_ADD = createAction<Flow>("FLOWS_ADD");
+export const FLOWS_UPDATE = createAction<Flow>("FLOWS_UPDATE");
+export const FLOWS_REMOVE = createAction<string>("FLOWS_REMOVE");
+export const FLOWS_RECEIVE = createAction<Flow[]>("FLOWS_RECEIVE");
 
 interface FlowSortFn extends store.SortFn<Flow> {}
 
@@ -45,36 +47,28 @@ export const defaultState: FlowsState = {
 function updateSelected(
     state: FlowsState = defaultState,
     newStoreState: State<Flow>,
-    action,
+    action: Action,
 ): Pick<FlowsState, "selected" | "selectedIndex"> {
     let { selected, selectedIndex } = state;
-    switch (action.type) {
-        case UPDATE:
-            if (selectedIndex[action.data.id] === undefined) {
-                break;
-            }
+    if (FLOWS_UPDATE.match(action)) {
+        if (selectedIndex[action.payload.id] !== undefined) {
             selected = selected.map((f) =>
-                f.id === action.data.id ? action.data : f,
+                f.id === action.payload.id ? action.payload : f,
             );
-            break;
-        case RECEIVE:
-            selected = selected
-                .map((f) => newStoreState.byId[f.id])
-                .filter((f) => f !== undefined);
-            selectedIndex = Object.fromEntries(
-                selected.map((f, i) => [f.id, i]),
-            );
-            break;
-        case REMOVE:
-            if (selectedIndex[action.data] === undefined) {
-                break;
-            }
+        }
+    } else if (FLOWS_RECEIVE.match(action)) {
+        selected = selected
+            .map((f) => newStoreState.byId[f.id])
+            .filter((f) => f !== undefined);
+        selectedIndex = Object.fromEntries(selected.map((f, i) => [f.id, i]));
+    } else if (FLOWS_REMOVE.match(action)) {
+        if (selectedIndex[action.payload] !== undefined) {
             if (selected.length > 1) {
-                selected = selected.filter((f) => f.id !== action.data);
-            } else if (!(action.data in state.viewIndex)) {
+                selected = selected.filter((f) => f.id !== action.payload);
+            } else if (!(action.payload in state.viewIndex)) {
                 selected = [];
             } else {
-                const currentIndex = state.viewIndex[action.data];
+                const currentIndex = state.viewIndex[action.payload];
                 // Try to select the next item in view, or fallback to the previous one
                 const fallback =
                     state.view[currentIndex + 1] ??
@@ -85,72 +79,123 @@ function updateSelected(
             selectedIndex = Object.fromEntries(
                 selected.map((f, i) => [f.id, i]),
             );
-            break;
+        }
     }
     return { selected, selectedIndex };
 }
 
-export default function reducer(
-    state: FlowsState = defaultState,
-    action,
-): FlowsState {
-    switch (action.type) {
-        case ADD:
-        case UPDATE:
-        case REMOVE:
-        case RECEIVE: {
-            const storeAction = store[action.cmd](
-                action.data,
-                makeFilter(state.filter),
-                makeSort(state.sort),
+const flowsSlice = createSlice({
+    name: "flows",
+    initialState: defaultState,
+    reducers: {
+        setFilter: (state, action: PayloadAction<string>) => {
+            const newStoreState = store.reduce(
+                state,
+                store.setFilter(
+                    makeFilter(action.payload),
+                    makeSort(state.sort),
+                ),
             );
-            const newStoreState = store.reduce(state, storeAction);
             return {
                 ...state,
+                filter: action.payload,
                 ...newStoreState,
-                ...updateSelected(state, newStoreState, action),
             };
-        }
-        case SET_FILTER:
+        },
+        setHighlight: (state, action: PayloadAction<string>) => {
             return {
                 ...state,
-                filter: action.filter,
-                ...store.reduce(
+                highlight: action.payload,
+            };
+        },
+        setSort: (
+            state,
+            action: PayloadAction<{
+                column?: keyof typeof sortFunctions;
+                desc: boolean;
+            }>,
+        ) => {
+            const newStoreState = store.reduce(
+                state,
+                store.setSort(makeSort(action.payload)),
+            );
+            return {
+                ...state,
+                sort: action.payload,
+                ...newStoreState,
+            };
+        },
+        select: (state, action: PayloadAction<Flow[]>) => {
+            return {
+                ...state,
+                selected: action.payload,
+                selectedIndex: Object.fromEntries(
+                    action.payload.map((f, i) => [f.id, i]),
+                ),
+            };
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(FLOWS_ADD, (state, action) => {
+                const newStoreState = store.reduce(
                     state,
-                    store.setFilter(
-                        makeFilter(action.filter),
+                    store.add(
+                        action.payload,
+                        makeFilter(state.filter),
                         makeSort(state.sort),
                     ),
-                ),
-            };
+                );
+                return {
+                    ...state,
+                    ...newStoreState,
+                };
+            })
+            .addCase(FLOWS_UPDATE, (state, action) => {
+                const newStoreState = store.reduce(
+                    state,
+                    store.update(
+                        action.payload,
+                        makeFilter(state.filter),
+                        makeSort(state.sort),
+                    ),
+                );
+                return {
+                    ...state,
+                    ...newStoreState,
+                    ...updateSelected(state, newStoreState, action),
+                };
+            })
+            .addCase(FLOWS_REMOVE, (state, action) => {
+                const newStoreState = store.reduce(
+                    state,
+                    store.remove(action.payload),
+                );
+                return {
+                    ...state,
+                    ...newStoreState,
+                    ...updateSelected(state, newStoreState, action),
+                };
+            })
+            .addCase(FLOWS_RECEIVE, (state, action) => {
+                const newStoreState = store.reduce(
+                    state,
+                    store.receive(
+                        action.payload,
+                        makeFilter(state.filter),
+                        makeSort(state.sort),
+                    ),
+                );
+                return {
+                    ...state,
+                    ...newStoreState,
+                    ...updateSelected(state, newStoreState, action),
+                };
+            });
+    },
+});
 
-        case SET_HIGHLIGHT:
-            return {
-                ...state,
-                highlight: action.highlight,
-            };
-
-        case SET_SORT:
-            return {
-                ...state,
-                sort: action.sort,
-                ...store.reduce(state, store.setSort(makeSort(action.sort))),
-            };
-
-        case SELECT: {
-            const selected: Flow[] = action.flows;
-            return {
-                ...state,
-                selected,
-                selectedIndex: Object.fromEntries(
-                    selected.map((f, i) => [f.id, i]),
-                ),
-            };
-        }
-        default:
-            return state;
-    }
-}
+export const { setFilter, setHighlight, setSort, select } = flowsSlice.actions;
 
 export function makeFilter(filter?: string): FlowFilterFn | undefined {
     if (!filter) {
@@ -183,18 +228,6 @@ export function makeSort({
         }
         return 0;
     };
-}
-
-export function setFilter(filter: string) {
-    return { type: SET_FILTER, filter };
-}
-
-export function setHighlight(highlight: string) {
-    return { type: SET_HIGHLIGHT, highlight };
-}
-
-export function setSort(column: string, desc: boolean) {
-    return { type: SET_SORT, sort: { column, desc } };
 }
 
 export function selectRelative(flows: FlowsState, shift: number) {
@@ -309,13 +342,6 @@ export function upload(file) {
     return () => fetchApi("/flows/dump", { method: "POST", body });
 }
 
-export function select(flows: Flow[]) {
-    return {
-        type: SELECT,
-        flows,
-    };
-}
-
 /** Toggle selection for one particular flow. */
 export function selectToggle(flow: Flow) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
@@ -349,3 +375,5 @@ export function selectRange(flow: Flow) {
         return dispatch(select(newSelection));
     };
 }
+
+export default flowsSlice.reducer;

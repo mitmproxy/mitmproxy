@@ -30,12 +30,16 @@ export default React.memo(function FlowTableHead() {
                     key={Column.name}
                     onClick={() =>
                         dispatch(
-                            setSort(
-                                Column.name === sortColumn && sortDesc
-                                    ? undefined
-                                    : Column.name,
-                                Column.name !== sortColumn ? false : !sortDesc,
-                            ),
+                            setSort({
+                                column:
+                                    Column.name === sortColumn && sortDesc
+                                        ? undefined
+                                        : Column.name,
+                                desc:
+                                    Column.name !== sortColumn
+                                        ? false
+                                        : !sortDesc,
+                            }),
                         )
                     }
                 >
