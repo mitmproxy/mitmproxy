@@ -1,9 +1,14 @@
-import { Flow, HTTPHeader, HTTPMessage, HTTPRequest } from "../flow";
+import { Flow, HTTPMessage, HTTPRequest } from "../flow";
 
 const defaultPorts = {
     http: 80,
     https: 443,
 };
+
+const _headerLookups: WeakMap<
+    HTTPMessage,
+    Map<RegExp, string | false>
+> = new WeakMap();
 
 export class MessageUtils {
     static getContentType(message: HTTPMessage): string | undefined {
@@ -17,32 +22,20 @@ export class MessageUtils {
         message: HTTPMessage,
         regex: RegExp,
     ): string | undefined {
-        //FIXME: Cache Invalidation.
-        // @ts-expect-error hidden cache on object
-        const msg: HTTPMessage & {
-            _headerLookups: { [regex: string]: string | undefined };
-        } = message;
-        if (!msg._headerLookups)
-            Object.defineProperty(msg, "_headerLookups", {
-                value: {},
-                configurable: false,
-                enumerable: false,
-                writable: false,
-            });
-        const regexStr = regex.toString();
-        if (!(regexStr in msg._headerLookups)) {
-            let header: HTTPHeader | undefined = undefined;
-            if (msg.headers) {
-                for (let i = 0; i < msg.headers.length; i++) {
-                    if (msg.headers[i][0].match(regex)) {
-                        header = msg.headers[i];
-                        break;
-                    }
-                }
-            }
-            msg._headerLookups[regexStr] = header ? header[1] : undefined;
+        let messageLookups = _headerLookups.get(message);
+        if (!messageLookups) {
+            messageLookups = new Map();
+            _headerLookups.set(message, messageLookups);
         }
-        return msg._headerLookups[regexStr];
+        let ret = messageLookups.get(regex);
+        if (ret === undefined) {
+            const header = message.headers.find(([name, _]) =>
+                regex.test(name),
+            );
+            ret = header ? header[1] : false;
+            messageLookups.set(regex, ret);
+        }
+        return ret !== false ? ret : undefined;
     }
 
     static match_header(message, regex) {
