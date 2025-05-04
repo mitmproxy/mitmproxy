@@ -232,7 +232,10 @@ class TestCert:
 
         assert c == certs.Cert.from_pem(c.to_pem())
         assert c == certs.Cert.from_state(c.get_state())
-        assert c == certs.Cert.from_pyopenssl(c.to_pyopenssl())
+        with pytest.deprecated_call():
+            assert c == certs.Cert.from_pyopenssl(c.to_pyopenssl())
+
+        assert c == certs.Cert(c.to_cryptography())
 
     @pytest.mark.parametrize(
         "filename,name,bits",

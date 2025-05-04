@@ -249,10 +249,8 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
 
-        tls_start.ssl_conn.use_certificate(entry.cert.to_pyopenssl())
-        tls_start.ssl_conn.use_privatekey(
-            crypto.PKey.from_cryptography_key(entry.privatekey)
-        )
+        tls_start.ssl_conn.use_certificate(entry.cert.to_cryptography())
+        tls_start.ssl_conn.use_privatekey(entry.privatekey)
 
         # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
         # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
@@ -375,7 +373,7 @@ class TlsConfig:
             raise ValueError("Cannot validate certificate hostname without SNI")
 
         if server.alpn_offers:
-            tls_start.ssl_conn.set_alpn_protos(server.alpn_offers)
+            tls_start.ssl_conn.set_alpn_protos(list(server.alpn_offers))
 
         tls_start.ssl_conn.set_connect_state()
 
