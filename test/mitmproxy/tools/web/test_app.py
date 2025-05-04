@@ -487,21 +487,20 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_login_with_token_param(self):
         web_password = self.master.addons.get("webauth")._password
-        resp = self.fetch(f"/?token={web_password}", headers={"Cookie": ""})
-        assert resp.code == 200
+        headers = {"Cookie": ""}
+        assert self.fetch(f"/?token={web_password}", headers=headers).code == 200
 
     def test_login_with_malformed_auth_header(self):
-        resp = self.fetch("/", headers={"Cookie": "", "Authorization": f"Bearer"})
-        assert resp.code == 403
+        headers = {"Cookie": "", "Authorization": f"Bearer"}
+        assert self.fetch("/", headers=headers).code == 403
 
     def test_login_with_invalid_auth_header(self):
-        resp = self.fetch(
-            "/", headers={"Cookie": "", "Authorization": f"Bearer invalid_token"}
-        )
-        assert resp.code == 403
+        headers = {"Cookie": "", "Authorization": f"Bearer invalid_token"}
+        assert self.fetch("/", headers=headers).code == 403
 
     def test_unauthorized_api(self):
-        assert self.fetch("/", headers={"Cookie": ""}).code == 403
+        headers = {"Cookie": ""}
+        assert self.fetch("/", headers=headers).code == 403
 
     @tornado.testing.gen_test
     def test_unauthorized_websocket(self):
