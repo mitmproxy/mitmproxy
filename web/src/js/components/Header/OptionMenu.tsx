@@ -32,15 +32,15 @@ export default function OptionMenu() {
                     <div className="menu-content">
                         <OptionsToggle name="anticache">
                             Strip cache headers{" "}
-                            <DocsLink resource="overview-features/#anticache" />
+                            <DocsLink resource="overview/features/#anticache" />
                         </OptionsToggle>
                         <OptionsToggle name="showhost">
                             Use host header for display{" "}
-                            <DocsLink resource="concepts-options/#showhost" />
+                            <DocsLink resource="concepts/options/#showhost" />
                         </OptionsToggle>
                         <OptionsToggle name="ssl_insecure">
                             Don&apos;t verify server certificates{" "}
-                            <DocsLink resource="concepts-options/#ssl_insecure" />
+                            <DocsLink resource="concepts/options/#ssl_insecure" />
                         </OptionsToggle>
                     </div>
                     <div className="menu-legend">Quick Options</div>
