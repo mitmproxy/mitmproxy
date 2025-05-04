@@ -11,6 +11,7 @@ import reduceCommandBar from "../ducks/commandBar";
 import configureStore from "redux-mock-store";
 import { testState } from "./ducks/tutils";
 import { RootStore } from "../ducks/store";
+import { setCurrent, Tab } from "../ducks/ui/tabs";
 
 const mockStore = configureStore();
 history.replaceState = jest.fn();
@@ -70,6 +71,13 @@ describe("updateStoreFromUrl", () => {
             },
         ]);
     });
+
+    it("should handle capture tab", () => {
+        window.location.hash = "#/capture";
+        const store = mockStore();
+        updateStoreFromUrl(store as RootStore);
+        expect(store.getActions()).toEqual([setCurrent(Tab.Capture)]);
+    });
 });
 
 describe("updateUrlFromStore", () => {
@@ -92,7 +100,7 @@ describe("updateUrlFromStore", () => {
         expect(history.replaceState).toBeCalledWith(
             undefined,
             "",
-            "/#/flows/flow2/request?s=~u%20%2Fsecond%20%7C%20~tcp%20%7C%20~dns%20%7C%20~udp&h=~u%20%2Fpath&e=true",
+            "/#/capture?s=~u%20%2Fsecond%20%7C%20~tcp%20%7C%20~dns%20%7C%20~udp&h=~u%20%2Fpath&e=true",
         );
     });
 });

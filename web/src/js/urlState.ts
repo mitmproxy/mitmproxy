@@ -10,6 +10,7 @@ import { selectTab } from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
 import * as commandBarActions from "./ducks/commandBar";
 import { RootStore } from "./ducks/store";
+import { Tab, setCurrent } from "./ducks/ui/tabs";
 
 const Query = {
     SEARCH: "s",
@@ -37,6 +38,8 @@ export function updateStoreFromUrl(store: RootStore) {
             const unsubscribe = store.subscribe(selectFlowOnceAvailable);
             selectFlowOnceAvailable();
         }
+    } else if (path_components[0] === "capture") {
+        store.dispatch(setCurrent(Tab.Capture));
     }
 
     if (query) {
@@ -79,7 +82,9 @@ export function updateUrlFromStore(store: RootStore) {
         .join("&");
 
     let url;
-    if (state.flows.selected.length > 0) {
+    if (state.ui.tabs.current === Tab.Capture) {
+        url = "/capture";
+    } else if (state.flows.selected.length > 0) {
         url = `/flows/${state.flows.selected[0].id}/${state.ui.flow.tab}`;
     } else {
         url = "/flows";
