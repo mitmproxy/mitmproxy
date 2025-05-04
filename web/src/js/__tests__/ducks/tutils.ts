@@ -73,7 +73,6 @@ export const testState: RootState = {
         },
         tabs: {
             current: Tab.Capture,
-            isInitial: true,
         },
     },
     options: defaultOptions,
