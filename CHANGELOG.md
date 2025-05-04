@@ -20,6 +20,7 @@
   ([#7685](https://github.com/mitmproxy/mitmproxy/pull/7685), @Florigolo)
 
 * fix concurrent mitmweb instances overwrite each other's mitmproxy-auth cookie
+  ([#7690](https://github.com/mitmproxy/mitmproxy/pull/7690), @turboOrange)
 
 ## 29 April 2025: mitmproxy 12.0.0
 
