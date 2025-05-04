@@ -7,7 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
-* In DNS proxy mode, user-provided addons now trigger before DNS resolution has taken place.
+- Added an option to pass the web token as `Authentication: Bearer ...` header
+  ([#7681](https://github.com/mitmproxy/mitmproxy/pull/7681), @gschaer)
+- In DNS proxy mode, user-provided addons now trigger before DNS resolution has taken place.
   ([#7685](https://github.com/mitmproxy/mitmproxy/pull/7685), @Florigolo)
 
 ## 29 April 2025: mitmproxy 12.0.0
