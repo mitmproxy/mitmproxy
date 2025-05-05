@@ -225,8 +225,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
 
     def get_auth_cookie_name(self):
         _, port = tornado.httputil.split_host_and_port(self.request.host)
-        port = port if port is not None else 80
-        return f"mitmproxy-auth-{port}"
+        return f"mitmproxy-auth-{port or 80}"
 
     def auth_fail(self, invalid_password: bool) -> None:
         """
