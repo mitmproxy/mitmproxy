@@ -81,7 +81,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @property
     def auth_cookie(self) -> str:
-        cookie_name = f"mitmproxy-auth-{self.get_http_port()}"
+        cookie_name = f"mitmproxy-auth-{self.master.options.web_port}"
         cookie_value = b"y"
 
         auth_cookie = create_signed_value(
