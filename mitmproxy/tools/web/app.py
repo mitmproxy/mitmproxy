@@ -213,6 +213,9 @@ class APIError(tornado.web.HTTPError):
 
 
 class AuthRequestHandler(tornado.web.RequestHandler):
+    # mypy: override to access .master
+    application: Application
+
     AUTH_COOKIE_VALUE = b"y"
 
     def __init_subclass__(cls, **kwargs):
@@ -256,7 +259,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
                     self.auth_fail(bool(password))
                     return None
                 self.set_signed_cookie(
-                    AuthRequestHandler.auth_cookie_name(self.master.options.web_port),
+                    AuthRequestHandler.auth_cookie_name(self.application.master.options.web_port),
                     self.AUTH_COOKIE_VALUE,
                     expires_days=400,
                     httponly=True,
