@@ -224,7 +224,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
                 setattr(cls, method, AuthRequestHandler._require_auth(fn))
 
     @staticmethod
-    def auth_cookie_name(port: int)-> str:
+    def auth_cookie_name(port: int) -> str:
         return f"mitmproxy-auth-{port}"
 
     def auth_fail(self, invalid_password: bool) -> None:
@@ -267,8 +267,12 @@ class AuthRequestHandler(tornado.web.RequestHandler):
         return wrapper
 
     def get_current_user(self) -> bool:
-        cookie_name = AuthRequestHandler.auth_cookie_name(self.application.master.options.web_port)
-        return (self.get_signed_cookie(cookie_name, min_version=2) == self.AUTH_COOKIE_VALUE)
+        cookie_name = AuthRequestHandler.auth_cookie_name(
+            self.application.master.options.web_port
+        )
+        return (
+            self.get_signed_cookie(cookie_name, min_version=2) == self.AUTH_COOKIE_VALUE
+        )
 
 
 class RequestHandler(AuthRequestHandler):
