@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash when editing raw messages bodies in mitmproxy.
 - Added an option to pass the web token as `Authentication: Bearer ...` header
   ([#7681](https://github.com/mitmproxy/mitmproxy/pull/7681), @gschaer)
 - In DNS proxy mode, user-provided addons now trigger before DNS resolution has taken place.
