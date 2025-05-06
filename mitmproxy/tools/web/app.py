@@ -259,7 +259,9 @@ class AuthRequestHandler(tornado.web.RequestHandler):
                     self.auth_fail(bool(password))
                     return None
                 self.set_signed_cookie(
-                    AuthRequestHandler.auth_cookie_name(self.application.master.options.web_port),
+                    AuthRequestHandler.auth_cookie_name(
+                        self.application.master.options.web_port
+                    ),
                     self.AUTH_COOKIE_VALUE,
                     expires_days=400,
                     httponly=True,
