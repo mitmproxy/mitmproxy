@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 06 May 2025: mitmproxy 12.0.1
+
 - Fix a crash when editing raw messages bodies in mitmproxy.
   ([#7697](https://github.com/mitmproxy/mitmproxy/pull/7697), @mhils)
 - Added an option to pass the web token as `Authentication: Bearer ...` header
