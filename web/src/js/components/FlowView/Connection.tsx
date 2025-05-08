@@ -14,7 +14,7 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
             <>
                 <tr>
                     <td>Address:</td>
-                    <td>{conn.address?.join(":")}</td>
+                    <td>{conn.address?.slice(0, 2).join(":")}</td>
                 </tr>
                 {conn.peername && (
                     <tr>
