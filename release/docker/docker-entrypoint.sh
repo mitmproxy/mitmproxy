@@ -20,7 +20,8 @@ usermod -o \
 
 if [[ "$1" = "mitmdump" || "$1" = "mitmproxy" || "$1" = "mitmweb" ]]; then
   # Drop privileges if we are starting one of the mitmproxy tools.
-  exec gosu mitmproxy "$@"
+  # Set HOME to /home/mitmproxy for config dir fix (mitmproxy/mitmproxy#7597)
+  exec env HOME=/home/mitmproxy gosu mitmproxy "$@"
 else
   exec "$@"
 fi
