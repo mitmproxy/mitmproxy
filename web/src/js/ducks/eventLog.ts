@@ -40,23 +40,21 @@ const eventLogSlice = createSlice({
         },
         toggleFilter: (state, action: PayloadAction<LogLevel>) => {
             state.filters[action.payload] = !state.filters[action.payload];
-            state.view = state.list.filter(
-                (log) => state.filters[log.level]
-            );
+            state.view = state.list.filter((log) => state.filters[log.level]);
         },
     },
     extraReducers: (builder) => {
         builder
-            .addCase(EVENTS_ADD, (state, {payload: logItem}) => {
+            .addCase(EVENTS_ADD, (state, { payload: logItem }) => {
                 state.list.push(logItem);
-                if(state.filters[logItem.level]) {
-                    state.view.push(logItem)
+                if (state.filters[logItem.level]) {
+                    state.view.push(logItem);
                 }
             })
             .addCase(EVENTS_RECEIVE, (state, action) => {
                 state.list = action.payload;
                 state.view = state.list.filter(
-                    (log) => state.filters[log.level]
+                    (log) => state.filters[log.level],
                 );
             });
     },

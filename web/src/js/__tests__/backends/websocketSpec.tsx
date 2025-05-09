@@ -1,5 +1,5 @@
 import WebSocketBackend from "../../backends/websocket";
-import fetchMock, {MockResponseInit} from "jest-fetch-mock";
+import fetchMock, { MockResponseInit } from "jest-fetch-mock";
 import { waitFor } from "../test-utils";
 import * as connectionActions from "../../ducks/connection";
 import { UnknownAction } from "@reduxjs/toolkit";
@@ -16,7 +16,7 @@ import { STATE_RECEIVE } from "../../ducks/backendState";
 beforeEach(() => {
     fetchMock.enableMocks();
     fetchMock.mockClear();
-   // @ts-expect-error jest mock stuff
+    // @ts-expect-error jest mock stuff
     jest.spyOn(global, "WebSocket").mockImplementation(() => ({
         addEventListener: () => 0,
     }));
@@ -35,30 +35,27 @@ describe("websocket backend", () => {
         fetchMock.mockOnceIf("./options", never);
 
         const actions: Array<UnknownAction> = [];
-        const backend = new WebSocketBackend({dispatch: (e) => actions.push(e)});
+        const backend = new WebSocketBackend({
+            dispatch: (e) => actions.push(e),
+        });
         backend.onOpen();
         let payload: EventLogItem = {
             message: "test",
             level: LogLevel.debug,
-            id: "123"
+            id: "123",
         };
         backend.onMessage({
             type: "events/add",
-            payload
+            payload,
         });
 
-        expect(actions).toEqual([
-            connectionActions.startFetching()
-        ]);
+        expect(actions).toEqual([connectionActions.startFetching()]);
         actions.length = 0;
 
         resolve("[]");
         await waitFor(() =>
-            expect(actions).toEqual([
-                EVENTS_RECEIVE([]),
-                EVENTS_ADD(payload)
-            ])
-        )
+            expect(actions).toEqual([EVENTS_RECEIVE([]), EVENTS_ADD(payload)]),
+        );
         actions.length = 0;
     });
 
@@ -69,7 +66,9 @@ describe("websocket backend", () => {
         fetchMock.mockOnceIf("./options", "{}");
 
         const actions: Array<UnknownAction> = [];
-        const backend = new WebSocketBackend({dispatch: (e) => actions.push(e)});
+        const backend = new WebSocketBackend({
+            dispatch: (e) => actions.push(e),
+        });
 
         backend.onOpen();
 
@@ -96,7 +95,7 @@ describe("websocket backend", () => {
             } as EventLogItem,
         });
         expect(actions).toEqual([
-            EVENTS_ADD({id: "42", level: LogLevel.info, message: "test"}),
+            EVENTS_ADD({ id: "42", level: LogLevel.info, message: "test" }),
         ]);
         actions.length = 0;
 
@@ -108,7 +107,7 @@ describe("websocket backend", () => {
             expect(actions).toEqual([
                 EVENTS_RECEIVE([]),
                 connectionActions.connectionEstablished(),
-            ])
+            ]),
         );
         actions.length = 0;
         expect(fetchMock.mock.calls).toHaveLength(5);
@@ -129,15 +128,15 @@ describe("websocket backend", () => {
         fetchMock.mockOnceIf("./flows", "[]");
         fetchMock.mockOnceIf("./events", "[]");
         // Not useful, only for coverage
-        const backend = new WebSocketBackend({dispatch: () => {}});
-        backend.onMessage({type: "flows/add"});
-        backend.onMessage({type: "flows/update"});
-        backend.onMessage({type: "flows/remove"});
-        backend.onMessage({type: "flows/reset"});
-        backend.onMessage({type: "events/add"});
-        backend.onMessage({type: "events/reset"});
-        backend.onMessage({type: "options/update"});
-        backend.onMessage({type: "state/update"});
+        const backend = new WebSocketBackend({ dispatch: () => {} });
+        backend.onMessage({ type: "flows/add" });
+        backend.onMessage({ type: "flows/update" });
+        backend.onMessage({ type: "flows/remove" });
+        backend.onMessage({ type: "flows/reset" });
+        backend.onMessage({ type: "events/add" });
+        backend.onMessage({ type: "events/reset" });
+        backend.onMessage({ type: "options/update" });
+        backend.onMessage({ type: "state/update" });
         expect(fetchMock.mock.calls.length).toBe(2);
     });
 });
