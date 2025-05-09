@@ -1,4 +1,3 @@
-import * as store from "./utils/store";
 import { createAction, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export const EVENTS_ADD = createAction<EventLogItem>("EVENTS_ADD");
@@ -12,20 +11,24 @@ export enum LogLevel {
     error = "error",
 }
 
-export interface EventLogItem extends store.Item {
+export interface EventLogItem {
+    id: string;
     message: string;
     level: LogLevel;
 }
 
-interface EventLogState extends store.State<EventLogItem> {
+interface EventLogState {
     visible: boolean;
     filters: { [level in LogLevel]: boolean };
+    list: EventLogItem[];
+    view: EventLogItem[];
 }
 
-const defaultState: EventLogState = {
+export const defaultState: EventLogState = {
     visible: false,
     filters: { debug: false, info: true, web: true, warn: true, error: true },
-    ...store.defaultState,
+    list: [],
+    view: [],
 };
 
 const eventLogSlice = createSlice({
@@ -36,43 +39,26 @@ const eventLogSlice = createSlice({
             state.visible = !state.visible;
         },
         toggleFilter: (state, action: PayloadAction<LogLevel>) => {
-            const newFilters = {
-                ...state.filters,
-                [action.payload]: !state.filters[action.payload],
-            };
-            const storeState = store.reduce(
-                state,
-                store.setFilter<EventLogItem>((log) => newFilters[log.level]),
+            state.filters[action.payload] = !state.filters[action.payload];
+            state.view = state.list.filter(
+                (log) => state.filters[log.level]
             );
-            return {
-                ...state,
-                ...storeState,
-                filters: newFilters,
-            };
         },
     },
     extraReducers: (builder) => {
         builder
-            .addCase(EVENTS_ADD, (state, action) => ({
-                ...state,
-                ...store.reduce(
-                    state,
-                    store.add(
-                        action.payload,
-                        (log: EventLogItem) => state.filters[log.level],
-                    ),
-                ),
-            }))
-            .addCase(EVENTS_RECEIVE, (state, action) => ({
-                ...state,
-                ...store.reduce(
-                    state,
-                    store.receive(
-                        action.payload,
-                        (log: EventLogItem) => state.filters[log.level],
-                    ),
-                ),
-            }));
+            .addCase(EVENTS_ADD, (state, {payload: logItem}) => {
+                state.list.push(logItem);
+                if(state.filters[logItem.level]) {
+                    state.view.push(logItem)
+                }
+            })
+            .addCase(EVENTS_RECEIVE, (state, action) => {
+                state.list = action.payload;
+                state.view = state.list.filter(
+                    (log) => state.filters[log.level]
+                );
+            });
     },
 });
 
