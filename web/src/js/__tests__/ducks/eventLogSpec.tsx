@@ -50,4 +50,16 @@ describe("event log reducer", () => {
             error: true,
         });
     });
+
+    it("should receive state", () => {
+        const state = reduceEventLog(undefined, eventLogActions.EVENTS_RECEIVE([
+            {
+                message: "hello world",
+                level: LogLevel.debug,
+                id: "123"
+            }
+        ]));
+        expect(state.view.length).toBe(0);
+        expect(state.list.length).toBe(1);
+    });
 });

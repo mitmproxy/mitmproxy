@@ -26,7 +26,7 @@ export enum Resource {
 }
 
 /// All possible events emitted by the WebSocket backend.
-type WebsocketActions =
+type WebsocketMessageType =
     | "flows/add"
     | "flows/update"
     | "flows/remove"
@@ -81,7 +81,7 @@ export default class WebsocketBackend {
             });
     }
 
-    onMessage(msg: { type: WebsocketActions; payload?: any }) {
+    onMessage(msg: { type: WebsocketMessageType; payload?: any }) {
         switch (msg.type) {
             case "flows/add":
                 return this.queueOrDispatch(

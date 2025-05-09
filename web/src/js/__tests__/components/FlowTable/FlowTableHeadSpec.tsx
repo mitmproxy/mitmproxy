@@ -24,4 +24,6 @@ test("FlowTableHead Component", async () => {
     });
     fireEvent.click(screen.getByText("Size"));
     expect(store.getState().flows.sort).toEqual({ column: "size", desc: true });
+    fireEvent.click(screen.getByText("Size"));
+    expect(store.getState().flows.sort).toEqual({ column: undefined, desc: false });
 });
