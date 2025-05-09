@@ -316,6 +316,8 @@ class Message(serializable.Serializable):
         The raw (potentially compressed) HTTP message body.
 
         In contrast to `Message.content` and `Message.text`, accessing this property never raises.
+        `raw_content` may be `None` if the content is missing, for example due to body streaming
+        (see `Message.stream`). In contrast, `b""` signals a present but empty message body.
 
         *See also:* `Message.content`, `Message.text`
         """
