@@ -118,6 +118,7 @@ export default class WebsocketBackend {
             case "events/reset":
                 return this.fetchData(Resource.Events);
             default:
+                /* istanbul ignore next @preserve */
                 assertNever(msg.type);
         }
     }
@@ -146,6 +147,7 @@ export default class WebsocketBackend {
                 this.store.dispatch(FLOWS_RECEIVE(data));
                 break;
             default:
+                /* istanbul ignore next @preserve */
                 assertNever(resource);
         }
         const queue = this.activeFetches[resource]!;
