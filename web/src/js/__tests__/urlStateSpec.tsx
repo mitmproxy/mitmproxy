@@ -3,15 +3,16 @@ import initialize, {
     updateUrlFromStore,
 } from "../urlState";
 
-import reduceFlows from "../ducks/flows";
+import reduceFlows, * as flowActions from "../ducks/flows";
 import reduceUI from "../ducks/ui/index";
-import reduceEventLog from "../ducks/eventLog";
+import reduceEventLog, * as eventLogActions from "../ducks/eventLog";
 import reduceCommandBar from "../ducks/commandBar";
 
 import configureStore from "redux-mock-store";
 import { testState } from "./ducks/tutils";
 import { RootStore } from "../ducks/store";
 import { setCurrent, Tab } from "../ducks/ui/tabs";
+import { selectTab } from "../ducks/ui/flow";
 
 const mockStore = configureStore();
 history.replaceState = jest.fn();
@@ -21,27 +22,25 @@ describe("updateStoreFromUrl", () => {
         window.location.hash = "#/flows?s=foo";
         const store = mockStore(testState);
         updateStoreFromUrl(store as RootStore);
-        expect(store.getActions()).toEqual([
-            { filter: "foo", type: "FLOWS_SET_FILTER" },
-        ]);
+        expect(store.getActions()).toEqual([flowActions.setFilter("foo")]);
     });
 
     it("should handle highlight query", () => {
         window.location.hash = "#/flows?h=foo";
         const store = mockStore();
         updateStoreFromUrl(store as RootStore);
-        expect(store.getActions()).toEqual([
-            { highlight: "foo", type: "FLOWS_SET_HIGHLIGHT" },
-        ]);
+        expect(store.getActions()).toEqual([flowActions.setHighlight("foo")]);
     });
 
     it("should handle show event log", () => {
         window.location.hash = "#/flows?e=true";
-        const initialState = { eventLog: reduceEventLog(undefined, {}) };
+        const initialState = {
+            eventLog: reduceEventLog(undefined, { type: "unknown" }),
+        };
         const store = mockStore(initialState);
         updateStoreFromUrl(store as RootStore);
         expect(store.getActions()).toEqual([
-            { type: "EVENTS_TOGGLE_VISIBILITY" },
+            eventLogActions.toggleVisibility(),
         ]);
     });
 
@@ -61,14 +60,8 @@ describe("updateStoreFromUrl", () => {
         const store = mockStore(testState);
         updateStoreFromUrl(store as RootStore);
         expect(store.getActions()).toEqual([
-            {
-                payload: "request",
-                type: "ui/flow/selectTab",
-            },
-            {
-                flows: [tflow0],
-                type: "FLOWS_SELECT",
-            },
+            selectTab("request"),
+            flowActions.select([tflow0]),
         ]);
     });
 

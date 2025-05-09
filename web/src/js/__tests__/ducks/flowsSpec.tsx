@@ -8,11 +8,7 @@ jest.mock("../../utils");
 describe("flow reducer", () => {
     let s;
     for (const i of ["0", "1", "2", "3", "4"]) {
-        s = reduceFlows(s, {
-            type: flowActions.ADD,
-            data: { id: i },
-            cmd: "add",
-        });
+        s = reduceFlows(s, flowActions.FLOWS_ADD({ ...TFlow(), id: i }));
     }
     const state = s;
     const [_f0, f1, f2, f3, f4] = state.list;
@@ -93,21 +89,13 @@ describe("flow reducer", () => {
 
         it("should update state.selected on remove", () => {
             let next;
-            next = reduceFlows(alreadySelected, {
-                type: flowActions.REMOVE,
-                data: "1",
-                cmd: "remove",
-            });
+            next = reduceFlows(alreadySelected, flowActions.FLOWS_REMOVE("1"));
             expect(next.selected).toEqual([f2]);
 
             //last row
             next = reduceFlows(
                 { ...state, selected: [f4], selectedIndex: { "4": 0 } },
-                {
-                    type: flowActions.REMOVE,
-                    data: "4",
-                    cmd: "remove",
-                },
+                flowActions.FLOWS_REMOVE("4"),
             );
             expect(next.selected).toEqual([f3]);
 
@@ -118,11 +106,7 @@ describe("flow reducer", () => {
                     selected: [f2, f3],
                     selectedIndex: { "2": 0, "3": 1 },
                 },
-                {
-                    type: flowActions.REMOVE,
-                    data: "3",
-                    cmd: "remove",
-                },
+                flowActions.FLOWS_REMOVE("3"),
             );
             expect(next.selected).toEqual([f2]);
         });
@@ -147,11 +131,10 @@ describe("flow reducer", () => {
                 },
             };
 
-            const next = reduceFlows(modifiedState, {
-                type: flowActions.RECEIVE,
-                data: [stillExists],
-                cmd: "receive",
-            });
+            const next = reduceFlows(
+                modifiedState,
+                flowActions.FLOWS_RECEIVE([stillExists]),
+            );
 
             expect(next.selected).toEqual([stillExists]);
             expect(next.selectedIndex).toEqual({ [stillExists.id]: 0 });
@@ -166,11 +149,10 @@ describe("flow reducer", () => {
                 id: "nonexistent-id",
             };
 
-            const next = reduceFlows(store.getState().flows, {
-                type: flowActions.UPDATE,
-                data: unrelatedFlow,
-                cmd: "update",
-            });
+            const next = reduceFlows(
+                store.getState().flows,
+                flowActions.FLOWS_UPDATE(unrelatedFlow),
+            );
             expect(next.selected).toEqual(originalSelected);
         });
 
@@ -183,21 +165,19 @@ describe("flow reducer", () => {
                 comment: "I'm a modified comment!",
             };
 
-            const next = reduceFlows(store.getState().flows, {
-                type: flowActions.UPDATE,
-                data: updatedFlow,
-                cmd: "update",
-            });
+            const next = reduceFlows(
+                store.getState().flows,
+                flowActions.FLOWS_UPDATE(updatedFlow),
+            );
             const updatedSelected = next.selected;
             expect(updatedSelected[0]).toBe(updatedFlow);
         });
 
         it("should not update state.selected on remove if action.data is undefined", () => {
-            const next = reduceFlows(state, {
-                type: flowActions.REMOVE,
-                data: undefined,
-                cmd: "remove",
-            });
+            const next = reduceFlows(
+                state,
+                flowActions.FLOWS_REMOVE("unknown"),
+            );
             expect(next).toEqual(state);
         });
 
@@ -216,11 +196,10 @@ describe("flow reducer", () => {
                 viewIndex: {},
             };
 
-            const next = reduceFlows(modifiedState, {
-                type: flowActions.REMOVE,
-                cmd: "remove",
-                data: selectedFlow.id,
-            });
+            const next = reduceFlows(
+                modifiedState,
+                flowActions.FLOWS_REMOVE(selectedFlow.id),
+            );
 
             expect(next.selected).toEqual([]);
             expect(next.selectedIndex).toEqual({});
@@ -242,11 +221,10 @@ describe("flow reducer", () => {
     });
 
     it("should be possible to set sort", () => {
-        const sort = { column: "tls", desc: true };
-        expect(
-            reduceFlows(undefined, flowActions.setSort(sort.column, sort.desc))
-                .sort,
-        ).toEqual(sort);
+        const sort = { column: "tls" as const, desc: true };
+        expect(reduceFlows(undefined, flowActions.setSort(sort)).sort).toEqual(
+            sort,
+        );
     });
 });
 

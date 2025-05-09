@@ -1,3 +1,5 @@
+import { createSlice } from "@reduxjs/toolkit";
+
 export enum ConnectionState {
     INIT = "CONNECTION_INIT",
     FETCHING = "CONNECTION_FETCHING", // WebSocket is established, but still fetching resources.
@@ -16,34 +18,33 @@ const defaultState: ConnState = {
     message: undefined,
 };
 
-export default function reducer(state = defaultState, action): ConnState {
-    switch (action.type) {
-        case ConnectionState.ESTABLISHED:
-        case ConnectionState.FETCHING:
-        case ConnectionState.ERROR:
-        case ConnectionState.OFFLINE:
-            return {
-                state: action.type,
-                message: action.message,
-            };
+const connectionSlice = createSlice({
+    name: "connection",
+    initialState: defaultState,
+    reducers: {
+        startFetching: (state) => {
+            state.state = ConnectionState.FETCHING;
+            state.message = undefined;
+        },
+        connectionEstablished: (state) => {
+            state.state = ConnectionState.ESTABLISHED;
+            state.message = undefined;
+        },
+        connectionError: (state, action) => {
+            state.state = ConnectionState.ERROR;
+            state.message = action.payload;
+        },
+        setOffline: (state) => {
+            state.state = ConnectionState.OFFLINE;
+            state.message = undefined;
+        },
+    },
+});
 
-        default:
-            return state;
-    }
-}
-
-export function startFetching() {
-    return { type: ConnectionState.FETCHING };
-}
-
-export function connectionEstablished() {
-    return { type: ConnectionState.ESTABLISHED };
-}
-
-export function connectionError(message) {
-    return { type: ConnectionState.ERROR, message };
-}
-
-export function setOffline() {
-    return { type: ConnectionState.OFFLINE };
-}
+export const {
+    startFetching,
+    connectionEstablished,
+    connectionError,
+    setOffline,
+} = connectionSlice.actions;
+export default connectionSlice.reducer;

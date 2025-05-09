@@ -1,9 +1,7 @@
-import * as store from "./utils/store";
+import { createAction, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export const ADD = "EVENTS_ADD";
-export const RECEIVE = "EVENTS_RECEIVE";
-export const TOGGLE_VISIBILITY = "EVENTS_TOGGLE_VISIBILITY";
-export const TOGGLE_FILTER = "EVENTS_TOGGLE_FILTER";
+export const EVENTS_ADD = createAction<EventLogItem>("EVENTS_ADD");
+export const EVENTS_RECEIVE = createAction<EventLogItem[]>("EVENTS_RECEIVE");
 
 export enum LogLevel {
     debug = "debug",
@@ -13,82 +11,62 @@ export enum LogLevel {
     error = "error",
 }
 
-export interface EventLogItem extends store.Item {
+export interface EventLogItem {
+    id: string;
     message: string;
     level: LogLevel;
 }
 
-interface EventLogState extends store.State<EventLogItem> {
+interface EventLogState {
     visible: boolean;
     filters: { [level in LogLevel]: boolean };
+    list: EventLogItem[];
+    view: EventLogItem[];
 }
 
-const defaultState: EventLogState = {
+export const defaultState: EventLogState = {
     visible: false,
     filters: { debug: false, info: true, web: true, warn: true, error: true },
-    ...store.defaultState,
+    list: [],
+    view: [],
 };
 
-export default function reduce(
-    state: EventLogState = defaultState,
-    action,
-): EventLogState {
-    switch (action.type) {
-        case TOGGLE_VISIBILITY:
-            return {
-                ...state,
-                visible: !state.visible,
-            };
+const eventLogSlice = createSlice({
+    name: "eventLog",
+    initialState: defaultState,
+    reducers: {
+        toggleVisibility: (state) => {
+            state.visible = !state.visible;
+        },
+        toggleFilter: (state, action: PayloadAction<LogLevel>) => {
+            state.filters[action.payload] = !state.filters[action.payload];
+            state.view = state.list.filter((log) => state.filters[log.level]);
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(EVENTS_ADD, (state, { payload: logItem }) => {
+                state.list.push(logItem);
+                if (state.filters[logItem.level]) {
+                    state.view.push(logItem);
+                }
+            })
+            .addCase(EVENTS_RECEIVE, (state, action) => {
+                state.list = action.payload;
+                state.view = state.list.filter(
+                    (log) => state.filters[log.level],
+                );
+            });
+    },
+});
 
-        case TOGGLE_FILTER: {
-            const filters = {
-                ...state.filters,
-                [action.filter]: !state.filters[action.filter],
-            };
-            return {
-                ...state,
-                filters,
-                ...store.reduce(
-                    state,
-                    store.setFilter<EventLogItem>((log) => filters[log.level]),
-                ),
-            };
-        }
-        case ADD:
-        case RECEIVE:
-            return {
-                ...state,
-                ...store.reduce(
-                    state,
-                    store[action.cmd](
-                        action.data,
-                        (log: EventLogItem) => state.filters[log.level],
-                    ),
-                ),
-            };
-
-        default:
-            return state;
-    }
-}
-
-export function toggleFilter(filter: LogLevel) {
-    return { type: TOGGLE_FILTER, filter };
-}
-
-export function toggleVisibility() {
-    return { type: TOGGLE_VISIBILITY };
-}
+export const { toggleVisibility, toggleFilter } = eventLogSlice.actions;
+export default eventLogSlice.reducer;
 
 export function add(message: string, level: LogLevel = LogLevel.web) {
-    const data = {
+    return EVENTS_ADD({
         id: Math.random().toString(),
         message,
         level,
-    };
-    return {
-        type: ADD,
-        cmd: "add",
-        data,
-    };
+    });
 }

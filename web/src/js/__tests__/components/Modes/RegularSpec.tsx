@@ -12,7 +12,7 @@ test("RegularSpec", async () => {
 
     act(() =>
         store.dispatch(
-            backendState.mockUpdate({
+            backendState.STATE_UPDATE({
                 servers: {
                     regular: {
                         description: "Regular Mode",

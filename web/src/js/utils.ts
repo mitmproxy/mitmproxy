@@ -204,3 +204,8 @@ export function partition(str: string, sep: string): [string, string] {
     const after = str.slice(index + sep.length);
     return [before, after];
 }
+
+/* istanbul ignore next @preserve */
+export function assertNever(val: never): never {
+    throw new Error(`Unreachable: ${JSON.stringify(val)}`);
+}

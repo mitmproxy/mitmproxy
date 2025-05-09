@@ -124,10 +124,10 @@ export const testState: RootState = {
             { id: "1", level: LogLevel.info, message: "foo" },
             { id: "2", level: LogLevel.error, message: "bar" },
         ],
-        byId: {}, // TODO: incomplete
-        list: [], // TODO: incomplete
-        listIndex: {}, // TODO: incomplete
-        viewIndex: {}, // TODO: incomplete
+        list: [
+            { id: "1", level: LogLevel.info, message: "foo" },
+            { id: "2", level: LogLevel.error, message: "bar" },
+        ],
     },
     commandBar: {
         visible: false,
