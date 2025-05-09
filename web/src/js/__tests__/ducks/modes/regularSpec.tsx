@@ -4,13 +4,9 @@ import regularReducer, {
     setListenPort,
     setActive,
 } from "./../../../ducks/modes/regular";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("regularSlice", () => {
     it("should have working setters", async () => {
@@ -19,6 +15,7 @@ describe("regularSlice", () => {
 
         expect(store.getState().modes.regular[0]).toEqual({
             active: true,
+            ui_id: store.getState().modes.regular[0].ui_id,
         });
 
         const server = store.getState().modes.regular[0];
@@ -30,6 +27,7 @@ describe("regularSlice", () => {
             active: false,
             listen_host: "127.0.0.1",
             listen_port: 4444,
+            ui_id: store.getState().modes.regular[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -69,24 +67,21 @@ describe("regularSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active regular proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "regular@localhost:8081": {
-                        description: "HTTP(S) proxy",
-                        full_spec: "regular@localhost:8081",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8081],
-                            ["::1", 8081],
-                        ],
-                        type: "regular",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "regular@localhost:8081": {
+                    description: "HTTP(S) proxy",
+                    full_spec: "regular@localhost:8081",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8081],
+                        ["::1", 8081],
+                    ],
+                    type: "regular",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = regularReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -99,12 +94,7 @@ describe("regularSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active regular proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = regularReducer(initialState, action);
         expect(newState).toEqual([
             {

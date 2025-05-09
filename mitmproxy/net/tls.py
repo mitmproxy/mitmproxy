@@ -258,7 +258,7 @@ def create_client_proxy_context(
         context.set_verify(Verify.VERIFY_NONE.value, None)
 
     for i in extra_chain_certs:
-        context.add_extra_chain_cert(i.to_pyopenssl())
+        context.add_extra_chain_cert(i.to_cryptography())
 
     if dhparams:
         res = SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)  # type: ignore

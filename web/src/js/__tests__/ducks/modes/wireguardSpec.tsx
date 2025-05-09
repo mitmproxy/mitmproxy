@@ -5,13 +5,9 @@ import wireguardReducer, {
     setActive,
     setFilePath,
 } from "./../../../ducks/modes/wireguard";
-import {
-    RECEIVE as STATE_RECEIVE,
-    BackendState,
-} from "../../../ducks/backendState";
+import { STATE_UPDATE } from "../../../ducks/backendState";
 import { TStore } from "../tutils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
-import { PayloadAction } from "@reduxjs/toolkit";
 
 describe("wireguardSlice", () => {
     it("should have working setters", async () => {
@@ -20,6 +16,7 @@ describe("wireguardSlice", () => {
 
         expect(store.getState().modes.wireguard[0]).toEqual({
             active: false,
+            ui_id: store.getState().modes.wireguard[0].ui_id,
         });
 
         const server = store.getState().modes.wireguard[0];
@@ -33,6 +30,7 @@ describe("wireguardSlice", () => {
             listen_host: "127.0.0.1",
             listen_port: 4444,
             file_path: "/path/example",
+            ui_id: store.getState().modes.wireguard[0].ui_id,
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(4);
@@ -83,24 +81,21 @@ describe("wireguardSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with an active wireguard proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {
-                    "wireguard:/path/example@localhost:8081": {
-                        description: "WireGuard server",
-                        full_spec: "wireguard:/path/example@localhost:8081",
-                        is_running: true,
-                        last_exception: null,
-                        listen_addrs: [
-                            ["127.0.0.1", 8081],
-                            ["::1", 8081],
-                        ],
-                        type: "wireguard",
-                    },
+        const action = STATE_UPDATE({
+            servers: {
+                "wireguard:/path/example@localhost:8081": {
+                    description: "WireGuard server",
+                    full_spec: "wireguard:/path/example@localhost:8081",
+                    is_running: true,
+                    last_exception: null,
+                    listen_addrs: [
+                        ["127.0.0.1", 8081],
+                        ["::1", 8081],
+                    ],
+                    type: "wireguard",
                 },
             },
-        } as PayloadAction<Partial<BackendState>>;
+        });
         const newState = wireguardReducer(initialState, action);
         expect(newState).toEqual([
             {
@@ -114,12 +109,7 @@ describe("wireguardSlice", () => {
     });
 
     it("should handle RECEIVE_STATE with no active wireguard proxy", () => {
-        const action = {
-            type: STATE_RECEIVE.type,
-            payload: {
-                servers: {},
-            },
-        } as PayloadAction<Partial<BackendState>>;
+        const action = STATE_UPDATE({ servers: {} });
         const newState = wireguardReducer(initialState, action);
         expect(newState).toEqual([
             {

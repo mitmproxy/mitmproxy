@@ -332,27 +332,35 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_flow_contentview(self):
         assert get_json(self.fetch("/flows/42/request/content/raw")) == {
-            "lines": [[["text", "foo"]], [["text", "bar"]]],
-            "description": "Raw",
+            "description": "",
+            "syntax_highlight": "none",
+            "text": "foo\nbar",
+            "view_name": "Raw",
         }
         assert get_json(self.fetch("/flows/42/request/content/raw?lines=1")) == {
-            "lines": [[["text", "foo"]]],
-            "description": "Raw",
+            "description": "",
+            "syntax_highlight": "none",
+            "text": "foo\n",
+            "view_name": "Raw",
         }
         assert self.fetch("/flows/42/messages/content/raw").code == 400
 
     def test_flow_contentview_websocket(self):
         assert get_json(self.fetch("/flows/43/messages/content/raw?lines=2")) == [
             {
-                "description": "Raw",
+                "text": "hello binary",
+                "view_name": "Raw",
+                "syntax_highlight": "none",
+                "description": "",
                 "from_client": True,
-                "lines": [[["text", "hello binary"]]],
                 "timestamp": 946681203,
             },
             {
-                "description": "Raw",
+                "text": "hello text",
+                "view_name": "Raw",
+                "syntax_highlight": "none",
+                "description": "",
                 "from_client": True,
-                "lines": [[["text", "hello text"]]],
                 "timestamp": 946681204,
             },
         ]
@@ -406,9 +414,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         r1 = yield ws_client.read_message()
         response = json.loads(r1)
         assert response == {
-            "resource": "options",
-            "cmd": "update",
-            "data": {
+            "type": "options/update",
+            "payload": {
                 "anticomp": {
                     "value": True,
                     "choices": None,
@@ -590,8 +597,27 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             ).body
         )
 
+    def test_login_with_token_header(self):
+        web_password = self.master.addons.get("webauth")._password
+        headers = {"Cookie": "", "Authorization": f"Bearer {web_password}"}
+        assert self.fetch("/", headers=headers).code == 200
+
+    def test_login_with_token_param(self):
+        web_password = self.master.addons.get("webauth")._password
+        headers = {"Cookie": ""}
+        assert self.fetch(f"/?token={web_password}", headers=headers).code == 200
+
+    def test_login_with_malformed_auth_header(self):
+        headers = {"Cookie": "", "Authorization": f"Bearer"}
+        assert self.fetch("/", headers=headers).code == 403
+
+    def test_login_with_invalid_auth_header(self):
+        headers = {"Cookie": "", "Authorization": f"Bearer invalid_token"}
+        assert self.fetch("/", headers=headers).code == 403
+
     def test_unauthorized_api(self):
-        assert self.fetch("/", headers={"Cookie": ""}).code == 403
+        headers = {"Cookie": ""}
+        assert self.fetch("/", headers=headers).code == 403
 
     @tornado.testing.gen_test
     def test_unauthorized_websocket(self):

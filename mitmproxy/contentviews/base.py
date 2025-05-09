@@ -1,4 +1,5 @@
 # Default view cutoff *in lines*
+import sys
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Iterable
@@ -10,6 +11,11 @@ from typing import Union
 from mitmproxy import flow
 from mitmproxy import http
 
+if sys.version_info < (3, 13):  # pragma: no cover
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
+
 KEY_MAX = 30
 
 TTextType = Union[str, bytes]  # FIXME: This should be either bytes or str ultimately.
@@ -17,7 +23,12 @@ TViewLine = list[tuple[str, TTextType]]
 TViewResult = tuple[str, Iterator[TViewLine]]
 
 
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 class View(ABC):
+    """
+    Deprecated, do not use.
+    """
+
     name: ClassVar[str]
 
     @abstractmethod
@@ -70,6 +81,7 @@ class View(ABC):
         return self.name.__lt__(other.name)
 
 
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def format_pairs(items: Iterable[tuple[TTextType, TTextType]]) -> Iterator[TViewLine]:
     """
     Helper function that accepts a list of (k,v) pairs into a list of
@@ -94,6 +106,7 @@ def format_pairs(items: Iterable[tuple[TTextType, TTextType]]) -> Iterator[TView
         yield [("header", key), ("text", value)]
 
 
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def format_dict(d: Mapping[TTextType, TTextType]) -> Iterator[TViewLine]:
     """
     Helper function that transforms the given dictionary into a list of
@@ -107,6 +120,7 @@ def format_dict(d: Mapping[TTextType, TTextType]) -> Iterator[TViewLine]:
     return format_pairs(d.items())
 
 
+@deprecated("Use `mitmproxy.contentviews.Contentview` instead.")
 def format_text(text: TTextType) -> Iterator[TViewLine]:
     """
     Helper function that transforms bytes into the view output format.

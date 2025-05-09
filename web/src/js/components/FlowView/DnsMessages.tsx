@@ -63,7 +63,9 @@ const ResourceRecords: React.FC<{
                             <td>{rr.type}</td>
                             <td>{rr.class}</td>
                             <td>{rr.ttl}</td>
-                            <td>{rr.data}</td>
+                            <td>
+                                {JSON.stringify(rr.data).replace(/^"|"$/g, "")}
+                            </td>
                         </tr>
                     ))}
                 </tbody>
@@ -98,9 +100,7 @@ const Message: React.FC<{
 );
 
 export function Request() {
-    const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
-    ) as DNSFlow;
+    const flow = useAppSelector((state) => state.flows.selected[0]) as DNSFlow;
     return <Message type="request" message={flow.request} />;
 }
 
@@ -108,7 +108,7 @@ Request.displayName = "Request";
 
 export function Response() {
     const flow = useAppSelector(
-        (state) => state.flows.byId[state.flows.selected[0]],
+        (state) => state.flows.selected[0],
     ) as DNSFlow & { response: DNSMessage };
     return <Message type="response" message={flow.response} />;
 }

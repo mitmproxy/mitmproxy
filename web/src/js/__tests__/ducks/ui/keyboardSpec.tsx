@@ -2,34 +2,28 @@ import * as flowsActions from "../../../ducks/flows";
 import { onKeyDown } from "../../../ducks/ui/keyboard";
 import * as modalActions from "../../../ducks/ui/modal";
 import { fetchApi, runCommand } from "../../../utils";
-import { TStore } from "../tutils";
+import { TFlow, TStore } from "../tutils";
 
 jest.mock("../../../utils");
 
 describe("onKeyDown", () => {
     const makeStore = () => {
         const store = TStore();
-        store.dispatch({
-            type: flowsActions.RECEIVE,
-            cmd: "receive",
-            data: [],
-        });
+        store.dispatch(flowsActions.FLOWS_RECEIVE([]));
         store.dispatch(flowsActions.setFilter(""));
-        store.dispatch(flowsActions.select("1"));
         for (let i = 1; i <= 12; i++) {
-            store.dispatch({
-                type: flowsActions.ADD,
-                cmd: "add",
-                data: {
+            store.dispatch(
+                flowsActions.FLOWS_ADD({
+                    ...TFlow(),
                     id: i + "",
-                    request: true,
-                    response: true,
-                    type: "http",
+                    websocket: undefined,
+                    error: undefined,
                     intercepted: true,
                     modified: true,
-                },
-            });
+                }),
+            );
         }
+        store.dispatch(flowsActions.select([store.getState().flows.list[0]]));
         return store;
     };
 
@@ -47,29 +41,29 @@ describe("onKeyDown", () => {
         const store = makeStore();
         // down
         store.dispatch(createKeyEvent("j"));
-        expect(store.getState().flows.selected).toEqual(["2"]);
+        expect(store.getState().flows.selected[0].id).toEqual("2");
         store.dispatch(createKeyEvent("ArrowDown"));
-        expect(store.getState().flows.selected).toEqual(["3"]);
+        expect(store.getState().flows.selected[0].id).toEqual("3");
 
         // up
         store.dispatch(createKeyEvent("k"));
-        expect(store.getState().flows.selected).toEqual(["2"]);
+        expect(store.getState().flows.selected[0].id).toEqual("2");
         store.dispatch(createKeyEvent("ArrowUp"));
-        expect(store.getState().flows.selected).toEqual(["1"]);
+        expect(store.getState().flows.selected[0].id).toEqual("1");
         store.dispatch(createKeyEvent("ArrowUp"));
-        expect(store.getState().flows.selected).toEqual(["1"]);
+        expect(store.getState().flows.selected[0].id).toEqual("1");
     });
 
     it("should handle scrolling", () => {
         const store = makeStore();
         store.dispatch(createKeyEvent("PageDown"));
-        expect(store.getState().flows.selected).toEqual(["11"]);
+        expect(store.getState().flows.selected[0].id).toEqual("11");
         store.dispatch(createKeyEvent("End"));
-        expect(store.getState().flows.selected).toEqual(["12"]);
+        expect(store.getState().flows.selected[0].id).toEqual("12");
         store.dispatch(createKeyEvent("PageUp"));
-        expect(store.getState().flows.selected).toEqual(["2"]);
+        expect(store.getState().flows.selected[0].id).toEqual("2");
         store.dispatch(createKeyEvent("Home"));
-        expect(store.getState().flows.selected).toEqual(["1"]);
+        expect(store.getState().flows.selected[0].id).toEqual("1");
     });
 
     it("should handle deselect", () => {
@@ -118,19 +112,18 @@ describe("onKeyDown", () => {
         });
     });
 
-    it("should handle resume action", () => {
+    it("should handle resume action", async () => {
         const store = makeStore();
-        // resume all
-        store.dispatch(createKeyEvent("A"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", {
+        await store.dispatch(createKeyEvent("a"));
+        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", {
             method: "POST",
         });
-        // resume
-        store.getState().flows.byId[
-            store.getState().flows.selected[0]
-        ].intercepted = true;
-        store.dispatch(createKeyEvent("a"));
-        expect(fetchApi).toHaveBeenCalledWith("/flows/1/resume", {
+    });
+
+    it("should handle resume all action", async () => {
+        const store = makeStore();
+        await store.dispatch(createKeyEvent("A"));
+        expect(fetchApi).toHaveBeenCalledWith("/flows/resume", {
             method: "POST",
         });
     });
@@ -173,7 +166,7 @@ describe("onKeyDown", () => {
 
     it("should stop on some action with no flow is selected", () => {
         const store = makeStore();
-        store.dispatch(flowsActions.select(undefined));
+        store.dispatch(flowsActions.select([]));
         store.dispatch(createKeyEvent("ArrowLeft"));
         store.dispatch(createKeyEvent("Tab"));
         store.dispatch(createKeyEvent("ArrowRight"));

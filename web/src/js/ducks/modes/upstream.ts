@@ -1,8 +1,5 @@
 import { createModeUpdateThunk, addSetter, updateState } from "./utils";
-import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { createSlice } from "@reduxjs/toolkit";
 import { parseRaw } from "../../modes/upstream";
 import { UpstreamState } from "../../modes/upstream";
@@ -39,8 +36,8 @@ export const upstreamSlice = createSlice({
         addSetter(builder, "listen_port", setListenPort);
         addSetter(builder, "destination", setDestination);
 
-        builder.addCase(RECEIVE_STATE, updateState("upstream", parseRaw));
-        builder.addCase(UPDATE_STATE, updateState("upstream", parseRaw));
+        builder.addCase(STATE_RECEIVE, updateState("upstream", parseRaw));
+        builder.addCase(STATE_UPDATE, updateState("upstream", parseRaw));
     },
 });
 

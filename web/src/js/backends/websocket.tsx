@@ -3,14 +3,38 @@
  *  from the REST API and live updates delivered via a WebSocket connection.
  *  An alternative backend may use the REST API only to host static instances.
  */
-import { fetchApi } from "../utils";
+import { assertNever, fetchApi } from "../utils";
 import * as connectionActions from "../ducks/connection";
 import { Store } from "redux";
 import { RootState } from "../ducks";
-import { PayloadAction } from "@reduxjs/toolkit";
-import { BackendState } from "../ducks/backendState";
+import { STATE_RECEIVE, STATE_UPDATE } from "../ducks/backendState";
+import { EVENTS_ADD, EVENTS_RECEIVE } from "../ducks/eventLog";
+import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../ducks/options";
+import {
+    FLOWS_ADD,
+    FLOWS_RECEIVE,
+    FLOWS_REMOVE,
+    FLOWS_UPDATE,
+} from "../ducks/flows";
+import { Action } from "@reduxjs/toolkit";
 
-const CMD_RESET = "reset";
+export enum Resource {
+    State = "state",
+    Flows = "flows",
+    Events = "events",
+    Options = "options",
+}
+
+/// All possible events emitted by the WebSocket backend.
+type WebsocketMessageType =
+    | "flows/add"
+    | "flows/update"
+    | "flows/remove"
+    | "flows/reset"
+    | "events/add"
+    | "events/reset"
+    | "options/update"
+    | "state/update";
 
 interface WebSocketMessage {
     cmd: string;
@@ -19,11 +43,7 @@ interface WebSocketMessage {
 }
 
 export default class WebsocketBackend {
-    activeFetches: {
-        flows?: [];
-        events?: [];
-        options?: [];
-    };
+    activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
     socket: WebSocket;
     messagesQueue: string[]; // Queue for messages while connecting.
@@ -50,18 +70,15 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
-        this.messagesQueue.forEach((message) => this.socket.send(message)); // Flush the message queue.
-        this.messagesQueue = [];
-
-        this.fetchData("state");
-        this.fetchData("flows");
-        this.fetchData("events");
-        this.fetchData("options");
+        this.fetchData(Resource.State);
+        this.fetchData(Resource.Flows);
+        this.fetchData(Resource.Events);
+        this.fetchData(Resource.Options);
         this.store.dispatch(connectionActions.startFetching());
     }
 
-    fetchData(resource: string) {
-        const queue = [];
+    fetchData(resource: Resource) {
+        const queue: Array<Action> = [];
         this.activeFetches[resource] = queue;
         fetchApi(`./${resource}`)
             .then((res) => res.json())
@@ -72,61 +89,82 @@ export default class WebsocketBackend {
             });
     }
 
-    onMessage(msg: WebSocketMessage) {
-        if (msg.cmd === CMD_RESET) {
-            return this.fetchData(msg.resource);
-        }
-        if (msg.resource in this.activeFetches) {
-            this.activeFetches[msg.resource].push(msg);
-        } else {
-            const type = `${msg.resource}_${msg.cmd}`.toUpperCase();
-            this.store.dispatch({ type, ...msg });
+    onMessage(msg: { type: WebsocketMessageType; payload?: any }) {
+        switch (msg.type) {
+            case "flows/add":
+                return this.queueOrDispatch(
+                    Resource.Flows,
+                    FLOWS_ADD(msg.payload),
+                );
+            case "flows/update":
+                return this.queueOrDispatch(
+                    Resource.Flows,
+                    FLOWS_UPDATE(msg.payload),
+                );
+            case "flows/remove":
+                return this.queueOrDispatch(
+                    Resource.Flows,
+                    FLOWS_REMOVE(msg.payload),
+                );
+            case "events/add":
+                return this.queueOrDispatch(
+                    Resource.Events,
+                    EVENTS_ADD(msg.payload),
+                );
+            case "options/update":
+                return this.queueOrDispatch(
+                    Resource.Options,
+                    OPTIONS_UPDATE(msg.payload),
+                );
+            case "state/update":
+                return this.queueOrDispatch(
+                    Resource.State,
+                    STATE_UPDATE(msg.payload),
+                );
+            case "flows/reset":
+                return this.fetchData(Resource.Flows);
+            case "events/reset":
+                return this.fetchData(Resource.Events);
+            /* istanbul ignore next @preserve */
+            default:
+                assertNever(msg.type);
         }
     }
 
-    receive(resource: string, data: any) {
-        const type = `${resource}_RECEIVE`.toUpperCase();
-        if (resource === "state") {
-            this.store.dispatch({
-                type,
-                payload: data,
-            } as PayloadAction<BackendState>);
-        } else {
-            // deprecated: these should be converted to payload actions as well.
-            this.store.dispatch({ type, cmd: "receive", resource, data });
-        }
+    queueOrDispatch(resource: Resource, action: Action) {
         const queue = this.activeFetches[resource];
+        if (queue !== undefined) {
+            queue.push(action);
+        } else {
+            this.store.dispatch(action);
+        }
+    }
+
+    receive(resource: Resource, data) {
+        switch (resource) {
+            case Resource.State:
+                this.store.dispatch(STATE_RECEIVE(data));
+                break;
+            case Resource.Options:
+                this.store.dispatch(OPTIONS_RECEIVE(data));
+                break;
+            case Resource.Events:
+                this.store.dispatch(EVENTS_RECEIVE(data));
+                break;
+            case Resource.Flows:
+                this.store.dispatch(FLOWS_RECEIVE(data));
+                break;
+            /* istanbul ignore next @preserve */
+            default:
+                assertNever(resource);
+        }
+        const queue = this.activeFetches[resource]!;
         delete this.activeFetches[resource];
-        queue.forEach((msg: WebSocketMessage) => this.onMessage(msg));
+        queue.forEach((msg) => this.store.dispatch(msg));
 
         if (Object.keys(this.activeFetches).length === 0) {
             // We have fetched the last resource
             this.store.dispatch(connectionActions.connectionEstablished());
-        }
-    }
-
-    updateFilter(name: string, expr: string) {
-        this.sendMessage("flows", {
-            cmd: "updateFilter",
-            name,
-            expr,
-        });
-    }
-
-    private sendMessage(resource: string, data: any) {
-        const message = JSON.stringify({ resource, ...data });
-        if (this.socket) {
-            if (this.socket.readyState === WebSocket.CONNECTING) {
-                this.messagesQueue.push(message);
-            } else if (this.socket.readyState === WebSocket.OPEN) {
-                this.socket.send(message);
-            } else {
-                console.error(
-                    "WebSocket is not open. Cannot send message:",
-                    resource,
-                    data,
-                );
-            }
         }
     }
 

@@ -1,6 +1,5 @@
+/** @returns {Promise<import('jest').Config>} */
 module.exports = async () => {
-    process.env.TZ = "UTC";
-
     return {
         testEnvironment: "jsdom",
         testRegex: "__tests__/.*Spec.(js|ts)x?$",
@@ -25,5 +24,6 @@ module.exports = async () => {
                 },
             ],
         },
+        setupFilesAfterEnv: ["<rootDir>/setup-jest.js"],
     };
 };

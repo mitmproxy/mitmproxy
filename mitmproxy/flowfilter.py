@@ -321,9 +321,9 @@ class FBod(_Rex):
                 if msg.content is not None and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
-            if f.request and self.re.search(f.request.content):
+            if f.request and self.re.search(str(f.request).encode()):
                 return True
-            if f.response and self.re.search(f.response.content):
+            if f.response and self.re.search(str(f.response).encode()):
                 return True
         return False
 
@@ -351,7 +351,7 @@ class FBodRequest(_Rex):
                 if msg.from_client and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
-            if f.request and self.re.search(f.request.content):
+            if f.request and self.re.search(str(f.request).encode()):
                 return True
 
 
@@ -378,7 +378,7 @@ class FBodResponse(_Rex):
                 if not msg.from_client and self.re.search(msg.content):
                     return True
         elif isinstance(f, dns.DNSFlow):
-            if f.response and self.re.search(f.response.content):
+            if f.response and self.re.search(str(f.response).encode()):
                 return True
 
 
@@ -629,15 +629,16 @@ def _make():
     parts.append(f)
 
     atom = pp.MatchFirst(parts)
-    expr = pp.infixNotation(
-        atom,
-        [
-            (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
-            (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
-            (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
-        ],
+    expr = pp.OneOrMore(
+        pp.infixNotation(
+            atom,
+            [
+                (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
+                (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
+                (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
+            ],
+        )
     )
-    expr = pp.OneOrMore(expr)
     return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
 
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 import functools
 import hashlib
 import json
-import logging
 import os.path
 import re
 import secrets
@@ -11,7 +10,7 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from itertools import islice
+from typing import Any
 from typing import ClassVar
 from typing import Concatenate
 
@@ -42,6 +41,7 @@ from mitmproxy.udp import UDPMessage
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils.emoji import emoji
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.utils.strutils import cut_after_n_lines
 from mitmproxy.websocket import WebSocketMessage
 
 TRANSPARENT_PNG = (
@@ -238,7 +238,15 @@ class AuthRequestHandler(tornado.web.RequestHandler):
             self: AuthRequestHandler, *args: P.args, **kwargs: P.kwargs
         ) -> R | None:
             if not self.current_user:
-                password = self.get_argument("token", default="")
+                password = ""
+                if auth_header := self.request.headers.get("Authorization"):
+                    auth_scheme, _, auth_params = auth_header.partition(" ")
+                    if auth_scheme == "Bearer":
+                        password = auth_params
+
+                if not password:
+                    password = self.get_argument("token", default="")
+
                 if not self.settings["is_valid_password"](password):
                     self.set_status(403)
                     self.auth_fail(bool(password))
@@ -661,23 +669,30 @@ class FlowContent(RequestHandler):
 class FlowContentView(RequestHandler):
     def message_to_json(
         self,
-        viewname: str,
+        view_name: str,
         message: http.Message | TCPMessage | UDPMessage | WebSocketMessage,
         flow: HTTPFlow | TCPFlow | UDPFlow,
         max_lines: int | None = None,
+        from_client: bool | None = None,
+        timestamp: float | None = None,
     ):
-        description, lines, error = contentviews.get_message_content_view(
-            viewname, message, flow
-        )
-        if error:
-            logging.error(error)
+        if view_name and view_name.lower() == "auto":
+            view_name = "auto"
+        pretty = contentviews.prettify_message(message, flow, view_name=view_name)
         if max_lines:
-            lines = islice(lines, max_lines)
+            pretty.text = cut_after_n_lines(pretty.text, max_lines)
 
-        return dict(
-            lines=list(lines),
-            description=description,
+        ret: dict[str, Any] = dict(
+            text=pretty.text,
+            view_name=pretty.view_name,
+            syntax_highlight=pretty.syntax_highlight,
+            description=pretty.description,
         )
+        if from_client is not None:
+            ret["from_client"] = from_client
+        if timestamp is not None:
+            ret["timestamp"] = timestamp
+        return ret
 
     def get(self, flow_id, message, content_view) -> None:
         flow = self.flow
@@ -698,12 +713,18 @@ class FlowContentView(RequestHandler):
                 raise APIError(400, f"This flow has no messages.")
             msgs = []
             for m in messages:
-                d = self.message_to_json(content_view, m, flow, max_lines)
-                d["from_client"] = m.from_client
-                d["timestamp"] = m.timestamp
+                d = self.message_to_json(
+                    view_name=content_view,
+                    message=m,
+                    flow=flow,
+                    max_lines=max_lines,
+                    from_client=m.from_client,
+                    timestamp=m.timestamp,
+                )
                 msgs.append(d)
                 if max_lines:
-                    max_lines -= len(d["lines"])
+                    max_lines -= d["text"].count("\n") + 1
+                    assert max_lines is not None
                     if max_lines <= 0:
                         break
             self.write(msgs)
@@ -786,7 +807,9 @@ class State(RequestHandler):
     def get_json(master: mitmproxy.tools.web.master.WebMaster):
         return {
             "version": version.VERSION,
-            "contentViews": [v.name for v in contentviews.views if v.name != "Query"],
+            "contentViews": [
+                v for v in contentviews.registry.available_views() if v != "query"
+            ],
             "servers": {
                 s.mode.full_spec: s.to_json() for s in master.proxyserver.servers
             },
@@ -805,7 +828,7 @@ class ProcessList(RequestHandler):
         return [
             {
                 "is_visible": process.is_visible,
-                "executable": process.executable,
+                "executable": str(process.executable),
                 "is_system": process.is_system,
                 "display_name": process.display_name,
             }

@@ -86,7 +86,7 @@ class TestHTTPSRecords:
         except struct.error:
             pass
 
-    def test_str(self):
+    def test_to_json(self):
         params = {
             0: b"\x00",
             1: b"\x01",
@@ -97,13 +97,39 @@ class TestHTTPSRecords:
             6: b"\x05",
         }
         record = https_records.HTTPSRecord(1, "example.com", params)
-        assert (
-            str(record)
-            == "priority: 1 target_name: 'example.com' {'mandatory': b'\\x00', 'alpn': b'\\x01', 'no_default_alpn': b'', 'port': b'\\x02', 'ipv4hint': b'\\x03', 'ech': b'\\x04', 'ipv6hint': b'\\x05'}"
-        )
+        assert record.to_json() == {
+            "alpn": r"\x01",
+            "ech": r"\x04",
+            "ipv4hint": r"\x03",
+            "ipv6hint": r"\x05",
+            "mandatory": r"\x00",
+            "no_default_alpn": "",
+            "port": r"\x02",
+            "priority": 1,
+            "target_name": "example.com",
+        }
 
         params = {111: b"\x00"}
         record = https_records.HTTPSRecord(1, "example.com", params)
+        assert record.to_json() == {
+            111: r"\x00",
+            "priority": 1,
+            "target_name": "example.com",
+        }
         assert (
-            str(record) == "priority: 1 target_name: 'example.com' {'key111': b'\\x00'}"
+            str(record)
+            == r"{'target_name': 'example.com', 'priority': 1, 111: '\\x00'}"
         )
+
+    def test_from_json(self):
+        record = https_records.HTTPSRecord.from_json(
+            {
+                "mandatory": r"\x00",
+                "no_default_alpn": "",
+                "priority": 1,
+                "target_name": "example.com",
+            }
+        )
+        assert record.target_name == "example.com"
+        assert record.priority == 1
+        assert record.params == {0: b"\x00", 2: b""}

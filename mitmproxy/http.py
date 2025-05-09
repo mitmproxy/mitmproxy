@@ -316,6 +316,8 @@ class Message(serializable.Serializable):
         The raw (potentially compressed) HTTP message body.
 
         In contrast to `Message.content` and `Message.text`, accessing this property never raises.
+        `raw_content` may be `None` if the content is missing, for example due to body streaming
+        (see `Message.stream`). In contrast, `b""` signals a present but empty message body.
 
         *See also:* `Message.content`, `Message.text`
         """
@@ -791,12 +793,13 @@ class Request(Message):
         """
         if self.first_line_format == "authority":
             return f"{self.host}:{self.port}"
-        return url.unparse(self.scheme, self.host, self.port, self.path)
+        path = self.path if self.path != "*" else ""
+        return url.unparse(self.scheme, self.host, self.port, path)
 
     @url.setter
     def url(self, val: str | bytes) -> None:
         val = always_str(val, "utf-8", "surrogateescape")
-        self.scheme, self.host, self.port, self.path = url.parse(val)
+        self.scheme, self.host, self.port, self.path = url.parse(val)  # type: ignore
 
     @property
     def pretty_host(self) -> str:
@@ -827,8 +830,9 @@ class Request(Message):
 
         pretty_host, pretty_port = url.parse_authority(host_header, check=False)
         pretty_port = pretty_port or url.default_port(self.scheme) or 443
+        path = self.path if self.path != "*" else ""
 
-        return url.unparse(self.scheme, pretty_host, pretty_port, self.path)
+        return url.unparse(self.scheme, pretty_host, pretty_port, path)
 
     def _get_query(self):
         query = urllib.parse.urlparse(self.url).query

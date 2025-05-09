@@ -2,6 +2,7 @@ import reduceOptions, * as optionsActions from "../../ducks/options";
 import { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "./tutils";
 import { waitFor } from "@testing-library/dom";
+import { OptionsStateWithMeta } from "../../ducks/options";
 
 enableFetchMocks();
 
@@ -13,18 +14,16 @@ describe("option reducer", () => {
     });
 
     it("should handle receive action", () => {
-        const action = {
-            type: optionsActions.RECEIVE,
-            data: { id: { value: "foo" } },
-        };
+        // @ts-expect-error mock
+        const payload: OptionsStateWithMeta = { id: { value: "foo" } };
+        const action = optionsActions.OPTIONS_RECEIVE(payload);
         expect(reduceOptions(undefined, action)).toEqual({ id: "foo" });
     });
 
     it("should handle update action", () => {
-        const action = {
-            type: optionsActions.UPDATE,
-            data: { id: { value: 1 } },
-        };
+        // @ts-expect-error mock
+        const payload: OptionsStateWithMeta = { id: { value: 1 } };
+        const action = optionsActions.OPTIONS_UPDATE(payload);
         expect(reduceOptions(undefined, action)).toEqual({
             ...optionsActions.defaultState,
             id: 1,
@@ -66,10 +65,15 @@ test("addInterceptFilter", async () => {
     await store.dispatch(optionsActions.addInterceptFilter("~u foo"));
     expect(fetchMock.mock.calls[0][1]?.body).toEqual('{"intercept":"~u foo"}');
 
-    store.dispatch({
-        type: optionsActions.UPDATE,
-        data: { intercept: { value: "~u foo" } },
-    });
+    const payload: Partial<OptionsStateWithMeta> = {
+        intercept: {
+            value: "~u foo",
+            default: "",
+            help: "Intercept filter",
+            type: "str",
+        },
+    };
+    store.dispatch(optionsActions.OPTIONS_UPDATE(payload));
 
     await store.dispatch(optionsActions.addInterceptFilter("~u foo"));
     expect(fetchMock.mock.calls).toHaveLength(1);

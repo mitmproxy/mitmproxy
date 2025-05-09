@@ -1,5 +1,5 @@
 import * as React from "react";
-import { fireEvent, render, screen, waitFor } from "../../test-utils";
+import { act, fireEvent, render, screen, waitFor } from "../../test-utils";
 import LocalDropdown from "../../../components/Modes/LocalDropdown";
 import { TStore } from "../../ducks/tutils";
 import { Provider } from "react-redux";
@@ -16,16 +16,16 @@ test("LocalDropdown - initial render and filtering", async () => {
     );
     expect(asFragment()).toMatchSnapshot();
 
-    const input = screen.getByPlaceholderText("(all applications)");
+    const input = screen.getByPlaceholderText("all applications");
     expect(input).toBeInTheDocument();
 
-    fireEvent.change(input, { target: { value: "curl" } });
+    await act(() => fireEvent.change(input, { target: { value: "curl" } }));
 
     await waitFor(() =>
         expect(screen.getByText("curl.exe")).toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByText("curl.exe"));
+    await act(() => fireEvent.click(screen.getByText("curl.exe")));
 
     expect(
         screen.getByText("curl.exe").parentElement?.parentElement,
@@ -42,8 +42,10 @@ test("LocalDropdown - no matching processes", async () => {
         </Provider>,
     );
 
-    const input = screen.getByPlaceholderText("(all applications)");
-    fireEvent.change(input, { target: { value: "nonexistent" } });
+    const input = screen.getByPlaceholderText("all applications");
+    await act(() =>
+        fireEvent.change(input, { target: { value: "nonexistent" } }),
+    );
 
     await waitFor(() => {
         expect(screen.getByText(/Press/i)).toBeInTheDocument();
@@ -62,20 +64,20 @@ test("LocalDropdown - toggle process selection", async () => {
         </Provider>,
     );
 
-    const input = screen.getByPlaceholderText("(all applications)");
-    fireEvent.change(input, { target: { value: "curl" } });
+    const input = screen.getByPlaceholderText("all applications");
+    await act(() => fireEvent.change(input, { target: { value: "curl" } }));
 
     await waitFor(() =>
         expect(screen.getByText("curl.exe")).toBeInTheDocument(),
     );
 
-    fireEvent.click(screen.getByText("curl.exe"));
+    await act(() => fireEvent.click(screen.getByText("curl.exe")));
 
     expect(
         screen.getByText("curl.exe").parentElement?.parentElement,
     ).toHaveClass("selected");
 
-    fireEvent.click(screen.getByText("curl.exe"));
+    await act(() => fireEvent.click(screen.getByText("curl.exe")));
 
     expect(
         screen.getByText("curl.exe").parentElement?.parentElement,

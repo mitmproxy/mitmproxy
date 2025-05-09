@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-from OpenSSL import crypto
 from OpenSSL import SSL
 
 from mitmproxy import certs
@@ -60,8 +59,8 @@ def test_sslkeylogfile(tdata, monkeypatch):
     server = SSL.Connection(sctx)
     server.set_accept_state()
 
-    server.use_certificate(entry.cert.to_pyopenssl())
-    server.use_privatekey(crypto.PKey.from_cryptography_key(entry.privatekey))
+    server.use_certificate(entry.cert.to_cryptography())
+    server.use_privatekey(entry.privatekey)
 
     client = SSL.Connection(cctx)
     client.set_connect_state()

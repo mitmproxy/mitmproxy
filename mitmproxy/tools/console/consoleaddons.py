@@ -1,5 +1,6 @@
 import csv
 import logging
+import re
 from collections.abc import Sequence
 
 import mitmproxy.types
@@ -14,6 +15,8 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import tcp
 from mitmproxy import udp
+from mitmproxy.contentviews import ContentviewMessage
+from mitmproxy.exceptions import CommandError
 from mitmproxy.log import ALERT
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
@@ -62,7 +65,7 @@ class ConsoleAddon:
             str,
             "auto",
             "The default content view mode.",
-            choices=[i.name.lower() for i in contentviews.views],
+            choices=contentviews.registry.available_views(),
         )
         loader.add_option(
             "console_eventlog_verbosity",
@@ -396,31 +399,58 @@ class ConsoleAddon:
         flow = self.master.view.focus.flow
         focus_options = []
 
+        try:
+            view_name = self.master.commands.call("console.flowview.mode")
+        except CommandError:
+            view_name = "auto"
+
+        def add_message_edit_option(
+            message_name: str, message: ContentviewMessage | None
+        ) -> None:
+            if message is None:
+                return
+            data, _ = contentviews.get_data(message)
+            cv = contentviews.registry.get_view(
+                data or b"",
+                contentviews.make_metadata(message, flow),
+                view_name,
+            )
+            if isinstance(cv, contentviews.InteractiveContentview):
+                focus_options.append(f"{message_name} ({cv.name})")
+
         if flow is None:
             raise exceptions.CommandError("No flow selected.")
         elif isinstance(flow, tcp.TCPFlow):
-            focus_options = ["tcp-message"]
+            focus_options.append("tcp-message")
+            add_message_edit_option("tcp-message", flow.messages[-1])
         elif isinstance(flow, udp.UDPFlow):
-            focus_options = ["udp-message"]
+            focus_options.append("udp-message")
+            add_message_edit_option("udp-message", flow.messages[-1])
         elif isinstance(flow, http.HTTPFlow):
-            focus_options = [
-                "cookies",
-                "urlencoded form",
-                "multipart form",
-                "path",
-                "method",
-                "query",
-                "reason",
-                "request-headers",
-                "response-headers",
-                "request-body",
-                "response-body",
-                "status_code",
-                "set-cookies",
-                "url",
-            ]
+            focus_options.extend(
+                [
+                    "cookies",
+                    "urlencoded form",
+                    "multipart form",
+                    "path",
+                    "method",
+                    "query",
+                    "reason",
+                    "request-headers",
+                    "response-headers",
+                    "request-body",
+                    "response-body",
+                    "status_code",
+                    "set-cookies",
+                    "url",
+                ]
+            )
+            add_message_edit_option("request-body", flow.request)
+            add_message_edit_option("response-body", flow.response)
             if flow.websocket:
-                focus_options.append("websocket-message")
+                add_message_edit_option(
+                    "websocket-message", flow.websocket.messages[-1]
+                )
         elif isinstance(flow, dns.DNSFlow):
             raise exceptions.CommandError(
                 "Cannot edit DNS flows yet, please submit a patch."
@@ -463,6 +493,38 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_request_headers")
         elif flow_part == "response-headers":
             self.master.switch_view("edit_focus_response_headers")
+        elif m := re.match(
+            r"(?P<message>(request|response)-body|(tcp|udp|websocket)-message) \((?P<contentview>.+)\)",
+            flow_part,
+        ):
+            match m["message"]:
+                case "request-body":
+                    message = flow.request
+                case "response-body":
+                    message = flow.response
+                case "tcp-message" | "udp-message":
+                    message = flow.messages[-1]
+                case "websocket-message":
+                    message = flow.websocket.messages[-1]
+                case _:
+                    assert False, "should be exhaustive"
+
+            cv = contentviews.registry.get(m["contentview"])
+            if not cv or not isinstance(cv, contentviews.InteractiveContentview):
+                raise CommandError(
+                    f"Contentview {m['contentview']} is not bidirectional."
+                )
+
+            pretty = contentviews.prettify_message(message, flow, cv.name)
+            prettified = self.master.spawn_editor(pretty.text)
+
+            message.content = contentviews.reencode_message(
+                prettified,
+                message,
+                flow,
+                cv.name,
+            )
+
         elif flow_part in ("request-body", "response-body"):
             if flow_part == "request-body":
                 message = flow.request
@@ -474,9 +536,8 @@ class ConsoleAddon:
             # cause problems. We strip trailing newlines by default, but this
             # behavior is configurable.
             if self.master.options.console_strip_trailing_newlines:
-                message.content = c.rstrip(b"\n")
-            else:
-                message.content = c
+                c = c.rstrip(b"\n")
+            message.content = c
         elif flow_part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
         elif flow_part == "url":
@@ -488,13 +549,14 @@ class ConsoleAddon:
             self.master.commands.call_strings(
                 "console.command", ["flow.set", "@focus", flow_part]
             )
-        elif flow_part in ["tcp-message", "udp-message"]:
-            message = flow.messages[-1]
+        elif flow_part in ["tcp-message", "udp-message", "websocket-message"]:
+            if flow_part == "websocket-message":
+                message = flow.websocket.messages[-1]
+            else:
+                message = flow.messages[-1]
             c = self.master.spawn_editor(message.content or b"")
-            message.content = c.rstrip(b"\n")
-        elif flow_part == "websocket-message":
-            message = flow.websocket.messages[-1]
-            c = self.master.spawn_editor(message.content or b"")
+            if self.master.options.console_strip_trailing_newlines:
+                c = c.rstrip(b"\n")
             message.content = c.rstrip(b"\n")
 
     def _grideditor(self):
@@ -576,7 +638,7 @@ class ConsoleAddon:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
 
-        if mode not in [i.name.lower() for i in contentviews.views]:
+        if mode.lower() not in self.flowview_mode_options():
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
@@ -591,7 +653,7 @@ class ConsoleAddon:
         """
         Returns the valid options for the flowview mode.
         """
-        return [i.name.lower() for i in contentviews.views]
+        return contentviews.registry.available_views()
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:

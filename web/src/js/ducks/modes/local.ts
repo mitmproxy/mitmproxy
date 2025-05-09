@@ -1,7 +1,4 @@
-import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
 import { LocalState, parseRaw } from "../../modes/local";
@@ -28,8 +25,8 @@ export const localSlice = createSlice({
     extraReducers: (builder) => {
         addSetter(builder, "active", setActive);
         addSetter(builder, "selectedProcesses", setSelectedProcesses);
-        builder.addCase(RECEIVE_STATE, updateState("local", parseRaw));
-        builder.addCase(UPDATE_STATE, updateState("local", parseRaw));
+        builder.addCase(STATE_RECEIVE, updateState("local", parseRaw));
+        builder.addCase(STATE_UPDATE, updateState("local", parseRaw));
     },
 });
 

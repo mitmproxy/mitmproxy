@@ -1,8 +1,5 @@
 import { DnsState, parseRaw } from "../../modes/dns";
-import {
-    RECEIVE as RECEIVE_STATE,
-    UPDATE as UPDATE_STATE,
-} from "../backendState";
+import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -29,8 +26,8 @@ export const dnsSlice = createSlice({
         addSetter(builder, "active", setActive);
         addSetter(builder, "listen_host", setListenHost);
         addSetter(builder, "listen_port", setListenPort);
-        builder.addCase(RECEIVE_STATE, updateState("dns", parseRaw));
-        builder.addCase(UPDATE_STATE, updateState("dns", parseRaw));
+        builder.addCase(STATE_RECEIVE, updateState("dns", parseRaw));
+        builder.addCase(STATE_UPDATE, updateState("dns", parseRaw));
     },
 });
 

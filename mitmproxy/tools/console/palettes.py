@@ -70,13 +70,13 @@ class Palette:
         "intercept",
         "replay",
         "mark",
-        # Hex view
-        "offset",
-        # JSON/msgpack view
-        "Token_Name_Tag",
-        "Token_Literal_String",
-        "Token_Literal_Number",
-        "Token_Keyword_Constant",
+        # Contentview Syntax Highlighting
+        "name",
+        "string",
+        "number",
+        "boolean",
+        "comment",
+        "error",
         # TCP flow details
         "from_client",
         "to_client",
@@ -210,13 +210,12 @@ class LowDark(Palette):
         intercept=("brown", "default"),
         replay=("light green", "default"),
         mark=("light red", "default"),
-        # Hex view
-        offset=("dark cyan", "default"),
-        # JSON/msgpack view
-        Token_Name_Tag=("dark green", "default"),
-        Token_Literal_String=("dark blue", "default"),
-        Token_Literal_Number=("light magenta", "default"),
-        Token_Keyword_Constant=("dark magenta", "default"),
+        # Contentview Syntax Highlighting
+        name=("dark green", "default"),
+        string=("dark blue", "default"),
+        number=("light magenta", "default"),
+        boolean=("dark magenta", "default"),
+        comment=("dark gray", "default"),
         # TCP flow details
         from_client=("light blue", "default"),
         to_client=("light red", "default"),
@@ -310,13 +309,12 @@ class LowLight(Palette):
         intercept=("brown", "default"),
         replay=("dark green", "default"),
         mark=("dark red", "default"),
-        # Hex view
-        offset=("dark blue", "default"),
-        # JSON/msgpack view
-        Token_Name_Tag=("dark green", "default"),
-        Token_Literal_String=("dark blue", "default"),
-        Token_Literal_Number=("light magenta", "default"),
-        Token_Keyword_Constant=("dark magenta", "default"),
+        # Contentview Syntax Highlighting
+        name=("dark green", "default"),
+        string=("dark blue", "default"),
+        number=("light magenta", "default"),
+        boolean=("dark magenta", "default"),
+        comment=("dark gray", "default"),
         # TCP flow details
         from_client=("dark blue", "default"),
         to_client=("dark red", "default"),
@@ -433,13 +431,13 @@ class SolarizedLight(LowLight):
             sol_green,
             "default",
         ),
-        # Hex view
-        offset=(sol_cyan, "default"),
-        # JSON/msgpack view
-        Token_Name_Tag=(sol_green, "default"),
-        Token_Literal_String=(sol_cyan, "default"),
-        Token_Literal_Number=(sol_blue, "default"),
-        Token_Keyword_Constant=(sol_magenta, "default"),
+        mark=(sol_base01, "default"),
+        # Contentview Syntax Highlighting
+        name=(sol_green, "default"),
+        string=(sol_cyan, "default"),
+        number=(sol_blue, "default"),
+        boolean=(sol_magenta, "default"),
+        comment=(sol_base1, "default"),
         # TCP flow details
         from_client=(sol_blue, "default"),
         to_client=(sol_red, "default"),
@@ -513,13 +511,13 @@ class SolarizedDark(LowDark):
             sol_green,
             "default",
         ),
-        # Hex view
-        offset=(sol_cyan, "default"),
-        # JSON/msgpack view
-        Token_Name_Tag=(sol_green, "default"),
-        Token_Literal_String=(sol_cyan, "default"),
-        Token_Literal_Number=(sol_blue, "default"),
-        Token_Keyword_Constant=(sol_magenta, "default"),
+        mark=(sol_base01, "default"),
+        # Contentview Syntax Highlighting
+        name=(sol_green, "default"),
+        string=(sol_cyan, "default"),
+        number=(sol_blue, "default"),
+        boolean=(sol_magenta, "default"),
+        comment=(sol_base00, "default"),
         # TCP flow details
         from_client=(sol_blue, "default"),
         to_client=(sol_red, "default"),
