@@ -274,6 +274,13 @@ class TestRawResponse:
         with pytest.raises(exceptions.CommandError):
             export.raw_response(udp_flow)
 
+    def test_head_non_zero_content_length(self):
+        request = tflow.tflow(
+            req=tutils.treq(method=b"HEAD"),
+            resp=tutils.tresp(headers=((b"content-length", b"7"),), content=b""),
+        )
+        assert b"content-length: 7" in export.raw_response(request)
+
 
 def qr(f):
     with open(f, "rb") as fp:
