@@ -117,8 +117,8 @@ export default class WebsocketBackend {
                 return this.fetchData(Resource.Flows);
             case "events/reset":
                 return this.fetchData(Resource.Events);
+            /* istanbul ignore next @preserve */
             default:
-                /* istanbul ignore next @preserve */
                 assertNever(msg.type);
         }
     }
@@ -146,8 +146,8 @@ export default class WebsocketBackend {
             case Resource.Flows:
                 this.store.dispatch(FLOWS_RECEIVE(data));
                 break;
+            /* istanbul ignore next @preserve */
             default:
-                /* istanbul ignore next @preserve */
                 assertNever(resource);
         }
         const queue = this.activeFetches[resource]!;
