@@ -469,6 +469,8 @@ class Message(serializable.Serializable):
         *Raises:*
          - `ValueError`, when the content-encoding is invalid and strict is True.
         """
+        if not self.raw_content:
+            return
         decoded = self.get_content(strict)
         self.headers.pop("content-encoding", None)
         self.content = decoded

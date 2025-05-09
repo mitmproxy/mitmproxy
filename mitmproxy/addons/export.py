@@ -39,8 +39,7 @@ def cleanup_response(f: flow.Flow) -> http.Response:
         raise exceptions.CommandError("Can't export flow with no response.")
     assert isinstance(f, http.HTTPFlow)
     response = f.response.copy()  # type: ignore
-    if response.content:
-        response.decode(strict=False)
+    response.decode(strict=False)
     return response
 
 
