@@ -139,71 +139,78 @@ describe("websocket backend", () => {
         backend.onMessage({ type: "state/update" });
         expect(fetchMock.mock.calls.length).toBe(2);
     });
-});
 
-test("sendMessage should send message when WebSocket is open", () => {
-    const backend = new WebSocketBackend({ dispatch: jest.fn() });
+    test("updateFilter should call socket.send when WebSocket is OPEN", () => {
+        Object.defineProperty(global.WebSocket, "OPEN", { value: 1 }); // otherwise it's undefined in tests
+        const backend = new WebSocketBackend({ dispatch: () => {} });
+        const sendMock = jest.fn();
+        backend.socket = {
+            ...backend.socket,
+            readyState: WebSocket.OPEN,
+            send: sendMock,
+        };
 
-    const sendMessageSpy = jest.spyOn(backend as any, "sendMessage"); // trick to spy on sendMessage, which is private
+        const name = "search";
+        const expr = "~b boo";
 
-    backend.socket = { readyState: WebSocket.OPEN, send: jest.fn() } as any;
+        backend.updateFilter(name, expr);
 
-    const name = "search";
-    const expr = "~b boo";
-
-    backend.updateFilter(name, expr);
-
-    expect(sendMessageSpy).toHaveBeenCalledWith("flows", {
-        cmd: "updateFilter",
-        name,
-        expr,
+        expect(sendMock).toHaveBeenCalledTimes(1);
+        expect(sendMock).toHaveBeenCalledWith(
+            JSON.stringify({
+                type: "flows/updateFilter",
+                name,
+                expr,
+            }),
+        );
     });
-});
 
-test("sendMessage should queue messages when WebSocket is CONNECTING", () => {
-    const backend = new WebSocketBackend({ dispatch: jest.fn() });
+    test("updateFilter should queue messages when WebSocket is CONNECTING", () => {
+        Object.defineProperty(global.WebSocket, "CONNECTING", { value: 0 }); // otherwise it's undefined in tests
+        const backend = new WebSocketBackend({ dispatch: () => {} });
 
-    backend.socket = {
-        readyState: WebSocket.CONNECTING,
-        send: jest.fn(),
-    } as any;
+        backend.socket = {
+            ...backend.socket,
+            readyState: WebSocket.CONNECTING,
+        };
 
-    const messageQueueSpy = jest.spyOn(backend.messagesQueue, "push");
+        backend.messagesQueue = [];
 
-    const name = "search";
-    const expr = "~b boo";
-    backend.updateFilter(name, expr);
+        const name = "search";
+        const expr = "~b boo";
 
-    expect(messageQueueSpy).toHaveBeenCalledWith(
-        JSON.stringify({
-            resource: "flows",
-            cmd: "updateFilter",
-            name: "search",
-            expr: "~b boo",
-        }),
-    );
-    expect(backend.messagesQueue).toHaveLength(1);
-});
+        backend.updateFilter(name, expr);
 
-test("sendMessage should log an error if WebSocket is not CONNECTING or OPEN", () => {
-    const backend = new WebSocketBackend({ dispatch: jest.fn() });
+        expect(backend.messagesQueue).toContain(
+            JSON.stringify({
+                type: "flows/updateFilter",
+                name,
+                expr,
+            }),
+        );
+        expect(backend.messagesQueue).toHaveLength(1);
+    });
 
-    backend.socket = {
-        readyState: WebSocket.CLOSING,
-        send: jest.fn(),
-    } as any;
+    test("updateFilter should log an error if WebSocket is not CONNECTING or OPEN", () => {
+        Object.defineProperty(global.WebSocket, "CLOSING", { value: 2 }); // otherwise it's undefined in tests
+        const backend = new WebSocketBackend({ dispatch: jest.fn() });
 
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+        backend.socket = {
+            readyState: WebSocket.CLOSING,
+            send: jest.fn(),
+        } as any;
 
-    const name = "search";
-    const expr = "~b boo";
-    backend.updateFilter(name, expr);
+        const consoleErrorSpy = jest
+            .spyOn(console, "error")
+            .mockImplementation();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "WebSocket is not open. Cannot send message:",
-        "flows",
-        { cmd: "updateFilter", name: "search", expr: "~b boo" },
-    );
+        const name = "search";
+        const expr = "~b boo";
+        backend.updateFilter(name, expr);
 
-    consoleErrorSpy.mockRestore();
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "WebSocket is not open. Cannot send message:",
+            { type: "flows/updateFilter", name: "search", expr: "~b boo" },
+        );
+    });
 });

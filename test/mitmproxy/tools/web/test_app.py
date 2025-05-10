@@ -433,14 +433,16 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @tornado.testing.gen_test
     def test_websocket_filter_application(self):
-        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
-        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+        ws_req = httpclient.HTTPRequest(
+             f"ws://localhost:{self.get_http_port()}/updates",
+             headers={"Cookie": self.auth_cookie},
+         )
+        ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
         # test update filter message
         message = json.dumps(
             {
-                "resource": "flows",
-                "cmd": "updateFilter",
+                "type": "flows/updateFilter",
                 "name": "search",
                 "expr": "~bq foo",
             }
@@ -451,11 +453,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response == {
-            "resource": "flows",
-            "cmd": "filtersUpdated",
+            "type": "flows/filtersUpdated",
             "name": "search",
             "expr": "~bq foo",
-            "data": ["42"],
+            "payload": ["42"],
         }
 
         # test add flow
@@ -463,34 +464,31 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f.id = "41"
         f.request.content = b"foo\nbarbar"
 
-        app.ClientConnection.broadcast_flow("add", f)
+        app.ClientConnection.broadcast_flow("flows/add", f)
 
         response = yield ws_client.read_message()
         response = json.loads(response)
 
-        assert response["resource"] == "flows"
-        assert response["cmd"] == "add"
+        assert response["type"] == "flows/add"
         assert response["matches"] == {"~bq foo": True}
-        assert response["data"]["id"] == "41"
+        assert response["payload"]["id"] == "41"
 
         # test update flow
         f.request.content = b"bar"
 
-        app.ClientConnection.broadcast_flow("update", f)
+        app.ClientConnection.broadcast_flow("flows/update", f)
 
         response = yield ws_client.read_message()
         response = json.loads(response)
 
-        assert response["resource"] == "flows"
-        assert response["cmd"] == "update"
+        assert response["type"] == "flows/update"
         assert response["matches"] == {"~bq foo": False}
-        assert response["data"]["id"] == "41"
+        assert response["payload"]["id"] == "41"
 
         # test filter removal
         message = json.dumps(
             {
-                "resource": "flows",
-                "cmd": "updateFilter",
+                "type": "flows/updateFilter",
                 "name": "search",
                 "expr": "",
             }
@@ -501,25 +499,26 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response == {
-            "resource": "flows",
-            "cmd": "filtersUpdated",
+            "type": "flows/filtersUpdated",
             "name": "search",
             "expr": "",
-            "data": [],
+            "payload": [],
         }
 
         ws_client.close()
 
     @tornado.testing.gen_test
     def test_websocket_filter_command_error(self):
-        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
-        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+        ws_req = httpclient.HTTPRequest(
+             f"ws://localhost:{self.get_http_port()}/updates",
+             headers={"Cookie": self.auth_cookie},
+         )
+        ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
         # Send a message with an invalid command
         message = json.dumps(
             {
-                "resource": "flows",
-                "cmd": "invalidCommand",
+                "type": "flows/invalidCommand",
                 "name": "search",
                 "expr": "~bq foo",
             }
@@ -535,8 +534,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @tornado.testing.gen_test
     def test_websocket_filter_internal_server_error(self):
-        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
-        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+        ws_req = httpclient.HTTPRequest(
+             f"ws://localhost:{self.get_http_port()}/updates",
+             headers={"Cookie": self.auth_cookie},
+         )
+        ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
         # Send a message with an invalid json
         message = "Invalid JSON string"
