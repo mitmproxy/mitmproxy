@@ -89,6 +89,9 @@ const flowsSlice = createSlice({
     initialState: defaultState,
     reducers: {
         setFilter: (state, action: PayloadAction<string>) => {
+            if (window.backend) {
+                window.backend.updateFilter("search", action.payload);
+            }
             const newStoreState = store.reduce(
                 state,
                 store.setFilter(
@@ -103,6 +106,9 @@ const flowsSlice = createSlice({
             };
         },
         setHighlight: (state, action: PayloadAction<string>) => {
+            if (window.backend) {
+                window.backend.updateFilter("highlight", action.payload);
+            }
             return {
                 ...state,
                 highlight: action.payload,

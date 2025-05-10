@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import hashlib
 import json
+import logging
 import os.path
 import re
 import secrets
@@ -412,24 +413,23 @@ class ClientConnection(WebSocketEventBroadcaster):
         self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
 
     @classmethod
-    def broadcast_flow(cls, cmd: str, f: mitmproxy.flow.Flow) -> None:
+    def broadcast_flow(cls, type: str, f: mitmproxy.flow.Flow) -> None:
         flow_json = flow_to_json(f)
         for conn in cls.connections:
-            conn._broadcast_flow(cmd, f, flow_json)
+            conn._broadcast_flow(type, f, flow_json)
 
     def _broadcast_flow(
         self,
-        cmd: str,
+        type: str,
         f: mitmproxy.flow.Flow,
         flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
     ) -> None:
         matches = {expr.pattern: bool(expr(f)) for expr in self.filters.values()}
         message = json.dumps(
             {
-                "resource": "flows",
-                "cmd": cmd,
+                "type": type,
                 "matches": matches,
-                "data": flow_json,
+                "payload": flow_json,
             },
         ).encode()
 
@@ -446,11 +446,10 @@ class ClientConnection(WebSocketEventBroadcaster):
 
         message = json.dumps(
             {
-                "resource": "flows",
-                "cmd": "filtersUpdated",
+                "type": "flows/filtersUpdated",
                 "name": name,
                 "expr": expr,
-                "data": matching_flow_ids,
+                "payload": matching_flow_ids,
             },
         ).encode()
 
@@ -462,12 +461,12 @@ class ClientConnection(WebSocketEventBroadcaster):
         try:
             data = json.loads(message)
 
-            resource: str = data["resource"]
-            command: str = data["cmd"]
+            type: str = data["type"]
+            resource, cmd = type.split("/")
             name: str = data["name"]
             expr: str = data["expr"]
 
-            if resource == "flows" and command == "updateFilter":
+            if resource == "flows" and cmd == "updateFilter":
                 self.update_filter(name, expr)
             else:
                 logger.error("Unsupported command found in incoming message.")

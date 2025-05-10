@@ -36,12 +36,6 @@ type WebsocketMessageType =
     | "options/update"
     | "state/update";
 
-interface WebSocketMessage {
-    cmd: string;
-    resource: string;
-    data?: any;
-}
-
 export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
@@ -70,6 +64,8 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
+        this.messagesQueue.forEach((message) => this.socket.send(message)); // Flush the message queue.
+        this.messagesQueue = [];
         this.fetchData(Resource.State);
         this.fetchData(Resource.Flows);
         this.fetchData(Resource.Events);
@@ -90,6 +86,7 @@ export default class WebsocketBackend {
     }
 
     onMessage(msg: { type: WebsocketMessageType; payload?: any }) {
+        console.log(msg);
         switch (msg.type) {
             case "flows/add":
                 return this.queueOrDispatch(
@@ -128,6 +125,30 @@ export default class WebsocketBackend {
             /* istanbul ignore next @preserve */
             default:
                 assertNever(msg.type);
+        }
+    }
+
+    updateFilter(name: string, expr: string) {
+        this.sendMessage({
+            type: Resource.Flows + "/updateFilter",
+            name,
+            expr,
+        });
+    }
+
+    private sendMessage(data: any) {
+        const message = JSON.stringify(data);
+        if (this.socket) {
+            if (this.socket.readyState === WebSocket.CONNECTING) {
+                this.messagesQueue.push(message);
+            } else if (this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(message);
+            } else {
+                console.error(
+                    "WebSocket is not open. Cannot send message:",
+                    data,
+                );
+            }
         }
     }
 
