@@ -17,6 +17,9 @@
 - In DNS proxy mode, user-provided addons now trigger before DNS resolution has taken place.
   ([#7685](https://github.com/mitmproxy/mitmproxy/pull/7685), @Florigolo)
 
+* fix concurrent mitmweb instances overwrite each other's mitmproxy-auth cookie
+  ([#7690](https://github.com/mitmproxy/mitmproxy/pull/7690), @turboOrange)
+
 ## 29 April 2025: mitmproxy 12.0.0
 
 ### New Contentview System ([#7623](https://github.com/mitmproxy/mitmproxy/pull/7623), @mhils)
