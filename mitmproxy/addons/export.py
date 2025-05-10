@@ -26,7 +26,7 @@ def cleanup_request(f: flow.Flow) -> http.Request:
 
 def pop_headers(request: http.Request) -> http.Request:
     # Remove some headers that are redundant for curl/httpie export
-    request.headers.pop("content-length")
+    request.headers.pop("content-length", None)
     if request.headers.get("host", "") == request.host:
         request.headers.pop("host")
     if request.headers.get(":authority", "") == request.host:

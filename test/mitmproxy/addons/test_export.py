@@ -15,7 +15,12 @@ from mitmproxy.test import tutils
 @pytest.fixture
 def get_request():
     return tflow.tflow(
-        req=tutils.treq(method=b"GET", content=b"", path=b"/path?a=foo&a=bar&b=baz")
+        req=tutils.treq(
+            method=b"GET",
+            content=b"",
+            path=b"/path?a=foo&a=bar&b=baz",
+            headers=((b"header", b"qvalue"), (b"content-length", b"0")),
+        )
     )
 
 
@@ -273,6 +278,13 @@ class TestRawResponse:
     def test_udp(self, udp_flow):
         with pytest.raises(exceptions.CommandError):
             export.raw_response(udp_flow)
+
+    def test_head_non_zero_content_length(self):
+        request = tflow.tflow(
+            req=tutils.treq(method=b"HEAD"),
+            resp=tutils.tresp(headers=((b"content-length", b"7"),), content=b""),
+        )
+        assert b"content-length: 7" in export.raw_response(request)
 
 
 def qr(f):

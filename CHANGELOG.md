@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix raw response export incorrectly zeroing non-zero `Content-Length` header for HEAD requests.
+  ([#7701](https://github.com/mitmproxy/mitmproxy/pull/7701), @sujaldev)
 
 ## 06 May 2025: mitmproxy 12.0.1
 
