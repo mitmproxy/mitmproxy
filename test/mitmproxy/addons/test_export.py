@@ -15,7 +15,12 @@ from mitmproxy.test import tutils
 @pytest.fixture
 def get_request():
     return tflow.tflow(
-        req=tutils.treq(method=b"GET", content=b"", path=b"/path?a=foo&a=bar&b=baz")
+        req=tutils.treq(
+            method=b"GET",
+            content=b"",
+            path=b"/path?a=foo&a=bar&b=baz",
+            headers=((b"header", b"qvalue"), (b"content-length", b"0")),
+        )
     )
 
 
