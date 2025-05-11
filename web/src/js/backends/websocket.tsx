@@ -88,7 +88,6 @@ export default class WebsocketBackend {
     }
 
     onMessage(msg: { type: WebsocketMessageType; payload?: any }) {
-        console.log(msg);
         switch (msg.type) {
             case "flows/add":
                 return this.queueOrDispatch(
