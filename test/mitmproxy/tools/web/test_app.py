@@ -434,9 +434,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     @tornado.testing.gen_test
     def test_websocket_filter_application(self):
         ws_req = httpclient.HTTPRequest(
-             f"ws://localhost:{self.get_http_port()}/updates",
-             headers={"Cookie": self.auth_cookie},
-         )
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
         ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
         # test update filter message
@@ -446,7 +446,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "payload": {
                     "name": "search",
                     "expr": "~bq foo",
-                }
+                },
             }
         ).encode()
         yield ws_client.write_message(message)
@@ -460,7 +460,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "name": "search",
                 "expr": "~bq foo",
                 "matching_flow_ids": ["42"],
-            }
+            },
         }
 
         # test add flow
@@ -496,7 +496,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "payload": {
                     "name": "search",
                     "expr": "",
-                }
+                },
             }
         ).encode()
         yield ws_client.write_message(message)
@@ -510,7 +510,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "name": "search",
                 "expr": "",
                 "matching_flow_ids": [],
-            }
+            },
         }
 
         ws_client.close()
@@ -518,9 +518,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     @tornado.testing.gen_test
     def test_websocket_filter_command_error(self):
         ws_req = httpclient.HTTPRequest(
-             f"ws://localhost:{self.get_http_port()}/updates",
-             headers={"Cookie": self.auth_cookie},
-         )
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
         ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
         # Send a message with an invalid command
@@ -530,7 +530,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "payload": {
                     "name": "search",
                     "expr": "~bq foo",
-                }
+                },
             }
         )
         yield ws_client.write_message(message)
@@ -545,9 +545,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     @tornado.testing.gen_test
     def test_websocket_filter_internal_server_error(self):
         ws_req = httpclient.HTTPRequest(
-             f"ws://localhost:{self.get_http_port()}/updates",
-             headers={"Cookie": self.auth_cookie},
-         )
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
         ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
         # Send a message with an invalid json

@@ -428,10 +428,7 @@ class ClientConnection(WebSocketEventBroadcaster):
         message = json.dumps(
             {
                 "type": type,
-                "payload": {
-                    "flow": flow_json,
-                    "matches": matches
-                },
+                "payload": {"flow": flow_json, "matches": matches},
             },
         ).encode()
 
@@ -452,7 +449,7 @@ class ClientConnection(WebSocketEventBroadcaster):
                 "payload": {
                     "name": name,
                     "expr": expr,
-                    "matching_flow_ids": matching_flow_ids
+                    "matching_flow_ids": matching_flow_ids,
                 },
             },
         ).encode()
