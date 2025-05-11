@@ -12,6 +12,7 @@ import { EVENTS_ADD, EVENTS_RECEIVE } from "../ducks/eventLog";
 import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../ducks/options";
 import {
     FLOWS_ADD,
+    FLOWS_FILTERS_UPDATED,
     FLOWS_RECEIVE,
     FLOWS_REMOVE,
     FLOWS_UPDATE,
@@ -29,12 +30,21 @@ export enum Resource {
 type WebsocketMessageType =
     | "flows/add"
     | "flows/update"
+    | "flows/filtersUpdated"
     | "flows/remove"
     | "flows/reset"
     | "events/add"
     | "events/reset"
     | "options/update"
     | "state/update";
+
+interface WebSocketMessage {
+    type: WebsocketMessageType;
+    payload?: any;
+    expr?: string;
+    name?: string;
+    matches?: Record<string, boolean>;
+}
 
 export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
@@ -85,18 +95,34 @@ export default class WebsocketBackend {
             });
     }
 
-    onMessage(msg: { type: WebsocketMessageType; payload?: any }) {
+    onMessage(msg: WebSocketMessage) {
         console.log(msg);
         switch (msg.type) {
             case "flows/add":
                 return this.queueOrDispatch(
                     Resource.Flows,
-                    FLOWS_ADD(msg.payload),
+                    FLOWS_ADD({
+                        flow: msg.payload,
+                        matches: msg.matches ?? {},
+                    }),
                 );
             case "flows/update":
                 return this.queueOrDispatch(
                     Resource.Flows,
-                    FLOWS_UPDATE(msg.payload),
+                    FLOWS_UPDATE({
+                        flow: msg.payload,
+                        matches: msg.matches ?? {},
+                    }),
+                );
+            case "flows/filtersUpdated":
+                if (!msg.name || !msg.expr) return;
+                return this.queueOrDispatch(
+                    Resource.Flows,
+                    FLOWS_FILTERS_UPDATED({
+                        name: msg.name,
+                        expr: msg.expr,
+                        payload: msg.payload,
+                    }),
                 );
             case "flows/remove":
                 return this.queueOrDispatch(
