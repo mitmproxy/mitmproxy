@@ -137,6 +137,7 @@ describe("websocket backend", () => {
         backend.onMessage({ type: "events/reset" });
         backend.onMessage({ type: "options/update" });
         backend.onMessage({ type: "state/update" });
+        backend.onMessage({ type: "flows/filtersUpdated" });
         expect(fetchMock.mock.calls.length).toBe(2);
     });
 

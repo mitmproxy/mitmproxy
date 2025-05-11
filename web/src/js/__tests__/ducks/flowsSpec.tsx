@@ -211,16 +211,26 @@ describe("flow reducer", () => {
 
     it("should be possible to set filter", () => {
         const filt = "~u 123";
-        expect(
-            reduceFlows(undefined, flowActions.setFilter(filt)).filter,
-        ).toEqual(filt);
+    
+        const updateFilterMock = jest.fn();
+        (window as any).backend = { updateFilter: updateFilterMock };
+    
+        const newState = reduceFlows(undefined, flowActions.setFilter(filt));
+    
+        expect(newState.filter).toEqual(filt);
+        expect(updateFilterMock).toHaveBeenCalledWith("search", filt);
     });
 
     it("should be possible to set highlight", () => {
         const key = "foo";
-        expect(
-            reduceFlows(undefined, flowActions.setHighlight(key)).highlight,
-        ).toEqual(key);
+
+        const updateFilterMock = jest.fn();
+        (window as any).backend = { updateFilter: updateFilterMock };
+
+        const newState = reduceFlows(undefined, flowActions.setHighlight(key));
+
+        expect(newState.highlight).toEqual(key);
+        expect(updateFilterMock).toHaveBeenCalledWith("highlight", key);
     });
 
     it("should be possible to set sort", () => {
