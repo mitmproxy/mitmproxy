@@ -211,12 +211,12 @@ describe("flow reducer", () => {
 
     it("should be possible to set filter", () => {
         const filt = "~u 123";
-    
+
         const updateFilterMock = jest.fn();
         (window as any).backend = { updateFilter: updateFilterMock };
-    
+
         const newState = reduceFlows(undefined, flowActions.setFilter(filt));
-    
+
         expect(newState.filter).toEqual(filt);
         expect(updateFilterMock).toHaveBeenCalledWith("search", filt);
     });
