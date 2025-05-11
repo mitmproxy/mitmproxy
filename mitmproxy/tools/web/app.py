@@ -428,8 +428,10 @@ class ClientConnection(WebSocketEventBroadcaster):
         message = json.dumps(
             {
                 "type": type,
-                "matches": matches,
-                "payload": flow_json,
+                "payload": {
+                    "flow": flow_json,
+                    "matches": matches
+                },
             },
         ).encode()
 
@@ -447,9 +449,11 @@ class ClientConnection(WebSocketEventBroadcaster):
         message = json.dumps(
             {
                 "type": "flows/filtersUpdated",
-                "name": name,
-                "expr": expr,
-                "payload": matching_flow_ids,
+                "payload": {
+                    "name": name,
+                    "expr": expr,
+                    "matching_flow_ids": matching_flow_ids
+                },
             },
         ).encode()
 
@@ -463,8 +467,8 @@ class ClientConnection(WebSocketEventBroadcaster):
 
             type: str = data["type"]
             resource, cmd = type.split("/")
-            name: str = data["name"]
-            expr: str = data["expr"]
+            name: str = data["payload"]["name"]
+            expr: str = data["payload"]["expr"]
 
             if resource == "flows" and cmd == "updateFilter":
                 self.update_filter(name, expr)

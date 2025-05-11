@@ -30,7 +30,7 @@ export const FLOWS_RECEIVE = createAction<Flow[]>("FLOWS_RECEIVE");
 export const FLOWS_FILTERS_UPDATED = createAction<{
     name: string;
     expr: string;
-    payload: string[];
+    matching_flow_ids: string[];
 }>("FLOWS_FILTERSUPDATED");
 
 interface FlowSortFn extends store.SortFn<Flow> {}
@@ -106,17 +106,9 @@ const flowsSlice = createSlice({
             if (window.backend) {
                 window.backend.updateFilter("search", action.payload);
             }
-            /*const newStoreState = store.reduce(
-                state,
-                store.setFilter(
-                    makeFilter([action.payload]),
-                    makeSort(state.sort),
-                ),
-            );*/
             return {
                 ...state,
                 filter: action.payload,
-                //...newStoreState,
             };
         },
         setHighlight: (state, action: PayloadAction<string>) => {
@@ -159,7 +151,6 @@ const flowsSlice = createSlice({
         builder
             .addCase(FLOWS_ADD, (state, action) => {
                 const { flow, matches } = action.payload;
-                console.log(action.payload)
                 const {
                     filter,
                     highlight,
@@ -236,12 +227,13 @@ const flowsSlice = createSlice({
                 };
             })
             .addCase(FLOWS_FILTERS_UPDATED, (state, action) => {
-                const { name: filterName, expr, payload } = action.payload;
+                const { name, expr, matching_flow_ids } = action.payload;
                 let updatedState = { ...state };
 
-                switch (filterName) {
+                switch (name) {
                     case "search": {
-                        const matchedIds = expr !== "" ? payload : undefined;
+                        const matchedIds =
+                            expr !== "" ? matching_flow_ids : undefined;
                         updatedState = {
                             ...updatedState,
                             filter: expr,
@@ -250,7 +242,8 @@ const flowsSlice = createSlice({
                         break;
                     }
                     case "highlight": {
-                        const matchedIds = expr !== "" ? payload : undefined;
+                        const matchedIds =
+                            expr !== "" ? matching_flow_ids : undefined;
                         updatedState = {
                             ...updatedState,
                             highlight: expr,
@@ -492,20 +485,23 @@ function updateMatchedIds(
 ): string[] | undefined {
     if (!matchedIds) return;
 
-    let updatedIds = [...matchedIds];
+    const idSet = new Set(matchedIds);
 
     if (
         Object.keys(matches).length === 0 ||
         (currentFilter && matches[currentFilter])
     ) {
-        if (!updatedIds.includes(flowId)) {
-            updatedIds.push(flowId);
+        if (!idSet.has(flowId)) {
+            idSet.add(flowId);
+            return Array.from(idSet);
         }
+        return matchedIds;
     } else {
-        updatedIds = updatedIds.filter((id) => id !== flowId);
+        if (idSet.delete(flowId)) {
+            return Array.from(idSet);
+        }
+        return matchedIds;
     }
-
-    return updatedIds;
 }
 
 export default flowsSlice.reducer;

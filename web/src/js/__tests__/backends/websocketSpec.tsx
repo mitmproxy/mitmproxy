@@ -159,8 +159,10 @@ describe("websocket backend", () => {
         expect(sendMock).toHaveBeenCalledWith(
             JSON.stringify({
                 type: "flows/updateFilter",
-                name,
-                expr,
+                payload: {
+                    name,
+                    expr,
+                },
             }),
         );
     });
@@ -184,8 +186,10 @@ describe("websocket backend", () => {
         expect(backend.messagesQueue).toContain(
             JSON.stringify({
                 type: "flows/updateFilter",
-                name,
-                expr,
+                payload: {
+                    name,
+                    expr,
+                },
             }),
         );
         expect(backend.messagesQueue).toHaveLength(1);
@@ -210,7 +214,13 @@ describe("websocket backend", () => {
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
             "WebSocket is not open. Cannot send message:",
-            { type: "flows/updateFilter", name: "search", expr: "~b boo" },
+            {
+                type: "flows/updateFilter",
+                payload: {
+                    name: "search",
+                    expr: "~b boo",
+                },
+            },
         );
     });
 });

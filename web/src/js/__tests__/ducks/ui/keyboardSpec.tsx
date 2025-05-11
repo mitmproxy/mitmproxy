@@ -14,12 +14,15 @@ describe("onKeyDown", () => {
         for (let i = 1; i <= 12; i++) {
             store.dispatch(
                 flowsActions.FLOWS_ADD({
-                    ...TFlow(),
-                    id: i + "",
-                    websocket: undefined,
-                    error: undefined,
-                    intercepted: true,
-                    modified: true,
+                    flow: {
+                        ...TFlow(),
+                        id: i + "",
+                        websocket: undefined,
+                        error: undefined,
+                        intercepted: true,
+                        modified: true,
+                    },
+                    matches: {},
                 }),
             );
         }

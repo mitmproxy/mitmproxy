@@ -8,7 +8,10 @@ jest.mock("../../utils");
 describe("flow reducer", () => {
     let s;
     for (const i of ["0", "1", "2", "3", "4"]) {
-        s = reduceFlows(s, flowActions.FLOWS_ADD({ ...TFlow(), id: i }));
+        s = reduceFlows(
+            s,
+            flowActions.FLOWS_ADD({ flow: { ...TFlow(), id: i }, matches: {} }),
+        );
     }
     const state = s;
     const [_f0, f1, f2, f3, f4] = state.list;
@@ -151,7 +154,7 @@ describe("flow reducer", () => {
 
             const next = reduceFlows(
                 store.getState().flows,
-                flowActions.FLOWS_UPDATE(unrelatedFlow),
+                flowActions.FLOWS_UPDATE({ flow: unrelatedFlow, matches: {} }),
             );
             expect(next.selected).toEqual(originalSelected);
         });
@@ -167,7 +170,7 @@ describe("flow reducer", () => {
 
             const next = reduceFlows(
                 store.getState().flows,
-                flowActions.FLOWS_UPDATE(updatedFlow),
+                flowActions.FLOWS_UPDATE({ flow: updatedFlow, matches: {} }),
             );
             const updatedSelected = next.selected;
             expect(updatedSelected[0]).toBe(updatedFlow);

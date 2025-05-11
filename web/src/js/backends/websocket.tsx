@@ -38,14 +38,6 @@ type WebsocketMessageType =
     | "options/update"
     | "state/update";
 
-interface WebSocketMessage {
-    type: WebsocketMessageType;
-    payload?: any;
-    expr?: string;
-    name?: string;
-    matches?: Record<string, boolean>;
-}
-
 export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
@@ -95,34 +87,23 @@ export default class WebsocketBackend {
             });
     }
 
-    onMessage(msg: WebSocketMessage) {
+    onMessage(msg: { type: WebsocketMessageType; payload?: any }) {
         console.log(msg);
         switch (msg.type) {
             case "flows/add":
                 return this.queueOrDispatch(
                     Resource.Flows,
-                    FLOWS_ADD({
-                        flow: msg.payload,
-                        matches: msg.matches ?? {},
-                    }),
+                    FLOWS_ADD(msg.payload),
                 );
             case "flows/update":
                 return this.queueOrDispatch(
                     Resource.Flows,
-                    FLOWS_UPDATE({
-                        flow: msg.payload,
-                        matches: msg.matches ?? {},
-                    }),
+                    FLOWS_UPDATE(msg.payload),
                 );
             case "flows/filtersUpdated":
-                if (!msg.name || !msg.expr) return;
                 return this.queueOrDispatch(
                     Resource.Flows,
-                    FLOWS_FILTERS_UPDATED({
-                        name: msg.name,
-                        expr: msg.expr,
-                        payload: msg.payload,
-                    }),
+                    FLOWS_FILTERS_UPDATED(msg.payload),
                 );
             case "flows/remove":
                 return this.queueOrDispatch(
@@ -157,8 +138,10 @@ export default class WebsocketBackend {
     updateFilter(name: string, expr: string) {
         this.sendMessage({
             type: Resource.Flows + "/updateFilter",
-            name,
-            expr,
+            payload: {
+                name,
+                expr,
+            },
         });
     }
 

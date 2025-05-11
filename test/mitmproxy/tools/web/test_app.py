@@ -443,8 +443,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         message = json.dumps(
             {
                 "type": "flows/updateFilter",
-                "name": "search",
-                "expr": "~bq foo",
+                "payload": {
+                    "name": "search",
+                    "expr": "~bq foo",
+                }
             }
         ).encode()
         yield ws_client.write_message(message)
@@ -454,9 +456,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         assert response == {
             "type": "flows/filtersUpdated",
-            "name": "search",
-            "expr": "~bq foo",
-            "payload": ["42"],
+            "payload": {
+                "name": "search",
+                "expr": "~bq foo",
+                "matching_flow_ids": ["42"],
+            }
         }
 
         # test add flow
@@ -470,8 +474,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response["type"] == "flows/add"
-        assert response["matches"] == {"~bq foo": True}
-        assert response["payload"]["id"] == "41"
+        assert response["payload"]["matches"] == {"~bq foo": True}
+        assert response["payload"]["flow"]["id"] == "41"
 
         # test update flow
         f.request.content = b"bar"
@@ -482,15 +486,17 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response["type"] == "flows/update"
-        assert response["matches"] == {"~bq foo": False}
-        assert response["payload"]["id"] == "41"
+        assert response["payload"]["matches"] == {"~bq foo": False}
+        assert response["payload"]["flow"]["id"] == "41"
 
         # test filter removal
         message = json.dumps(
             {
                 "type": "flows/updateFilter",
-                "name": "search",
-                "expr": "",
+                "payload": {
+                    "name": "search",
+                    "expr": "",
+                }
             }
         ).encode()
         yield ws_client.write_message(message)
@@ -500,9 +506,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         assert response == {
             "type": "flows/filtersUpdated",
-            "name": "search",
-            "expr": "",
-            "payload": [],
+            "payload": {
+                "name": "search",
+                "expr": "",
+                "matching_flow_ids": [],
+            }
         }
 
         ws_client.close()
@@ -519,8 +527,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         message = json.dumps(
             {
                 "type": "flows/invalidCommand",
-                "name": "search",
-                "expr": "~bq foo",
+                "payload": {
+                    "name": "search",
+                    "expr": "~bq foo",
+                }
             }
         )
         yield ws_client.write_message(message)
