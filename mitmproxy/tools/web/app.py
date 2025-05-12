@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import hashlib
 import json
+import logging
 import os.path
 import re
 import secrets
@@ -49,6 +50,8 @@ TRANSPARENT_PNG = (
     b"\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdac\xfc\xff\x07"
     b"\x00\x02\x00\x01\xfc\xa8Q\rh\x00\x00\x00\x00IEND\xaeB`\x82"
 )
+
+logger = logging.getLogger(__name__)
 
 
 def cert_to_json(certs: Sequence[certs.Cert]) -> dict | None:

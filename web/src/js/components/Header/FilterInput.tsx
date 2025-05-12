@@ -3,8 +3,14 @@ import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
 
+export enum FilterIcon {
+    SEARCH = "search",
+    HIGHLIGHT = "tag",
+    INTERCEPT = "pause",
+}
+
 type FilterInputProps = {
-    type: string;
+    icon: FilterIcon;
     color: string;
     placeholder: string;
     value: string;
@@ -96,13 +102,13 @@ export default class FilterInput extends Component<
         this.setState({ mousefocus: false });
     }
 
-    onKeyDown(e: Partial<React.KeyboardEvent<HTMLInputElement>>) {
+    onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key === "Escape" || e.key === "Enter") {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({ mousefocus: false });
         }
-        e.stopPropagation?.();
+        e.stopPropagation();
     }
 
     selectFilter(cmd: string) {
@@ -119,7 +125,7 @@ export default class FilterInput extends Component<
     }
 
     render() {
-        const { type, color, placeholder } = this.props;
+        const { icon, color, placeholder } = this.props;
         const { value, focus, mousefocus } = this.state;
         return (
             <div
@@ -128,7 +134,7 @@ export default class FilterInput extends Component<
                 })}
             >
                 <span className="input-group-addon">
-                    <i className={"fa fa-fw fa-" + type} style={{ color }} />
+                    <i className={"fa fa-fw fa-" + icon} style={{ color }} />
                 </span>
                 <input
                     type="text"
