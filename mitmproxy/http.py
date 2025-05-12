@@ -464,9 +464,9 @@ class Message(serializable.Serializable):
         """
         Decodes body based on the current Content-Encoding header, then
         removes the header.
-        
+
         If the message body is missing or empty, no action is taken.
-        
+
         *Raises:*
          - `ValueError`, when the content-encoding is invalid and strict is True.
         """
