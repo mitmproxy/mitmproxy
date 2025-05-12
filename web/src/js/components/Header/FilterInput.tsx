@@ -54,7 +54,7 @@ export default class FilterInput extends Component<
                 Filt.parse(filt);
             }
             return true;
-        } catch (e) {
+        } catch {
             return false;
         }
     }

@@ -23,7 +23,7 @@ export default React.memo(function FileChooser({
             href="#"
             onClick={(e) => {
                 fileInput.click();
-                onClick && onClick(e);
+                if (onClick) onClick(e);
             }}
             className={className}
             title={title}

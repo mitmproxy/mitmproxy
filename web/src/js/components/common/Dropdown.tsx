@@ -105,7 +105,7 @@ export default React.memo(function Dropdown({
 
     const setOpen = (b: boolean) => {
         _setOpen(b);
-        onOpen && onOpen(b);
+        if (onOpen) onOpen(b);
     };
 
     useEffect(() => {
