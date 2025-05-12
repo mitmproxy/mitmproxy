@@ -9,6 +9,7 @@
         "eslint": "eslint --fix ."
     },
     "dependencies": {
+        "@floating-ui/react-dom": "^2.1.2",
         "@popperjs/core": "^2.11.8",
         "@reduxjs/toolkit": "^2.8.1",
         "bootstrap": "^3.4.1",
@@ -17,9 +18,8 @@
         "lodash": "^4.17.21",
         "prop-types": "^15.7.2",
         "qrcode": "^1.5.4",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1",
-        "react-popper": "^2.2.5",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
         "react-redux": "^9.2.0",
         "stable": "^0.1.8"
     },
@@ -50,7 +50,7 @@
         "jest-environment-jsdom": "^29.7.0",
         "jest-fetch-mock": "^3.0.3",
         "prettier": "^3.5.3",
-        "react-test-renderer": "^18.3.1",
+        "react-test-renderer": "^19.1.0",
         "redux-mock-store": "^1.5.5",
         "through2": "^4.0.2",
         "typescript": "^5.8.3",

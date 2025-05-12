@@ -21,6 +21,8 @@ import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
 import { Flow } from "../../flow";
 
+import type { JSX } from "react";
+
 FlowMenu.title = "Flow";
 
 export default function FlowMenu(): JSX.Element {

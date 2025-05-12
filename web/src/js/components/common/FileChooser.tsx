@@ -31,7 +31,9 @@ export default React.memo(function FileChooser({
             <i className={"fa fa-fw " + icon} />
             {text}
             <input
-                ref={(ref) => (fileInput = ref)}
+                ref={(ref) => {
+                    fileInput = ref;
+                }}
                 className="hidden"
                 type="file"
                 onChange={(e) => {

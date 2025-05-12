@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 
-export const isAtBottom = (viewport: RefObject<HTMLElement>) => {
+export const isAtBottom = (viewport: RefObject<HTMLElement | null>) => {
     const v = viewport.current;
     if (v === null) {
         return false;
@@ -12,7 +12,7 @@ export const isAtBottom = (viewport: RefObject<HTMLElement>) => {
     return Math.ceil(v.scrollTop) + v.clientHeight >= v.scrollHeight;
 };
 
-export const adjustScrollTop = (viewport: RefObject<HTMLElement>) => {
+export const adjustScrollTop = (viewport: RefObject<HTMLElement | null>) => {
     if (viewport.current && !isAtBottom(viewport)) {
         viewport.current.scrollTop = viewport.current.scrollHeight;
     }
