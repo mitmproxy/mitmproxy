@@ -46,14 +46,14 @@ describe("websocket backend", () => {
             dispatch: (e) => actions.push(e),
         });
 
-        backend.sendMessage({type: "unknown"});
+        backend.sendMessage({ type: "unknown" });
         expect(backend.messageQueue.length).toBe(1);
         // @ts-expect-error jest mock stuff
         backend.socket.readyState = WebSocket.OPEN;
         backend.onOpen();
         expect(backend.messageQueue.length).toBe(0);
 
-        backend.sendMessage({type: "unknown"});
+        backend.sendMessage({ type: "unknown" });
         expect(backend.messageQueue.length).toBe(0);
 
         let payload: EventLogItem = {

@@ -64,7 +64,7 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
-        for(const message of this.messageQueue) {
+        for (const message of this.messageQueue) {
             this.socket.send(JSON.stringify(message));
         }
         this.messageQueue = [];
@@ -135,10 +135,7 @@ export default class WebsocketBackend {
         } else if (this.socket.readyState === WebSocket.CONNECTING) {
             this.messageQueue.push(action);
         } else {
-            console.error(
-                "WebSocket is not open. Cannot send:",
-                action,
-            );
+            console.error("WebSocket is not open. Cannot send:", action);
         }
     }
 
