@@ -16,10 +16,17 @@ import { STATE_RECEIVE } from "../../ducks/backendState";
 beforeEach(() => {
     fetchMock.enableMocks();
     fetchMock.mockClear();
+    const WebSocketOrig = WebSocket;
     // @ts-expect-error jest mock stuff
     jest.spyOn(global, "WebSocket").mockImplementation(() => ({
         addEventListener: () => 0,
+        send: () => 0,
+        readyState: WebSocketOrig.CONNECTING,
     }));
+    // @ts-expect-error jest mock stuff
+    global.WebSocket.OPEN = WebSocketOrig.OPEN;
+    // @ts-expect-error jest mock stuff
+    global.WebSocket.CONNECTING = WebSocketOrig.CONNECTING;
 });
 
 describe("websocket backend", () => {
@@ -38,7 +45,23 @@ describe("websocket backend", () => {
         const backend = new WebSocketBackend({
             dispatch: (e) => actions.push(e),
         });
+
+        backend.sendMessage({
+            type: "unknown",
+            payload: { name: "foo", expr: "bar" },
+        });
+        expect(backend.messageQueue.length).toBe(1);
+        // @ts-expect-error jest mock stuff
+        backend.socket.readyState = WebSocket.OPEN;
         backend.onOpen();
+        expect(backend.messageQueue.length).toBe(0);
+
+        backend.sendMessage({
+            type: "unknown",
+            payload: { name: "foo", expr: "bar" },
+        });
+        expect(backend.messageQueue.length).toBe(0);
+
         let payload: EventLogItem = {
             message: "test",
             level: LogLevel.debug,
@@ -177,23 +200,21 @@ describe("websocket backend", () => {
             readyState: WebSocket.CONNECTING,
         };
 
-        backend.messagesQueue = [];
+        backend.messageQueue = [];
 
         const name = "search";
         const expr = "~b boo";
 
         backend.updateFilter(name, expr);
 
-        expect(backend.messagesQueue).toContain(
-            JSON.stringify({
-                type: "flows/updateFilter",
-                payload: {
-                    name,
-                    expr,
-                },
-            }),
-        );
-        expect(backend.messagesQueue).toHaveLength(1);
+        expect(backend.messageQueue).toContainEqual({
+            type: "flows/updateFilter",
+            payload: {
+                name,
+                expr,
+            },
+        });
+        expect(backend.messageQueue).toHaveLength(1);
     });
 
     test("updateFilter should log an error if WebSocket is not CONNECTING or OPEN", () => {
@@ -214,7 +235,7 @@ describe("websocket backend", () => {
         backend.updateFilter(name, expr);
 
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "WebSocket is not open. Cannot send message:",
+            "WebSocket is not open. Cannot send:",
             {
                 type: "flows/updateFilter",
                 payload: {

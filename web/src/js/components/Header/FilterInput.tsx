@@ -3,14 +3,14 @@ import classnames from "classnames";
 import Filt from "../../filt/filt";
 import FilterDocs from "./FilterDocs";
 
-export enum FILTER_ICON {
+export enum FilterIcon {
     SEARCH = "search",
     HIGHLIGHT = "tag",
     INTERCEPT = "pause",
 }
 
 type FilterInputProps = {
-    icon: FILTER_ICON;
+    icon: FilterIcon;
     color: string;
     placeholder: string;
     value: string;

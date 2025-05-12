@@ -465,12 +465,17 @@ class Message(serializable.Serializable):
     def decode(self, strict: bool = True) -> None:
         """
         Decodes body based on the current Content-Encoding header, then
-        removes the header. If there is no Content-Encoding header, no
-        action is taken.
+        removes the header.
+
+        If the message body is missing or empty, no action is taken.
 
         *Raises:*
          - `ValueError`, when the content-encoding is invalid and strict is True.
         """
+        if not self.raw_content:
+            # The body is missing (for example, because of body streaming or because it's a response
+            # to a HEAD request), so we can't correctly update content-length.
+            return
         decoded = self.get_content(strict)
         self.headers.pop("content-encoding", None)
         self.content = decoded

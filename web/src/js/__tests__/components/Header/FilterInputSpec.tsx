@@ -1,7 +1,7 @@
 import * as React from "react";
 import renderer from "react-test-renderer";
 import FilterInput, {
-    FILTER_ICON,
+    FilterIcon,
 } from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
 import { act, render } from "../../test-utils";
@@ -10,7 +10,7 @@ describe("FilterInput Component", () => {
     it("should render correctly", () => {
         const filterInput = renderer.create(
             <FilterInput
-                icon={FILTER_ICON.SEARCH}
+                icon={FilterIcon.SEARCH}
                 color="red"
                 placeholder="bar"
                 onChange={() => undefined}
@@ -25,7 +25,7 @@ describe("FilterInput Component", () => {
         const ref = React.createRef<FilterInput>();
         render(
             <FilterInput
-                icon={FILTER_ICON.SEARCH}
+                icon={FilterIcon.SEARCH}
                 color="red"
                 placeholder="bar"
                 value="wat"
@@ -39,7 +39,7 @@ describe("FilterInput Component", () => {
     it("should handle componentWillReceiveProps", () => {
         const { rerender, getByDisplayValue } = render(
             <FilterInput
-                icon={FILTER_ICON.SEARCH}
+                icon={FilterIcon.SEARCH}
                 color="red"
                 value="foo"
                 placeholder=""
@@ -48,7 +48,7 @@ describe("FilterInput Component", () => {
         );
         rerender(
             <FilterInput
-                icon={FILTER_ICON.SEARCH}
+                icon={FilterIcon.SEARCH}
                 color="red"
                 value="bar"
                 placeholder=""

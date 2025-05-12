@@ -42,12 +42,12 @@ export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
     socket: WebSocket;
-    messagesQueue: string[]; // Queue for messages while connecting.
+    messageQueue: Action[];
 
     constructor(store) {
         this.activeFetches = {};
         this.store = store;
-        this.messagesQueue = [];
+        this.messageQueue = [];
         this.connect();
     }
 
@@ -66,8 +66,10 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
-        this.messagesQueue.forEach((message) => this.socket.send(message)); // Flush the message queue.
-        this.messagesQueue = [];
+        for (const message of this.messageQueue) {
+            this.socket.send(JSON.stringify(message)); // Flush the message queue.
+        }
+        this.messageQueue = [];
         this.fetchData(Resource.State);
         this.fetchData(Resource.Flows);
         this.fetchData(Resource.Events);
@@ -144,19 +146,13 @@ export default class WebsocketBackend {
         });
     }
 
-    private sendMessage(data: any) {
-        const message = JSON.stringify(data);
-        if (this.socket) {
-            if (this.socket.readyState === WebSocket.OPEN) {
-                this.socket.send(message);
-            } else if (this.socket.readyState === WebSocket.CONNECTING) {
-                this.messagesQueue.push(message);
-            } else {
-                console.error(
-                    "WebSocket is not open. Cannot send message:",
-                    data,
-                );
-            }
+    sendMessage(action: Action & { payload: { name: string; expr: string } }) {
+        if (this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(action));
+        } else if (this.socket.readyState === WebSocket.CONNECTING) {
+            this.messageQueue.push(action);
+        } else {
+            console.error("WebSocket is not open. Cannot send:", action);
         }
     }
 
