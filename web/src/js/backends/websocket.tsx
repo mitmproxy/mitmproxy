@@ -40,10 +40,12 @@ export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
     socket: WebSocket;
+    messageQueue: Action[];
 
     constructor(store) {
         this.activeFetches = {};
         this.store = store;
+        this.messageQueue = [];
         this.connect();
     }
 
@@ -62,6 +64,10 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
+        for (const message of this.messageQueue) {
+            this.socket.send(JSON.stringify(message));
+        }
+        this.messageQueue = [];
         this.fetchData(Resource.State);
         this.fetchData(Resource.Flows);
         this.fetchData(Resource.Events);
@@ -120,6 +126,16 @@ export default class WebsocketBackend {
             /* istanbul ignore next @preserve */
             default:
                 assertNever(msg.type);
+        }
+    }
+
+    sendMessage(action: Action) {
+        if (this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(action));
+        } else if (this.socket.readyState === WebSocket.CONNECTING) {
+            this.messageQueue.push(action);
+        } else {
+            console.error("WebSocket is not open. Cannot send:", action);
         }
     }
 
