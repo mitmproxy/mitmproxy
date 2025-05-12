@@ -1,30 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FilterInput Component should render correctly 1`] = `
-<div
-  className="filter-input input-group"
->
-  <span
-    className="input-group-addon"
+<DocumentFragment>
+  <div
+    class="filter-input input-group"
   >
-    <i
-      className="fa fa-fw fa-foo"
-      style={
-        {
-          "color": "red",
-        }
-      }
+    <span
+      class="input-group-addon"
+    >
+      <i
+        class="fa fa-fw fa-foo"
+        style="color: red;"
+      />
+    </span>
+    <input
+      class="form-control"
+      placeholder="bar"
+      type="text"
+      value="42"
     />
-  </span>
-  <input
-    className="form-control"
-    onBlur={[Function]}
-    onChange={[Function]}
-    onFocus={[Function]}
-    onKeyDown={[Function]}
-    placeholder="bar"
-    type="text"
-    value="42"
-  />
-</div>
+  </div>
+</DocumentFragment>
 `;

@@ -383,7 +383,7 @@ exports[`Header 3`] = `
       </a>
       <ul
         class="dropdown-menu show"
-        style="position: absolute; left: 0px; top: 0px;"
+        style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
       >
         <li>
           <a

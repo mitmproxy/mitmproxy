@@ -1,158 +1,278 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Flowcolumns Components should render CommentColumn 1`] = `
-<td
-  className="col-comment"
->
-  I'm a comment!
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-comment"
+        >
+          I'm a comment!
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 1`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-tcp"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-tcp"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 2`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-plain"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-plain"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 3`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-not-modified"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-not-modified"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 4`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-redirect"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-redirect"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 5`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-image"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-image"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 6`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-js"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-js"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 7`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-css"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-css"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 8`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-document"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-document"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 9`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-plain"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-plain"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 10`] = `
-<td
-  className="col-icon"
->
-  <div
-    className="resource-icon resource-icon-websocket"
-  />
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-icon"
+        >
+          <div
+            class="resource-icon resource-icon-websocket"
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render TimeColumn 1`] = `
-<td
-  className="col-time"
->
-  5s
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-time"
+        >
+          5s
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render TimeColumn 2`] = `
-<td
-  className="col-time"
->
-  5s
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-time"
+        >
+          5s
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render pathColumn 1`] = `
-<td
-  className="col-path"
->
-  <i
-    className="fa fa-fw fa-exclamation pull-right"
-  />
-  <span
-    className="marker pull-right"
-  />
-  http://address:22/path
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-path"
+        >
+          <i
+            class="fa fa-fw fa-exclamation pull-right"
+          />
+          <span
+            class="marker pull-right"
+          />
+          http://address:22/path
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`Flowcolumns Components should render pathColumn 2`] = `
-<td
-  className="col-path"
->
-  <i
-    className="fa fa-fw fa-pause pull-right"
-  />
-  <i
-    className="fa fa-fw fa-times pull-right"
-  />
-  <span
-    className="marker pull-right"
-  />
-  http://address:22/path
-</td>
+<DocumentFragment>
+  <table>
+    <tbody>
+      <tr>
+        <td
+          class="col-path"
+        >
+          <i
+            class="fa fa-fw fa-pause pull-right"
+          />
+          <i
+            class="fa fa-fw fa-times pull-right"
+          />
+          <span
+            class="marker pull-right"
+          />
+          http://address:22/path
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</DocumentFragment>
 `;
 
 exports[`should render columns: comment 1`] = `

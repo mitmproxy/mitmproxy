@@ -50,7 +50,6 @@
         "jest-environment-jsdom": "^29.7.0",
         "jest-fetch-mock": "^3.0.3",
         "prettier": "^3.5.3",
-        "react-test-renderer": "^19.1.0",
         "redux-mock-store": "^1.5.5",
         "through2": "^4.0.2",
         "typescript": "^5.8.3",

@@ -1,61 +1,61 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PureOptionDefault Component should handle array 1`] = `null`;
+exports[`PureOptionDefault Component should handle array 1`] = `<DocumentFragment />`;
 
 exports[`PureOptionDefault Component should handle array 2`] = `
-<div
-  className="small"
->
-  Default: 
-  <strong>
+<DocumentFragment>
+  <div
+    class="small"
+  >
+    Default: 
+    <strong>
+       [ ] 
+    </strong>
      
-    [ ]
-     
-  </strong>
-   
-</div>
+  </div>
+</DocumentFragment>
 `;
 
 exports[`PureOptionDefault Component should handle boolean type 1`] = `
-<div
-  className="small"
->
-  Default: 
-  <strong>
+<DocumentFragment>
+  <div
+    class="small"
+  >
+    Default: 
+    <strong>
+       false 
+    </strong>
      
-    false
-     
-  </strong>
-   
-</div>
+  </div>
+</DocumentFragment>
 `;
 
 exports[`PureOptionDefault Component should handle null value 1`] = `
-<div
-  className="small"
->
-  Default: 
-  <strong>
+<DocumentFragment>
+  <div
+    class="small"
+  >
+    Default: 
+    <strong>
+       null 
+    </strong>
      
-    null
-     
-  </strong>
-   
-</div>
+  </div>
+</DocumentFragment>
 `;
 
 exports[`PureOptionDefault Component should handle string 1`] = `
-<div
-  className="small"
->
-  Default: 
-  <strong>
+<DocumentFragment>
+  <div
+    class="small"
+  >
+    Default: 
+    <strong>
+       "" 
+    </strong>
      
-    ""
-     
-  </strong>
-   
-</div>
+  </div>
+</DocumentFragment>
 `;
 
-exports[`PureOptionDefault Component should return null when the value is default 1`] = `null`;
+exports[`PureOptionDefault Component should return null when the value is default 1`] = `<DocumentFragment />`;
