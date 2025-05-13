@@ -164,7 +164,9 @@ export default class CodeMirror extends React.Component<
         return (
             <div className={editorClassName}>
                 <textarea
-                    ref={(ref) => (this.textareaNode = ref)}
+                    ref={(ref) => {
+                        this.textareaNode = ref;
+                    }}
                     name={this.props.name || this.props.path}
                     defaultValue={this.props.value}
                     autoComplete="off"

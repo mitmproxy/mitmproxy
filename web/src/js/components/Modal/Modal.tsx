@@ -2,6 +2,8 @@ import * as React from "react";
 import ModalList from "./ModalList";
 import { useAppSelector } from "../../ducks";
 
+import type { JSX } from "react";
+
 export default function PureModal() {
     const activeModal = useAppSelector((state) => state.ui.modal.activeModal);
     const ActiveModal: (() => JSX.Element) | undefined = ModalList.find(

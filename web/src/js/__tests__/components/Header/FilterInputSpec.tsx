@@ -1,5 +1,4 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
 import FilterInput, {
     FilterIcon,
 } from "../../../components/Header/FilterInput";
@@ -8,7 +7,7 @@ import { act, render } from "../../test-utils";
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
-        const filterInput = renderer.create(
+        const { asFragment } = render(
             <FilterInput
                 icon={FilterIcon.SEARCH}
                 color="red"
@@ -17,8 +16,7 @@ describe("FilterInput Component", () => {
                 value="42"
             />,
         );
-        const tree = filterInput.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(asFragment()).toMatchSnapshot();
     });
 
     function dummyInput(): FilterInput {

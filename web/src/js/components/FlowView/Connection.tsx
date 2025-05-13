@@ -2,6 +2,8 @@ import * as React from "react";
 import { formatTimeStamp } from "../../utils";
 import { Client, Flow, Server } from "../../flow";
 
+import type { JSX } from "react";
+
 type ConnectionInfoProps = {
     conn: Client | Server;
 };

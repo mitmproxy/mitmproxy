@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, type JSX } from "react";
 import classnames from "classnames";
 import { fetchApi, runCommand } from "../utils";
 import Filt from "../filt/command";

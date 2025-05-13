@@ -1,76 +1,75 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`EventLog Component should connect to state and render correctly 1`] = `
-<div
-  className="eventlog"
-  style={
-    {
-      "height": 200,
-    }
-  }
->
+exports[`EventLog 1`] = `
+<DocumentFragment>
   <div
-    onMouseDown={[Function]}
+    class="eventlog"
+    style="height: 200px;"
   >
-    Eventlog
-    <div
-      className="pull-right"
-    >
+    <div>
+      Eventlog
       <div
-        className="btn btn-toggle btn-primary"
-        onClick={[Function]}
+        class="pull-right"
       >
+        <div
+          class="btn btn-toggle btn-primary"
+        >
+          <i
+            class="fa fa-fw fa-check-square-o"
+          />
+           debug
+        </div>
+        <div
+          class="btn btn-toggle btn-primary"
+        >
+          <i
+            class="fa fa-fw fa-check-square-o"
+          />
+           info
+        </div>
+        <div
+          class="btn btn-toggle btn-default"
+        >
+          <i
+            class="fa fa-fw fa-square-o"
+          />
+           web
+        </div>
+        <div
+          class="btn btn-toggle btn-primary"
+        >
+          <i
+            class="fa fa-fw fa-check-square-o"
+          />
+           warn
+        </div>
+        <div
+          class="btn btn-toggle btn-primary"
+        >
+          <i
+            class="fa fa-fw fa-check-square-o"
+          />
+           error
+        </div>
         <i
-          className="fa fa-fw fa-check-square-o"
+          class="fa fa-close"
         />
-         
-        debug
       </div>
-      <div
-        className="btn btn-toggle btn-primary"
-        onClick={[Function]}
-      >
-        <i
-          className="fa fa-fw fa-check-square-o"
-        />
-         
-        info
-      </div>
-      <div
-        className="btn btn-toggle btn-default"
-        onClick={[Function]}
-      >
-        <i
-          className="fa fa-fw fa-square-o"
-        />
-         
-        web
-      </div>
-      <div
-        className="btn btn-toggle btn-primary"
-        onClick={[Function]}
-      >
-        <i
-          className="fa fa-fw fa-check-square-o"
-        />
-         
-        warn
-      </div>
-      <div
-        className="btn btn-toggle btn-primary"
-        onClick={[Function]}
-      >
-        <i
-          className="fa fa-fw fa-check-square-o"
-        />
-         
-        error
-      </div>
-      <i
-        className="fa fa-close"
-        onClick={[Function]}
-      />
     </div>
+    <pre>
+      <div
+        style="height: 0px;"
+      />
+      <div>
+        <i
+          class="fa fa-fw fa-info"
+        />
+        foo
+      </div>
+      <div
+        style="height: 18px;"
+      />
+    </pre>
   </div>
-</div>
+</DocumentFragment>
 `;

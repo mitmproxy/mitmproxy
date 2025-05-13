@@ -1,10 +1,10 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
 import Button from "../../../components/common/Button";
+import { render } from "../../test-utils";
 
 describe("Button Component", () => {
     it("should render correctly", () => {
-        const button = renderer.create(
+        const { asFragment } = render(
             <Button
                 className="classname"
                 onClick={() => "onclick"}
@@ -14,17 +14,15 @@ describe("Button Component", () => {
                 <a>foo</a>
             </Button>,
         );
-        const tree = button.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(asFragment()).toMatchSnapshot();
     });
 
     it("should be able to be disabled", () => {
-        const button = renderer.create(
+        const { asFragment } = render(
             <Button className="classname" onClick={() => "onclick"} disabled>
                 <a>foo</a>
             </Button>,
         );
-        const tree = button.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(asFragment()).toMatchSnapshot();
     });
 });

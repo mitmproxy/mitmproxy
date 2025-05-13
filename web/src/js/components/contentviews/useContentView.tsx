@@ -41,7 +41,7 @@ export function useContentView(
         if (cv_json) {
             try {
                 return JSON.parse(cv_json);
-            } catch (e) {
+            } catch {
                 const err: ContentViewData = {
                     text: cv_json,
                     description: "Network Error",

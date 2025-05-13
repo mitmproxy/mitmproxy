@@ -21,9 +21,6 @@ exports[`Dropdown 2`] = `
   </a>
   <ul
     class="dropdown-menu show"
-    data-popper-escaped="true"
-    data-popper-placement="bottom"
-    data-popper-reference-hidden="true"
     style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
   >
     <li>
@@ -86,9 +83,6 @@ exports[`SubMenu 2`] = `
     </a>
     <ul
       class="dropdown-menu show"
-      data-popper-escaped="true"
-      data-popper-placement="right-start"
-      data-popper-reference-hidden="true"
       style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
     >
       <li>

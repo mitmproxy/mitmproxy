@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, type JSX } from "react";
 import { onKeyDown } from "../ducks/ui/keyboard";
 import MainView from "./MainView";
 import Header from "./Header";
