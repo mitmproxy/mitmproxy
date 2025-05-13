@@ -48,16 +48,14 @@ type HttpMessageEditProps = {
 
 function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
     const dispatch = useAppDispatch();
-    const editorRef = useRef<CodeEditor>(null);
 
     const part = flow.request === message ? "request" : "response";
-
     const url = MessageUtils.getContentURL(flow, message);
     const content = useContent(url, message.contentHash);
+    const [editedContent, setEditedContent] = useState<string>();
 
     const save = async () => {
-        const content = editorRef.current?.getContent();
-        await dispatch(flowActions.update(flow, { [part]: { content } }));
+        await dispatch(flowActions.update(flow, { [part]: { content: editedContent || content || "" } }));
         stopEdit();
     };
     return (
@@ -80,7 +78,7 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                     Cancel
                 </Button>
             </div>
-            <CodeEditor ref={editorRef} initialContent={content || ""} />
+            <CodeEditor initialContent={content || ""} onChange={setEditedContent} />
         </div>
     );
 }
