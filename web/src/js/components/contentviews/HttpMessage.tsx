@@ -55,7 +55,11 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
     const [editedContent, setEditedContent] = useState<string>();
 
     const save = async () => {
-        await dispatch(flowActions.update(flow, { [part]: { content: editedContent || content || "" } }));
+        await dispatch(
+            flowActions.update(flow, {
+                [part]: { content: editedContent || content || "" },
+            }),
+        );
         stopEdit();
     };
     return (
