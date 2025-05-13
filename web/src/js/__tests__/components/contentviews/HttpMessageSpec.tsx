@@ -6,8 +6,6 @@ import HttpMessage, {
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
-jest.mock("../../../contrib/CodeMirror");
-
 enableFetchMocks();
 
 test("HttpMessage", async () => {

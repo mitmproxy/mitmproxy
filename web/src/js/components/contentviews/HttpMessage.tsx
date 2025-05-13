@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
@@ -78,7 +78,10 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                     Cancel
                 </Button>
             </div>
-            <CodeEditor initialContent={content || ""} onChange={setEditedContent} />
+            <CodeEditor
+                initialContent={content || ""}
+                onChange={setEditedContent}
+            />
         </div>
     );
 }

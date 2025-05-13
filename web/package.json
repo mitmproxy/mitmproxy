@@ -9,6 +9,10 @@
         "eslint": "eslint --fix ."
     },
     "dependencies": {
+        "@codemirror/lang-css": "^6.3.1",
+        "@codemirror/lang-html": "^6.4.9",
+        "@codemirror/lang-javascript": "^6.2.3",
+        "@codemirror/lang-yaml": "^6.1.2",
         "@floating-ui/react-dom": "^2.1.2",
         "@popperjs/core": "^2.11.8",
         "@reduxjs/toolkit": "^2.8.1",
