@@ -16,7 +16,7 @@ export function formatAddress(
     // strip IPv6 flowid
     address = [address[0], address[1]];
     // Add IPv6 brackets
-    if(address[0].includes(":")) {
+    if (address[0].includes(":")) {
         address[0] = `[${address[0]}]`;
     }
     return (
