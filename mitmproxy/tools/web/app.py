@@ -12,7 +12,7 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from typing import Any
+from typing import Any, Literal
 from typing import ClassVar
 from typing import Concatenate
 
@@ -419,10 +419,14 @@ class ClientConnection(WebSocketEventBroadcaster):
 
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
-        self.filters: dict[str, flowfilter.TFilter] = {}  # Instance-level filters
+        self.filters: dict[str, flowfilter.TFilter] = {}  # filters per connection
 
     @classmethod
-    def broadcast_flow(cls, type: str, f: mitmproxy.flow.Flow) -> None:
+    def broadcast_flow(
+        cls,
+        type: Literal["flows/add", "flows/update"],
+        f: mitmproxy.flow.Flow,
+    ) -> None:
         flow_json = flow_to_json(f)
         for conn in cls.connections:
             conn._broadcast_flow(type, f, flow_json)
@@ -433,15 +437,20 @@ class ClientConnection(WebSocketEventBroadcaster):
         f: mitmproxy.flow.Flow,
         flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
     ) -> None:
-        matches = {expr.pattern: bool(expr(f)) for expr in self.filters.values()}
-        message = json.dumps(
+        filters = {
+            name: bool(expr(f))
+            for name, expr in self.filters.items()
+        }
+        message = self._json_dumps(
             {
                 "type": type,
-                "payload": {"flow": flow_json, "matches": matches},
+                "payload": {
+                    "flow": flow_json,
+                    "matching_filters": filters,
+                },
             },
-        ).encode()
-
-        self.send(conn=self, message=message)
+        )
+        self.send(message)
 
     def update_filter(self, name: str, expr: str) -> None:
         if expr:
@@ -452,35 +461,25 @@ class ClientConnection(WebSocketEventBroadcaster):
             self.filters.pop(name, None)
             matching_flow_ids = []
 
-        message = json.dumps(
+        message = self._json_dumps(
             {
                 "type": "flows/filtersUpdated",
                 "payload": {
                     "name": name,
-                    "expr": expr,
                     "matching_flow_ids": matching_flow_ids,
                 },
             },
-        ).encode()
-
-        self.send(
-            conn=self, message=message
-        )  # send message just to the interested ClientConnection
+        )
+        self.send(message=message)
 
     async def on_message(self, message: str | bytes):
         try:
             data = json.loads(message)
-
-            type: str = data["type"]
-            resource, cmd = type.split("/")
-            name: str = data["payload"]["name"]
-            expr: str = data["payload"]["expr"]
-
-            if resource == "flows" and cmd == "updateFilter":
-                self.update_filter(name, expr)
-            else:
-                logger.error("Unsupported command found in incoming message.")
-                self.close(code=1003, reason="Unsupported command.")
+            match data["type"]:
+                case "flows/updateFilter":
+                    self.update_filter(data["payload"]["name"], data["payload"]["expr"])
+                case other:
+                    raise ValueError(f"Unsupported command: {other}")
         except Exception as e:
             logger.error(f"Error processing message from {self}: {e}")
             self.close(code=1011, reason="Internal server error.")

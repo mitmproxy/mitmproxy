@@ -458,7 +458,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             "type": "flows/filtersUpdated",
             "payload": {
                 "name": "search",
-                "expr": "~bq foo",
                 "matching_flow_ids": ["42"],
             },
         }
@@ -474,7 +473,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response["type"] == "flows/add"
-        assert response["payload"]["matches"] == {"~bq foo": True}
+        assert response["payload"]["matching_filters"] == {"search": True}
         assert response["payload"]["flow"]["id"] == "41"
 
         # test update flow
@@ -486,7 +485,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response["type"] == "flows/update"
-        assert response["payload"]["matches"] == {"~bq foo": False}
+        assert response["payload"]["matching_filters"] == {"search": False}
         assert response["payload"]["flow"]["id"] == "41"
 
         # test filter removal
@@ -508,7 +507,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             "type": "flows/filtersUpdated",
             "payload": {
                 "name": "search",
-                "expr": "",
                 "matching_flow_ids": [],
             },
         }
@@ -517,49 +515,25 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @tornado.testing.gen_test
     def test_websocket_filter_command_error(self):
-        ws_req = httpclient.HTTPRequest(
-            f"ws://localhost:{self.get_http_port()}/updates",
-            headers={"Cookie": self.auth_cookie},
-        )
-        ws_client = yield tornado.websocket.websocket_connect(ws_req)
+        # can't do pytest.parametrize, so we do this.
+        for data in [
+            """{"type": "flows/updateFilter"}""",
+            """{"type": "unknownCommand"}""",
+            "invalid json"
+        ]:
+            ws_req = httpclient.HTTPRequest(
+                f"ws://localhost:{self.get_http_port()}/updates",
+                headers={"Cookie": self.auth_cookie},
+            )
+            ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
-        # Send a message with an invalid command
-        message = json.dumps(
-            {
-                "type": "flows/invalidCommand",
-                "payload": {
-                    "name": "search",
-                    "expr": "~bq foo",
-                },
-            }
-        )
-        yield ws_client.write_message(message)
+            yield ws_client.write_message(data)
+            response = yield ws_client.read_message()
 
-        response = yield ws_client.read_message()
-
-        # Connection should be closed
-        self.assertIsNone(response)
-        self.assertEqual(ws_client.close_code, 1003)
-        self.assertEqual(ws_client.close_reason, "Unsupported command.")
-
-    @tornado.testing.gen_test
-    def test_websocket_filter_internal_server_error(self):
-        ws_req = httpclient.HTTPRequest(
-            f"ws://localhost:{self.get_http_port()}/updates",
-            headers={"Cookie": self.auth_cookie},
-        )
-        ws_client = yield tornado.websocket.websocket_connect(ws_req)
-
-        # Send a message with an invalid json
-        message = "Invalid JSON string"
-        yield ws_client.write_message(message)
-
-        response = yield ws_client.read_message()
-
-        # Connection should be closed
-        self.assertIsNone(response)
-        self.assertEqual(ws_client.close_code, 1011)
-        self.assertEqual(ws_client.close_reason, "Internal server error.")
+            # Connection should be closed
+            self.assertIsNone(response)
+            self.assertEqual(ws_client.close_code, 1011)
+            self.assertEqual(ws_client.close_reason, "Internal server error.")
 
     def test_process_list(self):
         try:
