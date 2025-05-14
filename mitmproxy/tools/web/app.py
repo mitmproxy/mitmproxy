@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import functools
 import hashlib
 import json
@@ -374,35 +375,43 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestH
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
 
+    _send_queue: asyncio.Queue[bytes]
+    _send_task: asyncio.Task[None]
+
     def open(self, *args, **kwargs):
         self.connections.add(self)
+        self._send_queue = asyncio.Queue()
+        # Python 3.13+: use _send_queue.shutdown() and we can use keep_ref=True here.
+        self._send_task = asyncio_utils.create_task(
+            self.send_task(),
+            name="WebSocket send task",
+            keep_ref=False,
+        )
 
     def on_close(self):
         self.connections.discard(self)
-
-    @classmethod
-    def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
-        async def wrapper():
-            try:
-                await conn.write_message(message)
-            except tornado.websocket.WebSocketClosedError:
-                cls.connections.discard(conn)
-
-        asyncio_utils.create_task(
-            wrapper(),
-            name="WebSocketEventBroadcaster",
-            keep_ref=True,
-        )
+        self._send_task.cancel()
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs, ensure_ascii=False).encode(
-            "utf8", "surrogateescape"
-        )
+        message = cls._json_dumps(kwargs)
+        for conn in cls.connections:
+            conn.send(message)
 
-        for conn in cls.connections.copy():
-            cls.send(conn, message)
+    def send(self, message: bytes):
+        self._send_queue.put_nowait(message)
 
+    async def send_task(self):
+        while True:
+            message = await self._send_queue.get()
+            try:
+                await self.write_message(message)
+            except tornado.websocket.WebSocketClosedError:
+                self.on_close()
+
+    @staticmethod
+    def _json_dumps(d):
+        return json.dumps(d, ensure_ascii=False).encode("utf8", "surrogateescape")
 
 class ClientConnection(WebSocketEventBroadcaster):
     connections: ClassVar[set] = set()
