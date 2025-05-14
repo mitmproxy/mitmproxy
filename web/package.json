@@ -9,12 +9,17 @@
         "eslint": "eslint --fix ."
     },
     "dependencies": {
+        "@codemirror/lang-css": "^6.3.1",
+        "@codemirror/lang-html": "^6.4.9",
+        "@codemirror/lang-javascript": "^6.2.3",
+        "@codemirror/lang-yaml": "^6.1.2",
         "@floating-ui/react-dom": "^2.1.2",
         "@popperjs/core": "^2.11.8",
         "@reduxjs/toolkit": "^2.8.1",
+        "@uiw/react-codemirror": "^4.23.12",
         "bootstrap": "^3.4.1",
         "classnames": "^2.3.1",
-        "codemirror": "^5.62.3",
+        "codemirror": "^6.0.1",
         "lodash": "^4.17.21",
         "prop-types": "^15.7.2",
         "qrcode": "^1.5.4",
