@@ -40,7 +40,10 @@ import sys
 from abc import ABC
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import ClassVar, AnyStr, Generic, cast
+from typing import AnyStr
+from typing import cast
+from typing import ClassVar
+from typing import Generic
 from typing import Protocol
 
 import pyparsing as pp
@@ -53,8 +56,8 @@ from mitmproxy import udp
 
 maybe_ignore_case: re.RegexFlag = (
     cast(re.RegexFlag, re.IGNORECASE)
-    if os.environ.get("MITMPROXY_CASE_SENSITIVE_FILTERS") != "1" else
-    re.NOFLAG
+    if os.environ.get("MITMPROXY_CASE_SENSITIVE_FILTERS") != "1"
+    else re.NOFLAG
 )
 
 
