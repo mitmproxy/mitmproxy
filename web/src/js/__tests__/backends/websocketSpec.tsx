@@ -156,11 +156,11 @@ describe("websocket backend", () => {
         backend.onMessage({ type: "flows/update" });
         backend.onMessage({ type: "flows/remove" });
         backend.onMessage({ type: "flows/reset" });
+        backend.onMessage({ type: "flows/filterUpdate" });
         backend.onMessage({ type: "events/add" });
         backend.onMessage({ type: "events/reset" });
         backend.onMessage({ type: "options/update" });
         backend.onMessage({ type: "state/update" });
-        backend.onMessage({ type: "flows/filtersUpdated" });
         expect(fetchMock.mock.calls.length).toBe(2);
     });
 

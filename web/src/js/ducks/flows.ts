@@ -27,11 +27,10 @@ export const FLOWS_UPDATE = createAction<{
 }>("FLOWS_UPDATE");
 export const FLOWS_REMOVE = createAction<string>("FLOWS_REMOVE");
 export const FLOWS_RECEIVE = createAction<Flow[]>("FLOWS_RECEIVE");
-export const FLOWS_FILTERS_UPDATED = createAction<{
+export const FLOWS_FILTER_UPDATE = createAction<{
     name: string;
-    expr: string;
     matching_flow_ids: string[];
-}>("FLOWS_FILTERSUPDATED");
+}>("FLOWS_FILTER_UPDATE");
 
 interface FlowSortFn extends store.SortFn<Flow> {}
 
@@ -226,7 +225,7 @@ const flowsSlice = createSlice({
                     ...updateSelected(state, newStoreState, action),
                 };
             })
-            .addCase(FLOWS_FILTERS_UPDATED, (state, action) => {
+            .addCase(FLOWS_FILTER_UPDATE, (state, action) => {
                 const { name, expr, matching_flow_ids } = action.payload;
                 let updatedState = { ...state };
 

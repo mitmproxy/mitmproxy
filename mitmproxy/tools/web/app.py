@@ -463,7 +463,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 
         message = self._json_dumps(
             {
-                "type": "flows/filtersUpdated",
+                "type": "flows/filterUpdate",
                 "payload": {
                     "name": name,
                     "matching_flow_ids": matching_flow_ids,

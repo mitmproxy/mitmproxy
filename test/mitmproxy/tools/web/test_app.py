@@ -455,7 +455,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response == {
-            "type": "flows/filtersUpdated",
+            "type": "flows/filterUpdate",
             "payload": {
                 "name": "search",
                 "matching_flow_ids": ["42"],
@@ -504,7 +504,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         response = json.loads(response)
 
         assert response == {
-            "type": "flows/filtersUpdated",
+            "type": "flows/filterUpdate",
             "payload": {
                 "name": "search",
                 "matching_flow_ids": [],

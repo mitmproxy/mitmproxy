@@ -12,7 +12,7 @@ import { EVENTS_ADD, EVENTS_RECEIVE } from "../ducks/eventLog";
 import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../ducks/options";
 import {
     FLOWS_ADD,
-    FLOWS_FILTERS_UPDATED,
+    FLOWS_FILTER_UPDATE,
     FLOWS_RECEIVE,
     FLOWS_REMOVE,
     FLOWS_UPDATE,
@@ -30,7 +30,7 @@ export enum Resource {
 type WebsocketMessageType =
     | "flows/add"
     | "flows/update"
-    | "flows/filtersUpdated"
+    | "flows/filterUpdate"
     | "flows/remove"
     | "flows/reset"
     | "events/add"
@@ -101,10 +101,10 @@ export default class WebsocketBackend {
                     Resource.Flows,
                     FLOWS_UPDATE(msg.payload),
                 );
-            case "flows/filtersUpdated":
+            case "flows/filterUpdate":
                 return this.queueOrDispatch(
                     Resource.Flows,
-                    FLOWS_FILTERS_UPDATED(msg.payload),
+                    FLOWS_FILTER_UPDATE(msg.payload),
                 );
             case "flows/remove":
                 return this.queueOrDispatch(
