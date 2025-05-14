@@ -1,5 +1,4 @@
 import * as React from "react";
-import renderer from "react-test-renderer";
 import {
     EventlogToggle,
     MenuToggle,
@@ -14,13 +13,12 @@ enableFetchMocks();
 describe("MenuToggle Component", () => {
     it("should render correctly", () => {
         const changeFn = jest.fn();
-        const menuToggle = renderer.create(
+        const { asFragment } = render(
             <MenuToggle onChange={changeFn} value={true}>
                 <p>foo children</p>
             </MenuToggle>,
         );
-        const tree = menuToggle.toJSON();
-        expect(tree).toMatchSnapshot();
+        expect(asFragment()).toMatchSnapshot();
     });
 });
 

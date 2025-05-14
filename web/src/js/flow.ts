@@ -39,7 +39,8 @@ export interface Error {
     timestamp: number;
 }
 
-export type Address = [string, number];
+// IPv6 has flowinfo and scope_id (currently not correctly typed on the Python side)
+export type Address = [string, number] | [string, number, number, number];
 
 export interface Connection {
     id: string;

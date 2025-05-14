@@ -1,47 +1,46 @@
 import * as React from "react";
 import { formatTimeStamp } from "../../utils";
-import { Client, Flow, Server } from "../../flow";
+import { Address, Client, Flow, Server } from "../../flow";
 
 type ConnectionInfoProps = {
     conn: Client | Server;
 };
 
+export function formatAddress(
+    desc: string,
+    address: Address | undefined,
+): React.ReactElement {
+    if (address === undefined) {
+        return <></>;
+    }
+    // strip IPv6 flowid
+    address = [address[0], address[1]];
+    // Add IPv6 brackets
+    if (address[0].includes(":")) {
+        address[0] = `[${address[0]}]`;
+    }
+    return (
+        <tr>
+            <td>{desc}:</td>
+            <td>{address.join(":")}</td>
+        </tr>
+    );
+}
+
 export function ConnectionInfo({ conn }: ConnectionInfoProps) {
-    let address_info: JSX.Element | null = null;
+    let address_info: React.ReactElement;
     if ("address" in conn) {
         // Server
         address_info = (
             <>
-                <tr>
-                    <td>Address:</td>
-                    <td>{conn.address?.join(":")}</td>
-                </tr>
-                {conn.peername && (
-                    <tr>
-                        <td>Resolved address:</td>
-                        <td>{conn.peername.join(":")}</td>
-                    </tr>
-                )}
-                {conn.sockname && (
-                    <tr>
-                        <td>Source address:</td>
-                        <td>{conn.sockname.join(":")}</td>
-                    </tr>
-                )}
+                {formatAddress("Address", conn.address)}
+                {formatAddress("Resolved address", conn.peername)}
+                {formatAddress("Source address", conn.sockname)}
             </>
         );
     } else {
         // Client
-        if (conn.peername?.[0]) {
-            address_info = (
-                <>
-                    <tr>
-                        <td>Address:</td>
-                        <td>{conn.peername?.join(":")}</td>
-                    </tr>
-                </>
-            );
-        }
+        address_info = formatAddress("Address", conn.peername);
     }
     return (
         <table className="connection-table">
@@ -80,7 +79,7 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
     );
 }
 
-function attrList(data: [string, string][]): JSX.Element {
+function attrList(data: [string, string][]): React.ReactElement {
     return (
         <dl className="cert-attributes">
             {data.map(([k, v]) => (
@@ -93,7 +92,7 @@ function attrList(data: [string, string][]): JSX.Element {
     );
 }
 
-export function CertificateInfo({ flow }: { flow: Flow }): JSX.Element {
+export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
     const cert = flow.server_conn?.cert;
     if (!cert) return <></>;
 

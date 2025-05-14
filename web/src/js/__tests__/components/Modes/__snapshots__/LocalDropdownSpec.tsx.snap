@@ -18,7 +18,7 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
         class="mode-popover local-popover"
       >
         <button
-          popovertarget=":r0:"
+          popovertarget="«r0»"
         >
           <i
             aria-hidden="true"
@@ -26,7 +26,7 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
           />
         </button>
         <div
-          id=":r0:"
+          id="«r0»"
           popover="auto"
         >
           <h4>

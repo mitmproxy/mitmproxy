@@ -23,7 +23,7 @@ export default React.memo(function FileChooser({
             href="#"
             onClick={(e) => {
                 fileInput.click();
-                onClick && onClick(e);
+                if (onClick) onClick(e);
             }}
             className={className}
             title={title}
@@ -31,7 +31,9 @@ export default React.memo(function FileChooser({
             <i className={"fa fa-fw " + icon} />
             {text}
             <input
-                ref={(ref) => (fileInput = ref)}
+                ref={(ref) => {
+                    fileInput = ref;
+                }}
                 className="hidden"
                 type="file"
                 onChange={(e) => {

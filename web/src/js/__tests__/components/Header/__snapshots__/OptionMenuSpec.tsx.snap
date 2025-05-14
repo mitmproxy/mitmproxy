@@ -1,149 +1,137 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`OptionMenu Component should render correctly 1`] = `
-<div>
-  <div
-    className="menu-group"
-  >
+<DocumentFragment>
+  <div>
     <div
-      className="menu-content"
+      class="menu-group"
     >
-      <button
-        className="btn btn-default"
-        onClick={[Function]}
-        title="Open Options"
+      <div
+        class="menu-content"
       >
-        <i
-          className="fa fa-cogs text-primary"
-        />
-         
-        Edit Options 
-        <sup>
-          alpha
-        </sup>
-      </button>
+        <button
+          class="btn btn-default"
+          title="Open Options"
+        >
+          <i
+            class="fa fa-cogs text-primary"
+          />
+           Edit Options 
+          <sup>
+            alpha
+          </sup>
+        </button>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Options Editor
+      </div>
     </div>
     <div
-      className="menu-legend"
+      class="menu-group"
     >
-      Options Editor
+      <div
+        class="menu-content"
+      >
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Strip cache headers 
+            <a
+              href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <i
+                class="fa fa-question-circle"
+              />
+            </a>
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Use host header for display 
+            <a
+              href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <i
+                class="fa fa-question-circle"
+              />
+            </a>
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Don't verify server certificates 
+            <a
+              href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <i
+                class="fa fa-question-circle"
+              />
+            </a>
+          </label>
+        </div>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Quick Options
+      </div>
+    </div>
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              checked=""
+              type="checkbox"
+            />
+            Display Event Log
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
+          <label>
+            <input
+              type="checkbox"
+            />
+            Display Command Bar
+          </label>
+        </div>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        View Options
+      </div>
     </div>
   </div>
-  <div
-    className="menu-group"
-  >
-    <div
-      className="menu-content"
-    >
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Strip cache headers
-           
-          <a
-            href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <i
-              className="fa fa-question-circle"
-            />
-          </a>
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Use host header for display
-           
-          <a
-            href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <i
-              className="fa fa-question-circle"
-            />
-          </a>
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Don't verify server certificates
-           
-          <a
-            href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <i
-              className="fa fa-question-circle"
-            />
-          </a>
-        </label>
-      </div>
-    </div>
-    <div
-      className="menu-legend"
-    >
-      Quick Options
-    </div>
-  </div>
-  <div
-    className="menu-group"
-  >
-    <div
-      className="menu-content"
-    >
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={true}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Display Event Log
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Display Command Bar
-        </label>
-      </div>
-    </div>
-    <div
-      className="menu-legend"
-    >
-      View Options
-    </div>
-  </div>
-</div>
+</DocumentFragment>
 `;

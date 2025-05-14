@@ -1,28 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Button Component should be able to be disabled 1`] = `
-<button
-  className="classname btn btn-default"
-  disabled={true}
->
-  <a>
-    foo
-  </a>
-</button>
+<DocumentFragment>
+  <button
+    class="classname btn btn-default"
+    disabled=""
+  >
+    <a>
+      foo
+    </a>
+  </button>
+</DocumentFragment>
 `;
 
 exports[`Button Component should render correctly 1`] = `
-<button
-  className="classname btn btn-default"
-  onClick={[Function]}
-  title="title"
->
-  <i
-    className="fa icon"
-  />
-   
-  <a>
-    foo
-  </a>
-</button>
+<DocumentFragment>
+  <button
+    class="classname btn btn-default"
+    title="title"
+  >
+    <i
+      class="fa icon"
+    />
+     
+    <a>
+      foo
+    </a>
+  </button>
+</DocumentFragment>
 `;

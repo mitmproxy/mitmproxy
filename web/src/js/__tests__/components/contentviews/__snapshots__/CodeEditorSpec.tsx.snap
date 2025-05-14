@@ -4,6 +4,501 @@ exports[`CodeEditor 1`] = `
 <DocumentFragment>
   <div
     class="codeeditor"
-  />
+  >
+    <div
+      class="cm-theme-light"
+    >
+      <div
+        class="cm-editor ͼ1 ͼ2 ͼ4 ͼ17 ͼ15"
+      >
+        <div
+          aria-live="polite"
+          class="cm-announced"
+        />
+        <div
+          class="cm-scroller"
+          tabindex="-1"
+        >
+          <div
+            aria-hidden="true"
+            class="cm-gutters"
+            style="min-height: 14px; position: sticky;"
+          >
+            <div
+              class="cm-gutter cm-lineNumbers"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                9
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              >
+                1
+              </div>
+            </div>
+            <div
+              class="cm-gutter cm-foldGutter"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                <span
+                  title="Unfold line"
+                >
+                  ›
+                </span>
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              />
+            </div>
+          </div>
+          <div
+            aria-multiline="true"
+            autocapitalize="off"
+            autocorrect="off"
+            class="cm-content"
+            contenteditable="true"
+            role="textbox"
+            spellcheck="false"
+            style="tab-size: 4;"
+            translate="no"
+            writingsuggestions="false"
+          >
+            <div
+              class="cm-activeLine cm-line"
+            >
+              foo
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-layer-above cm-cursorLayer"
+            style="z-index: 150; animation-duration: 1200ms;"
+          />
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-selectionLayer"
+            style="z-index: -2;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CodeEditor highlights CSS 1`] = `
+<DocumentFragment>
+  <div
+    class="codeeditor"
+  >
+    <div
+      class="cm-theme-light"
+    >
+      <div
+        class="cm-editor ͼ1 ͼ2 ͼ4 ͼ1g ͼ15"
+      >
+        <div
+          aria-live="polite"
+          class="cm-announced"
+        />
+        <div
+          class="cm-scroller"
+          tabindex="-1"
+        >
+          <div
+            aria-hidden="true"
+            class="cm-gutters"
+            style="min-height: 14px; position: sticky;"
+          >
+            <div
+              class="cm-gutter cm-lineNumbers"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                9
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              >
+                1
+              </div>
+            </div>
+            <div
+              class="cm-gutter cm-foldGutter"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                <span
+                  title="Unfold line"
+                >
+                  ›
+                </span>
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              />
+            </div>
+          </div>
+          <div
+            aria-multiline="true"
+            autocapitalize="off"
+            autocorrect="off"
+            class="cm-content"
+            contenteditable="true"
+            data-language="css"
+            role="textbox"
+            spellcheck="false"
+            style="tab-size: 4;"
+            translate="no"
+            writingsuggestions="false"
+          >
+            <div
+              class="cm-activeLine cm-line"
+            >
+              * { color: 
+              <span
+                class="ͼc"
+              >
+                black
+              </span>
+              ; }
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-layer-above cm-cursorLayer"
+            style="z-index: 150; animation-duration: 1200ms;"
+          />
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-selectionLayer"
+            style="z-index: -2;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CodeEditor highlights HTML 1`] = `
+<DocumentFragment>
+  <div
+    class="codeeditor"
+  >
+    <div
+      class="cm-theme-light"
+    >
+      <div
+        class="cm-editor ͼ1 ͼ2 ͼ4 ͼ1d ͼ15"
+      >
+        <div
+          aria-live="polite"
+          class="cm-announced"
+        />
+        <div
+          class="cm-scroller"
+          tabindex="-1"
+        >
+          <div
+            aria-hidden="true"
+            class="cm-gutters"
+            style="min-height: 14px; position: sticky;"
+          >
+            <div
+              class="cm-gutter cm-lineNumbers"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                9
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              >
+                1
+              </div>
+            </div>
+            <div
+              class="cm-gutter cm-foldGutter"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                <span
+                  title="Unfold line"
+                >
+                  ›
+                </span>
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              />
+            </div>
+          </div>
+          <div
+            aria-multiline="true"
+            autocapitalize="off"
+            autocorrect="off"
+            class="cm-content"
+            contenteditable="true"
+            data-language="html"
+            role="textbox"
+            spellcheck="false"
+            style="tab-size: 4;"
+            translate="no"
+            writingsuggestions="false"
+          >
+            <div
+              class="cm-activeLine cm-line"
+            >
+              &lt;
+              <span
+                class="ͼi"
+              >
+                p
+              </span>
+              &gt;yay&lt;/
+              <span
+                class="ͼi"
+              >
+                p
+              </span>
+              &gt;
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-layer-above cm-cursorLayer"
+            style="z-index: 150; animation-duration: 1200ms;"
+          />
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-selectionLayer"
+            style="z-index: -2;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CodeEditor highlights JavaScript 1`] = `
+<DocumentFragment>
+  <div
+    class="codeeditor"
+  >
+    <div
+      class="cm-theme-light"
+    >
+      <div
+        class="cm-editor ͼ1 ͼ2 ͼ4 ͼ1a ͼ15"
+      >
+        <div
+          aria-live="polite"
+          class="cm-announced"
+        />
+        <div
+          class="cm-scroller"
+          tabindex="-1"
+        >
+          <div
+            aria-hidden="true"
+            class="cm-gutters"
+            style="min-height: 14px; position: sticky;"
+          >
+            <div
+              class="cm-gutter cm-lineNumbers"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                9
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              >
+                1
+              </div>
+            </div>
+            <div
+              class="cm-gutter cm-foldGutter"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                <span
+                  title="Unfold line"
+                >
+                  ›
+                </span>
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              />
+            </div>
+          </div>
+          <div
+            aria-multiline="true"
+            autocapitalize="off"
+            autocorrect="off"
+            class="cm-content"
+            contenteditable="true"
+            data-language="javascript"
+            role="textbox"
+            spellcheck="false"
+            style="tab-size: 4;"
+            translate="no"
+            writingsuggestions="false"
+          >
+            <div
+              class="cm-activeLine cm-line"
+            >
+              alert(
+              <span
+                class="ͼd"
+              >
+                1
+              </span>
+              );
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-layer-above cm-cursorLayer"
+            style="z-index: 150; animation-duration: 1200ms;"
+          />
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-selectionLayer"
+            style="z-index: -2;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CodeEditor highlights YAML 1`] = `
+<DocumentFragment>
+  <div
+    class="codeeditor"
+  >
+    <div
+      class="cm-theme-light"
+    >
+      <div
+        class="cm-editor ͼ1 ͼ2 ͼ4 ͼ1j ͼ15"
+      >
+        <div
+          aria-live="polite"
+          class="cm-announced"
+        />
+        <div
+          class="cm-scroller"
+          tabindex="-1"
+        >
+          <div
+            aria-hidden="true"
+            class="cm-gutters"
+            style="min-height: 14px; position: sticky;"
+          >
+            <div
+              class="cm-gutter cm-lineNumbers"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                9
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              >
+                1
+              </div>
+            </div>
+            <div
+              class="cm-gutter cm-foldGutter"
+            >
+              <div
+                class="cm-gutterElement"
+                style="height: 0px; visibility: hidden; pointer-events: none;"
+              >
+                <span
+                  title="Unfold line"
+                >
+                  ›
+                </span>
+              </div>
+              <div
+                class="cm-gutterElement cm-activeLineGutter"
+                style="height: 14px;"
+              />
+            </div>
+          </div>
+          <div
+            aria-multiline="true"
+            autocapitalize="off"
+            autocorrect="off"
+            class="cm-content"
+            contenteditable="true"
+            data-language="yaml"
+            role="textbox"
+            spellcheck="false"
+            style="tab-size: 4;"
+            translate="no"
+            writingsuggestions="false"
+          >
+            <div
+              class="cm-activeLine cm-line"
+            >
+              <span
+                class="ͼl"
+              >
+                foo
+              </span>
+              : bar
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-layer-above cm-cursorLayer"
+            style="z-index: 150; animation-duration: 1200ms;"
+          />
+          <div
+            aria-hidden="true"
+            class="cm-layer cm-selectionLayer"
+            style="z-index: -2;"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
 </DocumentFragment>
 `;

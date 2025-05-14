@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { usePopper } from "react-popper";
-import * as PopperJS from "@popperjs/core";
+import { useFloating, UseFloatingOptions } from "@floating-ui/react-dom";
 import classnames from "classnames";
 
 export const Divider = () => <li role="separator" className="divider" />;
@@ -33,23 +32,16 @@ type SubMenuProps = {
 
 export function SubMenu({ title, children, className }: SubMenuProps) {
     const [open, setOpen] = useState(false);
-    const [referenceElement, setReferenceElement] =
-        useState<HTMLLIElement | null>(null);
-    const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(
-        null,
-    );
-    const { styles, attributes } = usePopper(referenceElement, popperElement, {
+    const { refs, floatingStyles } = useFloating({
         placement: "right-start",
     });
-
     let submenu: React.ReactNode | null = null;
     if (open) {
         submenu = (
             <ul
                 className={classnames("dropdown-menu show", className)}
-                ref={setPopperElement}
-                style={styles.popper}
-                {...attributes.popper}
+                ref={refs.setFloating}
+                style={floatingStyles}
             >
                 {children}
             </ul>
@@ -58,7 +50,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
 
     return (
         <li
-            ref={setReferenceElement}
+            ref={refs.setReference}
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
         >
@@ -77,9 +69,9 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
 type DropdownProps = {
     text: React.ReactNode;
     children: React.ReactNode;
-    options?: Partial<PopperJS.Options>;
+    options?: UseFloatingOptions;
     className?: string;
-    onOpen?: (boolean) => void;
+    onOpen?: (b: boolean) => void;
 };
 /*
  * When modifying this component, check that File -> Open and flow content upload work.
@@ -92,28 +84,21 @@ export default React.memo(function Dropdown({
     onOpen,
     ...attrs
 }: DropdownProps) {
-    const [refElement, setRefElement] = useState<HTMLAnchorElement | null>(
-        null,
-    );
     const [open, _setOpen] = useState(false);
-    const [popperElement, setPopperElement] = useState<HTMLUListElement | null>(
-        null,
-    );
-    const { styles, attributes } = usePopper(refElement, popperElement, {
-        ...options,
-    });
+
+    const { refs, floatingStyles } = useFloating(options);
 
     const setOpen = (b: boolean) => {
         _setOpen(b);
-        onOpen && onOpen(b);
+        if (onOpen) onOpen(b);
     };
 
     useEffect(() => {
-        if (!popperElement) return;
+        if (!refs.floating.current) return;
         document.addEventListener(
             "click",
             (e) => {
-                if (!popperElement.contains(e.target as Node)) {
+                if (!refs.floating.current?.contains(e.target as Node)) {
                     e.preventDefault();
                     e.stopPropagation();
                     setOpen(false);
@@ -127,16 +112,15 @@ export default React.memo(function Dropdown({
             },
             { once: true, capture: true },
         );
-    }, [popperElement]);
+    }, [refs.floating.current]);
 
     let contents;
     if (open) {
         contents = (
             <ul
                 className="dropdown-menu show"
-                ref={setPopperElement}
-                style={styles.popper}
-                {...attributes.popper}
+                ref={refs.setFloating}
+                style={floatingStyles}
             >
                 {children}
             </ul>
@@ -149,7 +133,7 @@ export default React.memo(function Dropdown({
         <>
             <a
                 href="#"
-                ref={setRefElement}
+                ref={refs.setReference}
                 className={classnames(className, { open: open })}
                 onClick={(e) => {
                     e.preventDefault();

@@ -2,8 +2,9 @@ import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-export default [
+export default defineConfig([
     { files: ["**/*.{ts,tsx}"] },
     { languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } } },
     { languageOptions: { globals: globals.browser } },
@@ -12,6 +13,7 @@ export default [
     pluginReactConfig,
     {
         rules: {
+            "@typescript-eslint/no-empty-object-type": "off",
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-unused-vars": [
                 "error",
@@ -51,4 +53,5 @@ export default [
             ],
         },
     },
-];
+    globalIgnores(["coverage/*"]),
+]);

@@ -113,7 +113,9 @@ export default class KeyValueListEditor extends Component<
                     onEditDone={(newItem) => this.onEditDone(row, newItem)}
                     onClickEmptyArea={() => this.onClickEmptyArea(row)}
                     onTabNext={() => this.onTabNext(row)}
-                    ref={(e) => (this.rowRefs[row] = e)}
+                    ref={(e) => {
+                        this.rowRefs[row] = e;
+                    }}
                 />
             );
         });

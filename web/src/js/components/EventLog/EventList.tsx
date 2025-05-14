@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import * as autoscroll from "../helpers/AutoScroll";
 import { calcVScroll, VScroll } from "../helpers/VirtualScroll";
 import { EventLogItem } from "../../ducks/eventLog";
@@ -17,11 +16,6 @@ export default class EventLogList extends Component<
     EventLogListProps,
     EventLogListState
 > {
-    static propTypes = {
-        events: PropTypes.array.isRequired,
-        rowHeight: PropTypes.number,
-    };
-
     static defaultProps = {
         rowHeight: 18,
     };
@@ -97,7 +91,9 @@ export default class EventLogList extends Component<
                 {events.slice(vScroll.start, vScroll.end).map((event) => (
                     <div
                         key={event.id}
-                        ref={(node) => this.setHeight(event.id, node)}
+                        ref={(node) => {
+                            this.setHeight(event.id, node);
+                        }}
                     >
                         <LogIcon event={event} />
                         {event.message}

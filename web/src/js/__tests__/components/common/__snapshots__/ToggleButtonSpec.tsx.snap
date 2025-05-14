@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ToggleButton Component should render correctly 1`] = `
-<div
-  className="btn btn-toggle btn-primary"
-  onClick={[MockFunction]}
->
-  <i
-    className="fa fa-fw fa-check-square-o"
-  />
-   
-  foo
-</div>
+<DocumentFragment>
+  <div
+    class="btn btn-toggle btn-primary"
+  >
+    <i
+      class="fa fa-fw fa-check-square-o"
+    />
+     foo
+  </div>
+</DocumentFragment>
 `;
