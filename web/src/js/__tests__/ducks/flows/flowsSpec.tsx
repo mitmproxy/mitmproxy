@@ -1,16 +1,19 @@
-import reduceFlows, * as flowActions from "../../ducks/flows";
-import { fetchApi } from "../../utils";
-import { TFlow, TStore, TTCPFlow } from "./tutils";
-import FlowColumns from "../../components/FlowTable/FlowColumns";
+import reduceFlows, * as flowActions from "../../../ducks/flows";
+import { fetchApi } from "../../../utils";
+import { TFlow, TStore, TTCPFlow } from "../tutils";
+import FlowColumns from "../../../components/FlowTable/FlowColumns";
 
-jest.mock("../../utils");
+jest.mock("../../../utils");
 
 describe("flow reducer", () => {
     let s;
     for (const i of ["0", "1", "2", "3", "4"]) {
         s = reduceFlows(
             s,
-            flowActions.FLOWS_ADD({ flow: { ...TFlow(), id: i }, matches: {} }),
+            flowActions.FLOWS_ADD({
+                flow: { ...TFlow(), id: i },
+                matching_filters: {},
+            }),
         );
     }
     const state = s;
@@ -65,15 +68,15 @@ describe("flow reducer", () => {
             const [tflow0, tflow1] = store.getState().flows.list;
             store.dispatch(flowActions.selectToggle(tflow0));
             expect(store.getState().flows.selected).toEqual([tflow1, tflow0]);
-            expect(store.getState().flows.selectedIndex).toEqual({
-                [tflow1.id]: 0,
-                [tflow0.id]: 1,
+            expect(store.getState().flows.selectedIds).toEqual({
+                [tflow1.id]: true,
+                [tflow0.id]: true,
             });
 
             store.dispatch(flowActions.selectToggle(tflow1));
             expect(store.getState().flows.selected).toEqual([tflow0]);
-            expect(store.getState().flows.selectedIndex).toEqual({
-                [tflow0.id]: 0,
+            expect(store.getState().flows.selectedIds).toEqual({
+                [tflow0.id]: true,
             });
         });
 
@@ -140,7 +143,7 @@ describe("flow reducer", () => {
             );
 
             expect(next.selected).toEqual([stillExists]);
-            expect(next.selectedIndex).toEqual({ [stillExists.id]: 0 });
+            expect(next.selectedIds).toEqual({ [stillExists.id]: true });
         });
 
         it("should not update the flow in state.selected if the id doesn't exist in selectedIndex", () => {
@@ -154,7 +157,10 @@ describe("flow reducer", () => {
 
             const next = reduceFlows(
                 store.getState().flows,
-                flowActions.FLOWS_UPDATE({ flow: unrelatedFlow, matches: {} }),
+                flowActions.FLOWS_UPDATE({
+                    flow: unrelatedFlow,
+                    matching_filters: {},
+                }),
             );
             expect(next.selected).toEqual(originalSelected);
         });
@@ -170,7 +176,10 @@ describe("flow reducer", () => {
 
             const next = reduceFlows(
                 store.getState().flows,
-                flowActions.FLOWS_UPDATE({ flow: updatedFlow, matches: {} }),
+                flowActions.FLOWS_UPDATE({
+                    flow: updatedFlow,
+                    matching_filters: {},
+                }),
             );
             const updatedSelected = next.selected;
             expect(updatedSelected[0]).toBe(updatedFlow);
@@ -205,32 +214,8 @@ describe("flow reducer", () => {
             );
 
             expect(next.selected).toEqual([]);
-            expect(next.selectedIndex).toEqual({});
+            expect(next.selectedIds).toEqual({});
         });
-    });
-
-    it("should be possible to set filter", () => {
-        const filt = "~u 123";
-
-        const updateFilterMock = jest.fn();
-        (window as any).backend = { updateFilter: updateFilterMock };
-
-        const newState = reduceFlows(undefined, flowActions.setFilter(filt));
-
-        expect(newState.filter).toEqual(filt);
-        expect(updateFilterMock).toHaveBeenCalledWith("search", filt);
-    });
-
-    it("should be possible to set highlight", () => {
-        const key = "foo";
-
-        const updateFilterMock = jest.fn();
-        (window as any).backend = { updateFilter: updateFilterMock };
-
-        const newState = reduceFlows(undefined, flowActions.setHighlight(key));
-
-        expect(newState.highlight).toEqual(key);
-        expect(updateFilterMock).toHaveBeenCalledWith("highlight", key);
     });
 
     it("should be possible to set sort", () => {

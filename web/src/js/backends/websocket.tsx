@@ -17,8 +17,8 @@ import {
     FLOWS_REMOVE,
     FLOWS_UPDATE,
 } from "../ducks/flows";
-import {Action, PayloadAction} from "@reduxjs/toolkit";
-import {type FilterName} from "../ducks/ui/filter";
+import { Action, PayloadAction } from "@reduxjs/toolkit";
+import { type FilterName } from "../ducks/ui/filter";
 
 export enum Resource {
     State = "state",

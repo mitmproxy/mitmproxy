@@ -4,11 +4,13 @@ import Dropdown, { Divider, MenuItem } from "../common/Dropdown";
 import * as flowsActions from "../../ducks/flows";
 import HideInStatic from "../common/HideInStatic";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {FilterName} from "../../ducks/ui/filter";
+import { FilterName } from "../../ducks/ui/filter";
 
 export default React.memo(function FileMenu() {
     const dispatch = useAppDispatch();
-    const filter = useAppSelector((state) => state.ui.filter[FilterName.Search]);
+    const filter = useAppSelector(
+        (state) => state.ui.filter[FilterName.Search],
+    );
     return (
         <Dropdown
             className="pull-left special"

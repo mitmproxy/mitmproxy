@@ -5,7 +5,7 @@
  * - read the initial URL state on page load
  * - push updates to the URL later on.
  */
-import {FilterName, setFilter} from "./ducks/ui/filter";
+import { FilterName, setFilter } from "./ducks/ui/filter";
 import { select } from "./ducks/flows";
 import { selectTab } from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
@@ -49,10 +49,14 @@ export function updateStoreFromUrl(store: RootStore) {
             const value = decodeURIComponent(encodedVal);
             switch (key) {
                 case Query.SEARCH:
-                    store.dispatch(setFilter({name: FilterName.Search, expr: value}));
+                    store.dispatch(
+                        setFilter({ name: FilterName.Search, expr: value }),
+                    );
                     break;
                 case Query.HIGHLIGHT:
-                    store.dispatch(setFilter({name: FilterName.Highlight, expr: value}));
+                    store.dispatch(
+                        setFilter({ name: FilterName.Highlight, expr: value }),
+                    );
                     break;
                 case Query.SHOW_EVENTLOG:
                     if (!store.getState().eventLog.visible)

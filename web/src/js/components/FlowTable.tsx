@@ -10,8 +10,9 @@ import { RootState } from "../ducks";
 type FlowTableProps = {
     flowView: Flow[];
     rowHeight: number;
-    highlighted: Set<string>;
-    selectedIds: Set<string>;
+    highlighted: { [id: string]: boolean };
+    selectedIds: { [key: string]: boolean };
+    onlySelectedId: string | false;
     firstSelectedIndex: number | undefined;
 };
 
@@ -63,13 +64,11 @@ export class PureFlowTable extends React.Component<
         }
         this.onViewportUpdate();
 
-        const { selectedIds } = this.props;
-        const prevSelectedIds = prevProps.selectedIds;
-        const currentSelectionFlow: Flow | undefined = selectedIds.values().next().value;
+        const { onlySelectedId } = this.props;
 
         const selectedPotentiallyOffscreenFlow =
-            selectedIds.size === 1 &&
-            currentSelectionFlow!.id !== prevSelectedIds.values().next().value?.id;
+            onlySelectedId &&
+            onlySelectedId !== prevProps.onlySelectedId;
 
         if (selectedPotentiallyOffscreenFlow) {
             const { rowHeight, firstSelectedIndex } = this.props;
@@ -125,8 +124,7 @@ export class PureFlowTable extends React.Component<
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flowView, selectedIds, highlighted } =
-            this.props;
+        const { flowView, selectedIds, highlighted } = this.props;
 
         return (
             <div
@@ -149,8 +147,8 @@ export class PureFlowTable extends React.Component<
                                 <FlowRow
                                     key={flow.id}
                                     flow={flow}
-                                    selected={selectedIds.has(flow.id)}
-                                    highlighted={highlighted.has(flow.id)}
+                                    selected={flow.id in selectedIds}
+                                    highlighted={flow.id in highlighted}
                                 />
                             ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
@@ -165,5 +163,6 @@ export default connect((state: RootState) => ({
     flowView: state.flows.view,
     highlighted: state.flows.highlighted,
     selectedIds: state.flows.selectedIds,
-    firstSelectedIndex: state.flows._viewIndex.get(state.flows.selected[0]?.id),
+    onlySelectedId: state.flows.selected.length === 1 && state.flows.selected[0].id,
+    firstSelectedIndex: state.flows._viewIndex[state.flows.selected[0]?.id],
 }))(PureFlowTable);

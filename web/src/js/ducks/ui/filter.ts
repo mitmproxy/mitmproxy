@@ -12,10 +12,16 @@ const filtersSlice = createSlice({
         [FilterName.Highlight]: "",
     },
     reducers: {
-        setFilter(state, action: PayloadAction<{ name: FilterName, expr: string }>) {
-            window.backend.updateFilter(action.payload.name, action.payload.expr);
+        setFilter(
+            state,
+            action: PayloadAction<{ name: FilterName; expr: string }>,
+        ) {
+            window.backend.updateFilter(
+                action.payload.name,
+                action.payload.expr,
+            );
             state[action.payload.name] = action.payload.expr;
-        }
+        },
     },
     /* FIXME remove
     extraReducers: (builder) => {
