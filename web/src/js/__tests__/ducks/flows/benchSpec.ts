@@ -8,14 +8,16 @@ import flowReducer, {
 
 // Mini benchmark for redux performance.
 // Main findings:
-//  - Immer is terrible performance-wise.
-//  - No major difference between Map and object.
+//  - Immer is terrible performance-wise. (100x slower)
+//  - Set/Map instead object gives another 2x improvement.
 
 // Increase for manual testing
-const N = 100;
+const N = 10;
 
 test("receive", () => {
-    const flows = new Array(N).fill(undefined).map(() => TFlow());
+    const flows = new Array(N)
+        .fill(undefined)
+        .map(() => ({ ...TFlow(), id: Math.random().toString() }));
 
     console.time(`receive ${N} flows`);
     let state = flowReducer(defaultState, FLOWS_RECEIVE(flows));
@@ -26,7 +28,12 @@ test("receive", () => {
 test("add", () => {
     const actions = new Array(N)
         .fill(undefined)
-        .map(() => FLOWS_ADD({ flow: TFlow(), matching_filters: {} }));
+        .map(() =>
+            FLOWS_ADD({
+                flow: { ...TFlow(), id: Math.random().toString() },
+                matching_filters: {},
+            }),
+        );
 
     let state = defaultState;
     console.time(`add ${N} flows`);
