@@ -8,6 +8,9 @@ import useUrlState from "./urlState";
 import WebSocketBackend from "./backends/websocket";
 import StaticBackend from "./backends/static";
 import { store } from "./ducks";
+import {enableMapSet} from "immer"
+
+enableMapSet()
 
 // Extend the Window interface to avoid TS errors
 declare global {

@@ -22,7 +22,7 @@ describe("onKeyDown", () => {
                         intercepted: true,
                         modified: true,
                     },
-                    matches: {},
+                    matching_filters: {},
                 }),
             );
         }

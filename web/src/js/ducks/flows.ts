@@ -1,6 +1,5 @@
-import { fetchApi } from "../utils";
+import {assertNever, fetchApi} from "../utils";
 
-import * as store from "./utils/store";
 import { Flow } from "../flow";
 import {
     canReplay,
@@ -9,9 +8,9 @@ import {
     sortFunctions,
 } from "../flow/utils";
 import { AppDispatch, RootState } from "./store";
-import { State } from "./utils/store";
+import { FilterName} from "./ui/filter";
 import {
-    Action,
+    Comparer,
     createAction,
     createSlice,
     PayloadAction,
@@ -19,106 +18,111 @@ import {
 
 export const FLOWS_ADD = createAction<{
     flow: Flow;
-    matches: Record<string, boolean>;
+    matching_filters: Partial<{ [key in FilterName]: boolean }>;
 }>("FLOWS_ADD");
 export const FLOWS_UPDATE = createAction<{
     flow: Flow;
-    matches: Record<string, boolean>;
+    matching_filters: Partial<{ [key in FilterName]: boolean }>;
 }>("FLOWS_UPDATE");
 export const FLOWS_REMOVE = createAction<string>("FLOWS_REMOVE");
 export const FLOWS_RECEIVE = createAction<Flow[]>("FLOWS_RECEIVE");
 export const FLOWS_FILTER_UPDATE = createAction<{
-    name: string;
+    name: FilterName;
     matching_flow_ids: string[];
 }>("FLOWS_FILTER_UPDATE");
 
-interface FlowSortFn extends store.SortFn<Flow> {}
+type FlowSortFn = Comparer<Flow>
 
-interface FlowFilterFn extends store.FilterFn<Flow> {}
+export interface FlowsState {
+    list: Flow[];
+    _listIndex: Map<string, number>;
+    byId: Map<string, Flow>;
+    view: Flow[];
+    _viewIndex: Map<string, number>;
 
-export interface FlowsState extends store.State<Flow> {
-    highlight?: string;
-    highlightMatchedIds?: string[];
-    filter?: string;
-    filterMatchedIds?: string[];
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: Flow[];
-    selectedIndex: { [id: string]: number };
+    selectedIds: Set<string>;
+    highlighted: Set<string>;
 }
 
 export const defaultState: FlowsState = {
-    highlight: undefined,
-    highlightMatchedIds: undefined,
-    filter: undefined,
-    filterMatchedIds: undefined,
+    list: [],
+    _listIndex: new Map(),
+    byId: new Map(),
+    view: [],
+    _viewIndex: new Map(),
+
     sort: { column: undefined, desc: false },
     selected: [],
-    selectedIndex: {},
-    ...store.defaultState,
+    selectedIds: new Set(),
+    highlighted: new Set(),
 };
 
-function updateSelected(
-    state: FlowsState = defaultState,
-    newStoreState: State<Flow>,
-    action: Action,
-): Pick<FlowsState, "selected" | "selectedIndex"> {
-    let { selected, selectedIndex } = state;
-    if (FLOWS_UPDATE.match(action)) {
-        if (selectedIndex[action.payload.flow.id] !== undefined) {
-            selected = selected.map((f) =>
-                f.id === action.payload.flow.id ? action.payload.flow : f,
-            );
-        }
-    } else if (FLOWS_RECEIVE.match(action)) {
-        selected = selected
-            .map((f) => newStoreState.byId[f.id])
-            .filter((f) => f !== undefined);
-        selectedIndex = Object.fromEntries(selected.map((f, i) => [f.id, i]));
-    } else if (FLOWS_REMOVE.match(action)) {
-        if (selectedIndex[action.payload] !== undefined) {
-            if (selected.length > 1) {
-                selected = selected.filter((f) => f.id !== action.payload);
-            } else if (!(action.payload in state.viewIndex)) {
-                selected = [];
-            } else {
-                const currentIndex = state.viewIndex[action.payload];
-                // Try to select the next item in view, or fallback to the previous one
-                const fallback =
-                    state.view[currentIndex + 1] ??
-                    state.view[currentIndex - 1]; // last element
-                // If fallback is undefined (e.g. removed last remaining flow)
-                selected = fallback ? [fallback] : [];
-            }
-            selectedIndex = Object.fromEntries(
-                selected.map((f, i) => [f.id, i]),
-            );
+function buildIndex(flows: Flow[]): Map<string, number> {
+    return new Map(flows.map((f, i) => [f.id, i]));
+}
+
+/// Find the insertion position in a sorted array.
+function findInsertPos<T>(list: T[], item: T, sort: Comparer<T>): number {
+    let low = 0,
+        high = list.length;
+
+    while (low < high) {
+        const middle = (low + high) >>> 1;
+        if (sort(item, list[middle]) >= 0) {
+            low = middle + 1;
+        } else {
+            high = middle;
         }
     }
-    return { selected, selectedIndex };
+
+    return low;
+}
+
+function insertIntoView(state: FlowsState, flow: Flow) {
+    const sort = makeSort(state.sort);
+    const insert_at_end = (
+        state.view.length === 0 ||
+        sort(state.view[state.view.length - 1], flow) <= 0
+    );
+    if(insert_at_end) {
+        state.view.push(flow);
+        state._viewIndex.set(flow.id, state.view.length - 1);
+    } else {
+        const insertIdx = findInsertPos(state.view, flow, sort)
+        state.view.splice(insertIdx, 0, flow);
+        state._viewIndex = buildIndex(state.view);
+    }
+}
+
+function removeFromView(state: FlowsState, flow_id: string, oldIndex: number) {
+    state.view.splice(oldIndex, 1);
+    if(oldIndex === state.view.length - 1) {
+        state._viewIndex.delete(flow_id);
+    } else {
+        state._viewIndex = buildIndex(state.view);
+    }
+}
+
+function updateInView(state: FlowsState, flow: Flow, oldIndex: number) {
+    const sort = makeSort(state.sort);
+    state.view[oldIndex] = flow;
+    const already_sorted = (
+        (oldIndex === 0 || sort(state.view[oldIndex - 1], flow) <= 0)
+        &&
+        (oldIndex === state.view.length - 1 || sort(flow, state.view[oldIndex + 1]) <= 0)
+    );
+    if(!already_sorted) {
+        state.view.sort(sort);
+        state._viewIndex = buildIndex(state.view);
+    }
 }
 
 const flowsSlice = createSlice({
     name: "flows",
     initialState: defaultState,
     reducers: {
-        setFilter: (state, action: PayloadAction<string>) => {
-            if (window.backend) {
-                window.backend.updateFilter("search", action.payload);
-            }
-            return {
-                ...state,
-                filter: action.payload,
-            };
-        },
-        setHighlight: (state, action: PayloadAction<string>) => {
-            if (window.backend) {
-                window.backend.updateFilter("highlight", action.payload);
-            }
-            return {
-                ...state,
-                highlight: action.payload,
-            };
-        },
         setSort: (
             state,
             action: PayloadAction<{
@@ -126,183 +130,133 @@ const flowsSlice = createSlice({
                 desc: boolean;
             }>,
         ) => {
-            const newStoreState = store.reduce(
-                state,
-                store.setSort(makeSort(action.payload)),
-            );
-            return {
-                ...state,
-                sort: action.payload,
-                ...newStoreState,
-            };
+            const sortFn = makeSort(action.payload);
+            state.sort = action.payload;
+            state.view.sort(sortFn);
+            state._viewIndex = buildIndex(state.view);
         },
         select: (state, action: PayloadAction<Flow[]>) => {
-            return {
-                ...state,
-                selected: action.payload,
-                selectedIndex: Object.fromEntries(
-                    action.payload.map((f, i) => [f.id, i]),
-                ),
-            };
+            state.selected = action.payload;
+            state.selectedIds = new Set(action.payload.map(f => f.id));
         },
     },
     extraReducers: (builder) => {
         builder
+            .addCase(FLOWS_RECEIVE, (state, action) => {
+                const list = action.payload;
+                state.list = list;
+                state._listIndex = buildIndex(list);
+
+                const byId: Map<string, Flow> = new Map(list.map(f => [f.id, f]));
+                state.byId = byId;
+
+                // No filter information yet, we expect that to come immediately after.
+                const sorted = list.toSorted(makeSort(state.sort));
+                state.view = sorted;
+                state._viewIndex = buildIndex(sorted);
+
+                state.selected = state.selectedIds
+                    .values()
+                    .map(id => byId.get(id))
+                    .filter(f => f !== undefined)
+                    .toArray();
+                state.selectedIds = new Set(state.selected.map(f => f.id));
+
+
+            })
             .addCase(FLOWS_ADD, (state, action) => {
-                const { flow, matches } = action.payload;
-                const {
-                    filter,
-                    highlight,
-                    filterMatchedIds,
-                    highlightMatchedIds,
-                } = state;
-
-                // Update matched IDs
-                const newFilterMatchedIds = updateMatchedIds(
-                    filterMatchedIds,
-                    flow.id,
-                    matches,
-                    filter,
-                );
-
-                const newHighlightMatchedIds = updateMatchedIds(
-                    highlightMatchedIds,
-                    flow.id,
-                    matches,
-                    highlight,
-                );
-
-                const storeAction = store.add<Flow>(
-                    flow,
-                    makeFilter(newFilterMatchedIds),
-                    makeSort(state.sort),
-                );
-
-                return {
-                    ...state,
-                    filterMatchedIds: newFilterMatchedIds,
-                    highlightMatchedIds: newHighlightMatchedIds,
-                    ...store.reduce(state, storeAction),
-                };
+                const { flow, matching_filters } = action.payload;
+                state._listIndex.set(flow.id, state.list.length);
+                state.list.push(flow);
+                state.byId.set(flow.id, flow);
+                if(matching_filters[FilterName.Search] !== false) {
+                    insertIntoView(state, flow);
+                }
+                if(matching_filters[FilterName.Highlight] === true) {
+                    state.highlighted.add(flow.id);
+                }
             })
             .addCase(FLOWS_UPDATE, (state, action) => {
-                const { flow, matches } = action.payload;
-                const {
-                    filter,
-                    highlight,
-                    filterMatchedIds,
-                    highlightMatchedIds,
-                } = state;
+                const { flow, matching_filters } = action.payload;
 
-                // Update matched IDs
-                const newFilterMatchedIds = updateMatchedIds(
-                    filterMatchedIds,
-                    flow.id,
-                    matches,
-                    filter,
-                );
+                const listIndex = state._listIndex.get(flow.id)!;
+                state.list[listIndex] = flow;
+                state.byId.set(flow.id, flow);
 
-                const newHighlightMatchedIds = updateMatchedIds(
-                    highlightMatchedIds,
-                    flow.id,
-                    matches,
-                    highlight,
-                );
-
-                const storeAction = store.update<Flow>(
-                    flow,
-                    makeFilter(newFilterMatchedIds),
-                    makeSort(state.sort),
-                );
-
-                const newStoreState = store.reduce(state, storeAction);
-
-                return {
-                    ...state,
-                    filterMatchedIds: newFilterMatchedIds,
-                    highlightMatchedIds: newHighlightMatchedIds,
-                    ...newStoreState,
-                    ...updateSelected(state, newStoreState, action),
-                };
-            })
-            .addCase(FLOWS_FILTER_UPDATE, (state, action) => {
-                const { name, expr, matching_flow_ids } = action.payload;
-                let updatedState = { ...state };
-
-                switch (name) {
-                    case "search": {
-                        const matchedIds =
-                            expr !== "" ? matching_flow_ids : undefined;
-                        updatedState = {
-                            ...updatedState,
-                            filter: expr,
-                            filterMatchedIds: matchedIds,
-                        };
-                        break;
-                    }
-                    case "highlight": {
-                        const matchedIds =
-                            expr !== "" ? matching_flow_ids : undefined;
-                        updatedState = {
-                            ...updatedState,
-                            highlight: expr,
-                            highlightMatchedIds: matchedIds,
-                        };
-                        break;
-                    }
-                    default:
-                        return state;
+                const oldIndex = state._viewIndex.get(flow.id);
+                const hasOldFlow = oldIndex !== undefined;
+                const hasNewFlow = !(matching_filters[FilterName.Search] === false);
+                if (hasNewFlow && !hasOldFlow) {
+                    insertIntoView(state, flow);
+                } else if (!hasNewFlow && hasOldFlow) {
+                    removeFromView(state, flow.id, oldIndex)
+                } else if (hasNewFlow && hasOldFlow) {
+                    updateInView(state, flow, oldIndex);
                 }
 
-                return {
-                    ...updatedState,
-                    ...store.reduce(
-                        state,
-                        store.setFilter<Flow>(
-                            makeFilter(updatedState.filterMatchedIds),
-                            makeSort(state.sort),
-                        ),
-                    ),
-                };
+                if(state.selectedIds.has(flow.id)) {
+                    state.selected = state.selected
+                        .map(existing => existing.id === flow.id ? flow : existing);
+                }
+
+                if(matching_filters[FilterName.Highlight] === true) {
+                    state.highlighted.add(flow.id);
+                } else {
+                    state.highlighted.delete(flow.id);
+                }
+            })
+            .addCase(FLOWS_FILTER_UPDATE, (state, action) => {
+                const { name, matching_flow_ids } = action.payload;
+
+                switch(name) {
+                    case FilterName.Search: {
+                        const view = matching_flow_ids
+                            .map(id => state.byId.get(id))
+                            .filter(f => f !== undefined);
+                        view.sort(makeSort(state.sort));
+                        state.view = view;
+                        state._viewIndex = buildIndex(view);
+                        break;
+                    }
+                    case FilterName.Highlight:
+                        state.highlighted = new Set(matching_flow_ids);
+                        break;
+                    /* istanbul ignore next @preserve */
+                    default:
+                        assertNever(name);
+                }
             })
             .addCase(FLOWS_REMOVE, (state, action) => {
-                const newStoreState = store.reduce(
-                    state,
-                    store.remove(action.payload),
-                );
-                return {
-                    ...state,
-                    ...newStoreState,
-                    ...updateSelected(state, newStoreState, action),
-                };
+                const flow_id = action.payload;
+                state.list.splice(state._listIndex.get(flow_id)!, 1);
+                state._listIndex.delete(flow_id);
+                state.byId.delete(flow_id);
+                const viewIndex = state._viewIndex.get(flow_id);
+                if(viewIndex !== undefined) {
+                    removeFromView(state, flow_id, viewIndex);
+                }
+
+                if(state.selectedIds.delete(flow_id)) {
+                    if(state.selectedIds.size === 0 && viewIndex !== undefined) {
+                        const fallback =
+                            state.view[viewIndex /* no +1, already removed */] ??
+                            state.view[viewIndex - 1];
+                        state.selected = [fallback];
+                        state.selectedIds.add(fallback.id);
+                    } else {
+                        state.selected = state.selected.filter(f => f.id !== flow_id);
+                    }
+                }
+
+                state.highlighted.delete(flow_id);
             })
-            .addCase(FLOWS_RECEIVE, (state, action) => {
-                const newStoreState = store.reduce(
-                    state,
-                    store.receive(
-                        action.payload,
-                        makeFilter(state.filterMatchedIds),
-                        makeSort(state.sort),
-                    ),
-                );
-                return {
-                    ...state,
-                    ...newStoreState,
-                    ...updateSelected(state, newStoreState, action),
-                };
-            });
+
     },
 });
 
-export const { setFilter, setHighlight, setSort, select } = flowsSlice.actions;
 
-export function makeFilter(matchedIds?: string[]): FlowFilterFn | undefined {
-    if (!matchedIds) {
-        return;
-    }
-    const idSet = new Set(matchedIds);
-    return (flow) => idSet.has(flow.id);
-}
+export const { setSort, select } = flowsSlice.actions;
+
 
 export function makeSort({
     column,
@@ -332,7 +286,7 @@ export function makeSort({
 
 export function selectRelative(flows: FlowsState, shift: number) {
     const currentSelectionIndex: number | undefined =
-        flows.viewIndex[flows.selected[flows.selected.length - 1]?.id];
+        flows._viewIndex.get(flows.selected[flows.selected.length - 1]?.id);
     const minIndex = 0;
     const maxIndex = flows.view.length - 1;
     let newIndex: number;
@@ -446,8 +400,8 @@ export function upload(file) {
 export function selectToggle(flow: Flow) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
         const { flows } = getState();
-        if (flow.id in flows.selectedIndex) {
-            dispatch(select(flows.selected.filter((f) => flow.id !== f.id)));
+        if (flows.selectedIds.has(flow.id)) {
+            dispatch(select(flows.selected.filter(f => f !== flow)));
         } else {
             dispatch(select([...flows.selected, flow]));
         }
@@ -460,8 +414,8 @@ export function selectRange(flow: Flow) {
         const { flows } = getState();
         const prev = flows.selected[flows.selected.length - 1];
 
-        const thisIndex = flows.viewIndex[flow.id];
-        const prevIndex = flows.viewIndex[prev?.id];
+        const thisIndex = flows._viewIndex.get(flow.id);
+        const prevIndex = flows._viewIndex.get(prev?.id);
         if (thisIndex === undefined || prevIndex === undefined) {
             return dispatch(select([flow]));
         }
@@ -474,33 +428,6 @@ export function selectRange(flow: Flow) {
         }
         return dispatch(select(newSelection));
     };
-}
-
-function updateMatchedIds(
-    matchedIds: string[] | undefined,
-    flowId: string,
-    matches: Record<string, boolean>,
-    currentFilter: string | undefined,
-): string[] | undefined {
-    if (!matchedIds) return;
-
-    const idSet = new Set(matchedIds);
-
-    if (
-        Object.keys(matches).length === 0 ||
-        (currentFilter && matches[currentFilter])
-    ) {
-        if (!idSet.has(flowId)) {
-            idSet.add(flowId);
-            return Array.from(idSet);
-        }
-        return matchedIds;
-    } else {
-        if (idSet.delete(flowId)) {
-            return Array.from(idSet);
-        }
-        return matchedIds;
-    }
 }
 
 export default flowsSlice.reducer;

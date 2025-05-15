@@ -1,10 +1,10 @@
 import * as React from "react";
-import FilterInput, { FilterIcon } from "./FilterInput";
+import FilterInput, {FilterIcon} from "./FilterInput";
 import * as flowsActions from "../../ducks/flows";
-import { setFilter, setHighlight } from "../../ducks/flows";
 import Button from "../common/Button";
-import { update as updateOptions } from "../../ducks/options";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import {update as updateOptions} from "../../ducks/options";
+import {useAppDispatch, useAppSelector} from "../../ducks";
+import {FilterName, setFilter} from "../../ducks/ui/filter";
 
 FlowListMenu.title = "Flow List";
 
@@ -46,28 +46,28 @@ function InterceptInput() {
 
 function FlowFilterInput() {
     const dispatch = useAppDispatch();
-    const value = useAppSelector((state) => state.flows.filter);
+    const value = useAppSelector((state) => state.ui.filter.search);
     return (
         <FilterInput
-            value={value || ""}
+            value={value}
             placeholder="Search"
             icon={FilterIcon.SEARCH}
             color="black"
-            onChange={(value) => dispatch(setFilter(value))}
+            onChange={expr =>  dispatch(setFilter({name: FilterName.Search, expr}))}
         />
     );
 }
 
 function HighlightInput() {
     const dispatch = useAppDispatch();
-    const value = useAppSelector((state) => state.flows.highlight);
+    const value = useAppSelector((state) => state.ui.filter.highlight);
     return (
         <FilterInput
-            value={value || ""}
+            value={value}
             placeholder="Highlight"
             icon={FilterIcon.HIGHLIGHT}
             color="hsl(48, 100%, 50%)"
-            onChange={(value) => dispatch(setHighlight(value))}
+            onChange={expr => dispatch(setFilter({name: FilterName.Highlight, expr}))}
         />
     );
 }

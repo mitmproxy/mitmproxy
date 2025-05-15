@@ -42,7 +42,7 @@ export const tls: FlowColumn = ({ flow }) => {
 tls.headerName = "";
 
 export const index: FlowColumn = ({ flow }) => {
-    const index = useAppSelector((state) => state.flows.listIndex[flow.id]);
+    const index = useAppSelector((state) => state.flows._listIndex.get(flow.id)!);
     return <td className="col-index">{index + 1}</td>;
 };
 index.headerName = "#";

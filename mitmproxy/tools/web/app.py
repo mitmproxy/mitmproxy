@@ -414,12 +414,19 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestH
         return json.dumps(d, ensure_ascii=False).encode("utf8", "surrogateescape")
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections: ClassVar[set] = set()
+    connections: ClassVar[set[ClientConnection]] = set()
     application: Application
 
     def __init__(self, application: Application, request, **kwargs):
         super().__init__(application, request, **kwargs)
         self.filters: dict[str, flowfilter.TFilter] = {}  # filters per connection
+
+    @classmethod
+    def broadcast_flow_reset(cls) -> None:
+        for conn in cls.connections:
+            conn.send(cls._json_dumps({"type": "flows/reset"}))
+            for name, expr in conn.filters.copy().items():
+                conn.update_filter(name, expr.pattern)
 
     @classmethod
     def broadcast_flow(

@@ -67,9 +67,7 @@ class WebMaster(master.Master):
         )
 
     def _sig_view_refresh(self) -> None:
-        app.ClientConnection.broadcast(
-            type="flows/reset",
-        )
+        app.ClientConnection.broadcast_flow_reset()
 
     def _sig_events_add(self, entry: log.LogEntry) -> None:
         app.ClientConnection.broadcast(
