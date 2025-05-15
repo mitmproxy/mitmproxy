@@ -12,9 +12,10 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from typing import Any, Literal
+from typing import Any
 from typing import ClassVar
 from typing import Concatenate
+from typing import Literal
 
 import tornado.escape
 import tornado.web
@@ -413,8 +414,9 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestH
     def _json_dumps(d):
         return json.dumps(d, ensure_ascii=False).encode("utf8", "surrogateescape")
 
+
 class ClientConnection(WebSocketEventBroadcaster):
-    connections: ClassVar[set[ClientConnection]] = set()
+    connections: ClassVar[set[ClientConnection]] = set()  # type: ignore
     application: Application
 
     def __init__(self, application: Application, request, **kwargs):
@@ -444,10 +446,7 @@ class ClientConnection(WebSocketEventBroadcaster):
         f: mitmproxy.flow.Flow,
         flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
     ) -> None:
-        filters = {
-            name: bool(expr(f))
-            for name, expr in self.filters.items()
-        }
+        filters = {name: bool(expr(f)) for name, expr in self.filters.items()}
         message = self._json_dumps(
             {
                 "type": type,

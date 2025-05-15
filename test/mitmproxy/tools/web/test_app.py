@@ -519,7 +519,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         for data in [
             """{"type": "flows/updateFilter"}""",
             """{"type": "unknownCommand"}""",
-            "invalid json"
+            "invalid json",
         ]:
             ws_req = httpclient.HTTPRequest(
                 f"ws://localhost:{self.get_http_port()}/updates",
