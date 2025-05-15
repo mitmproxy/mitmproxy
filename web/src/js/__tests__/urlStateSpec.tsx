@@ -13,6 +13,7 @@ import { testState } from "./ducks/tutils";
 import { RootStore } from "../ducks/store";
 import { setCurrent, Tab } from "../ducks/ui/tabs";
 import { selectTab } from "../ducks/ui/flow";
+import { setFilter, setHighlight } from "../ducks/ui/filter";
 
 const mockStore = configureStore();
 history.replaceState = jest.fn();
@@ -22,14 +23,14 @@ describe("updateStoreFromUrl", () => {
         window.location.hash = "#/flows?s=foo";
         const store = mockStore(testState);
         updateStoreFromUrl(store as RootStore);
-        expect(store.getActions()).toEqual([flowActions.setFilter("foo")]);
+        expect(store.getActions()).toEqual([setFilter("foo")]);
     });
 
     it("should handle highlight query", () => {
         window.location.hash = "#/flows?h=foo";
         const store = mockStore();
         updateStoreFromUrl(store as RootStore);
-        expect(store.getActions()).toEqual([flowActions.setHighlight("foo")]);
+        expect(store.getActions()).toEqual([setHighlight("foo")]);
     });
 
     it("should handle show event log", () => {

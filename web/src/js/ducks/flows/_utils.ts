@@ -52,8 +52,8 @@ export function updateViewItem<T extends Item>(
 ): { view: T[]; _viewIndex: Map<string, number> } {
     const view = [...prevView];
     const len = view.length;
-    let _viewIndex = prevViewIndex;
-    let pos = _viewIndex.get(item.id)!;
+    let _viewIndex = prevViewIndex,
+        pos = _viewIndex.get(item.id)!;
 
     // is this overoptimized? yes.
     // was it fun? also yes.
@@ -111,7 +111,7 @@ export function findInsertPos<T>(
         high = list.length;
 
     // fast path: insert at end
-    if (sort(list[high - 1], item) <= 0) {
+    if (high === 0 || sort(list[high - 1], item) <= 0) {
         return high;
     }
 

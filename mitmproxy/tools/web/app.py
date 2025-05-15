@@ -465,7 +465,7 @@ class ClientConnection(WebSocketEventBroadcaster):
             matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
         else:
             self.filters.pop(name, None)
-            matching_flow_ids = []
+            matching_flow_ids = None
 
         message = self._json_dumps(
             {

@@ -4,7 +4,7 @@ import * as flowsActions from "../../ducks/flows";
 import Button from "../common/Button";
 import { update as updateOptions } from "../../ducks/options";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { FilterName, setFilter } from "../../ducks/ui/filter";
+import { setFilter, setHighlight } from "../../ducks/ui/filter";
 
 FlowListMenu.title = "Flow List";
 
@@ -53,9 +53,7 @@ function FlowFilterInput() {
             placeholder="Search"
             icon={FilterIcon.SEARCH}
             color="black"
-            onChange={(expr) =>
-                dispatch(setFilter({ name: FilterName.Search, expr }))
-            }
+            onChange={(expr) => dispatch(setFilter(expr))}
         />
     );
 }
@@ -69,9 +67,7 @@ function HighlightInput() {
             placeholder="Highlight"
             icon={FilterIcon.HIGHLIGHT}
             color="hsl(48, 100%, 50%)"
-            onChange={(expr) =>
-                dispatch(setFilter({ name: FilterName.Highlight, expr }))
-            }
+            onChange={(expr) => dispatch(setHighlight(expr))}
         />
     );
 }

@@ -12,32 +12,17 @@ const filtersSlice = createSlice({
         [FilterName.Highlight]: "",
     },
     reducers: {
-        setFilter(
-            state,
-            action: PayloadAction<{ name: FilterName; expr: string }>,
-        ) {
-            window.backend.updateFilter(
-                action.payload.name,
-                action.payload.expr,
-            );
-            state[action.payload.name] = action.payload.expr;
+        setFilter(state, action: PayloadAction<string>) {
+            window.backend.updateFilter(FilterName.Search, action.payload);
+            state[FilterName.Search] = action.payload;
+        },
+        setHighlight(state, action: PayloadAction<string>) {
+            window.backend.updateFilter(FilterName.Highlight, action.payload);
+            state[FilterName.Highlight] = action.payload;
         },
     },
-    /* FIXME remove
-    extraReducers: (builder) => {
-        builder
-            .addCase(FLOWS_RECEIVE, (state, action) => {
-                // Awkward workaround to trigger filter updates after RECEIVE.
-                if(state[FilterName.Search] !== "") {
-                    window.backend.updateFilter(FilterName.Search, state[FilterName.Search]);
-                }
-                if(state[FilterName.Highlight] !== "") {
-                    window.backend.updateFilter(FilterName.Highlight, state[FilterName.Highlight]);
-                }
-            })
-    },*/
 });
 
 const { actions, reducer } = filtersSlice;
-export const { setFilter } = actions;
+export const { setFilter, setHighlight } = actions;
 export default reducer;

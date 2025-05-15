@@ -26,14 +26,12 @@ test("receive", () => {
 });
 
 test("add", () => {
-    const actions = new Array(N)
-        .fill(undefined)
-        .map(() =>
-            FLOWS_ADD({
-                flow: { ...TFlow(), id: Math.random().toString() },
-                matching_filters: {},
-            }),
-        );
+    const actions = new Array(N).fill(undefined).map(() =>
+        FLOWS_ADD({
+            flow: { ...TFlow(), id: Math.random().toString() },
+            matching_filters: {},
+        }),
+    );
 
     let state = defaultState;
     console.time(`add ${N} flows`);

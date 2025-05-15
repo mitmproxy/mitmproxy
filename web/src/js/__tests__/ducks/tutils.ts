@@ -1,8 +1,8 @@
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
 import { RootState } from "../../ducks";
-import { reducer } from "../../ducks/store";
-import { DNSFlow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
+import { middlewares, reducer } from "../../ducks/store";
+import { DNSFlow, Flow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";
@@ -10,6 +10,7 @@ import { Tab } from "../../ducks/ui/tabs";
 import { LogLevel } from "../../ducks/eventLog";
 import { ReverseProxyProtocols } from "../../backends/consts";
 import { defaultReverseState } from "../../modes/reverse";
+import { FilterName } from "../../ducks/ui/filter";
 
 export { THTTPFlow as TFlow, TTCPFlow, TUDPFlow };
 
@@ -74,39 +75,42 @@ export const testState: RootState = {
         tabs: {
             current: Tab.Capture,
         },
+        filter: {
+            [FilterName.Search]: "~u /second | ~tcp | ~dns | ~udp",
+            [FilterName.Highlight]: "~u /path",
+        },
     },
     options: defaultOptions,
     flows: {
         selected: [tflow1],
-        selectedIndex: { [tflow1.id]: 0 },
-        byId: {
-            [tflow0.id]: tflow0,
-            [tflow1.id]: tflow1,
-            [tflow2.id]: tflow2,
-            [tflow3.id]: tflow3,
-            [tflow4.id]: tflow4,
-        },
-        filter: "~u /second | ~tcp | ~dns | ~udp",
-        highlight: "~u /path",
+        selectedIds: new Set([tflow1.id]),
+        byId: new Map<string, Flow>([
+            [tflow0.id, tflow0],
+            [tflow1.id, tflow1],
+            [tflow2.id, tflow2],
+            [tflow3.id, tflow3],
+            [tflow4.id, tflow4],
+        ]),
         sort: {
             desc: true,
             column: "path",
         },
         view: [tflow1, tflow2, tflow3, tflow4],
         list: [tflow0, tflow1, tflow2, tflow3, tflow4],
-        listIndex: {
-            [tflow0.id]: 0,
-            [tflow1.id]: 1,
-            [tflow2.id]: 2,
-            [tflow3.id]: 3,
-            [tflow4.id]: 4,
-        },
-        viewIndex: {
-            [tflow1.id]: 0,
-            [tflow2.id]: 1,
-            [tflow3.id]: 2,
-            [tflow4.id]: 3,
-        },
+        _listIndex: new Map<string, number>([
+            [tflow0.id, 0],
+            [tflow1.id, 1],
+            [tflow2.id, 2],
+            [tflow3.id, 3],
+            [tflow4.id, 4],
+        ]),
+        _viewIndex: new Map<string, number>([
+            [tflow1.id, 0],
+            [tflow2.id, 1],
+            [tflow3.id, 2],
+            [tflow4.id, 3],
+        ]),
+        highlighted: new Set([tflow1.id]),
     },
     connection: {
         state: ConnectionState.ESTABLISHED,
@@ -210,9 +214,5 @@ export const TStore = () =>
     configureStore({
         reducer,
         preloadedState: testState,
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({
-                immutableCheck: { warnAfter: 500_000 },
-                serializableCheck: { warnAfter: 500_000 },
-            }),
+        middleware: (getDefaultMiddleware) => getDefaultMiddleware(middlewares),
     });

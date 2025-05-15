@@ -12,6 +12,7 @@ import {
 import { OPTIONS_RECEIVE } from "../../ducks/options";
 import { FLOWS_RECEIVE } from "../../ducks/flows";
 import { STATE_RECEIVE } from "../../ducks/backendState";
+import { FilterName } from "../../ducks/ui/filter";
 
 beforeEach(() => {
     fetchMock.enableMocks();
@@ -174,7 +175,7 @@ describe("websocket backend", () => {
             send: sendMock,
         };
 
-        const name = "search";
+        const name = FilterName.Search;
         const expr = "~b boo";
 
         backend.updateFilter(name, expr);
@@ -202,7 +203,7 @@ describe("websocket backend", () => {
 
         backend.messageQueue = [];
 
-        const name = "search";
+        const name = FilterName.Search;
         const expr = "~b boo";
 
         backend.updateFilter(name, expr);
@@ -230,7 +231,7 @@ describe("websocket backend", () => {
             .spyOn(console, "error")
             .mockImplementation();
 
-        const name = "search";
+        const name = FilterName.Search;
         const expr = "~b boo";
         backend.updateFilter(name, expr);
 

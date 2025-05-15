@@ -13,7 +13,7 @@ import {
     updateViewItem,
     withElemRemoved,
     withKeyRemoved,
-} from "./utils";
+} from "./_utils";
 
 export * from "./_backend_actions";
 
@@ -29,7 +29,7 @@ export const FLOWS_REMOVE = createAction<string>("FLOWS_REMOVE");
 export const FLOWS_RECEIVE = createAction<Flow[]>("FLOWS_RECEIVE");
 export const FLOWS_FILTER_UPDATE = createAction<{
     name: FilterName;
-    matching_flow_ids: string[];
+    matching_flow_ids: string[] | null;
 }>("FLOWS_FILTER_UPDATE");
 
 export const setSort = createAction<{
@@ -81,7 +81,7 @@ export default function flowsReducer(
         const _viewIndex = buildIndex(view);
         const selected = state.selected
             .map((flow) => byId.get(flow.id))
-            .filter((f) => f !== undefined)
+            .filter((f) => f !== undefined);
         const selectedIds = buildLookup(selected);
         const highlighted = new Set<string>();
 
@@ -241,10 +241,13 @@ export default function flowsReducer(
         const { name, matching_flow_ids } = action.payload;
         switch (name) {
             case FilterName.Search: {
-                const view = matching_flow_ids
-                    .map((id) => state.byId.get(id))
-                    .filter((f) => f !== undefined)
-                    .toSorted(makeSort(state.sort));
+                const view = (
+                    matching_flow_ids === null
+                        ? state.list
+                        : matching_flow_ids
+                              .map((id) => state.byId.get(id))
+                              .filter((f) => f !== undefined)
+                ).toSorted(makeSort(state.sort));
                 const _viewIndex = buildIndex(view);
                 return {
                     ...state,
