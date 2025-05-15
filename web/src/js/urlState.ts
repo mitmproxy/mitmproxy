@@ -30,7 +30,7 @@ export function updateStoreFromUrl(store: RootStore) {
             store.dispatch(selectTab(tab));
 
             const selectFlowOnceAvailable = () => {
-                const flow = store.getState().flows.byId[flowId];
+                const flow = store.getState().flows.byId.get(flowId);
                 if (flow !== undefined) {
                     unsubscribe();
                     store.dispatch(select([flow]));

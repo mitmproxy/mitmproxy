@@ -10,8 +10,8 @@ import { RootState } from "../ducks";
 type FlowTableProps = {
     flowView: Flow[];
     rowHeight: number;
-    highlighted: { [id: string]: boolean };
-    selectedIds: { [key: string]: boolean };
+    highlighted: Set<string>;
+    selectedIds: Set<string>;
     onlySelectedId: string | false;
     firstSelectedIndex: number | undefined;
 };
@@ -146,8 +146,8 @@ export class PureFlowTable extends React.Component<
                                 <FlowRow
                                     key={flow.id}
                                     flow={flow}
-                                    selected={flow.id in selectedIds}
-                                    highlighted={flow.id in highlighted}
+                                    selected={selectedIds.has(flow.id)}
+                                    highlighted={highlighted.has(flow.id)}
                                 />
                             ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
@@ -164,5 +164,5 @@ export default connect((state: RootState) => ({
     selectedIds: state.flows.selectedIds,
     onlySelectedId:
         state.flows.selected.length === 1 && state.flows.selected[0].id,
-    firstSelectedIndex: state.flows._viewIndex[state.flows.selected[0]?.id],
+    firstSelectedIndex: state.flows._viewIndex.get(state.flows.selected[0]?.id),
 }))(PureFlowTable);

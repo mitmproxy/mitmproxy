@@ -2,39 +2,43 @@ import { Comparer } from "@reduxjs/toolkit";
 
 type Item = { id: string };
 
-export function buildIndex<T extends Item>(
-    data: T[],
-): { [id: string]: number } {
-    return Object.fromEntries(data.map((f, i) => [f.id, i]));
+export function buildIndex<T extends Item>(data: T[]): Map<string, number> {
+    return new Map(data.map((f, i) => [f.id, i]));
 }
 
-export function buildLookup<T extends Item>(
-    data: T[],
-): { [id: string]: boolean } {
-    return Object.fromEntries(data.map((f) => [f.id, true]));
+export function buildLookup<T extends Item>(data: T[]): Set<string> {
+    return new Set(data.map((f) => f.id));
 }
 
-export function withKeyRemoved<T extends object>(map: T, key: string): T {
-    if (key in map) {
-        map = { ...map };
-        delete map[key];
+export function withKeyRemoved<K, V>(map: Map<K, V>, key: K): Map<K, V> {
+    if (map.has(key)) {
+        map = new Map(map);
+        map.delete(key);
     }
     return map;
 }
 
+export function withElemRemoved<K>(set: Set<K>, key: K): Set<K> {
+    if (set.has(key)) {
+        set = new Set(set);
+        set.delete(key);
+    }
+    return set;
+}
+
 export function removeViewItemAt<T extends Item>(
     prevView: T[],
-    prevViewIndex: { [id: string]: number },
+    prevViewIndex: Map<string, number>,
     pos: number,
-) {
+): { view: T[]; _viewIndex: Map<string, number> } {
     // update data
     const view = prevView.toSpliced(pos, 1);
 
     // update index
-    const _viewIndex = { ...prevViewIndex };
-    delete _viewIndex[prevView[pos].id];
+    const _viewIndex = new Map(prevViewIndex);
+    _viewIndex.delete(prevView[pos].id);
     for (let i = view.length - 1; i >= pos; i--) {
-        _viewIndex[view[i].id] = i;
+        _viewIndex.set(view[i].id, i);
     }
 
     return { view, _viewIndex };
@@ -42,44 +46,56 @@ export function removeViewItemAt<T extends Item>(
 
 export function updateViewItem<T extends Item>(
     prevView: T[],
-    prevViewIndex: { [id: string]: number },
+    prevViewIndex: Map<string, number>,
     item: T,
     sort: Comparer<T>,
-) {
+): { view: T[]; _viewIndex: Map<string, number> } {
     const view = [...prevView];
-    const _viewIndex = { ...prevViewIndex };
-    let pos = _viewIndex[item.id];
+    const len = view.length;
+    let _viewIndex = prevViewIndex;
+    let pos = _viewIndex.get(item.id)!;
+
+    // is this overoptimized? yes.
+    // was it fun? also yes.
+    if (pos + 1 < len && sort(item, view[pos + 1]) > 0) {
+        // move up
+        _viewIndex = new Map(_viewIndex);
+        do {
+            const move = view[pos + 1];
+            view[pos] = move;
+            _viewIndex.set(move.id, pos);
+            pos++;
+        } while (pos + 1 < len && sort(item, view[pos + 1]) > 0);
+        _viewIndex.set(item.id, pos);
+    } else if (pos > 0 && sort(item, view[pos - 1]) < 0) {
+        // move down
+        _viewIndex = new Map(_viewIndex);
+        do {
+            const move = view[pos - 1];
+            view[pos] = move;
+            _viewIndex.set(move.id, pos);
+            pos--;
+        } while (pos > 0 && sort(item, view[pos - 1]) < 0);
+        _viewIndex.set(item.id, pos);
+    }
     view[pos] = item;
-    while (pos + 1 < view.length && sort(view[pos], view[pos + 1]) > 0) {
-        view[pos] = view[pos + 1];
-        view[pos + 1] = item;
-        _viewIndex[item.id] = pos + 1;
-        _viewIndex[view[pos].id] = pos;
-        ++pos;
-    }
-    while (pos > 0 && sort(view[pos], view[pos - 1]) < 0) {
-        view[pos] = view[pos - 1];
-        view[pos - 1] = item;
-        _viewIndex[item.id] = pos - 1;
-        _viewIndex[view[pos].id] = pos;
-        --pos;
-    }
+
     return { view, _viewIndex };
 }
 
 export function insertViewItem<T extends Item>(
     prevView: T[],
-    prevViewIndex: { [id: string]: number },
+    prevViewIndex: Map<string, number>,
     item: T,
     sort: Comparer<T>,
-) {
+): { view: T[]; _viewIndex: Map<string, number> } {
     const pos = findInsertPos(prevView, item, sort);
 
     const view = prevView.toSpliced(pos, 0, item);
 
-    const _viewIndex = { ...prevViewIndex };
+    const _viewIndex = new Map(prevViewIndex);
     for (let i = view.length - 1; i >= pos; i--) {
-        _viewIndex[view[i].id] = i;
+        _viewIndex.set(view[i].id, i);
     }
 
     return { view, _viewIndex };
