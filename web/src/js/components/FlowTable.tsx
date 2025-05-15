@@ -67,8 +67,7 @@ export class PureFlowTable extends React.Component<
         const { onlySelectedId } = this.props;
 
         const selectedPotentiallyOffscreenFlow =
-            onlySelectedId &&
-            onlySelectedId !== prevProps.onlySelectedId;
+            onlySelectedId && onlySelectedId !== prevProps.onlySelectedId;
 
         if (selectedPotentiallyOffscreenFlow) {
             const { rowHeight, firstSelectedIndex } = this.props;
@@ -163,6 +162,7 @@ export default connect((state: RootState) => ({
     flowView: state.flows.view,
     highlighted: state.flows.highlighted,
     selectedIds: state.flows.selectedIds,
-    onlySelectedId: state.flows.selected.length === 1 && state.flows.selected[0].id,
+    onlySelectedId:
+        state.flows.selected.length === 1 && state.flows.selected[0].id,
     firstSelectedIndex: state.flows._viewIndex[state.flows.selected[0]?.id],
 }))(PureFlowTable);
