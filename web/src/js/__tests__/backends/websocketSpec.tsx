@@ -49,7 +49,7 @@ describe("websocket backend", () => {
 
         backend.sendMessage({
             type: "unknown",
-            payload: { name: "foo", expr: "bar" },
+            payload: {},
         });
         expect(backend.messageQueue.length).toBe(1);
         // @ts-expect-error jest mock stuff
@@ -59,7 +59,7 @@ describe("websocket backend", () => {
 
         backend.sendMessage({
             type: "unknown",
-            payload: { name: "foo", expr: "bar" },
+            payload: {},
         });
         expect(backend.messageQueue.length).toBe(0);
 

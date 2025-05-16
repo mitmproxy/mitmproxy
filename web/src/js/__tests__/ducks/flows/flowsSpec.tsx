@@ -1,9 +1,8 @@
 import reduceFlows, * as flowActions from "../../../ducks/flows";
-import { fetchApi } from "../../../utils";
-import { TFlow, TStore, TTCPFlow } from "../tutils";
+import { testState, TFlow, TStore } from "../tutils";
 import FlowColumns from "../../../components/FlowTable/FlowColumns";
-
-jest.mock("../../../utils");
+import { defaultState } from "../../../ducks/flows";
+import { FilterName } from "../../../ducks/ui/filter";
 
 describe("flow reducer", () => {
     let s;
@@ -16,20 +15,27 @@ describe("flow reducer", () => {
             }),
         );
     }
-    const state = s;
-    const [_f0, f1, f2, f3, f4] = state.list;
-    const alreadySelected = {
-        ...state,
-        selected: [f1],
-        selectedIndex: { "1": 0 },
-    };
+    const state = reduceFlows(
+        undefined,
+        flowActions.FLOWS_RECEIVE([
+            { ...TFlow(), id: "0" },
+            { ...TFlow(), id: "1" },
+            { ...TFlow(), id: "2" },
+            { ...TFlow(), id: "3", comment: "foo" },
+            { ...TFlow(), id: "4" },
+        ]),
+    );
+    const [f0, f1, f2, f3, f4] = state.list;
 
     describe("selections", () => {
+        const alreadySelected = reduceFlows(state, flowActions.select([f1]));
+        expect(alreadySelected).not.toEqual(state);
+
         it("should be possible to select a single flow", () => {
             expect(reduceFlows(state, flowActions.select([f1]))).toEqual({
                 ...state,
                 selected: [f1],
-                selectedIndex: { "1": 0 },
+                selectedIds: new Set(["1"]),
             });
         });
 
@@ -37,18 +43,14 @@ describe("flow reducer", () => {
             expect(reduceFlows(state, flowActions.select([f1, f2]))).toEqual({
                 ...state,
                 selected: [f1, f2],
-                selectedIndex: { "1": 0, "2": 1 },
+                selectedIds: new Set(["1", "2"]),
             });
         });
 
         it("should be possible to deselect a flow", () => {
             expect(
                 reduceFlows(alreadySelected, flowActions.select([])),
-            ).toEqual({
-                ...state,
-                selected: [],
-                selectedIndex: {},
-            });
+            ).toEqual(state);
         });
 
         it("should be possible to select relative", () => {
@@ -61,6 +63,11 @@ describe("flow reducer", () => {
             expect(flowActions.selectRelative(alreadySelected, 1)).toEqual(
                 flowActions.select([f2]),
             );
+
+            // empty
+            expect(flowActions.selectRelative(defaultState, 1)).toEqual(
+                flowActions.select([]),
+            );
         });
 
         it("should be possible to toggle selections", () => {
@@ -68,16 +75,9 @@ describe("flow reducer", () => {
             const [tflow0, tflow1] = store.getState().flows.list;
             store.dispatch(flowActions.selectToggle(tflow0));
             expect(store.getState().flows.selected).toEqual([tflow1, tflow0]);
-            expect(store.getState().flows.selectedIds).toEqual({
-                [tflow1.id]: true,
-                [tflow0.id]: true,
-            });
 
             store.dispatch(flowActions.selectToggle(tflow1));
             expect(store.getState().flows.selected).toEqual([tflow0]);
-            expect(store.getState().flows.selectedIds).toEqual({
-                [tflow0.id]: true,
-            });
         });
 
         it("should be possible to do range selections", () => {
@@ -93,268 +93,241 @@ describe("flow reducer", () => {
             expect(store.getState().flows.selected).toEqual([tflow3, tflow2]);
         });
 
-        it("should update state.selected on remove", () => {
-            let next;
-            next = reduceFlows(alreadySelected, flowActions.FLOWS_REMOVE("1"));
-            expect(next.selected).toEqual([f2]);
-
-            //last row
-            next = reduceFlows(
-                { ...state, selected: [f4], selectedIndex: { "4": 0 } },
-                flowActions.FLOWS_REMOVE("4"),
+        it("should select next row on remove", () => {
+            const s = reduceFlows(
+                alreadySelected,
+                flowActions.FLOWS_REMOVE("1"),
             );
-            expect(next.selected).toEqual([f3]);
+            expect(s.selected).toEqual([f2]);
+        });
 
-            //multiple selection
-            next = reduceFlows(
-                {
-                    ...state,
-                    selected: [f2, f3],
-                    selectedIndex: { "2": 0, "3": 1 },
-                },
-                flowActions.FLOWS_REMOVE("3"),
-            );
-            expect(next.selected).toEqual([f2]);
+        it("should select next row on remove (last row)", () => {
+            let s = reduceFlows(state, flowActions.select([f4]));
+            s = reduceFlows(s, flowActions.FLOWS_REMOVE("4"));
+            expect(s.selected).toEqual([f3]);
+        });
+
+        it("should remove from multi-selection", () => {
+            s = reduceFlows(state, flowActions.select([f2, f3]));
+            s = reduceFlows(s, flowActions.FLOWS_REMOVE("3"));
+            expect(s.selected).toEqual([f2]);
+        });
+
+        it("should clear selection when last flow is removed", () => {
+            s = reduceFlows(defaultState, flowActions.FLOWS_RECEIVE([f1]));
+            s = reduceFlows(defaultState, flowActions.select([f1]));
+            s = reduceFlows(s, flowActions.FLOWS_REMOVE("1"));
+            expect(s.selected).toEqual([]);
         });
 
         it("should keep only selected flows that exist in byId during RECEIVE", () => {
-            const store = TStore();
-            const originalState = store.getState().flows;
+            let state = testState.flows;
+            let [f0, f1, ..._] = state.list;
+            state = reduceFlows(state, flowActions.select([f0, f1]));
+            expect(state.selected).toEqual([f0, f1]);
 
-            // Simulate selected flows: one valid, one missing from byId
-            const stillExists = originalState.list[1];
-            const removedFlow = { ...stillExists, id: "missing-id" };
+            state = reduceFlows(state, flowActions.FLOWS_RECEIVE([f0]));
 
-            const modifiedState = {
-                ...originalState,
-                selected: [stillExists, removedFlow],
-                selectedIndex: {
-                    [stillExists.id]: 0,
-                    [removedFlow.id]: 1,
-                },
-                byId: {
-                    [stillExists.id]: stillExists,
-                },
-            };
-
-            const next = reduceFlows(
-                modifiedState,
-                flowActions.FLOWS_RECEIVE([stillExists]),
-            );
-
-            expect(next.selected).toEqual([stillExists]);
-            expect(next.selectedIds).toEqual({ [stillExists.id]: true });
+            expect(state.selected).toEqual([f0]);
+            expect(state.selectedIds).toEqual(new Set([f0.id]));
         });
 
-        it("should not update the flow in state.selected if the id doesn't exist in selectedIndex", () => {
-            const store = TStore();
-            const originalSelected = store.getState().flows.selected;
-
-            const unrelatedFlow = {
-                ...originalSelected[0],
-                id: "nonexistent-id",
-            };
-
-            const next = reduceFlows(
-                store.getState().flows,
-                flowActions.FLOWS_UPDATE({
-                    flow: unrelatedFlow,
-                    matching_filters: {},
-                }),
-            );
-            expect(next.selected).toEqual(originalSelected);
-        });
-
-        it("should update the flow in state.selected if the id exists in selectedIndex", () => {
-            const store = TStore();
-            const [tflow1] = store.getState().flows.selected;
-
-            const updatedFlow = {
-                ...tflow1,
+        it("should update the flow in state.selected", () => {
+            const f1Updated = {
+                ...f1,
                 comment: "I'm a modified comment!",
             };
 
-            const next = reduceFlows(
-                store.getState().flows,
+            let s = reduceFlows(state, flowActions.select([f1, f2]));
+            s = reduceFlows(
+                s,
                 flowActions.FLOWS_UPDATE({
-                    flow: updatedFlow,
+                    flow: f1Updated,
                     matching_filters: {},
                 }),
             );
-            const updatedSelected = next.selected;
-            expect(updatedSelected[0]).toBe(updatedFlow);
+            expect(s.selected).toEqual([f1Updated, f2]);
         });
+    });
 
-        it("should not update state.selected on remove if action.data is undefined", () => {
-            const next = reduceFlows(
-                state,
-                flowActions.FLOWS_REMOVE("unknown"),
-            );
-            expect(next).toEqual(state);
-        });
-
-        it("should clear selected when the flow id doesn't exist in viewIndex during REMOVE", () => {
-            const store = TStore();
-            const originalState = store.getState().flows;
-
-            const selectedFlow = originalState.list[0];
-
-            const modifiedState = {
-                ...originalState,
-                selected: [selectedFlow],
-                selectedIndex: {
-                    [selectedFlow.id]: 0,
+    describe("highlighting", () => {
+        const alreadyHighlighted = reduceFlows(
+            state,
+            flowActions.FLOWS_UPDATE({
+                flow: f1,
+                matching_filters: {
+                    [FilterName.Highlight]: true,
                 },
-                viewIndex: {},
-            };
+            }),
+        );
+        expect(alreadyHighlighted).not.toEqual(state);
 
-            const next = reduceFlows(
-                modifiedState,
-                flowActions.FLOWS_REMOVE(selectedFlow.id),
+        it("should add flows that are highlighted", () => {
+            let s = reduceFlows(
+                undefined,
+                flowActions.FLOWS_ADD({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Highlight]: true,
+                    },
+                }),
             );
-
-            expect(next.selected).toEqual([]);
-            expect(next.selectedIds).toEqual({});
+            expect(s.highlighted).toContain("1");
+            s = reduceFlows(
+                undefined,
+                flowActions.FLOWS_ADD({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Highlight]: false,
+                    },
+                }),
+            );
+            expect(s.highlighted).not.toContain("1");
+            s = reduceFlows(
+                undefined,
+                flowActions.FLOWS_ADD({
+                    flow: f1,
+                    matching_filters: {},
+                }),
+            );
+            expect(s.highlighted).not.toContain("1");
+        });
+        it("should update highlight state", () => {
+            let s = reduceFlows(
+                state,
+                flowActions.FLOWS_UPDATE({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Highlight]: true,
+                    },
+                }),
+            );
+            expect(s.highlighted).toContain("1");
+            s = reduceFlows(
+                state,
+                flowActions.FLOWS_UPDATE({
+                    flow: f1,
+                    matching_filters: {},
+                }),
+            );
+            expect(s.highlighted).not.toContain("1");
+        });
+        it("should discard removed flows from highlight", () => {
+            let s = reduceFlows(
+                alreadyHighlighted,
+                flowActions.FLOWS_REMOVE("1"),
+            );
+            expect(s.highlighted).not.toContain("1");
+        });
+        it("should update highlight filters", () => {
+            let s = reduceFlows(
+                alreadyHighlighted,
+                flowActions.FLOWS_FILTER_UPDATE({
+                    name: FilterName.Highlight,
+                    matching_flow_ids: ["2", "3"],
+                }),
+            );
+            expect(s.highlighted).toEqual(new Set(["2", "3"]));
         });
     });
 
-    it("should be possible to set sort", () => {
-        const sort = { column: "tls" as const, desc: true };
-        expect(reduceFlows(undefined, flowActions.setSort(sort)).sort).toEqual(
-            sort,
-        );
-    });
-});
-
-describe("flows actions", () => {
-    const store = TStore();
-    const tflow = TFlow();
-    tflow.intercepted = true;
-    tflow.modified = true;
-    // @ts-expect-error TFlow is Required<> for other tests.
-    tflow.websocket = undefined;
-    const ttcpflow = TTCPFlow();
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
-    it("should handle resume action", () => {
-        store.dispatch(flowActions.resume([tflow]));
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/resume",
-            { method: "POST" },
-        );
-    });
-
-    it("should handle resumeAll action", () => {
-        store.dispatch(flowActions.resumeAll());
-        expect(fetchApi).toBeCalledWith("/flows/resume", { method: "POST" });
-    });
-
-    it("should handle kill action", () => {
-        store.dispatch(flowActions.kill([tflow]));
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/kill",
-            { method: "POST" },
-        );
-    });
-
-    it("should handle killAll action", () => {
-        store.dispatch(flowActions.killAll());
-        expect(fetchApi).toBeCalledWith("/flows/kill", { method: "POST" });
-    });
-
-    it("should handle remove action", () => {
-        store.dispatch(flowActions.remove([tflow]));
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
-            { method: "DELETE" },
-        );
-    });
-
-    it("should handle remove action with multiple flows", async () => {
-        await store.dispatch(flowActions.remove([tflow, ttcpflow]));
-
-        expect(fetchApi).toHaveBeenCalledTimes(2);
-        expect(fetchApi).toHaveBeenCalledWith(`/flows/${tflow.id}`, {
-            method: "DELETE",
+    describe("filtering", () => {
+        it("should add flows that are filtered", () => {
+            let s = reduceFlows(
+                undefined,
+                flowActions.FLOWS_ADD({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Search]: true,
+                    },
+                }),
+            );
+            expect(s.view).toContain(f1);
+            s = reduceFlows(
+                undefined,
+                flowActions.FLOWS_ADD({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Search]: false,
+                    },
+                }),
+            );
+            expect(s.view).not.toContain(f1);
+            s = reduceFlows(
+                undefined,
+                flowActions.FLOWS_ADD({
+                    flow: f1,
+                    matching_filters: {},
+                }),
+            );
+            expect(s.view).toContain(f1);
         });
-        expect(fetchApi).toHaveBeenCalledWith(`/flows/${ttcpflow.id}`, {
-            method: "DELETE",
+        it("should update flows that are filtered", () => {
+            let s = reduceFlows(
+                state,
+                flowActions.FLOWS_UPDATE({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Search]: true,
+                    },
+                }),
+            );
+            expect(s.view).toContain(f1);
+            s = reduceFlows(
+                state,
+                flowActions.FLOWS_UPDATE({
+                    flow: f1,
+                    matching_filters: {
+                        [FilterName.Search]: false,
+                    },
+                }),
+            );
+            expect(s.view).not.toContain(f1);
+            s = reduceFlows(
+                state,
+                flowActions.FLOWS_UPDATE({
+                    flow: f1,
+                    matching_filters: {},
+                }),
+            );
+            expect(s.view).toContain(f1);
         });
-    });
-
-    it("should handle duplicate action", () => {
-        store.dispatch(flowActions.duplicate([tflow]));
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/duplicate",
-            { method: "POST" },
-        );
-    });
-
-    it("should handle replay action", () => {
-        store.dispatch(flowActions.replay([tflow]));
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/replay",
-            { method: "POST" },
-        );
-    });
-
-    it("should handle revert action", () => {
-        store.dispatch(flowActions.revert([tflow]));
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/revert",
-            { method: "POST" },
-        );
-    });
-
-    it("should handle mark action", async () => {
-        store.dispatch(flowActions.mark([tflow, ttcpflow], ":red_circle:"));
-        expect(fetchApi.put).toHaveBeenCalledWith(`/flows/${tflow.id}`, {
-            marked: ":red_circle:",
-        });
-        expect(fetchApi.put).toHaveBeenCalledWith(`/flows/${ttcpflow.id}`, {
-            marked: ":red_circle:",
+        it("should update search filters", () => {
+            let s = reduceFlows(
+                state,
+                flowActions.FLOWS_FILTER_UPDATE({
+                    name: FilterName.Search,
+                    matching_flow_ids: ["2", "3"],
+                }),
+            );
+            expect(s.view).toEqual([f2, f3]);
         });
     });
 
-    it("should handle update action", () => {
-        store.dispatch(flowActions.update(tflow, "foo"));
-        expect(fetchApi.put).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29",
-            "foo",
-        );
-    });
-
-    it("should handle uploadContent action", () => {
-        const body = new FormData();
-        const file = new window.Blob(["foo"], { type: "plain/text" });
-        body.append("file", file);
-        store.dispatch(flowActions.uploadContent(tflow, "foo", "foo"));
-        // window.Blob's lastModified is always the current time,
-        // which causes flaky tests on comparison.
-        expect(fetchApi).toBeCalledWith(
-            "/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/foo/content.data",
-            {
-                method: "POST",
-                body: expect.anything(),
-            },
-        );
-    });
-
-    it("should handle clear action", () => {
-        store.dispatch(flowActions.clear());
-        expect(fetchApi).toBeCalledWith("/clear", { method: "POST" });
-    });
-
-    it("should handle upload action", () => {
-        const body = new FormData();
-        body.append("file", "foo");
-        store.dispatch(flowActions.upload("foo"));
-        expect(fetchApi).toBeCalledWith("/flows/dump", {
-            method: "POST",
-            body,
+    describe("sorting", () => {
+        it("should sort", () => {
+            const sort = { column: "comment" as const, desc: true };
+            expect(reduceFlows(state, flowActions.setSort(sort))).toEqual({
+                ...reduceFlows(
+                    undefined,
+                    flowActions.FLOWS_RECEIVE([f3, f0, f1, f2, f4]),
+                ),
+                list: state.list,
+                _listIndex: state._listIndex,
+                sort,
+            });
+        });
+        it("should restore original order if column is undefined", () => {
+            let s = reduceFlows(
+                state,
+                flowActions.setSort({ column: "comment", desc: true }),
+            );
+            expect(s.view).not.toEqual(state.view);
+            s = reduceFlows(
+                s,
+                flowActions.setSort({ column: undefined, desc: false }),
+            );
+            expect(s.view).toEqual(state.view);
         });
     });
 });

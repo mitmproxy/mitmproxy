@@ -20,17 +20,17 @@ export * from "./_backend_actions";
 export const FLOWS_ADD = createAction<{
     flow: Flow;
     matching_filters: Partial<{ [key in FilterName]: boolean }>;
-}>("FLOWS_ADD");
+}>("flows/add");
 export const FLOWS_UPDATE = createAction<{
     flow: Flow;
     matching_filters: Partial<{ [key in FilterName]: boolean }>;
-}>("FLOWS_UPDATE");
-export const FLOWS_REMOVE = createAction<string>("FLOWS_REMOVE");
-export const FLOWS_RECEIVE = createAction<Flow[]>("FLOWS_RECEIVE");
+}>("flows/update");
+export const FLOWS_REMOVE = createAction<string>("flows/remove");
+export const FLOWS_RECEIVE = createAction<Flow[]>("flows/receive");
 export const FLOWS_FILTER_UPDATE = createAction<{
     name: FilterName;
     matching_flow_ids: string[] | null;
-}>("FLOWS_FILTER_UPDATE");
+}>("flows/filterUpdate");
 
 export const setSort = createAction<{
     column?: keyof typeof sortFunctions;
@@ -217,7 +217,7 @@ export default function flowsReducer(
                 const fallback =
                     view[viewPos /* no +1, already removed */] ??
                     view[viewPos - 1];
-                selected = [fallback];
+                selected = fallback ? [fallback] : [];
             } else {
                 selected = selected.filter((f) => f.id !== flow_id);
             }
@@ -244,9 +244,7 @@ export default function flowsReducer(
                 const view = (
                     matching_flow_ids === null
                         ? state.list
-                        : matching_flow_ids
-                              .map((id) => state.byId.get(id))
-                              .filter((f) => f !== undefined)
+                        : matching_flow_ids.map((id) => state.byId.get(id)!)
                 ).toSorted(makeSort(state.sort));
                 const _viewIndex = buildIndex(view);
                 return {
@@ -266,7 +264,13 @@ export default function flowsReducer(
         }
     } else if (setSort.match(action)) {
         const sort = action.payload;
-        const view = state.view.toSorted(makeSort(sort));
+        let view: Flow[];
+        if (sort.column) {
+            view = state.view.toSorted(makeSort(sort));
+        } else {
+            // Restore original order if column isn't specified.
+            view = state.list.filter((f) => state._viewIndex.has(f.id));
+        }
         const _viewIndex = buildIndex(view);
         return {
             ...state,
