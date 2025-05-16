@@ -55,16 +55,10 @@ class WebMaster(master.Master):
         self.proxyserver.servers.changed.connect(self._sig_servers_changed)
 
     def _sig_view_add(self, flow: flow.Flow) -> None:
-        app.ClientConnection.broadcast(
-            type="flows/add",
-            payload=app.flow_to_json(flow),
-        )
+        app.ClientConnection.broadcast_flow("flows/add", flow)
 
     def _sig_view_update(self, flow: flow.Flow) -> None:
-        app.ClientConnection.broadcast(
-            type="flows/update",
-            payload=app.flow_to_json(flow),
-        )
+        app.ClientConnection.broadcast_flow("flows/update", flow)
 
     def _sig_view_remove(self, flow: flow.Flow, index: int) -> None:
         app.ClientConnection.broadcast(
@@ -73,9 +67,7 @@ class WebMaster(master.Master):
         )
 
     def _sig_view_refresh(self) -> None:
-        app.ClientConnection.broadcast(
-            type="flows/reset",
-        )
+        app.ClientConnection.broadcast_flow_reset()
 
     def _sig_events_add(self, entry: log.LogEntry) -> None:
         app.ClientConnection.broadcast(

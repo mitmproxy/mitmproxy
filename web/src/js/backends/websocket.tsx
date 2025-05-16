@@ -12,11 +12,13 @@ import { EVENTS_ADD, EVENTS_RECEIVE } from "../ducks/eventLog";
 import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../ducks/options";
 import {
     FLOWS_ADD,
+    FLOWS_FILTER_UPDATE,
     FLOWS_RECEIVE,
     FLOWS_REMOVE,
     FLOWS_UPDATE,
 } from "../ducks/flows";
-import { Action } from "@reduxjs/toolkit";
+import { Action, PayloadAction } from "@reduxjs/toolkit";
+import { type FilterName } from "../ducks/ui/filter";
 
 export enum Resource {
     State = "state",
@@ -29,6 +31,7 @@ export enum Resource {
 type WebsocketMessageType =
     | "flows/add"
     | "flows/update"
+    | "flows/filterUpdate"
     | "flows/remove"
     | "flows/reset"
     | "events/add"
@@ -64,6 +67,7 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
+        // Send all queued messages.
         for (const message of this.messageQueue) {
             this.socket.send(JSON.stringify(message));
         }
@@ -99,6 +103,11 @@ export default class WebsocketBackend {
                     Resource.Flows,
                     FLOWS_UPDATE(msg.payload),
                 );
+            case "flows/filterUpdate":
+                return this.queueOrDispatch(
+                    Resource.Flows,
+                    FLOWS_FILTER_UPDATE(msg.payload),
+                );
             case "flows/remove":
                 return this.queueOrDispatch(
                     Resource.Flows,
@@ -129,7 +138,17 @@ export default class WebsocketBackend {
         }
     }
 
-    sendMessage(action: Action) {
+    updateFilter(name: FilterName, expr: string) {
+        this.sendMessage({
+            type: "flows/updateFilter",
+            payload: {
+                name,
+                expr,
+            },
+        });
+    }
+
+    sendMessage(action: PayloadAction<any>) {
         if (this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify(action));
         } else if (this.socket.readyState === WebSocket.CONNECTING) {

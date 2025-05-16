@@ -5,13 +5,14 @@ import * as connectionActions from "../../ducks/connection";
 import { UnknownAction } from "@reduxjs/toolkit";
 import {
     EventLogItem,
-    LogLevel,
     EVENTS_ADD,
     EVENTS_RECEIVE,
+    LogLevel,
 } from "../../ducks/eventLog";
 import { OPTIONS_RECEIVE } from "../../ducks/options";
 import { FLOWS_RECEIVE } from "../../ducks/flows";
 import { STATE_RECEIVE } from "../../ducks/backendState";
+import { FilterName } from "../../ducks/ui/filter";
 
 beforeEach(() => {
     fetchMock.enableMocks();
@@ -46,14 +47,20 @@ describe("websocket backend", () => {
             dispatch: (e) => actions.push(e),
         });
 
-        backend.sendMessage({ type: "unknown" });
+        backend.sendMessage({
+            type: "unknown",
+            payload: {},
+        });
         expect(backend.messageQueue.length).toBe(1);
         // @ts-expect-error jest mock stuff
         backend.socket.readyState = WebSocket.OPEN;
         backend.onOpen();
         expect(backend.messageQueue.length).toBe(0);
 
-        backend.sendMessage({ type: "unknown" });
+        backend.sendMessage({
+            type: "unknown",
+            payload: {},
+        });
         expect(backend.messageQueue.length).toBe(0);
 
         let payload: EventLogItem = {
@@ -150,10 +157,17 @@ describe("websocket backend", () => {
         backend.onMessage({ type: "flows/update" });
         backend.onMessage({ type: "flows/remove" });
         backend.onMessage({ type: "flows/reset" });
+        backend.onMessage({ type: "flows/filterUpdate" });
         backend.onMessage({ type: "events/add" });
         backend.onMessage({ type: "events/reset" });
         backend.onMessage({ type: "options/update" });
         backend.onMessage({ type: "state/update" });
         expect(fetchMock.mock.calls.length).toBe(2);
+    });
+
+    test("sendMessage wrappers", () => {
+        const backend = new WebSocketBackend({ dispatch: () => {} });
+        backend.updateFilter(FilterName.Search, "foo");
+        expect(backend.messageQueue.length).toBe(1);
     });
 });

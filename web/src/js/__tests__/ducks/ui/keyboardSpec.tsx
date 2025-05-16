@@ -10,16 +10,18 @@ describe("onKeyDown", () => {
     const makeStore = () => {
         const store = TStore();
         store.dispatch(flowsActions.FLOWS_RECEIVE([]));
-        store.dispatch(flowsActions.setFilter(""));
         for (let i = 1; i <= 12; i++) {
             store.dispatch(
                 flowsActions.FLOWS_ADD({
-                    ...TFlow(),
-                    id: i + "",
-                    websocket: undefined,
-                    error: undefined,
-                    intercepted: true,
-                    modified: true,
+                    flow: {
+                        ...TFlow(),
+                        id: i + "",
+                        websocket: undefined,
+                        error: undefined,
+                        intercepted: true,
+                        modified: true,
+                    },
+                    matching_filters: {},
                 }),
             );
         }

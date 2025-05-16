@@ -3,6 +3,7 @@ import flow from "./flow";
 import modal from "./modal";
 import optionsEditor from "./optionsEditor";
 import tabs from "./tabs";
+import filter from "./filter";
 
 // TODO: Just move ducks/ui/* into ducks/?
 export default combineReducers({
@@ -10,4 +11,5 @@ export default combineReducers({
     modal,
     optionsEditor,
     tabs,
+    filter,
 });

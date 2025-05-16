@@ -5,7 +5,8 @@
  * - read the initial URL state on page load
  * - push updates to the URL later on.
  */
-import { select, setFilter, setHighlight } from "./ducks/flows";
+import { FilterName, setFilter, setHighlight } from "./ducks/ui/filter";
+import { select } from "./ducks/flows";
 import { selectTab } from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
 import * as commandBarActions from "./ducks/commandBar";
@@ -29,7 +30,7 @@ export function updateStoreFromUrl(store: RootStore) {
             store.dispatch(selectTab(tab));
 
             const selectFlowOnceAvailable = () => {
-                const flow = store.getState().flows.byId[flowId];
+                const flow = store.getState().flows.byId.get(flowId);
                 if (flow !== undefined) {
                     unsubscribe();
                     store.dispatch(select([flow]));
@@ -71,8 +72,8 @@ export function updateStoreFromUrl(store: RootStore) {
 export function updateUrlFromStore(store: RootStore) {
     const state = store.getState();
     const query = {
-        [Query.SEARCH]: state.flows.filter,
-        [Query.HIGHLIGHT]: state.flows.highlight,
+        [Query.SEARCH]: state.ui.filter[FilterName.Search],
+        [Query.HIGHLIGHT]: state.ui.filter[FilterName.Highlight],
         [Query.SHOW_EVENTLOG]: state.eventLog.visible,
         [Query.SHOW_COMMANDBAR]: state.commandBar.visible,
     };
