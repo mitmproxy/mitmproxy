@@ -107,7 +107,10 @@ export default function flowsReducer(
         const byId = new Map(state.byId);
         byId.set(flow.id, flow);
         // Update view
-        if (matching_filters[FilterName.Search] !== false) {
+        if (
+            matching_filters[FilterName.Search] === true ||
+            matching_filters[FilterName.Search] === undefined
+        ) {
             ({ view, _viewIndex } = insertViewItem(
                 view,
                 _viewIndex,
@@ -145,7 +148,9 @@ export default function flowsReducer(
         // Update view
         const prevViewPos: number | undefined = _viewIndex.get(flow.id);
         const hasOldFlow = prevViewPos !== undefined;
-        const hasNewFlow = !(matching_filters[FilterName.Search] === false);
+        const hasNewFlow =
+            matching_filters[FilterName.Search] === true ||
+            matching_filters[FilterName.Search] === undefined;
         if (hasNewFlow && !hasOldFlow) {
             ({ view, _viewIndex } = insertViewItem(
                 view,
