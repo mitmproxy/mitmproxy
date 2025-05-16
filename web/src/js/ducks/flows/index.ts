@@ -12,7 +12,6 @@ import {
     removeViewItemAt,
     updateViewItem,
     withElemRemoved,
-    withKeyRemoved,
 } from "./_utils";
 
 export * from "./_backend_actions";
@@ -205,8 +204,9 @@ export default function flowsReducer(
         let { view, _viewIndex, selected, selectedIds } = state;
         const listPos = state._listIndex.get(flow_id)!;
         const list = state.list.toSpliced(listPos, 1);
-        const _listIndex = withKeyRemoved(state._listIndex, flow_id);
-        const byId = withKeyRemoved(state.byId, flow_id);
+        const _listIndex = buildIndex(list);
+        const byId = new Map(state.byId);
+        byId.delete(flow_id);
         // Update view
         const viewPos = _viewIndex.get(flow_id);
         if (viewPos !== undefined) {

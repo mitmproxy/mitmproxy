@@ -10,14 +10,6 @@ export function buildLookup<T extends Item>(data: T[]): Set<string> {
     return new Set(data.map((f) => f.id));
 }
 
-export function withKeyRemoved<K, V>(map: Map<K, V>, key: K): Map<K, V> {
-    if (map.has(key)) {
-        map = new Map(map);
-        map.delete(key);
-    }
-    return map;
-}
-
 export function withElemRemoved<K>(set: Set<K>, key: K): Set<K> {
     if (set.has(key)) {
         set = new Set(set);
