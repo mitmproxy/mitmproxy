@@ -121,8 +121,8 @@ describe("flow reducer", () => {
         });
 
         it("should keep only selected flows that exist in byId during RECEIVE", () => {
-            let state = testState.flows;
-            let [f0, f1, ..._] = state.list;
+            let state = testState.flows,
+                [f0, f1, ..._] = state.list;
             state = reduceFlows(state, flowActions.select([f0, f1]));
             expect(state.selected).toEqual([f0, f1]);
 
