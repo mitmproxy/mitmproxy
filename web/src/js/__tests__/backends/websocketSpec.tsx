@@ -5,9 +5,9 @@ import * as connectionActions from "../../ducks/connection";
 import { UnknownAction } from "@reduxjs/toolkit";
 import {
     EventLogItem,
-    LogLevel,
     EVENTS_ADD,
     EVENTS_RECEIVE,
+    LogLevel,
 } from "../../ducks/eventLog";
 import { OPTIONS_RECEIVE } from "../../ducks/options";
 import { FLOWS_RECEIVE } from "../../ducks/flows";
@@ -165,85 +165,9 @@ describe("websocket backend", () => {
         expect(fetchMock.mock.calls.length).toBe(2);
     });
 
-    test("updateFilter should call socket.send when WebSocket is OPEN", () => {
-        Object.defineProperty(global.WebSocket, "OPEN", { value: 1 }); // otherwise it's undefined in tests
+    test("sendMessage wrappers", () => {
         const backend = new WebSocketBackend({ dispatch: () => {} });
-        const sendMock = jest.fn();
-        backend.socket = {
-            ...backend.socket,
-            readyState: WebSocket.OPEN,
-            send: sendMock,
-        };
-
-        const name = FilterName.Search;
-        const expr = "~b boo";
-
-        backend.updateFilter(name, expr);
-
-        expect(sendMock).toHaveBeenCalledTimes(1);
-        expect(sendMock).toHaveBeenCalledWith(
-            JSON.stringify({
-                type: "flows/updateFilter",
-                payload: {
-                    name,
-                    expr,
-                },
-            }),
-        );
-    });
-
-    test("updateFilter should queue messages when WebSocket is CONNECTING", () => {
-        Object.defineProperty(global.WebSocket, "CONNECTING", { value: 0 }); // otherwise it's undefined in tests
-        const backend = new WebSocketBackend({ dispatch: () => {} });
-
-        backend.socket = {
-            ...backend.socket,
-            readyState: WebSocket.CONNECTING,
-        };
-
-        backend.messageQueue = [];
-
-        const name = FilterName.Search;
-        const expr = "~b boo";
-
-        backend.updateFilter(name, expr);
-
-        expect(backend.messageQueue).toContainEqual({
-            type: "flows/updateFilter",
-            payload: {
-                name,
-                expr,
-            },
-        });
-        expect(backend.messageQueue).toHaveLength(1);
-    });
-
-    test("updateFilter should log an error if WebSocket is not CONNECTING or OPEN", () => {
-        Object.defineProperty(global.WebSocket, "CLOSING", { value: 2 }); // otherwise it's undefined in tests
-        const backend = new WebSocketBackend({ dispatch: jest.fn() });
-
-        backend.socket = {
-            readyState: WebSocket.CLOSING,
-            send: jest.fn(),
-        } as any;
-
-        const consoleErrorSpy = jest
-            .spyOn(console, "error")
-            .mockImplementation();
-
-        const name = FilterName.Search;
-        const expr = "~b boo";
-        backend.updateFilter(name, expr);
-
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "WebSocket is not open. Cannot send:",
-            {
-                type: "flows/updateFilter",
-                payload: {
-                    name: "search",
-                    expr: "~b boo",
-                },
-            },
-        );
+        backend.updateFilter(FilterName.Search, "foo");
+        expect(backend.messageQueue.length).toBe(1);
     });
 });

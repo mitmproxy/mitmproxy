@@ -29943,7 +29943,7 @@ ${latestSubscriptionCallbackError.current.stack}
     return funcs.reduce((a, b) => (...args) => a(b(...args)));
   }
   __name(compose, "compose");
-  function applyMiddleware(...middlewares) {
+  function applyMiddleware(...middlewares2) {
     return (createStore2) => (reducer8, preloadedState) => {
       const store2 = createStore2(reducer8, preloadedState);
       let dispatch = /* @__PURE__ */ __name(() => {
@@ -29953,7 +29953,7 @@ ${latestSubscriptionCallbackError.current.stack}
         getState: store2.getState,
         dispatch: /* @__PURE__ */ __name((action, ...args) => dispatch(action, ...args), "dispatch")
       };
-      const chain = middlewares.map((middleware) => middleware(middlewareAPI));
+      const chain = middlewares2.map((middleware) => middleware(middlewareAPI));
       dispatch = compose(...chain)(store2.dispatch);
       return {
         ...store2,
@@ -32325,93 +32325,86 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
     },
     reducers: {
       setFilter(state, action) {
-        window.backend.updateFilter(
-          action.payload.name,
-          action.payload.expr
-        );
-        state[action.payload.name] = action.payload.expr;
+        window.backend.updateFilter("search" /* Search */, action.payload);
+        state["search" /* Search */] = action.payload;
+      },
+      setHighlight(state, action) {
+        window.backend.updateFilter("highlight" /* Highlight */, action.payload);
+        state["highlight" /* Highlight */] = action.payload;
       }
     }
-    /* FIXME remove
-    extraReducers: (builder) => {
-        builder
-            .addCase(FLOWS_RECEIVE, (state, action) => {
-                // Awkward workaround to trigger filter updates after RECEIVE.
-                if(state[FilterName.Search] !== "") {
-                    window.backend.updateFilter(FilterName.Search, state[FilterName.Search]);
-                }
-                if(state[FilterName.Highlight] !== "") {
-                    window.backend.updateFilter(FilterName.Highlight, state[FilterName.Highlight]);
-                }
-            })
-    },*/
   });
   var { actions: actions2, reducer: reducer2 } = filtersSlice;
-  var { setFilter } = actions2;
+  var { setFilter, setHighlight } = actions2;
   var filter_default = reducer2;
 
-  // src/js/ducks/flows/utils.ts
+  // src/js/ducks/flows/_utils.ts
   function buildIndex(data) {
-    return Object.fromEntries(data.map((f, i) => [f.id, i]));
+    return new Map(data.map((f, i) => [f.id, i]));
   }
   __name(buildIndex, "buildIndex");
   function buildLookup(data) {
-    return Object.fromEntries(data.map((f) => [f.id, true]));
+    return new Set(data.map((f) => f.id));
   }
   __name(buildLookup, "buildLookup");
-  function withKeyRemoved(map, key) {
-    if (key in map) {
-      map = { ...map };
-      delete map[key];
+  function withElemRemoved(set2, key) {
+    if (set2.has(key)) {
+      set2 = new Set(set2);
+      set2.delete(key);
     }
-    return map;
+    return set2;
   }
-  __name(withKeyRemoved, "withKeyRemoved");
+  __name(withElemRemoved, "withElemRemoved");
   function removeViewItemAt(prevView, prevViewIndex, pos) {
     const view = prevView.toSpliced(pos, 1);
-    const _viewIndex = { ...prevViewIndex };
-    delete _viewIndex[prevView[pos].id];
+    const _viewIndex = new Map(prevViewIndex);
+    _viewIndex.delete(prevView[pos].id);
     for (let i = view.length - 1; i >= pos; i--) {
-      _viewIndex[view[i].id] = i;
+      _viewIndex.set(view[i].id, i);
     }
     return { view, _viewIndex };
   }
   __name(removeViewItemAt, "removeViewItemAt");
   function updateViewItem(prevView, prevViewIndex, item, sort) {
     const view = [...prevView];
-    const _viewIndex = { ...prevViewIndex };
-    let pos = _viewIndex[item.id];
+    const len = view.length;
+    let _viewIndex = prevViewIndex, pos = _viewIndex.get(item.id);
+    if (pos + 1 < len && sort(item, view[pos + 1]) > 0) {
+      _viewIndex = new Map(_viewIndex);
+      do {
+        const move = view[pos + 1];
+        view[pos] = move;
+        _viewIndex.set(move.id, pos);
+        pos++;
+      } while (pos + 1 < len && sort(item, view[pos + 1]) > 0);
+      _viewIndex.set(item.id, pos);
+    } else if (pos > 0 && sort(item, view[pos - 1]) < 0) {
+      _viewIndex = new Map(_viewIndex);
+      do {
+        const move = view[pos - 1];
+        view[pos] = move;
+        _viewIndex.set(move.id, pos);
+        pos--;
+      } while (pos > 0 && sort(item, view[pos - 1]) < 0);
+      _viewIndex.set(item.id, pos);
+    }
     view[pos] = item;
-    while (pos + 1 < view.length && sort(view[pos], view[pos + 1]) > 0) {
-      view[pos] = view[pos + 1];
-      view[pos + 1] = item;
-      _viewIndex[item.id] = pos + 1;
-      _viewIndex[view[pos].id] = pos;
-      ++pos;
-    }
-    while (pos > 0 && sort(view[pos], view[pos - 1]) < 0) {
-      view[pos] = view[pos - 1];
-      view[pos - 1] = item;
-      _viewIndex[item.id] = pos - 1;
-      _viewIndex[view[pos].id] = pos;
-      --pos;
-    }
     return { view, _viewIndex };
   }
   __name(updateViewItem, "updateViewItem");
   function insertViewItem(prevView, prevViewIndex, item, sort) {
     const pos = findInsertPos(prevView, item, sort);
     const view = prevView.toSpliced(pos, 0, item);
-    const _viewIndex = { ...prevViewIndex };
+    const _viewIndex = new Map(prevViewIndex);
     for (let i = view.length - 1; i >= pos; i--) {
-      _viewIndex[view[i].id] = i;
+      _viewIndex.set(view[i].id, i);
     }
     return { view, _viewIndex };
   }
   __name(insertViewItem, "insertViewItem");
   function findInsertPos(list, item, sort) {
     let low = 0, high = list.length;
-    if (sort(list[high - 1], item) <= 0) {
+    if (high === 0 || sort(list[high - 1], item) <= 0) {
       return high;
     }
     while (low < high) {
@@ -32517,35 +32510,35 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
   __name(upload, "upload");
 
   // src/js/ducks/flows/index.ts
-  var FLOWS_ADD = createAction("FLOWS_ADD");
-  var FLOWS_UPDATE = createAction("FLOWS_UPDATE");
-  var FLOWS_REMOVE = createAction("FLOWS_REMOVE");
-  var FLOWS_RECEIVE = createAction("FLOWS_RECEIVE");
-  var FLOWS_FILTER_UPDATE = createAction("FLOWS_FILTER_UPDATE");
+  var FLOWS_ADD = createAction("flows/add");
+  var FLOWS_UPDATE = createAction("flows/update");
+  var FLOWS_REMOVE = createAction("flows/remove");
+  var FLOWS_RECEIVE = createAction("flows/receive");
+  var FLOWS_FILTER_UPDATE = createAction("flows/filterUpdate");
   var setSort = createAction("flows/sort");
   var select = createAction("flows/select");
   var defaultState2 = {
     list: [],
-    _listIndex: {},
-    byId: {},
+    _listIndex: /* @__PURE__ */ new Map(),
+    byId: /* @__PURE__ */ new Map(),
     view: [],
-    _viewIndex: {},
+    _viewIndex: /* @__PURE__ */ new Map(),
     sort: { column: void 0, desc: false },
     selected: [],
-    selectedIds: {},
-    highlighted: {}
+    selectedIds: /* @__PURE__ */ new Set(),
+    highlighted: /* @__PURE__ */ new Set()
   };
   function flowsReducer(state = defaultState2, action) {
     if (FLOWS_RECEIVE.match(action)) {
       const { sort } = state;
       const list = action.payload;
       const _listIndex = buildIndex(list);
-      const byId = Object.fromEntries(list.map((f) => [f.id, f]));
+      const byId = new Map(list.map((f) => [f.id, f]));
       const view = list.toSorted(makeSort(sort));
       const _viewIndex = buildIndex(view);
-      const selected = Object.keys(state.selectedIds).map((id2) => byId[id2]).filter((f) => f !== void 0);
-      const selectedIds = buildLookup(state.selected);
-      const highlighted = {};
+      const selected = state.selected.map((flow) => byId.get(flow.id)).filter((f) => f !== void 0);
+      const selectedIds = buildLookup(selected);
+      const highlighted = /* @__PURE__ */ new Set();
       return {
         list,
         _listIndex,
@@ -32561,13 +32554,12 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
       const { flow, matching_filters } = action.payload;
       const { sort, selected, selectedIds } = state;
       let { view, _viewIndex, highlighted } = state;
-      const _listIndex = {
-        ...state._listIndex,
-        [flow.id]: state.list.length
-      };
+      const _listIndex = new Map(state._listIndex);
+      _listIndex.set(flow.id, state.list.length);
       const list = [...state.list, flow];
-      const byId = { ...state.byId, [flow.id]: flow };
-      if (matching_filters["search" /* Search */] !== false) {
+      const byId = new Map(state.byId);
+      byId.set(flow.id, flow);
+      if (matching_filters["search" /* Search */] === true || matching_filters["search" /* Search */] === void 0) {
         ({ view, _viewIndex } = insertViewItem(
           view,
           _viewIndex,
@@ -32576,7 +32568,8 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         ));
       }
       if (matching_filters["highlight" /* Highlight */] === true) {
-        highlighted = { ...highlighted, [flow.id]: true };
+        highlighted = new Set(highlighted);
+        highlighted.add(flow.id);
       }
       return {
         list,
@@ -32593,13 +32586,14 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
       const { flow, matching_filters } = action.payload;
       const { _listIndex, sort, selectedIds } = state;
       let { view, _viewIndex, selected, highlighted } = state;
-      const listPos = state._listIndex[flow.id];
+      const listPos = state._listIndex.get(flow.id);
       const list = [...state.list];
       list[listPos] = flow;
-      const byId = { ...state.byId, [flow.id]: flow };
-      const prevPos = _viewIndex[flow.id];
-      const hasOldFlow = prevPos !== void 0;
-      const hasNewFlow = !(matching_filters["search" /* Search */] === false);
+      const byId = new Map(state.byId);
+      byId.set(flow.id, flow);
+      const prevViewPos = _viewIndex.get(flow.id);
+      const hasOldFlow = prevViewPos !== void 0;
+      const hasNewFlow = matching_filters["search" /* Search */] === true || matching_filters["search" /* Search */] === void 0;
       if (hasNewFlow && !hasOldFlow) {
         ({ view, _viewIndex } = insertViewItem(
           view,
@@ -32611,7 +32605,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         ({ view, _viewIndex } = removeViewItemAt(
           view,
           _viewIndex,
-          prevPos
+          prevViewPos
         ));
       } else if (hasNewFlow && hasOldFlow) {
         ({ view, _viewIndex } = updateViewItem(
@@ -32621,17 +32615,18 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
           makeSort(sort)
         ));
       }
-      if (flow.id in state.selectedIds) {
+      if (selectedIds.has(flow.id)) {
         selected = selected.map(
           (existing) => existing.id === flow.id ? flow : existing
         );
       }
       if (matching_filters["highlight" /* Highlight */]) {
-        if (!(flow.id in highlighted)) {
-          highlighted = { ...highlighted, [flow.id]: true };
+        if (!highlighted.has(flow.id)) {
+          highlighted = new Set(highlighted);
+          highlighted.add(flow.id);
         }
       } else {
-        highlighted = withKeyRemoved(highlighted, flow.id);
+        highlighted = withElemRemoved(highlighted, flow.id);
       }
       return {
         list,
@@ -32648,11 +32643,12 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
       const flow_id = action.payload;
       const { sort } = state;
       let { view, _viewIndex, selected, selectedIds } = state;
-      const listPos = state._listIndex[flow_id];
+      const listPos = state._listIndex.get(flow_id);
       const list = state.list.toSpliced(listPos, 1);
-      const _listIndex = withKeyRemoved(state._listIndex, flow_id);
-      const byId = withKeyRemoved(state.byId, flow_id);
-      const viewPos = _viewIndex[flow_id];
+      const _listIndex = buildIndex(list);
+      const byId = new Map(state.byId);
+      byId.delete(flow_id);
+      const viewPos = _viewIndex.get(flow_id);
       if (viewPos !== void 0) {
         ({ view, _viewIndex } = removeViewItemAt(
           view,
@@ -32660,19 +32656,19 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
           viewPos
         ));
       }
-      if (flow_id in selectedIds) {
+      if (selectedIds.has(flow_id)) {
         if (selected.length === 1 && viewPos !== void 0) {
           const fallback = view[
             viewPos
             /* no +1, already removed */
           ] ?? view[viewPos - 1];
-          selected = [fallback];
+          selected = fallback ? [fallback] : [];
         } else {
           selected = selected.filter((f) => f.id !== flow_id);
         }
         selectedIds = buildLookup(selected);
       }
-      const highlighted = withKeyRemoved(state.highlighted, flow_id);
+      const highlighted = withElemRemoved(state.highlighted, flow_id);
       return {
         list,
         _listIndex,
@@ -32688,7 +32684,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
       const { name: name2, matching_flow_ids } = action.payload;
       switch (name2) {
         case "search" /* Search */: {
-          const view = matching_flow_ids.map((id2) => state.byId[id2]).filter((f) => f !== void 0).toSorted(makeSort(state.sort));
+          const view = (matching_flow_ids === null ? state.list : matching_flow_ids.map((id2) => state.byId.get(id2))).toSorted(makeSort(state.sort));
           const _viewIndex = buildIndex(view);
           return {
             ...state,
@@ -32699,9 +32695,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         case "highlight" /* Highlight */:
           return {
             ...state,
-            highlighted: Object.fromEntries(
-              matching_flow_ids.map((id2) => [id2, true])
-            )
+            highlighted: new Set(matching_flow_ids)
           };
         /* istanbul ignore next @preserve */
         default:
@@ -32709,7 +32703,12 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
       }
     } else if (setSort.match(action)) {
       const sort = action.payload;
-      const view = state.view.toSorted(makeSort(sort));
+      let view;
+      if (sort.column) {
+        view = state.view.toSorted(makeSort(sort));
+      } else {
+        view = state.list.filter((f) => state._viewIndex.has(f.id));
+      }
       const _viewIndex = buildIndex(view);
       return {
         ...state,
@@ -32751,7 +32750,9 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
   __name(makeSort, "makeSort");
   function selectRelative(flows, shift4) {
     const lastSelected = flows.selected[flows.selected.length - 1];
-    const currentSelectionIndex = flows._viewIndex[lastSelected?.id];
+    const currentSelectionIndex = flows._viewIndex.get(
+      lastSelected?.id
+    );
     const minIndex = 0;
     const maxIndex = flows.view.length - 1;
     let newIndex;
@@ -32769,7 +32770,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
   function selectToggle(flow) {
     return (dispatch, getState) => {
       const { flows } = getState();
-      if (flow.id in flows.selectedIds) {
+      if (flows.selectedIds.has(flow.id)) {
         dispatch(select(flows.selected.filter((f) => f !== flow)));
       } else {
         dispatch(select([...flows.selected, flow]));
@@ -32781,8 +32782,8 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
     return (dispatch, getState) => {
       const { flows } = getState();
       const prev = flows.selected[flows.selected.length - 1];
-      const thisIndex = flows._viewIndex[flow.id];
-      const prevIndex = flows._viewIndex[prev?.id];
+      const thisIndex = flows._viewIndex.get(flow.id);
+      const prevIndex = flows._viewIndex.get(prev?.id);
       if (thisIndex === void 0 || prevIndex === void 0) {
         return dispatch(select([flow]));
       }
@@ -34010,12 +34011,14 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
     backendState: backendState_default,
     processes: processes_default
   };
+  var middlewares = {
+    immutableCheck: { warnAfter: 5e5 },
+    serializableCheck: { warnAfter: 5e5, ignoredPaths: ["flows"] }
+  };
   var store = configureStore({
     reducer: reducer7,
-    middleware: /* @__PURE__ */ __name((getDefaultMiddleware) => getDefaultMiddleware({
-      immutableCheck: { warnAfter: 5e5 },
-      serializableCheck: { warnAfter: 5e5, ignoredPaths: ["flows"] }
-    }), "middleware")
+    middleware: /* @__PURE__ */ __name((getDefaultMiddleware) => getDefaultMiddleware(middlewares), "middleware"),
+    devTools: true ? { serialize: { options: { map: true } } } : false
   });
 
   // src/js/components/editors/KeyValueListEditor.tsx
@@ -65340,7 +65343,9 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
   }, "tls");
   tls.headerName = "";
   var index2 = /* @__PURE__ */ __name(({ flow }) => {
-    const index3 = useAppSelector((state) => state.flows._listIndex[flow.id]);
+    const index3 = useAppSelector(
+      (state) => state.flows._listIndex.get(flow.id)
+    );
     return /* @__PURE__ */ import_react17.default.createElement("td", { className: "col-index" }, index3 + 1);
   }, "index");
   index2.headerName = "#";
@@ -65610,8 +65615,8 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
           {
             key: flow.id,
             flow,
-            selected: flow.id in selectedIds,
-            highlighted: flow.id in highlighted
+            selected: selectedIds.has(flow.id),
+            highlighted: highlighted.has(flow.id)
           }
         )), /* @__PURE__ */ React30.createElement("tr", { style: { height: vScroll.paddingBottom } })))
       );
@@ -65622,7 +65627,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
     highlighted: state.flows.highlighted,
     selectedIds: state.flows.selectedIds,
     onlySelectedId: state.flows.selected.length === 1 && state.flows.selected[0].id,
-    firstSelectedIndex: state.flows._viewIndex[state.flows.selected[0]?.id]
+    firstSelectedIndex: state.flows._viewIndex.get(state.flows.selected[0]?.id)
   }))(PureFlowTable);
 
   // src/js/components/Modes/CaptureSetup.tsx
@@ -69090,7 +69095,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         placeholder: "Search",
         icon: "search" /* SEARCH */,
         color: "black",
-        onChange: (expr) => dispatch(setFilter({ name: "search" /* Search */, expr }))
+        onChange: (expr) => dispatch(setFilter(expr))
       }
     );
   }
@@ -69105,7 +69110,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         placeholder: "Highlight",
         icon: "tag" /* HIGHLIGHT */,
         color: "hsl(48, 100%, 50%)",
-        onChange: (expr) => dispatch(setFilter({ name: "highlight" /* Highlight */, expr }))
+        onChange: (expr) => dispatch(setHighlight(expr))
       }
     );
   }
@@ -70967,7 +70972,7 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         const [flowId, tab] = path_components.slice(1);
         store2.dispatch(selectTab(tab));
         const selectFlowOnceAvailable = /* @__PURE__ */ __name(() => {
-          const flow = store2.getState().flows.byId[flowId];
+          const flow = store2.getState().flows.byId.get(flowId);
           if (flow !== void 0) {
             unsubscribe();
             store2.dispatch(select([flow]));
@@ -70985,14 +70990,10 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
         const value = decodeURIComponent(encodedVal);
         switch (key) {
           case Query.SEARCH:
-            store2.dispatch(
-              setFilter({ name: "search" /* Search */, expr: value })
-            );
+            store2.dispatch(setFilter(value));
             break;
           case Query.HIGHLIGHT:
-            store2.dispatch(
-              setFilter({ name: "highlight" /* Highlight */, expr: value })
-            );
+            store2.dispatch(setHighlight(value));
             break;
           case Query.SHOW_EVENTLOG:
             if (!store2.getState().eventLog.visible)
@@ -71012,8 +71013,8 @@ Take a look at the reducer(s) handling this action type: ${action.type}.
   function updateUrlFromStore(store2) {
     const state = store2.getState();
     const query = {
-      [Query.SEARCH]: state.ui.filter.search,
-      [Query.HIGHLIGHT]: state.ui.filter.highlight,
+      [Query.SEARCH]: state.ui.filter["search" /* Search */],
+      [Query.HIGHLIGHT]: state.ui.filter["highlight" /* Highlight */],
       [Query.SHOW_EVENTLOG]: state.eventLog.visible,
       [Query.SHOW_COMMANDBAR]: state.commandBar.visible
     };

@@ -64,8 +64,6 @@ export const defaultState: FlowsState = {
 };
 
 // This is a manual reducer as RTK's createSlice always uses Immer, which is orders of magnitude slower.
-// In benchmarking we found no major difference between Map/Set and objects, so we use objects
-// for redux compatibility.
 export default function flowsReducer(
     state = defaultState,
     action: UnknownAction,

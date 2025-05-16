@@ -507,7 +507,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             "type": "flows/filterUpdate",
             "payload": {
                 "name": "search",
-                "matching_flow_ids": [],
+                "matching_flow_ids": None,
             },
         }
 
