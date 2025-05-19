@@ -5,6 +5,8 @@
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
 -->
 
+- Add invisible attribute for FlowColumns
+
 ## Unreleased: mitmproxy next
 
 - Fix raw response export incorrectly zeroing non-zero `Content-Length` header for HEAD requests.
