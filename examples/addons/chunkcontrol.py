@@ -12,7 +12,7 @@ def new_http1_server_send(self, event):
     # Handle ResponseData events
     if isinstance(event, _http1.ResponseData):
         response = self.response
-        if getattr(response, 'manual_chunk', False):
+        if getattr(response, "manual_chunk", False):
             # Send raw data without chunk formatting
             if event.data:
                 yield _http1.commands.SendData(self.conn, event.data)
@@ -20,7 +20,7 @@ def new_http1_server_send(self, event):
     # Handle ResponseEndOfMessage events
     elif isinstance(event, _http1.ResponseEndOfMessage):
         response = self.response
-        manual_chunk = getattr(response, 'manual_chunk', False)
+        manual_chunk = getattr(response, "manual_chunk", False)
         if (
             self.request.method.upper() != "HEAD"
             and "chunked" in response.headers.get("transfer-encoding", "").lower()
@@ -37,7 +37,7 @@ def new_http1_client_send(self, event):
     # Handle RequestData events
     if isinstance(event, _http1.RequestData):
         request = self.request
-        if getattr(request, 'manual_chunk', False):
+        if getattr(request, "manual_chunk", False):
             # Send raw data without chunk formatting
             if event.data:
                 yield _http1.commands.SendData(self.conn, event.data)
@@ -45,7 +45,7 @@ def new_http1_client_send(self, event):
     # Handle RequestEndOfMessage events
     elif isinstance(event, _http1.RequestEndOfMessage):
         request = self.request
-        manual_chunk = getattr(request, 'manual_chunk', False)
+        manual_chunk = getattr(request, "manual_chunk", False)
         if (
             "chunked" in request.headers.get("transfer-encoding", "").lower()
             and not manual_chunk  # Only send terminator if not manual_chunk
@@ -65,16 +65,16 @@ class ChunkedControlAddon:
 
     def request(self, flow: http.HTTPFlow):
         # Check if the request has the special header
-        if 'x-manual-chunk' in flow.request.headers:
+        if "x-manual-chunk" in flow.request.headers:
             # Remove the header and set the manual_chunk flag
-            del flow.request.headers['x-manual-chunk']
+            del flow.request.headers["x-manual-chunk"]
             flow.request.manual_chunk = True
 
     def response(self, flow: http.HTTPFlow):
         # Check if the response has the special header
-        if 'x-manual-chunk' in flow.response.headers:
+        if "x-manual-chunk" in flow.response.headers:
             # Remove the header and set the manual_chunk flag
-            del flow.response.headers['x-manual-chunk']
+            del flow.response.headers["x-manual-chunk"]
             flow.response.manual_chunk = True
 
 
