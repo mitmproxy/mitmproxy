@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
@@ -13,6 +13,7 @@ import CodeEditor from "./CodeEditor";
 import ContentRenderer from "./ContentRenderer";
 import ViewSelector from "./ViewSelector";
 import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
+import ContentEditor from "./ContentEditor";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -20,24 +21,7 @@ type HttpMessageProps = {
 };
 
 export default function HttpMessage({ flow, message }: HttpMessageProps) {
-    const [isEdited, setIsEdited] = useState<boolean>(false);
-    if (isEdited) {
-        return (
-            <HttpMessageEdit
-                flow={flow}
-                message={message}
-                stopEdit={() => setIsEdited(false)}
-            />
-        );
-    } else {
-        return (
-            <HttpMessageView
-                flow={flow}
-                message={message}
-                startEdit={() => setIsEdited(true)}
-            />
-        );
-    }
+    return <HttpMessageView flow={flow} message={message} />;
 }
 
 type HttpMessageEditProps = {
@@ -93,29 +77,31 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
 type HttpMessageViewProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
-    startEdit: () => void;
 };
 
-function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
+function HttpMessageView({ flow, message }: HttpMessageViewProps) {
     const dispatch = useAppDispatch();
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
         (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
     );
+    const [editedContent, setEditedContent] = useState<string>();
+    const [shouldSave, setShouldSave] = useState(false);
 
+    /*
     const [maxLines, setMaxLines] = useState<number>(
         useAppSelector((state) => state.options.content_view_lines_cutoff),
     );
     const showMore = useCallback(
         () => setMaxLines(Math.max(1024, maxLines * 2)),
         [maxLines],
-    );
+    );*/
 
     const contentViewData = useContentView(
         flow,
         message,
         contentView,
-        maxLines + 1,
+        undefined,
         message.contentHash,
     );
 
@@ -129,17 +115,64 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
             `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
     }
 
+    useEffect(() => {
+        console.log(editedContent)
+        setShouldSave(editedContent !== contentViewData?.text);
+    }, [editedContent]);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+            const isSaveCombo =
+                (isMac && event.metaKey && event.key === "s") ||
+                (!isMac && event.ctrlKey && event.key === "s");
+
+            if (isSaveCombo) {
+                event.preventDefault();
+                saveContent();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    const saveContent = async () => {
+        console.log(editedContent)
+        await dispatch(
+            flowActions.update(flow, {
+                [part]: {
+                    content: editedContent || contentViewData?.text || "",
+                },
+            }),
+        ).then(() => setShouldSave(false));
+    };
+
     return (
         <div className="contentview" key="view">
             <div className="controls">
-                <h5>{desc}</h5>
+                <div>
+                    <h5>{desc}</h5>
+                    {shouldSave && (
+                        <i className="fa fa-circle" aria-hidden="true"></i>
+                    )}
+                </div>
+                {shouldSave && (
+                    <Button
+                        onClick={saveContent}
+                        icon="fa-floppy-o"
+                        className="btn-xs"
+                    >
+                        Save
+                    </Button>
+                )}
+                &nbsp;
                 {contentViewData && contentViewData?.text.length > 0 && (
                     <CopyButton flow={flow} message={message} />
                 )}
-                &nbsp;
-                <Button onClick={startEdit} icon="fa-edit" className="btn-xs">
-                    Edit
-                </Button>
                 &nbsp;
                 <FileChooser
                     icon="fa-upload"
@@ -166,11 +199,16 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
             {ViewImage.matches(message) && (
                 <ViewImage flow={flow} message={message} />
             )}
-            <ContentRenderer
+            <ContentEditor
+                content={contentViewData?.text ?? ""}
+                language={contentViewData?.syntax_highlight}
+                onChange={(content) => setEditedContent(content)}
+            />
+            {/*<ContentRenderer
                 content={contentViewData?.text ?? ""}
                 maxLines={maxLines}
                 showMore={showMore}
-            />
+            />*/}
         </div>
     );
 }
