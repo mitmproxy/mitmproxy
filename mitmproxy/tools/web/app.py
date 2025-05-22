@@ -213,9 +213,6 @@ class APIError(tornado.web.HTTPError):
 
 
 class AuthRequestHandler(tornado.web.RequestHandler):
-    # mypy: override to access .master
-    application: Application
-
     AUTH_COOKIE_VALUE = b"y"
 
     def __init_subclass__(cls, **kwargs):
@@ -225,10 +222,6 @@ class AuthRequestHandler(tornado.web.RequestHandler):
             fn = getattr(cls, method)
             if fn is not tornado.web.RequestHandler._unimplemented_method:
                 setattr(cls, method, AuthRequestHandler._require_auth(fn))
-
-    @staticmethod
-    def auth_cookie_name(port: int) -> str:
-        return f"mitmproxy-auth-{port}"
 
     def auth_fail(self, invalid_password: bool) -> None:
         """
@@ -259,9 +252,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
                     self.auth_fail(bool(password))
                     return None
                 self.set_signed_cookie(
-                    AuthRequestHandler.auth_cookie_name(
-                        self.application.master.options.web_port
-                    ),
+                    self.settings["auth_cookie_name"],
                     self.AUTH_COOKIE_VALUE,
                     expires_days=400,
                     httponly=True,
@@ -272,11 +263,8 @@ class AuthRequestHandler(tornado.web.RequestHandler):
         return wrapper
 
     def get_current_user(self) -> bool:
-        cookie_name = AuthRequestHandler.auth_cookie_name(
-            self.application.master.options.web_port
-        )
         return (
-            self.get_signed_cookie(cookie_name, min_version=2) == self.AUTH_COOKIE_VALUE
+            self.get_signed_cookie(self.settings["auth_cookie_name"], min_version=2) == self.AUTH_COOKIE_VALUE
         )
 
 
@@ -852,4 +840,5 @@ class Application(tornado.web.Application):
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
             is_valid_password=auth_addon.is_valid_password,
+            auth_cookie_name=f"mitmproxy-auth-{master.options.web_port}",
         )

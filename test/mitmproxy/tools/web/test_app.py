@@ -81,15 +81,12 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @property
     def auth_cookie(self) -> str:
-        cookie_name = f"mitmproxy-auth-{self.master.options.web_port}"
-        cookie_value = b"y"
-
         auth_cookie = create_signed_value(
             secret=self._app.settings["cookie_secret"],
-            name=cookie_name,
-            value=cookie_value,
+            name=self._app.settings["auth_cookie_name"],
+            value=app.AuthRequestHandler.AUTH_COOKIE_VALUE,
         ).decode()
-        return f"{cookie_name}={auth_cookie}"
+        return f"{self._app.settings["auth_cookie_name"]}={auth_cookie}"
 
     def fetch(self, *args, **kwargs) -> httpclient.HTTPResponse:
         kwargs.setdefault("headers", {}).setdefault("Cookie", self.auth_cookie)
