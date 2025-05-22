@@ -172,7 +172,7 @@ describe("flow reducer", () => {
                     },
                 }),
             );
-            expect(s.highlighted).toContain("1");
+            expect(s.highlightedIds).toContain("1");
             s = reduceFlows(
                 undefined,
                 flowActions.FLOWS_ADD({
@@ -182,7 +182,7 @@ describe("flow reducer", () => {
                     },
                 }),
             );
-            expect(s.highlighted).not.toContain("1");
+            expect(s.highlightedIds).not.toContain("1");
             s = reduceFlows(
                 undefined,
                 flowActions.FLOWS_ADD({
@@ -190,7 +190,7 @@ describe("flow reducer", () => {
                     matching_filters: {},
                 }),
             );
-            expect(s.highlighted).not.toContain("1");
+            expect(s.highlightedIds).not.toContain("1");
         });
         it("should update highlight state", () => {
             let s = reduceFlows(
@@ -202,7 +202,7 @@ describe("flow reducer", () => {
                     },
                 }),
             );
-            expect(s.highlighted).toContain("1");
+            expect(s.highlightedIds).toContain("1");
             s = reduceFlows(
                 state,
                 flowActions.FLOWS_UPDATE({
@@ -210,14 +210,14 @@ describe("flow reducer", () => {
                     matching_filters: {},
                 }),
             );
-            expect(s.highlighted).not.toContain("1");
+            expect(s.highlightedIds).not.toContain("1");
         });
         it("should discard removed flows from highlight", () => {
             let s = reduceFlows(
                 alreadyHighlighted,
                 flowActions.FLOWS_REMOVE("1"),
             );
-            expect(s.highlighted).not.toContain("1");
+            expect(s.highlightedIds).not.toContain("1");
         });
         it("should update highlight filters", () => {
             let s = reduceFlows(
@@ -227,7 +227,7 @@ describe("flow reducer", () => {
                     matching_flow_ids: ["2", "3"],
                 }),
             );
-            expect(s.highlighted).toEqual(new Set(["2", "3"]));
+            expect(s.highlightedIds).toEqual(new Set(["2", "3"]));
         });
     });
 

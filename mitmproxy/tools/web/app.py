@@ -442,7 +442,7 @@ class ClientConnection(WebSocketEventBroadcaster):
 
     def _broadcast_flow(
         self,
-        type: str,
+        type: Literal["flows/add", "flows/update"],
         f: mitmproxy.flow.Flow,
         flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
     ) -> None:

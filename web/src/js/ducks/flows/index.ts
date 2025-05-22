@@ -47,7 +47,7 @@ export interface FlowsState {
     sort: { column?: keyof typeof sortFunctions; desc: boolean };
     selected: Flow[];
     selectedIds: Set<string>;
-    highlighted: Set<string>;
+    highlightedIds: Set<string>;
 }
 
 export const defaultState: FlowsState = {
@@ -60,7 +60,7 @@ export const defaultState: FlowsState = {
     sort: { column: undefined, desc: false },
     selected: [],
     selectedIds: new Set(),
-    highlighted: new Set(),
+    highlightedIds: new Set(),
 };
 
 // This is a manual reducer as RTK's createSlice always uses Immer, which is orders of magnitude slower.
@@ -80,7 +80,7 @@ export default function flowsReducer(
             .map((flow) => byId.get(flow.id))
             .filter((f) => f !== undefined);
         const selectedIds = buildLookup(selected);
-        const highlighted = new Set<string>();
+        const highlightedIds = new Set<string>();
 
         return {
             list,
@@ -91,19 +91,19 @@ export default function flowsReducer(
             sort,
             selected,
             selectedIds,
-            highlighted,
+            highlightedIds,
         };
     } else if (FLOWS_ADD.match(action)) {
         const { flow, matching_filters } = action.payload;
         const { sort, selected, selectedIds } = state;
-        let { view, _viewIndex, highlighted } = state;
+        let { view, _viewIndex, highlightedIds } = state;
         // Update list
         const _listIndex = new Map(state._listIndex);
         _listIndex.set(flow.id, state.list.length);
         const list = [...state.list, flow];
         const byId = new Map(state.byId);
         byId.set(flow.id, flow);
-        // Update view
+        // Update view if filter matches (true) or is unset (undefined).
         if (
             matching_filters[FilterName.Search] === true ||
             matching_filters[FilterName.Search] === undefined
@@ -117,8 +117,8 @@ export default function flowsReducer(
         }
         // Update highlight
         if (matching_filters[FilterName.Highlight] === true) {
-            highlighted = new Set(highlighted);
-            highlighted.add(flow.id);
+            highlightedIds = new Set(highlightedIds);
+            highlightedIds.add(flow.id);
         }
 
         return {
@@ -130,12 +130,12 @@ export default function flowsReducer(
             sort,
             selected,
             selectedIds,
-            highlighted,
+            highlightedIds,
         };
     } else if (FLOWS_UPDATE.match(action)) {
         const { flow, matching_filters } = action.payload;
         const { _listIndex, sort, selectedIds } = state;
-        let { view, _viewIndex, selected, highlighted } = state;
+        let { view, _viewIndex, selected, highlightedIds } = state;
         // Update list
         const listPos = state._listIndex.get(flow.id)!;
         const list = [...state.list];
@@ -176,13 +176,13 @@ export default function flowsReducer(
             );
         }
         // Update highlight
-        if (matching_filters[FilterName.Highlight]) {
-            if (!highlighted.has(flow.id)) {
-                highlighted = new Set(highlighted);
-                highlighted.add(flow.id);
+        if (matching_filters[FilterName.Highlight] === true) {
+            if (!highlightedIds.has(flow.id)) {
+                highlightedIds = new Set(highlightedIds);
+                highlightedIds.add(flow.id);
             }
         } else {
-            highlighted = withElemRemoved(highlighted, flow.id);
+            highlightedIds = withElemRemoved(highlightedIds, flow.id);
         }
 
         return {
@@ -194,7 +194,7 @@ export default function flowsReducer(
             sort,
             selected,
             selectedIds,
-            highlighted,
+            highlightedIds,
         };
     } else if (FLOWS_REMOVE.match(action)) {
         const flow_id = action.payload;
@@ -227,7 +227,7 @@ export default function flowsReducer(
             selectedIds = buildLookup(selected);
         }
         // Update highlight
-        const highlighted = withElemRemoved(state.highlighted, flow_id);
+        const highlightedIds = withElemRemoved(state.highlightedIds, flow_id);
 
         return {
             list,
@@ -238,7 +238,7 @@ export default function flowsReducer(
             sort,
             selected,
             selectedIds,
-            highlighted,
+            highlightedIds,
         };
     } else if (FLOWS_FILTER_UPDATE.match(action)) {
         const { name, matching_flow_ids } = action.payload;
@@ -259,7 +259,7 @@ export default function flowsReducer(
             case FilterName.Highlight:
                 return {
                     ...state,
-                    highlighted: new Set(matching_flow_ids),
+                    highlightedIds: new Set(matching_flow_ids),
                 };
             /* istanbul ignore next @preserve */
             default:

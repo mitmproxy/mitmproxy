@@ -4,7 +4,7 @@ import * as flowsActions from "../../ducks/flows";
 import Button from "../common/Button";
 import { update as updateOptions } from "../../ducks/options";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { setFilter, setHighlight } from "../../ducks/ui/filter";
+import { FilterName, setFilter, setHighlight } from "../../ducks/ui/filter";
 
 FlowListMenu.title = "Flow List";
 
@@ -46,7 +46,7 @@ function InterceptInput() {
 
 function FlowFilterInput() {
     const dispatch = useAppDispatch();
-    const value = useAppSelector((state) => state.ui.filter.search);
+    const value = useAppSelector((state) => state.ui.filter[FilterName.Search]);
     return (
         <FilterInput
             value={value}
@@ -60,7 +60,9 @@ function FlowFilterInput() {
 
 function HighlightInput() {
     const dispatch = useAppDispatch();
-    const value = useAppSelector((state) => state.ui.filter.highlight);
+    const value = useAppSelector(
+        (state) => state.ui.filter[FilterName.Highlight],
+    );
     return (
         <FilterInput
             value={value}

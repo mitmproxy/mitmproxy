@@ -110,7 +110,7 @@ export const testState: RootState = {
             [tflow3.id, 2],
             [tflow4.id, 3],
         ]),
-        highlighted: new Set([tflow1.id]),
+        highlightedIds: new Set([tflow1.id]),
     },
     connection: {
         state: ConnectionState.ESTABLISHED,
