@@ -264,7 +264,8 @@ class AuthRequestHandler(tornado.web.RequestHandler):
 
     def get_current_user(self) -> bool:
         return (
-            self.get_signed_cookie(self.settings["auth_cookie_name"], min_version=2) == self.AUTH_COOKIE_VALUE
+            self.get_signed_cookie(self.settings["auth_cookie_name"], min_version=2)
+            == self.AUTH_COOKIE_VALUE
         )
 
 
