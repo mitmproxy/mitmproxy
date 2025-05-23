@@ -16,7 +16,7 @@ export function toSpliced<T>(
     if (data.toSpliced) {
         return data.toSpliced(...args);
     } else {
-        let ret = [...data];
+        const ret = [...data];
         ret.splice(...args);
         return ret;
     }
