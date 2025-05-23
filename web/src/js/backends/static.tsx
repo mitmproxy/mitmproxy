@@ -50,6 +50,4 @@ export default class StaticBackend {
                 assertNever(resource);
         }
     }
-
-    updateFilter(_name: string, _expr: string) {}
 }

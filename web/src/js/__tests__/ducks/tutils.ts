@@ -1,6 +1,6 @@
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
-import { RootState } from "../../ducks";
+import { RootState, RootStore } from "../../ducks";
 import { middlewares, reducer } from "../../ducks/store";
 import { DNSFlow, Flow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
@@ -210,9 +210,12 @@ export const testState: RootState = {
     },
 };
 
-export const TStore = () =>
-    configureStore({
+export function TStore(
+    preloadedState: RootState | null = testState,
+): RootStore {
+    return configureStore({
         reducer,
-        preloadedState: testState,
+        preloadedState: preloadedState ?? undefined,
         middleware: (getDefaultMiddleware) => getDefaultMiddleware(middlewares),
     });
+}

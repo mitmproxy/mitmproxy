@@ -12,7 +12,9 @@ import {
 import { OPTIONS_RECEIVE } from "../../ducks/options";
 import { FLOWS_RECEIVE } from "../../ducks/flows";
 import { STATE_RECEIVE } from "../../ducks/backendState";
-import { FilterName } from "../../ducks/ui/filter";
+import { setFilter } from "../../ducks/ui/filter";
+import { TStore } from "../ducks/tutils";
+import { ConnectionState } from "../../ducks/connection";
 
 beforeEach(() => {
     fetchMock.enableMocks();
@@ -42,10 +44,8 @@ describe("websocket backend", () => {
         fetchMock.mockOnceIf("./events", () => events);
         fetchMock.mockOnceIf("./options", never);
 
-        const actions: Array<UnknownAction> = [];
-        const backend = new WebSocketBackend({
-            dispatch: (e) => actions.push(e),
-        });
+        const store = TStore(null);
+        const backend = new WebSocketBackend(store);
 
         backend.sendMessage({
             type: "unknown",
@@ -55,6 +55,9 @@ describe("websocket backend", () => {
         // @ts-expect-error jest mock stuff
         backend.socket.readyState = WebSocket.OPEN;
         backend.onOpen();
+        expect(store.getState().connection.state).toEqual(
+            ConnectionState.FETCHING,
+        );
         expect(backend.messageQueue.length).toBe(0);
 
         backend.sendMessage({
@@ -73,14 +76,12 @@ describe("websocket backend", () => {
             payload,
         });
 
-        expect(actions).toEqual([connectionActions.startFetching()]);
-        actions.length = 0;
+        expect(store.getState().eventLog.list.length).toBe(0);
 
         resolve("[]");
         await waitFor(() =>
-            expect(actions).toEqual([EVENTS_RECEIVE([]), EVENTS_ADD(payload)]),
+            expect(store.getState().eventLog.list.length).toBe(1),
         );
-        actions.length = 0;
     });
 
     test("basic", async () => {
@@ -92,6 +93,7 @@ describe("websocket backend", () => {
         const actions: Array<UnknownAction> = [];
         const backend = new WebSocketBackend({
             dispatch: (e) => actions.push(e),
+            subscribe: () => {},
         });
 
         backend.onOpen();
@@ -152,7 +154,10 @@ describe("websocket backend", () => {
         fetchMock.mockOnceIf("./flows", "[]");
         fetchMock.mockOnceIf("./events", "[]");
         // Not useful, only for coverage
-        const backend = new WebSocketBackend({ dispatch: () => {} });
+        const backend = new WebSocketBackend({
+            dispatch: () => {},
+            subscribe: () => {},
+        });
         backend.onMessage({ type: "flows/add" });
         backend.onMessage({ type: "flows/update" });
         backend.onMessage({ type: "flows/remove" });
@@ -165,9 +170,15 @@ describe("websocket backend", () => {
         expect(fetchMock.mock.calls.length).toBe(2);
     });
 
-    test("sendMessage wrappers", () => {
-        const backend = new WebSocketBackend({ dispatch: () => {} });
-        backend.updateFilter(FilterName.Search, "foo");
-        expect(backend.messageQueue.length).toBe(1);
+    test("filter updates", () => {
+        const store = TStore(null);
+        const backend = new WebSocketBackend(store);
+        store.dispatch(setFilter("foo"));
+        expect(backend.messageQueue).toEqual([
+            {
+                type: "flows/updateFilter",
+                payload: { expr: "foo", name: "search" },
+            },
+        ]);
     });
 });

@@ -5,19 +5,19 @@ export enum FilterName {
     Highlight = "highlight",
 }
 
+export const initialState: Record<FilterName, string> = {
+    [FilterName.Search]: "",
+    [FilterName.Highlight]: "",
+};
+
 const filtersSlice = createSlice({
     name: "ui/filters",
-    initialState: {
-        [FilterName.Search]: "",
-        [FilterName.Highlight]: "",
-    },
+    initialState,
     reducers: {
         setFilter(state, action: PayloadAction<string>) {
-            window.backend.updateFilter(FilterName.Search, action.payload);
             state[FilterName.Search] = action.payload;
         },
         setHighlight(state, action: PayloadAction<string>) {
-            window.backend.updateFilter(FilterName.Highlight, action.payload);
             state[FilterName.Highlight] = action.payload;
         },
     },

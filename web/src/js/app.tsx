@@ -13,14 +13,14 @@ import { store } from "./ducks";
 declare global {
     interface Window {
         MITMWEB_STATIC?: boolean;
-        backend: WebSocketBackend | StaticBackend;
     }
 }
 
-// we should set the window.backend variable before 'useUrlState(store)' otherwise window.backend is undefined when refreshing the page or changing the url
 if (window.MITMWEB_STATIC) {
+    // @ts-expect-error this is not declared above as it should not be used.
     window.backend = new StaticBackend(store);
 } else {
+    // @ts-expect-error this is not declared above as it should not be used.
     window.backend = new WebSocketBackend(store);
 }
 

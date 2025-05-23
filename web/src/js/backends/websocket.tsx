@@ -18,7 +18,10 @@ import {
     FLOWS_UPDATE,
 } from "../ducks/flows";
 import { Action, PayloadAction } from "@reduxjs/toolkit";
-import { type FilterName } from "../ducks/ui/filter";
+import {
+    FilterName,
+    initialState as initialFilterState,
+} from "../ducks/ui/filter";
 
 export enum Resource {
     State = "state",
@@ -42,14 +45,17 @@ type WebsocketMessageType =
 export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
+    filterState: typeof initialFilterState;
     socket: WebSocket;
     messageQueue: Action[];
 
     constructor(store) {
         this.activeFetches = {};
         this.store = store;
+        this.filterState = initialFilterState;
         this.messageQueue = [];
         this.connect();
+        this.store.subscribe(this.onStoreUpdate.bind(this));
     }
 
     connect() {
@@ -76,7 +82,27 @@ export default class WebsocketBackend {
         this.fetchData(Resource.Flows);
         this.fetchData(Resource.Events);
         this.fetchData(Resource.Options);
+        // useful side effect: onStoreUpdate will be called
         this.store.dispatch(connectionActions.startFetching());
+    }
+
+    onStoreUpdate() {
+        const storeFilterState = this.store.getState().ui.filter;
+        if (storeFilterState === this.filterState) {
+            return;
+        }
+        for (const name of Object.values(FilterName)) {
+            if (this.filterState[name] !== storeFilterState[name]) {
+                this.sendMessage({
+                    type: "flows/updateFilter",
+                    payload: {
+                        name,
+                        expr: storeFilterState[name],
+                    },
+                });
+            }
+        }
+        this.filterState = storeFilterState;
     }
 
     fetchData(resource: Resource) {
@@ -136,16 +162,6 @@ export default class WebsocketBackend {
             default:
                 assertNever(msg.type);
         }
-    }
-
-    updateFilter(name: FilterName, expr: string) {
-        this.sendMessage({
-            type: "flows/updateFilter",
-            payload: {
-                name,
-                expr,
-            },
-        });
     }
 
     sendMessage(action: PayloadAction<any>) {
