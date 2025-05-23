@@ -123,6 +123,18 @@ test("updateViewItem", () => {
             ["b", 2],
         ]),
     });
+    expect(updateViewItem(v, idx, { id: "c", w: 0 }, sort)).toEqual({
+        view: [
+            { id: "c", w: 0 },
+            { id: "a", w: 1 },
+            { id: "b", w: 2 },
+        ],
+        _viewIndex: new Map([
+            ["c", 0],
+            ["a", 1],
+            ["b", 2],
+        ]),
+    });
 });
 
 test("insertViewItem", () => {

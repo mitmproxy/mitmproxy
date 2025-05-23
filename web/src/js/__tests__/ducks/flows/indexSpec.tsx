@@ -1,7 +1,7 @@
 import reduceFlows, * as flowActions from "../../../ducks/flows";
+import { defaultState } from "../../../ducks/flows";
 import { testState, TFlow, TStore } from "../tutils";
 import FlowColumns from "../../../components/FlowTable/FlowColumns";
-import { defaultState } from "../../../ducks/flows";
 import { FilterName } from "../../../ducks/ui/filter";
 
 describe("flow reducer", () => {
@@ -91,6 +91,16 @@ describe("flow reducer", () => {
 
             store.dispatch(flowActions.selectRange(tflow3));
             expect(store.getState().flows.selected).toEqual([tflow3, tflow2]);
+
+            // selection is not in view?
+            store.dispatch(
+                flowActions.FLOWS_FILTER_UPDATE({
+                    name: FilterName.Search,
+                    matching_flow_ids: [tflow1.id],
+                }),
+            );
+            store.dispatch(flowActions.selectRange(tflow1));
+            expect(store.getState().flows.selected).toEqual([tflow1]);
         });
 
         it("should select next row on remove", () => {
