@@ -13,15 +13,16 @@ import flowReducer, {
 
 // Increase for manual testing
 const N = 10;
+const LOG = false;
 
 test("receive", () => {
     const flows = new Array(N)
         .fill(undefined)
         .map(() => ({ ...TFlow(), id: Math.random().toString() }));
 
-    console.time(`receive ${N} flows`);
+    if (LOG) console.time(`receive ${N} flows`);
     let state = flowReducer(defaultState, FLOWS_RECEIVE(flows));
-    console.timeEnd(`receive ${N} flows`);
+    if (LOG) console.timeEnd(`receive ${N} flows`);
     expect(state.view.length).toBe(N);
 });
 
@@ -34,10 +35,10 @@ test("add", () => {
     );
 
     let state = defaultState;
-    console.time(`add ${N} flows`);
+    if (LOG) console.time(`add ${N} flows`);
     for (const action of actions) {
         state = flowReducer(state, action);
     }
-    console.timeEnd(`add ${N} flows`);
+    if (LOG) console.timeEnd(`add ${N} flows`);
     expect(state.view.length).toBe(N);
 });

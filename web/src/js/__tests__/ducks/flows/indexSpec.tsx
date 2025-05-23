@@ -274,7 +274,7 @@ describe("flow reducer", () => {
             );
             expect(s.view).toContain(f1);
             s = reduceFlows(
-                state,
+                s,
                 flowActions.FLOWS_UPDATE({
                     flow: f1,
                     matching_filters: {
@@ -284,7 +284,7 @@ describe("flow reducer", () => {
             );
             expect(s.view).not.toContain(f1);
             s = reduceFlows(
-                state,
+                s,
                 flowActions.FLOWS_UPDATE({
                     flow: f1,
                     matching_filters: {},
@@ -339,7 +339,7 @@ test("makeSort", () => {
     a.request.method = "POST";
     a.request.path = "/foo";
     a.response.contentLength = 42;
-    a.response.status_code = 418;
+    a.response.status_code = 101;
 
     Object.keys(FlowColumns).forEach((column, i) => {
         // @ts-expect-error jest is funky about type annotations here.

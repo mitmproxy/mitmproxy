@@ -39,10 +39,12 @@ export default class StaticBackend {
             case Resource.Options:
                 this.store.dispatch(OPTIONS_RECEIVE(data));
                 break;
-
+            /* istanbul ignore next @preserve */
             case Resource.State:
+                throw "unreachable";
+            /* istanbul ignore next @preserve */
             case Resource.Events:
-                break;
+                throw "unreachable";
             /* istanbul ignore next @preserve */
             default:
                 assertNever(resource);
