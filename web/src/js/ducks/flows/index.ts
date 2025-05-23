@@ -13,6 +13,7 @@ import {
     updateViewItem,
     withElemRemoved,
 } from "./_utils";
+import { toSorted, toSpliced } from "./_compat";
 
 export * from "./_backend_actions";
 
@@ -74,7 +75,7 @@ export default function flowsReducer(
         const _listIndex = buildIndex(list);
         const byId = new Map(list.map((f) => [f.id, f]));
         // No filter information yet, we expect that to come immediately after.
-        const view = list.toSorted(makeSort(sort));
+        const view = toSorted(list, makeSort(sort));
         const _viewIndex = buildIndex(view);
         const selected = state.selected
             .map((flow) => byId.get(flow.id))
@@ -201,7 +202,7 @@ export default function flowsReducer(
         const { sort } = state;
         let { view, _viewIndex, selected, selectedIds } = state;
         const listPos = state._listIndex.get(flow_id)!;
-        const list = state.list.toSpliced(listPos, 1);
+        const list = toSpliced(state.list, listPos, 1);
         const _listIndex = buildIndex(list);
         const byId = new Map(state.byId);
         byId.delete(flow_id);
@@ -244,11 +245,12 @@ export default function flowsReducer(
         const { name, matching_flow_ids } = action.payload;
         switch (name) {
             case FilterName.Search: {
-                const view = (
+                const view = toSorted(
                     matching_flow_ids === null
                         ? state.list
-                        : matching_flow_ids.map((id) => state.byId.get(id)!)
-                ).toSorted(makeSort(state.sort));
+                        : matching_flow_ids.map((id) => state.byId.get(id)!),
+                    makeSort(state.sort),
+                );
                 const _viewIndex = buildIndex(view);
                 return {
                     ...state,
@@ -269,7 +271,7 @@ export default function flowsReducer(
         const sort = action.payload;
         let view: Flow[];
         if (sort.column) {
-            view = state.view.toSorted(makeSort(sort));
+            view = toSorted(state.view, makeSort(sort));
         } else {
             // Restore original order if column isn't specified.
             view = state.list.filter((f) => state._viewIndex.has(f.id));

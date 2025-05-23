@@ -1,4 +1,5 @@
 import { Comparer } from "@reduxjs/toolkit";
+import { toSpliced } from "./_compat";
 
 type Item = { id: string };
 
@@ -24,7 +25,7 @@ export function removeViewItemAt<T extends Item>(
     pos: number,
 ): { view: T[]; _viewIndex: Map<string, number> } {
     // update data
-    const view = prevView.toSpliced(pos, 1);
+    const view = toSpliced(prevView, pos, 1);
 
     // update index
     const _viewIndex = new Map(prevViewIndex);
@@ -83,7 +84,7 @@ export function insertViewItem<T extends Item>(
 ): { view: T[]; _viewIndex: Map<string, number> } {
     const pos = findInsertPos(prevView, item, sort);
 
-    const view = prevView.toSpliced(pos, 0, item);
+    const view = toSpliced(prevView, pos, 0, item);
 
     const _viewIndex = new Map(prevViewIndex);
     for (let i = view.length - 1; i >= pos; i--) {
