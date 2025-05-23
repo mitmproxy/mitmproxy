@@ -2,9 +2,12 @@
  * This backend uses the REST API only to host static instances,
  * without any Websocket connection.
  */
-import { fetchApi } from "../utils";
+import {assertNever, fetchApi} from "../utils";
 import { Store } from "redux";
 import { RootState } from "../ducks";
+import {OPTIONS_RECEIVE} from "../ducks/options";
+import {FLOWS_RECEIVE} from "../ducks/flows";
+import {Resource} from "./websocket";
 
 export default class StaticBackend {
     store: Store<RootState>;
@@ -28,9 +31,22 @@ export default class StaticBackend {
             });
     }
 
-    receive(resource, data) {
-        const type = `${resource}_RECEIVE`.toUpperCase();
-        this.store.dispatch({ type, cmd: "receive", resource, payload: data });
+    receive(resource: Resource, data) {
+        switch (resource) {
+            case Resource.Flows:
+                this.store.dispatch(FLOWS_RECEIVE(data));
+                break;
+            case Resource.Options:
+                this.store.dispatch(OPTIONS_RECEIVE(data));
+                break;
+
+            case Resource.State:
+            case Resource.Events:
+                break;
+            /* istanbul ignore next @preserve */
+            default:
+                assertNever(resource);
+        }
     }
 
     updateFilter(_name: string, _expr: string) {}
