@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import functools
 import hashlib
 import json
@@ -14,6 +15,7 @@ from io import BytesIO
 from typing import Any
 from typing import ClassVar
 from typing import Concatenate
+from typing import Literal
 
 import tornado.escape
 import tornado.web
@@ -374,38 +376,119 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestH
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
 
+    _send_queue: asyncio.Queue[bytes]
+    _send_task: asyncio.Task[None]
+
     def open(self, *args, **kwargs):
         self.connections.add(self)
+        self._send_queue = asyncio.Queue()
+        # Python 3.13+: use _send_queue.shutdown() and we can use keep_ref=True here.
+        self._send_task = asyncio_utils.create_task(
+            self.send_task(),
+            name="WebSocket send task",
+            keep_ref=False,
+        )
 
     def on_close(self):
         self.connections.discard(self)
-
-    @classmethod
-    def send(cls, conn: WebSocketEventBroadcaster, message: bytes) -> None:
-        async def wrapper():
-            try:
-                await conn.write_message(message)
-            except tornado.websocket.WebSocketClosedError:
-                cls.connections.discard(conn)
-
-        asyncio_utils.create_task(
-            wrapper(),
-            name="WebSocketEventBroadcaster",
-            keep_ref=True,
-        )
+        self._send_task.cancel()
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs, ensure_ascii=False).encode(
-            "utf8", "surrogateescape"
-        )
+        message = cls._json_dumps(kwargs)
+        for conn in cls.connections:
+            conn.send(message)
 
-        for conn in cls.connections.copy():
-            cls.send(conn, message)
+    def send(self, message: bytes):
+        self._send_queue.put_nowait(message)
+
+    async def send_task(self):
+        while True:
+            message = await self._send_queue.get()
+            try:
+                await self.write_message(message)
+            except tornado.websocket.WebSocketClosedError:
+                self.on_close()
+
+    @staticmethod
+    def _json_dumps(d):
+        return json.dumps(d, ensure_ascii=False).encode("utf8", "surrogateescape")
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections: ClassVar[set] = set()
+    connections: ClassVar[set[ClientConnection]] = set()  # type: ignore
+    application: Application
+
+    def __init__(self, application: Application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.filters: dict[str, flowfilter.TFilter] = {}  # filters per connection
+
+    @classmethod
+    def broadcast_flow_reset(cls) -> None:
+        for conn in cls.connections:
+            conn.send(cls._json_dumps({"type": "flows/reset"}))
+            for name, expr in conn.filters.copy().items():
+                conn.update_filter(name, expr.pattern)
+
+    @classmethod
+    def broadcast_flow(
+        cls,
+        type: Literal["flows/add", "flows/update"],
+        f: mitmproxy.flow.Flow,
+    ) -> None:
+        flow_json = flow_to_json(f)
+        for conn in cls.connections:
+            conn._broadcast_flow(type, f, flow_json)
+
+    def _broadcast_flow(
+        self,
+        type: Literal["flows/add", "flows/update"],
+        f: mitmproxy.flow.Flow,
+        flow_json: dict,  # Passing the flow_json dictionary to avoid recalculating it for each client
+    ) -> None:
+        filters = {name: bool(expr(f)) for name, expr in self.filters.items()}
+        message = self._json_dumps(
+            {
+                "type": type,
+                "payload": {
+                    "flow": flow_json,
+                    "matching_filters": filters,
+                },
+            },
+        )
+        self.send(message)
+
+    def update_filter(self, name: str, expr: str) -> None:
+        if expr:
+            filt = flowfilter.parse(expr)
+            self.filters[name] = filt
+            matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
+        else:
+            self.filters.pop(name, None)
+            matching_flow_ids = None
+
+        message = self._json_dumps(
+            {
+                "type": "flows/filterUpdate",
+                "payload": {
+                    "name": name,
+                    "matching_flow_ids": matching_flow_ids,
+                },
+            },
+        )
+        self.send(message=message)
+
+    async def on_message(self, message: str | bytes):
+        try:
+            data = json.loads(message)
+            match data["type"]:
+                case "flows/updateFilter":
+                    self.update_filter(data["payload"]["name"], data["payload"]["expr"])
+                case other:
+                    raise ValueError(f"Unsupported command: {other}")
+        except Exception as e:
+            logger.error(f"Error processing message from {self}: {e}")
+            self.close(code=1011, reason="Internal server error.")
 
 
 class Flows(RequestHandler):

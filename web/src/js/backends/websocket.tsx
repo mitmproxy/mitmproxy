@@ -12,11 +12,16 @@ import { EVENTS_ADD, EVENTS_RECEIVE } from "../ducks/eventLog";
 import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../ducks/options";
 import {
     FLOWS_ADD,
+    FLOWS_FILTER_UPDATE,
     FLOWS_RECEIVE,
     FLOWS_REMOVE,
     FLOWS_UPDATE,
 } from "../ducks/flows";
-import { Action } from "@reduxjs/toolkit";
+import { Action, PayloadAction } from "@reduxjs/toolkit";
+import {
+    FilterName,
+    initialState as initialFilterState,
+} from "../ducks/ui/filter";
 
 export enum Resource {
     State = "state",
@@ -29,6 +34,7 @@ export enum Resource {
 type WebsocketMessageType =
     | "flows/add"
     | "flows/update"
+    | "flows/filterUpdate"
     | "flows/remove"
     | "flows/reset"
     | "events/add"
@@ -39,14 +45,17 @@ type WebsocketMessageType =
 export default class WebsocketBackend {
     activeFetches: Partial<{ [key in Resource]: Array<Action> }>;
     store: Store<RootState>;
+    filterState: typeof initialFilterState;
     socket: WebSocket;
     messageQueue: Action[];
 
     constructor(store) {
         this.activeFetches = {};
         this.store = store;
+        this.filterState = initialFilterState;
         this.messageQueue = [];
         this.connect();
+        this.store.subscribe(this.onStoreUpdate.bind(this));
     }
 
     connect() {
@@ -64,6 +73,7 @@ export default class WebsocketBackend {
     }
 
     onOpen() {
+        // Send all queued messages.
         for (const message of this.messageQueue) {
             this.socket.send(JSON.stringify(message));
         }
@@ -72,7 +82,27 @@ export default class WebsocketBackend {
         this.fetchData(Resource.Flows);
         this.fetchData(Resource.Events);
         this.fetchData(Resource.Options);
+        // useful side effect: onStoreUpdate will be called
         this.store.dispatch(connectionActions.startFetching());
+    }
+
+    onStoreUpdate() {
+        const storeFilterState = this.store.getState().ui.filter;
+        if (storeFilterState === this.filterState) {
+            return;
+        }
+        for (const name of Object.values(FilterName)) {
+            if (this.filterState[name] !== storeFilterState[name]) {
+                this.sendMessage({
+                    type: "flows/updateFilter",
+                    payload: {
+                        name,
+                        expr: storeFilterState[name],
+                    },
+                });
+            }
+        }
+        this.filterState = storeFilterState;
     }
 
     fetchData(resource: Resource) {
@@ -98,6 +128,11 @@ export default class WebsocketBackend {
                 return this.queueOrDispatch(
                     Resource.Flows,
                     FLOWS_UPDATE(msg.payload),
+                );
+            case "flows/filterUpdate":
+                return this.queueOrDispatch(
+                    Resource.Flows,
+                    FLOWS_FILTER_UPDATE(msg.payload),
                 );
             case "flows/remove":
                 return this.queueOrDispatch(
@@ -129,7 +164,7 @@ export default class WebsocketBackend {
         }
     }
 
-    sendMessage(action: Action) {
+    sendMessage(action: PayloadAction<any>) {
         if (this.socket.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify(action));
         } else if (this.socket.readyState === WebSocket.CONNECTING) {

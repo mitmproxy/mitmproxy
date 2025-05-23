@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb now supports filtering by body contents (~b, ~bq, ~bs).
+  ([#7704](https://github.com/mitmproxy/mitmproxy/pull/7704), @lups2000, @mhils)
 - Fix raw response export incorrectly zeroing non-zero `Content-Length` header for HEAD requests.
   ([#7701](https://github.com/mitmproxy/mitmproxy/pull/7701), @sujaldev)
 

@@ -1,2 +1,2 @@
 export { useAppDispatch, useAppSelector } from "./hooks";
-export { RootState, AppDispatch, AppThunk, store } from "./store";
+export { RootState, RootStore, AppDispatch, AppThunk, store } from "./store";

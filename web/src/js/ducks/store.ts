@@ -26,13 +26,18 @@ export const reducer = {
     processes,
 };
 
+export const middlewares = {
+    immutableCheck: { warnAfter: 500_000 },
+    serializableCheck: { warnAfter: 500_000, ignoredPaths: ["flows"] },
+};
+
 export const store = configureStore({
     reducer,
-    middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({
-            immutableCheck: { warnAfter: 500_000 },
-            serializableCheck: { warnAfter: 500_000 },
-        }),
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware(middlewares),
+    devTools:
+        process.env.NODE_ENV !== "production"
+            ? { serialize: { options: { map: true } } }
+            : false,
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
