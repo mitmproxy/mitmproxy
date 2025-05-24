@@ -11,6 +11,8 @@
   ([#7704](https://github.com/mitmproxy/mitmproxy/pull/7704), @lups2000, @mhils)
 - Fix raw response export incorrectly zeroing non-zero `Content-Length` header for HEAD requests.
   ([#7701](https://github.com/mitmproxy/mitmproxy/pull/7701), @sujaldev)
+- Fix concurrent mitmweb instances overwrite each other's auth cookie.
+  ([#7690](https://github.com/mitmproxy/mitmproxy/pull/7690), @turboOrange)
 
 ## 06 May 2025: mitmproxy 12.0.1
 

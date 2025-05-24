@@ -83,10 +83,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def auth_cookie(self) -> str:
         auth_cookie = create_signed_value(
             secret=self._app.settings["cookie_secret"],
-            name=app.AuthRequestHandler.AUTH_COOKIE_NAME,
+            name=self._app.settings["auth_cookie_name"],
             value=app.AuthRequestHandler.AUTH_COOKIE_VALUE,
         ).decode()
-        return f"{app.AuthRequestHandler.AUTH_COOKIE_NAME}={auth_cookie}"
+        return f"{self._app.settings['auth_cookie_name']}={auth_cookie}"
 
     def fetch(self, *args, **kwargs) -> httpclient.HTTPResponse:
         kwargs.setdefault("headers", {}).setdefault("Cookie", self.auth_cookie)

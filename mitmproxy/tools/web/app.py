@@ -215,7 +215,6 @@ class APIError(tornado.web.HTTPError):
 
 
 class AuthRequestHandler(tornado.web.RequestHandler):
-    AUTH_COOKIE_NAME = "mitmproxy-auth"
     AUTH_COOKIE_VALUE = b"y"
 
     def __init_subclass__(cls, **kwargs):
@@ -255,7 +254,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
                     self.auth_fail(bool(password))
                     return None
                 self.set_signed_cookie(
-                    self.AUTH_COOKIE_NAME,
+                    self.settings["auth_cookie_name"],
                     self.AUTH_COOKIE_VALUE,
                     expires_days=400,
                     httponly=True,
@@ -267,7 +266,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
 
     def get_current_user(self) -> bool:
         return (
-            self.get_signed_cookie(self.AUTH_COOKIE_NAME, min_version=2)
+            self.get_signed_cookie(self.settings["auth_cookie_name"], min_version=2)
             == self.AUTH_COOKIE_VALUE
         )
 
@@ -925,4 +924,5 @@ class Application(tornado.web.Application):
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
             is_valid_password=auth_addon.is_valid_password,
+            auth_cookie_name=f"mitmproxy-auth-{master.options.web_port}",
         )
