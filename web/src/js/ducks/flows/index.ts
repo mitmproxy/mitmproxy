@@ -65,6 +65,12 @@ export const defaultState: FlowsState = {
 };
 
 // This is a manual reducer as RTK's createSlice always uses Immer, which is orders of magnitude slower.
+//
+// **WebSocket/HTTP race:**
+// After establishing a WebSocket connection with the backend, mitmweb will fetch the flow list over HTTP.
+// They are not sent over WebSocket for performance reasons. While flows are being fetched we buffer all events.
+// This is racy: We may see flows/add events for flows that are already in the view, or update/remove events
+// for flows that aren't known at all. The reducer needs to handle these cases gracefully.
 export default function flowsReducer(
     state = defaultState,
     action: UnknownAction,
@@ -96,6 +102,9 @@ export default function flowsReducer(
         };
     } else if (FLOWS_ADD.match(action)) {
         const { flow, matching_filters } = action.payload;
+        if (state._listIndex.has(flow.id)) {
+            return state;  // WebSocket/HTTP race
+        }
         const { sort, selected, selectedIds } = state;
         let { view, _viewIndex, highlightedIds } = state;
         // Update list
@@ -138,9 +147,15 @@ export default function flowsReducer(
         const { _listIndex, sort, selectedIds } = state;
         let { view, _viewIndex, selected, highlightedIds } = state;
         // Update list
-        const listPos = state._listIndex.get(flow.id)!;
+        const listPos = state._listIndex.get(flow.id);
         const list = [...state.list];
-        list[listPos] = flow;
+        if (listPos !== undefined) {
+            list[listPos] = flow;
+        } else {
+            // WebSocket/HTTP race. We could theoretically swallow this (expecting a flows/remove event still queued),
+            // but performance is not important here and adding the flow may generally be a bit more robust.
+            list.push(flow);
+        }
         const byId = new Map(state.byId);
         byId.set(flow.id, flow);
         // Update view
@@ -201,7 +216,10 @@ export default function flowsReducer(
         const flow_id = action.payload;
         const { sort } = state;
         let { view, _viewIndex, selected, selectedIds } = state;
-        const listPos = state._listIndex.get(flow_id)!;
+        const listPos = state._listIndex.get(flow_id);
+        if (listPos === undefined) {
+            return state;  // WebSocket/HTTP race
+        }
         const list = toSpliced(state.list, listPos, 1);
         const _listIndex = buildIndex(list);
         const byId = new Map(state.byId);
@@ -248,7 +266,10 @@ export default function flowsReducer(
                 const view = toSorted(
                     matching_flow_ids === null
                         ? state.list
-                        : matching_flow_ids.map((id) => state.byId.get(id)!),
+                        : matching_flow_ids
+                              .map((id) => state.byId.get(id))
+                              // WebSocket/HTTP race
+                              .filter((f) => f !== undefined),
                     makeSort(state.sort),
                 );
                 const _viewIndex = buildIndex(view);
