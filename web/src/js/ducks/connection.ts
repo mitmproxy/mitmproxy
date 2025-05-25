@@ -5,7 +5,6 @@ export enum ConnectionState {
     FETCHING = "CONNECTION_FETCHING", // WebSocket is established, but still fetching resources.
     ESTABLISHED = "CONNECTION_ESTABLISHED",
     ERROR = "CONNECTION_ERROR",
-    OFFLINE = "CONNECTION_OFFLINE", // indicates that there is no live (websocket) backend.
 }
 
 interface ConnState {
@@ -23,28 +22,22 @@ const connectionSlice = createSlice({
     initialState: defaultState,
     reducers: {
         startFetching: (state) => {
-            state.state = ConnectionState.FETCHING;
-            state.message = undefined;
+            if (state.state === ConnectionState.INIT) {
+                state.state = ConnectionState.FETCHING;
+            }
         },
-        connectionEstablished: (state) => {
-            state.state = ConnectionState.ESTABLISHED;
-            state.message = undefined;
+        finishFetching: (state) => {
+            if (state.state === ConnectionState.FETCHING) {
+                state.state = ConnectionState.ESTABLISHED;
+            }
         },
         connectionError: (state, action) => {
             state.state = ConnectionState.ERROR;
             state.message = action.payload;
         },
-        setOffline: (state) => {
-            state.state = ConnectionState.OFFLINE;
-            state.message = undefined;
-        },
     },
 });
 
-export const {
-    startFetching,
-    connectionEstablished,
-    connectionError,
-    setOffline,
-} = connectionSlice.actions;
+export const { startFetching, finishFetching, connectionError } =
+    connectionSlice.actions;
 export default connectionSlice.reducer;

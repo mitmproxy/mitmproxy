@@ -96,20 +96,18 @@ describe("websocket backend", () => {
             subscribe: () => {},
         });
 
-        backend.onOpen();
+        await backend.onOpen();
 
-        await waitFor(() =>
-            expect(actions).toEqual([
-                connectionActions.startFetching(),
-                // @ts-expect-error mocked
-                STATE_RECEIVE({}),
-                FLOWS_RECEIVE([]),
-                EVENTS_RECEIVE([]),
-                // @ts-expect-error mocked
-                OPTIONS_RECEIVE({}),
-                connectionActions.connectionEstablished(),
-            ]),
-        );
+        expect(actions).toEqual([
+            connectionActions.startFetching(),
+            // @ts-expect-error mocked
+            STATE_RECEIVE({}),
+            FLOWS_RECEIVE([]),
+            EVENTS_RECEIVE([]),
+            // @ts-expect-error mocked
+            OPTIONS_RECEIVE({}),
+            connectionActions.finishFetching(),
+        ]);
 
         actions.length = 0;
         backend.onMessage({
@@ -132,7 +130,6 @@ describe("websocket backend", () => {
         await waitFor(() =>
             expect(actions).toEqual([
                 EVENTS_RECEIVE([]),
-                connectionActions.connectionEstablished(),
             ]),
         );
         actions.length = 0;

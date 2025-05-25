@@ -3,9 +3,9 @@
 exports[`ConnectionIndicator 1`] = `
 <DocumentFragment>
   <span
-    class="connection-indicator established"
+    class="connection-indicator init"
   >
-    connected
+    connecting…
   </span>
 </DocumentFragment>
 `;
@@ -37,16 +37,6 @@ exports[`ConnectionIndicator 4`] = `
     title="wat"
   >
     connection lost
-  </span>
-</DocumentFragment>
-`;
-
-exports[`ConnectionIndicator 5`] = `
-<DocumentFragment>
-  <span
-    class="connection-indicator offline"
-  >
-    offline
   </span>
 </DocumentFragment>
 `;
