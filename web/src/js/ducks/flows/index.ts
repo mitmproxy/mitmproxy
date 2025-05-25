@@ -103,7 +103,7 @@ export default function flowsReducer(
     } else if (FLOWS_ADD.match(action)) {
         const { flow, matching_filters } = action.payload;
         if (state._listIndex.has(flow.id)) {
-            return state;  // WebSocket/HTTP race
+            return state; // WebSocket/HTTP race
         }
         const { sort, selected, selectedIds } = state;
         let { view, _viewIndex, highlightedIds } = state;
@@ -218,7 +218,7 @@ export default function flowsReducer(
         let { view, _viewIndex, selected, selectedIds } = state;
         const listPos = state._listIndex.get(flow_id);
         if (listPos === undefined) {
-            return state;  // WebSocket/HTTP race
+            return state; // WebSocket/HTTP race
         }
         const list = toSpliced(state.list, listPos, 1);
         const _listIndex = buildIndex(list);
