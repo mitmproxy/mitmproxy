@@ -127,11 +127,7 @@ describe("websocket backend", () => {
         backend.onMessage({
             type: "events/reset",
         });
-        await waitFor(() =>
-            expect(actions).toEqual([
-                EVENTS_RECEIVE([]),
-            ]),
-        );
+        await waitFor(() => expect(actions).toEqual([EVENTS_RECEIVE([])]));
         actions.length = 0;
         expect(fetchMock.mock.calls).toHaveLength(5);
 
