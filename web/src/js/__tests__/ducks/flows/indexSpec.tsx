@@ -27,6 +27,44 @@ describe("flow reducer", () => {
     );
     const [f0, f1, f2, f3, f4] = state.list;
 
+    describe("flow updates during fetch (WebSocket/HTTP race)", () => {
+        it("should handle flows/add for existing flows", () => {
+            expect(
+                reduceFlows(
+                    state,
+                    flowActions.FLOWS_ADD({ flow: f1, matching_filters: {} }),
+                ),
+            ).toEqual(state);
+        });
+        it("should handle flows/update for unknown flows", () => {
+            expect(
+                reduceFlows(
+                    state,
+                    flowActions.FLOWS_UPDATE({
+                        flow: { ...TFlow(), id: "5" },
+                        matching_filters: {},
+                    }),
+                ).byId.get("5"),
+            ).toBeTruthy();
+        });
+        it("should handle flows/remove for unknown flow", () => {
+            expect(
+                reduceFlows(state, flowActions.FLOWS_REMOVE("unknown-flow-id")),
+            ).toEqual(state);
+        });
+        it("should handle filter update for unknown flows", () => {
+            expect(
+                reduceFlows(
+                    state,
+                    flowActions.FLOWS_FILTER_UPDATE({
+                        name: FilterName.Search,
+                        matching_flow_ids: ["unknown-flow-id", "4"],
+                    }),
+                ).view,
+            ).toEqual([f4]);
+        });
+    });
+
     describe("selections", () => {
         const alreadySelected = reduceFlows(state, flowActions.select([f1]));
         expect(alreadySelected).not.toEqual(state);
@@ -125,7 +163,7 @@ describe("flow reducer", () => {
 
         it("should clear selection when last flow is removed", () => {
             s = reduceFlows(defaultState, flowActions.FLOWS_RECEIVE([f1]));
-            s = reduceFlows(defaultState, flowActions.select([f1]));
+            s = reduceFlows(s, flowActions.select([f1]));
             s = reduceFlows(s, flowActions.FLOWS_REMOVE("1"));
             expect(s.selected).toEqual([]);
         });

@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a race condition when updating the flow list in mitmweb.
+  ([#7729](https://github.com/mitmproxy/mitmproxy/pull/7729), @mhils)
 
 ## 24 May 2025: mitmproxy 12.1.0
 
