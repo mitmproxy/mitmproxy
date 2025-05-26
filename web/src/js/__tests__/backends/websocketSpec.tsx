@@ -96,20 +96,18 @@ describe("websocket backend", () => {
             subscribe: () => {},
         });
 
-        backend.onOpen();
+        await backend.onOpen();
 
-        await waitFor(() =>
-            expect(actions).toEqual([
-                connectionActions.startFetching(),
-                // @ts-expect-error mocked
-                STATE_RECEIVE({}),
-                FLOWS_RECEIVE([]),
-                EVENTS_RECEIVE([]),
-                // @ts-expect-error mocked
-                OPTIONS_RECEIVE({}),
-                connectionActions.connectionEstablished(),
-            ]),
-        );
+        expect(actions).toEqual([
+            connectionActions.startFetching(),
+            // @ts-expect-error mocked
+            STATE_RECEIVE({}),
+            FLOWS_RECEIVE([]),
+            EVENTS_RECEIVE([]),
+            // @ts-expect-error mocked
+            OPTIONS_RECEIVE({}),
+            connectionActions.finishFetching(),
+        ]);
 
         actions.length = 0;
         backend.onMessage({
@@ -129,12 +127,7 @@ describe("websocket backend", () => {
         backend.onMessage({
             type: "events/reset",
         });
-        await waitFor(() =>
-            expect(actions).toEqual([
-                EVENTS_RECEIVE([]),
-                connectionActions.connectionEstablished(),
-            ]),
-        );
+        await waitFor(() => expect(actions).toEqual([EVENTS_RECEIVE([])]));
         actions.length = 0;
         expect(fetchMock.mock.calls).toHaveLength(5);
 

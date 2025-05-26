@@ -72,18 +72,21 @@ export default class WebsocketBackend {
         this.socket.addEventListener("error", (error) => this.onError(error));
     }
 
-    onOpen() {
+    async onOpen() {
         // Send all queued messages.
         for (const message of this.messageQueue) {
             this.socket.send(JSON.stringify(message));
         }
         this.messageQueue = [];
-        this.fetchData(Resource.State);
-        this.fetchData(Resource.Flows);
-        this.fetchData(Resource.Events);
-        this.fetchData(Resource.Options);
         // useful side effect: onStoreUpdate will be called
         this.store.dispatch(connectionActions.startFetching());
+        await Promise.all([
+            this.fetchData(Resource.State),
+            this.fetchData(Resource.Flows),
+            this.fetchData(Resource.Events),
+            this.fetchData(Resource.Options),
+        ]);
+        this.store.dispatch(connectionActions.finishFetching());
     }
 
     onStoreUpdate() {
@@ -108,7 +111,7 @@ export default class WebsocketBackend {
     fetchData(resource: Resource) {
         const queue: Array<Action> = [];
         this.activeFetches[resource] = queue;
-        fetchApi(`./${resource}`)
+        return fetchApi(`./${resource}`)
             .then((res) => res.json())
             .then((json) => {
                 // Make sure that we are not superseded yet by the server sending a RESET.
@@ -204,11 +207,6 @@ export default class WebsocketBackend {
         const queue = this.activeFetches[resource]!;
         delete this.activeFetches[resource];
         queue.forEach((msg) => this.store.dispatch(msg));
-
-        if (Object.keys(this.activeFetches).length === 0) {
-            // We have fetched the last resource
-            this.store.dispatch(connectionActions.connectionEstablished());
-        }
     }
 
     onClose(closeEvent: CloseEvent) {

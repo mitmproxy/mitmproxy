@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ConnectionState } from "../../ducks/connection";
 import { useAppSelector } from "../../ducks";
+import { assertNever } from "../../utils";
 
 export default React.memo(
     function ConnectionIndicator(): React.ReactElement<any> {
@@ -35,12 +36,9 @@ export default React.memo(
                         connection lost
                     </span>
                 );
-            case ConnectionState.OFFLINE:
-                return (
-                    <span className="connection-indicator offline">
-                        offline
-                    </span>
-                );
+            /* istanbul ignore next @preserve */
+            default:
+                assertNever(connState);
         }
     },
 );
