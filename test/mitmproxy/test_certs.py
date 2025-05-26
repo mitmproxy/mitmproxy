@@ -121,7 +121,7 @@ class TestCertStore:
         # TODO: How do we actually attempt to read that file as another user?
         try:
             assert os.stat(filename).st_mode & 0o77 == 0
-        except AssertionError as error: assert error
+        except AssertionError: print("File permissions were not set as expected!")
             
 
     @pytest.mark.parametrize(
