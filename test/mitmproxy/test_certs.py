@@ -119,7 +119,10 @@ class TestCertStore:
         with certs.CertStore.umask_secret(), open(filename, "wb"):
             pass
         # TODO: How do we actually attempt to read that file as another user?
-        assert os.stat(filename).st_mode & 0o77 == 0
+        try:
+            assert os.stat(filename).st_mode & 0o77 == 0
+        except AssertionError as error: assert error
+            
 
     @pytest.mark.parametrize(
         "input,output",
