@@ -8,9 +8,9 @@ type ConnectionInfoProps = {
 
 export function formatAddress(
     desc: string,
-    address: Address | undefined,
+    address: Address | undefined | null,
 ): React.ReactElement {
-    if (address === undefined) {
+    if (address === undefined || address === null) {
         return <></>;
     }
     // strip IPv6 flowid
