@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix crash in mitmweb when no explicit Server-Connection is logged.
+  ([#7734](https://github.com/mitmproxy/mitmproxy/pull/7734), @lups2000)
 
 ## 25 May 2025: mitmproxy 12.1.1
 
