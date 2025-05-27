@@ -1,9 +1,10 @@
 ---
 title: "Event Hooks"
 weight: 2
+# this is important so that the relative links in the generated file work.
+url: api/events.html
 aliases:
     - /addons-events/
-    - api/events.html
 ---
 
 # Event Hooks
