@@ -10,7 +10,7 @@ export function formatAddress(
     desc: string,
     address: Address | undefined | null,
 ): React.ReactElement {
-    if (address === undefined || address === null) {
+    if (!address) {
         return <></>;
     }
     // strip IPv6 flowid
