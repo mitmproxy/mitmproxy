@@ -95,95 +95,95 @@ export function FlowTable({
 
   return (
     <Table className="text-xs">
-      <TableHeader className="sticky top-0 bg-muted/50 z-10">
+      <TableHeader className="bg-muted/50 sticky top-0 z-10">
         <TableRow className="text-xs">
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.id}px` }}
           >
             #
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "id")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.host}px` }}
           >
             Host
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "host")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.path}px` }}
           >
             Path
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "path")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.method}px` }}
           >
             Method
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "method")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.status}px` }}
           >
             Status
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "status")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.code}px` }}
           >
             Code
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "code")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.time}px` }}
           >
             Time
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "time")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 border-r relative"
+            className="relative border-r px-2 py-1 text-xs"
             style={{ width: `${columnWidths.duration}px` }}
           >
             Duration
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "duration")}
             />
           </TableHead>
           <TableHead
-            className="text-xs py-1 px-2 relative"
+            className="relative px-2 py-1 text-xs"
             style={{ width: `${columnWidths.requestSize}px` }}
           >
             Size
             <div
-              className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-primary hover:opacity-50"
+              className="hover:bg-primary absolute top-0 right-0 h-full w-2 cursor-col-resize hover:opacity-50"
               onMouseDown={(e) => handleResizeStart(e, "requestSize")}
             />
           </TableHead>
@@ -201,60 +201,60 @@ export function FlowTable({
             onClick={() => setSelectedRequest(flow)}
           >
             <TableCell
-              className="text-xs py-1 px-2 border-r"
+              className="border-r px-2 py-1 text-xs"
               style={{ width: `${columnWidths.id}px` }}
             >
               <div className="flex items-center gap-1">
-                <Circle className="w-2 h-2 fill-green-500 text-green-500" />
+                <Circle className="h-2 w-2 fill-green-500 text-green-500" />
                 {flow.id}
               </div>
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r font-mono text-blue-600 dark:text-blue-400"
+              className="border-r px-2 py-1 font-mono text-xs text-blue-600 dark:text-blue-400"
               style={{ width: `${columnWidths.host}px` }}
             >
               <div className="truncate">{flow.host}</div>
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r font-mono text-blue-600 dark:text-blue-400"
+              className="border-r px-2 py-1 font-mono text-xs text-blue-600 dark:text-blue-400"
               style={{ width: `${columnWidths.path}px` }}
             >
               <div className="truncate">{flow.path}</div>
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r"
+              className="border-r px-2 py-1 text-xs"
               style={{ width: `${columnWidths.method}px` }}
             >
-              <Badge variant="outline" className="text-xs h-4 px-1">
+              <Badge variant="outline" className="h-4 px-1 text-xs">
                 {flow.method}
               </Badge>
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r"
+              className="border-r px-2 py-1 text-xs"
               style={{ width: `${columnWidths.status}px` }}
             >
               <div className="truncate">{flow.status}</div>
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r text-green-600 dark:text-green-400"
+              className="border-r px-2 py-1 text-xs text-green-600 dark:text-green-400"
               style={{ width: `${columnWidths.code}px` }}
             >
               {flow.code}
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r font-mono"
+              className="border-r px-2 py-1 font-mono text-xs"
               style={{ width: `${columnWidths.time}px` }}
             >
               {flow.time}
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2 border-r"
+              className="border-r px-2 py-1 text-xs"
               style={{ width: `${columnWidths.duration}px` }}
             >
               {flow.duration}
             </TableCell>
             <TableCell
-              className="text-xs py-1 px-2"
+              className="px-2 py-1 text-xs"
               style={{ width: `${columnWidths.requestSize}px` }}
             >
               {flow.requestSize}

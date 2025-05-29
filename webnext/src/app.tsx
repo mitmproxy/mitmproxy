@@ -125,16 +125,16 @@ export function App() {
   const [selectedRequest, setSelectedRequest] = useState(mockFlows[0]);
 
   return (
-    <div className="font-inter flex flex-col h-screen bg-background text-foreground dark:">
+    <div className="font-inter bg-background text-foreground dark: flex h-screen flex-col">
       <Header />
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 border-r bg-muted/20 relative">
+        <div className="bg-muted/20 relative w-64 border-r">
           <div className="p-3">
             <SideMenu />
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-muted/20">
+          <div className="border-border bg-muted/20 absolute right-0 bottom-0 left-0 border-t p-3">
             <ThemeToggle />
           </div>
         </div>
@@ -144,7 +144,7 @@ export function App() {
 
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel defaultSize={60}>
-              <div className="h-full flex flex-col">
+              <div className="flex h-full flex-col">
                 <div className="flex-1 overflow-hidden">
                   <div className="h-full overflow-auto text-xs">
                     <FlowTable
@@ -160,21 +160,21 @@ export function App() {
             <ResizableHandle />
 
             <ResizablePanel defaultSize={40}>
-              <div className="border-b px-4 py-3 bg-muted/30">
+              <div className="bg-muted/30 border-b px-4 py-3">
                 <div className="flex items-center gap-3">
                   <Badge
                     variant="outline"
-                    className="text-sm font-medium px-2 py-1"
+                    className="px-2 py-1 text-sm font-medium"
                   >
                     {selectedRequest.method}
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-sm bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-1"
+                    className="bg-green-100 px-2 py-1 text-sm text-green-700 dark:bg-green-900/50 dark:text-green-300"
                   >
                     {selectedRequest.code} OK
                   </Badge>
-                  <span className="text-sm text-blue-600 dark:text-blue-400 font-mono">
+                  <span className="font-mono text-sm text-blue-600 dark:text-blue-400">
                     {selectedRequest.url}
                   </span>
                 </div>

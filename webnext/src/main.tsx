@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./globals.css";
 import { App } from "./app";
 import initialize from "web/urlState";
-import { store } from "web/ducks/store"
+import { store } from "web/ducks/store";
 import { add as addLog } from "web/ducks/eventLog";
 import { Provider } from "react-redux";
 

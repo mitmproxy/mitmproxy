@@ -69,56 +69,56 @@ export function FilterPanel() {
   };
 
   return (
-    <div className="border-b bg-muted/10">
+    <div className="bg-muted/10 border-b">
       <div
-        className="flex items-center px-4 py-2 cursor-pointer hover:bg-muted/20"
+        className="hover:bg-muted/20 flex cursor-pointer items-center px-4 py-2"
         onClick={() => setShowFilterPanel(!showFilterPanel)}
       >
         {showFilterPanel ? (
-          <ChevronDown className="w-4 h-4 mr-2" />
+          <ChevronDown className="mr-2 h-4 w-4" />
         ) : (
-          <ChevronRight className="w-4 h-4 mr-2" />
+          <ChevronRight className="mr-2 h-4 w-4" />
         )}
-        <Filter className="w-4 h-4 mr-2" />
+        <Filter className="mr-2 h-4 w-4" />
         <span className="text-sm font-medium">Filter Settings</span>
       </div>
 
       {showFilterPanel && (
-        <div className="px-4 pb-3 grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 px-4 pb-3">
           <div>
-            <p className="text-xs font-medium mb-2">Method</p>
+            <p className="mb-2 text-xs font-medium">Method</p>
             <div className="flex flex-wrap gap-1">
               <Badge
                 variant={activeFilters.all ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("all")}
               >
                 ALL
               </Badge>
               <Badge
                 variant={activeFilters.get ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("get")}
               >
                 GET
               </Badge>
               <Badge
                 variant={activeFilters.post ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("post")}
               >
                 POST
               </Badge>
               <Badge
                 variant={activeFilters.put ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("put")}
               >
                 PUT
               </Badge>
               <Badge
                 variant={activeFilters.delete ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("delete")}
               >
                 DELETE
@@ -127,39 +127,39 @@ export function FilterPanel() {
           </div>
 
           <div>
-            <p className="text-xs font-medium mb-2">Status</p>
+            <p className="mb-2 text-xs font-medium">Status</p>
             <div className="flex flex-wrap gap-1">
               <Badge
                 variant={activeFilters["1xx"] ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("1xx")}
               >
                 1xx
               </Badge>
               <Badge
                 variant={activeFilters["2xx"] ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("2xx")}
               >
                 2xx
               </Badge>
               <Badge
                 variant={activeFilters["3xx"] ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("3xx")}
               >
                 3xx
               </Badge>
               <Badge
                 variant={activeFilters["4xx"] ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("4xx")}
               >
                 4xx
               </Badge>
               <Badge
                 variant={activeFilters["5xx"] ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("5xx")}
               >
                 5xx
@@ -168,39 +168,39 @@ export function FilterPanel() {
           </div>
 
           <div>
-            <p className="text-xs font-medium mb-2">Content Type</p>
+            <p className="mb-2 text-xs font-medium">Content Type</p>
             <div className="flex flex-wrap gap-1">
               <Badge
                 variant={activeFilters.json ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("json")}
               >
                 JSON
               </Badge>
               <Badge
                 variant={activeFilters.html ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("html")}
               >
                 HTML
               </Badge>
               <Badge
                 variant={activeFilters.js ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("js")}
               >
                 JS
               </Badge>
               <Badge
                 variant={activeFilters.css ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("css")}
               >
                 CSS
               </Badge>
               <Badge
                 variant={activeFilters.graphql ? "default" : "outline"}
-                className="text-xs cursor-pointer"
+                className="cursor-pointer text-xs"
                 onClick={() => handleFilterClick("graphql")}
               >
                 GraphQL

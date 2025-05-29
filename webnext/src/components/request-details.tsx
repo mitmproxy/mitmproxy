@@ -28,12 +28,12 @@ const mockRequestDetails = {
 };
 export function RequestDetails() {
   return (
-    <Tabs defaultValue="header" className="h-full flex flex-col">
-      <div className="border-b px-4 py-2 bg-muted/20">
-        <div className="flex items-center gap-2 mb-2">
+    <Tabs defaultValue="header" className="flex h-full flex-col">
+      <div className="bg-muted/20 border-b px-4 py-2">
+        <div className="mb-2 flex items-center gap-2">
           <span className="text-sm font-medium">Request</span>
         </div>
-        <TabsList className="grid w-full grid-cols-6 h-8">
+        <TabsList className="grid h-8 w-full grid-cols-6">
           <TabsTrigger value="header" className="text-xs">
             Header
           </TabsTrigger>
@@ -57,13 +57,13 @@ export function RequestDetails() {
 
       <TabsContent value="header" className="flex-1 p-0">
         <ScrollArea className="h-full">
-          <div className="p-4 space-y-2">
+          <div className="space-y-2 p-4">
             {Object.entries(mockRequestDetails.headers).map(([key, value]) => (
               <div key={key} className="flex">
-                <div className="w-32 text-xs font-medium text-muted-foreground flex-shrink-0">
+                <div className="text-muted-foreground w-32 flex-shrink-0 text-xs font-medium">
                   {key}
                 </div>
-                <div className="text-xs font-mono break-all">{value}</div>
+                <div className="font-mono text-xs break-all">{value}</div>
               </div>
             ))}
           </div>
@@ -71,7 +71,7 @@ export function RequestDetails() {
       </TabsContent>
 
       <TabsContent value="body" className="flex-1 p-4">
-        <pre className="text-xs font-mono bg-muted/50 p-3 rounded">
+        <pre className="bg-muted/50 rounded p-3 font-mono text-xs">
           {`{
   "query": "query TrendingTopics { trendingTopics { id name slug __typename } }"
 }`}

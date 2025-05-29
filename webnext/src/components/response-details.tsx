@@ -34,13 +34,13 @@ const mockResponseData = {
 
 export function ResponseDetails() {
   return (
-    <Tabs defaultValue="body" className="h-full flex flex-col">
-      <div className="border-b px-4 py-2 bg-muted/20">
-        <div className="flex items-center gap-2 mb-2">
+    <Tabs defaultValue="body" className="flex h-full flex-col">
+      <div className="bg-muted/20 border-b px-4 py-2">
+        <div className="mb-2 flex items-center gap-2">
           <span className="text-sm font-medium">Response</span>
-          <span className="text-xs text-muted-foreground">JSON</span>
+          <span className="text-muted-foreground text-xs">JSON</span>
         </div>
-        <TabsList className="grid w-full grid-cols-5 h-8">
+        <TabsList className="grid h-8 w-full grid-cols-5">
           <TabsTrigger value="header" className="text-xs">
             Header
           </TabsTrigger>
@@ -62,14 +62,14 @@ export function ResponseDetails() {
       <TabsContent value="body" className="flex-1 p-0">
         <ScrollArea className="h-full">
           <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-muted/50 border-r flex flex-col text-xs text-muted-foreground">
+            <div className="bg-muted/50 text-muted-foreground absolute top-0 bottom-0 left-0 flex w-12 flex-col border-r text-xs">
               {Array.from({ length: 25 }, (_, i) => (
                 <div key={i + 1} className="px-2 py-0.5 text-right">
                   {i + 1}
                 </div>
               ))}
             </div>
-            <pre className="pl-14 p-4 text-xs font-mono">
+            <pre className="p-4 pl-14 font-mono text-xs">
               {JSON.stringify(mockResponseData, null, 2)}
             </pre>
           </div>
@@ -79,22 +79,22 @@ export function ResponseDetails() {
       <TabsContent value="header" className="flex-1 p-4">
         <div className="space-y-2">
           <div className="flex">
-            <div className="w-32 text-xs font-medium text-muted-foreground">
+            <div className="text-muted-foreground w-32 text-xs font-medium">
               Content-Type
             </div>
-            <div className="text-xs font-mono">application/json</div>
+            <div className="font-mono text-xs">application/json</div>
           </div>
           <div className="flex">
-            <div className="w-32 text-xs font-medium text-muted-foreground">
+            <div className="text-muted-foreground w-32 text-xs font-medium">
               Cache-Control
             </div>
-            <div className="text-xs font-mono">no-cache</div>
+            <div className="font-mono text-xs">no-cache</div>
           </div>
           <div className="flex">
-            <div className="w-32 text-xs font-medium text-muted-foreground">
+            <div className="text-muted-foreground w-32 text-xs font-medium">
               Server
             </div>
-            <div className="text-xs font-mono">nginx/1.18.0</div>
+            <div className="font-mono text-xs">nginx/1.18.0</div>
           </div>
         </div>
       </TabsContent>

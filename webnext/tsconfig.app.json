@@ -29,7 +29,5 @@
     }
   },
   "include": ["src"],
-  "references": [
-    { "path": "../web/tsconfig.build.json" }
-  ]
+  "references": [{ "path": "../web/tsconfig.build.json" }]
 }
