@@ -9,7 +9,14 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "format": "prettier . --check",
-    "format:fix": "prettier . --write"
+    "format:fix": "prettier . --write",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*": [
+      "eslint --fix",
+      "prettier --write --ignore-unknown"
+    ]
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.2.9",
@@ -38,6 +45,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tw-animate-css": "^1.3.0",
