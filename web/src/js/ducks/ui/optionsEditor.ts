@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Option, OptionsState } from "../_options_gen";
 import { HIDE_MODAL } from "./modal";
 
-interface OptionUpdate<T> {
+export interface OptionUpdate<T> {
     isUpdating: boolean;
     value: T;
     error: string | false;

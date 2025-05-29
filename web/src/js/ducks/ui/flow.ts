@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface UiFlowState {
+export interface UiFlowState {
     tab: string;
     contentViewFor: { [messageId: string]: string };
 }
