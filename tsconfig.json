@@ -2,6 +2,6 @@
   "files": [],
   "references": [
     { "path": "./web" },
-    { "path": "./web2" }
+    { "path": "./webnext" }
   ]
 }
