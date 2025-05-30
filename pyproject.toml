@@ -42,7 +42,7 @@ dependencies = [
     "hyperframe>=6.0,<=6.1.0",
     "kaitaistruct>=0.10,<=0.10",
     "ldap3>=2.8,<=2.9.1",
-    "mitmproxy_rs>=0.12.3,<0.13",  # relaxed upper bound here: we control this
+    "mitmproxy_rs>=0.12.5,<0.13",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.0",
     "passlib>=1.6.5,<=1.7.4",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
