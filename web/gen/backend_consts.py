@@ -18,7 +18,7 @@ async def make() -> str:
         f'{protocol.upper()} = "{protocol.lower()}"' for protocol in protocols
     )
 
-    langs =typing.get_args(SyntaxHighlight.__value__)
+    langs = typing.get_args(SyntaxHighlight.__value__)
     syntax_highlight_enum = ",\n    ".join(
         f'{lang.upper()} = "{lang.lower()}"' for lang in langs
     )
