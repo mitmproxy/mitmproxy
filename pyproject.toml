@@ -35,7 +35,7 @@ dependencies = [
     "asgiref>=3.2.10,<=3.8.1",
     "Brotli>=1.0,<=1.1.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
-    "cryptography>=42.0,<44.1",  # relaxed upper bound here to get security fixes
+    "cryptography>=42.0,<45.1",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.1.0",
     "h11>=0.16.0,<=0.16.0",
     "h2>=4.1,<=4.1.0",
@@ -46,7 +46,7 @@ dependencies = [
     "msgpack>=1.0.0,<=1.1.0",
     "passlib>=1.6.5,<=1.7.4",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
-    "pyOpenSSL>=24.3,<=25.0.0",
+    "pyOpenSSL>=24.3,<=25.1.0",
     "pyparsing>=2.4.2,<=3.2.3",
     "pyperclip<=1.9.0,>=1.9.0",
     "ruamel.yaml>=0.18.10,<=0.18.10",
