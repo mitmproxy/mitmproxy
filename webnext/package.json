@@ -32,6 +32,7 @@
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
     "react-resizable-panels": "^3.0.2",
+    "react-virtuoso": "^4.12.7",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.7",
     "usehooks-ts": "^3.1.1",
