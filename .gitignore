@@ -11,6 +11,7 @@ MANIFEST
 .coverage*
 .idea
 .vscode
+*.code-workspace
 .cache/
 .tox*/
 build/
