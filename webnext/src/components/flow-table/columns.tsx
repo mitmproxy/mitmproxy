@@ -12,27 +12,34 @@ import {
 } from "web/flow/utils";
 import { Badge } from "@/components/ui/badge";
 import { formatSize, formatTimeDelta, formatTimeStamp } from "web/utils";
-import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import * as flowActions from "web/ducks/flows";
+import { CircleAlert, Lock, LockOpen } from "lucide-react";
 
 export const columns: ColumnDef<Flow>[] = [
   {
     id: "tls",
     header: "",
-    size: 8,
-    minSize: 8,
-    maxSize: 8,
+    size: 20,
+    //minSize: 8,
+    //maxSize: 8,
     cell: function CellComponent({ row }) {
       const isTLS = row.original.client_conn.tls_established;
 
       return (
-        <span className={cn("border-l-4", { "border-l-green-500": isTLS })} />
+        <div title={isTLS ? "Client TLS connection established" : "No TLS"}>
+          {isTLS ? (
+            <Lock className="text-muted-foreground size-4" />
+          ) : (
+            <LockOpen className="text-muted-foreground size-4" />
+          )}
+        </div>
       );
     },
   },
   {
+    id: "index",
     accessorKey: "index",
     header: "#",
     size: 60,
@@ -64,17 +71,22 @@ export const columns: ColumnDef<Flow>[] = [
     minSize: 150,
     maxSize: 500,
     cell: function CellComponent({ row }) {
-      // TODO: implement flow.error
       // TODO: implement flow.marked
 
+      const isError = Boolean(row.original.error);
+
       return (
-        <span
-          className={cn({
-            "bg-red-500": row.original.error,
-          })}
-        >
-          {mainPath(row.original)}
-        </span>
+        <div className="relative">
+          <span className="block truncate pr-6">{mainPath(row.original)}</span>
+
+          {isError && (
+            <div
+              title={`Error: ${row.original.error?.msg ?? "unknown connection error"}`}
+            >
+              <CircleAlert className="absolute top-1/2 right-0 size-4 -translate-y-1/2 text-red-500" />
+            </div>
+          )}
+        </div>
       );
     },
   },
