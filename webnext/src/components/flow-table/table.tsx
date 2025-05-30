@@ -20,6 +20,9 @@ import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
 import { setSort } from "web/ducks/flows";
 
 export function FlowTable() {
+  const displayColumnNames = useAppSelector(
+    (state) => state.options.web_columns,
+  ).concat(["index"]); // include the index column (not the case by default for some reason)
   const flowView = useSelector((state: RootState) => state.flows.view);
   const highlightedIds = useSelector(
     (state: RootState) => state.flows.highlightedIds,
@@ -29,7 +32,9 @@ export function FlowTable() {
   );
   const table = useReactTable({
     data: flowView,
-    columns,
+    columns: columns.filter(
+      (col) => col.id && displayColumnNames.includes(col.id),
+    ),
     getCoreRowModel: getCoreRowModel(),
   });
 
