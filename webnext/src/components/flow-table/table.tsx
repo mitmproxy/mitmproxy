@@ -4,6 +4,7 @@ import {
   TableHeader,
   TableRow,
   TableHead,
+  TableCell,
 } from "@/components/ui/table";
 import { useSelector } from "react-redux";
 import type { RootState } from "web/ducks/store";
@@ -17,7 +18,6 @@ import { columns } from "./columns";
 import { FlowRow } from "./row";
 import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
 import { setSort } from "web/ducks/flows";
-import { Fragment } from "react";
 
 export function FlowTable() {
   const flowView = useSelector((state: RootState) => state.flows.view);
@@ -63,7 +63,11 @@ export function FlowTable() {
               headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  style={{ width: header.getSize() }}
+                  style={{
+                    width: header.column.columnDef.size,
+                    minWidth: header.column.columnDef.minSize,
+                    maxWidth: header.column.columnDef.maxSize,
+                  }}
                   onClick={() =>
                     dispatch(
                       setSort({
@@ -96,9 +100,17 @@ export function FlowTable() {
         return (
           <>
             {row.getVisibleCells().map((cell) => (
-              <Fragment key={cell.id}>
+              <TableCell
+                key={cell.id}
+                className="truncate"
+                style={{
+                  width: cell.column.columnDef.size,
+                  minWidth: cell.column.columnDef.size,
+                  maxWidth: cell.column.columnDef.size,
+                }}
+              >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </Fragment>
+              </TableCell>
             ))}
           </>
         );

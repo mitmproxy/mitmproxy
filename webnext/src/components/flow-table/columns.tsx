@@ -16,185 +16,192 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import * as flowActions from "web/ducks/flows";
-import { TableCell } from "@/components/ui/table";
 
 export const columns: ColumnDef<Flow>[] = [
   {
     id: "tls",
     header: "",
-    size: 5,
+    size: 8,
+    minSize: 8,
+    maxSize: 8,
     cell: function CellComponent({ row }) {
       const isTLS = row.original.client_conn.tls_established;
 
       return (
-        <TableCell
-          className={cn("border-l-4", { "border-l-green-500": isTLS })}
-        />
+        <span className={cn("border-l-4", { "border-l-green-500": isTLS })} />
       );
     },
   },
   {
     accessorKey: "index",
     header: "#",
+    size: 60,
+    minSize: 40,
+    maxSize: 80,
     cell: function CellComponent({ row }) {
       const index = useAppSelector((state) =>
         state.flows._listIndex.get(row.original.id),
       );
 
-      return <TableCell>{(index ?? 0) + 1}</TableCell>;
+      return (index ?? 0) + 1;
     },
   },
   {
     id: "icon",
     header: "",
-    size: 20,
+    size: 40,
+    minSize: 40,
+    maxSize: 50,
     cell: function CellComponent() {
       // TODO: implement icons
-      return <TableCell>icon</TableCell>;
+      return "icon";
     },
   },
   {
     id: "path",
     header: "Path",
-    size: 100,
+    size: 300,
+    minSize: 150,
+    maxSize: 500,
     cell: function CellComponent({ row }) {
       // TODO: implement flow.error
       // TODO: implement flow.marked
 
       return (
-        <TableCell
-          className={cn("truncate", {
+        <span
+          className={cn({
             "bg-red-500": row.original.error,
           })}
         >
           {mainPath(row.original)}
-        </TableCell>
+        </span>
       );
     },
   },
   {
     id: "method",
     header: "Method",
-    size: 50,
+    size: 70,
+    minSize: 60,
+    maxSize: 80,
     cell: function CellComponent({ row }) {
       return (
-        <TableCell>
-          <Badge variant="outline" className="h-4 px-1 text-xs">
-            {getMethod(row.original)}
-          </Badge>
-        </TableCell>
+        <Badge variant="outline" className="h-4 px-1 text-xs">
+          {getMethod(row.original)}
+        </Badge>
       );
     },
   },
   {
     id: "version",
     header: "Version",
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     cell: function CellComponent({ row }) {
-      return <TableCell>{getVersion(row.original)}</TableCell>;
+      return getVersion(row.original);
     },
   },
   {
     id: "status",
     header: "Status",
-    size: 50,
+    size: 70,
+    minSize: 60,
+    maxSize: 80,
     cell: function CellComponent({ row }) {
       const flow = row.original;
 
       if (flow.type === "dns" && flow.response) {
-        return (
-          <TableCell>
-            <Badge>{flow.response.response_code}</Badge>
-          </TableCell>
-        );
+        return <Badge>{flow.response.response_code}</Badge>;
       }
 
       if (flow.type === "http" && flow.response) {
-        return (
-          <TableCell>
-            <StatusBadge code={flow.response.status_code} />
-          </TableCell>
-        );
+        return <StatusBadge code={flow.response.status_code} />;
       }
 
-      return <TableCell></TableCell>;
+      return null;
     },
   },
   {
     id: "size",
     header: "Size",
     size: 80,
+    minSize: 70,
+    maxSize: 100,
     cell: function CellComponent({ row }) {
-      return <TableCell>{formatSize(getTotalSize(row.original))}</TableCell>;
+      return formatSize(getTotalSize(row.original));
     },
   },
   {
     id: "time",
     header: "Time",
     size: 80,
+    minSize: 70,
+    maxSize: 100,
     cell: function CellComponent({ row }) {
       const start = startTime(row.original);
       const end = endTime(row.original);
 
-      return (
-        <TableCell>
-          {start && end ? formatTimeDelta(1000 * (end - start)) : "..."}
-        </TableCell>
-      );
+      return start && end ? formatTimeDelta(1000 * (end - start)) : "...";
     },
   },
   {
     id: "timestamp",
     header: "Timestamp",
     size: 150,
+    minSize: 120,
+    maxSize: 180,
     cell: function CellComponent({ row }) {
       const time = startTime(row.original);
 
-      return <TableCell>{time ? formatTimeStamp(time) : "..."}</TableCell>;
+      return time ? formatTimeStamp(time) : "...";
     },
   },
   {
     id: "quickactions",
     header: "Actions",
+    size: 90,
+    minSize: 80,
+    maxSize: 120,
     cell: function CellComponent({ row }) {
       const dispatch = useAppDispatch();
       const flow = row.original;
 
       if (flow.intercepted) {
         return (
-          <TableCell>
-            <Button
-              size="sm"
-              onClick={() => void dispatch(flowActions.resume([flow]))}
-            >
-              Resume
-            </Button>
-          </TableCell>
+          <Button
+            size="sm"
+            onClick={() => void dispatch(flowActions.resume([flow]))}
+          >
+            Resume
+          </Button>
         );
       }
 
       if (canReplay(flow)) {
         return (
-          <TableCell>
-            <Button
-              size="sm"
-              onClick={() => void dispatch(flowActions.replay([flow]))}
-            >
-              Replay
-            </Button>
-          </TableCell>
+          <Button
+            size="sm"
+            onClick={() => void dispatch(flowActions.replay([flow]))}
+          >
+            Replay
+          </Button>
         );
       }
 
-      return <TableCell />;
+      return null;
     },
   },
   {
     id: "comment",
     header: "Comment",
+    size: 200,
+    minSize: 100,
+    maxSize: 300,
     cell: function CellComponent({ row }) {
       const text = row.original.comment;
 
-      return <TableCell>{text}</TableCell>;
+      return text;
     },
   },
 ];
