@@ -12,7 +12,9 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   );
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+export type TableHeaderProps = React.ComponentProps<"thead">;
+
+function TableHeader({ className, ...props }: TableHeaderProps) {
   return (
     <thead
       data-slot="table-header"
@@ -45,7 +47,9 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   );
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+export type TableRowProps = React.ComponentProps<"tr">;
+
+function TableRow({ className, ...props }: TableRowProps) {
   return (
     <tr
       data-slot="table-row"

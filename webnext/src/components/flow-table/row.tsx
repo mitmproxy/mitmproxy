@@ -1,5 +1,5 @@
 import type { Flow } from "web/flow";
-import { TableRow } from "../ui/table";
+import { TableRow, type TableRowProps } from "../ui/table";
 import { cn } from "@/lib/utils";
 import { useAppDispatch } from "web/ducks/hooks";
 import { select, selectRange, selectToggle } from "web/ducks/flows";
@@ -9,7 +9,7 @@ export type FlowRowProps = {
   flow: Flow;
   selected: boolean;
   highlighted: boolean;
-} & React.ComponentProps<"tr">;
+} & TableRowProps;
 
 function FlowRow({
   flow,

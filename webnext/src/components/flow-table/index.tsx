@@ -1,1 +1,1 @@
-export * from "./flow-table";
+export * from "./table";

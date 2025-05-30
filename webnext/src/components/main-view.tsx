@@ -4,7 +4,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { FilterPanel } from "@/components/filter-panel";
-import { FlowTable } from "@/components/flow-table/flow-table";
+import { FlowTable } from "@/components/flow-table";
 import { useAppSelector } from "web/ducks/hooks";
 import { CaptureSetup } from "@/components/modes/capture-setup";
 import { FlowView } from "./flow-view";
