@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   ResizableHandle,
@@ -13,6 +13,9 @@ import { FlowTable } from "./components/flow-table";
 import { RequestDetails } from "./components/request-details";
 import { ResponseDetails } from "./components/response-details";
 import { Footer } from "./components/footer";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "web/ducks/store";
+import { onKeyDown } from "web/ducks/ui/keyboard";
 
 const mockFlows = [
   {
@@ -123,6 +126,24 @@ const mockFlows = [
 
 export function App() {
   const [selectedRequest, setSelectedRequest] = useState(mockFlows[0]);
+  const showEventLog = useSelector(
+    (state: RootState) => state.eventLog.visible,
+  );
+  const showCommandBar = useSelector(
+    (state: RootState) => state.commandBar.visible,
+  );
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      dispatch(onKeyDown(e));
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dispatch]);
+
+  console.log({ showEventLog, showCommandBar }); // TODO: implement these features
 
   return (
     <div className="font-inter bg-background text-foreground dark: flex h-screen flex-col">
