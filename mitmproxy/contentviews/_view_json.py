@@ -9,7 +9,7 @@ class JSONContentview(Contentview):
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         data = json.loads(data)
-        return json.dumps(data, indent=4)
+        return json.dumps(data, indent=4, ensure_ascii=False)
 
     def render_priority(self, data: bytes, metadata: Metadata) -> float:
         if not data:
