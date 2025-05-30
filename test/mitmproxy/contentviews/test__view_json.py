@@ -17,6 +17,11 @@ def test_view_json():
     assert json_view.syntax_highlight == "yaml"
 
 
+def test_view_json_nonascii():
+    """https://github.com/mitmproxy/mitmproxy/issues/7739"""
+    assert json_view.prettify('{"a": "日本語"}'.encode(), Metadata()) == '{\n    "a": "日本語"\n}'
+
+
 def test_render_priority():
     assert json_view.render_priority(b"data", Metadata(content_type="application/json"))
     assert json_view.render_priority(
