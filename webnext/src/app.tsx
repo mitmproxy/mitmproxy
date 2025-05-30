@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { Header } from "@/components/header";
-import { SideMenu } from "./components/sidemenu";
-import { ThemeToggle } from "./components/theme-toggle";
-import { Footer } from "./components/footer";
+import { SideMenu } from "@/components/sidemenu";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Footer } from "@/components/footer";
 import { useDispatch } from "react-redux";
 import { onKeyDown } from "web/ducks/ui/keyboard";
-import { MainView } from "./components/main-view";
+import { MainView } from "@/components/main-view";
 
 export function App() {
   /*   const showEventLog = useSelector(

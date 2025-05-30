@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 export function FilterPanel() {
   const [activeFilters, setActiveFilters] = useState<{

@@ -7,7 +7,7 @@ import { FilterPanel } from "@/components/filter-panel";
 import { FlowTable } from "@/components/flow-table";
 import { useAppSelector } from "web/ducks/hooks";
 import { CaptureSetup } from "@/components/modes/capture-setup";
-import { FlowView } from "./flow-view";
+import { FlowView } from "@/components/flow-view";
 
 export function MainView() {
   const hasOneFlowSelected = useAppSelector(

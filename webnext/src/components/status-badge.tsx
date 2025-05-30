@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 export const statusVariants = cva(null, {
   variants: {

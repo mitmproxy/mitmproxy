@@ -4,7 +4,7 @@ import {
   TableHeader,
   TableRow,
   TableHead,
-} from "../ui/table";
+} from "@/components/ui/table";
 import { useSelector } from "react-redux";
 import type { RootState } from "web/ducks/store";
 import { TableVirtuoso } from "react-virtuoso";

@@ -1,9 +1,9 @@
 import type { Flow } from "web/flow";
-import { TableRow, type TableRowProps } from "../ui/table";
 import { cn } from "@/lib/utils";
 import { useAppDispatch } from "web/ducks/hooks";
 import { select, selectRange, selectToggle } from "web/ducks/flows";
 import { memo, useCallback } from "react";
+import { TableRow, type TableRowProps } from "@/components/ui/table";
 
 export type FlowRowProps = {
   flow: Flow;
