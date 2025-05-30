@@ -30,8 +30,8 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       className="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
     >
-      {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+      {!isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      <span>{!isDarkMode ? "Light Mode" : "Dark Mode"}</span>
     </button>
   );
 }
