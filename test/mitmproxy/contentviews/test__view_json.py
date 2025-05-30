@@ -19,7 +19,10 @@ def test_view_json():
 
 def test_view_json_nonascii():
     """https://github.com/mitmproxy/mitmproxy/issues/7739"""
-    assert json_view.prettify('{"a": "日本語"}'.encode(), Metadata()) == '{\n    "a": "日本語"\n}'
+    assert (
+        json_view.prettify('{"a": "日本語"}'.encode(), Metadata())
+        == '{\n    "a": "日本語"\n}'
+    )
 
 
 def test_render_priority():

@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Do not escape non-ascii characters in the JSON contentview.
+  ([#7740](https://github.com/mitmproxy/mitmproxy/pull/7740), @mhils)
 - Fix crash in mitmweb when no explicit Server-Connection is logged.
   ([#7734](https://github.com/mitmproxy/mitmproxy/pull/7734), @lups2000)
 
