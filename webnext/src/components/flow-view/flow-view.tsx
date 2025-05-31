@@ -1,6 +1,6 @@
+import { RequestBar } from "@/components/flow-view/http-message/request-bar";
 import { RequestDetails } from "@/components/request-details";
 import { ResponseDetails } from "@/components/response-details";
-import { Badge } from "@/components/ui/badge";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/resizable";
 import { useAppSelector } from "web/ducks/hooks";
 import { tabsForFlowNext } from "web/ducks/ui/utils";
-import { mainPath, statusCode } from "web/flow/utils";
 
 export function FlowView() {
   const flow = useAppSelector((state) => state.flows.selected[0]);
@@ -36,22 +35,7 @@ export function FlowView() {
   return (
     <div className="flex h-full flex-col">
       <div className="bg-muted/30 border-b px-4 py-3">
-        {flow.type === "http" && (
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="px-2 py-1 text-sm font-medium">
-              {flow.request.method}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="bg-green-100 px-2 py-1 text-sm text-green-700 dark:bg-green-900/50 dark:text-green-300"
-            >
-              {statusCode(flow)}
-            </Badge>
-            <span className="font-mono text-sm text-blue-600 dark:text-blue-400">
-              {mainPath(flow)}
-            </span>
-          </div>
-        )}
+        {flow.type === "http" && <RequestBar flow={flow} />}
       </div>
 
       <div className="min-h-0">

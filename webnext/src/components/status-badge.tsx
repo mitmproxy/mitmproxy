@@ -4,11 +4,16 @@ import { Badge } from "@/components/ui/badge";
 export const statusVariants = cva("text-status-foreground", {
   variants: {
     status: {
-      informational: "bg-status-informational",
-      successful: "bg-status-successful",
-      redirection: "bg-status-redirection",
-      clientError: "bg-status-client-error",
-      serverError: "bg-status-server-error",
+      informational:
+        "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
+      successful:
+        "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
+      redirection:
+        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300",
+      clientError:
+        "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+      serverError:
+        "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
     },
   },
   defaultVariants: {

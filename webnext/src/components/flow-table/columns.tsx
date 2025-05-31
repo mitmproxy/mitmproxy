@@ -26,6 +26,7 @@ import {
 } from "react-icons/lu";
 import type { ReactNode } from "react";
 import { ContentTypeIcon } from "@/components/content-type-icon";
+import { MethodBadge } from "@/components/method-badge";
 
 export const columns: ColumnDef<Flow>[] = [
   {
@@ -145,11 +146,7 @@ export const columns: ColumnDef<Flow>[] = [
     minSize: 60,
     maxSize: 80,
     cell: function CellComponent({ row }) {
-      return (
-        <Badge variant="outline" className="h-4 px-1 text-xs">
-          {getMethod(row.original)}
-        </Badge>
-      );
+      return <MethodBadge method={getMethod(row.original)} />;
     },
   },
   {
