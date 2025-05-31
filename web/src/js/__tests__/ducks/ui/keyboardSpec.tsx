@@ -76,18 +76,18 @@ describe("onKeyDown", () => {
 
     it("should handle switch to left tab", () => {
         const store = makeStore();
-        expect(store.getState().ui.flow.tab).toBe("request");
+        expect(store.getState().ui.flow.tabResponse).toBe("request");
         store.dispatch(createKeyEvent("ArrowLeft"));
-        expect(store.getState().ui.flow.tab).toBe("comment");
+        expect(store.getState().ui.flow.tabResponse).toBe("comment");
     });
 
     it("should handle switch to right tab", () => {
         const store = makeStore();
-        expect(store.getState().ui.flow.tab).toBe("request");
+        expect(store.getState().ui.flow.tabResponse).toBe("request");
         store.dispatch(createKeyEvent("Tab"));
-        expect(store.getState().ui.flow.tab).toBe("response");
+        expect(store.getState().ui.flow.tabResponse).toBe("response");
         store.dispatch(createKeyEvent("ArrowRight"));
-        expect(store.getState().ui.flow.tab).toBe("connection");
+        expect(store.getState().ui.flow.tabResponse).toBe("connection");
     });
 
     it("should handle delete action", () => {

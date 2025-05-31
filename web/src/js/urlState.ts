@@ -86,7 +86,11 @@ export function updateUrlFromStore(store: RootStore) {
     if (state.ui.tabs.current === Tab.Capture) {
         url = "/capture";
     } else if (state.flows.selected.length > 0) {
-        url = `/flows/${state.flows.selected[0].id}/${state.ui.flow.tab}`;
+        if (state.ui.flow.tabRequest) {
+            url = `/flows/${state.flows.selected[0].id}/request/${state.ui.flow.tabRequest}/response/${state.ui.flow.tabResponse}`;
+        } else {
+            url = `/flows/${state.flows.selected[0].id}/${state.ui.flow.tabResponse}`;
+        }
     } else {
         url = "/flows";
     }

@@ -10,7 +10,7 @@ describe("option reducer", () => {
     });
 
     it("should handle set tab", () => {
-        expect(flowReducer(undefined, selectTab("response")).tab).toEqual(
+        expect(flowReducer(undefined, selectTab("response")).tabResponse).toEqual(
             "response",
         );
     });

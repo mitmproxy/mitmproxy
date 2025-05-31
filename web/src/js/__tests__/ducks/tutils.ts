@@ -59,7 +59,7 @@ export const testState: RootState = {
     ui: {
         flow: {
             contentViewFor: {},
-            tab: "request",
+            tabResponse: "request",
         },
         modal: {
             activeModal: undefined,

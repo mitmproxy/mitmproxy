@@ -1,9 +1,9 @@
-import { selectTab } from "./flow";
+import { selectRequestTab, selectResponseTab } from "./flow";
 import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
-import { tabsForFlow } from "../../components/FlowView";
 import { runCommand } from "../../utils";
 import { AppDispatch, RootState } from "../store";
+import { tabsForFlow, tabsForFlowNext } from "./utils";
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
@@ -55,31 +55,66 @@ export function onKeyDown(e: KeyboardEvent) {
 
             case "ArrowLeft": {
                 if (!flow) break;
-                const tabs = tabsForFlow(flow);
-                const currentTab = getState().ui.flow.tab;
-                const nextTab =
-                    tabs[
-                        (Math.max(0, tabs.indexOf(currentTab)) -
+
+                const currentRequestTab = getState().ui.flow.tabRequest;
+                const currentResponseTab = getState().ui.flow.tabResponse;
+
+                const getNextTab = (tabs: string[]) => {
+                    return tabs[
+                        (Math.max(0, tabs.indexOf(currentResponseTab)) -
                             1 +
                             tabs.length) %
                             tabs.length
                     ];
-                dispatch(selectTab(nextTab));
-                break;
-            }
+                };
 
+                // mitmweb does not have a request tab and non-http flow types don't either.
+                if (!currentRequestTab) {
+                    const tabs = tabsForFlow(flow);
+                    const nextTab = getNextTab(tabs);
+                    return dispatch(selectResponseTab(nextTab));
+                } else {
+                    const { request: requestTabs, response: responseTabs } =
+                        tabsForFlowNext(flow);
+                    const tabs = [...requestTabs, ...responseTabs];
+                    const nextTab = getNextTab(tabs);
+                    return dispatch(
+                        requestTabs.includes(nextTab)
+                            ? selectRequestTab(nextTab)
+                            : selectResponseTab(nextTab),
+                    );
+                }
+            }
             case "Tab":
             case "ArrowRight": {
                 if (!flow) break;
-                const tabs = tabsForFlow(flow);
-                const currentTab = getState().ui.flow.tab;
-                const nextTab =
-                    tabs[
-                        (Math.max(0, tabs.indexOf(currentTab)) + 1) %
+
+                const currentRequestTab = getState().ui.flow.tabRequest;
+                const currentResponseTab = getState().ui.flow.tabResponse;
+
+                const getNextTab = (tabs: string[]) => {
+                    return tabs[
+                        (Math.max(0, tabs.indexOf(currentResponseTab)) + 1) %
                             tabs.length
                     ];
-                dispatch(selectTab(nextTab));
-                break;
+                };
+
+                // mitmweb does not have a request tab and non-http flow types don't either.
+                if (!currentRequestTab) {
+                    const tabs = tabsForFlow(flow);
+                    const nextTab = getNextTab(tabs);
+                    return dispatch(selectResponseTab(nextTab));
+                } else {
+                    const { request: requestTabs, response: responseTabs } =
+                        tabsForFlowNext(flow);
+                    const tabs = [...requestTabs, ...responseTabs];
+                    const nextTab = getNextTab(tabs);
+                    return dispatch(
+                        requestTabs.includes(nextTab)
+                            ? selectRequestTab(nextTab)
+                            : selectResponseTab(nextTab),
+                    );
+                }
             }
 
             case "Delete":

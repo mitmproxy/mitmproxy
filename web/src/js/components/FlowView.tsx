@@ -17,6 +17,7 @@ import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
 import * as flowsActions from "../ducks/flows";
+import { tabsForFlow } from "../ducks/ui/utils";
 
 type TabProps = {
     flow: Flow;
@@ -38,36 +39,10 @@ export const allTabs: {
     comment: Comment,
 };
 
-export function tabsForFlow(flow: Flow): string[] {
-    let tabs;
-    switch (flow.type) {
-        case "http":
-            tabs = ["request", "response", "websocket"].filter((k) => flow[k]);
-            break;
-        case "tcp":
-            tabs = ["tcpmessages"];
-            break;
-        case "udp":
-            tabs = ["udpmessages"];
-            break;
-        case "dns":
-            tabs = ["request", "response"]
-                .filter((k) => flow[k])
-                .map((s) => "dns" + s);
-            break;
-    }
-
-    if (flow.error) tabs.push("error");
-    tabs.push("connection");
-    tabs.push("timing");
-    tabs.push("comment");
-    return tabs;
-}
-
 export default function FlowView() {
     const dispatch = useAppDispatch();
     const flow = useAppSelector((state) => state.flows.selected[0]);
-    let active = useAppSelector((state) => state.ui.flow.tab);
+    let active = useAppSelector((state) => state.ui.flow.tabResponse);
 
     if (flow == undefined) {
         return <></>;
