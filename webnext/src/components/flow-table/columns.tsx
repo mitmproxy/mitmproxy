@@ -15,7 +15,16 @@ import { formatSize, formatTimeDelta, formatTimeStamp } from "web/utils";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import * as flowActions from "web/ducks/flows";
-import { CircleAlert, Lock, LockOpen } from "lucide-react";
+import {
+  Bookmark,
+  CircleAlert,
+  Lock,
+  LockOpen,
+  OctagonX,
+  Pause,
+  RotateCw,
+} from "lucide-react";
+import type { ReactNode } from "react";
 
 export const columns: ColumnDef<Flow>[] = [
   {
@@ -70,22 +79,60 @@ export const columns: ColumnDef<Flow>[] = [
     size: 300,
     minSize: 150,
     maxSize: 500,
-    cell: function CellComponent({ row }) {
-      // TODO: implement flow.marked
+    cell: function CellComponent({ row: { original: flow } }) {
+      const icons: ReactNode[] = [];
 
-      const isError = Boolean(row.original.error);
+      if (flow.is_replay) {
+        icons.push(
+          <div title="Replayed flow">
+            <RotateCw className="size-4 text-blue-500" />
+          </div>,
+        );
+      }
+
+      if (flow.intercepted) {
+        icons.push(
+          <div title="Intercepted flow">
+            <Pause className="size-4 text-yellow-500" />
+          </div>,
+        );
+      }
+
+      if (flow.error) {
+        icons.push(
+          <div title={`Error: ${flow.error.msg || "unknown connection error"}`}>
+            {flow.error.msg === "Connection killed." ? (
+              <OctagonX className="size-4 text-red-500" />
+            ) : (
+              <CircleAlert className="size-4 text-red-500" />
+            )}
+          </div>,
+        );
+      }
+
+      if (flow.marked) {
+        icons.push(
+          <div title={`Marked with ${flow.marked}`}>
+            <Bookmark className="size-4 text-yellow-300" />
+          </div>,
+        );
+      }
+
+      const iconCount = icons.length;
+      const dynamicPaddingRight = iconCount > 0 ? iconCount * 20 : 0;
 
       return (
         <div className="relative">
-          <span className="block truncate pr-6">{mainPath(row.original)}</span>
+          <span
+            className="block truncate"
+            style={{ paddingRight: `${dynamicPaddingRight}px` }}
+          >
+            {mainPath(flow)}
+          </span>
 
-          {isError && (
-            <div
-              title={`Error: ${row.original.error?.msg ?? "unknown connection error"}`}
-            >
-              <CircleAlert className="absolute top-1/2 right-0 size-4 -translate-y-1/2 text-red-500" />
-            </div>
-          )}
+          <div className="absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-1">
+            {icons}
+          </div>
         </div>
       );
     },
