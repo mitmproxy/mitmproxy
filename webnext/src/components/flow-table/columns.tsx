@@ -29,11 +29,24 @@ import { ContentTypeIcon } from "@/components/content-type-icon";
 
 export const columns: ColumnDef<Flow>[] = [
   {
+    id: "index",
+    accessorKey: "index",
+    header: "#",
+    size: 10,
+    minSize: 20,
+    maxSize: 40,
+    cell: function CellComponent({ row }) {
+      const index = useAppSelector((state) =>
+        state.flows._listIndex.get(row.original.id),
+      );
+
+      return <span className="text-muted-foreground">{(index ?? 0) + 1}</span>;
+    },
+  },
+  {
     id: "tls",
-    header: "",
+    header: "TLS",
     size: 20,
-    //minSize: 8,
-    //maxSize: 8,
     cell: function CellComponent({ row }) {
       const isTLS = row.original.client_conn.tls_established;
 
@@ -49,26 +62,11 @@ export const columns: ColumnDef<Flow>[] = [
     },
   },
   {
-    id: "index",
-    accessorKey: "index",
-    header: "#",
-    size: 60,
-    minSize: 40,
-    maxSize: 80,
-    cell: function CellComponent({ row }) {
-      const index = useAppSelector((state) =>
-        state.flows._listIndex.get(row.original.id),
-      );
-
-      return (index ?? 0) + 1;
-    },
-  },
-  {
     id: "icon",
-    header: "",
-    size: 40,
-    minSize: 40,
-    maxSize: 50,
+    header: "Type",
+    size: 10,
+    minSize: 10,
+    maxSize: 40,
     cell: function CellComponent({ row }) {
       return <ContentTypeIcon flow={row.original} />;
     },
