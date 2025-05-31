@@ -1,4 +1,4 @@
-import { HeadersTable } from "@/components/flow-view/http-message/headers-table";
+import { RequestHeadersTable } from "@/components/flow-view/http-message/headers-table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,26 +16,26 @@ export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
         <TabsTrigger value="headers" className="text-xs">
           Headers
         </TabsTrigger>
+        <TabsTrigger value="cookies" className="text-xs">
+          Cookies
+        </TabsTrigger>
         <TabsTrigger value="query" className="text-xs">
           Query
         </TabsTrigger>
         <TabsTrigger value="body" className="text-xs">
           Body
         </TabsTrigger>
-        <TabsTrigger value="cookies" className="text-xs">
-          Cookies
-        </TabsTrigger>
-        <TabsTrigger value="raw" className="text-xs">
-          Raw
+        <TabsTrigger value="summary" className="text-xs">
+          Connection
         </TabsTrigger>
         <TabsTrigger value="summary" className="text-xs">
-          Summary
+          Timing
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="headers" className="min-h-0">
         <ScrollArea className="h-full">
-          <HeadersTable />
+          <RequestHeadersTable />
         </ScrollArea>
       </TabsContent>
     </Tabs>
