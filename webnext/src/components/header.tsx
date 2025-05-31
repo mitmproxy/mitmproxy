@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw, Square } from "lucide-react";
+import { LuPause, LuPlay, LuRotateCcw, LuSquare } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -10,17 +10,17 @@ export function Header() {
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm">
-            <Play className="h-4 w-4" />
+            <LuPlay className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm">
-            <Pause className="h-4 w-4" />
+            <LuPause className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm">
-            <Square className="h-4 w-4" />
+            <LuSquare className="h-4 w-4" />
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <Button variant="ghost" size="sm">
-            <RotateCcw className="h-4 w-4" />
+            <LuRotateCcw className="h-4 w-4" />
           </Button>
         </div>
       </div>

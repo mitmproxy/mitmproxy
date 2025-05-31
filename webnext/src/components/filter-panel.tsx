@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Filter } from "lucide-react";
+import { LuChevronDown, LuChevronRight, LuFilter } from "react-icons/lu";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
@@ -75,11 +75,11 @@ export function FilterPanel() {
         onClick={() => setShowFilterPanel(!showFilterPanel)}
       >
         {showFilterPanel ? (
-          <ChevronDown className="mr-2 h-4 w-4" />
+          <LuChevronDown className="mr-2 h-4 w-4" />
         ) : (
-          <ChevronRight className="mr-2 h-4 w-4" />
+          <LuChevronRight className="mr-2 h-4 w-4" />
         )}
-        <Filter className="mr-2 h-4 w-4" />
+        <LuFilter className="mr-2 h-4 w-4" />
         <span className="text-sm font-medium">Filter Settings</span>
       </div>
 

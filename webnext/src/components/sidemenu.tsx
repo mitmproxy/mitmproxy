@@ -1,21 +1,21 @@
-import { ChevronDown, Globe, Monitor } from "lucide-react";
+import { LuChevronDown, LuGlobe, LuMonitor } from "react-icons/lu";
 
 export function SideMenu() {
   return (
     <nav className="space-y-1">
       <div className="hover:bg-accent hover:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm">
-        <Monitor className="h-4 w-4" />
+        <LuMonitor className="h-4 w-4" />
         <span>Dashboard</span>
       </div>
 
       <div className="bg-accent text-accent-foreground flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium">
-        <Globe className="h-4 w-4" />
+        <LuGlobe className="h-4 w-4" />
         <span>Proxy</span>
       </div>
 
       <div className="space-y-1">
         <div className="hover:bg-accent hover:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm">
-          <ChevronDown className="h-4 w-4" />
+          <LuChevronDown className="h-4 w-4" />
           <span>Target</span>
         </div>
         <div className="ml-6 space-y-1">
@@ -30,7 +30,7 @@ export function SideMenu() {
 
       <div className="space-y-1">
         <div className="hover:bg-accent hover:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm">
-          <ChevronDown className="h-4 w-4" />
+          <LuChevronDown className="h-4 w-4" />
           <span>Tools</span>
         </div>
         <div className="ml-6 space-y-1">

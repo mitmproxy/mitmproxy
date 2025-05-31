@@ -1,4 +1,4 @@
-import { Sun, Moon } from "lucide-react";
+import { LuSun, LuMoon } from "react-icons/lu";
 import { useEffect } from "react";
 import { useDarkMode } from "usehooks-ts";
 
@@ -30,7 +30,11 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       className="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
     >
-      {!isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {!isDarkMode ? (
+        <LuSun className="h-4 w-4" />
+      ) : (
+        <LuMoon className="h-4 w-4" />
+      )}
       <span>{!isDarkMode ? "Light Mode" : "Dark Mode"}</span>
     </button>
   );

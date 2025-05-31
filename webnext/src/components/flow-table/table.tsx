@@ -18,7 +18,7 @@ import { columns } from "./columns";
 import { FlowRow } from "./row";
 import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
 import { setSort } from "web/ducks/flows";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { LuChevronDown, LuChevronUp } from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 
 export function FlowTable() {
@@ -107,7 +107,7 @@ export function FlowTable() {
                         )}
                     <div className="size-4">
                       {sortColumn === header.column.id && (
-                        <>{sortDesc ? <ChevronDown /> : <ChevronUp />}</>
+                        <>{sortDesc ? <LuChevronDown /> : <LuChevronUp />}</>
                       )}
                     </div>
                   </Button>

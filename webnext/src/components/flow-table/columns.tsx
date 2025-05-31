@@ -16,14 +16,14 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import * as flowActions from "web/ducks/flows";
 import {
-  Bookmark,
-  CircleAlert,
-  Lock,
-  LockOpen,
-  OctagonX,
-  Pause,
-  RotateCw,
-} from "lucide-react";
+  LuBookmark,
+  LuCircleAlert,
+  LuLock,
+  LuLockOpen,
+  LuOctagonX,
+  LuPause,
+  LuRotateCw,
+} from "react-icons/lu";
 import type { ReactNode } from "react";
 
 // TODO: source icon in table row
@@ -42,9 +42,9 @@ export const columns: ColumnDef<Flow>[] = [
       return (
         <div title={isTLS ? "Client TLS connection established" : "No TLS"}>
           {isTLS ? (
-            <Lock className="text-muted-foreground size-4" />
+            <LuLock className="text-muted-foreground size-4" />
           ) : (
-            <LockOpen className="text-muted-foreground size-4" />
+            <LuLockOpen className="text-muted-foreground size-4" />
           )}
         </div>
       );
@@ -88,7 +88,7 @@ export const columns: ColumnDef<Flow>[] = [
       if (flow.is_replay) {
         icons.push(
           <div key="replay" title="Replayed flow">
-            <RotateCw className="size-4 text-blue-500" />
+            <LuRotateCw className="size-4 text-blue-500" />
           </div>,
         );
       }
@@ -96,7 +96,7 @@ export const columns: ColumnDef<Flow>[] = [
       if (flow.intercepted) {
         icons.push(
           <div key="pause" title="Intercepted flow">
-            <Pause className="size-4 text-yellow-500" />
+            <LuPause className="size-4 text-yellow-500" />
           </div>,
         );
       }
@@ -108,9 +108,9 @@ export const columns: ColumnDef<Flow>[] = [
             title={`Error: ${flow.error.msg || "unknown connection error"}`}
           >
             {flow.error.msg === "Connection killed." ? (
-              <OctagonX className="size-4 text-red-500" />
+              <LuOctagonX className="size-4 text-red-500" />
             ) : (
-              <CircleAlert className="size-4 text-red-500" />
+              <LuCircleAlert className="size-4 text-red-500" />
             )}
           </div>,
         );
@@ -119,7 +119,7 @@ export const columns: ColumnDef<Flow>[] = [
       if (flow.marked) {
         icons.push(
           <div key="marked" title={`Marked with ${flow.marked}`}>
-            <Bookmark className="size-4 text-yellow-300" />
+            <LuBookmark className="size-4 text-yellow-300" />
           </div>,
         );
       }

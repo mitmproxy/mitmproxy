@@ -1,4 +1,10 @@
-import { Activity, Settings, Wifi, ArrowRight, Play } from "lucide-react";
+import {
+  LuActivity,
+  LuSettings,
+  LuWifi,
+  LuArrowRight,
+  LuPlay,
+} from "react-icons/lu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -15,14 +21,14 @@ export function CaptureSetup() {
 
         <div className="relative">
           <div className="bg-muted mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-full border">
-            <Activity className="text-primary h-16 w-16" strokeWidth={1.5} />
+            <LuActivity className="text-primary h-16 w-16" strokeWidth={1.5} />
           </div>
 
           <div className="bg-secondary absolute top-4 left-1/4 flex h-8 w-8 items-center justify-center rounded-full border">
-            <Wifi className="text-secondary-foreground h-4 w-4" />
+            <LuWifi className="text-secondary-foreground h-4 w-4" />
           </div>
           <div className="bg-accent absolute top-8 right-1/4 flex h-6 w-6 items-center justify-center rounded-full border">
-            <Settings className="text-accent-foreground h-3 w-3" />
+            <LuSettings className="text-accent-foreground h-3 w-3" />
           </div>
         </div>
 
@@ -40,7 +46,7 @@ export function CaptureSetup() {
           <Card className="border-border hover:border-primary/50 group border-2 border-dashed transition-colors">
             <CardContent className="p-6 text-center">
               <div className="bg-primary/10 group-hover:bg-primary/20 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-colors">
-                <Settings className="text-primary h-6 w-6" />
+                <LuSettings className="text-primary h-6 w-6" />
               </div>
               <h3 className="text-foreground mb-2 font-semibold">
                 Configure Capture
@@ -51,7 +57,7 @@ export function CaptureSetup() {
               </p>
               <Button variant="outline" className="w-full">
                 Open Capture Tab
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <LuArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
@@ -59,7 +65,7 @@ export function CaptureSetup() {
           <Card className="border-border hover:border-primary/50 group border-2 border-dashed transition-colors">
             <CardContent className="p-6 text-center">
               <div className="bg-primary/10 group-hover:bg-primary/20 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-colors">
-                <Play className="text-primary h-6 w-6" />
+                <LuPlay className="text-primary h-6 w-6" />
               </div>
               <h3 className="text-foreground mb-2 font-semibold">
                 Quick Start
@@ -69,7 +75,7 @@ export function CaptureSetup() {
               </p>
               <Button variant="outline" className="w-full">
                 View Guide
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <LuArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>

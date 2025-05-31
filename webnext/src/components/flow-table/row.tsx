@@ -20,7 +20,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { canReplay, mainPath } from "web/flow/utils";
-import { Clipboard, Play, RotateCw } from "lucide-react";
+import { LuClipboard, LuPlay, LuRotateCw } from "react-icons/lu";
 
 export type FlowRowProps = {
   flow: Flow;
@@ -72,13 +72,13 @@ function FlowRow({
         {/* Quick actions. */}
         {canReplay(flow) && (
           <ContextMenuItem onClick={() => void dispatch(replay([flow]))}>
-            <RotateCw />
+            <LuRotateCw />
             Replay <ContextMenuShortcut>r</ContextMenuShortcut>
           </ContextMenuItem>
         )}
         {flow.intercepted && (
           <ContextMenuItem onClick={() => void dispatch(resume([flow]))}>
-            <Play />
+            <LuPlay />
             Resume
           </ContextMenuItem>
         )}
@@ -90,7 +90,7 @@ function FlowRow({
             <ContextMenuItem
               onClick={() => void navigator.clipboard.writeText(mainPath(flow))}
             >
-              <Clipboard /> Copy {flow.type === "http" ? "URL" : "Path"}
+              <LuClipboard /> Copy {flow.type === "http" ? "URL" : "Path"}
             </ContextMenuItem>
           </>
         )}
