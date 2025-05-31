@@ -30,3 +30,23 @@ test("CodeEditor highlights YAML", async () => {
     );
     expect(asFragment()).toMatchSnapshot();
 });
+test("CodeEditor highlights JavaScript", async () => {
+    const { asFragment } = render(
+        <CodeEditor
+            initialContent="alert(1);"
+            onChange={() => 0}
+            language={SyntaxHighlight.JAVASCRIPT}
+        />,
+    );
+    expect(asFragment()).toMatchSnapshot();
+});
+test("CodeEditor highlights CSS", async () => {
+    const { asFragment } = render(
+        <CodeEditor
+            initialContent="p { color: red; }"
+            onChange={() => 0}
+            language={SyntaxHighlight.CSS}
+        />,
+    );
+    expect(asFragment()).toMatchSnapshot();
+});

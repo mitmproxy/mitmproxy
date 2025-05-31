@@ -1,8 +1,10 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
-import { yaml } from "@codemirror/lang-yaml";
+import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
+import { javascript } from "@codemirror/lang-javascript";
+import { yaml } from "@codemirror/lang-yaml";
 import { SyntaxHighlight } from "../../backends/consts";
 
 type CodeEditorProps = {
@@ -28,14 +30,14 @@ export default function CodeEditor({
                 return [yaml()];
             case SyntaxHighlight.XML:
                 return [html()];
-            //case "javascript":
-            //    return [javascript()];
-            //case "css":
-            //    return [css()];
-            case SyntaxHighlight.NONE:
-            case SyntaxHighlight.ERROR:
+            case SyntaxHighlight.JAVASCRIPT:
+                return [javascript()];
+            case SyntaxHighlight.CSS:
+                return [css()];
             case undefined:
             case null:
+            case SyntaxHighlight.NONE:
+            case SyntaxHighlight.ERROR:
                 return [];
             /* istanbul ignore next @preserve */
             default: {
