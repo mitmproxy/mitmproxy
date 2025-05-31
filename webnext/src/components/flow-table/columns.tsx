@@ -26,6 +26,11 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+// TODO: sorting indicators in table header
+// TODO: replay flow action (R click context menu + indicator for 'R' shortcut key)
+// TODO: source icon in table row
+// TODO: improve status badge colors
+
 export const columns: ColumnDef<Flow>[] = [
   {
     id: "tls",
@@ -84,7 +89,7 @@ export const columns: ColumnDef<Flow>[] = [
 
       if (flow.is_replay) {
         icons.push(
-          <div title="Replayed flow">
+          <div key="replay" title="Replayed flow">
             <RotateCw className="size-4 text-blue-500" />
           </div>,
         );
@@ -92,7 +97,7 @@ export const columns: ColumnDef<Flow>[] = [
 
       if (flow.intercepted) {
         icons.push(
-          <div title="Intercepted flow">
+          <div key="pause" title="Intercepted flow">
             <Pause className="size-4 text-yellow-500" />
           </div>,
         );
@@ -100,7 +105,10 @@ export const columns: ColumnDef<Flow>[] = [
 
       if (flow.error) {
         icons.push(
-          <div title={`Error: ${flow.error.msg || "unknown connection error"}`}>
+          <div
+            key="error"
+            title={`Error: ${flow.error.msg || "unknown connection error"}`}
+          >
             {flow.error.msg === "Connection killed." ? (
               <OctagonX className="size-4 text-red-500" />
             ) : (
@@ -112,7 +120,7 @@ export const columns: ColumnDef<Flow>[] = [
 
       if (flow.marked) {
         icons.push(
-          <div title={`Marked with ${flow.marked}`}>
+          <div key="marked" title={`Marked with ${flow.marked}`}>
             <Bookmark className="size-4 text-yellow-300" />
           </div>,
         );
