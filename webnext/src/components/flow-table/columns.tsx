@@ -27,8 +27,6 @@ import {
 import type { ReactNode } from "react";
 import { ContentTypeIcon } from "@/components/content-type-icon";
 
-// TODO: improve status badge colors
-
 export const columns: ColumnDef<Flow>[] = [
   {
     id: "tls",

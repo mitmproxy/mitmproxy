@@ -45,6 +45,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-foreground: var(--status-foreground);
+  --color-status-informational: var(--status-informational);
+  --color-status-successful: var(--status-successful);
+  --color-status-redirection: var(--status-redirection);
+  --color-status-client-error: var(--status-client-error);
+  --color-status-server-error: var(--status-server-error);
 }
 
 :root {
@@ -68,6 +74,12 @@
   --input: hsl(214.3 31.8% 91.4%);
   --ring: hsl(222.2 84% 4.9%);
   --radius: 0.5rem;
+  --status-foreground: hsl(222.2 84% 4.9%);
+  --status-informational: oklch(87.1% 0.15 154.449);
+  --status-successful: oklch(87.1% 0.15 154.449);
+  --status-redirection: oklch(80.9% 0.105 251.813);
+  --status-client-error: oklch(80.8% 0.114 19.571);
+  --status-server-error: oklch(80.8% 0.114 19.571);
 }
 
 .dark {
@@ -90,6 +102,12 @@
   --border: hsl(0 0% 14.9%);
   --input: hsl(0 0% 14.9%);
   --ring: hsl(0 0% 83.1%);
+  --status-foreground: hsl(0 0% 98%);
+  --status-informational: oklch(52.7% 0.154 150.069);
+  --status-successful: oklch(52.7% 0.154 150.069);
+  --status-redirection: oklch(48.8% 0.243 264.376);
+  --status-client-error: oklch(50.5% 0.213 27.518);
+  --status-server-error: oklch(50.5% 0.213 27.518);
 }
 
 @layer base {

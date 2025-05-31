@@ -1,14 +1,14 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Badge } from "@/components/ui/badge";
 
-export const statusVariants = cva(null, {
+export const statusVariants = cva("text-status-foreground", {
   variants: {
     status: {
-      informational: "bg-green-500",
-      successful: "bg-green-800",
-      redirection: "bg-blue-500",
-      clientError: "bg-red-500",
-      serverError: "bg-red-500",
+      informational: "bg-status-informational",
+      successful: "bg-status-successful",
+      redirection: "bg-status-redirection",
+      clientError: "bg-status-client-error",
+      serverError: "bg-status-server-error",
     },
   },
   defaultVariants: {
