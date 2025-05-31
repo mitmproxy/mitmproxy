@@ -69,6 +69,7 @@ function FlowRow({
       </ContextMenuTrigger>
       <ContextMenuContent className="w-52">
         <ContextMenuLabel>Flow {(index ?? 0) + 1}</ContextMenuLabel>
+        {/* Quick actions. */}
         {canReplay(flow) && (
           <ContextMenuItem onClick={() => void dispatch(replay([flow]))}>
             <RotateCw />
@@ -82,11 +83,17 @@ function FlowRow({
           </ContextMenuItem>
         )}
         <ContextMenuSeparator />
-        <ContextMenuItem
-          onClick={() => void navigator.clipboard.writeText(mainPath(flow))}
-        >
-          <Clipboard /> Copy {flow.type === "http" ? "URL" : "Path"}
-        </ContextMenuItem>
+
+        {/* Actions that are only available to selected flow(s). */}
+        {selected && (
+          <>
+            <ContextMenuItem
+              onClick={() => void navigator.clipboard.writeText(mainPath(flow))}
+            >
+              <Clipboard /> Copy {flow.type === "http" ? "URL" : "Path"}
+            </ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
   );
