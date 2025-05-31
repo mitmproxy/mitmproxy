@@ -32,17 +32,21 @@ const mockResponseData = {
   },
 };
 
-export function ResponseDetails() {
+export type ResponseDetailsProps = {
+  tab: string;
+};
+
+export function ResponseDetails({ tab = "headers" }: ResponseDetailsProps) {
   return (
-    <Tabs defaultValue="body" className="flex h-full flex-col">
+    <Tabs defaultValue={tab} className="flex h-full flex-col">
       <div className="bg-muted/20 border-b px-4 py-2">
         <div className="mb-2 flex items-center gap-2">
           <span className="text-sm font-medium">Response</span>
           <span className="text-muted-foreground text-xs">JSON</span>
         </div>
         <TabsList className="grid h-8 w-full grid-cols-5">
-          <TabsTrigger value="header" className="text-xs">
-            Header
+          <TabsTrigger value="headers" className="text-xs">
+            Headers
           </TabsTrigger>
           <TabsTrigger value="body" className="text-xs">
             Body
