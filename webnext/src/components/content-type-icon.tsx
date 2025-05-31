@@ -51,11 +51,20 @@ export function ContentTypeIcon({ flow }: { flow: Flow }) {
       break;
   }
 
-  return <Icon className="text-muted-foreground" title={contentType} />;
+  return (
+    <Icon
+      className="text-muted-foreground"
+      title={contentType.split("-").join(" ")}
+    />
+  );
 }
 
 function createCustomIcon(text: string) {
-  return function CustomTextIcon({ className }: IconBaseProps) {
-    return <span className={cn("font-mono", className)}>{text}</span>;
+  return function CustomTextIcon({ className, title }: IconBaseProps) {
+    return (
+      <span className={cn("font-mono", className)} title={title}>
+        {text}
+      </span>
+    );
   };
 }
