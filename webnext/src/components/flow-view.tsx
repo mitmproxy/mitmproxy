@@ -34,44 +34,39 @@ export function FlowView() {
   }
 
   return (
-    <ResizablePanel defaultSize={40}>
-      <div className="flex h-full flex-col">
-        <div className="bg-muted/30 border-b px-4 py-3">
-          {flow.type === "http" && (
-            <div className="flex items-center gap-3">
-              <Badge
-                variant="outline"
-                className="px-2 py-1 text-sm font-medium"
-              >
-                {flow.request.method}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="bg-green-100 px-2 py-1 text-sm text-green-700 dark:bg-green-900/50 dark:text-green-300"
-              >
-                {statusCode(flow)}
-              </Badge>
-              <span className="font-mono text-sm text-blue-600 dark:text-blue-400">
-                {mainPath(flow)}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel defaultSize={50}>
-              <RequestDetails tab={activeTabRequest} />
-            </ResizablePanel>
-
-            <ResizableHandle withHandle />
-
-            <ResizablePanel defaultSize={50}>
-              <ResponseDetails tab={activeTabResponse} />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </div>
+    <div className="flex h-full flex-col">
+      <div className="bg-muted/30 border-b px-4 py-3">
+        {flow.type === "http" && (
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="px-2 py-1 text-sm font-medium">
+              {flow.request.method}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="bg-green-100 px-2 py-1 text-sm text-green-700 dark:bg-green-900/50 dark:text-green-300"
+            >
+              {statusCode(flow)}
+            </Badge>
+            <span className="font-mono text-sm text-blue-600 dark:text-blue-400">
+              {mainPath(flow)}
+            </span>
+          </div>
+        )}
       </div>
-    </ResizablePanel>
+
+      <div className="min-h-0">
+        <ResizablePanelGroup id="flow-view-panel-group" direction="horizontal">
+          <ResizablePanel id="request-details-panel" defaultSize={50}>
+            <RequestDetails tab={activeTabRequest} />
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          <ResizablePanel id="response-details-panel" defaultSize={50}>
+            <ResponseDetails tab={activeTabResponse} />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    </div>
   );
 }

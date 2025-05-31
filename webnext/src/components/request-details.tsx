@@ -1,4 +1,5 @@
 import { HeadersTable } from "@/components/flow-view/http-message/headers-table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type RequestDetailsProps = {
@@ -7,7 +8,7 @@ export type RequestDetailsProps = {
 
 export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
   return (
-    <Tabs defaultValue={tab} className="p-4">
+    <Tabs defaultValue={tab} className="h-full p-4">
       <div className="mb-2 flex items-center gap-2">
         <span className="text-sm font-medium">Request</span>
       </div>
@@ -32,8 +33,10 @@ export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="headers">
-        <HeadersTable />
+      <TabsContent value="headers" className="min-h-0">
+        <ScrollArea className="h-full">
+          <HeadersTable />
+        </ScrollArea>
       </TabsContent>
     </Tabs>
   );

@@ -16,20 +16,20 @@ export function MainView() {
   // const currentTab = useAppSelector((state) => state.ui.tabs.current); // TODO: implement tabs
 
   return hasFlows ? (
-    <div className="flex-1">
-      <ResizablePanelGroup direction="vertical">
-        <ResizablePanel defaultSize={60}>
-          <FlowTable />
-        </ResizablePanel>
+    <ResizablePanelGroup direction="vertical">
+      <ResizablePanel id="flow-table-panel" defaultSize={60}>
+        <FlowTable />
+      </ResizablePanel>
 
-        {hasOneFlowSelected && (
-          <>
-            <ResizableHandle />
+      {hasOneFlowSelected && (
+        <>
+          <ResizableHandle />
+          <ResizablePanel id="flow-view-panel" defaultSize={40}>
             <FlowView />
-          </>
-        )}
-      </ResizablePanelGroup>
-    </div>
+          </ResizablePanel>
+        </>
+      )}
+    </ResizablePanelGroup>
   ) : (
     <CaptureSetup />
   );
