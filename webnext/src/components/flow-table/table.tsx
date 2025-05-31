@@ -128,8 +128,8 @@ export function FlowTable() {
                 className="truncate"
                 style={{
                   width: cell.column.columnDef.size,
-                  minWidth: cell.column.columnDef.size,
-                  maxWidth: cell.column.columnDef.size,
+                  minWidth: cell.column.columnDef.minSize,
+                  maxWidth: cell.column.columnDef.maxSize,
                 }}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
