@@ -25,8 +25,8 @@ import {
   LuRotateCw,
 } from "react-icons/lu";
 import type { ReactNode } from "react";
+import { ContentTypeIcon } from "@/components/content-type-icon";
 
-// TODO: source icon in table row
 // TODO: improve status badge colors
 
 export const columns: ColumnDef<Flow>[] = [
@@ -71,9 +71,8 @@ export const columns: ColumnDef<Flow>[] = [
     size: 40,
     minSize: 40,
     maxSize: 50,
-    cell: function CellComponent() {
-      // TODO: implement icons
-      return "icon";
+    cell: function CellComponent({ row }) {
+      return <ContentTypeIcon flow={row.original} />;
     },
   },
   {
