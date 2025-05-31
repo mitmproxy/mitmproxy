@@ -83,10 +83,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def auth_cookie(self) -> str:
         auth_cookie = create_signed_value(
             secret=self._app.settings["cookie_secret"],
-            name=app.AuthRequestHandler.AUTH_COOKIE_NAME,
+            name=self._app.settings["auth_cookie_name"],
             value=app.AuthRequestHandler.AUTH_COOKIE_VALUE,
         ).decode()
-        return f"{app.AuthRequestHandler.AUTH_COOKIE_NAME}={auth_cookie}"
+        return f"{self._app.settings['auth_cookie_name']}={auth_cookie}"
 
     def fetch(self, *args, **kwargs) -> httpclient.HTTPResponse:
         kwargs.setdefault("headers", {}).setdefault("Cookie", self.auth_cookie)
@@ -430,6 +430,110 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_req)
         ws_client2.close()
+
+    @tornado.testing.gen_test
+    def test_websocket_filter_application(self):
+        ws_req = httpclient.HTTPRequest(
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
+        ws_client = yield tornado.websocket.websocket_connect(ws_req)
+
+        # test update filter message
+        message = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "~bq foo",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "type": "flows/filterUpdate",
+            "payload": {
+                "name": "search",
+                "matching_flow_ids": ["42"],
+            },
+        }
+
+        # test add flow
+        f = tflow.tflow(resp=True)
+        f.id = "41"
+        f.request.content = b"foo\nbarbar"
+
+        app.ClientConnection.broadcast_flow("flows/add", f)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response["type"] == "flows/add"
+        assert response["payload"]["matching_filters"] == {"search": True}
+        assert response["payload"]["flow"]["id"] == "41"
+
+        # test update flow
+        f.request.content = b"bar"
+
+        app.ClientConnection.broadcast_flow("flows/update", f)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response["type"] == "flows/update"
+        assert response["payload"]["matching_filters"] == {"search": False}
+        assert response["payload"]["flow"]["id"] == "41"
+
+        # test filter removal
+        message = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "type": "flows/filterUpdate",
+            "payload": {
+                "name": "search",
+                "matching_flow_ids": None,
+            },
+        }
+
+        ws_client.close()
+
+    @tornado.testing.gen_test
+    def test_websocket_filter_command_error(self):
+        # can't do pytest.parametrize, so we do this.
+        for data in [
+            """{"type": "flows/updateFilter"}""",
+            """{"type": "unknownCommand"}""",
+            "invalid json",
+        ]:
+            ws_req = httpclient.HTTPRequest(
+                f"ws://localhost:{self.get_http_port()}/updates",
+                headers={"Cookie": self.auth_cookie},
+            )
+            ws_client = yield tornado.websocket.websocket_connect(ws_req)
+
+            yield ws_client.write_message(data)
+            response = yield ws_client.read_message()
+
+            # Connection should be closed
+            self.assertIsNone(response)
+            self.assertEqual(ws_client.close_code, 1011)
+            self.assertEqual(ws_client.close_reason, "Internal server error.")
 
     def test_process_list(self):
         try:

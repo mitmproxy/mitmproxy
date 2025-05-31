@@ -1,16 +1,15 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
 import { yaml } from "@codemirror/lang-yaml";
-import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
+import { SyntaxHighlight } from "../../backends/consts";
 
 type CodeEditorProps = {
     initialContent: string;
     onChange: (content: string) => void;
     readonly?: boolean;
-    language?: "javascript" | "yaml" | "css" | "html";
+    language?: SyntaxHighlight | null;
 };
 
 export default function CodeEditor({
@@ -25,16 +24,28 @@ export default function CodeEditor({
     );
     const extensions = useMemo(() => {
         switch (language) {
-            case "javascript":
-                return [javascript()];
-            case "yaml":
+            case SyntaxHighlight.YAML:
                 return [yaml()];
-            case "css":
-                return [css()];
-            case "html":
+            case SyntaxHighlight.XML:
                 return [html()];
-            default:
+            //case "javascript":
+            //    return [javascript()];
+            //case "css":
+            //    return [css()];
+            case SyntaxHighlight.NONE:
+            case SyntaxHighlight.ERROR:
+            case undefined:
+            case null:
                 return [];
+            /* istanbul ignore next @preserve */
+            default: {
+                const unexpected: never = language;
+                console.error(
+                    "Unexpected syntax highlighting language: ",
+                    unexpected,
+                );
+                return [];
+            }
         }
     }, [language]);
     return (

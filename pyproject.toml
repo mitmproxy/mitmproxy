@@ -35,23 +35,23 @@ dependencies = [
     "asgiref>=3.2.10,<=3.8.1",
     "Brotli>=1.0,<=1.1.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
-    "cryptography>=42.0,<44.1",  # relaxed upper bound here to get security fixes
-    "flask>=3.0,<=3.1.0",
+    "cryptography>=42.0,<45.1",  # relaxed upper bound here to get security fixes
+    "flask>=3.0,<=3.1.1",
     "h11>=0.16.0,<=0.16.0",
     "h2>=4.1,<=4.1.0",
     "hyperframe>=6.0,<=6.1.0",
     "kaitaistruct>=0.10,<=0.10",
     "ldap3>=2.8,<=2.9.1",
-    "mitmproxy_rs>=0.12.3,<0.13",  # relaxed upper bound here: we control this
+    "mitmproxy_rs>=0.12.5,<0.13",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.0",
     "passlib>=1.6.5,<=1.7.4",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
-    "pyOpenSSL>=24.3,<=25.0.0",
+    "pyOpenSSL>=24.3,<=25.1.0",
     "pyparsing>=2.4.2,<=3.2.3",
     "pyperclip<=1.9.0,>=1.9.0",
-    "ruamel.yaml>=0.18.10,<=0.18.10",
+    "ruamel.yaml>=0.18.10,<=0.18.12",
     "sortedcontainers>=2.3,<=2.4.0",
-    "tornado>=6.5.0,<=6.5.0",
+    "tornado>=6.5.0,<=6.5.1",
     "typing-extensions>=4.13.2,<=4.14; python_version < '3.13'",
     "urwid>=2.6.14,<=2.6.16",
     "wsproto>=1.0,<=1.2.0",

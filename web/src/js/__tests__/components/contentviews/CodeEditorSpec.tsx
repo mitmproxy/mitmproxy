@@ -1,6 +1,7 @@
 import * as React from "react";
 import CodeEditor from "../../../components/contentviews/CodeEditor";
 import { render } from "../../test-utils";
+import { SyntaxHighlight } from "../../../backends/consts";
 
 test("CodeEditor", async () => {
     const { asFragment } = render(
@@ -9,32 +10,12 @@ test("CodeEditor", async () => {
     expect(asFragment()).toMatchSnapshot();
 });
 
-test("CodeEditor highlights JavaScript", async () => {
-    const { asFragment } = render(
-        <CodeEditor
-            initialContent="alert(1);"
-            onChange={() => 0}
-            language="javascript"
-        />,
-    );
-    expect(asFragment()).toMatchSnapshot();
-});
 test("CodeEditor highlights HTML", async () => {
     const { asFragment } = render(
         <CodeEditor
             initialContent="<p>yay</p>"
             onChange={() => 0}
-            language="html"
-        />,
-    );
-    expect(asFragment()).toMatchSnapshot();
-});
-test("CodeEditor highlights CSS", async () => {
-    const { asFragment } = render(
-        <CodeEditor
-            initialContent="* { color: black; }"
-            onChange={() => 0}
-            language="css"
+            language={SyntaxHighlight.XML}
         />,
     );
     expect(asFragment()).toMatchSnapshot();
@@ -44,7 +25,7 @@ test("CodeEditor highlights YAML", async () => {
         <CodeEditor
             initialContent="foo: bar"
             onChange={() => 0}
-            language="yaml"
+            language={SyntaxHighlight.YAML}
         />,
     );
     expect(asFragment()).toMatchSnapshot();

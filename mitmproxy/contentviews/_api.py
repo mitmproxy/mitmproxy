@@ -17,7 +17,7 @@ from mitmproxy.websocket import WebSocketMessage
 logger = logging.getLogger(__name__)
 
 
-type SyntaxHighlight = Literal["yaml", "xml", "error", "none"]
+type SyntaxHighlight = Literal["xml", "yaml", "error", "none"]
 
 
 @typing.runtime_checkable

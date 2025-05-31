@@ -7,8 +7,24 @@
 
 ## Unreleased: mitmproxy next
 
+- Do not escape non-ascii characters in the JSON contentview.
+  ([#7740](https://github.com/mitmproxy/mitmproxy/pull/7740), @mhils)
+- Fix crash in mitmweb when no explicit Server-Connection is logged.
+  ([#7734](https://github.com/mitmproxy/mitmproxy/pull/7734), @lups2000)
+
+## 25 May 2025: mitmproxy 12.1.1
+
+- Fix a race condition when updating the flow list in mitmweb.
+  ([#7729](https://github.com/mitmproxy/mitmproxy/pull/7729), @mhils)
+
+## 24 May 2025: mitmproxy 12.1.0
+
+- mitmweb now supports filtering by body contents (~b, ~bq, ~bs).
+  ([#7704](https://github.com/mitmproxy/mitmproxy/pull/7704), @lups2000, @mhils)
 - Fix raw response export incorrectly zeroing non-zero `Content-Length` header for HEAD requests.
   ([#7701](https://github.com/mitmproxy/mitmproxy/pull/7701), @sujaldev)
+- Fix concurrent mitmweb instances overwrite each other's auth cookie.
+  ([#7690](https://github.com/mitmproxy/mitmproxy/pull/7690), @turboOrange)
 
 ## 06 May 2025: mitmproxy 12.0.1
 

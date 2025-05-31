@@ -21,12 +21,27 @@ describe("connection reducer", () => {
     it("should handle connection established", () => {
         expect(
             reduceConnection(
-                undefined,
-                ConnectionActions.connectionEstablished(),
+                {
+                    state: ConnectionState.FETCHING,
+                    message: undefined,
+                },
+                ConnectionActions.finishFetching(),
             ),
         ).toEqual({
             state: ConnectionState.ESTABLISHED,
             message: undefined,
+        });
+        expect(
+            reduceConnection(
+                {
+                    state: ConnectionState.ERROR,
+                    message: "we already failed",
+                },
+                ConnectionActions.finishFetching(),
+            ),
+        ).toEqual({
+            state: ConnectionState.ERROR,
+            message: "we already failed",
         });
     });
 
@@ -39,15 +54,6 @@ describe("connection reducer", () => {
         ).toEqual({
             state: ConnectionState.ERROR,
             message: "no internet",
-        });
-    });
-
-    it("should handle offline mode", () => {
-        expect(
-            reduceConnection(undefined, ConnectionActions.setOffline()),
-        ).toEqual({
-            state: ConnectionState.OFFLINE,
-            message: undefined,
         });
     });
 });

@@ -1,10 +1,13 @@
+import typing
 from pathlib import Path
 
 from ruamel.yaml import YAML
 
+import mitmproxy_rs.syntax_highlight
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import InteractiveContentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.contentviews._view_raw import raw
 from mitmproxy.test import tflow
 from mitmproxy_rs.contentviews import _test_inspect_metadata
@@ -53,6 +56,12 @@ def test_default_impls():
 
 
 class TestRustInterop:
+    def test_syntaxhighlight_matches(self):
+        assert (
+            list(typing.get_args(SyntaxHighlight.__value__))
+            == mitmproxy_rs.syntax_highlight.languages()
+        )
+
     def test_compare(self):
         assert msgpack < raw
         assert not raw < msgpack
