@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-// TODO: sorting indicators in table header
 // TODO: source icon in table row
 // TODO: improve status badge colors
 

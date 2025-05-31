@@ -18,11 +18,13 @@ import { columns } from "./columns";
 import { FlowRow } from "./row";
 import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
 import { setSort } from "web/ducks/flows";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function FlowTable() {
   const displayColumnNames = useAppSelector(
     (state) => state.options.web_columns,
-  ).concat(["index"]); // include the index column (not the case by default for some reason)
+  );
   const flowView = useSelector((state: RootState) => state.flows.view);
   const highlightedIds = useSelector(
     (state: RootState) => state.flows.highlightedIds,
@@ -33,7 +35,9 @@ export function FlowTable() {
   const table = useReactTable({
     data: flowView,
     columns: columns.filter(
-      (col) => col.id && displayColumnNames.includes(col.id),
+      // Also include the index column (not the case by default for some reason)
+      (col) =>
+        col.id && (col.id === "index" || displayColumnNames.includes(col.id)),
     ),
     getCoreRowModel: getCoreRowModel(),
   });
@@ -62,6 +66,10 @@ export function FlowTable() {
         const sortDesc = useAppSelector((state) => state.flows.sort.desc);
         const sortColumn = useAppSelector((state) => state.flows.sort.column);
 
+        // TODO: Can we use native tanstack table sorting?
+        //       Mitmproxy only supports sorting by one column at a time
+        //       so we'd probably need to adapt the sorting logic.
+
         return (
           <TableRow>
             {table.getHeaderGroups().map((headerGroup) =>
@@ -87,12 +95,22 @@ export function FlowTable() {
                     )
                   }
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
+                  <Button
+                    variant="ghost"
+                    className="flex w-full justify-between gap-2 p-0"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                    <div className="size-4">
+                      {sortColumn === header.column.id && (
+                        <>{sortDesc ? <ChevronDown /> : <ChevronUp />}</>
                       )}
+                    </div>
+                  </Button>
                 </TableHead>
               )),
             )}
