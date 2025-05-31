@@ -30,7 +30,7 @@ export function App() {
     <div className="font-inter bg-background text-foreground dark: flex h-screen flex-col">
       <Header />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         <div className="bg-muted/20 relative w-64 border-r">
           <div className="p-3">
             <SideMenu />
