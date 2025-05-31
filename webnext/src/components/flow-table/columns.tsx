@@ -27,7 +27,6 @@ import {
 import type { ReactNode } from "react";
 
 // TODO: sorting indicators in table header
-// TODO: replay flow action (R click context menu + indicator for 'R' shortcut key)
 // TODO: source icon in table row
 // TODO: improve status badge colors
 

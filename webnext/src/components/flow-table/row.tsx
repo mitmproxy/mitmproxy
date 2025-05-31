@@ -1,9 +1,26 @@
 import type { Flow } from "web/flow";
 import { cn } from "@/lib/utils";
-import { useAppDispatch } from "web/ducks/hooks";
-import { select, selectRange, selectToggle } from "web/ducks/flows";
+import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
+import {
+  replay,
+  resume,
+  select,
+  selectRange,
+  selectToggle,
+} from "web/ducks/flows";
 import { memo, useCallback } from "react";
 import { TableRow, type TableRowProps } from "@/components/ui/table";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { canReplay, mainPath } from "web/flow/utils";
+import { Clipboard, Play, RotateCw } from "lucide-react";
 
 export type FlowRowProps = {
   flow: Flow;
@@ -21,12 +38,6 @@ function FlowRow({
   const dispatch = useAppDispatch();
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLTableRowElement>) => {
-      // a bit of a hack to disable row selection for quickactions.
-      let node = e.target as HTMLElement;
-      while (node.parentNode) {
-        if (node.classList.contains("col-quickactions")) return;
-        node = node.parentNode as HTMLElement;
-      }
       if (e.metaKey || e.ctrlKey) {
         dispatch(selectToggle(flow));
       } else if (e.shiftKey) {
@@ -38,20 +49,46 @@ function FlowRow({
     },
     [dispatch, flow],
   );
+  const index = useAppSelector((state) => state.flows._listIndex.get(flow.id));
 
   // TODO: add higlighted, intercepted, etc. state colors
 
   return (
-    <TableRow
-      key={flow.id}
-      {...props}
-      className={cn(
-        "cursor-pointer",
-        selected ? "bg-accent/50" : "hover:bg-muted/50",
-        className,
-      )}
-      onClick={onClick}
-    />
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <TableRow
+          key={flow.id}
+          {...props}
+          className={cn(
+            "cursor-pointer",
+            selected ? "bg-accent/50" : "hover:bg-muted/50",
+            className,
+          )}
+          onClick={onClick}
+        />
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-52">
+        <ContextMenuLabel>Flow {(index ?? 0) + 1}</ContextMenuLabel>
+        {canReplay(flow) && (
+          <ContextMenuItem onClick={() => void dispatch(replay([flow]))}>
+            <RotateCw />
+            Replay <ContextMenuShortcut>r</ContextMenuShortcut>
+          </ContextMenuItem>
+        )}
+        {flow.intercepted && (
+          <ContextMenuItem onClick={() => void dispatch(resume([flow]))}>
+            <Play />
+            Resume
+          </ContextMenuItem>
+        )}
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          onClick={() => void navigator.clipboard.writeText(mainPath(flow))}
+        >
+          <Clipboard /> Copy {flow.type === "http" ? "URL" : "Path"}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
