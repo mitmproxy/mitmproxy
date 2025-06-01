@@ -39,14 +39,12 @@ function HttpMessageView({ flow, message }: HttpMessageViewProps) {
         flow,
         message,
         contentView,
-        undefined,
         message.contentHash,
     );
 
     // These refs store the latest values of editedContent and contentViewData.
     // They're needed because the keyboard event listener (added outside React's render cycle)
     // captures its own closure and won't automatically get the updated values from state.
-    // Using refs allows the latest values to be accessed reliably inside the event handler.
     const editedContentRef = useRef(editedContent);
     const contentViewDataRef = useRef(contentViewData);
 
@@ -148,9 +146,9 @@ function HttpMessageView({ flow, message }: HttpMessageViewProps) {
                 <ViewImage flow={flow} message={message} />
             )}
             <ContentEditor
-                content={contentViewData?.text ?? ""}
+                initialContent={contentViewData?.text ?? ""}
                 language={contentViewData?.syntax_highlight}
-                onChange={(content) => setEditedContent(content)}
+                onChange={setEditedContent}
             />
         </div>
     );
