@@ -1,3 +1,4 @@
+import { ColoredURL } from "@/components/colored-url";
 import { MethodBadge } from "@/components/method-badge";
 import { StatusBadge } from "@/components/status-badge";
 import type { HTTPFlow } from "web/flow";
@@ -15,9 +16,7 @@ export function HttpBar({ flow }: { flow: HTTPFlow }) {
       </div>
 
       <div>
-        <span className="font-mono text-sm break-all text-blue-600 dark:text-blue-400">
-          {mainPath(flow)}
-        </span>
+        <ColoredURL url={mainPath(flow)} />
       </div>
     </div>
   );
