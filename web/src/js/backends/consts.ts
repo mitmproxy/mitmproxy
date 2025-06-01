@@ -12,8 +12,10 @@ export enum ReverseProxyProtocols {
 }
 
 export enum SyntaxHighlight {
+    CSS = "css",
+    JAVASCRIPT = "javascript",
     XML = "xml",
     YAML = "yaml",
-    ERROR = "error",
     NONE = "none",
+    ERROR = "error",
 }
