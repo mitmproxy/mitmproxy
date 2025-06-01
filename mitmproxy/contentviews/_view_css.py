@@ -1,8 +1,8 @@
 import re
 import time
 
-from ._api import Contentview
-from ._api import Metadata
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.utils import strutils
 
 """
@@ -50,6 +50,8 @@ def beautify(data: str, indent: str = "    "):
 
 
 class ViewCSS(Contentview):
+    syntax_highlight = "css"
+
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         data_str = data.decode("utf8", "surrogateescape")
         return beautify(data_str)
