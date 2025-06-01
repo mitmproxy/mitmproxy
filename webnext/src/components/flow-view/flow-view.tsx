@@ -1,4 +1,4 @@
-import { RequestBar } from "@/components/flow-view/http-message/request-bar";
+import { HttpBar } from "@/components/flow-view/http-message/http-bar";
 import { RequestDetails } from "@/components/request-details";
 import { ResponseDetails } from "@/components/response-details";
 import {
@@ -35,7 +35,7 @@ export function FlowView() {
   return (
     <div className="flex h-full flex-col">
       <div className="bg-muted/30 border-b px-4 py-3">
-        {flow.type === "http" && <RequestBar flow={flow} />}
+        {flow.type === "http" && <HttpBar flow={flow} />}
       </div>
 
       <div className="min-h-0">
