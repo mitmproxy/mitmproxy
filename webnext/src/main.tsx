@@ -3,10 +3,12 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "@/app";
 import initialize from "web/urlState";
-import { store } from "web/ducks/store";
 import { add as addLog } from "web/ducks/eventLog";
 import WebSocketBackend from "web/backends/websocket";
 import { Provider } from "react-redux";
+import { createStore } from "web/ducks/store";
+
+const store = createStore("webnext");
 
 // Extend the Window interface to avoid TS errors
 declare global {
