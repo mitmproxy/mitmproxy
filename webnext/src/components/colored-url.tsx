@@ -83,39 +83,44 @@ export function ColoredURL({ url, className }: ColoredURLProps) {
   }
 
   return (
-    <div
-      className={cn("font-mono break-all", className)}
-      onMouseDown={(e) => {
-        if (e.detail === 3) {
-          e.preventDefault();
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.selectNodeContents(e.currentTarget);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        }
-      }}
-    >
-      {parts.map((part, index) => (
-        <span
-          // eslint-disable-next-line react-x/no-array-index-key
-          key={index}
-          className={cn("hover:bg-muted rounded transition-colors", part.color)}
-          title={part.label}
-          onMouseDown={(e) => {
-            if (e.detail === 2) {
-              e.preventDefault();
-              const selection = window.getSelection();
-              const range = document.createRange();
-              range.selectNodeContents(e.currentTarget);
-              selection?.removeAllRanges();
-              selection?.addRange(range);
-            }
-          }}
-        >
-          {part.text}
-        </span>
-      ))}
+    <div className={cn("max-h-40 overflow-scroll", className)}>
+      <div
+        className="font-mono break-all"
+        onMouseDown={(e) => {
+          if (e.detail === 3) {
+            e.preventDefault();
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(e.currentTarget);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }
+        }}
+      >
+        {parts.map((part, index) => (
+          <span
+            // eslint-disable-next-line react-x/no-array-index-key
+            key={index}
+            className={cn(
+              "hover:bg-muted rounded transition-colors",
+              part.color,
+            )}
+            title={part.label}
+            onMouseDown={(e) => {
+              if (e.detail === 2) {
+                e.preventDefault();
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(e.currentTarget);
+                selection?.removeAllRanges();
+                selection?.addRange(range);
+              }
+            }}
+          >
+            {part.text}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
