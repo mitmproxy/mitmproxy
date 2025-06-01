@@ -12,11 +12,11 @@ export function tabsForFlowNext(flow: Flow): {
 
     switch (flow.type) {
         case "http":
-            responseTabs = filterExistingProperties(flow, [
+            responseTabs = ['headers', ...filterExistingProperties(flow, [
                 "response",
                 "websocket",
-            ]);
-            requestTabs = ["request"];
+            ])];
+            requestTabs = ["headers"];
             break;
         case "tcp":
             responseTabs = ["tcpmessages"];
