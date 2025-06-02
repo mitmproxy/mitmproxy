@@ -18,6 +18,10 @@ export type KvpTableProps = {
  * Key-Value Pair Table Component.
  */
 export function KvpTable({ pairs, ...props }: KvpTableProps) {
+  if (pairs.length === 0) {
+    return <span className="text-muted-foreground text-xs">No data</span>;
+  }
+
   return (
     <Table {...props}>
       <TableHeader>
