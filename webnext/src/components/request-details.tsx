@@ -2,14 +2,22 @@ import { RequestHeadersTable } from "@/components/flow-view/http-message/headers
 import { UrlQueryTable } from "@/components/flow-view/http-message/url-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAppDispatch } from "web/ducks/hooks";
+import { selectRequestTab } from "web/ducks/ui/flow";
 
 export type RequestDetailsProps = {
   tab: string;
 };
 
 export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
+  const dispatch = useAppDispatch();
+
   return (
-    <Tabs defaultValue={tab} className="h-full p-4">
+    <Tabs
+      defaultValue={tab}
+      className="h-full p-4"
+      onValueChange={(value) => dispatch(selectRequestTab(value))}
+    >
       <div className="mb-2 flex items-center gap-2">
         <span className="text-sm font-medium">Request</span>
       </div>
