@@ -1,4 +1,4 @@
-import { ResponseHeadersTable } from "@/components/flow-view/http-message/headers-table";
+import { ResponseHeadersTable } from "@/components/flow-view/http-message/headers";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
