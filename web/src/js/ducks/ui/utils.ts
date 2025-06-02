@@ -16,7 +16,7 @@ export function tabsForFlowNext(flow: Flow): {
                 "response",
                 "websocket",
             ])];
-            requestTabs = ["headers"];
+            requestTabs = ["headers", "query"];
             break;
         case "tcp":
             responseTabs = ["tcpmessages"];
