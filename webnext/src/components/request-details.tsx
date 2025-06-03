@@ -1,3 +1,4 @@
+import { RequestBody } from "@/components/flow-view/http-message/body";
 import { CookiesTable } from "@/components/flow-view/http-message/cookies";
 import { RequestHeadersTable } from "@/components/flow-view/http-message/headers";
 import { UrlQueryTable } from "@/components/flow-view/http-message/url-query";
@@ -59,6 +60,10 @@ export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
         <ScrollArea className="h-full">
           <CookiesTable />
         </ScrollArea>
+      </TabsContent>
+
+      <TabsContent value="body" className="min-h-0">
+        <RequestBody />
       </TabsContent>
     </Tabs>
   );

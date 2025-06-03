@@ -12,11 +12,11 @@ export function tabsForFlowNext(flow: Flow): {
 
     switch (flow.type) {
         case "http":
-            responseTabs = ['headers', ...filterExistingProperties(flow, [
-                "response",
-                "websocket",
-            ])];
-            requestTabs = ["headers", "query"];
+            responseTabs = [
+                "headers",
+                ...filterExistingProperties(flow, ["response", "websocket"]),
+            ];
+            requestTabs = ["headers", "query", "cookies", "body"];
             break;
         case "tcp":
             responseTabs = ["tcpmessages"];
@@ -71,7 +71,6 @@ export function tabsForFlow(flow: Flow): string[] {
     tabs.push("comment");
     return tabs;
 }
-
 
 /**
  * The flow may not yet contain all properties if it hasn't been finalized yet.
