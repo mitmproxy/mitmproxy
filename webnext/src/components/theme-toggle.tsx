@@ -1,12 +1,9 @@
 import { LuSun, LuMoon } from "react-icons/lu";
 import { useEffect } from "react";
-import { useDarkMode } from "usehooks-ts";
+import { useTheme } from "@/hooks/use-theme";
 
 export function ThemeToggle() {
-  const { isDarkMode, toggle: toggleDarkMode } = useDarkMode({
-    localStorageKey: "darkMode",
-    defaultValue: window.matchMedia("(prefers-color-scheme: dark)").matches,
-  });
+  const { isDarkMode, toggle: toggleDarkMode } = useTheme();
 
   const toggleTheme = () => {
     toggleDarkMode();

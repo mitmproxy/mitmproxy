@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LuCopy, LuDownload } from "react-icons/lu";
 import { VscWordWrap } from "react-icons/vsc";
-import { useDarkMode } from "usehooks-ts";
 import { formatBytes } from "@/components/content-views/utils";
 import { cn } from "@/lib/utils";
 import { CONTENT_VIEW_ALL_LINES } from "@/components/content-views/use-content-view";
+import { useTheme } from "@/hooks/use-theme";
 
 export type ContentRendererProps = {
   content: string;
@@ -26,7 +26,7 @@ export const ContentRenderer = memo<ContentRendererProps>(
     const [isExpanded, setIsExpanded] = useState(false);
     const [isWrapped, setIsWrapped] = useState(false);
     const editorRef = useRef<EditorType.IStandaloneCodeEditor>(null);
-    const { isDarkMode } = useDarkMode();
+    const { isDarkMode } = useTheme();
 
     const { language, formattedContent, displayContent, isTruncated } =
       useMemo(() => {
