@@ -23,3 +23,5 @@ function isExcludedContentView(view: string) {
   // We don't want to include query parameters in body content views because we already have a dedicated query view.
   return view.toLowerCase() === "query";
 }
+
+export const CONTENT_VIEW_ALL_LINES = -1;

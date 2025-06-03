@@ -10,17 +10,19 @@ import { VscWordWrap } from "react-icons/vsc";
 import { useDarkMode } from "usehooks-ts";
 import { formatBytes } from "@/components/content-views/utils";
 import { cn } from "@/lib/utils";
+import { CONTENT_VIEW_ALL_LINES } from "@/components/content-views/use-content-view";
 
 export type ContentRendererProps = {
   content: string;
   part: "request" | "response";
   maxLines?: number;
   showMore?: () => void;
+  showAll?: () => void;
   contentType?: string;
 };
 
 export const ContentRenderer = memo<ContentRendererProps>(
-  ({ content, maxLines = 20, showMore, contentType, part }) => {
+  ({ content, maxLines = 20, contentType, part, showMore, showAll }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isWrapped, setIsWrapped] = useState(false);
     const editorRef = useRef<EditorType.IStandaloneCodeEditor>(null);
@@ -115,6 +117,11 @@ export const ContentRenderer = memo<ContentRendererProps>(
       showMore?.();
     }, [showMore]);
 
+    const handleToggleExpandAll = useCallback(() => {
+      setIsExpanded((prev) => !prev);
+      showAll?.();
+    }, [showAll]);
+
     const handleToggleWrap = useCallback(() => {
       setIsWrapped((prev) => !prev);
     }, []);
@@ -193,16 +200,23 @@ export const ContentRenderer = memo<ContentRendererProps>(
 
           {/* Expand/Collapse button for truncated content */}
           {isTruncated && (
-            <div className="absolute right-2 bottom-2">
+            <div className="absolute right-2 bottom-2 mr-4 space-y-2 space-x-2">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleToggleExpand}
                 className="shadow-md"
               >
-                {isExpanded
-                  ? "Show Less"
-                  : `Show More (${formattedContent.split("\n").length - maxLines} more lines)`}
+                Show more
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleToggleExpandAll}
+                className="shadow-md"
+              >
+                Show all
               </Button>
             </div>
           )}
@@ -243,5 +257,7 @@ function formatContent(content: string, language: string): string {
 }
 
 function shouldTruncate(content: string, maxLines: number): boolean {
-  return content.split("\n").length > maxLines;
+  return (
+    maxLines !== CONTENT_VIEW_ALL_LINES && content.split("\n").length > maxLines
+  );
 }
