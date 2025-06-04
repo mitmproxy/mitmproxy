@@ -11,6 +11,26 @@ export default React.memo(function FileMenu() {
     const filter = useAppSelector(
         (state) => state.ui.filter[FilterName.Search],
     );
+
+    const handleSave = () => {
+        const defaultName = "flows";
+        const name = prompt("Enter filename", defaultName);
+        if (!name) return;
+
+        const params = new URLSearchParams();
+        if (filter && filter.trim() !== "") {
+            params.set("filter", filter);
+        }
+        params.set("filename", name);
+
+        const a = document.createElement("a");
+        a.href = `/flows/dump?${params.toString()}`;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
     return (
         <Dropdown
             className="pull-left special"
@@ -31,13 +51,11 @@ export default React.memo(function FileMenu() {
                     }}
                 />
             </li>
-            <MenuItem onClick={() => location.replace("/flows/dump")}>
+            <MenuItem onClick={handleSave}>
                 <i className="fa fa-fw fa-floppy-o" />
                 &nbsp;Save
             </MenuItem>
-            <MenuItem
-                onClick={() => location.replace("/flows/dump?filter=" + filter)}
-            >
+            <MenuItem onClick={handleSave}>
                 <i className="fa fa-fw fa-floppy-o" />
                 &nbsp;Save filtered
             </MenuItem>
