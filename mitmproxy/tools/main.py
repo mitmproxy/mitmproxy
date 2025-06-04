@@ -14,7 +14,6 @@ from typing import TypeVar
 from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import options
-from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
 from mitmproxy.utils import arg_check
 from mitmproxy.utils import debug
@@ -83,15 +82,14 @@ def run(
 
         try:
             opts.set(*args.setoptions, defer=True)
-            optmanager.load_paths(
-                opts,
+            opts.load_paths(
                 os.path.join(opts.confdir, "config.yaml"),
                 os.path.join(opts.confdir, "config.yml"),
             )
             process_options(parser, opts, args)
 
             if args.options:
-                optmanager.dump_defaults(opts, sys.stdout)
+                opts.dump_defaults(sys.stdout)
                 sys.exit(0)
             if args.commands:
                 master.commands.dump()

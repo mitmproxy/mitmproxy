@@ -473,50 +473,123 @@ class OptManager:
         else:
             raise ValueError("Unsupported option type: %s", o.typespec)
 
+    def dump_defaults(self, out: TextIO):
+        """
+        Dumps an annotated file with all options.
+        """
+        # Sort data
+        s = ruamel.yaml.comments.CommentedMap()
+        for k in sorted(self.keys()):
+            o = self._options[k]
+            s[k] = o.default
+            txt = o.help.strip()
 
-def dump_defaults(opts, out: TextIO):
-    """
-    Dumps an annotated file with all options.
-    """
-    # Sort data
-    s = ruamel.yaml.comments.CommentedMap()
-    for k in sorted(opts.keys()):
-        o = opts._options[k]
-        s[k] = o.default
-        txt = o.help.strip()
+            if o.choices:
+                txt += " Valid values are %s." % ", ".join(repr(c) for c in o.choices)
+            else:
+                t = typecheck.typespec_to_str(o.typespec)
+                txt += " Type %s." % t
 
-        if o.choices:
-            txt += " Valid values are %s." % ", ".join(repr(c) for c in o.choices)
-        else:
+            txt = "\n".join(textwrap.wrap(txt))
+            s.yaml_set_comment_before_after_key(k, before="\n" + txt)
+        return ruamel.yaml.YAML().dump(s, out)
+
+    def dump_dicts(self, keys: Iterable[str] | None = None) -> dict:
+        """
+        Dumps the options into a list of dict object.
+
+        Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
+        """
+        options_dict = {}
+        if keys is None:
+            keys = self.keys()
+        for k in sorted(keys):
+            o = self._options[k]
             t = typecheck.typespec_to_str(o.typespec)
-            txt += " Type %s." % t
+            option = {
+                "type": t,
+                "default": o.default,
+                "value": o.current(),
+                "help": o.help,
+                "choices": o.choices,
+            }
+            options_dict[k] = option
+        return options_dict
 
-        txt = "\n".join(textwrap.wrap(txt))
-        s.yaml_set_comment_before_after_key(k, before="\n" + txt)
-    return ruamel.yaml.YAML().dump(s, out)
+    def load(self, text: str, cwd: Path | str | None = None) -> None:
+        """
+        Load configuration from text, over-writing options already set in
+        this object. May raise OptionsError if the config file is invalid.
+        """
+        data = parse(text)
 
+        scripts = data.get("scripts")
+        if scripts is not None and cwd is not None:
+            data["scripts"] = [
+                str(relative_path(Path(path), relative_to=Path(cwd)))
+                for path in scripts
+            ]
 
-def dump_dicts(opts, keys: Iterable[str] | None = None) -> dict:
-    """
-    Dumps the options into a list of dict object.
+        self.update_defer(**data)
 
-    Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
-    """
-    options_dict = {}
-    if keys is None:
-        keys = opts.keys()
-    for k in sorted(keys):
-        o = opts._options[k]
-        t = typecheck.typespec_to_str(o.typespec)
-        option = {
-            "type": t,
-            "default": o.default,
-            "value": o.current(),
-            "help": o.help,
-            "choices": o.choices,
-        }
-        options_dict[k] = option
-    return options_dict
+    def load_paths(self, *paths: Path | str) -> None:
+        """
+        Load paths in order. Each path takes precedence over the previous
+        path. Paths that don't exist are ignored, errors raise an
+        OptionsError.
+        """
+        for p in paths:
+            p = Path(p).expanduser()
+            if p.exists() and p.is_file():
+                with p.open(encoding="utf8") as f:
+                    try:
+                        txt = f.read()
+                    except UnicodeDecodeError as e:
+                        raise exceptions.OptionsError(f"Error reading {p}: {e}")
+                try:
+                    self.load(txt, cwd=p.absolute().parent)
+                except exceptions.OptionsError as e:
+                    raise exceptions.OptionsError(f"Error reading {p}: {e}")
+
+    def serialize(self, file: TextIO, text: str, defaults: bool = False) -> None:
+        """
+        Performs a round-trip serialization. If text is not None, it is
+        treated as a previous serialization that should be modified
+        in-place.
+
+        - If "defaults" is False, only options with non-default values are
+            serialized. Default values in text are preserved.
+        - Unknown options in text are removed.
+        - Raises OptionsError if text is invalid.
+        """
+        data = parse(text)
+        for k in self.keys():
+            if defaults or self.has_changed(k):
+                data[k] = getattr(self, k)
+        for k in list(data.keys()):
+            if k not in self._options:
+                del data[k]
+
+        ruamel.yaml.YAML().dump(data, file)
+
+    def save(self, path: Path | str, defaults: bool = False) -> None:
+        """
+        Save to path. If the destination file exists, modify it in-place.
+
+        Raises OptionsError if the existing data is corrupt.
+        """
+        path = Path(path).expanduser()
+        if path.exists() and path.is_file():
+            with path.open(encoding="utf8") as f:
+                try:
+                    data = f.read()
+                except UnicodeDecodeError as e:
+                    raise exceptions.OptionsError(f"Error trying to modify {path}: {e}")
+        else:
+            data = ""
+
+        with path.open("w", encoding="utf8") as f:
+            self.serialize(f, data, defaults)
 
 
 def parse(text):
@@ -539,86 +612,6 @@ def parse(text):
     elif data is None:
         return {}
     return data
-
-
-def load(opts: OptManager, text: str, cwd: Path | str | None = None) -> None:
-    """
-    Load configuration from text, over-writing options already set in
-    this object. May raise OptionsError if the config file is invalid.
-    """
-    data = parse(text)
-
-    scripts = data.get("scripts")
-    if scripts is not None and cwd is not None:
-        data["scripts"] = [
-            str(relative_path(Path(path), relative_to=Path(cwd))) for path in scripts
-        ]
-
-    opts.update_defer(**data)
-
-
-def load_paths(opts: OptManager, *paths: Path | str) -> None:
-    """
-    Load paths in order. Each path takes precedence over the previous
-    path. Paths that don't exist are ignored, errors raise an
-    OptionsError.
-    """
-    for p in paths:
-        p = Path(p).expanduser()
-        if p.exists() and p.is_file():
-            with p.open(encoding="utf8") as f:
-                try:
-                    txt = f.read()
-                except UnicodeDecodeError as e:
-                    raise exceptions.OptionsError(f"Error reading {p}: {e}")
-            try:
-                load(opts, txt, cwd=p.absolute().parent)
-            except exceptions.OptionsError as e:
-                raise exceptions.OptionsError(f"Error reading {p}: {e}")
-
-
-def serialize(
-    opts: OptManager, file: TextIO, text: str, defaults: bool = False
-) -> None:
-    """
-    Performs a round-trip serialization. If text is not None, it is
-    treated as a previous serialization that should be modified
-    in-place.
-
-    - If "defaults" is False, only options with non-default values are
-        serialized. Default values in text are preserved.
-    - Unknown options in text are removed.
-    - Raises OptionsError if text is invalid.
-    """
-    data = parse(text)
-    for k in opts.keys():
-        if defaults or opts.has_changed(k):
-            data[k] = getattr(opts, k)
-    for k in list(data.keys()):
-        if k not in opts._options:
-            del data[k]
-
-    ruamel.yaml.YAML().dump(data, file)
-
-
-def save(opts: OptManager, path: Path | str, defaults: bool = False) -> None:
-    """
-    Save to path. If the destination file exists, modify it in-place.
-
-    Raises OptionsError if the existing data is corrupt.
-    """
-    path = Path(path).expanduser()
-    if path.exists() and path.is_file():
-        with path.open(encoding="utf8") as f:
-            try:
-                data = f.read()
-            except UnicodeDecodeError as e:
-                raise exceptions.OptionsError(f"Error trying to modify {path}: {e}")
-    else:
-        data = ""
-
-    with path.open("w", encoding="utf8") as f:
-        serialize(opts, f, data, defaults)
 
 
 def relative_path(script_path: Path | str, *, relative_to: Path | str) -> Path:

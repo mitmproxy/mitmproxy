@@ -10,7 +10,6 @@ from mitmproxy import flow
 from mitmproxy import log
 from mitmproxy import master
 from mitmproxy import options
-from mitmproxy import optmanager
 from mitmproxy.addons import errorcheck
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
@@ -81,7 +80,7 @@ class WebMaster(master.Master):
         )
 
     def _sig_options_update(self, updated: set[str]) -> None:
-        options_dict = optmanager.dump_dicts(self.options, updated)
+        options_dict = self.options.dump_dicts(updated)
         app.ClientConnection.broadcast(
             type="options/update",
             payload=options_dict,
