@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "patch-package"
   },
   "lint-staged": {
     "**/*": [
@@ -54,6 +55,7 @@
     "eslint-plugin-react-x": "^1.50.0",
     "globals": "^16.0.0",
     "lint-staged": "^16.1.0",
+    "patch-package": "^8.0.0",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tw-animate-css": "^1.3.0",
