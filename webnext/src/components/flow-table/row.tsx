@@ -8,7 +8,6 @@ import {
   selectRange,
   selectToggle,
 } from "web/ducks/flows";
-import { memo, useCallback } from "react";
 import { TableRow, type TableRowProps } from "@/components/ui/table";
 import {
   ContextMenu,
@@ -28,7 +27,7 @@ export type FlowRowProps = {
   highlighted: boolean;
 } & TableRowProps;
 
-function FlowRow({
+export function FlowRow({
   flow,
   selected,
   highlighted: _,
@@ -36,20 +35,28 @@ function FlowRow({
   ...props
 }: FlowRowProps) {
   const dispatch = useAppDispatch();
-  const onClick = useCallback(
-    (e: React.MouseEvent<HTMLTableRowElement>) => {
-      if (e.metaKey || e.ctrlKey) {
-        dispatch(selectToggle(flow));
-      } else if (e.shiftKey) {
-        window.getSelection()?.empty();
-        dispatch(selectRange(flow));
-      } else {
-        dispatch(select([flow]));
-      }
-    },
-    [dispatch, flow],
-  );
+  const onClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+    if (e.metaKey || e.ctrlKey) {
+      dispatch(selectToggle(flow));
+    } else if (e.shiftKey) {
+      window.getSelection()?.empty();
+      dispatch(selectRange(flow));
+    } else {
+      dispatch(select([flow]));
+    }
+  };
   const index = useAppSelector((state) => state.flows._listIndex.get(flow.id));
+  const onReplay = () => {
+    void dispatch(replay([flow]));
+  };
+
+  const onResume = () => {
+    void dispatch(resume([flow]));
+  };
+
+  const onCopyPath = () => {
+    void navigator.clipboard.writeText(mainPath(flow));
+  };
 
   // TODO: add higlighted, intercepted, etc. state colors
 
@@ -57,7 +64,6 @@ function FlowRow({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <TableRow
-          key={flow.id}
           {...props}
           className={cn(
             "cursor-pointer",
@@ -71,13 +77,13 @@ function FlowRow({
         <ContextMenuLabel>Flow {(index ?? 0) + 1}</ContextMenuLabel>
         {/* Quick actions. */}
         {canReplay(flow) && (
-          <ContextMenuItem onClick={() => void dispatch(replay([flow]))}>
+          <ContextMenuItem onClick={onReplay}>
             <LuRotateCw />
             Replay <ContextMenuShortcut>r</ContextMenuShortcut>
           </ContextMenuItem>
         )}
         {flow.intercepted && (
-          <ContextMenuItem onClick={() => void dispatch(resume([flow]))}>
+          <ContextMenuItem onClick={onResume}>
             <LuPlay />
             Resume
           </ContextMenuItem>
@@ -87,9 +93,7 @@ function FlowRow({
         {/* Actions that are only available to selected flow(s). */}
         {selected && (
           <>
-            <ContextMenuItem
-              onClick={() => void navigator.clipboard.writeText(mainPath(flow))}
-            >
+            <ContextMenuItem onClick={onCopyPath}>
               <LuClipboard /> Copy {flow.type === "http" ? "URL" : "Path"}
             </ContextMenuItem>
           </>
@@ -98,7 +102,3 @@ function FlowRow({
     </ContextMenu>
   );
 }
-
-const FlowRowMemo = memo(FlowRow);
-
-export { FlowRowMemo as FlowRow };

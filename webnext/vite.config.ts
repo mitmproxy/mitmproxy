@@ -5,9 +5,18 @@ import react from "@vitejs/plugin-react";
 
 const target = "http://localhost:8081"; // mitmweb instance URL (for development only)
 
+const ReactCompilerConfig = {};
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+      },
+    }),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

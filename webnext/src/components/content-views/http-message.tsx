@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useAppSelector } from "web/ducks/hooks";
 import type { HTTPFlow } from "web/flow";
 import { ContentRenderer, type ContentRendererProps } from "./content-renderer";
@@ -19,11 +19,8 @@ export function HttpMessageContentView({
   const [maxLines, setMaxLines] = useState<number>(
     useAppSelector((state) => state.options.content_view_lines_cutoff),
   );
-  const showMore = useCallback(
-    () => setMaxLines((value) => Math.max(1024, value * 2)),
-    [],
-  );
-  const showAll = useCallback(() => setMaxLines(CONTENT_VIEW_ALL_LINES), []);
+  const showMore = () => setMaxLines((value) => Math.max(1024, value * 2));
+  const showAll = () => setMaxLines(CONTENT_VIEW_ALL_LINES);
   const contentViewData = useContentView(
     flow,
     part,

@@ -5,6 +5,7 @@ import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 import reactX from "eslint-plugin-react-x";
 import reactDom from "eslint-plugin-react-dom";
+import reactCompiler from "eslint-plugin-react-compiler";
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -14,6 +15,7 @@ export default tseslint.config(
       ...tseslint.configs.recommendedTypeChecked,
       reactX.configs["recommended-typescript"],
       reactDom.configs.recommended,
+      reactCompiler.configs.recommended,
       prettier,
     ],
     files: ["**/*.{ts,tsx}"],
