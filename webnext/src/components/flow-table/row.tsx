@@ -67,7 +67,8 @@ export function FlowRow({
           {...props}
           className={cn(
             "cursor-pointer",
-            selected ? "bg-accent/50" : "hover:bg-muted/50",
+            "hover:bg-muted/50",
+            { "bg-muted/50": selected },
             className,
           )}
           onClick={onClick}
