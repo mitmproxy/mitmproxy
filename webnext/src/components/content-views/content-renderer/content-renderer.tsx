@@ -9,7 +9,7 @@ import { LuCopy, LuDownload } from "react-icons/lu";
 import { VscWordWrap } from "react-icons/vsc";
 import { formatBytes } from "@/components/content-views/utils";
 import { cn } from "@/lib/utils";
-import { CONTENT_VIEW_ALL_LINES } from "@/components/content-views/use-content-view";
+import { useContentRenderer } from "./use-content-renderer";
 import { useTheme } from "@/hooks/use-theme";
 
 export type ContentRendererProps = {
@@ -33,9 +33,8 @@ export function ContentRenderer({
   const [isWrapped, setIsWrapped] = useState(false);
   const editorRef = useRef<EditorType.IStandaloneCodeEditor>(null);
   const { isDarkMode } = useTheme();
-
   const { language, formattedContent, displayContent, isTruncated } =
-    processContent({ content, contentType, maxLines, isExpanded });
+    useContentRenderer({ content, contentType, maxLines, isExpanded });
 
   const editorOptions: EditorType.IEditorOptions &
     EditorType.IGlobalEditorOptions = {
@@ -61,6 +60,7 @@ export function ContentRenderer({
     contextmenu: false,
     theme: isDarkMode ? "vs-dark" : "vs",
   };
+  const contentBytes = formatBytes(new Blob([content]).size);
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -103,8 +103,6 @@ export function ContentRenderer({
   const handleToggleWrap = () => {
     setIsWrapped((prev) => !prev);
   };
-
-  const contentBytes = formatBytes(new Blob([content]).size);
 
   if (!content || content.length === 0) {
     return (
@@ -198,72 +196,4 @@ export function ContentRenderer({
       </div>
     </div>
   );
-}
-
-function detectLanguage(content: string, contentType?: string): string {
-  if (contentType) {
-    if (contentType.includes("json")) return "json";
-    if (contentType.includes("xml") || contentType.includes("html"))
-      return "xml";
-    if (contentType.includes("javascript")) return "javascript";
-    if (contentType.includes("css")) return "css";
-  }
-
-  // Fallback detection.
-  const trimmed = content.trim();
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return "json";
-  if (trimmed.startsWith("<")) return "xml";
-
-  return "plaintext";
-}
-
-function formatContent(content: string, language: string): string {
-  if (language === "json") {
-    try {
-      return JSON.stringify(JSON.parse(content), null, 2);
-    } catch {
-      return content;
-    }
-  }
-
-  return content;
-}
-
-function shouldTruncate(content: string, maxLines: number): boolean {
-  return (
-    maxLines !== CONTENT_VIEW_ALL_LINES && content.split("\n").length > maxLines
-  );
-}
-
-function processContent({
-  content,
-  contentType,
-  maxLines = 20,
-  isExpanded,
-}: Pick<ContentRendererProps, "content" | "contentType" | "maxLines"> & {
-  isExpanded: boolean;
-}) {
-  if (!content) {
-    return {
-      language: "plaintext",
-      formattedContent: "",
-      displayContent: "",
-      isTruncated: false,
-    };
-  }
-
-  const language = detectLanguage(content, contentType);
-  const formattedContent = formatContent(content, language);
-  const isTruncated = shouldTruncate(formattedContent, maxLines);
-  const displayContent =
-    isTruncated && !isExpanded
-      ? formattedContent.split("\n").slice(0, maxLines).join("\n") + "\n..."
-      : formattedContent;
-
-  return {
-    language,
-    formattedContent,
-    displayContent,
-    isTruncated,
-  };
 }
