@@ -1,6 +1,6 @@
-import { HttpBar } from "@/components/flow-view/http-message/http-bar";
-import { RequestDetails } from "@/components/request-details";
-import { ResponseDetails } from "@/components/response-details";
+import { HttpBar } from "./http-message/http-bar";
+import { RequestDetails } from "./request-details";
+import { ResponseDetails } from "./response-details";
 import {
   ResizableHandle,
   ResizablePanel,
