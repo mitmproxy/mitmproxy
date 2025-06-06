@@ -85,7 +85,7 @@ const tableCellVariants = cva(
     variants: {
       variant: {
         default: "",
-        muted: "text-muted-foreground text-xs font-medium",
+        muted: "text-muted-foreground font-medium",
       },
     },
     defaultVariants: {
