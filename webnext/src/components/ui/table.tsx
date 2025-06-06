@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
@@ -75,14 +76,37 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+const tableCellVariants = cva(
+  "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+  {
+    variants: {
+      variant: {
+        default: "",
+        muted: "text-muted-foreground text-xs font-medium",
+      },
+      type: {
+        default: "whitespace-nowrap",
+        responsive:
+          "w-full max-w-0 min-w-0 font-mono text-xs break-words whitespace-normal",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      type: "default",
+    },
+  },
+);
+
+function TableCell({
+  variant,
+  type,
+  className,
+  ...props
+}: React.ComponentProps<"td"> & VariantProps<typeof tableCellVariants>) {
   return (
     <td
       data-slot="table-cell"
-      className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
-        className,
-      )}
+      className={tableCellVariants({ variant, type, className })}
       {...props}
     />
   );

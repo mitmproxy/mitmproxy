@@ -1,3 +1,4 @@
+import { Connection } from "@/components/flow-view/connection";
 import { RequestBody } from "@/components/flow-view/http-message/body";
 import { CookiesTable } from "@/components/flow-view/http-message/cookies";
 import { RequestHeadersTable } from "@/components/flow-view/http-message/headers";
@@ -36,7 +37,7 @@ export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
         <TabsTrigger value="body" className="text-xs">
           Body
         </TabsTrigger>
-        <TabsTrigger value="summary" className="text-xs">
+        <TabsTrigger value="connection" className="text-xs">
           Connection
         </TabsTrigger>
         <TabsTrigger value="summary" className="text-xs">
@@ -64,6 +65,12 @@ export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
 
       <TabsContent value="body" className="min-h-0">
         <RequestBody />
+      </TabsContent>
+
+      <TabsContent value="connection" className="min-h-0">
+        <ScrollArea className="h-full">
+          <Connection />
+        </ScrollArea>
       </TabsContent>
     </Tabs>
   );

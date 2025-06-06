@@ -34,12 +34,8 @@ export function KvpTable({ pairs, ...props }: KvpTableProps) {
         {pairs.map(([key, value], index) => (
           // eslint-disable-next-line react-x/no-array-index-key
           <TableRow key={index}>
-            <TableCell className="text-muted-foreground align-top text-xs font-medium whitespace-nowrap">
-              {key}
-            </TableCell>
-            <TableCell className="w-full max-w-0 min-w-0 font-mono text-xs break-words whitespace-normal">
-              {value}
-            </TableCell>
+            <TableCell variant="muted">{key}</TableCell>
+            <TableCell type="responsive">{value}</TableCell>
           </TableRow>
         ))}
       </TableBody>
