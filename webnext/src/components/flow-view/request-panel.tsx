@@ -1,6 +1,6 @@
 import { Connection } from "@/components/flow-view/connection";
 import { RequestBody } from "@/components/flow-view/http-message/body";
-import { CookiesTable } from "@/components/flow-view/http-message/cookies";
+import { RequestCookiesTable } from "@/components/flow-view/http-message/cookies";
 import { RequestHeadersTable } from "@/components/flow-view/http-message/headers";
 import { UrlQueryTable } from "@/components/flow-view/http-message/url-query";
 import { PanelTabs, type Tab } from "./panel-tabs";
@@ -32,6 +32,12 @@ const tabs: Tab[] = [
     scrollable: true,
   },
   {
+    name: "Body",
+    value: "body",
+    component: RequestBody,
+    scrollable: false,
+  },
+  {
     name: "Query",
     value: "query",
     component: UrlQueryTable,
@@ -40,14 +46,8 @@ const tabs: Tab[] = [
   {
     name: "Cookies",
     value: "cookies",
-    component: CookiesTable,
+    component: RequestCookiesTable,
     scrollable: true,
-  },
-  {
-    name: "Body",
-    value: "body",
-    component: RequestBody,
-    scrollable: false,
   },
   {
     name: "Connection",

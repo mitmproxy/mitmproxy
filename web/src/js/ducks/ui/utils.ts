@@ -14,9 +14,11 @@ export function tabsForFlowNext(flow: Flow): {
         case "http":
             responseTabs = [
                 "headers",
-                ...filterExistingProperties(flow, ["response", "websocket"]),
+                "body",
+                "set-cookie",
+                ...filterExistingProperties(flow, ["websocket"]),
             ];
-            requestTabs = ["headers", "query", "cookies", "body", "connection"];
+            requestTabs = ["headers", "body", "query", "cookies", "connection"];
             break;
         case "tcp":
             responseTabs = ["tcpmessages"];
