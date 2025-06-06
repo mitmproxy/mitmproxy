@@ -1,18 +1,18 @@
 import * as React from "react";
-import CodeEditor from "../../../components/contentviews/CodeEditor";
+import ContentEditor from "../../../components/contentviews/ContentEditor";
 import { render } from "../../test-utils";
 import { SyntaxHighlight } from "../../../backends/consts";
 
-test("CodeEditor", async () => {
+test("ContentEditor", async () => {
     const { asFragment } = render(
-        <CodeEditor initialContent="foo" onChange={() => 0} />,
+        <ContentEditor initialContent="foo" onChange={() => 0} />,
     );
     expect(asFragment()).toMatchSnapshot();
 });
 
-test("CodeEditor highlights HTML", async () => {
+test("ContentEditor highlights HTML", async () => {
     const { asFragment } = render(
-        <CodeEditor
+        <ContentEditor
             initialContent="<p>yay</p>"
             onChange={() => 0}
             language={SyntaxHighlight.XML}
@@ -20,9 +20,9 @@ test("CodeEditor highlights HTML", async () => {
     );
     expect(asFragment()).toMatchSnapshot();
 });
-test("CodeEditor highlights YAML", async () => {
+test("ContentEditor highlights YAML", async () => {
     const { asFragment } = render(
-        <CodeEditor
+        <ContentEditor
             initialContent="foo: bar"
             onChange={() => 0}
             language={SyntaxHighlight.YAML}
@@ -30,9 +30,9 @@ test("CodeEditor highlights YAML", async () => {
     );
     expect(asFragment()).toMatchSnapshot();
 });
-test("CodeEditor highlights JavaScript", async () => {
+test("ContentEditor highlights JavaScript", async () => {
     const { asFragment } = render(
-        <CodeEditor
+        <ContentEditor
             initialContent="alert(1);"
             onChange={() => 0}
             language={SyntaxHighlight.JAVASCRIPT}
@@ -40,9 +40,9 @@ test("CodeEditor highlights JavaScript", async () => {
     );
     expect(asFragment()).toMatchSnapshot();
 });
-test("CodeEditor highlights CSS", async () => {
+test("ContentEditor highlights CSS", async () => {
     const { asFragment } = render(
-        <CodeEditor
+        <ContentEditor
             initialContent="p { color: red; }"
             onChange={() => 0}
             language={SyntaxHighlight.CSS}

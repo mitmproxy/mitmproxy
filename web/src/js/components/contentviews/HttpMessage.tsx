@@ -1,18 +1,16 @@
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { ContentViewData, useContentView } from "./useContentView";
-import { useContent } from "./useContent";
 import { MessageUtils } from "../../flow/utils";
 import FileChooser from "../common/FileChooser";
 import * as flowActions from "../../ducks/flows";
 import { uploadContent } from "../../ducks/flows";
 import Button from "../common/Button";
-import CodeEditor from "./CodeEditor";
-import ContentRenderer from "./ContentRenderer";
 import ViewSelector from "./ViewSelector";
 import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
+import ContentEditor from "./ContentEditor";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -20,104 +18,35 @@ type HttpMessageProps = {
 };
 
 export default function HttpMessage({ flow, message }: HttpMessageProps) {
-    const [isEdited, setIsEdited] = useState<boolean>(false);
-    if (isEdited) {
-        return (
-            <HttpMessageEdit
-                flow={flow}
-                message={message}
-                stopEdit={() => setIsEdited(false)}
-            />
-        );
-    } else {
-        return (
-            <HttpMessageView
-                flow={flow}
-                message={message}
-                startEdit={() => setIsEdited(true)}
-            />
-        );
-    }
-}
-
-type HttpMessageEditProps = {
-    flow: HTTPFlow;
-    message: HTTPMessage;
-    stopEdit: () => void;
-};
-
-function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
-    const dispatch = useAppDispatch();
-
-    const part = flow.request === message ? "request" : "response";
-    const url = MessageUtils.getContentURL(flow, message);
-    const content = useContent(url, message.contentHash);
-    const [editedContent, setEditedContent] = useState<string>();
-
-    const save = async () => {
-        await dispatch(
-            flowActions.update(flow, {
-                [part]: { content: editedContent || content || "" },
-            }),
-        );
-        stopEdit();
-    };
-    return (
-        <div className="contentview" key="edit">
-            <div className="controls">
-                <h5>[Editing]</h5>
-                <Button
-                    onClick={save}
-                    icon="fa-check text-success"
-                    className="btn-xs"
-                >
-                    Done
-                </Button>
-                &nbsp;
-                <Button
-                    onClick={() => stopEdit()}
-                    icon="fa-times text-danger"
-                    className="btn-xs"
-                >
-                    Cancel
-                </Button>
-            </div>
-            <CodeEditor
-                initialContent={content || ""}
-                onChange={setEditedContent}
-            />
-        </div>
-    );
+    return <HttpMessageView flow={flow} message={message} />;
 }
 
 type HttpMessageViewProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
-    startEdit: () => void;
 };
 
-function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
+function HttpMessageView({ flow, message }: HttpMessageViewProps) {
     const dispatch = useAppDispatch();
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
         (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
     );
-
-    const [maxLines, setMaxLines] = useState<number>(
-        useAppSelector((state) => state.options.content_view_lines_cutoff),
-    );
-    const showMore = useCallback(
-        () => setMaxLines(Math.max(1024, maxLines * 2)),
-        [maxLines],
-    );
+    const [editedContent, setEditedContent] = useState<string>();
+    const [shouldSave, setShouldSave] = useState(false);
 
     const contentViewData = useContentView(
         flow,
         message,
         contentView,
-        maxLines + 1,
         message.contentHash,
     );
+
+    // These refs store the latest values of editedContent and contentViewData.
+    // They're needed because the keyboard event listener (added outside React's render cycle)
+    // captures its own closure and won't automatically get the updated values from state.
+    const editedContentRef = useRef(editedContent);
+    const contentViewDataRef = useRef(contentViewData);
 
     let desc: string;
     if (message.contentLength === 0) {
@@ -129,17 +58,67 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
             `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
     }
 
+    useEffect(() => {
+        editedContentRef.current = editedContent;
+        contentViewDataRef.current = contentViewData;
+    }, [editedContent, contentViewData]);
+
+    useEffect(() => {
+        setShouldSave(editedContent !== contentViewData?.text);
+    }, [editedContent]);
+
+    useEffect(() => {
+        const handleKeyDown = async (event: KeyboardEvent) => {
+            // Cmd + s or Ctrl + s to save the content
+            const isCmdOrCtrl = event.metaKey || event.ctrlKey;
+            if (isCmdOrCtrl && event.key.toLowerCase() === "s") {
+                event.preventDefault();
+                await saveContent();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown, true);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown, true);
+        };
+    }, []);
+
+    const saveContent = async () => {
+        await dispatch(
+            flowActions.update(flow, {
+                [part]: {
+                    content:
+                        editedContentRef.current ||
+                        contentViewDataRef.current?.text ||
+                        "",
+                },
+            }),
+        ).then(() => setShouldSave(false));
+    };
+
     return (
         <div className="contentview" key="view">
             <div className="controls">
-                <h5>{desc}</h5>
+                <div>
+                    <h5>{desc}</h5>
+                    {shouldSave && (
+                        <i className="fa fa-circle" aria-hidden="true"></i>
+                    )}
+                </div>
+                {shouldSave && (
+                    <Button
+                        onClick={saveContent}
+                        icon="fa-floppy-o"
+                        className="btn-xs"
+                    >
+                        Save
+                    </Button>
+                )}
+                &nbsp;
                 {contentViewData && contentViewData?.text.length > 0 && (
                     <CopyButton flow={flow} message={message} />
                 )}
-                &nbsp;
-                <Button onClick={startEdit} icon="fa-edit" className="btn-xs">
-                    Edit
-                </Button>
                 &nbsp;
                 <FileChooser
                     icon="fa-upload"
@@ -166,10 +145,10 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
             {ViewImage.matches(message) && (
                 <ViewImage flow={flow} message={message} />
             )}
-            <ContentRenderer
-                content={contentViewData?.text ?? ""}
-                maxLines={maxLines}
-                showMore={showMore}
+            <ContentEditor
+                initialContent={contentViewData?.text ?? ""}
+                language={contentViewData?.syntax_highlight}
+                onChange={setEditedContent}
             />
         </div>
     );
