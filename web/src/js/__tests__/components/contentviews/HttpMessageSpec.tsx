@@ -5,32 +5,31 @@ import HttpMessage, {
 } from "../../../components/contentviews/HttpMessage";
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
+import { SyntaxHighlight } from "../../../backends/consts";
+
+jest.mock("@uiw/react-codemirror", () => {
+    return {
+        __esModule: true,
+        default: ({ value }: { value: string }) => (
+            <pre data-testid="mock-editor">{value}</pre>
+        ),
+    };
+});
 
 enableFetchMocks();
 
 test("HttpMessage", async () => {
-    const text = "data\n".repeat(512) + "additional\n".repeat(512);
-
     const cvd = {
         view_name: "Raw",
         description: "",
-        syntax_highlight: "none",
+        syntax_highlight: SyntaxHighlight.NONE,
     };
 
     fetchMock.mockResponses(
         JSON.stringify({
-            text: "data\n".repeat(512) + "additional\n",
+            text: "data\n".repeat(10) + "additional\n",
             ...cvd,
         }),
-        JSON.stringify({
-            text,
-            ...cvd,
-        }),
-        JSON.stringify({
-            text: "rawdata\n".repeat(5),
-            ...cvd,
-        }),
-        "raw content",
         JSON.stringify({
             text: "rawdata\n".repeat(5),
             ...cvd,
@@ -41,22 +40,22 @@ test("HttpMessage", async () => {
     const { asFragment } = render(
         <HttpMessage flow={tflow} message={tflow.request} />,
     );
-    await waitFor(() => screen.getAllByText("data"));
-    expect(screen.queryByText("additional")).toBeNull();
-
-    fireEvent.click(screen.getByText("Show more"));
-    await waitFor(() => screen.getAllByText("additional"));
+    await waitFor(() =>
+        expect(screen.getByTestId("mock-editor").textContent).toContain("data"),
+    );
+    await waitFor(() =>
+        expect(screen.getByTestId("mock-editor").textContent).toContain(
+            "additional",
+        ),
+    );
 
     fireEvent.click(screen.getByText("auto"));
     fireEvent.click(screen.getByText("raw"));
-    await waitFor(() => screen.getAllByText("rawdata"));
-    expect(asFragment()).toMatchSnapshot();
-
-    fireEvent.click(screen.getByText("Edit"));
-    expect(asFragment()).toMatchSnapshot();
-    fireEvent.click(screen.getByText("Cancel"));
-
-    await waitFor(() => screen.getAllByText("rawdata"));
+    await waitFor(() =>
+        expect(screen.getByTestId("mock-editor").textContent).toContain(
+            "rawdata",
+        ),
+    );
     expect(asFragment()).toMatchSnapshot();
 
     await waitFor(() => screen.getByText("Copy"));
