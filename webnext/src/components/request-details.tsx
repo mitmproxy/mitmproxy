@@ -23,7 +23,7 @@ export function RequestDetails({ tab = "headers" }: RequestDetailsProps) {
       <div className="mb-2 flex items-center gap-2">
         <span className="text-sm font-medium">Request</span>
       </div>
-      <TabsList className="grid h-8 w-full grid-cols-6">
+      <TabsList>
         <TabsTrigger value="headers" className="text-xs">
           Headers
         </TabsTrigger>

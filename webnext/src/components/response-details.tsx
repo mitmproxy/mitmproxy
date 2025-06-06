@@ -13,7 +13,7 @@ export function ResponseDetails({ tab = "headers" }: ResponseDetailsProps) {
         <span className="text-sm font-medium">Response</span>
         <span className="text-muted-foreground text-xs">JSON</span>
       </div>
-      <TabsList className="grid h-8 w-full grid-cols-5">
+      <TabsList>
         <TabsTrigger value="headers" className="text-xs">
           Headers
         </TabsTrigger>
