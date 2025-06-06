@@ -1,6 +1,6 @@
+import { RequestPanel } from "@/components/flow-view/request-panel";
 import { HttpBar } from "./http-message/http-bar";
-import { RequestDetails } from "./request-details";
-import { ResponseDetails } from "./response-details";
+import { ResponsePanel } from "./response-panel";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -41,13 +41,13 @@ export function FlowView() {
       <div className="min-h-0">
         <ResizablePanelGroup id="flow-view-panel-group" direction="horizontal">
           <ResizablePanel id="request-details-panel" defaultSize={50}>
-            <RequestDetails tab={activeTabRequest} />
+            <RequestPanel tab={activeTabRequest} />
           </ResizablePanel>
 
           <ResizableHandle withHandle />
 
           <ResizablePanel id="response-details-panel" defaultSize={50}>
-            <ResponseDetails tab={activeTabResponse} />
+            <ResponsePanel tab={activeTabResponse} />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

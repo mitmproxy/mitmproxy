@@ -1,12 +1,10 @@
+import type { TabProps } from "@/components/flow-view/panel-tabs";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Fragment, type ReactElement } from "react";
-import { useAppSelector } from "web/ducks/hooks";
 import type { Address, Certificate, Client, Server } from "web/flow";
 import { formatTimeStamp } from "web/utils";
 
-export function Connection() {
-  const flow = useAppSelector((state) => state.flows.selected[0]);
-
+export function Connection({ flow }: TabProps) {
   return (
     <div className="space-y-4">
       <section>
