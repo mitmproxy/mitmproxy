@@ -54,9 +54,7 @@ function ConnectionInfo({ conn }: { conn: Client | Server }) {
         )}
         {conn.sni && (
           <TableRow>
-            <TableCell variant="muted" className="w-60">
-              SNI:
-            </TableCell>
+            <TableCell variant="muted">SNI:</TableCell>
             <TableCell variant="muted" className="flex-1">
               {conn.sni}
             </TableCell>
@@ -64,9 +62,7 @@ function ConnectionInfo({ conn }: { conn: Client | Server }) {
         )}
         {conn.alpn && (
           <TableRow>
-            <TableCell variant="muted" className="w-60">
-              ALPN:
-            </TableCell>
+            <TableCell variant="muted">ALPN:</TableCell>
             <TableCell variant="muted" className="flex-1">
               {conn.alpn}
             </TableCell>
@@ -74,9 +70,7 @@ function ConnectionInfo({ conn }: { conn: Client | Server }) {
         )}
         {conn.tls_version && (
           <TableRow>
-            <TableCell variant="muted" className="w-60">
-              TLS version:
-            </TableCell>
+            <TableCell variant="muted">TLS version:</TableCell>
             <TableCell variant="muted" className="flex-1">
               {conn.tls_version}
             </TableCell>
@@ -84,9 +78,7 @@ function ConnectionInfo({ conn }: { conn: Client | Server }) {
         )}
         {conn.cipher && (
           <TableRow>
-            <TableCell variant="muted" className="w-60">
-              TLS cipher:
-            </TableCell>
+            <TableCell variant="muted">TLS cipher:</TableCell>
             <TableCell variant="muted" className="flex-1">
               {conn.cipher}
             </TableCell>
@@ -113,9 +105,7 @@ function AddressRow({
 
   return (
     <TableRow>
-      <TableCell variant="muted" className="w-60">
-        {desc}:
-      </TableCell>
+      <TableCell variant="muted">{desc}:</TableCell>
       <TableCell variant="muted" className="flex-1">
         {address.join(":")}
       </TableCell>
@@ -136,25 +126,19 @@ function CertificateInfo({ certificate }: { certificate: Certificate }) {
     <Table>
       <TableBody>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Type:
-          </TableCell>
+          <TableCell variant="muted">Type:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {certificate.keyinfo[0]}, {certificate.keyinfo[1]} bits
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            SHA256 digest:
-          </TableCell>
+          <TableCell variant="muted">SHA256 digest:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {certificate.sha256}
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Valid from:
-          </TableCell>
+          <TableCell variant="muted">Valid from:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {formatTimeStamp(certificate.notbefore, {
               milliseconds: false,
@@ -162,9 +146,7 @@ function CertificateInfo({ certificate }: { certificate: Certificate }) {
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Valid to:
-          </TableCell>
+          <TableCell variant="muted">Valid to:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {formatTimeStamp(certificate.notafter, {
               milliseconds: false,
@@ -172,33 +154,25 @@ function CertificateInfo({ certificate }: { certificate: Certificate }) {
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Subject Alternative Names:
-          </TableCell>
+          <TableCell variant="muted">Subject Alternative Names:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {certificate.altnames.join(", ")}
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Subject:
-          </TableCell>
+          <TableCell variant="muted">Subject:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {attrList(certificate.subject)}
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Issuer:
-          </TableCell>
+          <TableCell variant="muted">Issuer:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {attrList(certificate.issuer)}
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell variant="muted" className="w-60">
-            Serial:
-          </TableCell>
+          <TableCell variant="muted">Serial:</TableCell>
           <TableCell variant="muted" className="flex-1">
             {certificate.serial}
           </TableCell>

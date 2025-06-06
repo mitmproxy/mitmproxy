@@ -26,8 +26,8 @@ export function KvpTable({ pairs, ...props }: KvpTableProps) {
     <Table {...props}>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-32 min-w-[8rem]">Key</TableHead>
-          <TableHead className="min-w-0">Value</TableHead>
+          <TableHead>Key</TableHead>
+          <TableHead>Value</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -35,7 +35,7 @@ export function KvpTable({ pairs, ...props }: KvpTableProps) {
           // eslint-disable-next-line react-x/no-array-index-key
           <TableRow key={index}>
             <TableCell variant="muted">{key}</TableCell>
-            <TableCell type="responsive">{value}</TableCell>
+            <TableCell>{value}</TableCell>
           </TableRow>
         ))}
       </TableBody>

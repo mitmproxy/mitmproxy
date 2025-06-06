@@ -7,7 +7,10 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <table
       data-slot="table"
-      className={cn("w-full caption-bottom text-sm", className)}
+      className={cn(
+        "w-full table-fixed caption-bottom text-sm break-all",
+        className,
+      )}
       {...props}
     />
   );
@@ -84,29 +87,25 @@ const tableCellVariants = cva(
         default: "",
         muted: "text-muted-foreground text-xs font-medium",
       },
-      type: {
-        default: "whitespace-nowrap",
-        responsive:
-          "w-full max-w-0 min-w-0 font-mono text-xs break-words whitespace-normal",
-      },
     },
     defaultVariants: {
       variant: "default",
-      type: "default",
     },
   },
 );
 
 function TableCell({
-  variant,
-  type,
   className,
+  variant,
   ...props
 }: React.ComponentProps<"td"> & VariantProps<typeof tableCellVariants>) {
   return (
     <td
       data-slot="table-cell"
-      className={tableCellVariants({ variant, type, className })}
+      className={tableCellVariants({
+        variant,
+        className,
+      })}
       {...props}
     />
   );
