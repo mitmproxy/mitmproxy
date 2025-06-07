@@ -18,7 +18,14 @@ export function tabsForFlowNext(flow: Flow): {
                 "set-cookie",
                 ...filterExistingProperties(flow, ["websocket"]),
             ];
-            requestTabs = ["headers", "body", "query", "cookies", "connection"];
+            requestTabs = [
+                "headers",
+                "body",
+                "query",
+                "cookies",
+                "connection",
+                "timing",
+            ];
             break;
         case "tcp":
             responseTabs = ["tcpmessages"];

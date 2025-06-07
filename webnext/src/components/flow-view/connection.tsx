@@ -1,4 +1,5 @@
 import type { TabProps } from "@/components/flow-view/panel-tabs";
+import { Section, SectionTitle } from "./section";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Fragment, type ReactElement } from "react";
 import type { Address, Certificate, Client, Server } from "web/flow";
@@ -7,23 +8,23 @@ import { formatTimeStamp } from "web/utils";
 export function Connection({ flow }: TabProps) {
   return (
     <div className="space-y-4">
-      <section>
+      <Section>
         <SectionTitle>Client connection</SectionTitle>
         <ConnectionInfo conn={flow.client_conn} />
-      </section>
+      </Section>
 
       {flow.server_conn?.address && (
-        <section>
+        <Section>
           <SectionTitle>Server connection</SectionTitle>
           <ConnectionInfo conn={flow.server_conn} />
-        </section>
+        </Section>
       )}
 
       {flow.server_conn?.cert && (
-        <section>
+        <Section>
           <SectionTitle>Server certificate</SectionTitle>
           <CertificateInfo certificate={flow.server_conn.cert} />
-        </section>
+        </Section>
       )}
     </div>
   );
@@ -110,14 +111,6 @@ function AddressRow({
         {address.join(":")}
       </TableCell>
     </TableRow>
-  );
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h4 className="text-muted-foreground mb-2 text-lg font-semibold">
-      {children}
-    </h4>
   );
 }
 

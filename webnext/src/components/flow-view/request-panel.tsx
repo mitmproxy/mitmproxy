@@ -6,6 +6,7 @@ import { UrlQueryTable } from "@/components/flow-view/http-message/url-query";
 import { PanelTabs, type Tab } from "./panel-tabs";
 import { useAppDispatch } from "web/ducks/hooks";
 import { selectRequestTab } from "web/ducks/ui/flow";
+import { Timing } from "@/components/flow-view/timing";
 
 export type RequestPanelProps = {
   tab: string;
@@ -53,6 +54,12 @@ const tabs: Tab[] = [
     name: "Connection",
     value: "connection",
     component: Connection,
+    scrollable: true,
+  },
+  {
+    name: "Timing",
+    value: "timing",
+    component: Timing,
     scrollable: true,
   },
 ];
