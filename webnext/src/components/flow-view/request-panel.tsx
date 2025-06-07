@@ -18,7 +18,7 @@ export function RequestPanel({ tab = "headers" }: RequestPanelProps) {
 
   return (
     <PanelTabs
-      defaultValue={tab}
+      value={tab}
       onValueChange={(value) => dispatch(selectRequestTab(value))}
       title="Request"
       tabs={tabs}

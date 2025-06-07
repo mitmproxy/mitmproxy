@@ -14,7 +14,7 @@ export function ResponsePanel({ tab = "headers" }: ResponsePanelProps) {
 
   return (
     <PanelTabs
-      defaultValue={tab}
+      value={tab}
       onValueChange={(value) => dispatch(selectResponseTab(value))}
       title="Response"
       tabs={tabs}
