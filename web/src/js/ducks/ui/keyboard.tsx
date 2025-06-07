@@ -1,9 +1,9 @@
-import { selectRequestTab, selectResponseTab } from "./flow";
+import { selectTab } from "./flow";
 import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
 import { runCommand } from "../../utils";
 import { AppDispatch, RootState } from "../store";
-import { tabsForFlow, tabsForFlowNext } from "./utils";
+import { tabsForFlow } from "./utils";
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)
@@ -54,67 +54,32 @@ export function onKeyDown(e: KeyboardEvent) {
                 break;
 
             case "ArrowLeft": {
-                if (!flow) break;
-
-                const currentRequestTab = getState().ui.flow.tabRequest;
-                const currentResponseTab = getState().ui.flow.tabResponse;
-
-                const getNextTab = (tabs: string[]) => {
-                    return tabs[
-                        (Math.max(0, tabs.indexOf(currentResponseTab)) -
+                if (!flow || getState().version.value === "webnext") break;
+                const tabs = tabsForFlow(flow);
+                const currentTab = getState().ui.flow.tabResponse;
+                const nextTab =
+                    tabs[
+                        (Math.max(0, tabs.indexOf(currentTab)) -
                             1 +
                             tabs.length) %
                             tabs.length
                     ];
-                };
-
-                // mitmweb does not have a request tab and non-http flow types don't either.
-                if (!currentRequestTab) {
-                    const tabs = tabsForFlow(flow);
-                    const nextTab = getNextTab(tabs);
-                    return dispatch(selectResponseTab(nextTab));
-                } else {
-                    const { request: requestTabs, response: responseTabs } =
-                        tabsForFlowNext(flow);
-                    const tabs = [...requestTabs, ...responseTabs];
-                    const nextTab = getNextTab(tabs);
-                    return dispatch(
-                        requestTabs.includes(nextTab)
-                            ? selectRequestTab(nextTab)
-                            : selectResponseTab(nextTab),
-                    );
-                }
+                dispatch(selectTab(nextTab));
+                break;
             }
+
             case "Tab":
             case "ArrowRight": {
-                if (!flow) break;
-
-                const currentRequestTab = getState().ui.flow.tabRequest;
-                const currentResponseTab = getState().ui.flow.tabResponse;
-
-                const getNextTab = (tabs: string[]) => {
-                    return tabs[
-                        (Math.max(0, tabs.indexOf(currentResponseTab)) + 1) %
+                if (!flow || getState().version.value === "webnext") break;
+                const tabs = tabsForFlow(flow);
+                const currentTab = getState().ui.flow.tabResponse;
+                const nextTab =
+                    tabs[
+                        (Math.max(0, tabs.indexOf(currentTab)) + 1) %
                             tabs.length
                     ];
-                };
-
-                // mitmweb does not have a request tab and non-http flow types don't either.
-                if (!currentRequestTab) {
-                    const tabs = tabsForFlow(flow);
-                    const nextTab = getNextTab(tabs);
-                    return dispatch(selectResponseTab(nextTab));
-                } else {
-                    const { request: requestTabs, response: responseTabs } =
-                        tabsForFlowNext(flow);
-                    const tabs = [...requestTabs, ...responseTabs];
-                    const nextTab = getNextTab(tabs);
-                    return dispatch(
-                        requestTabs.includes(nextTab)
-                            ? selectRequestTab(nextTab)
-                            : selectResponseTab(nextTab),
-                    );
-                }
+                dispatch(selectTab(nextTab));
+                break;
             }
 
             case "Delete":
