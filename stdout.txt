@@ -1,0 +1,284 @@
+Running selected tests: test/mitmproxy/addons/test_browser.py
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.12.10, pytest-8.3.3, pluggy-1.5.0 -- /usr/local/bin/python3.12
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase(PosixPath('/app/.hypothesis/examples'))
+rootdir: /app
+configfile: pyproject.toml
+plugins: rerunfailures-14.0, timeout-2.3.1, xdist-3.6.1, cov-5.0.0, asyncio-0.24.0, hypothesis-6.112.2
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+[1mcollecting ... [0mcollected 6 items
+
+test/mitmproxy/addons/test_browser.py::test_browser [32mPASSED[0m
+test/mitmproxy/addons/test_browser.py::test_no_browser [32mPASSED[0m
+test/mitmproxy/addons/test_browser.py::test_get_browser_cmd_executable [32mPASSED[0m
+test/mitmproxy/addons/test_browser.py::test_get_browser_cmd_no_executable [32mPASSED[0m
+test/mitmproxy/addons/test_browser.py::test_get_browser_cmd_flatpak [32mPASSED[0m
+test/mitmproxy/addons/test_browser.py::test_get_browser_cmd_no_flatpak [32mPASSED[0m
+
+[33m=============================== warnings summary ===============================[0m
+../usr/local/lib/python3.12/site-packages/pyasn1/codec/ber/encoder.py:952
+  /usr/local/lib/python3.12/site-packages/pyasn1/codec/ber/encoder.py:952: DeprecationWarning: tagMap is deprecated. Please use TAG_MAP instead.
+    warnings.warn(f"{attr} is deprecated. Please use {newAttr} instead.", DeprecationWarning)
+
+../usr/local/lib/python3.12/site-packages/pyasn1/codec/ber/encoder.py:952
+  /usr/local/lib/python3.12/site-packages/pyasn1/codec/ber/encoder.py:952: DeprecationWarning: typeMap is deprecated. Please use TYPE_MAP instead.
+    warnings.warn(f"{attr} is deprecated. Please use {newAttr} instead.", DeprecationWarning)
+
+../usr/local/lib/python3.12/site-packages/passlib/utils/__init__.py:854
+  /usr/local/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform linux, python 3.12.10-final-0 ----------
+Name                                                  Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------------
+mitmproxy/__init__.py                                     0      0   100%
+mitmproxy/addonmanager.py                               149     74    50%   36-41, 46-56, 85-99, 107, 117, 139, 145-148, 156, 180, 185, 214-220, 223, 226, 229-230, 236-241, 251-260, 268-272, 279-283, 289-294, 303-308
+mitmproxy/addons/__init__.py                             33      1    97%   35
+mitmproxy/addons/anticache.py                             7      3    57%   6, 17-18
+mitmproxy/addons/anticomp.py                              7      3    57%   6, 14-15
+mitmproxy/addons/asgiapp.py                              58     39    33%   24-25, 29, 32, 41-42, 47-48, 60-75, 102-144
+mitmproxy/addons/block.py                                21     14    33%   10-18, 30-48
+mitmproxy/addons/blocklist.py                            49     31    37%   25-39, 44, 47, 61-70, 73-82
+mitmproxy/addons/browser.py                              45      0   100%
+mitmproxy/addons/clientplayback.py                      186    125    33%   45-46, 49-80, 89-110, 113-114, 124-125, 128-142, 153-156, 159-160, 165-170, 173-190, 193-206, 209-215, 223-232, 241, 248-260, 267-283, 290-294
+mitmproxy/addons/command_history.py                      67     40    40%   14-16, 19, 28, 36-39, 42-48, 52-63, 68, 72-78, 84-86, 90-91, 95-96
+mitmproxy/addons/comment.py                              13      5    62%   14-19
+mitmproxy/addons/core.py                                180    128    29%   24-33, 45-52, 59-62, 70-77, 85-90, 97-103, 111-117, 121, 136-182, 189-197, 204-216, 229-239, 246, 253-256, 263-266, 273, 280-282
+mitmproxy/addons/cut.py                                 100     74    26%   22-24, 28, 35-72, 76-80, 99-102, 118-148, 162-176
+mitmproxy/addons/disable_h2c.py                          16     12    25%   17-34, 41
+mitmproxy/addons/dns_resolver.py                         73     46    37%   21-28, 36-38, 46-56, 63-65, 71-101, 105, 123-135, 150-153, 157-167
+mitmproxy/addons/dumper.py                              250    250     0%   1-419
+mitmproxy/addons/errorcheck.py                           30     30     0%   1-55
+mitmproxy/addons/eventstore.py                           36     36     0%   1-56
+mitmproxy/addons/export.py                              128     94    27%   20-25, 30-35, 39-44, 48-56, 60-88, 92-106, 110-113, 117-120, 125-144, 158, 176, 183-194, 201-204, 211-215
+mitmproxy/addons/intercept.py                            39     39     0%   1-63
+mitmproxy/addons/keepserving.py                          20     20     0%   1-48
+mitmproxy/addons/maplocal.py                             99     73    26%   26-38, 46-50, 58-79, 84, 87, 99-109, 112-149
+mitmproxy/addons/mapremote.py                            42     24    43%   19-26, 31, 34, 46-56, 59-68
+mitmproxy/addons/modifybody.py                           45     29    36%   16, 19, 31-49, 56-58, 61-63, 66-81
+mitmproxy/addons/modifyheaders.py                        72     47    35%   29-33, 37-53, 58, 61, 73-82, 85-87, 90-92, 95-117
+mitmproxy/addons/next_layer.py                          240    180    25%   86-98, 103-112, 119-197, 213-264, 281-298, 311-337, 343-405, 409-421, 425, 455-475
+mitmproxy/addons/onboarding.py                           17      7    59%   12, 15-18, 29-30, 33-34
+mitmproxy/addons/onboardingapp/__init__.py               37     18    51%   17, 22, 27, 32, 37-47, 54-60
+mitmproxy/addons/proxyauth.py                           160    111    31%   28-31, 48-62, 65-67, 70-72, 75-82, 91-111, 115-123, 136-139, 148, 157-158, 166-175, 188, 193-196, 199, 204-208, 211, 221-233, 237-279, 282-291
+mitmproxy/addons/proxyserver.py                         207    142    31%   46-49, 53, 56-99, 102, 105, 108-110, 127-130, 133, 139-143, 146-210, 218, 221-292, 298, 303, 307-325, 331-341, 345-352, 356-363, 366-385
+mitmproxy/addons/readfile.py                             64     64     0%   1-93
+mitmproxy/addons/save.py                                128     81    37%   28-30, 36-39, 44-47, 50-61, 69-86, 89-102, 108-120, 123-130, 138-151, 154-155, 158, 161, 164-165, 168, 171, 174, 177-178, 183-184, 187, 190-191, 194, 197
+mitmproxy/addons/savehar.py                             146    108    26%   32-33, 39-47, 50-65, 79, 91-102, 107-108, 111, 114, 117-120, 123-128, 133-284, 288-307, 310
+mitmproxy/addons/script.py                              146    110    25%   24-55, 62-69, 81-97, 100, 103-104, 108, 111-128, 133-147, 156-157, 160, 163, 172-185, 188-226
+mitmproxy/addons/server_side_events.py                    8      8     0%   1-20
+mitmproxy/addons/serverplayback.py                      137    101    26%   34-35, 38-128, 143-144, 151-155, 159-163, 170-171, 175, 181-223, 230-248, 251-268, 275-276, 279-305
+mitmproxy/addons/stickyauth.py                           26     17    35%   10-11, 14, 22-29, 32-38
+mitmproxy/addons/stickycookie.py                         59     42    29%   18-24, 28-32, 37-40, 43, 51-58, 61-78, 81-95
+mitmproxy/addons/strip_dns_https_records.py              14      8    43%   8, 16-22
+mitmproxy/addons/termlog.py                              32     15    53%   17-18, 21-24, 27-28, 34, 39-42, 45-50
+mitmproxy/addons/tlsconfig.py                           256    209    18%   92-113, 136-196, 204-205, 211-272, 276-378, 382-417, 423-465, 473-543, 546-559, 569-581, 591-619, 624-629
+mitmproxy/addons/update_alt_svc.py                       17      7    59%   12, 17, 25-33
+mitmproxy/addons/upstream_auth.py                        31     16    48%   13-16, 33, 44-48, 51-52, 55-62
+mitmproxy/addons/view.py                                459    459     0%   12-749
+mitmproxy/certs.py                                      306    200    35%   60-61, 64, 67-68, 71, 75, 78, 81, 85-86, 89, 93, 96, 99, 102, 106, 110-112, 119-120, 127, 131, 135, 140-146, 150-156, 164-167, 171-176, 183-190, 194-199, 207-251, 259-281, 302-341, 375-385, 388-391, 397-414, 425-430, 436-445, 455-460, 466-515, 520-550, 557-562, 570-579, 595-624, 632-637
+mitmproxy/command.py                                    202    105    48%   29-30, 37-44, 49, 59-62, 87, 93, 104-107, 110-115, 118-141, 148-158, 181-182, 187-188, 203-263, 269-271, 277-280, 286-292, 295-301, 308-314
+mitmproxy/command_lexer.py                               16     10    38%   28-34, 38-41
+mitmproxy/connection.py                                 136     41    70%   135, 140, 143-145, 148, 151-164, 201-209, 302-314, 317-326
+mitmproxy/contentviews/__init__.py                      133    133     0%   15-253
+mitmproxy/contentviews/auto.py                           11     11     0%   1-19
+mitmproxy/contentviews/base.py                           34     34     0%   2-115
+mitmproxy/contentviews/css.py                            26     26     0%   1-62
+mitmproxy/contentviews/dns.py                            13     13     0%   1-20
+mitmproxy/contentviews/graphql.py                        37     37     0%   1-64
+mitmproxy/contentviews/grpc.py                          455    455     0%   1-1123
+mitmproxy/contentviews/hex.py                            18     18     0%   1-27
+mitmproxy/contentviews/http3.py                          99     99     0%   1-160
+mitmproxy/contentviews/image/__init__.py                  2      2     0%   1-3
+mitmproxy/contentviews/image/image_parser.py             67     67     0%   1-119
+mitmproxy/contentviews/image/view.py                     27     27     0%   1-39
+mitmproxy/contentviews/javascript.py                     32     32     0%   1-59
+mitmproxy/contentviews/json.py                           46     46     0%   1-72
+mitmproxy/contentviews/mqtt.py                          140    140     0%   1-277
+mitmproxy/contentviews/msgpack.py                        55     55     0%   1-99
+mitmproxy/contentviews/multipart.py                      21     21     0%   1-35
+mitmproxy/contentviews/protobuf.py                       60     60     0%   1-102
+mitmproxy/contentviews/query.py                          11     11     0%   1-20
+mitmproxy/contentviews/raw.py                             7      7     0%   1-11
+mitmproxy/contentviews/urlencoded.py                     13     13     0%   1-19
+mitmproxy/contentviews/wbxml.py                          15     15     0%   1-21
+mitmproxy/contentviews/xml_html.py                      156    156     0%   1-277
+mitmproxy/contrib/__init__.py                             0      0   100%
+mitmproxy/contrib/click/__init__.py                      45     39    13%   33-40, 120-156
+mitmproxy/contrib/imghdr.py                              74     74     0%   8-142
+mitmproxy/contrib/kaitaistruct/__init__.py                0      0   100%
+mitmproxy/contrib/kaitaistruct/dtls_client_hello.py     152    110    28%   8, 12-15, 18-25, 30-33, 36-38, 43-46, 49-50, 55-58, 61-62, 67-70, 73-78, 84-87, 90-93, 99-102, 105-106, 111-114, 117-122, 128-131, 134-139, 145-148, 151-152, 157-160, 163-164, 169-172, 175-176, 181-184, 187-199
+mitmproxy/contrib/kaitaistruct/exif.py                  610    610     0%   3-651
+mitmproxy/contrib/kaitaistruct/gif.py                   250    250     0%   3-354
+mitmproxy/contrib/kaitaistruct/google_protobuf.py        63     63     0%   3-123
+mitmproxy/contrib/kaitaistruct/ico.py                    59     59     0%   3-90
+mitmproxy/contrib/kaitaistruct/jpeg.py                  195    195     0%   3-255
+mitmproxy/contrib/kaitaistruct/png.py                   361    361     0%   3-524
+mitmproxy/contrib/kaitaistruct/tls_client_hello.py      142    103    27%   8, 12-15, 18-24, 29-32, 35-37, 42-45, 48-49, 54-57, 60-61, 66-69, 72-77, 83-86, 89-92, 98-101, 104-105, 110-113, 116-121, 127-130, 133-138, 144-147, 150-151, 156-159, 162-163, 168-171, 174-186
+mitmproxy/contrib/kaitaistruct/vlq_base128_le.py         63     63     0%   3-113
+mitmproxy/contrib/wbxml/ASCommandResponse.py             34     34     0%   30-73
+mitmproxy/contrib/wbxml/ASWBXML.py                      705    705     0%   30-903
+mitmproxy/contrib/wbxml/ASWBXMLByteQueue.py              49     49     0%   30-102
+mitmproxy/contrib/wbxml/ASWBXMLCodePage.py               19     19     0%   30-52
+mitmproxy/contrib/wbxml/GlobalTokens.py                  21     21     0%   30-50
+mitmproxy/contrib/wbxml/InvalidDataException.py           2      2     0%   30-31
+mitmproxy/contrib/wbxml/__init__.py                       0      0   100%
+mitmproxy/coretypes/__init__.py                           0      0   100%
+mitmproxy/coretypes/bidi.py                              14     14     0%   1-26
+mitmproxy/coretypes/multidict.py                        102     56    45%   23-24, 47-50, 53, 56-59, 64-69, 72, 75-77, 84-85, 91-102, 108, 114-115, 124, 133, 142-145, 152-153, 157, 161, 164, 167, 171, 182-184, 189, 195, 199, 203, 206
+mitmproxy/coretypes/serializable.py                     109     77    29%   55-58, 82-86, 91-96, 99-116, 125-190, 195, 200
+mitmproxy/ctx.py                                          6      0   100%
+mitmproxy/dns.py                                        269    139    48%   37, 44, 63-76, 80, 84, 88, 92, 96, 100, 104, 108, 127-133, 137-142, 146-152, 159, 170, 177, 184, 189, 194, 201, 251, 263, 269-271, 276, 284-286, 304, 324-327, 332-407, 412-459, 466, 486-488, 500, 507-509, 512
+mitmproxy/eventsequence.py                               62     45    27%   17-32, 36-45, 49-58, 62-67, 79-84
+mitmproxy/exceptions.py                                  14      1    93%   25
+mitmproxy/flow.py                                       140     77    45%   38, 41, 118-130, 144-159, 162-181, 185-193, 197-199, 205-208, 214-215, 221-223, 228, 234-242, 249-253, 259-263, 269-273, 282
+mitmproxy/flowfilter.py                                 410    148    64%   56-58, 67, 91, 99, 108, 117, 126, 135, 144, 153-154, 163, 171, 179-185, 189, 213-217, 226-230, 239, 248-250, 260-264, 274-275, 285-286, 296-322, 332-349, 359-376, 386, 397, 412-414, 418-423, 432-435, 444-447, 455, 463, 471, 481-482, 491, 501, 506, 515-516, 521, 524-526, 529, 534, 537-539, 542, 547, 550-551, 554, 656, 661-662, 673-677
+mitmproxy/hooks.py                                       46      8    83%   22-25, 29, 31, 40-41
+mitmproxy/http.py                                       568    328    42%   41, 45, 105-112, 124, 129, 132-135, 138-139, 142-143, 155-156, 163-165, 168-170, 173-176, 192-194, 197-200, 203-207, 211-214, 238, 241, 244, 267, 271, 277, 281, 285, 289, 296, 300, 307, 311, 322, 326, 337, 341, 352, 356, 359-381, 388-403, 406-423, 430-439, 446, 450, 457, 461, 472-474, 484-487, 502-506, 568-573, 589-634, 643-648, 655, 659, 666, 670, 685-688, 692-697, 710, 714-715, 727-730, 734-743, 750, 754-758, 761-768, 779, 783, 792-794, 798-799, 810-814, 821-831, 834-835, 838-840, 849, 853, 856-857, 860, 869, 873, 889-892, 898-903, 909, 915-917, 924-930, 937-938, 950, 956, 959-969, 972-985, 997, 1003, 1049-1055, 1069-1109, 1116, 1120, 1130, 1134, 1137-1139, 1142-1146, 1161, 1165, 1175-1200, 1228, 1236-1241, 1244-1256, 1261, 1274-1279
+mitmproxy/io/__init__.py                                  5      0   100%
+mitmproxy/io/compat.py                                  270    230    15%   18-19, 23-24, 28-42, 46-47, 51-58, 62-64, 69-74, 79-93, 98-101, 105-126, 130-135, 139-141, 149-174, 178-194, 198-200, 204-209, 213-228, 232-261, 265-278, 285-339, 343-348, 352-358, 362-368, 372-376, 380-382, 386-388, 392-417, 421-424, 428-433, 437-440, 444-451, 458-468, 505-528
+mitmproxy/io/har.py                                      79     68    14%   20-37, 45-155
+mitmproxy/io/io.py                                       72     46    36%   20, 23-24, 31, 34-41, 48-79, 84-85, 88-91, 103-111
+mitmproxy/log.py                                         97     25    74%   43-44, 56, 58, 64-65, 92, 97, 111-113, 116, 133-138, 144-149, 158-163, 169-174, 180-185, 188-193, 246
+mitmproxy/master.py                                      75     39    48%   38-39, 55-90, 97, 100, 103-106, 109-116, 126-141
+mitmproxy/net/__init__.py                                 0      0   100%
+mitmproxy/net/check.py                                   28     22    21%   15-39, 43
+mitmproxy/net/dns/__init__.py                             0      0   100%
+mitmproxy/net/dns/classes.py                              8      1    88%   11
+mitmproxy/net/dns/domain_names.py                        93     78    16%   15, 19-35, 41-65, 70-81, 86-89, 94-109, 113-137, 145-169
+mitmproxy/net/dns/https_records.py                       60     37    38%   40-47, 52-65, 75-87, 92-99, 104-108
+mitmproxy/net/dns/op_codes.py                             9      1    89%   19
+mitmproxy/net/dns/response_codes.py                      18      2    89%   46, 50
+mitmproxy/net/dns/types.py                               92      1    99%   185
+mitmproxy/net/encoding.py                                86     62    28%   47-71, 105-129, 144, 148-151, 155-159, 163-165, 169, 173-176, 180-181, 193-198, 205
+mitmproxy/net/http/__init__.py                            0      0   100%
+mitmproxy/net/http/cookies.py                           183    149    19%   42, 48, 59-64, 77-91, 98, 105-110, 119-136, 146-190, 194-200, 207-218, 222, 230-231, 235-238, 245, 257-263, 267-271, 279-287, 300-319, 331-345, 355-362, 370-387
+mitmproxy/net/http/headers.py                            37     32    14%   19-29, 33-36, 44-72
+mitmproxy/net/http/http1/__init__.py                     11      0   100%
+mitmproxy/net/http/http1/assemble.py                     44     35    20%   2-10, 14-16, 20-28, 32-34, 38-52, 60-75, 87, 91, 99
+mitmproxy/net/http/http1/read.py                        133    115    14%   17-20, 30-37, 55-71, 93-215, 219-220, 226-253, 257-268, 282-298, 314-319, 348-351
+mitmproxy/net/http/multipart.py                          55     47    15%   12-45, 54-75
+mitmproxy/net/http/status_codes.py                       49      0   100%
+mitmproxy/net/http/url.py                                91     72    21%   40-75, 85-88, 97-108, 115, 123, 133, 140-146, 150, 164-193
+mitmproxy/net/http/user_agents.py                         5      5     0%   8-60
+mitmproxy/net/local_ip.py                                18     14    22%   13-22, 31-40
+mitmproxy/net/server_spec.py                             30     22    27%   41-85
+mitmproxy/net/tls.py                                    100     50    50%   22-23, 72-86, 91-93, 99-105, 108-110, 115, 132-163, 275, 288, 302
+mitmproxy/options.py                                     38      0   100%
+mitmproxy/optmanager.py                                 344    234    32%   50, 60, 64-65, 68, 71, 74-77, 80-83, 135-145, 155-159, 164-169, 172, 177-179, 182-184, 192, 202, 205, 208, 211, 217-219, 228-231, 234-237, 241-242, 247, 254-260, 267-276, 279, 285, 293-300, 303-306, 320-347, 356-359, 362, 368-403, 413-474, 482-496, 505-519, 523-541, 549-557, 566-577, 593-601, 610-621, 629-633
+mitmproxy/platform/__init__.py                           23     12    48%   23-38
+mitmproxy/platform/linux.py                              14      9    36%   22-33
+mitmproxy/platform/openbsd.py                             2      2     0%   1-2
+mitmproxy/platform/osx.py                                16     16     0%   1-39
+mitmproxy/platform/pf.py                                 24     24     0%   1-42
+mitmproxy/platform/windows.py                           308    308     0%   1-598
+mitmproxy/proxy/__init__.py                               0      0   100%
+mitmproxy/proxy/commands.py                              55     17    69%   42-44, 55, 66, 77-78, 81-82, 110-111, 124-126, 155-156, 159
+mitmproxy/proxy/context.py                               24      9    62%   38-43, 46-49, 52
+mitmproxy/proxy/events.py                                61     11    82%   26, 54-55, 74-77, 87, 92-93, 100
+mitmproxy/proxy/layer.py                                175    115    34%   84-89, 94-101, 105-114, 119-124, 132-183, 192-222, 230-240, 258-263, 266, 269-272, 275-289, 296-314, 318, 321, 324-329
+mitmproxy/proxy/layers/__init__.py                       13      0   100%
+mitmproxy/proxy/layers/dns.py                           123     84    32%   48-52, 65-68, 73-91, 96-100, 103-106, 112-140, 144-145, 149-180, 187
+mitmproxy/proxy/layers/http/__init__.py                 670    517    23%   76-83, 87, 103, 106, 138, 157-160, 163-168, 171-174, 184-193, 199-285, 288-301, 307-344, 350-394, 400-412, 415-421, 427-451, 457-467, 471-510, 513-541, 549-623, 626-653, 658-687, 690-703, 706-716, 719-732, 735-736, 739-777, 781-833, 837, 841, 845, 867-873, 876, 879-944, 953-985, 990-992, 998-1086, 1091-1115, 1124-1137
+mitmproxy/proxy/layers/http/_base.py                     29      6    79%   25-26, 37, 40, 44-45
+mitmproxy/proxy/layers/http/_events.py                   64     16    75%   35-36, 44-45, 53-54, 62-63, 69, 75, 84-86, 95-97
+mitmproxy/proxy/layers/http/_hooks.py                    35      0   100%
+mitmproxy/proxy/layers/http/_http1.py                   298    218    27%   56-57, 70-78, 82-83, 88-120, 127-136, 150-156, 159-166, 171-217, 229-230, 233-272, 279-322, 329-331, 342, 345-388, 395-452, 458-463, 467-472, 479-488
+mitmproxy/proxy/layers/http/_http2.py                   371    276    26%   81-90, 94-103, 107-118, 121-197, 203-282, 289-292, 295-299, 303, 311-318, 322-327, 334-353, 360-369, 384, 387-398, 401-437, 461-469, 475-503, 506-544, 547-603, 609-623, 630-653, 660-670
+mitmproxy/proxy/layers/http/_http3.py                   150     82    45%   54-55, 60-181, 188, 202, 206-229, 242-244, 250-261, 265-276
+mitmproxy/proxy/layers/http/_http_h2.py                 110     82    25%   17-19, 22, 27, 51-53, 68-91, 94-98, 101-103, 106-107, 110-130, 137-178, 184-194
+mitmproxy/proxy/layers/http/_http_h3.py                 144     77    47%   66-74, 86, 92-95, 98, 101, 108, 125-131, 137, 141, 146-147, 157-169, 179-180, 185-188, 193, 198, 211, 215-243, 254-257, 263-276, 281-282, 294-298, 304-308, 313-314
+mitmproxy/proxy/layers/http/_upstream_proxy.py           70     47    33%   27-29, 33-46, 49-75, 80-105
+mitmproxy/proxy/layers/modes.py                         183    124    32%   27-29, 35-37, 46-58, 62, 68-86, 92-96, 141-149, 153-163, 168-205, 210-236, 240-303
+mitmproxy/proxy/layers/quic/__init__.py                  20      0   100%
+mitmproxy/proxy/layers/quic/_client_hello_parser.py      54     37    31%   51-107
+mitmproxy/proxy/layers/quic/_commands.py                 46     16    65%   14-15, 33-35, 38-40, 52-53, 65-66, 89-92
+mitmproxy/proxy/layers/quic/_events.py                   38      7    82%   27-29, 67-70
+mitmproxy/proxy/layers/quic/_hooks.py                    39      0   100%
+mitmproxy/proxy/layers/quic/_raw_layers.py              209    150    28%   41-43, 47, 51-53, 73-101, 107-119, 123-141, 144, 173-187, 191-325, 335-340, 347-419, 424-427
+mitmproxy/proxy/layers/quic/_stream_layers.py           323    236    27%   71-75, 78-91, 96-98, 104-127, 135-166, 172-189, 194-252, 255-264, 267-321, 324-330, 341-344, 350-358, 374, 377-384, 387-397, 400-401, 417-432, 435, 440-557, 560-563, 566-568, 571-572, 581-582, 585-589, 593, 599-605, 611, 621
+mitmproxy/proxy/layers/tcp.py                            78     43    45%   69-73, 77-89, 95-137, 143
+mitmproxy/proxy/layers/tls.py                           353    260    26%   38-54, 62-69, 85-91, 100-118, 126-136, 152-158, 247-253, 256, 262, 266, 269-283, 286-292, 298-398, 401-406, 409-439, 442-445, 448-453, 459, 470, 473-489, 492-503, 506-507, 533-552, 555, 560-620, 627-630, 633-670, 673-674, 687
+mitmproxy/proxy/layers/udp.py                            71     37    48%   68-72, 76-88, 94-126, 132
+mitmproxy/proxy/layers/websocket.py                     152    101    34%   73-75, 78-79, 82, 95-96, 100-132, 138-218, 224, 246-247, 250-256, 259-272
+mitmproxy/proxy/mode_servers.py                         262    159    39%   64-66, 69-73, 96-97, 114-121, 129-140, 143-155, 175, 189-214, 217, 224-225, 229, 245-258, 261-269, 274-332, 348, 358-401, 404-412, 427, 430-435, 452, 455, 462-463, 466-486, 489-493, 498, 503, 508, 513, 518, 523
+mitmproxy/proxy/mode_specs.py                           151     48    68%   72, 88, 109-119, 126-127, 130, 142-147, 156-161, 165, 168, 171-172, 182, 202, 215-218, 233-238, 242-244, 255, 266, 290, 302
+mitmproxy/proxy/server.py                               298    225    24%   58-63, 66, 69-77, 81-89, 109-128, 131-181, 184-264, 269-273, 281-329, 336-343, 346-355, 358-360, 364, 374, 385-438, 443-463, 474-484
+mitmproxy/proxy/server_hooks.py                          27      0   100%
+mitmproxy/proxy/tunnel.py                               130     88    32%   46-50, 53, 56-98, 101-113, 118-144, 147-154, 157, 163-164, 168, 171, 174, 177, 182, 187, 190, 193-201
+mitmproxy/proxy/utils.py                                 32     14    56%   21-24, 48-49, 52-55, 58, 61, 64, 67-68
+mitmproxy/script/__init__.py                              2      2     0%   1-3
+mitmproxy/script/concurrent.py                           15     15     0%   6-32
+mitmproxy/tcp.py                                         32     13    59%   17-19, 23, 26, 29, 32, 55-56, 59, 65-66, 69
+mitmproxy/test/taddons.py                                43     15    65%   33, 46-49, 57-63, 69-70, 76-77
+mitmproxy/tls.py                                         69     27    61%   23-29, 45-62, 67, 75-85, 93-97, 102-107, 110
+mitmproxy/tools/__init__.py                               0      0   100%
+mitmproxy/tools/cmdline.py                               73     73     0%   1-151
+mitmproxy/tools/console/__init__.py                       2      2     0%   1-3
+mitmproxy/tools/console/commander/__init__.py             0      0   100%
+mitmproxy/tools/console/commander/commander.py          196    196     0%   1-260
+mitmproxy/tools/console/commandexecutor.py               21     21     0%   1-29
+mitmproxy/tools/console/commands.py                     108    108     0%   1-156
+mitmproxy/tools/console/common.py                       429    429     0%   1-849
+mitmproxy/tools/console/consoleaddons.py                329    329     0%   1-675
+mitmproxy/tools/console/defaultkeys.py                   81     81     0%   1-253
+mitmproxy/tools/console/eventlog.py                      42     42     0%   1-63
+mitmproxy/tools/console/flowdetailview.py                82     82     0%   1-149
+mitmproxy/tools/console/flowlist.py                      73     73     0%   1-108
+mitmproxy/tools/console/flowview.py                     249    249     0%   1-493
+mitmproxy/tools/console/grideditor/__init__.py           13     13     0%   1-14
+mitmproxy/tools/console/grideditor/base.py              265    265     0%   1-467
+mitmproxy/tools/console/grideditor/col_bytes.py          36     36     0%   1-49
+mitmproxy/tools/console/grideditor/col_subgrid.py        29     29     0%   1-40
+mitmproxy/tools/console/grideditor/col_text.py           27     27     0%   8-48
+mitmproxy/tools/console/grideditor/col_viewany.py        21     21     0%   5-34
+mitmproxy/tools/console/grideditor/editors.py           125    125     0%   1-209
+mitmproxy/tools/console/help.py                          54     54     0%   1-113
+mitmproxy/tools/console/keybindings.py                  114    114     0%   1-163
+mitmproxy/tools/console/keymap.py                       163    163     0%   1-262
+mitmproxy/tools/console/layoutwidget.py                  10     10     0%   1-37
+mitmproxy/tools/console/master.py                       165    165     0%   1-260
+mitmproxy/tools/console/options.py                      187    187     0%   1-277
+mitmproxy/tools/console/overlay.py                      117    117     0%   1-190
+mitmproxy/tools/console/palettes.py                      80     80     0%   6-541
+mitmproxy/tools/console/quickhelp.py                     93     93     0%   5-191
+mitmproxy/tools/console/searchable.py                    66     66     0%   1-89
+mitmproxy/tools/console/signals.py                       16     16     0%   1-66
+mitmproxy/tools/console/statusbar.py                    255    255     0%   1-347
+mitmproxy/tools/console/tabs.py                          43     43     0%   1-58
+mitmproxy/tools/console/window.py                       168    168     0%   1-312
+mitmproxy/tools/dump.py                                  14     14     0%   1-22
+mitmproxy/tools/web/__init__.py                           2      2     0%   1-3
+mitmproxy/tools/web/app.py                              406    406     0%   1-726
+mitmproxy/tools/web/master.py                            66     66     0%   1-116
+mitmproxy/tools/web/static_viewer.py                     65     65     0%   1-106
+mitmproxy/tools/web/web_columns.py                        1      1     0%   2
+mitmproxy/tools/web/webaddons.py                         28     28     0%   1-67
+mitmproxy/types.py                                      265    124    53%   93, 96-101, 104, 128, 131, 134, 137, 145, 148, 151, 159, 162, 165, 173, 176, 179, 189-208, 211, 214, 222, 225-227, 230, 238, 241, 244, 252, 255, 258-266, 308-313, 316-317, 320-329, 358, 366-374, 377, 385-388, 391-397, 416-423, 431, 434-437, 440-444, 455, 458-464, 467
+mitmproxy/udp.py                                         32     13    59%   14-16, 20, 23, 26, 29, 52-53, 56, 62-63, 66
+mitmproxy/utils/__init__.py                               0      0   100%
+mitmproxy/utils/arg_check.py                             31     31     0%   1-163
+mitmproxy/utils/asyncio_utils.py                         49     33    33%   21-23, 33-38, 47-49, 54-63, 68-74, 79-88
+mitmproxy/utils/bits.py                                   7      7     0%   1-13
+mitmproxy/utils/data.py                                  22      4    82%   31-34
+mitmproxy/utils/debug.py                                 35     35     0%   1-131
+mitmproxy/utils/emoji.py                                  1      0   100%
+mitmproxy/utils/human.py                                 60     47    22%   20-28, 38-50, 54-66, 70-72, 76-77, 86-99
+mitmproxy/utils/magisk.py                                32     18    44%   76-85, 90-92, 98-112
+mitmproxy/utils/pyinstaller/__init__.py                   4      4     0%   1-7
+mitmproxy/utils/pyinstaller/hook-mitmproxy.py             1      1     0%   1
+mitmproxy/utils/signals.py                               54      9    83%   35, 54, 63, 65, 74, 83, 86, 89, 137
+mitmproxy/utils/sliding_window.py                         5      5     0%   1-6
+mitmproxy/utils/spec.py                                  12     10    17%   11-21
+mitmproxy/utils/strutils.py                              85     55    35%   19-24, 42-47, 76-80, 97-110, 120-125, 129-132, 136-140, 150-152, 160-170, 174, 178, 203, 232-239, 248
+mitmproxy/utils/typecheck.py                             51     24    53%   32, 34-41, 45, 49-52, 54, 57, 62-72
+mitmproxy/utils/vt_codes.py                              39     34    13%   10-55, 60
+mitmproxy/version.py                                     16      9    44%   18-50
+mitmproxy/websocket.py                                   74     26    65%   63-68, 72, 75, 85-93, 96-99, 102-105, 113, 117, 137-142, 146-151, 179, 182
+-----------------------------------------------------------------------------------
+TOTAL                                                 23396  18159    22%
+
+[33m======================== [32m6 passed[0m, [33m[1m3 warnings[0m[33m in 4.96s[0m[33m =========================[0m
