@@ -12,13 +12,6 @@ export function CaptureSetup() {
   return (
     <div className="bg-background mx-auto flex items-center justify-center p-4">
       <div className="w-full max-w-2xl space-y-8 text-center">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <div className="bg-accent text-accent-foreground flex items-center gap-2 rounded-full border px-4 py-2">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
-            <span className="font-medium">mitmproxy is running</span>
-          </div>
-        </div>
-
         <div className="relative">
           <div className="bg-muted mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-full border">
             <LuActivity className="text-primary h-16 w-16" strokeWidth={1.5} />
