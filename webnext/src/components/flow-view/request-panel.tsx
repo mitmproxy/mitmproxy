@@ -7,6 +7,7 @@ import { PanelTabs, type Tab } from "./panel-tabs";
 import { useAppDispatch } from "web/ducks/hooks";
 import { selectRequestTab } from "web/ducks/ui/flow";
 import { Timing } from "@/components/flow-view/timing";
+import { Comment } from "@/components/flow-view/comment";
 
 export type RequestPanelProps = {
   tab: string;
@@ -60,6 +61,13 @@ const tabs: Tab[] = [
     name: "Timing",
     value: "timing",
     component: Timing,
+    scrollable: true,
+  },
+  // TODO: add support for comment field in the response panel too
+  {
+    name: "Comment",
+    value: "comment",
+    component: Comment,
     scrollable: true,
   },
 ];

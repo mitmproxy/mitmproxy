@@ -25,6 +25,7 @@ export function tabsForFlowNext(flow: Flow): {
                 "cookies",
                 "connection",
                 "timing",
+                "comment",
             ];
             break;
         case "tcp":
