@@ -5,12 +5,23 @@ import { runCommand } from "../../utils";
 import { AppDispatch, RootState } from "../store";
 import { tabsForFlow } from "./utils";
 
-export function onKeyDown(e: KeyboardEvent) {
+export type OnKeyDownOptions = {
+    includeKeys?: string[];
+    excludeKeys?: string[];
+};
+
+export function onKeyDown(e: KeyboardEvent, options: OnKeyDownOptions = {}) {
     //console.debug("onKeyDown", e)
     if (e.ctrlKey || e.metaKey) {
         return () => {};
     }
     const key = e.key;
+    if (
+        (options.includeKeys && !options.includeKeys.includes(key)) ||
+        (options.excludeKeys && options.excludeKeys.includes(key))
+    ) {
+        return () => {};
+    }
     e.preventDefault();
     return (dispatch: AppDispatch, getState: () => RootState) => {
         const { flows } = getState();
@@ -54,7 +65,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 break;
 
             case "ArrowLeft": {
-                if (!flow || getState().version.value === "webnext") break;
+                if (!flow) break;
                 const tabs = tabsForFlow(flow);
                 const currentTab = getState().ui.flow.tabResponse;
                 const nextTab =
@@ -70,7 +81,7 @@ export function onKeyDown(e: KeyboardEvent) {
 
             case "Tab":
             case "ArrowRight": {
-                if (!flow || getState().version.value === "webnext") break;
+                if (!flow) break;
                 const tabs = tabsForFlow(flow);
                 const currentTab = getState().ui.flow.tabResponse;
                 const nextTab =

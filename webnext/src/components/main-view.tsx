@@ -7,6 +7,7 @@ import { FlowTable } from "@/components/flow-table";
 import { useAppSelector } from "web/ducks/hooks";
 import { CaptureSetup } from "@/components/modes/capture-setup";
 import { FlowView } from "@/components/flow-view";
+import { WithKeyboardNavigation } from "@/components/keyboard-navigation";
 
 export function MainView() {
   const hasOneFlowSelected = useAppSelector(
@@ -18,7 +19,14 @@ export function MainView() {
   return hasFlows ? (
     <ResizablePanelGroup direction="vertical">
       <ResizablePanel id="flow-table-panel" defaultSize={60}>
-        <FlowTable />
+        <WithKeyboardNavigation
+          // Theses keys are A) difficult to implement with backwards compatibility for web in mind and B) conflicting with the builtin keyboard navigation in the tabs.
+          // Turned off for now until we have a better solution.
+          excludeKeys={["ArrowLeft", "ArrowRight", "Tab"]}
+          className="h-full"
+        >
+          <FlowTable />
+        </WithKeyboardNavigation>
       </ResizablePanel>
 
       {hasOneFlowSelected && (

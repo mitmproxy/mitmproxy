@@ -1,10 +1,7 @@
-import { useEffect } from "react";
 import { Header } from "@/components/header";
 import { SideMenu } from "@/components/sidemenu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Footer } from "@/components/footer";
-import { useDispatch } from "react-redux";
-import { onKeyDown } from "web/ducks/ui/keyboard";
 import { MainView } from "@/components/main-view";
 
 export function App() {
@@ -15,16 +12,6 @@ export function App() {
     (state: RootState) => state.commandBar.visible,
   ); */
   // console.log({ showEventLog, showCommandBar }); // TODO: implement these features
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      dispatch(onKeyDown(e));
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch]);
 
   return (
     <div className="font-inter bg-background text-foreground dark: flex h-screen flex-col">

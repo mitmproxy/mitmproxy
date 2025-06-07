@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/resizable";
 import { useAppSelector } from "web/ducks/hooks";
 import { tabsForFlowNext } from "web/ducks/ui/utils";
+import { WithKeyboardNavigation } from "@/components/keyboard-navigation";
 
 export function FlowView() {
   const flow = useAppSelector((state) => state.flows.selected[0]);
@@ -38,7 +39,10 @@ export function FlowView() {
         {flow.type === "http" && <HttpBar flow={flow} />}
       </div>
 
-      <div className="min-h-0">
+      <WithKeyboardNavigation
+        includeKeys={["ArrowUp", "ArrowDown"]}
+        className="min-h-0"
+      >
         <ResizablePanelGroup id="flow-view-panel-group" direction="horizontal">
           <ResizablePanel id="request-details-panel" defaultSize={50}>
             <RequestPanel tab={activeTabRequest} />
@@ -50,7 +54,7 @@ export function FlowView() {
             <ResponsePanel tab={activeTabResponse} />
           </ResizablePanel>
         </ResizablePanelGroup>
-      </div>
+      </WithKeyboardNavigation>
     </div>
   );
 }
