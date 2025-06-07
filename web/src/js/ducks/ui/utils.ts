@@ -46,10 +46,6 @@ export function tabsForFlowNext(flow: Flow): {
         responseTabs.push("error");
     }
 
-    responseTabs.push("connection");
-    responseTabs.push("timing");
-    responseTabs.push("comment");
-
     return { response: responseTabs, request: requestTabs };
 }
 
