@@ -26,11 +26,11 @@ export function HttpMessageContentView({
     part,
     contentView,
     maxLines + 1,
-    flow.request.contentHash,
+    part === "request" ? flow.request.contentHash : flow.response?.contentHash,
   );
-  const contentType = flow.request.headers.find(
-    ([header]) => header.toLowerCase() === "content-type",
-  )?.[1];
+  const contentType = (
+    part === "request" ? flow.request : flow.response
+  )?.headers?.find(([header]) => header.toLowerCase() === "content-type")?.[1];
 
   return (
     <div className="h-full">
