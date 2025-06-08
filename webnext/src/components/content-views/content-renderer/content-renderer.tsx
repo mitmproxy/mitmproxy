@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useRef } from "react";
-import Editor, { type OnMount } from "@monaco-editor/react";
-import { editor as EditorType } from "monaco-editor/esm/vs/editor/editor.api";
+import { useState } from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json";
+import { xml } from "@codemirror/lang-xml";
+import { javascript } from "@codemirror/lang-javascript";
+import { css } from "@codemirror/lang-css";
+import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
+import { EditorView } from "@codemirror/view";
+import { EditorState, type Extension } from "@codemirror/state";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LuCopy, LuDownload } from "react-icons/lu";
 import { VscWordWrap } from "react-icons/vsc";
-import { formatBytes } from "@/components/content-views/utils";
 import { cn } from "@/lib/utils";
 import { useContentRenderer } from "./use-content-renderer";
+import { formatBytes } from "@/components/content-views/utils";
 import { useTheme } from "@/components/theme-provider";
 
 export type ContentRendererProps = {
@@ -31,44 +37,17 @@ export function ContentRenderer({
 }: ContentRendererProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isWrapped, setIsWrapped] = useState(false);
-  const editorRef = useRef<EditorType.IStandaloneCodeEditor>(null);
   const { resolvedTheme } = useTheme();
   const { language, formattedContent, displayContent, isTruncated } =
-    useContentRenderer({ content, contentType, maxLines, isExpanded });
-
-  const editorOptions: EditorType.IEditorOptions &
-    EditorType.IGlobalEditorOptions = {
-    readOnly: true,
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    wordWrap: isWrapped ? "on" : "off",
-    lineNumbers: "on",
-    glyphMargin: false,
-    folding: true,
-    lineDecorationsWidth: 0,
-    lineNumbersMinChars: 3,
-    renderLineHighlight: "none",
-    scrollbar: {
-      vertical: "auto",
-      horizontal: "auto",
-      verticalScrollbarSize: 8,
-      horizontalScrollbarSize: 8,
-    },
-    fontSize: 13,
-    fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-    automaticLayout: true,
-    contextmenu: false,
-    theme: resolvedTheme === "dark" ? "vs-dark" : "vs",
-  };
-  const contentBytes = formatBytes(new Blob([content]).size);
-
-  const handleEditorDidMount: OnMount = (editor) => {
-    editorRef.current = editor;
-    editor.updateOptions({
-      ...editorOptions,
-      renderValidationDecorations: "off",
+    useContentRenderer({
+      content,
+      contentType,
+      maxLines,
+      isExpanded,
     });
-  };
+
+  const extensions = getExtensions({ language, isWrapped });
+  const contentBytes = formatBytes(new Blob([content]).size);
 
   const handleCopy = async () => {
     try {
@@ -136,7 +115,7 @@ export function ContentRenderer({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void handleCopy}
+            onClick={() => void handleCopy()}
             title="Copy contents"
           >
             <LuCopy />
@@ -155,23 +134,28 @@ export function ContentRenderer({
 
       {/* The editor takes up all available space minus the height of the top bar. */}
       <div className="relative h-[calc(100%_-_32px)] min-h-0">
-        <Editor
-          height="100%"
-          language={language}
-          value={displayContent}
-          options={editorOptions}
-          onMount={handleEditorDidMount}
-          theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
-          loading={
-            <div className="flex h-32 items-center justify-center">
-              <div className="text-muted-foreground text-sm">
-                Loading editor...
-              </div>
-            </div>
-          }
-        />
+        <div className="h-full overflow-scroll">
+          <CodeMirror
+            value={displayContent}
+            height="100%"
+            extensions={extensions}
+            theme={resolvedTheme === "dark" ? vscodeDark : vscodeLight}
+            editable={false}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+              dropCursor: false,
+              allowMultipleSelections: false,
+              indentOnInput: false,
+              bracketMatching: true,
+              closeBrackets: false,
+              autocompletion: false,
+              highlightSelectionMatches: false,
+              searchKeymap: true,
+            }}
+          />
+        </div>
 
-        {/* Expand/Collapse button for truncated content */}
         {isTruncated && (
           <div className="absolute right-2 bottom-2 mr-4 space-y-2 space-x-2">
             <Button
@@ -196,4 +180,60 @@ export function ContentRenderer({
       </div>
     </div>
   );
+}
+
+function getExtensions({
+  isWrapped,
+  language,
+}: {
+  language: string;
+  isWrapped: boolean;
+}): Extension[] {
+  const extensions: Extension[] = [
+    EditorView.theme({
+      "&": {
+        fontSize: "13px",
+        fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+      },
+      ".cm-content": {
+        padding: "12px",
+        minHeight: "100px",
+      },
+      ".cm-focused": {
+        outline: "none",
+      },
+      ".cm-editor": {
+        borderRadius: "0",
+        height: "100%",
+      },
+      ".cm-scroller": {
+        fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+      },
+    }),
+    EditorState.readOnly.of(true),
+  ];
+
+  switch (language) {
+    case "json":
+      extensions.push(json());
+      break;
+    case "xml":
+      extensions.push(xml());
+      break;
+    case "javascript":
+      extensions.push(javascript());
+      break;
+    case "css":
+      extensions.push(css());
+      break;
+    default:
+      // No specific language extension needed.
+      break;
+  }
+
+  if (isWrapped) {
+    extensions.push(EditorView.lineWrapping);
+  }
+
+  return extensions;
 }

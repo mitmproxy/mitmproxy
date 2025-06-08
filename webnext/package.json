@@ -21,7 +21,12 @@
     ]
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0-rc.0",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.37.1",
     "@radix-ui/react-context-menu": "^2.2.15",
     "@radix-ui/react-scroll-area": "^1.2.9",
     "@radix-ui/react-separator": "^1.1.7",
@@ -29,6 +34,8 @@
     "@radix-ui/react-tabs": "^1.1.12",
     "@tailwindcss/vite": "^4.1.7",
     "@tanstack/react-table": "^8.21.3",
+    "@uiw/codemirror-theme-vscode": "^4.23.12",
+    "@uiw/react-codemirror": "^4.23.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "react": "^19.1.0",
