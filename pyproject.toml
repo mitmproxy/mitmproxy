@@ -102,6 +102,7 @@ Issues = "https://github.com/mitmproxy/mitmproxy/issues"
 mitmproxy = "mitmproxy.tools.main:mitmproxy"
 mitmdump = "mitmproxy.tools.main:mitmdump"
 mitmweb = "mitmproxy.tools.main:mitmweb"
+mitmwebnext = "mitmproxy.tools.main:mitmwebnext"
 
 [project.entry-points.pyinstaller40]
 hook-dirs = "mitmproxy.utils.pyinstaller:hook_dirs"

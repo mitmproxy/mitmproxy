@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && cp -r dist ../mitmproxy/tools/webnext",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",

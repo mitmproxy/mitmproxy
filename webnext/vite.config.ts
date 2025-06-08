@@ -23,6 +23,15 @@ export default defineConfig({
       web: path.resolve(__dirname, "../web/dist/js"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].js`,
+        chunkFileNames: `assets/[name].js`,
+        assetFileNames: `assets/[name].[ext]`,
+      },
+    },
+  },
   server: {
     host: "127.0.0.1",
     proxy: {
