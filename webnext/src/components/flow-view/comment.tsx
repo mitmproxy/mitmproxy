@@ -1,14 +1,14 @@
 import type { TabProps } from "@/components/flow-view/panel-tabs";
 import { Section, SectionTitle } from "@/components/flow-view/section";
 import { Textarea } from "@/components/ui/textarea";
-import { useDebounceCallback } from "usehooks-ts";
+import { useDebouncedCallback } from "use-debounce";
 import { update } from "web/ducks/flows";
 import { useAppDispatch } from "web/ducks/hooks";
 
 export function Comment({ flow }: TabProps) {
   const dispatch = useAppDispatch();
 
-  const updateComment = useDebounceCallback((comment: string) => {
+  const updateComment = useDebouncedCallback((comment: string) => {
     void dispatch(update(flow, { comment }));
   }, 500);
 

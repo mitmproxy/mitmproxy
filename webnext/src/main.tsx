@@ -7,6 +7,7 @@ import { add as addLog } from "web/ducks/eventLog";
 import WebSocketBackend from "web/backends/websocket";
 import { Provider } from "react-redux";
 import { createStore } from "web/ducks/store";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const store = createStore("webnext");
 
@@ -33,8 +34,10 @@ window.addEventListener("error", (e: ErrorEvent) => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <ThemeProvider>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </ThemeProvider>
   </StrictMode>,
 );

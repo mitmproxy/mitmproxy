@@ -1,38 +1,24 @@
 import { LuSun, LuMoon } from "react-icons/lu";
-import { useEffect } from "react";
-import { useTheme } from "@/hooks/use-theme";
+import { VscWand } from "react-icons/vsc";
+import { useTheme } from "@/components/theme-provider";
 
 export function ThemeToggle() {
-  const { isDarkMode, toggle: toggleDarkMode } = useTheme();
-
-  const toggleTheme = () => {
-    toggleDarkMode();
-
-    if (isDarkMode) {
-      document.documentElement.classList.remove("dark");
-    } else {
-      document.documentElement.classList.add("dark");
-    }
-  };
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    }
-  }, [isDarkMode]);
+  const { theme, toggle } = useTheme();
 
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={toggle}
       className="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
     >
-      {!isDarkMode ? (
-        <LuSun className="h-4 w-4" />
-      ) : (
-        <LuMoon className="h-4 w-4" />
-      )}
-      <span>{!isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+      {theme === "system" && <VscWand className="size-4" />}
+      {theme === "dark" && <LuMoon className="size-4" />}
+      {theme === "light" && <LuSun className="size-4" />}
+      <span>
+        {theme === "dark" && "Dark theme"}
+        {theme === "light" && "Light theme"}
+        {theme === "system" && "System theme"}
+      </span>
     </button>
   );
 }

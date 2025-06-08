@@ -10,7 +10,7 @@ import { VscWordWrap } from "react-icons/vsc";
 import { formatBytes } from "@/components/content-views/utils";
 import { cn } from "@/lib/utils";
 import { useContentRenderer } from "./use-content-renderer";
-import { useTheme } from "@/hooks/use-theme";
+import { useTheme } from "@/components/theme-provider";
 
 export type ContentRendererProps = {
   content: string;
@@ -32,7 +32,7 @@ export function ContentRenderer({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isWrapped, setIsWrapped] = useState(false);
   const editorRef = useRef<EditorType.IStandaloneCodeEditor>(null);
-  const { isDarkMode } = useTheme();
+  const { resolvedTheme } = useTheme();
   const { language, formattedContent, displayContent, isTruncated } =
     useContentRenderer({ content, contentType, maxLines, isExpanded });
 
@@ -58,7 +58,7 @@ export function ContentRenderer({
     fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
     automaticLayout: true,
     contextmenu: false,
-    theme: isDarkMode ? "vs-dark" : "vs",
+    theme: resolvedTheme === "dark" ? "vs-dark" : "vs",
   };
   const contentBytes = formatBytes(new Blob([content]).size);
 
@@ -161,7 +161,7 @@ export function ContentRenderer({
           value={displayContent}
           options={editorOptions}
           onMount={handleEditorDidMount}
-          theme={isDarkMode ? "vs-dark" : "vs"}
+          theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
           loading={
             <div className="flex h-32 items-center justify-center">
               <div className="text-muted-foreground text-sm">
