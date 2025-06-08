@@ -48,11 +48,16 @@ export function FlowTable() {
     autoResetAll: false,
   });
 
+  const { rows } = table.getRowModel();
+  const headerGroups = table.getHeaderGroups();
+
   return (
     <TableVirtuoso
       className="h-full w-full"
-      data={table.getRowModel().rows}
-      computeItemKey={(_, row) => row.id}
+      data={rows}
+      computeItemKey={(_, v) => v.original.id}
+      followOutput={true}
+      fixedItemHeight={43}
       components={{
         Table,
         TableBody,
@@ -60,11 +65,9 @@ export function FlowTable() {
         TableRow: TableRowComponent,
       }}
       fixedHeaderContent={() => (
-        <FixedHeaderContent headerGroups={table.getHeaderGroups()} />
+        <FixedHeaderContent headerGroups={headerGroups} />
       )}
-      itemContent={(index) => (
-        <ItemContent row={table.getRowModel().rows[index]} />
-      )}
+      itemContent={(_, row) => <ItemContent row={row} />}
     />
   );
 }
