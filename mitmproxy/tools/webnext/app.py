@@ -20,11 +20,18 @@ class Application(tornado.web.Application):
     ) -> None:
         self.master = master
         auth_addon: WebAuth = master.addons.get("webauth")
+        # The option to disable XSRF cookies is needed to test actions like replay requests from the vite dev server during development.
+        # In all other scenarios this should be turned ON, hence the warning.
+        disable_xsrf_cookies = os.environ.get("UNSAFE_DISABLE_XSRF_COOKIES", False)
+        if disable_xsrf_cookies:
+            print(
+                "WARNING: XSRF cookies are disabled! This is unsafe and should only be used for development purposes."
+            )
         super().__init__(
             handlers=handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "dist"),
-            xsrf_cookies=True,
+            xsrf_cookies=not disable_xsrf_cookies, 
             xsrf_cookie_kwargs=dict(httponly=True, samesite="Strict"),
             cookie_secret=secrets.token_bytes(32),
             debug=debug,
