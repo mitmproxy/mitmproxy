@@ -2,6 +2,9 @@
 
 Next-generation web interface for mitmproxy, designed for modern browsers and workflows.
 
+> [!IMPORTANT]  
+> This project is under active development. It is not suitable for production use yet. We welcome contributions and feedback!
+
 ## Introduction
 
 I've been waiting for a better mitmweb for years. It never came so I decided to build it myself. This project is a rewrite\* of the original mitmweb, aiming to provide a modern, responsive, and user-friendly interface for mitmproxy.
