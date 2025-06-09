@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, type PropsWithChildren } from "react";
 import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
 import type { HTTPFlow, HTTPMessage } from "web/flow";
 import { ContentRenderer } from "./content-renderer";
 import { CONTENT_VIEW_ALL_LINES, useContentView } from "./use-content-view";
 import { ContentViewSelector } from "@/components/content-views/content-view-selector";
 import { setContentViewFor } from "web/ducks/ui/flow";
+import { ImageViewer, isImage } from "@/components/content-views/image-viewer";
+import { MessageUtils } from "web/flow/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export type HttpMessageContentViewProps = {
   flow: HTTPFlow;
@@ -42,9 +45,8 @@ export function HttpMessageContentView({
     );
   };
 
-  const contentType = message?.headers?.find(
-    ([header]) => header.toLowerCase() === "content-type",
-  )?.[1];
+  const contentType = MessageUtils.getContentType(message);
+  const isImageContent = isImage(message);
 
   return (
     <div className="h-full">
@@ -57,22 +59,38 @@ export function HttpMessageContentView({
       )}
 
       {contentViewData && contentViewData.text.length > 0 && (
-        <ContentRenderer
-          content={contentViewData.text}
-          contentViewName={contentViewData.view_name}
-          contentType={contentType}
-          maxLines={maxLines}
-          part={part}
-          showMore={showMore}
-          showAll={showAll}
-        >
-          <ContentViewSelector
-            value={contentView}
+        <Wrapper isImageContent={isImageContent}>
+          <ContentRenderer
+            content={contentViewData.text}
+            contentViewName={contentViewData.view_name}
             contentType={contentType}
-            onChange={selectContentView}
-          />
-        </ContentRenderer>
+            maxLines={maxLines}
+            part={part}
+            showMore={showMore}
+            showAll={showAll}
+          >
+            <ContentViewSelector
+              value={contentView}
+              contentType={contentType}
+              onChange={selectContentView}
+            />
+          </ContentRenderer>
+          {isImageContent && (
+            <ImageViewer flow={flow} message={message} className="mt-4" />
+          )}
+        </Wrapper>
       )}
     </div>
+  );
+}
+
+function Wrapper({
+  isImageContent,
+  children,
+}: PropsWithChildren<{ isImageContent: boolean }>) {
+  return isImageContent ? (
+    <ScrollArea className="h-full">{children}</ScrollArea>
+  ) : (
+    <>{children}</>
   );
 }
