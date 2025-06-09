@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type PropsWithChildren } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { xml } from "@codemirror/lang-xml";
@@ -18,20 +18,23 @@ import { useContentRenderer } from "./use-content-renderer";
 import { formatBytes } from "@/components/content-views/utils";
 import { useTheme } from "@/components/theme-provider";
 
-export type ContentRendererProps = {
+export type ContentRendererProps = PropsWithChildren<{
   content: string;
   part: "request" | "response";
+  contentViewName?: string;
   maxLines?: number;
+  contentType?: string;
   showMore?: () => void;
   showAll?: () => void;
-  contentType?: string;
-};
+}>;
 
 export function ContentRenderer({
   content,
   maxLines = 20,
+  contentViewName,
   contentType,
   part,
+  children,
   showMore,
   showAll,
 }: ContentRendererProps) {
@@ -98,7 +101,7 @@ export function ContentRenderer({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-xs">
-            {`${language.toUpperCase()}${contentType ? ` (${contentType})` : ""}`}
+            {contentViewName || language.toUpperCase()}
           </span>
         </div>
 
@@ -129,6 +132,7 @@ export function ContentRenderer({
             <LuDownload /> {contentBytes}
             <span className="text-xs">{}</span>
           </Button>
+          {children}
         </div>
       </div>
 

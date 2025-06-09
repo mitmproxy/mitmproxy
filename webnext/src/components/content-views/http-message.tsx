@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { useAppSelector } from "web/ducks/hooks";
-import type { HTTPFlow } from "web/flow";
-import { ContentRenderer, type ContentRendererProps } from "./content-renderer";
+import { useAppDispatch, useAppSelector } from "web/ducks/hooks";
+import type { HTTPFlow, HTTPMessage } from "web/flow";
+import { ContentRenderer } from "./content-renderer";
 import { CONTENT_VIEW_ALL_LINES, useContentView } from "./use-content-view";
+import { ContentViewSelector } from "@/components/content-views/content-view-selector";
+import { setContentViewFor } from "web/ducks/ui/flow";
 
 export type HttpMessageContentViewProps = {
   flow: HTTPFlow;
-  part: ContentRendererProps["part"];
+  message: HTTPMessage;
 };
 
 export function HttpMessageContentView({
   flow,
-  part,
+  message,
 }: HttpMessageContentViewProps) {
+  const part = flow.request === message ? "request" : "response";
+  const dispatch = useAppDispatch();
+
   const contentView = useAppSelector(
     (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
   );
@@ -23,14 +28,23 @@ export function HttpMessageContentView({
   const showAll = () => setMaxLines(CONTENT_VIEW_ALL_LINES);
   const contentViewData = useContentView(
     flow,
-    part,
+    message,
     contentView,
     maxLines + 1,
-    part === "request" ? flow.request.contentHash : flow.response?.contentHash,
+    message.contentHash,
   );
-  const contentType = (
-    part === "request" ? flow.request : flow.response
-  )?.headers?.find(([header]) => header.toLowerCase() === "content-type")?.[1];
+  const selectContentView = (value: string) => {
+    dispatch(
+      setContentViewFor({
+        messageId: flow.id + part,
+        contentView: value,
+      }),
+    );
+  };
+
+  const contentType = message?.headers?.find(
+    ([header]) => header.toLowerCase() === "content-type",
+  )?.[1];
 
   return (
     <div className="h-full">
@@ -45,12 +59,19 @@ export function HttpMessageContentView({
       {contentViewData && contentViewData.text.length > 0 && (
         <ContentRenderer
           content={contentViewData.text}
+          contentViewName={contentViewData.view_name}
           contentType={contentType}
           maxLines={maxLines}
           part={part}
           showMore={showMore}
           showAll={showAll}
-        />
+        >
+          <ContentViewSelector
+            value={contentView}
+            contentType={contentType}
+            onChange={selectContentView}
+          />
+        </ContentRenderer>
       )}
     </div>
   );

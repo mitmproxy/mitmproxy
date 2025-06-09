@@ -1,21 +1,21 @@
-import {
-  HttpMessageContentView,
-  type HttpMessageContentViewProps,
-} from "@/components/content-views";
+import { HttpMessageContentView } from "@/components/content-views";
 import type { TabProps } from "@/components/flow-view/panel-tabs";
 import type { HTTPFlow } from "web/flow";
 
-export function Body({
-  type,
-  flow,
-}: { type: HttpMessageContentViewProps["part"] } & TabProps) {
-  return <HttpMessageContentView flow={flow as HTTPFlow} part={type} />;
+export function RequestBody({ flow }: TabProps) {
+  return (
+    <HttpMessageContentView
+      flow={flow as HTTPFlow}
+      message={(flow as HTTPFlow).request}
+    />
+  );
 }
 
-export function RequestBody(props: TabProps) {
-  return <Body {...props} type="request" />;
-}
-
-export function ResponseBody(props: TabProps) {
-  return <Body {...props} type="response" />;
+export function ResponseBody({ flow }: TabProps) {
+  return (
+    <HttpMessageContentView
+      flow={flow as HTTPFlow}
+      message={(flow as HTTPFlow).response!}
+    />
+  );
 }
