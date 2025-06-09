@@ -12,10 +12,9 @@ export function RequestBody({ flow }: TabProps) {
 }
 
 export function ResponseBody({ flow }: TabProps) {
-  return (
-    <HttpMessageContentView
-      flow={flow as HTTPFlow}
-      message={(flow as HTTPFlow).response!}
-    />
-  );
+  const response = (flow as HTTPFlow).response;
+
+  return response ? (
+    <HttpMessageContentView flow={flow as HTTPFlow} message={response} />
+  ) : null;
 }

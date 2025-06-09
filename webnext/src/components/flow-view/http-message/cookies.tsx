@@ -19,15 +19,15 @@ export function RequestCookiesTable({ flow }: TabProps) {
 
 export function ResponseCookiesTable({ flow }: TabProps) {
   const headers = (flow as HTTPFlow).response?.headers;
-  const cookieHeaders = headers ? extractHeaders(headers, "set-cookie") : [];
+  const cookieHeaders = headers ? extractHeaders(headers, "set-cookie") : null;
 
-  return (
+  return cookieHeaders ? (
     <KvpTable
       pairs={
         cookieHeaders.length > 0 ? parseResponseCookies(cookieHeaders) : []
       }
     />
-  );
+  ) : null;
 }
 
 function extractHeaders(
