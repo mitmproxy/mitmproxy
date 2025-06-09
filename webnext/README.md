@@ -72,6 +72,9 @@ The Vite dev server proxies API and websocket requests to mitmweb (port 8081 is 
 1. Create a production build:
 
    ```bash
+   # in the web directory:
+   npm run tsc
+   # in the webnext directory:
    npm run build
    ```
 
