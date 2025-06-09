@@ -85,3 +85,14 @@ The Vite dev server proxies API and websocket requests to mitmweb (port 8081 is 
    ```bash
    uv run --active mitmwebnext
    ```
+
+This should start the mitmwebnext server.
+
+To proxy requests similar to the development setup, you can use the included mitmproxy addon:
+
+```bash
+uv run --active mitmweb
+mitmdump --mode reverse:http://localhost:8081@8082 -s webnext/addon.py
+```
+
+Point your browser to `http://localhost:8082/`. Using this approach you can compare the original web and the new webnext interface production builds side by side, both using the same proxy server on port `8080`.
