@@ -4,7 +4,9 @@ Next-generation web interface for mitmproxy, designed for modern browsers and wo
 
 ## Introduction
 
-The wheel should not be reinvented when we don't have to. Therefore we reuse parts from the original web project such as the redux store (state management), websocket backend and keyboard shortcuts. This allows us to focus on building the UI/UX and new features without duplicating existing functionality.
+I've been waiting for a better mitmweb for years. It never came so I decided to build it myself. This project is a rewrite\* of the original mitmweb, aiming to provide a modern, responsive, and user-friendly interface for mitmproxy.
+
+\*The wheel should not be reinvented when we don't have to. Therefore we reuse parts from the original web project such as the redux store (state management), websocket backend and keyboard shortcuts. This allows us to focus on building the UI/UX and new features without duplicating existing functionality.
 
 > [!WARNING]  
 > We aim to maintain backward compatibility (at least for now). The original web project must remain a standalone application. Any changes to it should be implemented without disrupting existing functionality.
