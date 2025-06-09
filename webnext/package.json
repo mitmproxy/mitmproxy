@@ -11,7 +11,6 @@
     "preview": "vite preview",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
-    "prepare": "husky",
     "postinstall": "patch-package"
   },
   "lint-staged": {
