@@ -2,13 +2,21 @@ import * as React from "react";
 import { render, screen, waitFor } from "../test-utils";
 import ProxyApp from "../../components/ProxyApp";
 import { enableFetchMocks } from "jest-fetch-mock";
-import { ContentViewData } from "../../components/contentviews/useContentView";
 import { SyntaxHighlight } from "../../backends/consts";
+
+jest.mock("@uiw/react-codemirror", () => {
+    return {
+        __esModule: true,
+        default: ({ value }: { value: string }) => (
+            <pre data-testid="mock-editor">{value}</pre>
+        ),
+    };
+});
 
 enableFetchMocks();
 
 test("ProxyApp", async () => {
-    const cv: ContentViewData = {
+    const cv = {
         text: "my data",
         view_name: "raw",
         syntax_highlight: SyntaxHighlight.NONE,
