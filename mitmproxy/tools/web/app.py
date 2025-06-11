@@ -497,7 +497,8 @@ class Flows(RequestHandler):
 
 class DumpFlows(RequestHandler):
     def get(self) -> None:
-        self.set_header("Content-Disposition", "attachment; filename=flows")
+        filename = self.get_argument("filename", "flows")
+        self.set_header("Content-Disposition", f"attachment; filename={filename}")
         self.set_header("Content-Type", "application/octet-stream")
 
         match: Callable[[mitmproxy.flow.Flow], bool]
