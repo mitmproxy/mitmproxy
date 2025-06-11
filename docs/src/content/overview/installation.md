@@ -59,17 +59,16 @@ on GitHub.
 If your mitmproxy addons require the installation of additional Python packages,
 you can install mitmproxy from [PyPI](https://pypi.org/project/mitmproxy/).
 
-While there are plenty of options around[^1], we recommend the installation using pipx:
+While there are plenty of options around[^1], we recommend the installation using uvx:
 
 [^1]: If you are familiar with the Python ecosystem, you may know that there are a million ways to install Python
     packages. Most of them (pip, virtualenv, pipenv, etc.) should just work, but we don't have the capacity to
     provide support for it.
 
-1. Install a recent version of Python (we require at least 3.12).
-2. Install [pipx](https://pipxproject.github.io/pipx/).
-3. `pipx install mitmproxy`
+1. Install [uv](https://docs.astral.sh/uv/).
+2. `uvx mitmproxy` (or `uvx --from mitmproxy mitmweb`)
 
-To install additional Python packages, run `pipx inject mitmproxy <your-package-name>`.
+To install additional Python packages, run `uvx --with <your-package-name> mitmproxy`.
 
 ### Docker Images
 
