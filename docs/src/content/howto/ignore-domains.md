@@ -30,7 +30,19 @@ are excluded from interception, and passed on unmodified.
 |                    |                                                                    |
 | ------------------ | ------------------------------------------------------------------ |
 | command-line alias | `--ignore-hosts regex`                                             |
-| mitmproxy option   | `ignore_hosts` |
+| mitmproxy option   | `ignore_hosts`                                                     |
+
+### show_ignore_hosts
+
+Ignored hosts are not showed in the UI unless option `show_ignored_hosts` is set.
+A common use-case is to disable interception, but still show hostnames (from SNI).
+To do this, set `ignore_hosts` to the wildcard `.*` and enable `show_ignored_hosts`.
+
+|                    |                                                                    |
+| ------------------ | ------------------------------------------------------------------ |
+| command-line alias | `--show-ignore-hosts`                                              |
+| mitmproxy option   | `show_ignore_hosts`                                                |
+
 
 ## Limitations
 
