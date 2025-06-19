@@ -2,7 +2,6 @@
 import asyncio
 
 from mitmproxy import options
-from mitmproxy import optmanager
 from mitmproxy.tools import console
 from mitmproxy.tools import dump
 from mitmproxy.tools import web
@@ -20,7 +19,7 @@ async def dump():
     for tool_name, master in masters.items():
         opts = options.Options()
         _ = master(opts)
-        for key, option in optmanager.dump_dicts(opts).items():
+        for key, option in opts.dump_dicts().items():
             if key in unified_options:
                 unified_options[key]["tools"].append(tool_name)
             else:
