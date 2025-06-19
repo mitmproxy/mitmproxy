@@ -1,4 +1,5 @@
-import { LuPause, LuPlay, LuRotateCcw, LuSquare } from "react-icons/lu";
+import { LuPlay, LuRotateCcw, LuSquare } from "react-icons/lu";
+import { IoPlayForwardOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -23,17 +24,20 @@ export function Header() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm">
-              <LuPlay className="h-4 w-4" />
+              <IoPlayForwardOutline className="size-5" />
             </Button>
             <Button variant="ghost" size="sm">
-              <LuPause className="h-4 w-4" />
+              <LuPlay className="size-4" />
             </Button>
+            {/*  <Button variant="ghost" size="sm">
+              <LuPause className="size-4" />
+            </Button> */}
             <Button variant="ghost" size="sm">
-              <LuSquare className="h-4 w-4" />
+              <LuSquare className="size-4" />
             </Button>
             <Separator orientation="vertical" className="h-6" />
             <Button variant="ghost" size="sm">
-              <LuRotateCcw className="h-4 w-4" />
+              <LuRotateCcw className="size-4" />
             </Button>
           </div>
         </div>
