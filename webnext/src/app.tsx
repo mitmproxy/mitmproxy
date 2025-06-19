@@ -14,7 +14,11 @@ export function App() {
   return (
     <div className="font-inter bg-background text-foreground dark: flex h-screen flex-col">
       <Header />
-      <MainView />
+
+      <div className="flex flex-1">
+        <MainView />
+      </div>
+
       <Footer />
     </div>
   );
