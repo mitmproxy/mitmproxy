@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { FilterCommand } from "./types";
 import { validateFilterSyntax } from "./utils";
-import { LuCircleCheck, LuCircleAlert } from "react-icons/lu";
 import { cn } from "@/lib/utils";
 
 export type FilterAutocompleteProps = {
@@ -173,11 +172,6 @@ export function FilterAutocomplete({
             className,
           )}
         />
-        {isSyntaxValid ? (
-          <LuCircleCheck className="text-success h-4 w-4" />
-        ) : (
-          <LuCircleAlert className="text-destructive h-4 w-4" />
-        )}
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
