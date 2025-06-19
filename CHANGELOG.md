@@ -13,6 +13,7 @@
   ([#7734](https://github.com/mitmproxy/mitmproxy/pull/7734), @lups2000)
 - Add syntax highlighting for CSS and JavaScript contentviews.
   ([#7749](https://github.com/mitmproxy/mitmproxy/pull/7749), @mhils)
+- Fix TLS to send close_notify alerts and avoid unexpected EOF errors with strict clients like OpenSSL s_client.
 
 ## 25 May 2025: mitmproxy 12.1.1
 
