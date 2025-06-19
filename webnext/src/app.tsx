@@ -1,6 +1,4 @@
 import { Header } from "@/components/header";
-import { SideMenu } from "@/components/sidemenu";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Footer } from "@/components/footer";
 import { MainView } from "@/components/main-view";
 
@@ -16,21 +14,7 @@ export function App() {
   return (
     <div className="font-inter bg-background text-foreground dark: flex h-screen flex-col">
       <Header />
-
-      <div className="flex flex-1">
-        <div className="bg-muted/20 relative w-64 border-r">
-          <div className="p-3">
-            <SideMenu />
-          </div>
-
-          <div className="border-border bg-muted/20 absolute right-0 bottom-0 left-0 border-t p-3">
-            <ThemeToggle />
-          </div>
-        </div>
-
-        <MainView />
-      </div>
-
+      <MainView />
       <Footer />
     </div>
   );
