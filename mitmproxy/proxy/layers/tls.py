@@ -441,7 +441,9 @@ class TLSLayer(tunnel.TunnelLayer):
             )
         if close:
             self.conn.state &= ~connection.ConnectionState.CAN_READ
-            self.peer_sent_close_notify = bool(self.tls.get_shutdown() & SSL.RECEIVED_SHUTDOWN)
+            self.peer_sent_close_notify = bool(
+                self.tls.get_shutdown() & SSL.RECEIVED_SHUTDOWN
+            )
 
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", DEBUG)
