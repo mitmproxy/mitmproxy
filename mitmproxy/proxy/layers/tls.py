@@ -241,6 +241,7 @@ class TlsFailedServerHook(StartHook):
 
 class TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None  # type: ignore
+    peer_sent_close_notify: bool = False
     """The OpenSSL connection object"""
 
     def __init__(self, context: context.Context, conn: connection.Connection):
@@ -251,6 +252,7 @@ class TLSLayer(tunnel.TunnelLayer):
         )
 
         conn.tls = True
+        self.peer_sent_close_notify = False
 
     def __repr__(self):
         return (
@@ -439,6 +441,8 @@ class TLSLayer(tunnel.TunnelLayer):
             )
         if close:
             self.conn.state &= ~connection.ConnectionState.CAN_READ
+            self.peer_sent_close_notify = bool(self.tls.get_shutdown() & SSL.RECEIVED_SHUTDOWN)
+
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", DEBUG)
             yield from self.event_to_child(events.ConnectionClosed(self.conn))
@@ -460,7 +464,14 @@ class TLSLayer(tunnel.TunnelLayer):
     def send_close(
         self, command: commands.CloseConnection
     ) -> layer.CommandGenerator[None]:
-        # We should probably shutdown the TLS connection properly here.
+        # TLS connection is properly shutdown here.
+        if not self.peer_sent_close_notify:
+            try:
+                self.tls.shutdown()  # send TLS close_notify
+            except SSL.Error as e:
+                yield commands.Log(f"TLS shutdown error: {e}", WARNING)
+            yield from self.tls_interact()
+
         yield from super().send_close(command)
 
 
