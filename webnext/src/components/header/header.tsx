@@ -10,6 +10,7 @@ import { FilterDescription } from "@/components/header/intercept-filter/descript
 import { useAppDispatch } from "web/ducks";
 import { isValidFilterSyntax } from "@/components/header/intercept-filter/utils";
 import { update } from "web/ducks/options";
+import { resumeAll } from "web/ducks/flows";
 
 export function Header() {
   const [filter, setFilter] = useState("");
@@ -34,7 +35,11 @@ export function Header() {
           />
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void dispatch(resumeAll())}
+              >
                 <IoPlayForwardOutline className="size-5" />
               </Button>
               <Button variant="ghost" size="sm">
