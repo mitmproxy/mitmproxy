@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CodeEditor 1`] = `
+exports[`ContentEditor 1`] = `
 <DocumentFragment>
   <div
     class="codeeditor"
@@ -72,7 +72,7 @@ exports[`CodeEditor 1`] = `
             writingsuggestions="false"
           >
             <div
-              class="cm-activeLine cm-line"
+              class="cm-line"
             >
               foo
             </div>
@@ -94,7 +94,7 @@ exports[`CodeEditor 1`] = `
 </DocumentFragment>
 `;
 
-exports[`CodeEditor highlights CSS 1`] = `
+exports[`ContentEditor highlights CSS 1`] = `
 <DocumentFragment>
   <div
     class="codeeditor"
@@ -167,7 +167,7 @@ exports[`CodeEditor highlights CSS 1`] = `
             writingsuggestions="false"
           >
             <div
-              class="cm-activeLine cm-line"
+              class="cm-line"
             >
               <span
                 class="ͼi"
@@ -200,7 +200,7 @@ exports[`CodeEditor highlights CSS 1`] = `
 </DocumentFragment>
 `;
 
-exports[`CodeEditor highlights HTML 1`] = `
+exports[`ContentEditor highlights HTML 1`] = `
 <DocumentFragment>
   <div
     class="codeeditor"
@@ -273,7 +273,7 @@ exports[`CodeEditor highlights HTML 1`] = `
             writingsuggestions="false"
           >
             <div
-              class="cm-activeLine cm-line"
+              class="cm-line"
             >
               &lt;
               <span
@@ -307,7 +307,7 @@ exports[`CodeEditor highlights HTML 1`] = `
 </DocumentFragment>
 `;
 
-exports[`CodeEditor highlights JavaScript 1`] = `
+exports[`ContentEditor highlights JavaScript 1`] = `
 <DocumentFragment>
   <div
     class="codeeditor"
@@ -380,7 +380,7 @@ exports[`CodeEditor highlights JavaScript 1`] = `
             writingsuggestions="false"
           >
             <div
-              class="cm-activeLine cm-line"
+              class="cm-line"
             >
               alert(
               <span
@@ -408,7 +408,7 @@ exports[`CodeEditor highlights JavaScript 1`] = `
 </DocumentFragment>
 `;
 
-exports[`CodeEditor highlights YAML 1`] = `
+exports[`ContentEditor highlights YAML 1`] = `
 <DocumentFragment>
   <div
     class="codeeditor"
@@ -481,7 +481,7 @@ exports[`CodeEditor highlights YAML 1`] = `
             writingsuggestions="false"
           >
             <div
-              class="cm-activeLine cm-line"
+              class="cm-line"
             >
               <span
                 class="ͼl"
