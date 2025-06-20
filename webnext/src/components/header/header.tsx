@@ -3,14 +3,24 @@ import { IoPlayForwardOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FilterAutocomplete } from "./intercept-filter/autocomplete";
 import { useFilterCommands } from "./intercept-filter/use-filter-commands";
 import { FilterDescription } from "@/components/header/intercept-filter/description";
+import { useAppDispatch } from "web/ducks";
+import { isValidFilterSyntax } from "@/components/header/intercept-filter/utils";
+import { update } from "web/ducks/options";
 
 export function Header() {
   const [filter, setFilter] = useState("");
   const filterCommands = useFilterCommands();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (filter && isValidFilterSyntax(filter)) {
+      dispatch(update("intercept", filter));
+    }
+  }, [filter, dispatch]);
 
   return (
     <div className="bg-muted/30 border-b">
