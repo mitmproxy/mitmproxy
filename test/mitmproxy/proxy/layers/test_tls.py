@@ -955,6 +955,7 @@ class TestTlsSendClose:
         Test that TLSLayer.receive_data sets peer_sent_close_notify when CLOSE_NOTIFY is received.
         """
         layer = tls.TLSLayer(tctx, tctx.server)
+        layer.debug = "test:"
         layer.tls = Mock()
 
         # simulate shutdown was received
@@ -963,7 +964,10 @@ class TestTlsSendClose:
         layer.tls_interact = Mock(return_value=iter(()))
         layer.event_to_child = Mock(return_value=iter(()))
 
-        list(layer.receive_data(b"some tls encrypted data"))
+        result = list(layer.receive_data(b"some tls encrypted data"))
+        assert any(isinstance(x, commands.Log) for x in result)
+
+
 
         assert layer.peer_sent_close_notify is True
 
