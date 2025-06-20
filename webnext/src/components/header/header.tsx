@@ -11,6 +11,15 @@ import { useAppDispatch } from "web/ducks";
 import { isValidFilterSyntax } from "@/components/header/intercept-filter/utils";
 import { update } from "web/ducks/options";
 import { resumeAll } from "web/ducks/flows";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { FilterBuilder } from "@/components/filter-builder/filter-builder";
 
 export function Header() {
   const [filter, setFilter] = useState("");
@@ -60,6 +69,7 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <FilterBuilderButton />
           <Button variant="ghost" size="sm" className="flex items-center gap-2">
             <span>Command Palette</span>
             <kbd className="bg-muted text-muted-foreground flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium">
@@ -74,5 +84,29 @@ export function Header() {
 
       {filter && <FilterDescription filter={filter} />}
     </div>
+  );
+}
+
+function FilterBuilderButton() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Open filter builder</Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Filter builder</DialogTitle>
+          <DialogDescription>
+            Build complex filters using a visual interface.
+          </DialogDescription>
+        </DialogHeader>
+        <FilterBuilder
+          onApply={console.log}
+          onCancel={() => setIsOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }
