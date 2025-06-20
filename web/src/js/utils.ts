@@ -33,12 +33,32 @@ export const formatTimeDelta = function (milliseconds) {
 
 export const formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {},
+    { milliseconds = true, timezone = 'utc' }: { milliseconds?: boolean; timezone?: 'utc' | 'local' } = {},
 ) {
-    const utc = new Date(seconds * 1000);
-    let ts = utc.toISOString().replace("T", " ").replace("Z", "");
-    if (!milliseconds) ts = ts.slice(0, -4);
-    return ts;
+    const date = new Date(seconds * 1000);
+    
+    if (timezone === 'local') {
+        // Format as local time with milliseconds 
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return [
+            date.getFullYear(),
+            '-',
+            pad(date.getMonth() + 1),
+            '-',
+            pad(date.getDate()),
+            ' ',
+            pad(date.getHours()),
+            ':',
+            pad(date.getMinutes()),
+            ':',
+            pad(date.getSeconds()),
+            milliseconds ? `.${date.getMilliseconds().toString().padStart(3, '0')}` : ''
+        ].join('');
+    } else {    
+        let ts = date.toISOString().replace("T", " ").replace("Z", "");
+        if (!milliseconds) ts = ts.slice(0, -4);
+        return ts;
+    }
 };
 
 export function formatAddress(address: [string, number]): string {
@@ -49,6 +69,7 @@ export function formatAddress(address: [string, number]): string {
     }
 }
 
+// ... rest of the file unchanged ...
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.

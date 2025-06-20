@@ -6,6 +6,8 @@ import { Option } from "../../ducks/options";
 import { compact, isEmpty } from "lodash";
 import { RootState, useAppDispatch, useAppSelector } from "../../ducks";
 import OptionInput from "./OptionInput";
+import { setTimezoneDisplay } from "../../ducks/ui"; // Added this import
+import { selectTimezoneDisplay } from "../../ducks/ui"; // Added this import
 
 function OptionHelp({ name }: { name: Option }) {
     const help = useAppSelector((state) => state.options_meta[name]?.help);
@@ -58,6 +60,14 @@ export default function OptionModal() {
         (state) => Object.keys(state.options_meta),
         shallowEqual,
     ).sort() as Option[];
+    // Get current timezone setting
+    const timezoneDisplay = useAppSelector(selectTimezoneDisplay);
+    
+    // Handle timezone change
+    const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value as 'utc' | 'local';
+        dispatch(setTimezoneDisplay(value));
+    };
 
     return (
         <div>
@@ -76,6 +86,28 @@ export default function OptionModal() {
             </div>
 
             <div className="modal-body">
+            {/* Add frontend preferences section */}
+                <div className="form-group">
+                    <div className="col-xs-6">
+                        <label>Timestamp Display</label>
+                        <div className="help-block small">
+                            Choose between UTC or local time for timestamps
+                        </div>
+                    </div>
+                    <div className="col-xs-6">
+                        <select
+                            value={timezoneDisplay}
+                            onChange={handleTimezoneChange}
+                            className="form-control"
+                        >
+                            <option value="utc">UTC</option>
+                            <option value="local">Local Timezone</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <hr style={{ margin: "15px 0" }} />
+                
                 <div className="form-horizontal">
                     {options.map((name) => (
                         <div key={name} className="form-group">
