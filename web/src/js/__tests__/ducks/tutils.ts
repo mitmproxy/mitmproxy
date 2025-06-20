@@ -220,26 +220,29 @@ export function TStore(
     });
 }
 // Add this to your test utility file
-export function createUIState(overrides: Partial<RootState['ui']> = {}): RootState['ui'] {
-  return {
-    flow: {
-      // ... existing flow state
-    },
-    modal: {
-      activeModal: undefined,
-    },
-    optionsEditor: {
-      // ... existing optionsEditor state
-    },
-    tabs: {
-      // ... existing tabs state
-    },
-    filter: {
-      // ... existing filter state
-    },
-    preferences: {  // Add this new section
-      timezoneDisplay: 'utc'
-    },
-    ...overrides
-  };
+export function createUIState(
+    overrides: Partial<RootState["ui"]> = {},
+): RootState["ui"] {
+    return {
+        flow: {
+            // ... existing flow state
+        },
+        modal: {
+            activeModal: undefined,
+        },
+        optionsEditor: {
+            // ... existing optionsEditor state
+        },
+        tabs: {
+            // ... existing tabs state
+        },
+        filter: {
+            // ... existing filter state
+        },
+        preferences: {
+            // Add this new section
+            timezoneDisplay: "utc",
+        },
+        ...overrides,
+    };
 }

@@ -62,10 +62,10 @@ export default function OptionModal() {
     ).sort() as Option[];
     // Get current timezone setting
     const timezoneDisplay = useAppSelector(selectTimezoneDisplay);
-    
+
     // Handle timezone change
     const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value as 'utc' | 'local';
+        const value = e.target.value as "utc" | "local";
         dispatch(setTimezoneDisplay(value));
     };
 
@@ -86,7 +86,7 @@ export default function OptionModal() {
             </div>
 
             <div className="modal-body">
-            {/* Add frontend preferences section */}
+                {/* Add frontend preferences section */}
                 <div className="form-group">
                     <div className="col-xs-6">
                         <label>Timestamp Display</label>
@@ -105,9 +105,9 @@ export default function OptionModal() {
                         </select>
                     </div>
                 </div>
-                
+
                 <hr style={{ margin: "15px 0" }} />
-                
+
                 <div className="form-horizontal">
                     {options.map((name) => (
                         <div key={name} className="form-group">

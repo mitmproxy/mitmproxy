@@ -33,28 +33,33 @@ export const formatTimeDelta = function (milliseconds) {
 
 export const formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true, timezone = 'utc' }: { milliseconds?: boolean; timezone?: 'utc' | 'local' } = {},
+    {
+        milliseconds = true,
+        timezone = "utc",
+    }: { milliseconds?: boolean; timezone?: "utc" | "local" } = {},
 ) {
     const date = new Date(seconds * 1000);
-    
-    if (timezone === 'local') {
-        // Format as local time with milliseconds 
-        const pad = (n: number) => n.toString().padStart(2, '0');
+
+    if (timezone === "local") {
+        // Format as local time with milliseconds
+        const pad = (n: number) => n.toString().padStart(2, "0");
         return [
             date.getFullYear(),
-            '-',
+            "-",
             pad(date.getMonth() + 1),
-            '-',
+            "-",
             pad(date.getDate()),
-            ' ',
+            " ",
             pad(date.getHours()),
-            ':',
+            ":",
             pad(date.getMinutes()),
-            ':',
+            ":",
             pad(date.getSeconds()),
-            milliseconds ? `.${date.getMilliseconds().toString().padStart(3, '0')}` : ''
-        ].join('');
-    } else {    
+            milliseconds
+                ? `.${date.getMilliseconds().toString().padStart(3, "0")}`
+                : "",
+        ].join("");
+    } else {
         let ts = date.toISOString().replace("T", " ").replace("Z", "");
         if (!milliseconds) ts = ts.slice(0, -4);
         return ts;
