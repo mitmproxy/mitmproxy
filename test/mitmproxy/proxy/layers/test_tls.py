@@ -895,8 +895,9 @@ def test_dtls_parse_client_hello():
             dtls_client_hello_with_extensions[:-16]
             + b"\x00\x0e\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
-class TestTlsSendClose:
 
+
+class TestTlsSendClose:
     def test_send_close_triggers_shutdown(self, tctx: context.Context):
         """
         Test that TLSLayer.send_close() calls shutdown() and tls_interact() when peer_sent_close_notify is False.
@@ -912,7 +913,9 @@ class TestTlsSendClose:
         layer.tls.shutdown.assert_called_once()
         layer.tls_interact.assert_called_once()
 
-    def test_send_close_skips_shutdown_when_already_notified(self, tctx: context.Context):
+    def test_send_close_skips_shutdown_when_already_notified(
+        self, tctx: context.Context
+    ):
         """
         Test that TLSLayer.send_close() skips shutdown if peer_sent_close_notify is True.
         """
@@ -964,7 +967,9 @@ class TestTlsSendClose:
 
         assert layer.peer_sent_close_notify is True
 
-    def test_receive_data_does_not_set_peer_sent_close_notify(self, tctx: context.Context):
+    def test_receive_data_does_not_set_peer_sent_close_notify(
+        self, tctx: context.Context
+    ):
         """
         Test that TLSLayer.receive_data does NOT set peer_sent_close_notify when CLOSE_NOTIFY is not received.
         """
@@ -980,4 +985,3 @@ class TestTlsSendClose:
         list(layer.receive_data(b"some tls encrypted data"))
 
         assert layer.peer_sent_close_notify is False
-
