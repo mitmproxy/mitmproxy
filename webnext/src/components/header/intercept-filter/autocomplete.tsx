@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { FilterCommand } from "./types";
-import { validateFilterSyntax } from "./utils";
+import { isValidFilterSyntax } from "./utils";
 import { cn } from "@/lib/utils";
 
 export type FilterAutocompleteProps = {
@@ -26,7 +26,7 @@ export function FilterAutocomplete({
   const [cursorPosition, setCursorPosition] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const isSyntaxValid = validateFilterSyntax(value);
+  const isSyntaxValid = value ? isValidFilterSyntax(value) : true;
 
   const getCurrentWord = () => {
     const beforeCursor = value.slice(0, cursorPosition);

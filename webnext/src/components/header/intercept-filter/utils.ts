@@ -1,14 +1,23 @@
 import type { FilterHelpResponse } from "./use-filter-commands";
 import type { FilterCommand } from "./types";
+import Filter from "web/filt/filt";
 
-/**
- * Basic filter syntax validation.
- * TODO: replace with a more comprehensive parser.
- */
-export function validateFilterSyntax(input: string): boolean {
-  const openParens = (input.match(/\(/g) || []).length;
-  const closeParens = (input.match(/\)/g) || []).length;
-  return openParens === closeParens;
+export function isValidFilterSyntax(input: string): boolean {
+  try {
+    Filter.parse(input);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function parseFilterDescription(input: string): string {
+  try {
+    const parsed = Filter.parse(input);
+    return (parsed as { desc: string }).desc;
+  } catch (err) {
+    return String(err);
+  }
 }
 
 /**
