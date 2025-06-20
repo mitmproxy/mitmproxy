@@ -3,6 +3,7 @@ import sys
 import time
 from logging import DEBUG
 from logging import WARNING
+from unittest.mock import MagicMock as Mock
 
 import pytest
 from OpenSSL import SSL
@@ -894,3 +895,89 @@ def test_dtls_parse_client_hello():
             dtls_client_hello_with_extensions[:-16]
             + b"\x00\x0e\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
+class TestTlsSendClose:
+
+    def test_send_close_triggers_shutdown(self, tctx: context.Context):
+        """
+        Test that TLSLayer.send_close() calls shutdown() and tls_interact() when peer_sent_close_notify is False.
+        """
+        layer = tls.TLSLayer(tctx, tctx.server)
+        layer.tls = Mock()
+        layer.peer_sent_close_notify = False
+        layer.tls_interact = Mock(return_value=iter(()))
+
+        cmd = commands.CloseConnection(tctx.server)
+        list(layer.send_close(cmd))
+
+        layer.tls.shutdown.assert_called_once()
+        layer.tls_interact.assert_called_once()
+
+    def test_send_close_skips_shutdown_when_already_notified(self, tctx: context.Context):
+        """
+        Test that TLSLayer.send_close() skips shutdown if peer_sent_close_notify is True.
+        """
+        layer = tls.TLSLayer(tctx, tctx.server)
+        layer.tls = Mock()
+        layer.peer_sent_close_notify = True
+        layer.tls_interact = Mock(return_value=iter(()))
+
+        cmd = commands.CloseConnection(tctx.server)
+        list(layer.send_close(cmd))
+
+        layer.tls.shutdown.assert_not_called()
+        layer.tls_interact.assert_not_called()
+
+    def test_send_close_shutdown_raises_error(self, tctx: context.Context):
+        """
+        Test that TLSLayer.send_close() logs a warning if shutdown() raises SSL.Error.
+        """
+        layer = tls.TLSLayer(tctx, tctx.server)
+        layer.tls = Mock()
+        layer.peer_sent_close_notify = False
+        layer.tls.shutdown.side_effect = SSL.Error("test error")
+        layer.tls_interact = Mock(return_value=iter(()))
+
+        cmd = commands.CloseConnection(tctx.server)
+        result = list(layer.send_close(cmd))
+
+        assert any(
+            isinstance(x, commands.Log)
+            and "TLS shutdown error" in x.message
+            and x.level == WARNING
+            for x in result
+        )
+
+    def test_receive_data_sets_peer_sent_close_notify(self, tctx: context.Context):
+        """
+        Test that TLSLayer.receive_data sets peer_sent_close_notify when CLOSE_NOTIFY is received.
+        """
+        layer = tls.TLSLayer(tctx, tctx.server)
+        layer.tls = Mock()
+
+        # simulate shutdown was received
+        layer.tls.recv.side_effect = SSL.ZeroReturnError()
+        layer.tls.get_shutdown.return_value = SSL.RECEIVED_SHUTDOWN
+        layer.tls_interact = Mock(return_value=iter(()))
+        layer.event_to_child = Mock(return_value=iter(()))
+
+        list(layer.receive_data(b"some tls encrypted data"))
+
+        assert layer.peer_sent_close_notify is True
+
+    def test_receive_data_does_not_set_peer_sent_close_notify(self, tctx: context.Context):
+        """
+        Test that TLSLayer.receive_data does NOT set peer_sent_close_notify when CLOSE_NOTIFY is not received.
+        """
+        layer = tls.TLSLayer(tctx, tctx.server)
+        layer.tls = Mock()
+
+        # simulate shutdown was NOT received
+        layer.tls.recv.side_effect = SSL.ZeroReturnError()
+        layer.tls.get_shutdown.return_value = 0
+        layer.tls_interact = Mock(return_value=iter(()))
+        layer.event_to_child = Mock(return_value=iter(()))
+
+        list(layer.receive_data(b"some tls encrypted data"))
+
+        assert layer.peer_sent_close_notify is False
+
