@@ -4,6 +4,7 @@
         "composite": true,
         "declaration": true,
         "declarationMap": true,
+        "allowJs": true,
         "outDir": "./dist",
         "rootDir": "./src"
     },
