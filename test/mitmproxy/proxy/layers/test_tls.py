@@ -967,8 +967,6 @@ class TestTlsSendClose:
         result = list(layer.receive_data(b"some tls encrypted data"))
         assert any(isinstance(x, commands.Log) for x in result)
 
-
-
         assert layer.peer_sent_close_notify is True
 
     def test_receive_data_does_not_set_peer_sent_close_notify(
