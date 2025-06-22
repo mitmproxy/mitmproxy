@@ -24,6 +24,19 @@ export function Header() {
       <div className="flex items-center justify-between px-4 py-2">
         <div className="text-foreground text-lg font-bold">Mitmwebnext</div>
         <div className="flex max-w-2xl flex-1 items-center gap-4">
+          <FilterDialog
+            open={isInterceptFilterOpen}
+            onOpenChange={setIsInterceptFilterOpen}
+            value={interceptFilter || ""}
+            onApply={(value) => dispatchFilter("intercept", value)}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <LuPause />
+                Intercept filters
+              </Button>
+            </DialogTrigger>
+          </FilterDialog>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <Button
@@ -51,19 +64,6 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <FilterDialog
-            open={isInterceptFilterOpen}
-            onOpenChange={setIsInterceptFilterOpen}
-            value={interceptFilter || ""}
-            onApply={(value) => dispatchFilter("intercept", value)}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <LuPause />
-                Intercept filters
-              </Button>
-            </DialogTrigger>
-          </FilterDialog>
         </div>
       </div>
 
