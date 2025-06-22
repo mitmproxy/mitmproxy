@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { FILTER_DEFINITIONS } from "./constants";
 import type { FilterCommand } from "./types";
 import { FilterDescription } from "./filter-description";
+import { Label } from "@/components/ui/label";
 
 export type FilterInputProps = {
   value: string;
@@ -148,9 +149,11 @@ export function FilterInput({
   return (
     <div className="flex h-full flex-col">
       <div className="relative flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="filter-input">Enter filter expression:</Label>
           <Input
             ref={inputRef}
+            id="filter-input"
             value={value}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -167,7 +170,7 @@ export function FilterInput({
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="bg-background absolute top-10 right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-md border shadow-lg"
+            className="bg-background absolute top-16 right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-md border shadow-lg"
           >
             {suggestions.map((suggestion, index) => (
               <div
