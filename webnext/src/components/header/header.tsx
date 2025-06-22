@@ -61,12 +61,6 @@ export function Header() {
               <Button variant="outline">Intercept filters</Button>
             </DialogTrigger>
           </FilterDialog>
-          <Button variant="ghost" size="sm" className="flex items-center gap-2">
-            <span>Command Palette</span>
-            <kbd className="bg-muted text-muted-foreground flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium">
-              <span className="text-xs">⌘</span>K
-            </kbd>
-          </Button>
         </div>
       </div>
 
