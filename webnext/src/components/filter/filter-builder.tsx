@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  LuTrash2,
-  LuPlus,
-  LuCheck,
-  LuRotateCcw,
-  LuArrowDown,
-  LuCopy,
-} from "react-icons/lu";
+import { LuTrash2, LuPlus, LuArrowDown } from "react-icons/lu";
 import type {
   FilterCondition,
   FilterGroup,
@@ -28,13 +21,14 @@ import type {
 } from "./types";
 import { FILTER_DEFINITIONS, FILTER_CATEGORIES } from "./constants";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FilterDescription } from "./filter-description";
 
 export type FilterBuilderProps = {
-  onCancel: () => void;
-  onApply: (filter: string) => void;
+  value: string;
+  onChange: (value: string) => void;
 };
 
-export function FilterBuilder({ onApply, onCancel }: FilterBuilderProps) {
+export function FilterBuilder({ value, onChange }: FilterBuilderProps) {
   const [groups, setGroups] = useState<FilterGroup[]>([
     {
       id: "1",
@@ -178,7 +172,9 @@ export function FilterBuilder({ onApply, onCancel }: FilterBuilderProps) {
       }
     });
 
-    return groupExpressions.join("");
+    const filter = groupExpressions.join("");
+
+    return filter;
   };
 
   const clearFilters = () => {
@@ -190,6 +186,18 @@ export function FilterBuilder({ onApply, onCancel }: FilterBuilderProps) {
       },
     ]);
   };
+
+  const filter = generateFilterExpression();
+
+  useEffect(() => {
+    if (value === "") {
+      clearFilters();
+    }
+  }, [value]);
+
+  useEffect(() => {
+    onChange(filter);
+  }, [filter, onChange]);
 
   return (
     <div className="space-y-6">
@@ -421,41 +429,7 @@ export function FilterBuilder({ onApply, onCancel }: FilterBuilderProps) {
         <LuArrowDown className="size-10" />
       </div>
 
-      <div className="space-y-4">
-        <p className="font-semibold">Filter expression</p>
-
-        <div className="bg-card relative rounded-lg border">
-          <div className="p-4 pr-12 font-mono text-sm break-all">
-            {generateFilterExpression() || "No filters configured"}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 size-8 p-0"
-            onClick={() =>
-              void navigator.clipboard.writeText(generateFilterExpression())
-            }
-          >
-            <LuCopy className="size-4" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={clearFilters}>
-          <LuRotateCcw className="mr-2 size-4" />
-          Clear All
-        </Button>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button onClick={() => onApply(generateFilterExpression())}>
-            <LuCheck className="mr-2 size-4" />
-            Apply Filter
-          </Button>
-        </div>
-      </div>
+      <FilterDescription filter={filter} />
     </div>
   );
 }

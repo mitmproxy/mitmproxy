@@ -1,32 +1,29 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import type { FilterCommand } from "./types";
-import { isValidFilterSyntax } from "./utils";
 import { cn } from "@/lib/utils";
+import { FILTER_DEFINITIONS } from "./constants";
+import type { FilterCommand } from "./types";
+import { FilterDescription } from "./filter-description";
 
-export type FilterAutocompleteProps = {
+export type FilterInputProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-  commands: FilterCommand[];
 };
 
-export function FilterAutocomplete({
+export function FilterInput({
   value,
   onChange,
   placeholder,
   className,
-  commands,
-}: FilterAutocompleteProps) {
+}: FilterInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const isSyntaxValid = value ? isValidFilterSyntax(value) : true;
 
   const getCurrentWord = () => {
     const beforeCursor = value.slice(0, cursorPosition);
@@ -56,10 +53,10 @@ export function FilterAutocomplete({
     const { word } = getCurrentWord();
     if (!word || word.length < 1) return [];
 
-    return commands
+    return Object.values(FILTER_DEFINITIONS)
       .filter(
         (command) =>
-          command.filter.toLowerCase().includes(word.toLowerCase()) ||
+          command.symbol.toLowerCase().includes(word.toLowerCase()) ||
           command.description.toLowerCase().includes(word.toLowerCase()),
       )
       .slice(0, 8);
@@ -104,8 +101,8 @@ export function FilterAutocomplete({
     const beforeWord = value.slice(0, start);
     const afterWord = value.slice(start + word.length);
 
-    let newFilter = beforeWord + suggestion.filter;
-    if (suggestion.requiresValue) {
+    let newFilter = beforeWord + suggestion.symbol;
+    if (suggestion.hasValue) {
       newFilter += ' ""';
     }
     newFilter += afterWord;
@@ -118,8 +115,8 @@ export function FilterAutocomplete({
       if (inputRef.current) {
         const newPosition =
           beforeWord.length +
-          suggestion.filter.length +
-          (suggestion.requiresValue ? 2 : 0);
+          suggestion.symbol.length +
+          (suggestion.hasValue ? 2 : 0);
         inputRef.current.setSelectionRange(newPosition, newPosition);
         setCursorPosition(newPosition);
       }
@@ -149,65 +146,55 @@ export function FilterAutocomplete({
   const suggestions = getSuggestions();
 
   return (
-    <div className="relative flex-1">
-      <div className="flex items-center gap-2">
-        <Input
-          ref={inputRef}
-          value={value}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setShowSuggestions(value.length > 0)}
-          onSelect={(e) =>
-            setCursorPosition(
-              (e.target as HTMLInputElement).selectionStart || 0,
-            )
-          }
-          placeholder={placeholder}
-          className={cn(
-            `font-mono text-sm`,
-            {
-              "ring-destructive focus-visible:ring-destructive ring-1 focus-visible:ring-1":
-                !isSyntaxValid,
-            },
-            className,
-          )}
-        />
-      </div>
-
-      {showSuggestions && suggestions.length > 0 && (
-        <div
-          ref={suggestionsRef}
-          className="bg-background absolute top-full right-0 left-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-md border shadow-lg"
-        >
-          {suggestions.map((suggestion, index) => (
-            <div
-              key={suggestion.filter}
-              className={`cursor-pointer border-b px-3 py-2 last:border-b-0 ${
-                index === selectedSuggestion
-                  ? "bg-accent/50"
-                  : "hover:bg-accent/30"
-              }`}
-              onClick={() => applySuggestion(suggestion)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <code className="text-primary font-mono text-sm">
-                    {suggestion.filter}
-                  </code>
-                  {suggestion.requiresValue && (
-                    <Badge variant="outline" className="text-xs">
-                      {suggestion.valueType}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {suggestion.description}
-              </p>
-            </div>
-          ))}
+    <div className="flex h-full flex-col">
+      <div className="relative flex-1">
+        <div className="flex items-center gap-2">
+          <Input
+            ref={inputRef}
+            value={value}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setShowSuggestions(value.length > 0)}
+            onSelect={(e) =>
+              setCursorPosition(
+                (e.target as HTMLInputElement).selectionStart || 0,
+              )
+            }
+            placeholder={placeholder}
+            className={cn("font-mono text-sm", className)}
+          />
         </div>
-      )}
+        {showSuggestions && suggestions.length > 0 && (
+          <div
+            ref={suggestionsRef}
+            className="bg-background absolute top-10 right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-md border shadow-lg"
+          >
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={suggestion.symbol}
+                className={`cursor-pointer border-b px-3 py-2 last:border-b-0 ${
+                  index === selectedSuggestion
+                    ? "bg-accent/50"
+                    : "hover:bg-accent/30"
+                }`}
+                onClick={() => applySuggestion(suggestion)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <code className="text-primary font-mono text-sm">
+                      {suggestion.symbol}
+                    </code>
+                  </div>
+                </div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {suggestion.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <FilterDescription filter={value} />
     </div>
   );
 }

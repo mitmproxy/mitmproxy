@@ -56,13 +56,12 @@ export type FilterCategoriesRecord = Record<
   { icon: IconType; color: string; filters: string[] }
 >;
 
-export type FilterDefinitionsRecord = Record<
-  FilterType,
-  {
-    label: string;
-    hasValue: boolean;
-    symbol: string;
-    icon: IconType;
-    description: string;
-  }
->;
+export type FilterCommand = {
+  label: string;
+  hasValue: boolean;
+  symbol: string;
+  icon: IconType;
+  description: string;
+};
+
+export type FilterDefinitionsRecord = Record<FilterType, FilterCommand>;

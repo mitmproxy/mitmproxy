@@ -3,45 +3,26 @@ import { IoPlayForwardOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useEffect, useState } from "react";
-import { FilterAutocomplete } from "./intercept-filter/autocomplete";
-import { useFilterCommands } from "./intercept-filter/use-filter-commands";
-import { FilterDescription } from "@/components/header/intercept-filter/description";
-import { useAppDispatch } from "web/ducks";
-import { isValidFilterSyntax } from "@/components/header/intercept-filter/utils";
+import { useState } from "react";
+import { FilterDescriptionBanner } from "@/components/filter/filter-description";
+import { useAppDispatch, useAppSelector } from "web/ducks";
 import { update } from "web/ducks/options";
 import { resumeAll } from "web/ducks/flows";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { FilterBuilder } from "@/components/filter-builder/filter-builder";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { FilterDialog } from "@/components/filter";
 
 export function Header() {
-  const [filter, setFilter] = useState("");
-  const filterCommands = useFilterCommands();
+  const [isInterceptFilterOpen, setIsInterceptFilterOpen] = useState(false);
+  const interceptFilter = useAppSelector((state) => state.options.intercept);
   const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    if (filter && isValidFilterSyntax(filter)) {
-      dispatch(update("intercept", filter));
-    }
-  }, [filter, dispatch]);
+  const dispatchFilter = (type: "intercept", value: string) =>
+    dispatch(update(type, value));
 
   return (
     <div className="bg-muted/30 border-b">
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex max-w-2xl flex-1 items-center gap-4">
-          <FilterAutocomplete
-            value={filter}
-            commands={filterCommands}
-            onChange={setFilter}
-            placeholder="Intercept filter (type '~' for help)"
-          />
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <Button
@@ -69,7 +50,16 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <FilterBuilderButton />
+          <FilterDialog
+            open={isInterceptFilterOpen}
+            onOpenChange={setIsInterceptFilterOpen}
+            value={interceptFilter || ""}
+            onApply={(value) => dispatchFilter("intercept", value)}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline">Intercept filters</Button>
+            </DialogTrigger>
+          </FilterDialog>
           <Button variant="ghost" size="sm" className="flex items-center gap-2">
             <span>Command Palette</span>
             <kbd className="bg-muted text-muted-foreground flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium">
@@ -82,31 +72,7 @@ export function Header() {
         </div>
       </div>
 
-      {filter && <FilterDescription filter={filter} />}
+      {interceptFilter && <FilterDescriptionBanner filter={interceptFilter} />}
     </div>
-  );
-}
-
-function FilterBuilderButton() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Open filter builder</Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Filter builder</DialogTitle>
-          <DialogDescription>
-            Build complex filters using a visual interface.
-          </DialogDescription>
-        </DialogHeader>
-        <FilterBuilder
-          onApply={console.log}
-          onCancel={() => setIsOpen(false)}
-        />
-      </DialogContent>
-    </Dialog>
   );
 }
