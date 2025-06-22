@@ -1,4 +1,4 @@
-import { LuPlay, LuRotateCcw, LuSquare } from "react-icons/lu";
+import { LuPause, LuPlay, LuRotateCcw, LuSquare } from "react-icons/lu";
 import { IoPlayForwardOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -58,7 +58,10 @@ export function Header() {
             onApply={(value) => dispatchFilter("intercept", value)}
           >
             <DialogTrigger asChild>
-              <Button variant="outline">Intercept filters</Button>
+              <Button variant="outline">
+                <LuPause />
+                Intercept filters
+              </Button>
             </DialogTrigger>
           </FilterDialog>
         </div>
