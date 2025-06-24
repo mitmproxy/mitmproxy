@@ -99,7 +99,6 @@ export function ColoredURL({ url, className }: ColoredURLProps) {
       >
         {parts.map((part, index) => (
           <span
-            // eslint-disable-next-line react-x/no-array-index-key
             key={index}
             className={cn(
               "hover:bg-muted rounded transition-colors",

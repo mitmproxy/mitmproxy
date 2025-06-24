@@ -32,7 +32,6 @@ export function KvpTable({ pairs, ...props }: KvpTableProps) {
       </TableHeader>
       <TableBody>
         {pairs.map(([key, value], index) => (
-          // eslint-disable-next-line react-x/no-array-index-key
           <TableRow key={index}>
             <TableCell variant="muted">{key}</TableCell>
             <TableCell>{value}</TableCell>

@@ -49,7 +49,6 @@ function FilterBadges({ filter }: { filter: string }) {
     .filter(Boolean);
 
   return badges.map((badge, index) => (
-    // eslint-disable-next-line react-x/no-array-index-key
     <Badge variant="outline" key={index}>
       {badge}
     </Badge>

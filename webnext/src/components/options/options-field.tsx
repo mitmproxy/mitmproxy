@@ -61,7 +61,6 @@ export function OptionField({ option, onChange }: OptionFieldProps) {
             <div className="flex flex-wrap gap-2">
               {arrayValue.map((item, index) => (
                 <Badge
-                  // eslint-disable-next-line react-x/no-array-index-key
                   key={index}
                   variant="secondary"
                   className="flex items-center gap-1"
