@@ -12,13 +12,17 @@ export type FilterInputProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  label?: string;
+  hideDescription?: boolean;
 };
 
 export function FilterInput({
-  value,
   onChange,
+  value,
   placeholder,
   className,
+  label,
+  hideDescription = false,
 }: FilterInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState(0);
@@ -150,7 +154,7 @@ export function FilterInput({
     <div className="flex h-full flex-col">
       <div className="relative flex-1">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="filter-input">Enter filter expression:</Label>
+          {label && <Label htmlFor="filter-input">{label}</Label>}
           <Input
             ref={inputRef}
             id="filter-input"
@@ -170,7 +174,10 @@ export function FilterInput({
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
-            className="bg-background absolute top-16 right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-md border shadow-lg"
+            className={cn(
+              "bg-background absolute right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-md border shadow-lg",
+              label ? "top-16" : "top-10",
+            )}
           >
             {suggestions.map((suggestion, index) => (
               <div
@@ -197,7 +204,7 @@ export function FilterInput({
           </div>
         )}
       </div>
-      <FilterDescription filter={value} />
+      {!hideDescription && <FilterDescription filter={value} />}
     </div>
   );
 }

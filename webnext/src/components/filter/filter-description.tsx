@@ -2,36 +2,64 @@ import { isValidFilterSyntax, parseFilterDescription } from "./utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LuCircleAlert, LuCircleCheck, LuCopy, LuPause } from "react-icons/lu";
+import {
+  LuCircleAlert,
+  LuCircleCheck,
+  LuCopy,
+  LuPause,
+  LuSearch,
+} from "react-icons/lu";
+
+export type FilterDescriptionBannerProps = {
+  interceptFilter?: string;
+  searchFilter?: string;
+  className?: string;
+};
+
+export function FilterDescriptionBanner({
+  interceptFilter,
+  searchFilter,
+}: FilterDescriptionBannerProps) {
+  return (
+    <div className="bg-muted/50 text-muted-foreground space-y-2 border-t px-4 py-2">
+      {searchFilter && (
+        <div className="flex items-center gap-2 text-sm">
+          <LuSearch className="size-4" title="Searching" />
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterBadges filter={searchFilter} />
+          </div>
+        </div>
+      )}
+      {interceptFilter && (
+        <div className="flex items-center gap-2 text-sm">
+          <LuPause className="size-4" title="Intercepting" />
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterBadges filter={interceptFilter} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterBadges({ filter }: { filter: string }) {
+  const badges = parseFilterDescription(filter)
+    .split("and")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return badges.map((badge, index) => (
+    // eslint-disable-next-line react-x/no-array-index-key
+    <Badge variant="outline" key={index}>
+      {badge}
+    </Badge>
+  ));
+}
 
 export type FilterDescriptionProps = {
   filter: string;
   className?: string;
 };
-
-export function FilterDescriptionBanner({ filter }: FilterDescriptionProps) {
-  const description = parseFilterDescription(filter);
-  const badges = description
-    .split("and")
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  return (
-    <div className="bg-muted/50 text-muted-foreground border-t px-4 py-2">
-      <div className="flex items-center gap-2 text-sm">
-        <LuPause className="size-4" title="Intercepting" />
-        <div className="flex flex-wrap items-center gap-2">
-          {badges.map((badge, index) => (
-            // eslint-disable-next-line react-x/no-array-index-key
-            <Badge variant="outline" key={index}>
-              {badge}
-            </Badge>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function FilterDescription({
   filter,

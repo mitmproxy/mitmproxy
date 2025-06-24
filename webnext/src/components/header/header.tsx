@@ -10,19 +10,34 @@ import { update } from "web/ducks/options";
 import { resumeAll } from "web/ducks/flows";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { FilterDialog } from "@/components/filter";
+import { setFilter } from "web/ducks/ui/filter";
+import { SearchInput } from "@/components/search";
 
 export function Header() {
   const [isInterceptFilterOpen, setIsInterceptFilterOpen] = useState(false);
   const interceptFilter = useAppSelector((state) => state.options.intercept);
+  const searchFilter = useAppSelector((state) => state.ui.filter.search);
   const dispatch = useAppDispatch();
 
-  const dispatchFilter = (type: "intercept", value: string) =>
-    dispatch(update(type, value));
+  const dispatchFilter = (type: "intercept" | "search", value: string) => {
+    if (type === "intercept") {
+      dispatch(update(type, value));
+    } else if (type === "search") {
+      dispatch(setFilter(value));
+    }
+  };
 
   return (
     <div className="bg-muted/30 border-b">
       <div className="flex items-center justify-between px-4 py-2">
         <div className="text-foreground text-lg font-bold">Mitmwebnext</div>
+        <SearchInput
+          value={searchFilter || ""}
+          onChange={(value) => dispatchFilter("search", value)}
+          placeholder="Search flows"
+          className="w-xl pl-10"
+          hideDescription
+        />
         <div className="flex max-w-2xl flex-1 items-center gap-4">
           <FilterDialog
             open={isInterceptFilterOpen}
@@ -67,7 +82,12 @@ export function Header() {
         </div>
       </div>
 
-      {interceptFilter && <FilterDescriptionBanner filter={interceptFilter} />}
+      {(interceptFilter || searchFilter) && (
+        <FilterDescriptionBanner
+          interceptFilter={interceptFilter}
+          searchFilter={searchFilter}
+        />
+      )}
     </div>
   );
 }

@@ -106,6 +106,7 @@ export function FilterDialog({
             <FilterInput
               value={filter}
               onChange={setFilter}
+              label="Enter filter expression:"
               placeholder="Intercept filter (type '~' for help)"
             />
           </TabsContent>
