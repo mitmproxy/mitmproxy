@@ -18,7 +18,10 @@ import { OptionField } from "./options-field";
 import { type Option, type OptionsState } from "web/ducks/_options_gen";
 import { settingsCategories } from "./options-categories";
 import { useAppDispatch, useAppSelector } from "web/ducks";
-import { update as updateOptions } from "web/ducks/options";
+import {
+  update as updateOptions,
+  reset as resetOptions,
+} from "web/ducks/options";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { shallowEqual } from "react-redux";
 import { MdMiscellaneousServices } from "react-icons/md";
@@ -39,8 +42,7 @@ export function OptionsDialog({ children }: OptionsDialogProps) {
   };
 
   const resetToDefaults = () => {
-    console.log("reset");
-    // TODO: implement reset (requires changes to web)
+    dispatch(resetOptions());
   };
 
   const filteredCategories = useMemo(() => {
