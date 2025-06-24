@@ -15,11 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import { LuSettings, LuSearch, LuRotateCcw } from "react-icons/lu";
 import { getSettingDisplayName } from "./utils";
 import { OptionField } from "./options-field";
-import { type OptionsState } from "web/ducks/_options_gen";
+import { type Option, type OptionsState } from "web/ducks/_options_gen";
 import { settingsCategories } from "./options-categories";
-import { useAppDispatch } from "web/ducks";
+import { useAppDispatch, useAppSelector } from "web/ducks";
 import { update as updateOptions } from "web/ducks/options";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import { shallowEqual } from "react-redux";
+import { MdMiscellaneousServices } from "react-icons/md";
 
 export type OptionsDialogProps = PropsWithChildren;
 
@@ -27,6 +29,10 @@ export function OptionsDialog({ children }: OptionsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dispatch = useAppDispatch();
+  const options = useAppSelector(
+    (state) => Object.keys(state.options_meta),
+    shallowEqual,
+  ).sort() as Option[];
 
   const updateSetting = (key: keyof OptionsState, value: unknown) => {
     dispatch(updateOptions(key, value));
@@ -38,21 +44,43 @@ export function OptionsDialog({ children }: OptionsDialogProps) {
   };
 
   const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return settingsCategories;
+    let result = [...settingsCategories];
 
-    const query = searchQuery.toLowerCase();
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
 
-    return settingsCategories
-      .map((category) => ({
-        ...category,
-        settings: category.options.filter(
-          (setting) =>
-            setting.toLowerCase().includes(query) ||
-            getSettingDisplayName(setting).toLowerCase().includes(query),
+      result = settingsCategories
+        .map((category) => ({
+          ...category,
+          settings: category.options.filter(
+            (setting) =>
+              setting.toLowerCase().includes(query) ||
+              getSettingDisplayName(setting).toLowerCase().includes(query),
+          ),
+        }))
+        .filter((category) => category.settings.length > 0);
+    }
+
+    const unrecognizedOptions = options.filter(
+      (option) =>
+        !settingsCategories.some((category) =>
+          category.options.includes(option),
         ),
-      }))
-      .filter((category) => category.settings.length > 0);
-  }, [searchQuery]);
+    );
+    if (unrecognizedOptions.length > 0) {
+      result.push({
+        id: "other",
+        label: "Other",
+        description: "Uncategorized options",
+        icon: (
+          <MdMiscellaneousServices className="text-gray-500 dark:text-gray-300" />
+        ),
+        options: unrecognizedOptions,
+      });
+    }
+
+    return result;
+  }, [options, searchQuery]);
 
   const totalMatchingSettings = filteredCategories.reduce(
     (total, category) => total + category.options.length,
