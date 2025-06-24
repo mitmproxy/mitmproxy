@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && cp -r dist ../mitmproxy/tools/webnext",
+    "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "preview": "vite preview",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
+    "typecheck": "tsc --noEmit",
     "postinstall": "patch-package"
   },
   "lint-staged": {
