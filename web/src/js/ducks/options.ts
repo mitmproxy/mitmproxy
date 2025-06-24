@@ -70,12 +70,28 @@ export async function pureSendUpdate(option: Option, value, dispatch) {
     }
 }
 
+export async function pureSendReset(dispatch) {
+    const response = await fetchApi.put("/options", defaultState);
+    if (response.status === 200) {
+        dispatch(optionsEditorActions.resetSuccess());
+    } else {
+        throw await response.text();
+    }
+}
+
 const sendUpdate = pureSendUpdate; // _.throttle(pureSendUpdate, 500, {leading: true, trailing: true})
+const sendReset = pureSendReset;
 
 export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {
         dispatch(optionsEditorActions.startUpdate({ option: name, value }));
         sendUpdate(name, value, dispatch);
+    };
+}
+
+export function reset(): AppThunk {
+    return (dispatch) => {
+        sendReset(dispatch);
     };
 }
 
