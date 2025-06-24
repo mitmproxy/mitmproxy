@@ -1,4 +1,10 @@
-import { LuPause, LuPlay, LuRotateCcw, LuSquare } from "react-icons/lu";
+import {
+  LuPause,
+  LuPlay,
+  LuRotateCcw,
+  LuSettings,
+  LuSquare,
+} from "react-icons/lu";
 import { IoPlayForwardOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +18,7 @@ import { DialogTrigger } from "@/components/ui/dialog";
 import { FilterDialog } from "@/components/filter";
 import { setFilter } from "web/ducks/ui/filter";
 import { SearchInput } from "@/components/search";
+import { OptionsDialog } from "@/components/options";
 
 export function Header() {
   const [isInterceptFilterOpen, setIsInterceptFilterOpen] = useState(false);
@@ -80,6 +87,14 @@ export function Header() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
         </div>
+        <OptionsDialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <LuSettings />
+              Settings
+            </Button>
+          </DialogTrigger>
+        </OptionsDialog>
       </div>
 
       {(interceptFilter || searchFilter) && (
