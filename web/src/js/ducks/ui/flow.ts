@@ -35,5 +35,10 @@ const flowsSlice = createSlice({
 });
 
 const { actions, reducer } = flowsSlice;
-export const { selectTab, selectRequestTab, selectResponseTab, setContentViewFor } = actions;
+export const {
+    selectTab,
+    selectRequestTab,
+    selectResponseTab,
+    setContentViewFor,
+} = actions;
 export default reducer;

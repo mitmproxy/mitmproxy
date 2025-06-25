@@ -5,37 +5,42 @@
  */
 
 export interface ParseOptions {
-  startRule?: string;
+    startRule?: string;
 }
 
 export interface Location {
-  line: number;
-  column: number;
-  seenCR: boolean;
+    line: number;
+    column: number;
+    seenCR: boolean;
 }
 
 export interface LocationRange {
-  start: Location;
-  end: Location;
+    start: Location;
+    end: Location;
 }
 
 export interface SyntaxError extends Error {
-  message: string;
-  expected: any[];
-  found: string | null;
-  location: LocationRange;
-  name: "SyntaxError";
+    message: string;
+    expected: any[];
+    found: string | null;
+    location: LocationRange;
+    name: "SyntaxError";
 }
 
 export interface SyntaxErrorConstructor {
-  new (message: string, expected: any[], found: string | null, location: LocationRange): SyntaxError;
+    new (
+        message: string,
+        expected: any[],
+        found: string | null,
+        location: LocationRange,
+    ): SyntaxError;
 }
 
 export type ParseResult = string[];
 
 export interface Parser {
-  SyntaxError: SyntaxErrorConstructor;
-  parse(input: string, options?: ParseOptions): ParseResult;
+    SyntaxError: SyntaxErrorConstructor;
+    parse(input: string, options?: ParseOptions): ParseResult;
 }
 
 declare const parser: Parser;

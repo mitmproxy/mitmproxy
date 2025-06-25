@@ -10,9 +10,9 @@ describe("option reducer", () => {
     });
 
     it("should handle set tab", () => {
-        expect(flowReducer(undefined, selectTab("response")).tabResponse).toEqual(
-            "response",
-        );
+        expect(
+            flowReducer(undefined, selectTab("response")).tabResponse,
+        ).toEqual("response");
     });
 
     it("should handle set content view", () => {

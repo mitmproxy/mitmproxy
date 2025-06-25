@@ -8,7 +8,8 @@ import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master
-from mitmproxy.tools.web.app import handlers, GZipContentAndFlowFiles
+from mitmproxy.tools.web.app import GZipContentAndFlowFiles
+from mitmproxy.tools.web.app import handlers
 from mitmproxy.tools.web.webaddons import WebAuth
 
 
@@ -31,7 +32,7 @@ class Application(tornado.web.Application):
             handlers=handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "dist"),
-            xsrf_cookies=not disable_xsrf_cookies, 
+            xsrf_cookies=not disable_xsrf_cookies,
             xsrf_cookie_kwargs=dict(httponly=True, samesite="Strict"),
             cookie_secret=secrets.token_bytes(32),
             debug=debug,
