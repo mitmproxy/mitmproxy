@@ -153,6 +153,7 @@ export const settingsCategories: SettingCategory[] = [
       "web_debug",
       "web_static_viewer",
       "web_columns",
+      "web_theme",
       "onboarding",
       "onboarding_host",
       "view_order",

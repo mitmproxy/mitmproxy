@@ -21,11 +21,21 @@ export const OPTIONS_RECEIVE =
 export const OPTIONS_UPDATE =
     createAction<Partial<OptionsStateWithMeta>>("OPTIONS_UPDATE");
 
+const THEME_KEY = "theme";
+const DEFAULT_THEME = "system";
+const readThemeFromStorage = () =>
+    localStorage.getItem(THEME_KEY) || DEFAULT_THEME;
+const writeThemeToStorage = (theme: string) =>
+    localStorage.setItem(THEME_KEY, theme);
+
 export { Option, defaultState };
 
 const optionsSlice = createSlice({
     name: "options",
-    initialState: defaultState,
+    initialState: {
+        ...defaultState,
+        web_theme: readThemeFromStorage(),
+    },
     reducers: {},
     extraReducers: (builder) => {
         builder
@@ -34,6 +44,14 @@ const optionsSlice = createSlice({
                 for (const [name, { value }] of Object.entries(
                     action.payload,
                 )) {
+                    // Handle theme option client side only
+                    // because the backend can't 'read' the user's theme preference by the time we receive the options
+                    // as it is persisted in the browser's localStorage.
+                    if (name === "web_theme") {
+                        s[name] = state.web_theme;
+                        continue;
+                    }
+
                     s[name] = value;
                 }
                 return s;
@@ -86,6 +104,9 @@ export function update(name: Option, value: any): AppThunk {
     return (dispatch) => {
         dispatch(optionsEditorActions.startUpdate({ option: name, value }));
         sendUpdate(name, value, dispatch);
+        if (name === "web_theme") {
+            writeThemeToStorage(value);
+        }
     };
 }
 

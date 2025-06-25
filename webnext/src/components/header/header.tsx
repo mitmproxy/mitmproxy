@@ -8,7 +8,6 @@ import {
 import { IoPlayForwardOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useState } from "react";
 import { FilterDescriptionBanner } from "@/components/filter/filter-description";
 import { useAppDispatch, useAppSelector } from "web/ducks";
@@ -83,9 +82,6 @@ export function Header() {
               </Button>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
         </div>
         <OptionsDialog>
           <DialogTrigger asChild>
