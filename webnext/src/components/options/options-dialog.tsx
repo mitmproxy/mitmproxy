@@ -122,6 +122,7 @@ export function OptionsDialog({ children }: OptionsDialogProps) {
         <div className="flex h-full min-h-0 flex-1 overflow-hidden">
           {filteredCategories.length > 0 ? (
             <Tabs
+              orientation="vertical"
               defaultValue={filteredCategories[0]?.id}
               className="flex h-full w-full flex-row"
             >
@@ -158,6 +159,7 @@ export function OptionsDialog({ children }: OptionsDialogProps) {
                     key={category.id}
                     value={category.id}
                     className="m-0 flex h-full flex-col"
+                    tabIndex={-1}
                   >
                     <div className="flex-shrink-0 p-4 px-6">
                       <h3 className="flex items-center gap-2 text-lg font-semibold">
