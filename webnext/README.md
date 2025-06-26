@@ -43,12 +43,21 @@ This project introduces the following new features:
    ```bash
    cd webnext
    npm install
+   cd ../web
+   npm install
    ```
 
-2. Start the development server:
+2. Build local dependency:
 
    ```bash
-   # in the project root:
+   # in the web directory:
+   npm run tsc
+   ```
+
+3. Start the development server:
+
+   ```bash
+   # at the project root:
    uv run --active mitmweb
    # in the webnext directory (in a separate terminal):
    npm run dev
@@ -88,7 +97,7 @@ The Vite dev server proxies API and websocket requests to mitmweb (port 8081 is 
 
 This should start the mitmwebnext server.
 
-To proxy requests similar to the development setup, you can use the included mitmproxy addon:
+To proxy requests, similar to the development setup, you can use the included mitmproxy addon:
 
 ```bash
 uv run --active mitmweb
