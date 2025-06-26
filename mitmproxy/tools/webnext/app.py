@@ -7,17 +7,17 @@ import tornado.web
 import tornado.websocket
 
 import mitmproxy.flow
-import mitmproxy.tools.web.master
+import mitmproxy.tools.webnext.master
 from mitmproxy.tools.web.app import GZipContentAndFlowFiles
 from mitmproxy.tools.web.app import handlers
 from mitmproxy.tools.web.webaddons import WebAuth
 
 
 class Application(tornado.web.Application):
-    master: mitmproxy.tools.web.master.WebMaster
+    master: mitmproxy.tools.webnext.master.WebMaster
 
     def __init__(
-        self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
+        self, master: mitmproxy.tools.webnext.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
         auth_addon: WebAuth = master.addons.get("webauth")
