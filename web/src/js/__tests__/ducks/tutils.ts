@@ -25,6 +25,9 @@ tflow1.id = "flow2";
 tflow1.request.path = "/second";
 
 export const testState: RootState = {
+    version: {
+        value: "web",
+    },
     backendState: TBackendState(),
     options_meta: {
         anticache: {
