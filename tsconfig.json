@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./web" },
+    { "path": "./webnext" }
+  ]
+}
