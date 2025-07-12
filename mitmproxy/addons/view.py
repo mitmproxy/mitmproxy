@@ -203,6 +203,12 @@ class View(collections.abc.Sequence):
         loader.add_option(
             "console_focus_follow", bool, False, "Focus follows new flows."
         )
+        loader.add_option(
+            "menu_select_keys",
+            str,
+            "123456789abcdefghijklmnoprstuvwxyz",
+            "Keys used to select menu items, assigned in order."
+        )
 
     def store_count(self):
         return len(self._store)
@@ -579,6 +585,14 @@ class View(collections.abc.Sequence):
             self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
+        if len(ctx.options.menu_select_keys) < 34:
+            raise exceptions.OptionsError(
+                "menu_select_keys should include at least 34 options."
+            )
+        if len(ctx.options.menu_select_keys) != len(set(ctx.options.menu_select_keys)):
+            raise exceptions.OptionsError(
+                "menu_select_keys must not contain duplicate characters."
+            )
 
     def requestheaders(self, f):
         self.add([f])

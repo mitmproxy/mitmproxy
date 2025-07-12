@@ -59,10 +59,10 @@ class Choice(urwid.WidgetWrap):
 
 
 class ChooserListWalker(urwid.ListWalker):
-    shortcuts = "123456789abcdefghijklmnoprstuvwxyz"
-
-    def __init__(self, choices, current):
+    
+    def __init__(self, master, choices, current):
         self.index = 0
+        self.shortcuts = master.options.menu_select_keys
         self.choices = choices
         self.current = current
 
@@ -105,7 +105,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         choicewidth = max(len(i) for i in choices)
         self.width = max(choicewidth, len(title)) + 7
 
-        self.walker = ChooserListWalker(choices, current)
+        self.walker = ChooserListWalker(master, choices, current)
         super().__init__(
             urwid.AttrMap(
                 urwid.LineBox(
