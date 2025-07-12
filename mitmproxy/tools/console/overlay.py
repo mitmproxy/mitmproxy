@@ -59,7 +59,6 @@ class Choice(urwid.WidgetWrap):
 
 
 class ChooserListWalker(urwid.ListWalker):
-    
     def __init__(self, master, choices, current):
         self.index = 0
         self.shortcuts = master.options.menu_select_keys

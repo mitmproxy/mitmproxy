@@ -676,11 +676,16 @@ def test_configure():
         tctx.configure(v, console_focus_follow=True)
         assert v.focus_follow
 
-        with pytest.raises(Exception, match="menu_select_keys should include at least 34 options."):
+        with pytest.raises(
+            Exception, match="menu_select_keys should include at least 34 options."
+        ):
             tctx.configure(v, menu_select_keys="123")
-        with pytest.raises(Exception, match="menu_select_keys must not contain duplicate characters."):
+        with pytest.raises(
+            Exception, match="menu_select_keys must not contain duplicate characters."
+        ):
             tctx.configure(v, menu_select_keys="123456789abcdefghijklmnoprstuvwxzz")
         tctx.configure(v, menu_select_keys="asdfjklçqwerzxcv1234567890,mnbpoiu")
+
 
 @pytest.mark.parametrize(
     "marker, expected",

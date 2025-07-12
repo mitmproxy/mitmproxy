@@ -207,7 +207,7 @@ class View(collections.abc.Sequence):
             "menu_select_keys",
             str,
             "123456789abcdefghijklmnoprstuvwxyz",
-            "Keys used to select menu items, assigned in order."
+            "Keys used to select menu items, assigned in order.",
         )
 
     def store_count(self):

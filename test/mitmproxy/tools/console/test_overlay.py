@@ -9,7 +9,8 @@ class DummyMaster:
         self.options = DummyMaster.Options()
 
 
-def dummy_cb(_): pass
+def dummy_cb(_):
+    pass
 
 
 def test_chooser_list_walker_shortcuts():
@@ -24,4 +25,3 @@ def test_chooser_sets_walker():
     chooser = overlay.Chooser(master, "title", ["foo", "bar"], "foo", dummy_cb)
     assert isinstance(chooser.walker, overlay.ChooserListWalker)
     assert chooser.walker.choices == ["foo", "bar"]
-
