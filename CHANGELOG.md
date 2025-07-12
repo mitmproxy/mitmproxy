@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Add new menu_select_keys option.
+  ([#7799](https://github.com/mitmproxy/mitmproxy/pull/7799), @chedieck)
 
 - Do not escape non-ascii characters in the JSON contentview.
   ([#7740](https://github.com/mitmproxy/mitmproxy/pull/7740), @mhils)
