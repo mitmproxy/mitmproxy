@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Update deprecated `windows-2019` runner to `windows-2025`.
+  ([#7801](https://github.com/mitmproxy/mitmproxy/pull/7801), @chedieck)
 - Do not escape non-ascii characters in the JSON contentview.
   ([#7740](https://github.com/mitmproxy/mitmproxy/pull/7740), @mhils)
 - Fix crash in mitmweb when no explicit Server-Connection is logged.

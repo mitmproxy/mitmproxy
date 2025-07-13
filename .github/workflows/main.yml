@@ -70,7 +70,7 @@ jobs:
             platform: macos-arm64
           - image: macos-13
             platform: macos-x86_64
-          - image: windows-2019
+          - image: windows-2025
             platform: windows
           - image: ubuntu-latest
             platform: linux-x86_64
