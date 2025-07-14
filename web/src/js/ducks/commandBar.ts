@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-interface CommandBarState {
+export interface CommandBarState {
     visible: boolean;
 }
 

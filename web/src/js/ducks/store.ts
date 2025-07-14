@@ -13,17 +13,24 @@ import options_meta from "./options_meta";
 import modes from "./modes";
 import processes from "./processes";
 
-export const reducer = {
-    commandBar,
-    eventLog,
-    flows,
-    connection,
-    modes,
-    ui,
-    options,
-    options_meta,
-    backendState,
-    processes,
+import { Version, createVersionSlice } from "./version";
+
+const createReducer = (value: Version) => {
+    const { reducer: versionReducer } = createVersionSlice({ value });
+
+    return {
+        commandBar,
+        eventLog,
+        flows,
+        connection,
+        modes,
+        ui,
+        options,
+        options_meta,
+        backendState,
+        processes,
+        version: versionReducer, // we don't really use this reducer, but it's needed to construct the initial state.
+    };
 };
 
 export const middlewares = {
@@ -31,14 +38,23 @@ export const middlewares = {
     serializableCheck: { warnAfter: 500_000, ignoredPaths: ["flows"] },
 };
 
-export const store = configureStore({
-    reducer,
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware(middlewares),
-    devTools:
-        process.env.NODE_ENV !== "production"
-            ? { serialize: { options: { map: true } } }
-            : false,
-});
+export const createStore = (value: Version) => {
+    const reducer = createReducer(value);
+
+    return configureStore({
+        reducer,
+        middleware: (getDefaultMiddleware) => getDefaultMiddleware(middlewares),
+        devTools:
+            process.env.NODE_ENV !== "production"
+                ? { serialize: { options: { map: true } } }
+                : false,
+    });
+};
+
+// Export default store and reducer for mitmweb.
+// Mitmwebnext will use the factory functions above to create a different configuration instead.
+export const reducer = createReducer("web");
+export const store = createStore("web");
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;

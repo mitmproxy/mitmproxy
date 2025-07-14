@@ -1,0 +1,1 @@
+cd webnext && npx lint-staged
