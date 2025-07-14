@@ -37,7 +37,7 @@ class WebAuth:
             "everything else is considered a plaintext password. "
             "If no password is provided, a random token is generated on startup."
             "For automated calls, you can pass the password as token query parameter"
-            "or as `Authentication: Bearer ...` header.",
+            "or as `Authorization: Bearer ...` header.",
         )
 
     def configure(self, updated) -> None:
