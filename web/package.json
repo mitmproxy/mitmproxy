@@ -2,7 +2,7 @@
     "name": "mitmproxy",
     "private": true,
     "scripts": {
-        "test": "eslint . && tsc --noEmit && jest --coverage",
+        "test": "TZ=UTC eslint . && TZ=UTC tsc --noEmit && TZ=UTC jest --coverage",
         "build": "gulp prod",
         "start": "gulp",
         "prettier": "prettier --write .",
