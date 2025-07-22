@@ -659,7 +659,7 @@ class Request(Message):
         """
         HTTP request method, e.g. "GET".
         """
-        return self.data.method.decode("utf-8", "surrogateescape").upper()
+        return self.data.method.decode("utf-8", "surrogateescape")
 
     @method.setter
     def method(self, val: str | bytes) -> None:
