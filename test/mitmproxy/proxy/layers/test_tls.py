@@ -901,17 +901,37 @@ def test_send_data_zero_return_triggers_shutdown(tctx):
     layer = tls.TLSLayer(tctx, tctx.server)
     layer.tls = Mock()
     layer.tls.sendall.side_effect = SSL.ZeroReturnError()
-    layer.tls.version.return_value = "TLSv1.2"  # simulate TLS < 1.3
+    layer.tls.version.return_value = "TLSv1.2"
     layer.tls.shutdown = Mock()
     layer.tls_interact = Mock(return_value=iter(()))
-    layer.tls_version_is_pre_13 = lambda: True
 
     list(layer.send_data(b"test"))
 
     layer.tls.shutdown.assert_called_once()
     layer.tls_interact.assert_called_once()
+    assert layer.tls_version_is_pre_13() is True
 
+def test_send_data_shutdown_ssl_error(tctx):
+    layer = tls.TLSLayer(tctx, tctx.server)
+    layer.tls = Mock()
+    layer.tls.sendall.side_effect = SSL.ZeroReturnError()
+    layer.tls.version.return_value = "TLSv1.2"
+    layer.tls.shutdown.side_effect = SSL.Error("mock shutdown error")
+    layer.tls_interact = Mock(return_value=iter(()))
 
+    result = list(layer.send_data(b"error"))
+
+    assert any(
+        isinstance(cmd, commands.Log) and "Error sending close_notify" in cmd.message
+        for cmd in result
+    )
+
+def test_tls_version_is_not_pre_13(tctx):
+    layer = tls.TLSLayer(tctx, tctx.server)
+    layer.tls = Mock()
+    layer.tls.version.return_value = "TLSv1.3"
+    assert layer.tls_version_is_pre_13() is False
+    
 class TestTlsSendClose:
     def test_send_close_triggers_shutdown(self, tctx: context.Context):
         """
