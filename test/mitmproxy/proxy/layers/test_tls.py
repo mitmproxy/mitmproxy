@@ -896,6 +896,7 @@ def test_dtls_parse_client_hello():
             + b"\x00\x0e\x00\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         )
 
+
 def test_send_data_zero_return_triggers_shutdown(tctx):
     layer = tls.TLSLayer(tctx, tctx.server)
     layer.tls = Mock()
@@ -909,6 +910,7 @@ def test_send_data_zero_return_triggers_shutdown(tctx):
 
     layer.tls.shutdown.assert_called_once()
     layer.tls_interact.assert_called_once()
+
 
 class TestTlsSendClose:
     def test_send_close_triggers_shutdown(self, tctx: context.Context):
@@ -1000,4 +1002,3 @@ class TestTlsSendClose:
         list(layer.receive_data(b"some tls encrypted data"))
 
         assert layer.peer_sent_close_notify is False
-        
