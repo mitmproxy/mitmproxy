@@ -458,10 +458,21 @@ class TLSLayer(tunnel.TunnelLayer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         try:
             self.tls.sendall(data)
-        except (SSL.ZeroReturnError, SSL.SysCallError):
+        except SSL.ZeroReturnError:
+            if self.tls_version_is_pre_13():
+                try:
+                    self.tls.shutdown()  # send close_notify as required by TLS < 1.3
+                except SSL.Error as e:
+                    yield commands.Log(f"Error sending close_notify: {e}", WARNING)
+            # stop sending any more data after close_notify
+        except SSL.SysCallError:
             # The other peer may still be trying to send data over, which we discard here.
             pass
+
         yield from self.tls_interact()
+
+    def tls_version_is_pre_13(self) -> bool:
+        return self.tls.version() in ("TLSv1", "TLSv1.1", "TLSv1.2")
 
     def send_close(
         self, command: commands.CloseConnection
