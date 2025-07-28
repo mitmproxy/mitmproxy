@@ -911,6 +911,7 @@ def test_send_data_zero_return_triggers_shutdown(tctx):
     layer.tls_interact.assert_called_once()
     assert layer.tls_version_is_pre_13() is True
 
+
 def test_send_data_shutdown_ssl_error(tctx):
     layer = tls.TLSLayer(tctx, tctx.server)
     layer.tls = Mock()
@@ -926,12 +927,14 @@ def test_send_data_shutdown_ssl_error(tctx):
         for cmd in result
     )
 
+
 def test_tls_version_is_not_pre_13(tctx):
     layer = tls.TLSLayer(tctx, tctx.server)
     layer.tls = Mock()
     layer.tls.version.return_value = "TLSv1.3"
     assert layer.tls_version_is_pre_13() is False
-    
+
+
 class TestTlsSendClose:
     def test_send_close_triggers_shutdown(self, tctx: context.Context):
         """
