@@ -88,12 +88,16 @@ class TestExportCurlCommand:
         result = "curl -X POST http://address:22/path -d nobinarysupport"
         assert export_curl(post_request) == result
 
-    def test_non_zero_length_post_has_content_length_header_removed(self, export_curl, post_request):
+    def test_non_zero_length_post_has_content_length_header_removed(
+        self, export_curl, post_request
+    ):
         post_request.request.content = b"content"
         result = "curl -X POST http://address:22/path -d content"
         assert export_curl(post_request) == result
 
-    def test_zero_length_post_has_content_length_header_intact(self, export_curl, post_request):
+    def test_zero_length_post_has_content_length_header_intact(
+        self, export_curl, post_request
+    ):
         post_request.request.content = b""
         result = "curl -H 'content-length: 0' -X POST http://address:22/path"
         assert export_curl(post_request) == result
