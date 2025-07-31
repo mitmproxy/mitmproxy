@@ -24,14 +24,12 @@ def cleanup_request(f: flow.Flow) -> http.Request:
     return request
 
 
-def pop_headers(request: http.Request) -> http.Request:
-    # Remove some headers that are redundant for curl/httpie export
-    request.headers.pop("content-length", None)
+def pop_headers(request: http.Request) -> None:
+    """Remove some headers that are redundant for curl/httpie export."""
     if request.headers.get("host", "") == request.host:
         request.headers.pop("host")
     if request.headers.get(":authority", "") == request.host:
         request.headers.pop(":authority")
-    return request
 
 
 def cleanup_response(f: flow.Flow) -> http.Response:
@@ -62,7 +60,12 @@ def request_content_for_console(request: http.Request) -> str:
 
 def curl_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
-    request = pop_headers(request)
+    pop_headers(request)
+
+    # when content-length is explicitly 0, do not pop the header because curl will not calculate it
+    if request.headers.get("content-length", "0") != "0" or request.method == "GET":
+        request.headers.pop("content-length", None)
+
     args = ["curl"]
 
     server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
@@ -95,7 +98,10 @@ def curl_command(f: flow.Flow) -> str:
 
 def httpie_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
-    request = pop_headers(request)
+    pop_headers(request)
+
+    # allow httpie to calculate content-length
+    request.headers.pop("content-length", None)
 
     # TODO: Once https://github.com/httpie/httpie/issues/414 is implemented, we
     # should ensure we always connect to the IP address specified in the flow,
