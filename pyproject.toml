@@ -32,7 +32,7 @@ classifiers = [
 dependencies = [
     "aioquic>=1.2.0,<=1.2.0",
     "argon2-cffi>=23.1.0,<=25.1.0",
-    "asgiref>=3.2.10,<=3.8.1",
+    "asgiref>=3.2.10,<=3.9.1",
     "Brotli>=1.0,<=1.1.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
     "cryptography>=42.0,<45.1",  # relaxed upper bound here to get security fixes
