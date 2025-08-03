@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- fix: missing content-length header in curl export
+  ([#7810](https://github.com/mitmproxy/mitmproxy/pull/7810), @mheguy)
 - fix: update log message with correct header name
   ([#7802](https://github.com/mitmproxy/mitmproxy/pull/7802), @kristof-mattei)
 - Update deprecated `windows-2019` runner to `windows-2025`.
