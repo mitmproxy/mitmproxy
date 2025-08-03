@@ -69,7 +69,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
                 bthreads.append(i)
             else:
                 print(i.name)
-        bthreads.sort(key=lambda x: x._thread_started)
+        bthreads.sort(key=lambda x: getattr(x, "_thread_started", 0))
         for i in bthreads:
             print(i._threadinfo())
 

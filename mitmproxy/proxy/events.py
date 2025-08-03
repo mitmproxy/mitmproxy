@@ -94,7 +94,7 @@ class CommandCompleted(Event):
                 f"Two conflicting subclasses for {command_cls}: {cls} and {other}",
                 RuntimeWarning,
             )
-        command_reply_subclasses[command_cls] = cls
+        command_reply_subclasses[command_cls] = cls  # type: ignore
 
     def __repr__(self):
         return f"Reply({repr(self.command)}, {repr(self.reply)})"

@@ -1,3 +1,5 @@
+from abc import ABCMeta
+from abc import abstractmethod
 from enum import Enum
 
 from mitmproxy.contentviews._api import Contentview
@@ -7,7 +9,10 @@ from mitmproxy.utils import strutils
 
 
 class PacketType(Enum):
-    visible: bool
+    @property
+    @abstractmethod
+    def visible(self) -> bool:
+        raise RuntimeError  # pragma: no cover
 
     def __str__(self):
         return f"{type(self).__name__}.{self.name}"
