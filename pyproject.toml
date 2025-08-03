@@ -72,7 +72,7 @@ dev = [
     "pytest-timeout==2.3.1",
     "pytest-xdist==3.6.1",
     "pytest==8.3.5",
-    "requests==2.32.3",
+    "requests==2.32.4",
     "wheel==0.45.1",
     "build==1.2.2.post1",
     "mypy==1.15.0",
