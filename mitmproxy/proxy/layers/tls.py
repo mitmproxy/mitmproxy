@@ -241,6 +241,7 @@ class TlsFailedServerHook(StartHook):
 
 class TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None  # type: ignore
+    peer_sent_close_notify: bool = False
     """The OpenSSL connection object"""
 
     def __init__(self, context: context.Context, conn: connection.Connection):
@@ -251,6 +252,7 @@ class TLSLayer(tunnel.TunnelLayer):
         )
 
         conn.tls = True
+        self.peer_sent_close_notify = False
 
     def __repr__(self):
         return (
@@ -439,6 +441,10 @@ class TLSLayer(tunnel.TunnelLayer):
             )
         if close:
             self.conn.state &= ~connection.ConnectionState.CAN_READ
+            self.peer_sent_close_notify = bool(
+                self.tls.get_shutdown() & SSL.RECEIVED_SHUTDOWN
+            )
+
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", DEBUG)
             yield from self.event_to_child(events.ConnectionClosed(self.conn))
@@ -452,15 +458,33 @@ class TLSLayer(tunnel.TunnelLayer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         try:
             self.tls.sendall(data)
-        except (SSL.ZeroReturnError, SSL.SysCallError):
+        except SSL.ZeroReturnError:
+            if self.tls_version_is_pre_13():
+                try:
+                    self.tls.shutdown()  # send close_notify as required by TLS < 1.3
+                except SSL.Error as e:
+                    yield commands.Log(f"Error sending close_notify: {e}", WARNING)
+            # stop sending any more data after close_notify
+        except SSL.SysCallError:
             # The other peer may still be trying to send data over, which we discard here.
             pass
+
         yield from self.tls_interact()
+
+    def tls_version_is_pre_13(self) -> bool:
+        return self.tls.version() in ("TLSv1", "TLSv1.1", "TLSv1.2")
 
     def send_close(
         self, command: commands.CloseConnection
     ) -> layer.CommandGenerator[None]:
-        # We should probably shutdown the TLS connection properly here.
+        # TLS connection is properly shutdown here.
+        if not self.peer_sent_close_notify:
+            try:
+                self.tls.shutdown()  # send TLS close_notify
+            except SSL.Error as e:
+                yield commands.Log(f"TLS shutdown error: {e}", WARNING)
+            yield from self.tls_interact()
+
         yield from super().send_close(command)
 
 
