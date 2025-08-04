@@ -19,6 +19,8 @@
   ([#7734](https://github.com/mitmproxy/mitmproxy/pull/7734), @lups2000)
 - Add syntax highlighting for CSS and JavaScript contentviews.
   ([#7749](https://github.com/mitmproxy/mitmproxy/pull/7749), @mhils)
+- Fix capitalization of HTTP verbs.
+  ([#7808](https://github.com/mitmproxy/mitmproxy/pull/7808), @gachikuku)
 
 ## 25 May 2025: mitmproxy 12.1.1
 

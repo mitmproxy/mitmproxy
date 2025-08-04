@@ -201,7 +201,7 @@ def test_filter():
     v.requestheaders(tft(method="put"))
     assert (len(v)) == 4
     v.set_filter_cmd("~m get")
-    assert [i.request.method for i in v] == ["GET", "GET"]
+    assert [i.request.method for i in v] == ["get", "get"]
     assert len(v._store) == 4
     v.set_filter(None)
 
@@ -306,13 +306,13 @@ def test_resolve():
         def methods(flows):
             return [i.request.method for i in flows]
 
-        assert methods(tctx.command(v.resolve, "~m get")) == ["GET", "GET"]
-        assert methods(tctx.command(v.resolve, "~m put")) == ["PUT", "PUT"]
-        assert methods(tctx.command(v.resolve, "@shown")) == ["GET", "GET"]
-        assert methods(tctx.command(v.resolve, "@hidden")) == ["PUT", "PUT"]
-        assert methods(tctx.command(v.resolve, "@marked")) == ["GET"]
-        assert methods(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
-        assert methods(tctx.command(v.resolve, "@all")) == ["GET", "PUT", "GET", "PUT"]
+        assert methods(tctx.command(v.resolve, "~m get")) == ["get", "get"]
+        assert methods(tctx.command(v.resolve, "~m put")) == ["put", "put"]
+        assert methods(tctx.command(v.resolve, "@shown")) == ["get", "get"]
+        assert methods(tctx.command(v.resolve, "@hidden")) == ["put", "put"]
+        assert methods(tctx.command(v.resolve, "@marked")) == ["get"]
+        assert methods(tctx.command(v.resolve, "@unmarked")) == ["put", "get", "put"]
+        assert methods(tctx.command(v.resolve, "@all")) == ["get", "put", "get", "put"]
 
         with pytest.raises(exceptions.CommandError, match="Invalid filter expression"):
             tctx.command(v.resolve, "~")
@@ -404,9 +404,9 @@ def test_order():
 
     v.set_order("method")
     assert v.get_order() == "method"
-    assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
+    assert [i.request.method for i in v] == ["get", "get", "put", "put"]
     v.set_reversed(True)
-    assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
+    assert [i.request.method for i in v] == ["put", "put", "get", "get"]
 
     v.set_order("time")
     assert v.get_order() == "time"
@@ -551,7 +551,7 @@ def test_focus_follow():
         assert v.focus.index == 2
         assert v.focus.flow.timestamp_created == 7
 
-        mod.request.method = "GET"
+        mod.request.method = "get"
         v.update([mod])
         assert v.focus.index == 2
         assert v.focus.flow.timestamp_created == 6
@@ -616,7 +616,7 @@ def test_focus():
     )
 
     f.flow = v[2]
-    assert f.flow.request.method == "PUT"
+    assert f.flow.request.method == "put"
 
     filt = flowfilter.parse("~m get")
     v.set_filter(filt)

@@ -73,7 +73,7 @@ def test_flow_set():
 
         assert f.request.method != "post"
         sa.flow_set([f], "method", "post")
-        assert f.request.method == "POST"
+        assert f.request.method == "post"
 
         assert f.request.host != "testhost"
         sa.flow_set([f], "host", "testhost")
