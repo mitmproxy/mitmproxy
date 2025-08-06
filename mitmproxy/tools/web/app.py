@@ -912,6 +912,7 @@ class Application(tornado.web.Application):
         self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
+        self.master.options.changed.connect(self.update_web_port)
         auth_addon: WebAuth = master.addons.get("webauth")
         super().__init__(
             handlers=handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
@@ -926,3 +927,9 @@ class Application(tornado.web.Application):
             is_valid_password=auth_addon.is_valid_password,
             auth_cookie_name=f"mitmproxy-auth-{master.options.web_port}",
         )
+
+    def update_web_port(self, updated: set[str]):
+        if "web_port" in updated:
+            self.settings["auth_cookie_name"] = (
+                f"mitmproxy-auth-{self.master.options.web_port}"
+            )
