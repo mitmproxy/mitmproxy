@@ -1,3 +1,3 @@
 export default function () {
-    process.env.TZ = 'UTC';
-};
+    process.env.TZ = "UTC";
+}
