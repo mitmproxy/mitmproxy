@@ -33,22 +33,22 @@ export const formatTimeDelta = function (milliseconds) {
 
 export const formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {},
+    { includeMilliseconds = true } = {},
 ) {
-    const local = new Date(seconds * 1000);
+    const date = new Date(seconds * 1000);
 
-    const year = local.getFullYear();
-    const month = String(local.getMonth() + 1).padStart(2, "0");
-    const day = String(local.getDate()).padStart(2, "0");
-    const hours = String(local.getHours()).padStart(2, "0");
-    const minutes = String(local.getMinutes()).padStart(2, "0");
-    const secondsPart = String(local.getSeconds()).padStart(2, "0");
-    const millisPart = String(local.getMilliseconds()).padStart(3, "0");
+    const yearStr = String(date.getFullYear());
+    const monthStr = String(date.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(date.getDate()).padStart(2, "0");
+    const hourStr = String(date.getHours()).padStart(2, "0");
+    const minuteStr = String(date.getMinutes()).padStart(2, "0");
+    const secondStr = String(date.getSeconds()).padStart(2, "0");
+    const millisecondStr = String(date.getMilliseconds()).padStart(3, "0");
 
-    let ts = `${year}-${month}-${day} ${hours}:${minutes}:${secondsPart}`;
-    if (milliseconds) ts += `.${millisPart}`;
+    let timestamp = `${yearStr}-${monthStr}-${dayStr} ${hourStr}:${minuteStr}:${secondStr}`;
+    if (includeMilliseconds) timestamp += `.${millisecondStr}`;
 
-    return ts;
+    return timestamp;
 };
 
 export function formatAddress(address: [string, number]): string {
