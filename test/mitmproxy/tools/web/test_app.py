@@ -615,3 +615,15 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             assert e.code == 403
         else:
             assert False
+
+    def test_auth_cookie_port_suffix_modification(self):
+        opts = self.master.options
+
+        old_port = opts.web_port
+        new_port = 8082
+        opts.web_port = new_port
+
+        try:
+            assert self._app.settings["auth_cookie_name"].endswith(str(new_port))
+        finally:
+            opts.web_port = old_port
