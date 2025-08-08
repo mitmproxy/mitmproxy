@@ -25,5 +25,6 @@ module.exports = async () => {
             ],
         },
         setupFilesAfterEnv: ["<rootDir>/setup-jest.js"],
+        globalSetup: "<rootDir>/setup-global-jest.js",
     };
 };

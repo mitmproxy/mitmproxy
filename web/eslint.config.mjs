@@ -38,7 +38,12 @@ export default defineConfig([
         },
     },
     {
-        files: ["jest.config.js", "gulpfile.js", "setup-jest.js"],
+        files: [
+            "jest.config.js",
+            "gulpfile.js",
+            "setup-jest.js",
+            "setup-global-jest.js",
+        ],
         languageOptions: { globals: globals.node },
     },
     {

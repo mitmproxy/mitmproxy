@@ -33,12 +33,22 @@ export const formatTimeDelta = function (milliseconds) {
 
 export const formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {},
+    { includeMilliseconds = true } = {},
 ) {
-    const utc = new Date(seconds * 1000);
-    let ts = utc.toISOString().replace("T", " ").replace("Z", "");
-    if (!milliseconds) ts = ts.slice(0, -4);
-    return ts;
+    const date = new Date(seconds * 1000);
+
+    const yearStr = String(date.getFullYear());
+    const monthStr = String(date.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(date.getDate()).padStart(2, "0");
+    const hourStr = String(date.getHours()).padStart(2, "0");
+    const minuteStr = String(date.getMinutes()).padStart(2, "0");
+    const secondStr = String(date.getSeconds()).padStart(2, "0");
+    const millisecondStr = String(date.getMilliseconds()).padStart(3, "0");
+
+    let timestamp = `${yearStr}-${monthStr}-${dayStr} ${hourStr}:${minuteStr}:${secondStr}`;
+    if (includeMilliseconds) timestamp += `.${millisecondStr}`;
+
+    return timestamp;
 };
 
 export function formatAddress(address: [string, number]): string {
