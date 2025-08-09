@@ -217,6 +217,152 @@ class TestExportHttpieCommand:
         assert export.httpie_command(get_request) == result
 
 
+class TestExportPythonRequestsCommand:
+    def test_get(self, get_request):
+        # test cookie
+        get_request.request.cookies = [
+            ("cookie", "chocolate_chip"),
+            ("session_id", "abc123"),
+            ("user_id", "987654321"),
+        ]
+        result = (
+            "import requests\n"
+            "\n"
+            'url = "http://address:22/path?a=foo&a=bar&b=baz"\n'
+            "cookies = {\n"
+            '    "cookie": "chocolate_chip",\n'
+            '    "session_id": "abc123",\n'
+            '    "user_id": "987654321",\n'
+            "}\n"
+            "headers = {\n"
+            '    "header": "qvalue",\n'
+            "}\n"
+            "body = None\n"
+            'res = requests.request(method="GET", url=url, headers=headers, '
+            "cookies=cookies, data=body)\n"
+            "print(res.text)\n"
+        )
+        assert export.python_requests_command(get_request) == result
+
+    def test_post(self, post_request):
+        post_request.request.content = b"id=1&name=nate"
+        result = (
+            "import requests\n"
+            "\n"
+            'url = "http://address:22/path"\n'
+            "cookies = {\n"
+            "}\n"
+            "headers = {\n"
+            "}\n"
+            'body = "id=1&name=nate"\n'
+            'res = requests.request(method="POST", url=url, headers=headers, '
+            "cookies=cookies, data=body)\n"
+            "print(res.text)\n"
+        )
+        assert export.python_requests_command(post_request) == result
+
+    def test_post_json(self, post_request):
+        post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
+        # test different json data types
+        post_request.request.content = b"""{
+                "string": "Hello, world!",
+                "number": 42,
+                "float": 3.14,
+                "boolean": true,
+                "nullValue": null,
+                "object": {
+                    "name": "John",
+                    "age": 30
+                },
+                "array": [1, 2, 3, 4]
+            }"""
+        result = (
+            "import requests\n"
+            "\n"
+            'url = "http://address:22/path"\n'
+            "cookies = {\n"
+            "}\n"
+            "headers = {\n"
+            '    "Content-Type": "application/json; charset=utf-8",\n'
+            "}\n"
+            "body = {'string': 'Hello, world!', 'number': 42, 'float': 3.14, 'boolean': "
+            "True, 'nullValue': None, 'object': {'name': 'John', 'age': 30}, 'array': [1, "
+            "2, 3, 4]}\n"
+            'res = requests.request(method="POST", url=url, headers=headers, '
+            "cookies=cookies, json=body)\n"
+            "print(res.text)\n"
+        )
+        assert export.python_requests_command(post_request) == result
+
+    def test_success_with_binary_data(self, post_request):
+        # yeah, we support binary data in python
+        post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
+        result = (
+            "import requests\n"
+            "\n"
+            'url = "http://address:22/path"\n'
+            "cookies = {\n"
+            "}\n"
+            "headers = {\n"
+            '    "Content-Type": "application/json; charset=utf-8",\n'
+            "}\n"
+            "body = "
+            '"""\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f '
+            '!"#$%&\\\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\\x7f\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f\\xa0\\xa1\\xa2\\xa3\\xa4\\xa5\\xa6\\xa7\\xa8\\xa9\\xaa\\xab\\xac\\xad\\xae\\xaf\\xb0\\xb1\\xb2\\xb3\\xb4\\xb5\\xb6\\xb7\\xb8\\xb9\\xba\\xbb\\xbc\\xbd\\xbe\\xbf\\xc0\\xc1\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7\\xc8\\xc9\\xca\\xcb\\xcc\\xcd\\xce\\xcf\\xd0\\xd1\\xd2\\xd3\\xd4\\xd5\\xd6\\xd7\\xd8\\xd9\\xda\\xdb\\xdc\\xdd\\xde\\xdf\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xfe\\xff"""\n'
+            'res = requests.request(method="POST", url=url, headers=headers, '
+            "cookies=cookies, data=body)\n"
+            "print(res.text)\n"
+        )
+        assert export.python_requests_command(post_request) == result
+
+    def test_patch(self, export_curl, patch_request):
+        result = (
+            "import requests\n"
+            "\n"
+            'url = "http://address:22/path?query=param"\n'
+            "cookies = {\n"
+            "}\n"
+            "headers = {\n"
+            '    "header": "qvalue",\n'
+            "}\n"
+            'body = "content"\n'
+            'res = requests.request(method="PATCH", url=url, headers=headers, '
+            "cookies=cookies, data=body)\n"
+            "print(res.text)\n"
+        )
+        assert export.python_requests_command(patch_request) == result
+
+    def test_tcp(self, export_curl, tcp_flow):
+        # does not support tcp
+        with pytest.raises(exceptions.CommandError):
+            export.python_requests_command(tcp_flow)
+
+    def test_udp(self, export_curl, udp_flow):
+        # does not support udp
+        with pytest.raises(exceptions.CommandError):
+            export.python_requests_command(udp_flow)
+
+    def test_correct_host_used(self, get_request):
+        get_request.request.headers["host"] = "domain:22"
+
+        result = (
+            "import requests\n"
+            "\n"
+            'url = "http://domain:22/path?a=foo&a=bar&b=baz"\n'
+            "cookies = {\n"
+            "}\n"
+            "headers = {\n"
+            '    "header": "qvalue",\n'
+            '    "host": "domain:22",\n'
+            "}\n"
+            "body = None\n"
+            'res = requests.request(method="GET", url=url, headers=headers, '
+            "cookies=cookies, data=body)\n"
+            "print(res.text)\n"
+        )
+        assert export.python_requests_command(get_request) == result
+
+
 class TestRaw:
     def test_req_and_resp_present(self, get_flow):
         assert b"header: qvalue" in export.raw(get_flow)
@@ -305,7 +451,14 @@ def test_export(tmp_path) -> None:
     with taddons.context() as tctx:
         tctx.configure(e)
 
-        assert e.formats() == ["curl", "httpie", "raw", "raw_request", "raw_response"]
+        assert e.formats() == [
+            "curl",
+            "httpie",
+            "python_requests",
+            "raw",
+            "raw_request",
+            "raw_response",
+        ]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
 
@@ -322,6 +475,10 @@ def test_export(tmp_path) -> None:
         os.unlink(f)
 
         e.file("httpie", tflow.tflow(resp=True), f)
+        assert qr(f)
+        os.unlink(f)
+
+        e.file("python_requests", tflow.tflow(resp=True), f)
         assert qr(f)
         os.unlink(f)
 
@@ -383,6 +540,10 @@ def test_clip(tmpdir, caplog):
 
         with mock.patch("pyperclip.copy") as pc:
             e.clip("httpie", tflow.tflow(resp=True))
+            assert pc.called
+
+        with mock.patch("pyperclip.copy") as pc:
+            e.clip("python_requests", tflow.tflow(resp=True))
             assert pc.called
 
         with mock.patch("pyperclip.copy") as pc:
