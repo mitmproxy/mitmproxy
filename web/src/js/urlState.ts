@@ -7,7 +7,11 @@
  */
 import { FilterName, setFilter, setHighlight } from "./ducks/ui/filter";
 import { select } from "./ducks/flows";
-import { selectTab } from "./ducks/ui/flow";
+import {
+    selectRequestTab,
+    selectResponseTab,
+    selectTab,
+} from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
 import * as commandBarActions from "./ducks/commandBar";
 import { RootStore } from "./ducks/store";
@@ -20,6 +24,18 @@ const Query = {
     SHOW_COMMANDBAR: "c",
 };
 
+function selectFlowById(store: RootStore, flowId: string) {
+    const selectFlowOnceAvailable = () => {
+        const flow = store.getState().flows.byId.get(flowId);
+        if (flow !== undefined) {
+            unsubscribe();
+            store.dispatch(select([flow]));
+        }
+    };
+    const unsubscribe = store.subscribe(selectFlowOnceAvailable);
+    selectFlowOnceAvailable();
+}
+
 export function updateStoreFromUrl(store: RootStore) {
     const [path, query] = window.location.hash.substr(1).split("?", 2);
     const path_components = path.substr(1).split("/");
@@ -28,16 +44,17 @@ export function updateStoreFromUrl(store: RootStore) {
         if (path_components.length == 3) {
             const [flowId, tab] = path_components.slice(1);
             store.dispatch(selectTab(tab));
-
-            const selectFlowOnceAvailable = () => {
-                const flow = store.getState().flows.byId.get(flowId);
-                if (flow !== undefined) {
-                    unsubscribe();
-                    store.dispatch(select([flow]));
-                }
-            };
-            const unsubscribe = store.subscribe(selectFlowOnceAvailable);
-            selectFlowOnceAvailable();
+            selectFlowById(store, flowId);
+        } else if (
+            path_components.length == 6 &&
+            path_components[2] === "request" &&
+            path_components[4] === "response"
+        ) {
+            const [flowId, , requestTab, , responseTab] =
+                path_components.slice(1);
+            store.dispatch(selectRequestTab(requestTab));
+            store.dispatch(selectResponseTab(responseTab));
+            selectFlowById(store, flowId);
         }
     } else if (path_components[0] === "capture") {
         store.dispatch(setCurrent(Tab.Capture));
@@ -86,7 +103,17 @@ export function updateUrlFromStore(store: RootStore) {
     if (state.ui.tabs.current === Tab.Capture) {
         url = "/capture";
     } else if (state.flows.selected.length > 0) {
-        url = `/flows/${state.flows.selected[0].id}/${state.ui.flow.tab}`;
+        const flow = state.flows.selected[0];
+        if (state.version.value === "webnext" && flow.type === "http") {
+            const tabRequest = state.ui.flow.tabRequest || "headers";
+            const tabResponse =
+                state.ui.flow.tabResponse === "request" // for compatibility with web
+                    ? "headers"
+                    : state.ui.flow.tabResponse || "headers";
+            url = `/flows/${flow.id}/request/${tabRequest}/response/${tabResponse}`;
+        } else {
+            url = `/flows/${flow.id}/${state.ui.flow.tabResponse}`;
+        }
     } else {
         url = "/flows";
     }
