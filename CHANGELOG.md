@@ -21,6 +21,8 @@
   ([#7749](https://github.com/mitmproxy/mitmproxy/pull/7749), @mhils)
 - Display local timezone in the Timing tab of mitmweb.
   ([#7804](https://github.com/mitmproxy/mitmproxy/pull/7804), @lups2000)
+- Prevent showing the quit message in the console when no flows are available under specific configurations.
+  ([#7833](https://github.com/mitmproxy/mitmproxy/pull/7833), @lups2000)
 
 ## 25 May 2025: mitmproxy 12.1.1
 
