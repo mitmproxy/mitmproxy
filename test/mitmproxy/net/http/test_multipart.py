@@ -15,7 +15,7 @@ def test_decode():
         "--{0}--".format(boundary).encode()
     )
     form = multipart.decode_multipart(
-        f"multipart/form-data; boundary={boundary}", content
+        f"multipart/form-data; {boundary=!s}", content
     )
 
     assert len(form) == 2
@@ -24,7 +24,7 @@ def test_decode():
 
     boundary = "boundary茅莽"
     result = multipart.decode_multipart(
-        f"multipart/form-data; boundary={boundary}", content
+        f"multipart/form-data; {boundary=!s}", content
     )
     assert result == []
 

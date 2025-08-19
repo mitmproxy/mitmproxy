@@ -671,7 +671,7 @@ class FlowContent(RequestHandler):
             filename = self.flow.request.path.split("?")[0].split("/")[-1]
 
         filename = re.sub(r'[^-\w" .()]', "", filename)
-        cd = f"attachment; filename={filename}"
+        cd = f"attachment; {filename=!s}"
         self.set_header("Content-Disposition", cd)
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
