@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix mitmweb auth cookie always using the default `web_port` option.
+  ([#7827](https://github.com/mitmproxy/mitmproxy/pull/7827), @sujaldev)
 - fix: missing content-length header in curl export
   ([#7810](https://github.com/mitmproxy/mitmproxy/pull/7810), @mheguy)
 - fix: update log message with correct header name

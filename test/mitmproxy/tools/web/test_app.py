@@ -83,10 +83,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def auth_cookie(self) -> str:
         auth_cookie = create_signed_value(
             secret=self._app.settings["cookie_secret"],
-            name=self._app.settings["auth_cookie_name"],
+            name=self._app.settings["auth_cookie_name"](),
             value=app.AuthRequestHandler.AUTH_COOKIE_VALUE,
         ).decode()
-        return f"{self._app.settings['auth_cookie_name']}={auth_cookie}"
+        return f"{self._app.settings['auth_cookie_name']()}={auth_cookie}"
 
     def fetch(self, *args, **kwargs) -> httpclient.HTTPResponse:
         kwargs.setdefault("headers", {}).setdefault("Cookie", self.auth_cookie)
@@ -615,3 +615,15 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             assert e.code == 403
         else:
             assert False
+
+    def test_auth_cookie_port_suffix_modification(self):
+        opts = self.master.options
+
+        old_port = opts.web_port
+        new_port = 8082
+        opts.web_port = new_port
+
+        try:
+            assert self._app.settings["auth_cookie_name"]().endswith(str(new_port))
+        finally:
+            opts.web_port = old_port
