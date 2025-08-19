@@ -421,7 +421,7 @@ class DNSMessage(serializable.SerializableDataclass):
                 offset += Question.HEADER.size
                 msg.questions.append(Question(name=name, type=type, class_=class_))
             except struct.error as e:
-                raise struct.error(f"question #{i}: {str(e)}")
+                raise struct.error(f"question #{i}: {e}")
 
         def unpack_rrs(
             section: list[ResourceRecord], section_name: str, count: int
@@ -449,7 +449,7 @@ class DNSMessage(serializable.SerializableDataclass):
                     section.append(ResourceRecord(name, type, class_, ttl, data))
                     offset += len_data
                 except struct.error as e:
-                    raise struct.error(f"{section_name} #{i}: {str(e)}")
+                    raise struct.error(f"{section_name} #{i}: {e}")
 
         unpack_rrs(msg.answers, "answer", len_answers)
         unpack_rrs(msg.authorities, "authority", len_authorities)

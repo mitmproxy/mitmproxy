@@ -304,7 +304,7 @@ class RequestHandler(AuthRequestHandler):
         try:
             return json.loads(self.request.body.decode())
         except Exception as e:
-            raise APIError(400, f"Malformed JSON: {str(e)}")
+            raise APIError(400, f"Malformed JSON: {e}")
 
     @property
     def filecontents(self):

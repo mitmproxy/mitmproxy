@@ -398,7 +398,7 @@ class _Placeholder(Generic[T]):
         return f"Placeholder:{self._obj!r}"
 
     def __str__(self):
-        return f"Placeholder:{str(self._obj)}"
+        return f"Placeholder:{self._obj}"
 
 
 # noinspection PyPep8Naming

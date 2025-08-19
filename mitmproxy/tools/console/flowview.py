@@ -436,7 +436,7 @@ class FlowDetails(tabs.Tabs):
 
             def rr_text(rr: dns.ResourceRecord):
                 return urwid.Text(
-                    f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}"
+                    f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {rr}"
                 )
 
             txt = []

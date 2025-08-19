@@ -486,7 +486,7 @@ class ClientQuicLayer(QuicLayer):
             )
         except ValueError as e:
             msgs = b"\n".join(self.handshake_datagram_buf)
-            dbg = f"Cannot parse ClientHello: {str(e)} ({msgs.hex()})"
+            dbg = f"Cannot parse ClientHello: {e} ({msgs.hex()})"
             self.handshake_datagram_buf.clear()
             return False, dbg
 
