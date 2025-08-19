@@ -988,9 +988,7 @@ class Request(Message):
             on generating the boundary.
             """
             boundary = "-" * 20 + binascii.hexlify(os.urandom(16)).decode()
-            self.headers["content-type"] = ct = (
-                f"multipart/form-data; {boundary=!s}"
-            )
+            self.headers["content-type"] = ct = f"multipart/form-data; {boundary=!s}"
         self.content = multipart.encode_multipart(ct, value)
 
     @property
