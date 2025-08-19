@@ -65,6 +65,10 @@ class WebAuth:
         # noinspection HttpUrlsUsage
         return f"http://{ctx.options.web_host}:{ctx.options.web_port}/{auth}"
 
+    @staticmethod
+    def auth_cookie_name() -> str:
+        return f"mitmproxy-auth-{ctx.options.web_port}"
+
     def is_valid_password(self, password: str) -> bool:
         if self._password.startswith("$"):
             try:

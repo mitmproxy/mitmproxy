@@ -254,7 +254,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
                     self.auth_fail(bool(password))
                     return None
                 self.set_signed_cookie(
-                    self.settings["auth_cookie_name"],
+                    self.settings["auth_cookie_name"](),
                     self.AUTH_COOKIE_VALUE,
                     expires_days=400,
                     httponly=True,
@@ -266,7 +266,7 @@ class AuthRequestHandler(tornado.web.RequestHandler):
 
     def get_current_user(self) -> bool:
         return (
-            self.get_signed_cookie(self.settings["auth_cookie_name"], min_version=2)
+            self.get_signed_cookie(self.settings["auth_cookie_name"](), min_version=2)
             == self.AUTH_COOKIE_VALUE
         )
 
@@ -912,7 +912,6 @@ class Application(tornado.web.Application):
         self, master: mitmproxy.tools.web.master.WebMaster, debug: bool
     ) -> None:
         self.master = master
-        self.master.options.changed.connect(self.update_web_port)
         auth_addon: WebAuth = master.addons.get("webauth")
         super().__init__(
             handlers=handlers,  # type: ignore  # https://github.com/tornadoweb/tornado/pull/3455
@@ -925,11 +924,5 @@ class Application(tornado.web.Application):
             autoreload=False,
             transforms=[GZipContentAndFlowFiles],
             is_valid_password=auth_addon.is_valid_password,
-            auth_cookie_name=f"mitmproxy-auth-{master.options.web_port}",
+            auth_cookie_name=auth_addon.auth_cookie_name,
         )
-
-    def update_web_port(self, updated: set[str]):
-        if "web_port" in updated:
-            self.settings["auth_cookie_name"] = (
-                f"mitmproxy-auth-{self.master.options.web_port}"
-            )
