@@ -41,7 +41,7 @@ class Command:
     def __repr__(self):
         x = self.__dict__.copy()
         x.pop("blocking", None)
-        return f"{type(self).__name__}({repr(x)})"
+        return f"{type(self).__name__}({x!r})"
 
 
 class RequestWakeup(Command):

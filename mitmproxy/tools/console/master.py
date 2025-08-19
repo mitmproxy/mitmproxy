@@ -89,7 +89,7 @@ class ConsoleMaster(master.Master):
             signals.status_message.send(
                 message=(
                     entry.level,
-                    f"{entry.level.title()}: {str(entry.msg).lstrip()}",
+                    f"{entry.level.title()}: {entry.msg.lstrip()}",
                 ),
                 expire=5,
             )

@@ -203,7 +203,7 @@ if __name__ == "__main__":
         )
         print(f"Last update: {docker_last_updated.isoformat(timespec='minutes')}")
         assert docker_last_updated > datetime.datetime.now(
-            datetime.timezone.utc
+            datetime.UTC
         ) - datetime.timedelta(hours=2)
 
     print("")
