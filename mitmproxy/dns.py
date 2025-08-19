@@ -585,4 +585,4 @@ class DNSFlow(flow.Flow):
         super().set_state(state)
 
     def __repr__(self) -> str:
-        return f"<DNSFlow\r\n  request={repr(self.request)}\r\n  response={repr(self.response)}\r\n>"
+        return f"<DNSFlow\r\n  request={self.request!r}\r\n  response={self.response!r}\r\n>"

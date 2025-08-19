@@ -491,7 +491,7 @@ class Message(serializable.Serializable):
         self.headers["content-encoding"] = encoding
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
-            raise ValueError(f"Invalid content encoding {repr(encoding)}")
+            raise ValueError(f"Invalid content encoding {encoding!r}")
 
     def json(self, **kwargs: Any) -> Any:
         """
