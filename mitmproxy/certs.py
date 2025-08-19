@@ -122,18 +122,18 @@ class Cert(serializable.Serializable):
             return self._cert.not_valid_before_utc  # type: ignore
         except AttributeError:  # pragma: no cover
             # cryptography < 42.0
-            return self._cert.not_valid_before.replace(tzinfo=datetime.timezone.utc)
+            return self._cert.not_valid_before.replace(tzinfo=datetime.UTC)
 
     @property
     def notafter(self) -> datetime.datetime:
         try:
             return self._cert.not_valid_after_utc  # type: ignore
         except AttributeError:  # pragma: no cover
-            return self._cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
+            return self._cert.not_valid_after.replace(tzinfo=datetime.UTC)
 
     def has_expired(self) -> bool:
         if sys.version_info < (3, 11):  # pragma: no cover
-            return datetime.datetime.now(datetime.timezone.utc) > self.notafter
+            return datetime.datetime.now(datetime.UTC) > self.notafter
         return datetime.datetime.now(datetime.UTC) > self.notafter
 
     @property
