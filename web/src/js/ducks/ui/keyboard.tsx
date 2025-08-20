@@ -1,16 +1,27 @@
 import { selectTab } from "./flow";
 import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
-import { tabsForFlow } from "../../components/FlowView";
 import { runCommand } from "../../utils";
 import { AppDispatch, RootState } from "../store";
+import { tabsForFlow } from "./utils";
 
-export function onKeyDown(e: KeyboardEvent) {
+export type OnKeyDownOptions = {
+    includeKeys?: string[];
+    excludeKeys?: string[];
+};
+
+export function onKeyDown(e: KeyboardEvent, options: OnKeyDownOptions = {}) {
     //console.debug("onKeyDown", e)
     if (e.ctrlKey || e.metaKey) {
         return () => {};
     }
     const key = e.key;
+    if (
+        (options.includeKeys && !options.includeKeys.includes(key)) ||
+        (options.excludeKeys && options.excludeKeys.includes(key))
+    ) {
+        return () => {};
+    }
     e.preventDefault();
     return (dispatch: AppDispatch, getState: () => RootState) => {
         const { flows } = getState();
@@ -56,7 +67,7 @@ export function onKeyDown(e: KeyboardEvent) {
             case "ArrowLeft": {
                 if (!flow) break;
                 const tabs = tabsForFlow(flow);
-                const currentTab = getState().ui.flow.tab;
+                const currentTab = getState().ui.flow.tabResponse;
                 const nextTab =
                     tabs[
                         (Math.max(0, tabs.indexOf(currentTab)) -
@@ -72,7 +83,7 @@ export function onKeyDown(e: KeyboardEvent) {
             case "ArrowRight": {
                 if (!flow) break;
                 const tabs = tabsForFlow(flow);
-                const currentTab = getState().ui.flow.tab;
+                const currentTab = getState().ui.flow.tabResponse;
                 const nextTab =
                     tabs[
                         (Math.max(0, tabs.indexOf(currentTab)) + 1) %
