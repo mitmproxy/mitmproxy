@@ -31,7 +31,6 @@ from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
-from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
@@ -795,7 +794,7 @@ class Events(RequestHandler):
 
 class Options(RequestHandler):
     def get(self):
-        self.write(optmanager.dump_dicts(self.master.options))
+        self.write(self.master.options.dump_dicts())
 
     def put(self):
         update = self.json
@@ -808,7 +807,7 @@ class Options(RequestHandler):
 class SaveOptions(RequestHandler):
     def post(self):
         # try:
-        #     optmanager.save(self.master.options, CONFIG_PATH, True)
+        #     self.master.options.save(CONFIG_PATH, True)
         # except Exception as err:
         #     raise APIError(400, "{}".format(err))
         pass
