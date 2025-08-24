@@ -811,7 +811,7 @@ dev = [
     { name = "hypothesis", specifier = "==6.130.6" },
     { name = "maturin", specifier = "==1.9.2" },
     { name = "mypy", specifier = "==1.17.1" },
-    { name = "pdoc", specifier = "==15.0.2" },
+    { name = "pdoc", specifier = "==15.0.4" },
     { name = "pyinstaller", specifier = "==6.15.0" },
     { name = "pyinstaller-hooks-contrib", specifier = "==2025.8" },
     { name = "pytest", specifier = "==8.3.5" },
@@ -1015,16 +1015,16 @@ wheels = [
 
 [[package]]
 name = "pdoc"
-version = "15.0.2"
+version = "15.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jinja2" },
     { name = "markupsafe" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/29/65/7f457d6551920a64fd31f54d19c1624e44b9a610edc1a8cc32c31c2273a1/pdoc-15.0.2.tar.gz", hash = "sha256:854ca0d9ec0efb80ba1f911f62a1daee57bdc4f2da3a4b60071a47e5f7e6e924", size = 154726 }
+sdist = { url = "https://files.pythonhosted.org/packages/91/5c/e94c1ab4aa2f8a9cc29d81e1c513c6216946cb3a90957ef7115b12e9363d/pdoc-15.0.4.tar.gz", hash = "sha256:cf9680f10f5b4863381f44ef084b1903f8f356acb0d4cc6b64576ba9fb712c82", size = 155678 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/17/1bbe7dcccbf77f71deaff71be6d9b1bd96d3332e212163a133f54142fed4/pdoc-15.0.2-py3-none-any.whl", hash = "sha256:0ea70b1bc13c836bcb29347884760cca5b30d668c62b50c0edc823846bef0b43", size = 144455 },
+    { url = "https://files.pythonhosted.org/packages/fd/2c/87250ac73ca8730b2c4e0185b573585f0b42e09562132e6c29d00b3a9bb9/pdoc-15.0.4-py3-none-any.whl", hash = "sha256:f9028e85e7bb8475b054e69bde1f6d26fc4693d25d9fa1b1ce9009bec7f7a5c4", size = 145978 },
 ]
 
 [[package]]
