@@ -791,7 +791,7 @@ requires-dist = [
     { name = "pyopenssl", specifier = ">=24.3,<=25.1.0" },
     { name = "pyparsing", specifier = ">=2.4.2,<=3.2.3" },
     { name = "pyperclip", specifier = "<=1.9.0,>=1.9.0" },
-    { name = "ruamel-yaml", specifier = ">=0.18.10,<=0.18.14" },
+    { name = "ruamel-yaml", specifier = ">=0.18.10,<=0.18.15" },
     { name = "sortedcontainers", specifier = ">=2.3,<=2.4.0" },
     { name = "tornado", specifier = ">=6.5.0,<=6.5.2" },
     { name = "typing-extensions", marker = "python_full_version < '3.13'", specifier = ">=4.13.2,<=4.14" },
