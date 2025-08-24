@@ -65,7 +65,7 @@ dev = [
     "hypothesis==6.130.6",
     "maturin==1.9.2",
     "pdoc==15.0.2",
-    "pyinstaller==6.14.2",
+    "pyinstaller==6.15.0",
     "pyinstaller-hooks-contrib==2025.8",
     "pytest-asyncio==0.26.0",
     "pytest-cov==6.1.0",
