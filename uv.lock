@@ -822,14 +822,14 @@ dev = [
     { name = "requests", specifier = "==2.32.4" },
     { name = "ruff", specifier = "==0.11.2" },
     { name = "tox", specifier = "==4.28.4" },
-    { name = "tox-uv", specifier = "==1.25.0" },
+    { name = "tox-uv", specifier = "==1.28.0" },
     { name = "types-requests", specifier = "==2.32.4.20250611" },
     { name = "wheel", specifier = "==0.45.1" },
 ]
 ruff = [{ name = "ruff", specifier = "==0.11.2" }]
 tox = [
     { name = "tox", specifier = "==4.28.4" },
-    { name = "tox-uv", specifier = "==1.25.0" },
+    { name = "tox-uv", specifier = "==1.28.0" },
 ]
 
 [[package]]
@@ -1577,16 +1577,16 @@ wheels = [
 
 [[package]]
 name = "tox-uv"
-version = "1.25.0"
+version = "1.28.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
     { name = "tox" },
     { name = "uv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/3a/3e445f25978a716ba6674f33f687d9336d0312086a277a778a5e9e9220d7/tox_uv-1.25.0.tar.gz", hash = "sha256:59ee5e694c41fef7bbcf058f22a5f9b6a8509698def2ea60c08554f4e36b9fcc", size = 21114 }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/9a/f4b675ebcbd623854129891e87045f80c1d8e91b2957496f1fe6e463f291/tox_uv-1.28.0.tar.gz", hash = "sha256:a06ff909f73232b2b7965de19090d887b12b44e44eb0843b2c07266d2957ade2", size = 23265 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/a7/f5c29e0e6faaccefcab607f672b176927144e9412c8183d21301ea2a6f6c/tox_uv-1.25.0-py3-none-any.whl", hash = "sha256:50cfe7795dcd49b2160d7d65b5ece8717f38cfedc242c852a40ec0a71e159bf7", size = 16431 },
+    { url = "https://files.pythonhosted.org/packages/1f/ac/b32555d190c4440b8d2779d4a19439e5fbd5a3950f7e5a17ead7c7d30cad/tox_uv-1.28.0-py3-none-any.whl", hash = "sha256:3fbe13fa6eb6961df5512e63fc4a5cc0c8d264872674ee09164649f441839053", size = 17225 },
 ]
 
 [[package]]
