@@ -1,9 +1,9 @@
-FROM python:3.13-bookworm AS wheelbuilder
+FROM python:3.13-trixie AS wheelbuilder
 
 COPY mitmproxy-*-py3-none-any.whl /wheels/
 RUN pip install wheel && pip wheel --wheel-dir /wheels /wheels/*.whl
 
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim-trixie
 
 RUN useradd -mU mitmproxy
 RUN apt-get update \

@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Docker images are now build with Debian Trixie.
 - Fix mitmweb auth cookie always using the default `web_port` option.
   ([#7827](https://github.com/mitmproxy/mitmproxy/pull/7827), @sujaldev)
 - fix: missing content-length header in curl export
