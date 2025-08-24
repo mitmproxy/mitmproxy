@@ -26,9 +26,9 @@ jobs:
     name: ${{ matrix.env }}
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/setup-uv@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/uv-sync@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/setup-uv@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/uv-sync@16608e9df5912db0e3ad86a9b90e25e933f2496b
         with:
           args: --only-group tox
 
@@ -49,9 +49,9 @@ jobs:
             py: "3.12"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/setup-uv@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/uv-sync@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/setup-uv@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/uv-sync@16608e9df5912db0e3ad86a9b90e25e933f2496b
         with:
           args: --only-group tox
 
@@ -86,9 +86,9 @@ jobs:
         run: |
           apt-get update
           apt-get install --no-install-recommends -y git ca-certificates binutils
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/setup-uv@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/uv-sync@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/setup-uv@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/uv-sync@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
 
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
@@ -122,7 +122,7 @@ jobs:
           path: release/dist
 
   build-wheel:
-    uses: mhils/workflows/.github/workflows/python-build.yml@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+    uses: mhils/workflows/.github/workflows/python-build.yml@16608e9df5912db0e3ad86a9b90e25e933f2496b
     with:
       artifact: binaries.wheel
 
@@ -134,9 +134,9 @@ jobs:
         startsWith(github.ref, 'refs/tags/')
       )
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/setup-uv@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/uv-sync@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/setup-uv@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/uv-sync@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - run: uv pip install .  # pyinstaller 5.9 does not like pyproject.toml + editable installs.
       - run: python -u release/build.py installbuilder-installer msix-installer
         env:
@@ -150,7 +150,7 @@ jobs:
   test-web-ui:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-wheel
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - uses: actions/download-artifact@v5
         with:
           name: binaries.wheel
@@ -189,9 +189,9 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/setup-uv@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/uv-sync@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/setup-uv@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/uv-sync@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.139.3/hugo_extended_0.139.3_linux-amd64.deb
           echo "3e58800d1fee57269208d07d104ae1a6ab886615344099f2dca0c6ad5279bc11 hugo_extended_0.139.3_linux-amd64.deb" | sha256sum -c
@@ -223,7 +223,7 @@ jobs:
     - build-wheel
     - build-windows-installer
     - docs
-    uses: mhils/workflows/.github/workflows/alls-green.yml@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+    uses: mhils/workflows/.github/workflows/alls-green.yml@16608e9df5912db0e3ad86a9b90e25e933f2496b
     with:
       jobs: ${{ toJSON(needs) }}
       allowed-skips: build-windows-installer
@@ -243,7 +243,7 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - uses: actions/download-artifact@v5
         with:
           name: binaries.wheel
@@ -321,9 +321,9 @@ jobs:
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
     steps:
-      - uses: mhils/workflows/checkout@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/setup-uv@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
-      - uses: mhils/workflows/uv-sync@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/setup-uv@16608e9df5912db0e3ad86a9b90e25e933f2496b
+      - uses: mhils/workflows/uv-sync@16608e9df5912db0e3ad86a9b90e25e933f2496b
         with:
           args: --only-group deploy
 
