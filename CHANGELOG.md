@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 24 August 2025: mitmproxy 12.1.2
+
 - Docker images are now build with Debian Trixie.
   ([#7851](https://github.com/mitmproxy/mitmproxy/pull/7851), @mhils)
 - Fix mitmweb auth cookie always using the default `web_port` option.
