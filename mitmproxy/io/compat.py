@@ -502,6 +502,8 @@ converters = {
 
 
 def migrate_flow(flow_data: dict[bytes | str, Any]) -> dict[bytes | str, Any]:
+    if not isinstance(flow_data, dict):
+        raise ValueError(f"Invalid flow: {flow_data=}")
     while True:
         flow_version = flow_data.get(b"version", flow_data.get("version"))
 
