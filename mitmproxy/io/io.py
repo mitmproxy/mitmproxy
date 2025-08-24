@@ -70,6 +70,8 @@ class FlowReader:
                         tnetstring.load(self.fo),
                     )
                     try:
+                        if not isinstance(loaded, dict):
+                            raise ValueError(f"Invalid flow: {loaded=}")
                         yield flow.Flow.from_state(compat.migrate_flow(loaded))
                     except ValueError as e:
                         raise exceptions.FlowReadException(e) from e
