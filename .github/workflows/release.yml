@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .github/node-version.txt
-      - uses: mhils/workflows/setup-python@2a12a934b7c0db7fddaeacd20c542bdfcf9b2a19
+      - uses: mhils/workflows/setup-python@16608e9df5912db0e3ad86a9b90e25e933f2496b
       - run: ./release/release.py ${{ inputs.version }} ${{ inputs.skip-branch-status-check }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # this token works with the GraphQL API
