@@ -28,6 +28,12 @@
 - Prevent showing the quit message in the console when no flows are available under specific configurations.
   ([#7833](https://github.com/mitmproxy/mitmproxy/pull/7833), @lups2000)
 
+### Security Fixes
+
+* [GHSA-847f-9342-265h](https://github.com/python-hyper/h2/security/advisories/GHSA-847f-9342-265h):
+  Upgrade hyper-h2 to fix a request smuggling vulnerability that affects mitmproxy's
+  HTTP/2 -> HTTP/1 translation. (@mhils)
+
 ## 25 May 2025: mitmproxy 12.1.1
 
 - Fix a race condition when updating the flow list in mitmweb.
