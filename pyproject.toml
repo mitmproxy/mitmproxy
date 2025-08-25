@@ -62,7 +62,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "click==8.1.8",
-    "hypothesis==6.136.7",
+    "hypothesis==6.130.6",
     "maturin==1.8.3",
     "pdoc==15.0.2",
     "pyinstaller==6.12.0",
