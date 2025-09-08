@@ -167,3 +167,10 @@ def mitmweb(args=None) -> int | None:  # pragma: no cover
 
     run(web.master.WebMaster, cmdline.mitmweb, args)
     return None
+
+
+def mitmwebnext(args=None) -> int | None:  # pragma: no cover
+    from mitmproxy.tools import webnext
+
+    run(webnext.master.WebMaster, cmdline.mitmweb, args)
+    return None
