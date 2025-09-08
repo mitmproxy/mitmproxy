@@ -13,7 +13,7 @@ class Options(optmanager.OptManager):
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self.add_option(
-            "server", bool, True, "Start a proxy server. Enabled by default."
+            "server", bool, True, "Start a proxy server."
         )
         self.add_option(
             "showhost",
@@ -132,7 +132,7 @@ class Options(optmanager.OptManager):
             "http2",
             bool,
             True,
-            "Enable/disable HTTP/2 support. HTTP/2 support is enabled by default.",
+            "Enable/disable HTTP/2 support.",
         )
         self.add_option(
             "http2_ping_keepalive",
@@ -148,27 +148,25 @@ class Options(optmanager.OptManager):
             "http3",
             bool,
             True,
-            "Enable/disable support for QUIC and HTTP/3. Enabled by default.",
+            "Enable/disable support for QUIC and HTTP/3.",
         )
         self.add_option(
             "http_connect_send_host_header",
             bool,
             True,
-            "Include host header with CONNECT requests. Enabled by default.",
+            "Include host header with CONNECT requests.",
         )
         self.add_option(
             "websocket",
             bool,
             True,
-            "Enable/disable WebSocket support. "
-            "WebSocket support is enabled by default.",
+            "Enable/disable WebSocket support.",
         )
         self.add_option(
             "rawtcp",
             bool,
             True,
-            "Enable/disable raw TCP connections. "
-            "TCP connections are enabled by default. ",
+            "Enable/disable raw TCP connections.",
         )
         self.add_option(
             "ssl_insecure",
