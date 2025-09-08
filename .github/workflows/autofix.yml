@@ -24,7 +24,7 @@ jobs:
 
       - run: web/gen/all
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .github/node-version.txt
       - run: npm ci
