@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PUSH_TOKEN }}  # this token works to push to the protected main branch.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .github/node-version.txt
       - uses: mhils/workflows/setup-python@16608e9df5912db0e3ad86a9b90e25e933f2496b

@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@16608e9df5912db0e3ad86a9b90e25e933f2496b
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .github/node-version.txt
       - name: Cache Node.js modules
@@ -290,7 +290,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v3
         with:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
@@ -342,7 +342,7 @@ jobs:
           merge-multiple: true
           path: release/dist
       - id: provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: 'release/dist/*'
       - run: |
