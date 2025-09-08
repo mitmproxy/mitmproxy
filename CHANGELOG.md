@@ -6,6 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
+- Add new menu_select_keys option.
+  ([#7799](https://github.com/mitmproxy/mitmproxy/pull/7799), @chedieck)
 
 
 ## 24 August 2025: mitmproxy 12.1.2

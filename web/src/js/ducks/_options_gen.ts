@@ -39,6 +39,7 @@ export interface OptionsState {
     listen_port: number | undefined;
     map_local: string[];
     map_remote: string[];
+    menu_select_keys: string;
     mode: string[];
     modify_body: string[];
     modify_headers: string[];
@@ -145,6 +146,7 @@ export const defaultState: OptionsState = {
     listen_port: undefined,
     map_local: [],
     map_remote: [],
+    menu_select_keys: "123456789abcdefghijklmnoprstuvwxyz",
     mode: ["regular"],
     modify_body: [],
     modify_headers: [],
