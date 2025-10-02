@@ -44,7 +44,7 @@ dependencies = [
     "ldap3>=2.8,<=2.9.1",
     "mitmproxy_rs>=0.12.6,<0.13",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.1",
-    "passlib>=1.6.5,<=1.7.4",
+    "libpass>=1.9.2",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
     "pyOpenSSL>=24.3,<=25.1.0",
     "pyparsing>=2.4.2,<=3.2.3",

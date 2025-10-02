@@ -687,6 +687,15 @@ wheels = [
 ]
 
 [[package]]
+name = "libpass"
+version = "1.9.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/eb/1ac3da83c49530d44bdc6ff75cf8803b4ef28904e151332326622eef67cb/libpass-1.9.2.tar.gz", hash = "sha256:6ec5b7dc9e7d4152290c59f7f27499a8d644179e3271bc626199ebd3e117890a", size = 692682, upload-time = "2025-10-01T15:56:34.716Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1b/f1/41b759a63e8ef3522cb680c65d1e1745f50d65679ebc9e9c39372e04ef3c/libpass-1.9.2-py3-none-any.whl", hash = "sha256:588beea8a79f7d4b6864d003c7ac3445b1236131add03464078fbc2b622a3136", size = 306907, upload-time = "2025-10-01T15:56:33.71Z" },
+]
+
+[[package]]
 name = "macholib"
 version = "1.16.3"
 source = { registry = "https://pypi.org/simple" }
@@ -794,9 +803,9 @@ dependencies = [
     { name = "hyperframe" },
     { name = "kaitaistruct" },
     { name = "ldap3" },
+    { name = "libpass" },
     { name = "mitmproxy-rs" },
     { name = "msgpack" },
-    { name = "passlib" },
     { name = "publicsuffix2" },
     { name = "pydivert", marker = "sys_platform == 'win32'" },
     { name = "pyopenssl" },
@@ -859,9 +868,9 @@ requires-dist = [
     { name = "hyperframe", specifier = ">=6.0,<=6.1.0" },
     { name = "kaitaistruct", specifier = "<=0.10,>=0.10" },
     { name = "ldap3", specifier = ">=2.8,<=2.9.1" },
+    { name = "libpass", specifier = ">=1.9.2" },
     { name = "mitmproxy-rs", specifier = ">=0.12.6,<0.13" },
     { name = "msgpack", specifier = ">=1.0.0,<=1.1.1" },
-    { name = "passlib", specifier = ">=1.6.5,<=1.7.4" },
     { name = "publicsuffix2", specifier = ">=2.20190812,<=2.20191221" },
     { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=2.1.0" },
     { name = "pyopenssl", specifier = ">=24.3,<=25.1.0" },
@@ -1069,15 +1078,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b96ca8f8c3ba19e6a61c8253c72794544580a7b6c24d/packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f", size = 165727, upload-time = "2025-04-19T11:48:59.673Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469, upload-time = "2025-04-19T11:48:57.875Z" },
-]
-
-[[package]]
-name = "passlib"
-version = "1.7.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b6/06/9da9ee59a67fae7761aab3ccc84fa4f3f33f125b370f1ccdb915bf967c11/passlib-1.7.4.tar.gz", hash = "sha256:defd50f72b65c5402ab2c573830a6978e5f202ad0d984793c8dde2c4152ebe04", size = 689844, upload-time = "2020-10-08T19:00:52.121Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3b/a4/ab6b7589382ca3df236e03faa71deac88cae040af60c071a78d254a62172/passlib-1.7.4-py2.py3-none-any.whl", hash = "sha256:aa6bca462b8d8bda89c70b382f0c298a20b5560af6cbfa2dce410c0a2fb669f1", size = 525554, upload-time = "2020-10-08T19:00:49.856Z" },
 ]
 
 [[package]]
