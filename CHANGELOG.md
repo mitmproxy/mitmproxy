@@ -8,7 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Passlib version and fork updated to address bcrypt error.
-
+  ([#7896](https://github.com/mitmproxy/mitmproxy/pull/7896), @crclark96)
 
 ## 24 August 2025: mitmproxy 12.1.2
 
