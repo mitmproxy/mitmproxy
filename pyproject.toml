@@ -62,7 +62,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "click==8.2.1",
-    "hypothesis==6.136.7",
+    "hypothesis==6.140.2",
     "maturin==1.9.3",
     "pdoc==15.0.4",
     "pyinstaller==6.15.0",
@@ -79,6 +79,7 @@ dev = [
     "types-requests==2.32.4.20250809",
     {include-group = "tox"},
     {include-group = "ruff"},
+    "windows-curses==2.4.1; sys.platform == 'win32'",
 ]
 tox = [
     "tox==4.28.4",
