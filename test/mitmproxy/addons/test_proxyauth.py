@@ -125,7 +125,7 @@ class TestProxyAuth:
             assert not f.response
             assert not f.request.headers.get("Authorization")
 
-    def test_configure(self, monkeypatch, tdata):
+    def test_configure(self, monkeypatch, tdata, tmp_path):
         monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
         monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
 
@@ -196,21 +196,28 @@ class TestProxyAuth:
             ):
                 ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
 
-            with pytest.raises(
-                exceptions.OptionsError, match="Could not open htpasswd file"
-            ):
-                ctx.configure(
-                    pa, proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt")
-                )
+            # test htpasswd
+            # Manually create a SHA1-hashed password for "test:test".
+            # The htpasswd file in the repo uses unsalted MD5, which we don't support.
+            p = tmp_path / "htpasswd"
+            p.write_text("test:{SHA}qUqP5cyxm6YcTAhz05Hph5gvu9M=\n")
+            ctx.configure(pa, proxyauth=f"@{p}")
+            assert isinstance(pa.validator, proxyauth.Htpasswd)
+            assert pa.validator("test", "test")
+            assert not pa.validator("test", "foo")
+
+            # nonexistent file
             with pytest.raises(
                 exceptions.OptionsError, match="Could not open htpasswd file"
             ):
                 ctx.configure(pa, proxyauth="@nonexistent")
 
-            ctx.configure(pa, proxyauth="@" + tdata.path("mitmproxy/net/data/htpasswd"))
-            assert isinstance(pa.validator, proxyauth.Htpasswd)
-            assert pa.validator("test", "test")
-            assert not pa.validator("test", "foo")
+            # malformed file
+            p.write_text("malformed\n")
+            with pytest.raises(
+                exceptions.OptionsError, match="Could not open htpasswd file"
+            ):
+                ctx.configure(pa, proxyauth=f"@{p}")
 
     def test_handlers(self):
         up = proxyauth.ProxyAuth()

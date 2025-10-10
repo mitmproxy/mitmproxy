@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Replace `htpasswd` file parser with a custom implementation to migrate off unmaintained
+  `passlib` dependency. The new parser only supports bcrypt and SHA-1 hashing.
+  Contributions for additional formats are welcome as long as they don't introduce new
+  dependencies.
+  ([#7906](https://github.com/mitmproxy/mitmproxy/pull/7906), @mhils)
 
 ## 24 August 2025: mitmproxy 12.1.2
 

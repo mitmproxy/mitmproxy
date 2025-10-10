@@ -33,6 +33,7 @@ dependencies = [
     "aioquic>=1.2.0,<=1.2.0",
     "argon2-cffi>=23.1.0,<=25.1.0",
     "asgiref>=3.2.10,<=3.9.1",
+    "bcrypt>=5.0.0,<=5.0.0",
     "Brotli>=1.0,<=1.1.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
     "cryptography>=42.0,<45.1",  # relaxed upper bound here to get security fixes
@@ -44,7 +45,6 @@ dependencies = [
     "ldap3>=2.8,<=2.9.1",
     "mitmproxy_rs>=0.12.6,<0.13",  # relaxed upper bound here: we control this
     "msgpack>=1.0.0,<=1.1.1",
-    "passlib>=1.6.5,<=1.7.4",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
     "pyOpenSSL>=24.3,<=25.1.0",
     "pyparsing>=2.4.2,<=3.2.3",
@@ -315,7 +315,7 @@ dependency_groups = []
 commands = [["mypy"]]
 
 [tool.tox.env.individual_coverage]
-commands = [["python", { default = ["./test/individual_coverage.py"], replace = "posargs", extend = true }]]
+commands = [["python", "./test/individual_coverage.py", { default = [], replace = "posargs", extend = true }]]
 
 [tool.tox.env.old-dependencies]
 uv_resolution = "lowest-direct"
