@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
+  Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
+  ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
 - Replace `htpasswd` file parser with a custom implementation to migrate off unmaintained
   `passlib` dependency. The new parser only supports bcrypt and SHA-1 hashing.
   Contributions for additional formats are welcome as long as they don't introduce new
