@@ -105,6 +105,9 @@ def common_options(parser, opts):
     group = parser.add_argument_group("Modify Headers")
     opts.make_parser(group, "modify_headers", metavar="PATTERN", short="H")
 
+    # TCP Options
+    opts.make_parser(group, "tcp_timeout", metavar="SECONDS")
+
 
 def mitmproxy(opts):
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
