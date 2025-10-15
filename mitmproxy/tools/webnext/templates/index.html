@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>mitmproxy</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href=".{{ static_url('vite.svg') }}"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      crossorigin
+      href=".{{ static_url('assets/index.css') }}"
+    />
+    <script
+      type="module"
+      crossorigin
+      src=".{{ static_url('assets/index.js') }}"
+      data-xsrf="{{ xsrf_token }}"
+    ></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url(".{{ static_url('assets/Inter-VariableFont_opsz_wght.ttf') }}");
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
