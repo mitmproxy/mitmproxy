@@ -8,6 +8,7 @@ import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy.flow import Flow
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -56,7 +57,7 @@ class TAddon:
         pass
 
     @command.command("flow")
-    def flow(self, f: flow.Flow, s: str) -> None:
+    def flow(self, f: Flow, s: str) -> None:
         pass
 
 
