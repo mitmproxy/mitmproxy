@@ -116,10 +116,6 @@
                     "1.1 39464b01f314ad3cb531f46c3049bf58.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 14:59:54 GMT"
                 ],
@@ -150,10 +146,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "23866"
                 ]
             ],
-            "contentLength": 4946,
-            "contentHash": "b643b55c326524222b66cf8d6676c9b640e6417d23aaaa12c8a4ac58216d6586",
+            "contentLength": 23866,
+            "contentHash": "7fd5f643a86976f5711df86ae2d5f9f8137a47c705dee31ccc550215564a5364",
             "timestamp_start": 1680135212.418,
             "timestamp_end": 1680135212.5293427
         }
@@ -244,10 +244,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 09:06:44 GMT"
                 ],
@@ -278,10 +274,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "248261"
                 ]
             ],
-            "contentLength": 36819,
-            "contentHash": "62c365a16e642d4b512700140d3e99371aed31b74edc736f9927b6375b1230c0",
+            "contentLength": 248261,
+            "contentHash": "81d59b89e2c656c6e4aa508b5455f255325d744ec390be54f34c2a7dad4976c1",
             "timestamp_start": 1680135212.542,
             "timestamp_end": 1680135212.5420642
         }
@@ -884,10 +884,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 22:44:19 GMT"
                 ],
@@ -918,10 +914,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "22238"
                 ]
             ],
-            "contentLength": 5167,
-            "contentHash": "8a74d8c765558a54c3fb4eeb2e24367cfca6a889f0d56b7fc179eb722e5f8ebf",
+            "contentLength": 22238,
+            "contentHash": "9bdcfaca52fa8e575767659b70498dd86609e4fd50e913e957fdfa398086c595",
             "timestamp_start": 1680135212.557,
             "timestamp_end": 1680135212.5573125
         }
@@ -1012,10 +1012,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 16:03:05 GMT"
                 ],
@@ -1046,10 +1042,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "10452"
                 ]
             ],
-            "contentLength": 3346,
-            "contentHash": "e6c21f88023539515a971172a00e500b7e4444fbf9506e47ceee126ace246808",
+            "contentLength": 10452,
+            "contentHash": "ebe20255d8922ecbc1a159357d0cb0eb1ef05b8cc5a9d59f2a9f7e6fb585d7d3",
             "timestamp_start": 1680135212.559,
             "timestamp_end": 1680135212.5590725
         }
@@ -1140,10 +1140,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 02:43:50 GMT"
                 ],
@@ -1174,10 +1170,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "2219"
                 ]
             ],
-            "contentLength": 794,
-            "contentHash": "43cb84ef784bafbab5472abc7c396d95fc4468973d6501c83709e40963b2a953",
+            "contentLength": 2219,
+            "contentHash": "6c5cab1c5c34336ac526bb119abe71d870f246cebb4253a4c420b5c4601a22e5",
             "timestamp_start": 1680135212.559,
             "timestamp_end": 1680135212.5590615
         }
@@ -1280,10 +1280,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 20:15:23 GMT"
                 ],
@@ -1314,10 +1310,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "9689"
                 ]
             ],
-            "contentLength": 3346,
-            "contentHash": "1f3ac146af1c45c1a2b4e6c694ecb234382d77b4256524d5ffc365fc8d6130b0",
+            "contentLength": 9689,
+            "contentHash": "a4dcfad01ab92fbd09cad3477fb26184fbb26f164d1302ee79489519b280e22a",
             "timestamp_start": 1680135212.56,
             "timestamp_end": 1680135212.5948346
         }
@@ -1420,10 +1420,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 20:15:23 GMT"
                 ],
@@ -1454,10 +1450,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "9689"
                 ]
             ],
-            "contentLength": 3346,
-            "contentHash": "1f3ac146af1c45c1a2b4e6c694ecb234382d77b4256524d5ffc365fc8d6130b0",
+            "contentLength": 9689,
+            "contentHash": "a4dcfad01ab92fbd09cad3477fb26184fbb26f164d1302ee79489519b280e22a",
             "timestamp_start": 1680135212.56,
             "timestamp_end": 1680135212.5948346
         }
@@ -1560,10 +1560,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 20:15:23 GMT"
                 ],
@@ -1594,10 +1590,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "9689"
                 ]
             ],
-            "contentLength": 3346,
-            "contentHash": "1f3ac146af1c45c1a2b4e6c694ecb234382d77b4256524d5ffc365fc8d6130b0",
+            "contentLength": 9689,
+            "contentHash": "a4dcfad01ab92fbd09cad3477fb26184fbb26f164d1302ee79489519b280e22a",
             "timestamp_start": 1680135212.56,
             "timestamp_end": 1680135212.5999687
         }
@@ -1700,10 +1700,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 20:15:23 GMT"
                 ],
@@ -1734,10 +1730,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "9689"
                 ]
             ],
-            "contentLength": 3346,
-            "contentHash": "1f3ac146af1c45c1a2b4e6c694ecb234382d77b4256524d5ffc365fc8d6130b0",
+            "contentLength": 9689,
+            "contentHash": "a4dcfad01ab92fbd09cad3477fb26184fbb26f164d1302ee79489519b280e22a",
             "timestamp_start": 1680135212.56,
             "timestamp_end": 1680135212.5999687
         }
@@ -2212,10 +2212,6 @@
                     "1.1 05aec04162b0fed6e9762cd1edd66a72.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 19:52:06 GMT"
                 ],
@@ -2246,10 +2242,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "11800"
                 ]
             ],
-            "contentLength": 3969,
-            "contentHash": "3c4880b4b424071aa5e5c5f652b934179099ee8786ea67520b2fadbc4305e5a8",
+            "contentLength": 11800,
+            "contentHash": "a68ed14d0bc3ac8990bf6e6fc3f9f23134ea22032786a07680dc9468af39ab4e",
             "timestamp_start": 1680135212.583,
             "timestamp_end": 1680135212.5831468
         }
@@ -2522,10 +2522,6 @@
                     "1.1 39464b01f314ad3cb531f46c3049bf58.cloudfront.net (CloudFront)"
                 ],
                 [
-                    "Content-Encoding",
-                    "gzip"
-                ],
-                [
                     "Date",
                     "Wed, 29 Mar 2023 23:55:35 GMT"
                 ],
@@ -2556,10 +2552,14 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "6986"
                 ]
             ],
-            "contentLength": 1421,
-            "contentHash": "81de6d4a4bdb984627d61de60369ec4f0ce182170fbe6d9a980b15574d5f6c50",
+            "contentLength": 6986,
+            "contentHash": "ebb5ca702c6b7f09fe1c10e8992602bad67989e25151f0cb6928ea51299bf4e8",
             "timestamp_start": 1680135212.6,
             "timestamp_end": 1680135212.609897
         }

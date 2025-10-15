@@ -194,6 +194,10 @@
                 [
                     "x-cache",
                     "Hit from cloudfront"
+                ],
+                [
+                    "content-length",
+                    "23866"
                 ]
             ],
             "contentLength": 23866,
