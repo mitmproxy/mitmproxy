@@ -40,10 +40,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.13"
+            py: "3.14"
           - os: windows-latest
-            py: "3.13"
+            py: "3.14"
           - os: macos-latest
+            py: "3.14"
+          - os: ubuntu-latest
             py: "3.13"
           - os: ubuntu-latest
             py: "3.12"
