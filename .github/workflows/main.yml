@@ -40,10 +40,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            py: "3.13"
+            py: "3.14"
           - os: windows-latest
-            py: "3.13"
+            py: "3.14"
           - os: macos-latest
+            py: "3.14"
+          - os: ubuntu-latest
             py: "3.13"
           - os: ubuntu-latest
             py: "3.12"
@@ -85,7 +87,7 @@ jobs:
       - if: matrix.container
         run: |
           apt-get update
-          apt-get install --no-install-recommends -y git ca-certificates binutils
+          apt-get install --no-install-recommends -y git ca-certificates binutils build-essential
       - uses: mhils/workflows/checkout@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
       - uses: mhils/workflows/setup-uv@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
       - uses: mhils/workflows/uv-sync@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
