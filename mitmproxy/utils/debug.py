@@ -127,5 +127,5 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout):
 
 def register_info_dumpers():
     if os.name != "nt":  # pragma: windows no cover
-        signal.signal(signal.SIGUSR1, dump_info)
-        signal.signal(signal.SIGUSR2, dump_stacks)
+        signal.signal(signal.SIGUSR1, dump_info)  # type: ignore
+        signal.signal(signal.SIGUSR2, dump_stacks)  # type: ignore
