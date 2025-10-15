@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 15 October 2025: mitmproxy 12.2.0
+
 - mitmproxy now supports Python 3.14. Binary releases ship with 3.14 by default.
   ([#7918](https://github.com/mitmproxy/mitmproxy/pull/7918), @mhils)
 - Replace `htpasswd` file parser with a custom implementation to migrate off unmaintained
