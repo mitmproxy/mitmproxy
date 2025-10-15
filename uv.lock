@@ -643,15 +643,15 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.141.0"
+version = "6.130.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/ca/31352c7e7aa623eeb712efb415e7934d7bb7068983e8edfd688c647dcbff/hypothesis-6.141.0.tar.gz", hash = "sha256:a66861954dc1768945eda83ca28a9bbb5bc59a45edae899c219e2dd85a8ddd43", size = 467168, upload-time = "2025-10-15T05:00:28.494Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/26/01514ec525bbeb2cd166347e5c33e2aa5ec39406fcf24d91a884a6d72e96/hypothesis-6.130.6.tar.gz", hash = "sha256:994abd048924e365dbb8c21e3ea44c2ac576e02fa3d34b04288281768ae83b53", size = 427182, upload-time = "2025-03-31T14:49:48.139Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/e4/c92740135f9ad1cfe85aa7187eb72804fd5610d4a6ad72e39b6574e51588/hypothesis-6.141.0-py3-none-any.whl", hash = "sha256:29a1b4301611bdd2833a5ad5fc422c72b60071a169ee048e28b1435ac410d072", size = 534788, upload-time = "2025-10-15T05:00:24.387Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/18/153434ef2449be66c618695f74eeaec5db438e5a5d1f1ddfbf075d3ffd7b/hypothesis-6.130.6-py3-none-any.whl", hash = "sha256:fe457a716797dbcc9c3dd77fe4164d65f77296010ce5b931910276242a90ed0e", size = 491956, upload-time = "2025-03-31T14:49:44.802Z" },
 ]
 
 [[package]]
@@ -969,7 +969,6 @@ dev = [
     { name = "tox-uv" },
     { name = "types-requests" },
     { name = "wheel" },
-    { name = "windows-curses", marker = "sys_platform == 'win32'" },
 ]
 ruff = [
     { name = "ruff" },
@@ -1018,7 +1017,7 @@ deploy = [
 dev = [
     { name = "build", specifier = "==1.3.0" },
     { name = "click", specifier = "==8.3.0" },
-    { name = "hypothesis", specifier = "==6.141.0" },
+    { name = "hypothesis", specifier = "==6.130.6" },
     { name = "maturin", specifier = "==1.9.6" },
     { name = "mypy", specifier = "==1.18.2" },
     { name = "pdoc", specifier = "==15.0.4" },
@@ -1035,7 +1034,6 @@ dev = [
     { name = "tox-uv", specifier = "==1.29.0" },
     { name = "types-requests", specifier = "==2.32.4.20250913" },
     { name = "wheel", specifier = "==0.45.1" },
-    { name = "windows-curses", marker = "sys_platform == 'win32'", specifier = "==2.4.1" },
 ]
 ruff = [{ name = "ruff", specifier = "==0.14.0" }]
 tox = [
@@ -1971,17 +1969,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/8a/98/2d9906746cdc6a6ef809ae6338005b3f21bb568bea3165cfc6a243fdc25c/wheel-0.45.1.tar.gz", hash = "sha256:661e1abd9198507b1409a20c02106d9670b2576e916d58f520316666abca6729", size = 107545, upload-time = "2024-11-23T00:18:23.513Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/2c/87f3254fd8ffd29e4c02732eee68a83a1d3c346ae39bc6822dcbcb697f2b/wheel-0.45.1-py3-none-any.whl", hash = "sha256:708e7481cc80179af0e556bbf0cc00b8444c7321e2700b8d8580231d13017248", size = 72494, upload-time = "2024-11-23T00:18:21.207Z" },
-]
-
-[[package]]
-name = "windows-curses"
-version = "2.4.1"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/99/60f34e51514c82631aa5c6d21eab88ce1701562de9844608411e39462a46/windows_curses-2.4.1-cp312-cp312-win32.whl", hash = "sha256:bdbe7d58747408aef8a9128b2654acf6fbd11c821b91224b9a046faba8c6b6ca", size = 71489, upload-time = "2025-01-11T00:26:22.726Z" },
-    { url = "https://files.pythonhosted.org/packages/62/8f/d908bcab1954375b156a9300fa86ceccb110f39457cd6fd59c72777626ab/windows_curses-2.4.1-cp312-cp312-win_amd64.whl", hash = "sha256:5c9c2635faf171a229caca80e1dd760ab00db078e2a285ba2f667bbfcc31777c", size = 81777, upload-time = "2025-01-11T00:26:25.273Z" },
-    { url = "https://files.pythonhosted.org/packages/25/a0/e8d074f013117633f6b502ca123ecfc377fe0bd36818fe65e8935c91ca9c/windows_curses-2.4.1-cp313-cp313-win32.whl", hash = "sha256:05d1ca01e5199a435ccb6c8c2978df4a169cdff1ec99ab15f11ded9de8e5be26", size = 71390, upload-time = "2025-01-11T00:26:27.66Z" },
-    { url = "https://files.pythonhosted.org/packages/2b/4b/2838a829b074a68c570d54ae0ae8539979657d3e619a4dc5a4b03eb69745/windows_curses-2.4.1-cp313-cp313-win_amd64.whl", hash = "sha256:8cf653f8928af19c103ae11cfed38124f418dcdd92643c4cd17239c0cec2f9da", size = 81636, upload-time = "2025-01-11T00:26:29.595Z" },
 ]
 
 [[package]]
