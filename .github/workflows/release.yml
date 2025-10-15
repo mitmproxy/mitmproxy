@@ -25,10 +25,10 @@ jobs:
       - uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PUSH_TOKEN }}  # this token works to push to the protected main branch.
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .github/node-version.txt
-      - uses: mhils/workflows/setup-python@cc6add7a662663ad7ad3017a86bcb91c361c9cc9
+      - uses: mhils/workflows/setup-python@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
       - run: ./release/release.py ${{ inputs.version }} ${{ inputs.skip-branch-status-check }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # this token works with the GraphQL API
