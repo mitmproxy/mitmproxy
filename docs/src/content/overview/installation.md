@@ -57,7 +57,8 @@ on GitHub.
 ### Installation from the Python Package Index (PyPI)
 
 If your mitmproxy addons require the installation of additional Python packages,
-you can install mitmproxy from [PyPI](https://pypi.org/project/mitmproxy/).
+you can install mitmproxy from [PyPI](https://pypi.org/project/mitmproxy/). The mitmproxy binaries 
+only include a minimal Python runtime, which may require you to install dependencies manually.
 
 While there are plenty of options around[^1], we recommend the installation using uvx:
 
