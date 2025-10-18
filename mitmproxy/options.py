@@ -237,5 +237,13 @@ class Options(optmanager.OptManager):
             None,
             "Path to a .proto file that's used to resolve Protobuf field names when pretty-printing.",
         )
+        self.add_option(
+            "tcp_timeout",
+            int,
+            600,
+            """
+            Timeout in seconds for inactive TCP connections. Connections will be closed after this period of inactivity.
+            """,
+        )
 
         self.update(**kwargs)
