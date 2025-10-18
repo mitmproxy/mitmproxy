@@ -10,6 +10,11 @@
 - Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
   Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
   ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
+
+## 15 October 2025: mitmproxy 12.2.0
+
+- mitmproxy now supports Python 3.14. Binary releases ship with 3.14 by default.
+  ([#7918](https://github.com/mitmproxy/mitmproxy/pull/7918), @mhils)
 - Replace `htpasswd` file parser with a custom implementation to migrate off unmaintained
   `passlib` dependency. The new parser only supports bcrypt and SHA-1 hashing.
   Contributions for additional formats are welcome as long as they don't introduce new
