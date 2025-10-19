@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Show query parameters for empty-body requests in the mitmproxy console.
+  ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7918), @lups2000)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
