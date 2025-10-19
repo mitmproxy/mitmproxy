@@ -1,5 +1,6 @@
 import sys
 from functools import lru_cache
+from urllib.parse import urlparse
 
 import urwid
 
@@ -310,34 +311,42 @@ class FlowDetails(tabs.Tabs):
     def content_view(
         self, viewmode: str, message: http.Message
     ) -> tuple[str, list[urwid.Text]]:
+
         if message.raw_content is None:
             return "", [urwid.Text([("error", "[content missing]")])]
-        elif message.raw_content == b"":
+
+        if message.raw_content == b"":
             if isinstance(message, http.Request):
-                return "", [urwid.Text("No request content")]
+                path = getattr(message, "path", "") or ""
+                parsed = urlparse(path)
+                if not parsed.query:
+                    # No body and no query params
+                    return "", [urwid.Text("No request content")]
+                # else: there are query params -> fall through to render them
             else:
                 return "", [urwid.Text("No content")]
-        else:
-            full = self.master.commands.execute(
-                "view.settings.getval @focus fullcontents false"
-            )
-            if full == "true":
-                limit = sys.maxsize
-            else:
-                limit = ctx.options.content_view_lines_cutoff
 
-            flow_modify_cache_invalidation = hash(
-                (
-                    message.raw_content,
-                    message.headers.fields,
-                    getattr(message, "path", None),
-                )
+        full = self.master.commands.execute(
+            "view.settings.getval @focus fullcontents false"
+        )
+        
+        if full == "true":
+            limit = sys.maxsize
+        else:
+            limit = ctx.options.content_view_lines_cutoff
+
+        flow_modify_cache_invalidation = hash(
+            (
+                message.raw_content,
+                message.headers.fields,
+                getattr(message, "path", None),
             )
-            # we need to pass the message off-band because it's not hashable
-            self._get_content_view_message = message
-            return self._get_content_view(
-                viewmode, limit, flow_modify_cache_invalidation
-            )
+        )
+        # we need to pass the message off-band because it's not hashable
+        self._get_content_view_message = message
+        return self._get_content_view(
+            viewmode, limit, flow_modify_cache_invalidation
+        )
 
     @lru_cache(maxsize=200)
     def _get_content_view(
