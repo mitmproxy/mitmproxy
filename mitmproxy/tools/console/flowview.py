@@ -311,7 +311,6 @@ class FlowDetails(tabs.Tabs):
     def content_view(
         self, viewmode: str, message: http.Message
     ) -> tuple[str, list[urwid.Text]]:
-
         if message.raw_content is None:
             return "", [urwid.Text([("error", "[content missing]")])]
 
@@ -329,7 +328,7 @@ class FlowDetails(tabs.Tabs):
         full = self.master.commands.execute(
             "view.settings.getval @focus fullcontents false"
         )
-        
+
         if full == "true":
             limit = sys.maxsize
         else:
@@ -344,9 +343,7 @@ class FlowDetails(tabs.Tabs):
         )
         # we need to pass the message off-band because it's not hashable
         self._get_content_view_message = message
-        return self._get_content_view(
-            viewmode, limit, flow_modify_cache_invalidation
-        )
+        return self._get_content_view(viewmode, limit, flow_modify_cache_invalidation)
 
     @lru_cache(maxsize=200)
     def _get_content_view(
