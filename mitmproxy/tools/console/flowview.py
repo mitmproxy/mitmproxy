@@ -316,9 +316,8 @@ class FlowDetails(tabs.Tabs):
 
         if message.raw_content == b"":
             if isinstance(message, http.Request):
-                path = getattr(message, "path", "") or ""
-                parsed = urlparse(path)
-                if not parsed.query:
+                query = getattr(message, "query", "") or ""
+                if not query:
                     # No body and no query params
                     return "", [urwid.Text("No request content")]
                 # else: there are query params -> fall through to render them
