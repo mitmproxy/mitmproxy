@@ -1,6 +1,5 @@
 import sys
 from functools import lru_cache
-from urllib.parse import urlparse
 
 import urwid
 
