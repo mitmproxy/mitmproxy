@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix various issues in infer_content_encoding
+  ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
