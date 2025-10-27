@@ -6,7 +6,7 @@
 -->
 
 ## Unreleased: mitmproxy next
-
+- Remove `bless` from hex editors to avoid issues with macOS
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
 
