@@ -70,7 +70,9 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
             enc = meta_charset.group(1).decode("ascii", "ignore")
 
     if not enc and "xml" in content_type:
-        if xml_encoding := re.search(rb"""<\?xml[^\?>]+encoding=['"]([^'"\?>]+)""", content, re.IGNORECASE):
+        if xml_encoding := re.search(
+            rb"""<\?xml[^\?>]+encoding=['"]([^'"\?>]+)""", content, re.IGNORECASE
+        ):
             enc = xml_encoding.group(1).decode("ascii", "ignore")
 
     if not enc and "text/css" in content_type:
