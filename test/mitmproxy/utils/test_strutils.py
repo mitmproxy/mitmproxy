@@ -85,7 +85,9 @@ def test_is_mostly_bin():
     assert not strutils.is_mostly_bin(b"")
     assert strutils.is_mostly_bin(b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09")
     # shift UTF8 break point
-    assert not strutils.is_mostly_bin(b"" + 50 * "𐍅".encode())  # four byte UTF8 character
+    assert not strutils.is_mostly_bin(
+        b"" + 50 * "𐍅".encode()
+    )  # four byte UTF8 character
     assert not strutils.is_mostly_bin(b"a" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"aa" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"aaa" + 50 * "𐍅".encode())
