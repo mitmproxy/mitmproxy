@@ -9,6 +9,8 @@
 
 - Remove `bless` from hex editors to avoid issues with macOS
   ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
+- Improves `is_mostly_bin` check to support chinese characters
+  ([#7933](https://github.com/mitmproxy/mitmproxy/pull/7933), @caiquejjx, @mhils)
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
 
