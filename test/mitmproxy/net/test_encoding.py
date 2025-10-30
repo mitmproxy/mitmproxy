@@ -78,7 +78,8 @@ def test_decode_gzip_truncated():
     truncated = compressed[:-5]
     result = encoding.decode_gzip(truncated)
 
-    assert b"Hello" in result
+    assert result.startswith(b"Hello")
+    assert b"mitmproxy"[:5] in result  # partially decoded
 
 
 def test_cache():
