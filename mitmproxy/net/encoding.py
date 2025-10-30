@@ -147,8 +147,16 @@ def identity(content):
 def decode_gzip(content: bytes) -> bytes:
     if not content:
         return b""
-    with gzip.GzipFile(fileobj=BytesIO(content)) as f:
-        return f.read()
+    
+    try:
+        with gzip.GzipFile(fileobj=BytesIO(content)) as f:
+            return f.read()
+    except (OSError, EOFError):
+        try:
+            decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            return decompressor.decompress(content)
+        except zlib.error as e:
+            raise ValueError(f"Gzip decode failed: {e}")
 
 
 def encode_gzip(content: bytes) -> bytes:

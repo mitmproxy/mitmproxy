@@ -1,3 +1,4 @@
+import gzip
 from unittest import mock
 
 import pytest
@@ -64,6 +65,20 @@ def test_encoders_strings(encoder):
 
     with pytest.raises(TypeError):
         encoding.decode("foobar", encoder)
+
+
+def test_decode_gzip_truncated():
+    """
+    Test that decode_gzip() gracefully handles trucncated gzip streams.
+    This ensures the fallback using zlib.decompressobj works correctly.
+    """
+    data = b"Hello, mitmproxy!"
+    compressed = gzip.compress(data)
+
+    truncated = compressed[:-5]
+    result = encoding.decode_gzip(truncated)
+
+    assert b"Hello" in result
 
 
 def test_cache():
