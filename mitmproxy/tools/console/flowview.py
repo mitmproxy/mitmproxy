@@ -315,7 +315,7 @@ class FlowDetails(tabs.Tabs):
 
         if message.raw_content == b"":
             if isinstance(message, http.Request):
-                query = getattr(message, "query", "") or ""
+                query = getattr(message, "query", "")
                 if not query:
                     # No body and no query params
                     return "", [urwid.Text("No request content")]
