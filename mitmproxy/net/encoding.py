@@ -147,7 +147,7 @@ def identity(content):
 def decode_gzip(content: bytes) -> bytes:
     if not content:
         return b""
-    
+
     try:
         with gzip.GzipFile(fileobj=BytesIO(content)) as f:
             return f.read()
