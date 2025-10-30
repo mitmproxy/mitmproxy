@@ -149,14 +149,18 @@ def decode_gzip(content: bytes) -> bytes:
         return b""
 
     try:
-        with gzip.GzipFile(fileobj=BytesIO(content)) as f:
-            return f.read()
-    except (OSError, EOFError):
+        # Use 16 + zlib.MAX_WBITS (i.e., 31) to enable gzip header detection.
+        # According to the zlib docs, adding 16 tells zlib to expect a gzip-wrapper stream.
+        # This is explicit for gzip decoding and avoids ambiguity introduced by +47,
+        # which auto-detects both zlib and gzip and may mask malformed data.
+        decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
+        return decompressor.decompress(content) + decompressor.flush()
+    except zlib.error:
         try:
-            decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
-            return decompressor.decompress(content)
-        except zlib.error as e:
-            raise ValueError(f"Gzip decode failed: {e}")
+            with gzip.GzipFile(fileobj=BytesIO(content)) as f:
+                return f.read()
+        except (OSError, EOFError, gzip.BadGzipFile) as e:
+            raise ValueError(f"Decompression failed for both zlib and gzip: {e}")
 
 
 def encode_gzip(content: bytes) -> bytes:
