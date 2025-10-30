@@ -85,14 +85,15 @@ def test_is_mostly_bin():
     assert not strutils.is_mostly_bin(b"")
     assert strutils.is_mostly_bin(b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09")
     # shift UTF8 break point
-    assert not strutils.is_mostly_bin(
-        b"" + 50 * "𐍅".encode()
-    )  # four byte UTF8 character
+    # 𐍅 is four bytes in UTF-8, so we're breaking the 100 chars barrier.
+    assert not strutils.is_mostly_bin(b"" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"a" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"aa" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"aaa" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"aaaa" + 50 * "𐍅".encode())
     assert not strutils.is_mostly_bin(b"aaaaa" + 50 * "𐍅".encode())
+    # only utf8 continuation chars
+    assert strutils.is_mostly_bin(150 * b"\x80")
 
 
 def test_is_xml():
