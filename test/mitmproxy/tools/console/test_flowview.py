@@ -33,6 +33,7 @@ async def test_edit(console, monkeypatch, caplog):
     assert "hello: false" in console.screen_contents()
     assert f.request.content == MSGPACK_WITH_FALSE
 
+
 async def test_content_missing_returns_error(console):
     # message.raw_content is None -> expect "[content missing]" error text
     f_missing = tflow.tflow(
@@ -68,7 +69,7 @@ async def test_empty_content_request_and_response(console):
     # 2) Response with empty body -> "No content"
     f_resp_empty = tflow.tflow(
         req=http.Request.make("GET", "http://example.com", b""),
-        resp=http.Response.make(200, b"", {})
+        resp=http.Response.make(200, b"", {}),
     )
     f_resp_empty.response.raw_content = b""
     await console.load_flow(f_resp_empty)
