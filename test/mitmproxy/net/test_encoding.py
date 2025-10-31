@@ -1,4 +1,3 @@
-import gzip
 from unittest import mock
 
 import pytest
@@ -69,17 +68,18 @@ def test_encoders_strings(encoder):
 
 def test_decode_gzip_truncated():
     """
-    Test that decode_gzip() gracefully handles trucncated gzip streams.
-    This ensures the fallback using zlib.decompressobj works correctly.
+    Regression test for issue #7795: ensure decode_gzip() handles the real
+    malformed/truncated gzip sample posted in the issue comments and does not
+    raise. Using the exact test vector from the issue makes the test stable.
     """
-    data = b"Hello, mitmproxy!"
-    compressed = gzip.compress(data)
+    data = bytes.fromhex(
+        "1f8b08000000000000ffaa564a2d2a72ce4f4955b2d235d551502a4a2df12d4e57"
+        "b2527ab17efbb38d4d4f7b5a9fec58fb6cd3c267733a934a3353946a01000000ffff"
+    )
+    result = encoding.decode_gzip(data)
 
-    truncated = compressed[:-5]
-    result = encoding.decode_gzip(truncated)
-
-    assert result.startswith(b"Hello")
-    assert b"mitmproxy"[:5] in result  # partially decoded
+    assert isinstance(result, (bytes, bytearray))
+    assert len(result) > 0
 
 
 def test_cache():

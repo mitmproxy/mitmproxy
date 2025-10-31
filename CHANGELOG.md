@@ -11,6 +11,9 @@
   ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
+- Gracefully handle decoding of raw binary payloads that previously caused 
+  "Raw cannot decode" or "failed to parse as JSON" errors
+  ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
@@ -21,8 +24,6 @@
   Contributions for additional formats are welcome as long as they don't introduce new
   dependencies.
   ([#7906](https://github.com/mitmproxy/mitmproxy/pull/7906), @mhils)
-- Gracefully handle decoding of raw binary payloads that previously caused 
-  "Raw cannot decode" or "failed to parse as JSON" errors.
 
 ## 24 August 2025: mitmproxy 12.1.2
 
