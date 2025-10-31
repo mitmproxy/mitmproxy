@@ -420,9 +420,9 @@ class ConsoleAddon:
 
         if flow is None:
             raise exceptions.CommandError("No flow selected.")
-        
+
         focus_options.append("comment")
-        
+
         if isinstance(flow, tcp.TCPFlow):
             focus_options.append("tcp-message")
             add_message_edit_option("tcp-message", flow.messages[-1])

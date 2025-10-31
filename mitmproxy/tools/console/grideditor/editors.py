@@ -89,15 +89,17 @@ class PathEditor(base.FocusEditor):
     def set_data(self, vals, flow):
         flow.request.path_components = self.data_out(vals)
 
+
 class CommentEditor(base.FocusEditor):
     title = "Edit Comment"
     columns = [col_text.Column("Value")]
-    
+
     def get_data(self, flow):
         return [[flow.comment or ""]]
 
     def set_data(self, vals, flow):
         flow.comment = vals[0][0] if vals and vals[0] else ""
+
 
 class CookieEditor(base.FocusEditor):
     title = "Edit Cookies"
