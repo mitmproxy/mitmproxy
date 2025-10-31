@@ -1,3 +1,6 @@
+import sys
+
+import urwid
 from mitmproxy import http
 from mitmproxy.test import tflow
 from mitmproxy.tools.console.flowview import FlowDetails
@@ -77,3 +80,27 @@ async def test_empty_content_request_and_response(console):
     assert title_resp == ""
     resp_text = txt_objs_resp[0].get_text()[0]
     assert "No content" in resp_text
+
+async def test_content_view_fullcontents_true_uses_unlimited_limit(console):
+    f = tflow.tflow(req=http.Request.make("POST", "http://example.com", b"non-empty"))
+    await console.load_flow(f)
+
+    fd = FlowDetails(console)
+
+    # override console.commands.execute so it always returns "true"
+    console.commands.execute = lambda *args, **kwargs: "true"
+
+    # stub that records the limit value
+    captured = {}
+
+    def fake_get_content_view(viewmode, limit, flow_modify_cache_invalidation):
+        captured["limit"] = limit
+        return ("TEST_VIEW", [urwid.Text("ok")])
+
+    fd._get_content_view = fake_get_content_view
+
+    title, text_objs = fd.content_view("default", f.request)
+
+    assert title == "TEST_VIEW"
+    assert captured.get("limit") == sys.maxsize
+    assert isinstance(text_objs[0], urwid.Text)
