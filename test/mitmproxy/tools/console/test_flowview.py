@@ -1,6 +1,7 @@
 import sys
 
 import urwid
+
 from mitmproxy import http
 from mitmproxy.test import tflow
 from mitmproxy.tools.console.flowview import FlowDetails
@@ -80,6 +81,7 @@ async def test_empty_content_request_and_response(console):
     assert title_resp == ""
     resp_text = txt_objs_resp[0].get_text()[0]
     assert "No content" in resp_text
+
 
 async def test_content_view_fullcontents_true_uses_unlimited_limit(console):
     f = tflow.tflow(req=http.Request.make("POST", "http://example.com", b"non-empty"))
