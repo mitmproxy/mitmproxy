@@ -103,6 +103,7 @@ Issues = "https://github.com/mitmproxy/mitmproxy/issues"
 mitmproxy = "mitmproxy.tools.main:mitmproxy"
 mitmdump = "mitmproxy.tools.main:mitmdump"
 mitmweb = "mitmproxy.tools.main:mitmweb"
+mitmwebnext = "mitmproxy.tools.main:mitmwebnext"
 
 [project.entry-points.pyinstaller40]
 hook-dirs = "mitmproxy.utils.pyinstaller:hook_dirs"
@@ -229,6 +230,8 @@ exclude = [
   "mitmproxy/utils/bits.py",
   "mitmproxy/utils/pyinstaller/*",
   "mitmproxy/utils/vt_codes.py",
+  "mitmproxy/tools/webnext/app.py",
+  "mitmproxy/tools/webnext/master.py",
 ]
 
 [tool.mypy]
@@ -258,7 +261,7 @@ module = "test.*"
 ignore_errors = true
 
 [tool.ruff]
-extend-exclude = ["mitmproxy/contrib/"]
+extend-exclude = ["mitmproxy/contrib/", "mitmproxy/tools/webnext/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "TID251"]

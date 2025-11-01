@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Option, OptionsState } from "../_options_gen";
 import { HIDE_MODAL } from "./modal";
 
-interface OptionUpdate<T> {
+export interface OptionUpdate<T> {
     isUpdating: boolean;
     value: T;
     error: string | false;
@@ -28,6 +28,9 @@ const optionsEditorSlice = createSlice({
         updateSuccess(state, action: PayloadAction<{ option: any }>) {
             state[action.payload.option] = undefined;
         },
+        resetSuccess() {
+            return defaultState;
+        },
         updateError(
             state,
             action: PayloadAction<{ option: any; error: string | false }>,
@@ -52,5 +55,6 @@ const optionsEditorSlice = createSlice({
 });
 
 const { actions, reducer } = optionsEditorSlice;
-export const { startUpdate, updateSuccess, updateError } = actions;
+export const { startUpdate, resetSuccess, updateSuccess, updateError } =
+    actions;
 export default reducer;
