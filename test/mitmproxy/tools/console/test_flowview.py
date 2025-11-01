@@ -87,7 +87,7 @@ async def test_content_view_fullcontents_true_uses_unlimited_limit(console):
     await console.load_flow(f)
 
     fd = FlowDetails(console)
-    
+
     console.commands.execute("view.settings.setval @focus fullcontents true")
     fd._get_content_view = mock.MagicMock()
     fd.content_view("default", f.request)
