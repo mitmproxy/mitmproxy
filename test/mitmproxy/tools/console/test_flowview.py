@@ -1,6 +1,5 @@
 import sys
-
-import urwid
+from unittest import mock
 
 from mitmproxy import http
 from mitmproxy.test import tflow
@@ -53,7 +52,7 @@ async def test_content_missing_returns_error(console):
     assert title == ""
 
     first_text = txt_objs[0].get_text()[0]
-    assert "[content missing]" in first_text
+    assert "[content missing]" == first_text
 
 
 async def test_empty_content_request_and_response(console):
@@ -68,7 +67,7 @@ async def test_empty_content_request_and_response(console):
     title_req, txt_objs_req = fd.content_view("default", f_req_empty.request)
     assert title_req == ""
     req_text = txt_objs_req[0].get_text()[0]
-    assert "No request content" in req_text
+    assert "No request content" == req_text
 
     # 2) Response with empty body -> "No content"
     f_resp_empty = tflow.tflow(
@@ -80,7 +79,7 @@ async def test_empty_content_request_and_response(console):
     title_resp, txt_objs_resp = fd.content_view("default", f_resp_empty.response)
     assert title_resp == ""
     resp_text = txt_objs_resp[0].get_text()[0]
-    assert "No content" in resp_text
+    assert "No content" == resp_text
 
 
 async def test_content_view_fullcontents_true_uses_unlimited_limit(console):
@@ -88,21 +87,8 @@ async def test_content_view_fullcontents_true_uses_unlimited_limit(console):
     await console.load_flow(f)
 
     fd = FlowDetails(console)
-
-    # override console.commands.execute so it always returns "true"
-    console.commands.execute = lambda *args, **kwargs: "true"
-
-    # stub that records the limit value
-    captured = {}
-
-    def fake_get_content_view(viewmode, limit, flow_modify_cache_invalidation):
-        captured["limit"] = limit
-        return ("TEST_VIEW", [urwid.Text("ok")])
-
-    fd._get_content_view = fake_get_content_view
-
-    title, text_objs = fd.content_view("default", f.request)
-
-    assert title == "TEST_VIEW"
-    assert captured.get("limit") == sys.maxsize
-    assert isinstance(text_objs[0], urwid.Text)
+    
+    console.commands.execute("view.settings.setval @focus fullcontents true")
+    fd._get_content_view = mock.MagicMock()
+    fd.content_view("default", f.request)
+    fd._get_content_view.assert_called_with("default", sys.maxsize, mock.ANY)
