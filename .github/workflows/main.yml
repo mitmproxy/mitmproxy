@@ -118,7 +118,7 @@ jobs:
       - if: runner.os == 'Windows'
         run: python -u release/build.py standalone-binaries
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: binaries.${{ matrix.platform }}
           path: release/dist
@@ -144,7 +144,7 @@ jobs:
         env:
           CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: binaries.windows-installer
           path: release/dist
@@ -179,7 +179,7 @@ jobs:
     needs: build-wheel
     steps:
       - uses: mhils/workflows/checkout@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: binaries.wheel
           path: release/docker
@@ -200,7 +200,7 @@ jobs:
           sudo dpkg -i hugo*.deb
 
       - run: ./docs/build.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: docs
           path: docs/public
@@ -209,7 +209,7 @@ jobs:
         env:
           DOCS_ARCHIVE: ${{ github.ref_name }}
       - if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docs-archive
           path: docs/public
@@ -246,7 +246,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: binaries.wheel
           path: release/docker
@@ -329,16 +329,16 @@ jobs:
         with:
           args: --only-group deploy
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: docs
           path: docs/public
       - if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: docs-archive
           path: docs/archive
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           pattern: binaries.*
           merge-multiple: true
