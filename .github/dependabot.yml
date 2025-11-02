@@ -8,7 +8,7 @@ updates:
       "github actions":
         patterns:
           - "*"
-  - package-ecosystem: uv
+  - package-ecosystem: pip
     directory: "/"
     schedule:
       interval: "monthly"
