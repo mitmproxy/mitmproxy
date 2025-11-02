@@ -29,3 +29,10 @@ updates:
         patterns:
         - "pyopenssl"
         - "cryptography"
+      tox:
+        patterns:
+          - "tox*"
+      deploy:
+        patterns:
+          - "awscli"
+          - "twine"
