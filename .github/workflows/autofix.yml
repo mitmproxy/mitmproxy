@@ -20,7 +20,9 @@ jobs:
       - run: ruff check --fix-only .
       - run: ruff format .
 
-      - run: uv lock
+      # If we need to update the lockfile (--check returns an error),
+      # make sure to upgrade everything.
+      - run: uv lock --check || uv lock --upgrade
 
       - run: web/gen/all
 
