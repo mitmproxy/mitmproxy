@@ -15,14 +15,15 @@ jobs:
     steps:
       - uses: mhils/workflows/checkout@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
       - uses: mhils/workflows/setup-uv@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
-      - uses: mhils/workflows/uv-sync@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
-
-      - run: ruff check --fix-only .
-      - run: ruff format .
 
       # If we need to update the lockfile (--check returns an error),
       # make sure to upgrade everything.
       - run: uv lock --check || uv lock --upgrade
+
+      - uses: mhils/workflows/uv-sync@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
+
+      - run: ruff check --fix-only .
+      - run: ruff format .
 
       - run: web/gen/all
 
