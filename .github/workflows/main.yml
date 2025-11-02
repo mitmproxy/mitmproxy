@@ -68,9 +68,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: macos-14
+          - image: macos-15
             platform: macos-arm64
-          - image: macos-13
+          - image: macos-15-intel
             platform: macos-x86_64
           - image: windows-2025
             platform: windows
