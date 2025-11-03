@@ -516,15 +516,15 @@ class TlsConfig:
                     ) from e
 
         if "tls_ecdh_curve_client" in updated or "tls_ecdh_curve_server" in updated:
+            # Validate curve names using standard library ssl module
+            # instead of deprecated OpenSSL crypto.get_elliptic_curve
+            test_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             for ecdh_curve in [
                 ctx.options.tls_ecdh_curve_client,
                 ctx.options.tls_ecdh_curve_server,
             ]:
                 if ecdh_curve is not None:
                     try:
-                        # Validate the curve name using standard library ssl module
-                        # instead of deprecated OpenSSL crypto.get_elliptic_curve
-                        test_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
                         test_ctx.set_ecdh_curve(ecdh_curve)
                     except Exception as e:
                         raise exceptions.OptionsError(
