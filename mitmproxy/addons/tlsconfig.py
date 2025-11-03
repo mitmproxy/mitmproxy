@@ -11,7 +11,6 @@ from typing import TypedDict
 from aioquic.h3.connection import H3_ALPN
 from aioquic.tls import CipherSuite
 from cryptography import x509
-from OpenSSL import crypto
 from OpenSSL import SSL
 
 from mitmproxy import certs
