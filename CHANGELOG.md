@@ -13,6 +13,8 @@
   ([#7933](https://github.com/mitmproxy/mitmproxy/pull/7933), @caiquejjx, @mhils)
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
+- Show query parameters for empty-body requests in the mitmproxy console.
+  ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
