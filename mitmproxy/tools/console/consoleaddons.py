@@ -456,7 +456,7 @@ class ConsoleAddon:
             raise exceptions.CommandError(
                 "Cannot edit DNS flows yet, please submit a patch."
             )
-            
+
         focus_options.append("comment")
 
         return focus_options
