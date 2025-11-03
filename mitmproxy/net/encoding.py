@@ -150,7 +150,7 @@ def decode_gzip(content: bytes) -> bytes:
         return b""
 
     try:
-        # Using wbits=47 (32 + 15) tells zlib to automatically detect both gzip and headers.
+        # Using wbits=47 (32 + 15) tells zlib to automatically detect both gzip and zlib headers.
         # This simplifies decoding and avoids the need for a separate gzip.GzipFile fallback.
         # Reference: https://docs.python.org/3/library/zlib.html#zlib.decompress
         decompressor = zlib.decompressobj(47)
