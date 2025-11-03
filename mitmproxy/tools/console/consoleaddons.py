@@ -421,8 +421,6 @@ class ConsoleAddon:
         if flow is None:
             raise exceptions.CommandError("No flow selected.")
 
-        focus_options.append("comment")
-
         if isinstance(flow, tcp.TCPFlow):
             focus_options.append("tcp-message")
             add_message_edit_option("tcp-message", flow.messages[-1])
@@ -458,6 +456,8 @@ class ConsoleAddon:
             raise exceptions.CommandError(
                 "Cannot edit DNS flows yet, please submit a patch."
             )
+            
+        focus_options.append("comment")
 
         return focus_options
 
