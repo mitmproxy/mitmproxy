@@ -270,8 +270,7 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus=True)
-        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
+        # Use get_rows_sizes instead of deprecated get_item_size
+        _, _, sizes = self.get_rows_sizes(size, focus=True)
+        tsize = sizes[self.focus_position]
         return self.focus.keypress(tsize, key)

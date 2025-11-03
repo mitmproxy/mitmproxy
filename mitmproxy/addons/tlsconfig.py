@@ -523,7 +523,10 @@ class TlsConfig:
             ]:
                 if ecdh_curve is not None:
                     try:
-                        crypto.get_elliptic_curve(ecdh_curve)
+                        # Validate the curve name using standard library ssl module
+                        # instead of deprecated OpenSSL crypto.get_elliptic_curve
+                        test_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                        test_ctx.set_ecdh_curve(ecdh_curve)
                     except Exception as e:
                         raise exceptions.OptionsError(
                             f"Invalid ECDH curve: {ecdh_curve!r}"

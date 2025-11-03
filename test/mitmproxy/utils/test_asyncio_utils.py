@@ -52,7 +52,13 @@ async def test_eager_task_factory():
         x = True
 
     # assert that override works...
-    assert type(asyncio.get_event_loop_policy()) is asyncio.DefaultEventLoopPolicy
+    # Check that we're using a standard event loop policy, not the eager one
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        policy_name = type(asyncio.get_event_loop_policy()).__name__
+    assert "Eager" not in policy_name
 
     with asyncio_utils.set_eager_task_factory():
         _ = asyncio.create_task(task())
@@ -64,4 +70,20 @@ async def test_eager_task_factory():
 @pytest.fixture()
 def event_loop_policy(request):
     # override EagerTaskCreationEventLoopPolicy from top-level conftest
-    return asyncio.DefaultEventLoopPolicy()
+    if sys.version_info >= (3, 14):
+        # In Python 3.14+, DefaultEventLoopPolicy is deprecated
+        # Use the internal _BaseDefaultEventLoopPolicy as the base class
+        import asyncio.events
+
+        class DefaultEventLoopPolicy(asyncio.events._BaseDefaultEventLoopPolicy):
+            def __init__(self):
+                super().__init__()
+                # Set the appropriate loop factory for the platform
+                if sys.platform == "win32":
+                    self._loop_factory = asyncio.WindowsSelectorEventLoop
+                else:
+                    self._loop_factory = asyncio.SelectorEventLoop
+
+        return DefaultEventLoopPolicy()
+    else:
+        return asyncio.DefaultEventLoopPolicy()
