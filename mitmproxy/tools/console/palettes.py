@@ -70,6 +70,8 @@ class Palette:
         "intercept",
         "replay",
         "mark",
+        # Cursorline background for focused rows
+        "cursorline",
         # Contentview Syntax Highlighting
         "name",
         "string",
@@ -210,6 +212,7 @@ class LowDark(Palette):
         intercept=("brown", "default"),
         replay=("light green", "default"),
         mark=("light red", "default"),
+        cursorline=("default", "dark blue"),
         # Contentview Syntax Highlighting
         name=("dark green", "default"),
         string=("dark blue", "default"),
@@ -309,6 +312,7 @@ class LowLight(Palette):
         intercept=("brown", "default"),
         replay=("dark green", "default"),
         mark=("dark red", "default"),
+        cursorline=("default", "light gray"),
         # Contentview Syntax Highlighting
         name=("dark green", "default"),
         string=("dark blue", "default"),
@@ -432,6 +436,7 @@ class SolarizedLight(LowLight):
             "default",
         ),
         mark=(sol_base01, "default"),
+        cursorline=(sol_base00, sol_base2),
         # Contentview Syntax Highlighting
         name=(sol_green, "default"),
         string=(sol_cyan, "default"),
@@ -512,6 +517,7 @@ class SolarizedDark(LowDark):
             "default",
         ),
         mark=(sol_base01, "default"),
+        cursorline=(sol_base0, sol_base02),
         # Contentview Syntax Highlighting
         name=(sol_green, "default"),
         string=(sol_cyan, "default"),

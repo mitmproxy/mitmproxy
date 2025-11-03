@@ -21,12 +21,17 @@ class FlowItem(urwid.WidgetWrap):
         else:
             render_mode = common.RenderMode.TABLE
 
-        return common.format_flow(
+        row_widget = common.format_flow(
             self.flow,
             render_mode=render_mode,
             focused=self.flow is self.master.view.focus.flow,
             hostheader=self.master.options.showhost,
         )
+
+        # Apply a cursorline-like background highlight to the focused row if enabled.
+        if getattr(self.master.options, "console_cursorline", False):
+            return urwid.AttrMap(row_widget, None, "cursorline")
+        return row_widget
 
     def selectable(self):
         return True

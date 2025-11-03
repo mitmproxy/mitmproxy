@@ -112,6 +112,12 @@ class ConsoleAddon:
             choices=sorted(console_flowlist_layout),
         )
         loader.add_option(
+            "console_cursorline",
+            bool,
+            True,
+            "Highlight the background of the currently selected flow in the list.",
+        )
+        loader.add_option(
             "console_strip_trailing_newlines",
             bool,
             False,
