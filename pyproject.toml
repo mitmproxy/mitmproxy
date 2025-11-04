@@ -35,7 +35,7 @@ dependencies = [
     "argon2-cffi>=23.1.0,<=25.1.0",
     "asgiref>=3.2.10,<=3.10.0",
     "bcrypt>=5.0.0,<=5.0.0",
-    "Brotli>=1.0,<=1.1.0",
+    "Brotli>=1.0,<=1.2.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
     "cryptography>=42.0,<=46.1",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.1.2",
@@ -50,7 +50,7 @@ dependencies = [
     "pyOpenSSL>=24.3,<=25.3.0",
     "pyparsing>=2.4.2,<=3.2.5",
     "pyperclip>=1.9.0,<=1.11.0",
-    "ruamel.yaml>=0.18.10,<=0.18.15",
+    "ruamel.yaml>=0.18.10,<=0.18.16",
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado>=6.5.0,<=6.5.2",
     "typing-extensions>=4.13.2,<=4.14; python_version < '3.13'",
@@ -65,7 +65,7 @@ dev = [
     "click==8.3.0",
     "hypothesis==6.130.6",
     "maturin==1.9.6",
-    "pdoc==15.0.4",
+    "pdoc==16.0.0",
     "pyinstaller==6.16.0",
     "pyinstaller-hooks-contrib==2025.9",
     "pytest-asyncio==1.2.0",
@@ -82,15 +82,15 @@ dev = [
     {include-group = "ruff"},
 ]
 tox = [
-    "tox==4.31.0",
+    "tox==4.32.0",
     "tox-uv==1.29.0",
 ]
 ruff = [
-    "ruff==0.14.0",
+    "ruff==0.14.3",
 ]
 deploy = [
-    "awscli==1.42.16",
-    "twine==6.1.0",
+    "awscli==1.42.64",
+    "twine==6.2.0",
 ]
 
 [project.urls]

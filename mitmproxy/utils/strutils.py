@@ -126,10 +126,40 @@ def escaped_str_to_bytes(data: str) -> bytes:
 
 
 def is_mostly_bin(s: bytes) -> bool:
-    if not s or len(s) == 0:
+    if not s:
         return False
 
-    return sum(i < 9 or 13 < i < 32 or 126 < i for i in s[:100]) / len(s[:100]) > 0.3
+    # Cut off at ~100 chars, but do it smartly so that if the input is UTF-8, we don't
+    # chop a multibyte code point in half.
+    if len(s) > 100:
+        for cut in range(100, 104):
+            is_continuation_byte = (s[cut] >> 6) == 0b10
+            if not is_continuation_byte:
+                # A new character starts here, so we cut off just before that.
+                s = s[:cut]
+                break
+        else:
+            s = s[:100]
+
+    low_bytes = sum(i < 9 or 13 < i < 32 for i in s)
+    high_bytes = sum(i > 126 for i in s)
+    ascii_bytes = len(s) - low_bytes - high_bytes
+
+    # Heuristic 1: If it's mostly printable ASCII, it's not bin.
+    if ascii_bytes / len(s) > 0.7:
+        return False
+
+    # Heuristic 2: If it's UTF-8 without too many ASCII control chars, it's not bin.
+    # Note that b"\x00\x00\x00" would be valid UTF-8, so we don't want to accept _any_
+    # UTF-8 with higher code points.
+    if (ascii_bytes + high_bytes) / len(s) > 0.95:
+        try:
+            s.decode()
+            return False
+        except ValueError:
+            pass
+
+    return True
 
 
 def is_xml(s: bytes) -> bool:

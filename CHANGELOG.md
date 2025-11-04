@@ -10,6 +10,14 @@
 - Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
   Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
   ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
+- Remove `bless` from hex editors to avoid issues with macOS
+  ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
+- Improves `is_mostly_bin` check to support chinese characters
+  ([#7933](https://github.com/mitmproxy/mitmproxy/pull/7933), @caiquejjx, @mhils)
+- Fix various issues in infer_content_encoding
+  ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
+- Show query parameters for empty-body requests in the mitmproxy console.
+  ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
