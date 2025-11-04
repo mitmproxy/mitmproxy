@@ -17,17 +17,17 @@ filename = here / "../src/js/ducks/_options_gen.ts"
 
 
 def _ts_type(t):
-    if t == bool:  # noqa: E721
+    if t is bool:
         return "boolean"
-    if t == str:  # noqa: E721
+    if t is str:
         return "string"
-    if t == int:  # noqa: E721
+    if t is int:
         return "number"
-    if t == Sequence[str]:  # noqa: E721
+    if t == Sequence[str]:
         return "string[]"
-    if t == str | None:  # noqa: E721
+    if t == str | None:
         return "string | undefined"
-    if t == int | None:  # noqa: E721
+    if t == int | None:
         return "number | undefined"
     raise RuntimeError(t)
 
