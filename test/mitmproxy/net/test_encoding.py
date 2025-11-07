@@ -119,5 +119,7 @@ def test_decoders_size_limit(encoder):
     test_content = b"a" * 1024
     compressed = encoding.encode(test_content, encoder)
     encoding._cache = encoding.CachedDecode(None, None, None, None)
+    assert encoding.decode(compressed, encoder, size_limit=2048) == test_content
+    encoding._cache = encoding.CachedDecode(None, None, None, None)
     with pytest.raises(ValueError, match="Decompressed data exceeds size_limit"):
         encoding.decode(compressed, encoder, size_limit=512)
