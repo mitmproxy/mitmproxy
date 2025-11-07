@@ -386,7 +386,9 @@ class Message(serializable.Serializable):
         else:
             self.headers["content-length"] = str(len(self.raw_content))
 
-    def get_content(self, strict: bool = True, size_limit: int | None = None) -> bytes | None:
+    def get_content(
+        self, strict: bool = True, size_limit: int | None = None
+    ) -> bytes | None:
         """
         Similar to `Message.content`, but does not raise if `strict` is `False`.
         Instead, the compressed message body is returned as-is.
@@ -396,7 +398,9 @@ class Message(serializable.Serializable):
         ce = self.headers.get("content-encoding")
         if ce:
             try:
-                content = encoding.decode(self.raw_content, ce, size_limit or self.body_size_limit)
+                content = encoding.decode(
+                    self.raw_content, ce, size_limit or self.body_size_limit
+                )
                 # A client may illegally specify a byte -> str encoding here (e.g. utf8)
                 if isinstance(content, str):
                     raise ValueError(f"Invalid Content-Encoding: {ce}")

@@ -302,7 +302,9 @@ class Http3Client(Http3Connection):
             timestamp_start=time.time(),
             timestamp_end=None,
         )
-        response.body_size_limit = human.parse_size(self.context.options.body_size_limit)
+        response.body_size_limit = human.parse_size(
+            self.context.options.body_size_limit
+        )
         return ResponseHeaders(event.stream_id, response, event.stream_ended)
 
 

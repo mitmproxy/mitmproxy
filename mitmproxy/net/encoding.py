@@ -21,19 +21,28 @@ _cache = CachedDecode(None, None, None, None)
 
 
 @overload
-def decode(encoded: None, encoding: str, size_limit: int | None = None, errors: str = "strict") -> None: ...
+def decode(
+    encoded: None, encoding: str, size_limit: int | None = None, errors: str = "strict"
+) -> None: ...
 
 
 @overload
-def decode(encoded: str, encoding: str, size_limit: int | None = None, errors: str = "strict") -> str: ...
+def decode(
+    encoded: str, encoding: str, size_limit: int | None = None, errors: str = "strict"
+) -> str: ...
 
 
 @overload
-def decode(encoded: bytes, encoding: str, size_limit: int | None = None, errors: str = "strict") -> str | bytes: ...
+def decode(
+    encoded: bytes, encoding: str, size_limit: int | None = None, errors: str = "strict"
+) -> str | bytes: ...
 
 
 def decode(
-    encoded: None | str | bytes, encoding: str, size_limit: int | None = None, errors: str = "strict"
+    encoded: None | str | bytes,
+    encoding: str,
+    size_limit: int | None = None,
+    errors: str = "strict",
 ) -> None | str | bytes:
     """
     Decode the given input object
@@ -184,10 +193,12 @@ def encode_brotli(content: bytes) -> bytes:
 def decode_zstd(content: bytes, size_limit: int | None = None) -> bytes:
     if not content:
         return b""
-    stream = zstd.ZstdDecompressor().stream_reader(BytesIO(content), read_across_frames=True)
+    stream = zstd.ZstdDecompressor().stream_reader(
+        BytesIO(content), read_across_frames=True
+    )
     if size_limit:
         decoded = stream.read(size_limit)
-        if stream.read1(1) :
+        if stream.read1(1):
             raise ValueError("Decompressed data exceeds size_limit")
         return decoded
     return stream.read()
@@ -198,7 +209,9 @@ def encode_zstd(content: bytes) -> bytes:
     return zstd_ctx.compress(content)
 
 
-def decode_deflate(content: bytes, size_limit: int | None = None, wbits: int = 15) -> bytes:
+def decode_deflate(
+    content: bytes, size_limit: int | None = None, wbits: int = 15
+) -> bytes:
     """
     Returns decompressed data for DEFLATE. Some servers may respond with
     compressed data without a zlib header or checksum. An undocumented
