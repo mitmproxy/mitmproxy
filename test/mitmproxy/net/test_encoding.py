@@ -112,3 +112,12 @@ def test_zstd():
 
     # Uncompressed two frames should have the size of FRAME_SIZE * 2
     assert len(encoding.decode_zstd(two_frames)) == FRAME_SIZE * 2
+
+
+@pytest.mark.parametrize("encoder", ["gzip", "deflate", "br", "zstd"])
+def test_decoders_size_limit(encoder):
+    test_content = b"a" * 1024
+    compressed = encoding.encode(test_content, encoder)
+    encoding._cache = encoding.CachedDecode(None, None, None, None)
+    with pytest.raises(ValueError, match="Decompressed data exceeds size_limit"):
+        encoding.decode(compressed, encoder, size_limit=512)
