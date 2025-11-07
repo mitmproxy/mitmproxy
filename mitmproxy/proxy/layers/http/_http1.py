@@ -289,6 +289,7 @@ class Http1Server(Http1Connection):
                         [bytes(x) for x in request_head]
                     )
                     expected_body_size = http1.expected_http_body_size(self.request)
+                    self.request.body_size_limit = human.parse_size(self.context.options.body_size_limit)
                 except ValueError as e:
                     yield commands.SendData(self.conn, make_error_response(400, str(e)))
                     yield commands.CloseConnection(self.conn)
@@ -414,6 +415,7 @@ class Http1Client(Http1Connection):
                     expected_size = http1.expected_http_body_size(
                         self.request, self.response
                     )
+                    self.response.body_size_limit = human.parse_size(self.context.options.body_size_limit)
                 except ValueError as e:
                     yield commands.CloseConnection(self.conn)
                     yield ReceiveHttp(
