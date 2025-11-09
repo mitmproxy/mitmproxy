@@ -20,6 +20,8 @@
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
   ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
+- mitmweb is now built with Vite, improving the development workflow.
+  ([#7971](https://github.com/mitmproxy/mitmproxy/pull/7971), @sleeyax, @mhils)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
