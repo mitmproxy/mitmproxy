@@ -1,6 +1,7 @@
 import { fetchApi } from "../utils";
 import * as optionsEditorActions from "./ui/optionsEditor";
-import { defaultState, Option, OptionsState } from "./_options_gen";
+import { defaultState, OptionsState } from "./_options_gen";
+import type { Option } from "./_options_gen";
 import { AppThunk } from "./index";
 import { createAction, createSlice } from "@reduxjs/toolkit";
 
