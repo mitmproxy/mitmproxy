@@ -69,7 +69,9 @@ def test_encoders_strings(encoder):
 class TestDecodeGzip:
     def test_regular_gzip(self):
         # generated with gzip.compress(b"mitmproxy")
-        data = bytes.fromhex("1f8b0800e4a4106902ffcbcd2cc92d28caafa80400d21f9c9d09000000")
+        data = bytes.fromhex(
+            "1f8b0800e4a4106902ffcbcd2cc92d28caafa80400d21f9c9d09000000"
+        )
         assert encoding.decode_gzip(data) == b"mitmproxy"
 
     def test_zlib(self):
@@ -84,8 +86,8 @@ class TestDecodeGzip:
             "b2527ab17efbb38d4d4f7b5a9fec58fb6cd3c267733a934a3353946a01000000ffff"
         )
         assert encoding.decode_gzip(data) == (
-            b"{\"errCode\":-5, \"retMsg\":\"\xe8\xaf\xb7\xe6\xb1\x82\xe5\x8c\x85\xe4"
-            b"\xb8\xad\xe6\xb2\xa1\xe6\x9c\x89buid\"}"
+            b'{"errCode":-5, "retMsg":"\xe8\xaf\xb7\xe6\xb1\x82\xe5\x8c\x85\xe4'
+            b'\xb8\xad\xe6\xb2\xa1\xe6\x9c\x89buid"}'
         )
 
 
