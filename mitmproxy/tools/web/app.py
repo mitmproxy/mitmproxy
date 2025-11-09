@@ -377,6 +377,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestH
     def prepare(self) -> Optional[Awaitable[None]]:
         token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         assert token
+        return None
 
     def open(self, *args, **kwargs):
         self.connections.add(self)

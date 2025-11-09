@@ -10,6 +10,7 @@ export default defineConfig({
             },
         }),
     ],
+    base: "",
     build: {
         outDir: "../mitmproxy/tools/web",
         assetsDir: "static",
