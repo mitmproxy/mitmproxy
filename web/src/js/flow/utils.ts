@@ -300,3 +300,7 @@ export const sortFunctions = {
     quickactions: () => 0,
     comment: (flow: Flow) => flow.comment,
 };
+
+export function isValidColumnName(x: string): x is keyof typeof sortFunctions {
+  return x in sortFunctions;
+}
