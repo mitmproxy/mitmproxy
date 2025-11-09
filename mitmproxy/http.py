@@ -258,6 +258,10 @@ class Message(serializable.Serializable):
     This attribute must be set in the `requestheaders` or `responseheaders` hook.
     Setting it in `request` or  `response` is already too late, mitmproxy has buffered the message body already.
     """
+    body_size_limit: int | None = None
+    """
+    Limits the size of decompressed body content.
+    """
 
     @property
     def http_version(self) -> str:
@@ -382,7 +386,9 @@ class Message(serializable.Serializable):
         else:
             self.headers["content-length"] = str(len(self.raw_content))
 
-    def get_content(self, strict: bool = True) -> bytes | None:
+    def get_content(
+        self, strict: bool = True, size_limit: int | None = None
+    ) -> bytes | None:
         """
         Similar to `Message.content`, but does not raise if `strict` is `False`.
         Instead, the compressed message body is returned as-is.
@@ -392,7 +398,9 @@ class Message(serializable.Serializable):
         ce = self.headers.get("content-encoding")
         if ce:
             try:
-                content = encoding.decode(self.raw_content, ce)
+                content = encoding.decode(
+                    self.raw_content, ce, size_limit or self.body_size_limit
+                )
                 # A client may illegally specify a byte -> str encoding here (e.g. utf8)
                 if isinstance(content, str):
                     raise ValueError(f"Invalid Content-Encoding: {ce}")

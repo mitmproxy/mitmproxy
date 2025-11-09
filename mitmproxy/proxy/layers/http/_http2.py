@@ -460,6 +460,9 @@ class Http2Server(Http2Connection):
                 timestamp_start=time.time(),
                 timestamp_end=None,
             )
+            request.body_size_limit = human.parse_size(
+                self.context.options.body_size_limit
+            )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(
                 RequestHeaders(
@@ -601,6 +604,9 @@ class Http2Client(Http2Connection):
                 trailers=None,
                 timestamp_start=time.time(),
                 timestamp_end=None,
+            )
+            response.body_size_limit = human.parse_size(
+                self.context.options.body_size_limit
             )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(

@@ -21,19 +21,28 @@ _cache = CachedDecode(None, None, None, None)
 
 
 @overload
-def decode(encoded: None, encoding: str, errors: str = "strict") -> None: ...
+def decode(
+    encoded: None, encoding: str, size_limit: int | None = None, errors: str = "strict"
+) -> None: ...
 
 
 @overload
-def decode(encoded: str, encoding: str, errors: str = "strict") -> str: ...
+def decode(
+    encoded: str, encoding: str, size_limit: int | None = None, errors: str = "strict"
+) -> str: ...
 
 
 @overload
-def decode(encoded: bytes, encoding: str, errors: str = "strict") -> str | bytes: ...
+def decode(
+    encoded: bytes, encoding: str, size_limit: int | None = None, errors: str = "strict"
+) -> str | bytes: ...
 
 
 def decode(
-    encoded: None | str | bytes, encoding: str, errors: str = "strict"
+    encoded: None | str | bytes,
+    encoding: str,
+    size_limit: int | None = None,
+    errors: str = "strict",
 ) -> None | str | bytes:
     """
     Decode the given input object
@@ -42,7 +51,7 @@ def decode(
         The decoded value
 
     Raises:
-        ValueError, if decoding fails.
+        ValueError, if decoding fails or exceeds the size_limit.
     """
     if encoded is None:
         return None
@@ -59,7 +68,7 @@ def decode(
         return _cache.decoded
     try:
         try:
-            decoded = custom_decode[encoding](encoded)
+            decoded = custom_decode[encoding](encoded, size_limit)  # type: ignore
         except KeyError:
             decoded = codecs.decode(encoded, encoding, errors)  # type: ignore
         if encoding in ("gzip", "deflate", "deflateraw", "br", "zstd"):
@@ -117,7 +126,7 @@ def encode(
         return _cache.encoded
     try:
         try:
-            encoded = custom_encode[encoding](decoded)
+            encoded = custom_encode[encoding](decoded)  # type: ignore
         except KeyError:
             encoded = codecs.encode(decoded, encoding, errors)  # type: ignore
         if encoding in ("gzip", "deflate", "deflateraw", "br", "zstd"):
@@ -136,7 +145,7 @@ def encode(
         )
 
 
-def identity(content):
+def identity(content, *args):
     """
     Returns content unchanged. Identity is the default value of
     Accept-Encoding headers.
@@ -144,11 +153,17 @@ def identity(content):
     return content
 
 
-def decode_gzip(content: bytes) -> bytes:
+def decode_gzip(content: bytes, size_limit: int | None = None) -> bytes:
     if not content:
         return b""
     with gzip.GzipFile(fileobj=BytesIO(content)) as f:
-        return f.read()
+        if size_limit:
+            decoded = f.read(size_limit)
+            if f.read1(1):
+                raise ValueError("Decompressed data exceeds size_limit")
+            return decoded
+        else:
+            return f.read()
 
 
 def encode_gzip(content: bytes) -> bytes:
@@ -159,9 +174,15 @@ def encode_gzip(content: bytes) -> bytes:
     return s.getvalue()
 
 
-def decode_brotli(content: bytes) -> bytes:
+def decode_brotli(content: bytes, size_limit: int | None = None) -> bytes:
     if not content:
         return b""
+    if size_limit:
+        brotli_ctx = brotli.Decompressor()
+        decoded = brotli_ctx.process(content, output_buffer_limit=size_limit)
+        if not brotli_ctx.is_finished() or len(decoded) > size_limit:
+            raise ValueError("Decompressed data exceeds size_limit")
+        return decoded
     return brotli.decompress(content)
 
 
@@ -169,11 +190,18 @@ def encode_brotli(content: bytes) -> bytes:
     return brotli.compress(content)
 
 
-def decode_zstd(content: bytes) -> bytes:
+def decode_zstd(content: bytes, size_limit: int | None = None) -> bytes:
     if not content:
         return b""
-    zstd_ctx = zstd.ZstdDecompressor()
-    return zstd_ctx.stream_reader(BytesIO(content), read_across_frames=True).read()
+    stream = zstd.ZstdDecompressor().stream_reader(
+        BytesIO(content), read_across_frames=True
+    )
+    if size_limit:
+        decoded = stream.read(size_limit)
+        if stream.read1(1):
+            raise ValueError("Decompressed data exceeds size_limit")
+        return decoded
+    return stream.read()
 
 
 def encode_zstd(content: bytes) -> bytes:
@@ -181,7 +209,9 @@ def encode_zstd(content: bytes) -> bytes:
     return zstd_ctx.compress(content)
 
 
-def decode_deflate(content: bytes) -> bytes:
+def decode_deflate(
+    content: bytes, size_limit: int | None = None, wbits: int = 15
+) -> bytes:
     """
     Returns decompressed data for DEFLATE. Some servers may respond with
     compressed data without a zlib header or checksum. An undocumented
@@ -192,10 +222,17 @@ def decode_deflate(content: bytes) -> bytes:
     """
     if not content:
         return b""
+    obj = zlib.decompressobj(wbits)
     try:
-        return zlib.decompress(content)
+        if size_limit:
+            decoded = obj.decompress(content, max_length=size_limit)
+            if obj.unconsumed_tail:
+                raise ValueError("Decompressed data exceeds size_limit")
+            return decoded
+        else:
+            return obj.decompress(content)
     except zlib.error:
-        return zlib.decompress(content, -15)
+        return decode_deflate(content, size_limit, -15)
 
 
 def encode_deflate(content: bytes) -> bytes:
