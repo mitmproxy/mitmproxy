@@ -10,4 +10,6 @@ function OptionModal() {
     );
 }
 
-export default [OptionModal];
+export default {
+    OptionModal
+};
