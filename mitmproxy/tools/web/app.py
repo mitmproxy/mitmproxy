@@ -12,10 +12,12 @@ import sys
 from collections.abc import Callable
 from collections.abc import Sequence
 from io import BytesIO
-from typing import Any, Optional, Awaitable
+from typing import Any
+from typing import Awaitable
 from typing import ClassVar
 from typing import Concatenate
 from typing import Literal
+from typing import Optional
 
 import tornado.escape
 import tornado.web
