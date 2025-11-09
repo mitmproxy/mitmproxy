@@ -8,12 +8,17 @@
 ## Unreleased: mitmproxy next
 - Disables buffering for flow file
   ([#7967](https://github.com/mitmproxy/mitmproxy/pull/7967), @caiquejjx)
+- infer_content_encoding: Fallback to UTF-8 for more content types
+  ([#7961](https://github.com/mitmproxy/mitmproxy/pull/7961), @xu-cheng)
 - Remove `bless` from hex editors to avoid issues with macOS
   ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
 - Improves `is_mostly_bin` check to support chinese characters
   ([#7933](https://github.com/mitmproxy/mitmproxy/pull/7933), @caiquejjx, @mhils)
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
+- Gracefully handle decoding of raw binary payloads that previously caused 
+  "Raw cannot decode" or "failed to parse as JSON" errors
+  ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
   ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
 
