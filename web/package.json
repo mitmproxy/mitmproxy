@@ -3,7 +3,7 @@
     "private": true,
     "scripts": {
         "test": "eslint . && tsc --noEmit && jest --coverage",
-        "build": "gulp prod",
+        "build": "rm -rf ../mitmproxy/tools/web/static && vite build",
         "start": "gulp",
         "prettier": "prettier --write .",
         "eslint": "eslint --fix ."
@@ -35,6 +35,8 @@
         "@testing-library/user-event": "^14.6.1",
         "@types/jest": "^29.5.14",
         "@types/redux-mock-store": "^1.5.0",
+        "@vitejs/plugin-react": "^5.1.0",
+        "babel-plugin-react-compiler": "^1.0.0",
         "esbuild": "^0.25.4",
         "esbuild-jest": "^0.5.0",
         "eslint": "^9.26.0",
@@ -53,10 +55,12 @@
         "jest": "^29.7.0",
         "jest-environment-jsdom": "^29.7.0",
         "jest-fetch-mock": "^3.0.3",
+        "less": "^4.4.2",
         "prettier": "^3.5.3",
         "redux-mock-store": "^1.5.5",
         "through2": "^4.0.2",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.32.1"
+        "typescript-eslint": "^8.32.1",
+        "vite": "^7.2.2"
     }
 }

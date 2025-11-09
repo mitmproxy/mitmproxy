@@ -299,6 +299,7 @@ class RequestHandler(AuthRequestHandler):
             "Content-Security-Policy",
             "default-src 'self'; "
             "connect-src 'self' ws:; "
+            "img-src 'self' data:; "
             "style-src   'self' 'unsafe-inline'",
         )
 
@@ -354,7 +355,7 @@ class IndexHandler(RequestHandler):
         self.render("login.html", invalid_password=invalid_password)
 
     def get(self):
-        self.render("index.html")
+        self.render("../index.html")
 
     post = get  # login form
 
@@ -922,4 +923,5 @@ class Application(tornado.web.Application):
             transforms=[GZipContentAndFlowFiles],
             is_valid_password=auth_addon.is_valid_password,
             auth_cookie_name=auth_addon.auth_cookie_name,
+            compiled_template_cache=False,  # Vite
         )
