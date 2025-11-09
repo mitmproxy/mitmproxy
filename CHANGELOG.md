@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- infer_content_encoding: Fallback to UTF-8 for more content types
+  ([#7961](https://github.com/mitmproxy/mitmproxy/pull/7961), @xu-cheng)
 - Remove `bless` from hex editors to avoid issues with macOS
   ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
 - Improves `is_mostly_bin` check to support chinese characters

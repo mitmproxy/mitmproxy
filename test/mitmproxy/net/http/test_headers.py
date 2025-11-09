@@ -60,12 +60,22 @@ def test_assemble_content_type():
             b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
             "gb18030",
         ),
+        (
+            "text/html",
+            b"<html></html>",
+            "utf8",
+        ),
         # xml declaration encoding
         (
             "application/xml",
             b'<?xml version="1.0" encoding="gb2312"?>'
             b"<root>\xe6\x98\x8e\xe4\xbc\xaf</root>",
             "gb18030",
+        ),
+        (
+            "application/xml",
+            b'<?xml version="1.0"?>',
+            "utf8",
         ),
         # css charset
         (
@@ -83,6 +93,10 @@ def test_assemble_content_type():
             b"h1 {}",
             "utf8",
         ),
+        # js
+        ("application/javascript", b"", "utf8"),
+        ("application/ecmascript", b"", "utf8"),
+        ("text/javascript", b"", "utf8"),
     ],
 )
 def test_infer_content_encoding(content_type, content, expected):
