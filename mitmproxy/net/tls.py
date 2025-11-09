@@ -1,5 +1,6 @@
 import os
 import threading
+import typing
 from collections.abc import Callable
 from collections.abc import Iterable
 from enum import Enum
@@ -10,9 +11,12 @@ from typing import Any
 from typing import BinaryIO
 
 import certifi
-from OpenSSL import crypto
+import OpenSSL
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurveOID
+from cryptography.hazmat.primitives.asymmetric.ec import get_curve_for_oid
+from cryptography.x509 import ObjectIdentifier
 from OpenSSL import SSL
-from OpenSSL.crypto import X509
 
 from mitmproxy import certs
 
@@ -86,6 +90,27 @@ def is_supported_version(version: Version):
         return False
 
 
+EC_CURVES: dict[str, EllipticCurve] = {}
+for oid in EllipticCurveOID.__dict__.values():
+    if isinstance(oid, ObjectIdentifier):
+        curve = get_curve_for_oid(oid)()
+        EC_CURVES[curve.name] = curve
+
+
+@typing.overload
+def get_curve(name: str) -> EllipticCurve: ...
+
+
+@typing.overload
+def get_curve(name: None) -> None: ...
+
+
+def get_curve(name: str | None) -> EllipticCurve | None:
+    if name is None:
+        return None
+    return EC_CURVES[name]
+
+
 class MasterSecretLogger:
     def __init__(self, filename: Path):
         self.filename = filename.expanduser()
@@ -127,7 +152,7 @@ def _create_ssl_context(
     min_version: Version,
     max_version: Version,
     cipher_list: Iterable[str] | None,
-    ecdh_curve: str | None,
+    ecdh_curve: EllipticCurve | None,
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -145,7 +170,7 @@ def _create_ssl_context(
     # ECDHE for Key exchange
     if ecdh_curve is not None:
         try:
-            context.set_tmp_ecdh(crypto.get_elliptic_curve(ecdh_curve))
+            context.set_tmp_ecdh(ecdh_curve)
         except ValueError as e:
             raise RuntimeError(f"Elliptic curve specification error: {e}") from e
 
@@ -170,7 +195,7 @@ def create_proxy_server_context(
     min_version: Version,
     max_version: Version,
     cipher_list: tuple[str, ...] | None,
-    ecdh_curve: str | None,
+    ecdh_curve: EllipticCurve | None,
     verify: Verify,
     ca_path: str | None,
     ca_pemfile: str | None,
@@ -219,7 +244,7 @@ def create_client_proxy_context(
     min_version: Version,
     max_version: Version,
     cipher_list: tuple[str, ...] | None,
-    ecdh_curve: str | None,
+    ecdh_curve: EllipticCurve | None,
     chain_file: Path | None,
     alpn_select_callback: Callable[[SSL.Connection, list[bytes]], Any] | None,
     request_client_cert: bool,
@@ -269,7 +294,7 @@ def create_client_proxy_context(
 
 def accept_all(
     conn_: SSL.Connection,
-    x509: X509,
+    x509: OpenSSL.crypto.X509,
     errno: int,
     err_depth: int,
     is_cert_verified: int,
