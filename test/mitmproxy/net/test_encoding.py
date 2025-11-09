@@ -66,20 +66,27 @@ def test_encoders_strings(encoder):
         encoding.decode("foobar", encoder)
 
 
-def test_decode_gzip_truncated():
-    """
-    Regression test for issue #7795: ensure decode_gzip() handles the real
-    malformed/truncated gzip sample posted in the issue comments and does not
-    raise. Using the exact test vector from the issue makes the test stable.
-    """
-    data = bytes.fromhex(
-        "1f8b08000000000000ffaa564a2d2a72ce4f4955b2d235d551502a4a2df12d4e57"
-        "b2527ab17efbb38d4d4f7b5a9fec58fb6cd3c267733a934a3353946a01000000ffff"
-    )
-    result = encoding.decode_gzip(data)
+class TestDecodeGzip:
+    def test_regular_gzip(self):
+        # generated with gzip.compress(b"mitmproxy")
+        data = bytes.fromhex("1f8b0800e4a4106902ffcbcd2cc92d28caafa80400d21f9c9d09000000")
+        assert encoding.decode_gzip(data) == b"mitmproxy"
 
-    assert isinstance(result, (bytes, bytearray))
-    assert len(result) > 0
+    def test_zlib(self):
+        # generated with zlib.compress(b"mitmproxy")
+        data = bytes.fromhex("789ccbcd2cc92d28caafa80400138e03fa")
+        assert encoding.decode_gzip(data) == b"mitmproxy"
+
+    def test_truncated(self):
+        """https://github.com/mitmproxy/mitmproxy/issues/7795"""
+        data = bytes.fromhex(
+            "1f8b08000000000000ffaa564a2d2a72ce4f4955b2d235d551502a4a2df12d4e57"
+            "b2527ab17efbb38d4d4f7b5a9fec58fb6cd3c267733a934a3353946a01000000ffff"
+        )
+        assert encoding.decode_gzip(data) == (
+            b"{\"errCode\":-5, \"retMsg\":\"\xe8\xaf\xb7\xe6\xb1\x82\xe5\x8c\x85\xe4"
+            b"\xb8\xad\xe6\xb2\xa1\xe6\x9c\x89buid\"}"
+        )
 
 
 def test_cache():
