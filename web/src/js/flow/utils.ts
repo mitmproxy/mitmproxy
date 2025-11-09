@@ -302,5 +302,5 @@ export const sortFunctions = {
 };
 
 export function isValidColumnName(x: string): x is keyof typeof sortFunctions {
-  return x in sortFunctions;
+    return x in sortFunctions;
 }

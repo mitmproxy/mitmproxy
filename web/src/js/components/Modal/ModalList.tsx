@@ -11,5 +11,5 @@ function OptionModal() {
 }
 
 export default {
-    OptionModal
+    OptionModal,
 };

@@ -4,7 +4,7 @@ import FlowColumns from "./FlowColumns";
 
 import { setSort } from "../../ducks/flows";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import {isValidColumnName} from "../../flow/utils";
+import { isValidColumnName } from "../../flow/utils";
 
 export default React.memo(function FlowTableHead() {
     const dispatch = useAppDispatch();
@@ -36,9 +36,7 @@ export default React.memo(function FlowTableHead() {
                                         ? undefined
                                         : colName,
                                 desc:
-                                    colName !== sortColumn
-                                        ? false
-                                        : !sortDesc,
+                                    colName !== sortColumn ? false : !sortDesc,
                             }),
                         )
                     }

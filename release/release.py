@@ -81,6 +81,9 @@ if __name__ == "__main__":
     subprocess.run(
         ["npm", "start", "prod"], cwd=root / "web", check=True, capture_output=True
     )
+    subprocess.run(
+        ["git", "add", "--all", f"mitmproxy/tools/web"], cwd=root, capture_output=True
+    )
 
     print("➡️ Updating version...")
     version_py = root / "mitmproxy" / "version.py"
