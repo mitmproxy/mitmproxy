@@ -6,9 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
-- Adds flush after writing to flow file for realtime changes
+- Disables buffering for flow file
   ([#7967](https://github.com/mitmproxy/mitmproxy/pull/7967), @caiquejjx)
-
 - Remove `bless` from hex editors to avoid issues with macOS
   ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
 - Improves `is_mostly_bin` check to support chinese characters
