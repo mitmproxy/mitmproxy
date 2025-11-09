@@ -67,7 +67,7 @@ class _SignalMixin:
 
 class _SyncSignal(Generic[P], _SignalMixin):
     def connect(self, receiver: Callable[P, None]) -> None:
-        assert not asyncio.iscoroutinefunction(receiver)
+        assert not inspect.iscoroutinefunction(receiver)
         super().connect(receiver)
 
     def disconnect(self, receiver: Callable[P, None]) -> None:
