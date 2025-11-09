@@ -65,7 +65,6 @@ def dump(value: TSerializable, file_handle: BinaryIO) -> None:
     writes it to the given file.
     """
     file_handle.write(dumps(value))
-    file_handle.flush()
 
 
 def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
