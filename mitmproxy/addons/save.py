@@ -97,7 +97,7 @@ class Save:
         new_log_file = Path(path)
         new_log_file.parent.mkdir(parents=True, exist_ok=True)
 
-        f = new_log_file.open(_mode(ctx.options.save_stream_file), buffering=False)
+        f = new_log_file.open(_mode(ctx.options.save_stream_file))
         self.stream = io.FilteredFlowWriter(f, self.filt)
         self.current_path = path
 
