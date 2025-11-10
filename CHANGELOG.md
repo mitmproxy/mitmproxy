@@ -6,7 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
-- Disables buffering for flow file
+
+- Flush flow file after each flow to allow further processing.
   ([#7967](https://github.com/mitmproxy/mitmproxy/pull/7967), @caiquejjx)
 - infer_content_encoding: Fallback to UTF-8 for more content types
   ([#7961](https://github.com/mitmproxy/mitmproxy/pull/7961), @xu-cheng)
