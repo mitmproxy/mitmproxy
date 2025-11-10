@@ -5,6 +5,8 @@
 ✨ You do not need to add a pull request reference or author information, this will be done automatically by CI. ✨
 -->
 
+- Add invisible attribute for FlowColumns
+
 ## Unreleased: mitmproxy next
 
 - Flush flow file after each flow to allow further processing.
