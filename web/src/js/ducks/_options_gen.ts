@@ -101,6 +101,7 @@ export interface OptionsState {
     web_password: string;
     web_port: number;
     web_static_viewer: string | undefined;
+    web_theme: string;
     websocket: boolean;
 }
 
@@ -208,5 +209,6 @@ export const defaultState: OptionsState = {
     web_password: "",
     web_port: 8081,
     web_static_viewer: "",
+    web_theme: "system",
     websocket: true,
 };

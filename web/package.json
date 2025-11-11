@@ -4,6 +4,7 @@
     "scripts": {
         "test": "eslint . && tsc --noEmit && jest --coverage",
         "build": "gulp prod",
+        "tsc": "tsc --build tsconfig.build.json",
         "start": "gulp",
         "prettier": "prettier --write .",
         "eslint": "eslint --fix ."

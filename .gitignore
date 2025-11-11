@@ -11,6 +11,7 @@ MANIFEST
 .coverage*
 .idea
 .vscode
+*.code-workspace
 .cache/
 .tox*/
 build/
@@ -31,3 +32,6 @@ sslkeylogfile.log
 coverage.xml
 web/coverage/
 .mypy_cache/
+
+# TS
+*.tsbuildinfo

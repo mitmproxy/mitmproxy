@@ -1,12 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface UiFlowState {
-    tab: string;
+export interface UiFlowState {
+    tabResponse: string;
+    tabRequest?: string;
     contentViewFor: { [messageId: string]: string };
 }
 
 export const defaultState: UiFlowState = {
-    tab: "request",
+    tabResponse: "request",
     contentViewFor: {},
 };
 
@@ -15,7 +16,13 @@ const flowsSlice = createSlice({
     initialState: defaultState,
     reducers: {
         selectTab(state, action: PayloadAction<string>) {
-            state.tab = action.payload;
+            state.tabResponse = action.payload;
+        },
+        selectRequestTab(state, action: PayloadAction<string>) {
+            state.tabRequest = action.payload;
+        },
+        selectResponseTab(state, action: PayloadAction<string>) {
+            state.tabResponse = action.payload;
         },
         setContentViewFor(
             state,
@@ -28,5 +35,10 @@ const flowsSlice = createSlice({
 });
 
 const { actions, reducer } = flowsSlice;
-export const { selectTab, setContentViewFor } = actions;
+export const {
+    selectTab,
+    selectRequestTab,
+    selectResponseTab,
+    setContentViewFor,
+} = actions;
 export default reducer;

@@ -67,7 +67,9 @@ describe("FilterInput Component", () => {
         const filterInput = dummyInput();
 
         act(() => filterInput.setState({ value: "" }));
-        expect(filterInput.getDesc().type).toEqual(FilterDocs);
+        expect((filterInput.getDesc() as React.JSX.Element)?.type).toEqual(
+            FilterDocs,
+        );
 
         act(() => filterInput.setState({ value: "~u foo" }));
         expect(filterInput.getDesc()).toEqual("url matches /foo/i");

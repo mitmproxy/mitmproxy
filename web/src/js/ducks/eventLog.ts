@@ -19,7 +19,7 @@ export interface EventLogItem {
     level: LogLevel;
 }
 
-interface EventLogState {
+export interface EventLogState {
     visible: boolean;
     filters: { [level in LogLevel]: boolean };
     list: EventLogItem[];

@@ -7,7 +7,7 @@ export enum ConnectionState {
     ERROR = "CONNECTION_ERROR",
 }
 
-interface ConnState {
+export interface ConnState {
     state: ConnectionState;
     message?: string;
 }
