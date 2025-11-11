@@ -14,6 +14,16 @@ export default defineConfig({
     build: {
         outDir: "../mitmproxy/tools/web",
         assetsDir: "static",
+        rollupOptions: {
+            output: {
+                manualChunks: (id) => {
+                    if (id.includes('node_modules') || id.includes('vendor.less')) {
+                        return 'vendor';
+                    }
+                    return null;
+                }
+            }
+        }
     },
     server: {
         host: "127.0.0.1",
