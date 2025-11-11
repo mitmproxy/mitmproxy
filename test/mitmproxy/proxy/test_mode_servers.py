@@ -103,35 +103,35 @@ async def test_tcp_timeout(caplog_async):
     caplog_async.set_level("INFO")
     manager = MagicMock()
 
-    async with asyncio.timeout(30):
-        with taddons.context() as tctx:
-            # Set timeout to 0 for immediate timeout (fastest test)
-            tctx.options.tcp_timeout = 0
+    with taddons.context() as tctx:
+        # Set timeout to 0 for immediate timeout (fastest test)
+        tctx.options.tcp_timeout = 0
 
-            inst = ServerInstance.make("regular@127.0.0.1:0", manager)
-            await inst.start()
-            assert await caplog_async.await_log("proxy listening")
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("proxy listening")
 
-            host, port, *_ = inst.listen_addrs[0]
-            reader, writer = await asyncio.open_connection(host, port)
-            assert await caplog_async.await_log("client connect")
+        host, port, *_ = inst.listen_addrs[0]
+        reader, writer = await asyncio.open_connection(host, port)
+        assert await caplog_async.await_log("client connect")
 
-            # Keep connection open but inactive - it should timeout after 1s
-            # The await_log below will wait for the timeout to trigger
+        # Keep connection open but inactive - it should timeout after 1s
+        # The await_log below will wait for the timeout to trigger
 
-            # Verify the connection was closed due to inactivity
+        async with asyncio.timeout(30):
+            # Verify the connection was closed due to inactivity in <60s
             assert await caplog_async.await_log("Closing connection due to inactivity")
             assert await caplog_async.await_log("client disconnect")
 
-            # Try to read from the closed connection to confirm it's really closed
-            data = await reader.read(1)
-            assert data == b""  # EOF indicates connection is closed
+        # Try to read from the closed connection to confirm it's really closed
+        data = await reader.read(1)
+        assert data == b""  # EOF indicates connection is closed
 
-            writer.close()
-            await writer.wait_closed()
+        writer.close()
+        await writer.wait_closed()
 
-            await inst.stop()
-            assert await caplog_async.await_log("stopped")
+        await inst.stop()
+        assert await caplog_async.await_log("stopped")
 
 
 @pytest.mark.parametrize("failure", [True, False])
