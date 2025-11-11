@@ -77,7 +77,11 @@ function getCookie(name) {
     return r ? r[1] : undefined;
 }
 
-const xsrf = getCookie("_xsrf");
+let xsrf = () => {
+    const cached = getCookie("_xsrf");
+    xsrf = () => cached;
+    return xsrf();
+};
 
 export function fetchApi(
     url: string,
@@ -85,7 +89,7 @@ export function fetchApi(
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
         options.headers = options.headers || {};
-        options.headers["X-XSRFToken"] = xsrf;
+        options.headers["X-XSRFToken"] = xsrf();
     }
     if (url.startsWith("/")) {
         url = "." + url;
