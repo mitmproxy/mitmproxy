@@ -82,7 +82,7 @@ class FlowReader:
 
 
 class FilteredFlowWriter:
-    def __init__(self, fo, flt):
+    def __init__(self, fo: BinaryIO, flt: flowfilter.TFilter | None):
         self.fo = fo
         self.flt = flt
 
@@ -91,6 +91,7 @@ class FilteredFlowWriter:
             return
         d = f.get_state()
         tnetstring.dump(d, self.fo)
+        self.fo.flush()
 
 
 def read_flows_from_paths(paths) -> list[flow.Flow]:

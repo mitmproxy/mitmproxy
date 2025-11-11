@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
+  Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
+  ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
+- Flush flow file after each flow to allow further processing.
+  ([#7967](https://github.com/mitmproxy/mitmproxy/pull/7967), @caiquejjx)
 - infer_content_encoding: Fallback to UTF-8 for more content types
   ([#7961](https://github.com/mitmproxy/mitmproxy/pull/7961), @xu-cheng)
 - Remove `bless` from hex editors to avoid issues with macOS
@@ -15,6 +20,8 @@
   ([#7933](https://github.com/mitmproxy/mitmproxy/pull/7933), @caiquejjx, @mhils)
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
+- Add example addon to spoof DNS responses.
+  ([#7973](https://github.com/mitmproxy/mitmproxy/pull/7973), @mhils)
 - Gracefully handle decoding of raw binary payloads that previously caused 
   "Raw cannot decode" or "failed to parse as JSON" errors
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
@@ -22,6 +29,8 @@
   ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
 - mitmweb is now built with Vite, improving the development workflow.
   ([#7971](https://github.com/mitmproxy/mitmproxy/pull/7971), @sleeyax, @mhils)
+- Fix URL of mitmweb when --web-host is an IPv6 address.
+  ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
 
 ## 15 October 2025: mitmproxy 12.2.0
 

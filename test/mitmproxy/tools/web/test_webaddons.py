@@ -48,3 +48,21 @@ class TestWebAuth:
                 tctx.options.web_password = "$argon2id$"
             assert not a.is_valid_password("")
             assert not a.is_valid_password("test")
+
+    @pytest.mark.parametrize(
+        "web_host,web_port,expected_web_url",
+        [
+            ("example.com", 8080, "http://example.com:8080/"),
+            ("127.0.0.1", 8080, "http://127.0.0.1:8080/"),
+            ("::1", 8080, "http://[::1]:8080/"),
+            ("example.com", 80, "http://example.com:80/?"),
+            ("127.0.0.1", 80, "http://127.0.0.1:80/?"),
+            ("::1", 80, "http://[::1]:80/?"),
+        ],
+    )
+    def test_web_url(self, caplog, web_host, web_port, expected_web_url):
+        a = webaddons.WebAuth()
+        with taddons.context(webaddons.WebAddon(), a) as tctx:
+            tctx.options.web_host = web_host
+            tctx.options.web_port = web_port
+            assert a.web_url.startswith(expected_web_url), a.web_url
