@@ -20,7 +20,7 @@ def dns_request(flow: dns.DNSFlow) -> None:
     q = flow.request.question
     if q and q.type == dns.types.AAAA:
         logging.info(f"Spoofing IPv6 records for {q.name}...")
-        if flow.request.question.name == "example.com":
+        if q.name == "example.com":
             flow.response = flow.request.succeed(
                 [
                     dns.ResourceRecord(
@@ -32,7 +32,7 @@ def dns_request(flow: dns.DNSFlow) -> None:
                     )
                 ]
             )
-        elif flow.request.question.name == "example.org":
+        elif q.name == "example.org":
             flow.response = flow.request.fail(dns.response_codes.NXDOMAIN)
         else:
             flow.response = flow.request.succeed([])
