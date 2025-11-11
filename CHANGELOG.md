@@ -18,6 +18,7 @@
 - Fix various issues in infer_content_encoding
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
 - Add example addon to spoof DNS responses.
+  ([#7973](https://github.com/mitmproxy/mitmproxy/pull/7973), @mhils)
 - Gracefully handle decoding of raw binary payloads that previously caused 
   "Raw cannot decode" or "failed to parse as JSON" errors
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
