@@ -68,12 +68,28 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
         )
         if meta_charset:
             enc = meta_charset.group(1).decode("ascii", "ignore")
+        else:
+            # Fallback to utf8 for html
+            # Ref: https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
+            # > 9. [snip] the comprehensive UTF-8 encoding is suggested.
+            enc = "utf8"
 
     if not enc and "xml" in content_type:
         if xml_encoding := re.search(
             rb"""<\?xml[^\?>]+encoding=['"]([^'"\?>]+)""", content, re.IGNORECASE
         ):
             enc = xml_encoding.group(1).decode("ascii", "ignore")
+        else:
+            # Fallback to utf8 for xml
+            # Ref: https://datatracker.ietf.org/doc/html/rfc7303#section-8.5
+            # > the XML processor [snip] to determine an encoding of UTF-8.
+            enc = "utf8"
+
+    if not enc and ("javascript" in content_type or "ecmascript" in content_type):
+        # Fallback to utf8 for javascript
+        # Ref: https://datatracker.ietf.org/doc/html/rfc9239#section-4.2
+        # > 3. Else, the character encoding scheme is assumed to be UTF-8
+        enc = "utf8"
 
     if not enc and "text/css" in content_type:
         # @charset rule must be the very first thing.
@@ -83,6 +99,7 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
         else:
             # Fallback to utf8 for css
             # Ref: https://drafts.csswg.org/css-syntax/#determine-the-fallback-encoding
+            # > 4. Otherwise, return utf-8
             enc = "utf8"
 
     # Fallback to latin-1
