@@ -25,6 +25,8 @@
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
   ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
+- Fix URL of mitmweb when --web-host is an IPv6 address.
+  ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
