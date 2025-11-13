@@ -13,14 +13,17 @@ jobs:
   autofix:
     runs-on: ubuntu-latest
     steps:
-      - uses: mhils/workflows/checkout@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
-      - uses: mhils/workflows/setup-uv@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
-      - uses: mhils/workflows/uv-sync@8a2bdd081227cbdd6f5d3bbb54a759607feac0b6
+      - uses: mhils/workflows/checkout@481eaf3cc2ad8eb664a4c9a20cc635d46e02b5c6
+      - uses: mhils/workflows/setup-uv@481eaf3cc2ad8eb664a4c9a20cc635d46e02b5c6
+
+      # If we need to update the lockfile (--check returns an error),
+      # make sure to upgrade everything.
+      - run: uv lock --check || uv lock --upgrade
+
+      - uses: mhils/workflows/uv-sync@481eaf3cc2ad8eb664a4c9a20cc635d46e02b5c6
 
       - run: ruff check --fix-only .
       - run: ruff format .
-
-      - run: uv lock
 
       - run: web/gen/all
 
