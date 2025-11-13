@@ -145,10 +145,18 @@ def identity(content):
 
 
 def decode_gzip(content: bytes) -> bytes:
+    """Decode gzip or zlib-compressed data using zlib's auto-detection."""
     if not content:
         return b""
-    with gzip.GzipFile(fileobj=BytesIO(content)) as f:
-        return f.read()
+
+    try:
+        # Using wbits=47 (32 + 15) tells zlib to automatically detect both gzip and zlib headers.
+        # This simplifies decoding and avoids the need for a separate gzip.GzipFile fallback.
+        # Reference: https://docs.python.org/3/library/zlib.html#zlib.decompress
+        decompressor = zlib.decompressobj(47)
+        return decompressor.decompress(content) + decompressor.flush()
+    except zlib.error as e:
+        raise ValueError(f"Decompression failed: {e}")
 
 
 def encode_gzip(content: bytes) -> bytes:
