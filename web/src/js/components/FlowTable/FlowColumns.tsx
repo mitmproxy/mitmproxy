@@ -1,9 +1,8 @@
-import type { ReactElement} from "react";
+import type { ReactElement } from "react";
 import React, { type JSX } from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import classnames from "classnames";
-import type {
-    sortFunctions} from "../../flow/utils";
+import type { sortFunctions } from "../../flow/utils";
 import {
     canReplay,
     endTime,

@@ -1,17 +1,12 @@
 import { createModeUpdateThunk, addSetter } from "./utils";
 import type { ReverseProxyProtocols } from "../../backends/consts";
-import type { BackendState} from "../backendState";
+import type { BackendState } from "../backendState";
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { shallowEqual } from "react-redux";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
-import type {
-    ReverseState} from "../../modes/reverse";
-import {
-    defaultReverseState,
-    getSpec,
-    parseRaw
-} from "../../modes/reverse";
+import type { ReverseState } from "../../modes/reverse";
+import { defaultReverseState, getSpec, parseRaw } from "../../modes/reverse";
 import { parseSpec } from "../../modes";
 
 export const setActive = createModeUpdateThunk<boolean>(

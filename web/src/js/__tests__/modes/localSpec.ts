@@ -1,6 +1,6 @@
 import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import type { LocalState} from "../../modes/local";
+import type { LocalState } from "../../modes/local";
 import { getSpec, parseRaw } from "../../modes/local";
 
 describe("getSpec local mode", () => {

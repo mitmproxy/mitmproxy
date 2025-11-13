@@ -4,7 +4,7 @@ import { connect, shallowEqual } from "react-redux";
 import * as modalAction from "../../ducks/ui/modal";
 import type { Option } from "../../ducks/options";
 import { compact, isEmpty } from "lodash";
-import type { RootState} from "../../ducks";
+import type { RootState } from "../../ducks";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import OptionInput from "./OptionInput";
 

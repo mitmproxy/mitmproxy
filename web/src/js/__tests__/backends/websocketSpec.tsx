@@ -4,13 +4,8 @@ import fetchMock from "jest-fetch-mock";
 import { waitFor } from "../test-utils";
 import * as connectionActions from "../../ducks/connection";
 import type { UnknownAction } from "@reduxjs/toolkit";
-import type {
-    EventLogItem} from "../../ducks/eventLog";
-import {
-    EVENTS_ADD,
-    EVENTS_RECEIVE,
-    LogLevel,
-} from "../../ducks/eventLog";
+import type { EventLogItem } from "../../ducks/eventLog";
+import { EVENTS_ADD, EVENTS_RECEIVE, LogLevel } from "../../ducks/eventLog";
 import { OPTIONS_RECEIVE } from "../../ducks/options";
 import { FLOWS_RECEIVE } from "../../ducks/flows";
 import { STATE_RECEIVE } from "../../ducks/backendState";

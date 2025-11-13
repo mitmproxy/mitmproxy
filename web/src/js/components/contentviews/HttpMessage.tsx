@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import type { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
-import type { ContentViewData} from "./useContentView";
+import type { ContentViewData } from "./useContentView";
 import { useContentView } from "./useContentView";
 import { useContent } from "./useContent";
 import { MessageUtils } from "../../flow/utils";

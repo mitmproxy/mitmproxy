@@ -1,6 +1,6 @@
 import * as React from "react";
 import EventLogList from "../../../components/EventLog/EventList";
-import type { EventLogItem} from "../../../ducks/eventLog";
+import type { EventLogItem } from "../../../ducks/eventLog";
 import { LogLevel } from "../../../ducks/eventLog";
 import { render } from "../../test-utils";
 

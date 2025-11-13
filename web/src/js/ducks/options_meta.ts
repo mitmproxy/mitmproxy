@@ -1,9 +1,5 @@
-import type {
-    OptionsStateWithMeta} from "./options";
-import {
-    OPTIONS_RECEIVE,
-    OPTIONS_UPDATE
-} from "./options";
+import type { OptionsStateWithMeta } from "./options";
+import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "./options";
 import { createSlice } from "@reduxjs/toolkit";
 
 export type OptionsMetaState = Partial<OptionsStateWithMeta>;

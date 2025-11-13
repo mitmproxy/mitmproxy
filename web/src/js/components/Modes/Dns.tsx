@@ -6,7 +6,7 @@ import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
 import { Popover } from "./Popover";
 import { setActive, setListenHost, setListenPort } from "../../ducks/modes/dns";
-import type { DnsState} from "../../modes/dns";
+import type { DnsState } from "../../modes/dns";
 import { getSpec } from "../../modes/dns";
 
 export default function Dns() {

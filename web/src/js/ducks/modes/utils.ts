@@ -14,7 +14,7 @@ import type {
     Draft,
     PayloadAction,
 } from "@reduxjs/toolkit";
-import type { AppAsyncThunkConfig} from "../hooks";
+import type { AppAsyncThunkConfig } from "../hooks";
 import { createAppAsyncThunk } from "../hooks";
 import type { ModeState, RawSpecParts } from "../../modes";
 import { parseSpec } from "../../modes";
