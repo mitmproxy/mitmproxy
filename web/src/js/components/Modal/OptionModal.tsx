@@ -2,9 +2,10 @@
 import React from "react";
 import { connect, shallowEqual } from "react-redux";
 import * as modalAction from "../../ducks/ui/modal";
-import { Option } from "../../ducks/options";
+import type { Option } from "../../ducks/options";
 import { compact, isEmpty } from "lodash";
-import { RootState, useAppDispatch, useAppSelector } from "../../ducks";
+import type { RootState} from "../../ducks";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 import OptionInput from "./OptionInput";
 
 function OptionHelp({ name }: { name: Option }) {

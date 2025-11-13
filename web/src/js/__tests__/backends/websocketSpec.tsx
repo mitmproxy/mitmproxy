@@ -1,10 +1,12 @@
 import WebSocketBackend from "../../backends/websocket";
-import fetchMock, { MockResponseInit } from "jest-fetch-mock";
+import type { MockResponseInit } from "jest-fetch-mock";
+import fetchMock from "jest-fetch-mock";
 import { waitFor } from "../test-utils";
 import * as connectionActions from "../../ducks/connection";
-import { UnknownAction } from "@reduxjs/toolkit";
+import type { UnknownAction } from "@reduxjs/toolkit";
+import type {
+    EventLogItem} from "../../ducks/eventLog";
 import {
-    EventLogItem,
     EVENTS_ADD,
     EVENTS_RECEIVE,
     LogLevel,

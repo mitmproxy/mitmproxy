@@ -1,4 +1,5 @@
-import { DnsState, parseRaw } from "../../modes/dns";
+import type { DnsState} from "../../modes/dns";
+import { parseRaw } from "../../modes/dns";
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";

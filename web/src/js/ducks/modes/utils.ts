@@ -7,15 +7,17 @@ import { getSpec as getSocksSpec } from "../../modes/socks";
 import { getSpec as getUpstreamSpec } from "../../modes/upstream";
 import { getSpec as getDnsSpec } from "../../modes/dns";
 import { fetchApi } from "../../utils";
-import { BackendState } from "../backendState";
-import {
+import type { BackendState } from "../backendState";
+import type {
     ActionReducerMapBuilder,
     AsyncThunk,
     Draft,
     PayloadAction,
 } from "@reduxjs/toolkit";
-import { AppAsyncThunkConfig, createAppAsyncThunk } from "../hooks";
-import { ModeState, parseSpec, RawSpecParts } from "../../modes";
+import type { AppAsyncThunkConfig} from "../hooks";
+import { createAppAsyncThunk } from "../hooks";
+import type { ModeState, RawSpecParts } from "../../modes";
+import { parseSpec } from "../../modes";
 
 export const isActiveMode = (state: ModeState): boolean => {
     return state.active && !state.error;

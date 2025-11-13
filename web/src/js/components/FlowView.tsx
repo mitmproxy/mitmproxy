@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FunctionComponent } from "react";
+import type { FunctionComponent } from "react";
 import { Request, Response } from "./FlowView/HttpMessages";
 import {
     Request as DnsRequest,
@@ -12,7 +12,7 @@ import WebSocket from "./FlowView/WebSocket";
 import Comment from "./FlowView/Comment";
 import { selectTab } from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
-import { Flow } from "../flow";
+import type { Flow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";

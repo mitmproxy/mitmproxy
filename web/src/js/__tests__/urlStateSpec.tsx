@@ -10,7 +10,7 @@ import reduceCommandBar from "../ducks/commandBar";
 
 import configureStore from "redux-mock-store";
 import { testState } from "./ducks/tutils";
-import { RootStore } from "../ducks/store";
+import type { RootStore } from "../ducks/store";
 import { setCurrent, Tab } from "../ducks/ui/tabs";
 import { selectTab } from "../ducks/ui/flow";
 import { setFilter, setHighlight } from "../ducks/ui/filter";

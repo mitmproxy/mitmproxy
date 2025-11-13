@@ -1,9 +1,10 @@
-import { Flow, MessagesMeta } from "../../flow";
+import type { Flow, MessagesMeta } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as React from "react";
 import { useCallback, useState } from "react";
+import type {
+    ContentViewData} from "../contentviews/useContentView";
 import {
-    ContentViewData,
     useContentView,
 } from "../contentviews/useContentView";
 import ViewSelector from "../contentviews/ViewSelector";

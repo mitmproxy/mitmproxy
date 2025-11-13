@@ -1,12 +1,14 @@
-import React, { ReactElement, type JSX } from "react";
+import type { ReactElement} from "react";
+import React, { type JSX } from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import classnames from "classnames";
+import type {
+    sortFunctions} from "../../flow/utils";
 import {
     canReplay,
     endTime,
     getTotalSize,
     startTime,
-    sortFunctions,
     getIcon,
     mainPath,
     statusCode,
@@ -15,7 +17,7 @@ import {
 } from "../../flow/utils";
 import { formatSize, formatTimeDelta, formatTimeStamp } from "../../utils";
 import * as flowActions from "../../ducks/flows";
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
 
 type FlowColumnProps = {
     flow: Flow;

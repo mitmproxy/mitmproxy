@@ -2,7 +2,7 @@ import * as React from "react";
 import FlowColumns from "../../../components/FlowTable/FlowColumns";
 import { TFlow, TTCPFlow } from "../../ducks/tutils";
 import { render } from "../../test-utils";
-import { Flow } from "../../../flow";
+import type { Flow } from "../../../flow";
 
 test("should render columns", async () => {
     const tflow = TFlow();

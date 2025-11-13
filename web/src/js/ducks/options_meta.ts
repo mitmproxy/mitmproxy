@@ -1,7 +1,8 @@
+import type {
+    OptionsStateWithMeta} from "./options";
 import {
     OPTIONS_RECEIVE,
-    OPTIONS_UPDATE,
-    OptionsStateWithMeta,
+    OPTIONS_UPDATE
 } from "./options";
 import { createSlice } from "@reduxjs/toolkit";
 
