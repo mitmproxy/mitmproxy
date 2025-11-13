@@ -6,8 +6,6 @@
   [upgrade](https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions).
 - Run `cd ./web` to change to the directory with package.json.
 - Run `npm install` to install dependencies.
-
-
 - Run `uv run mitmweb`
 - Run `npm start` in a separate window to start the Vite development server for the web interface.
 

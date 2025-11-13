@@ -3,10 +3,10 @@
     "private": true,
     "scripts": {
         "test": "eslint . && tsc --noEmit && jest --coverage",
-        "build": "rm -rf ../mitmproxy/tools/web/static && vite build",
         "start": "vite",
         "prettier": "prettier --write .",
-        "eslint": "eslint --fix ."
+        "eslint": "eslint --fix .",
+        "ci-build-release": "rm -rf ../mitmproxy/tools/web/static && vite build"
     },
     "dependencies": {
         "@codemirror/lang-css": "^6.3.1",

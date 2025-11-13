@@ -79,7 +79,7 @@ if __name__ == "__main__":
     print("➡️ Updating web assets...")
     subprocess.run(["npm", "ci"], cwd=root / "web", check=True, capture_output=True)
     subprocess.run(
-        ["npm", "start", "prod"], cwd=root / "web", check=True, capture_output=True
+        ["npm", "run", "ci-build-release"], cwd=root / "web", check=True, capture_output=True
     )
     subprocess.run(
         ["git", "add", "--all", f"mitmproxy/tools/web"], cwd=root, capture_output=True
