@@ -27,6 +27,8 @@
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
   ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
+- mitmweb is now built with Vite, improving the development workflow.
+  ([#7971](https://github.com/mitmproxy/mitmproxy/pull/7971), @sleeyax, @mhils)
 - Fix URL of mitmweb when --web-host is an IPv6 address.
   ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
 
