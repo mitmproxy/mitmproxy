@@ -31,7 +31,7 @@
   ([#7971](https://github.com/mitmproxy/mitmproxy/pull/7971), @sleeyax, @mhils)
 - Fix URL of mitmweb when --web-host is an IPv6 address.
   ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
-- Add/Edit a comment for a specific flow in the mitmproxy console.
+- Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
 
 ## 15 October 2025: mitmproxy 12.2.0
