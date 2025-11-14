@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import classnames from "classnames";
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { select, selectRange, selectToggle } from "../../ducks/flows";
 import * as columns from "./FlowColumns";

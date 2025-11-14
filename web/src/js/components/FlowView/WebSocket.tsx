@@ -1,4 +1,4 @@
-import { HTTPFlow, WebSocketData } from "../../flow";
+import type { HTTPFlow, WebSocketData } from "../../flow";
 import * as React from "react";
 import { formatTimeStamp } from "../../utils";
 import Messages from "./Messages";

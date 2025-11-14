@@ -6,7 +6,7 @@ import CommandBar from "./CommandBar";
 import EventLog from "./EventLog";
 import Footer from "./Footer";
 import Modal from "./Modal/Modal";
-import { RootState } from "../ducks";
+import type { RootState } from "../ducks";
 import { connect } from "react-redux";
 
 type ProxyAppMainProps = {

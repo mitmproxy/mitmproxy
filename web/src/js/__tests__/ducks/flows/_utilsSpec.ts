@@ -7,7 +7,7 @@ import {
     updateViewItem,
     withElemRemoved,
 } from "../../../ducks/flows/_utils";
-import { Comparer } from "@reduxjs/toolkit";
+import type { Comparer } from "@reduxjs/toolkit";
 
 test("buildIndex", () => {
     expect(buildIndex([{ id: "foo" }, { id: "bar" }])).toEqual(

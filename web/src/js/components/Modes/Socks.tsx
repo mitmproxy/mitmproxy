@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { getSpec, SocksState } from "../../modes/socks";
-import { ServerInfo } from "../../ducks/backendState";
+import type { SocksState } from "../../modes/socks";
+import { getSpec } from "../../modes/socks";
+import type { ServerInfo } from "../../ducks/backendState";
 import {
     setActive,
     setListenHost,

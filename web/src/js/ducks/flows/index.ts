@@ -1,10 +1,11 @@
 import { assertNever } from "../../utils";
 
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
 import { sortFunctions } from "../../flow/utils";
-import { AppDispatch, RootState } from "../store";
+import type { AppDispatch, RootState } from "../store";
 import { FilterName } from "../ui/filter";
-import { Comparer, createAction, UnknownAction } from "@reduxjs/toolkit";
+import type { Comparer, UnknownAction } from "@reduxjs/toolkit";
+import { createAction } from "@reduxjs/toolkit";
 import {
     buildIndex,
     buildLookup,

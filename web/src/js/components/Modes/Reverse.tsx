@@ -9,9 +9,10 @@ import {
     setListenPort,
     setProtocol,
 } from "../../ducks/modes/reverse";
-import { getSpec, ReverseState } from "../../modes/reverse";
+import type { ReverseState } from "../../modes/reverse";
+import { getSpec } from "../../modes/reverse";
 import { ReverseProxyProtocols } from "../../backends/consts";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";

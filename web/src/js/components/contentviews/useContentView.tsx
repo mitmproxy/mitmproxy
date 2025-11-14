@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useContent } from "./useContent";
-import { Flow, HTTPFlow, HTTPMessage } from "../../flow";
+import type { Flow, HTTPFlow, HTTPMessage } from "../../flow";
 import { MessageUtils } from "../../flow/utils";
 
 export type ContentViewData = {

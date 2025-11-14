@@ -1,7 +1,7 @@
 import * as utils from "../../flow/utils";
 import { TFlow, TTCPFlow, TUDPFlow } from "../ducks/tutils";
 import { TDNSFlow, THTTPFlow } from "../ducks/_tflow";
-import { HTTPFlow } from "../../flow";
+import type { HTTPFlow } from "../../flow";
 
 describe("MessageUtils", () => {
     it("should be possible to get first header", () => {

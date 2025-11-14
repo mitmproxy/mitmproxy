@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { useAppSelector } from "../../ducks";
-import { DNSFlow, DNSMessage, DNSResourceRecord } from "../../flow";
+import type { DNSFlow, DNSMessage, DNSResourceRecord } from "../../flow";
 
 const Summary: React.FC<{
     message: DNSMessage;

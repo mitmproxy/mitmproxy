@@ -1,6 +1,6 @@
 import { isEqual } from "lodash";
 import * as React from "react";
-import { ContentViewData } from "./components/contentviews/useContentView";
+import type { ContentViewData } from "./components/contentviews/useContentView";
 
 window.React = React;
 

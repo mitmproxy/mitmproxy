@@ -10,7 +10,7 @@ import ValidateEditor from "../editors/ValidateEditor";
 import ValueEditor from "../editors/ValueEditor";
 
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { HTTPFlow, HTTPMessage, HTTPResponse } from "../../flow";
+import type { HTTPFlow, HTTPMessage, HTTPResponse } from "../../flow";
 import * as flowActions from "../../ducks/flows";
 import KeyValueListEditor from "../editors/KeyValueListEditor";
 import HttpMessage from "../contentviews/HttpMessage";

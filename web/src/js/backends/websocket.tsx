@@ -5,8 +5,8 @@
  */
 import { assertNever, fetchApi } from "../utils";
 import * as connectionActions from "../ducks/connection";
-import { Store } from "redux";
-import { RootState } from "../ducks";
+import type { Store } from "redux";
+import type { RootState } from "../ducks";
 import { STATE_RECEIVE, STATE_UPDATE } from "../ducks/backendState";
 import { EVENTS_ADD, EVENTS_RECEIVE } from "../ducks/eventLog";
 import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../ducks/options";
@@ -17,7 +17,7 @@ import {
     FLOWS_REMOVE,
     FLOWS_UPDATE,
 } from "../ducks/flows";
-import { Action, PayloadAction } from "@reduxjs/toolkit";
+import type { Action, PayloadAction } from "@reduxjs/toolkit";
 import {
     FilterName,
     initialState as initialFilterState,

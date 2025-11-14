@@ -1,7 +1,8 @@
 import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { getSpec, WireguardState } from "../../modes/wireguard";
+import type { WireguardState } from "../../modes/wireguard";
+import { getSpec } from "../../modes/wireguard";
 import {
     setActive,
     setFilePath,
@@ -10,7 +11,7 @@ import {
 } from "../../ducks/modes/wireguard";
 import { Popover } from "./Popover";
 import ValueEditor from "../editors/ValueEditor";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import { ServerStatus } from "./CaptureSetup";
 
 export default function Wireguard() {

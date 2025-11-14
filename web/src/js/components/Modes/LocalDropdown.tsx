@@ -1,9 +1,10 @@
 import * as React from "react";
-import { LocalState } from "../../modes/local";
+import type { LocalState } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setSelectedProcesses } from "../../ducks/modes/local";
 import { Popover } from "./Popover";
-import { fetchProcesses, Process } from "../../ducks/processes";
+import type { Process } from "../../ducks/processes";
+import { fetchProcesses } from "../../ducks/processes";
 import { rpartition } from "../../utils";
 
 interface LocalDropdownProps {

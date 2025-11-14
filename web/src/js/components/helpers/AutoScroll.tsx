@@ -1,4 +1,4 @@
-import { RefObject } from "react";
+import type { RefObject } from "react";
 
 export const isAtBottom = (viewport: RefObject<HTMLElement | null>) => {
     const v = viewport.current;

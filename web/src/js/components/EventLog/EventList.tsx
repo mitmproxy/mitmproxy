@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import * as autoscroll from "../helpers/AutoScroll";
-import { calcVScroll, VScroll } from "../helpers/VirtualScroll";
-import { EventLogItem } from "../../ducks/eventLog";
+import type { VScroll } from "../helpers/VirtualScroll";
+import { calcVScroll } from "../helpers/VirtualScroll";
+import type { EventLogItem } from "../../ducks/eventLog";
 import { shallowEqual } from "react-redux";
 
 type EventLogListProps = {

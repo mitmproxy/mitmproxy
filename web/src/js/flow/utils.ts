@@ -1,4 +1,4 @@
-import { Flow, HTTPMessage, HTTPRequest } from "../flow";
+import type { Flow, HTTPMessage, HTTPRequest } from "../flow";
 
 const defaultPorts = {
     http: 80,

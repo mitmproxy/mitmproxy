@@ -1,4 +1,5 @@
-import { parseRaw, WireguardState } from "../../modes/wireguard";
+import type { WireguardState } from "../../modes/wireguard";
+import { parseRaw } from "../../modes/wireguard";
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";

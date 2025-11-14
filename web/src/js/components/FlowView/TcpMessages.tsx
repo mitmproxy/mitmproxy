@@ -1,4 +1,4 @@
-import { TCPFlow } from "../../flow";
+import type { TCPFlow } from "../../flow";
 import * as React from "react";
 import Messages from "./Messages";
 

@@ -1,4 +1,5 @@
-import { parseRaw, TransparentState } from "../../modes/transparent";
+import type { TransparentState } from "../../modes/transparent";
+import { parseRaw } from "../../modes/transparent";
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";

@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "../ducks";
 import FlowListMenu from "./Header/FlowListMenu";
 import OptionMenu from "./Header/OptionMenu";
 import FlowMenu from "./Header/FlowMenu";
-import { Menu } from "./ProxyApp";
+import type { Menu } from "./ProxyApp";
 import { Tab, setCurrent } from "../ducks/ui/tabs";
 
 const tabs: { [key in Tab]: Menu } = {

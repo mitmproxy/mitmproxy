@@ -1,6 +1,7 @@
-import { ModesState } from "../../ducks/modes";
+import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import { getSpec, parseRaw, WireguardState } from "../../modes/wireguard";
+import type { WireguardState } from "../../modes/wireguard";
+import { getSpec, parseRaw } from "../../modes/wireguard";
 
 describe("getSpec wireguard mode", () => {
     it("should return the correct mode config", () => {

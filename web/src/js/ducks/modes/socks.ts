@@ -1,4 +1,5 @@
-import { parseRaw, SocksState } from "../../modes/socks";
+import type { SocksState } from "../../modes/socks";
+import { parseRaw } from "../../modes/socks";
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";

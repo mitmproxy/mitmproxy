@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
-import ValueEditor, { ValueEditorProps } from "./ValueEditor";
+import type { ValueEditorProps } from "./ValueEditor";
+import ValueEditor from "./ValueEditor";
 import classnames from "classnames";
 
 interface ValidateEditorProps extends ValueEditorProps {

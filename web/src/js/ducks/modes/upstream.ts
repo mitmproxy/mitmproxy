@@ -2,7 +2,7 @@ import { createModeUpdateThunk, addSetter, updateState } from "./utils";
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { createSlice } from "@reduxjs/toolkit";
 import { parseRaw } from "../../modes/upstream";
-import { UpstreamState } from "../../modes/upstream";
+import type { UpstreamState } from "../../modes/upstream";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/upstream/setActive",

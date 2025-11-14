@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useFloating, UseFloatingOptions } from "@floating-ui/react-dom";
+import type { UseFloatingOptions } from "@floating-ui/react-dom";
+import { useFloating } from "@floating-ui/react-dom";
 import classnames from "classnames";
 
 export const Divider = () => <li role="separator" className="divider" />;

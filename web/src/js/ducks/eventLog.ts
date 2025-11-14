@@ -1,4 +1,5 @@
-import { createAction, UnknownAction } from "@reduxjs/toolkit";
+import type { UnknownAction } from "@reduxjs/toolkit";
+import { createAction } from "@reduxjs/toolkit";
 
 export const EVENTS_ADD = createAction<EventLogItem>("EVENTS_ADD");
 export const EVENTS_RECEIVE = createAction<EventLogItem[]>("EVENTS_RECEIVE");

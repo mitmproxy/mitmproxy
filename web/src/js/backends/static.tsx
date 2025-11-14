@@ -3,8 +3,8 @@
  * without any Websocket connection.
  */
 import { assertNever, fetchApi } from "../utils";
-import { Store } from "redux";
-import { RootState } from "../ducks";
+import type { Store } from "redux";
+import type { RootState } from "../ducks";
 import { OPTIONS_RECEIVE } from "../ducks/options";
 import { FLOWS_RECEIVE } from "../ducks/flows";
 import { Resource } from "./websocket";

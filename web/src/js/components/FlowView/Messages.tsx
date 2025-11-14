@@ -1,11 +1,9 @@
-import { Flow, MessagesMeta } from "../../flow";
+import type { Flow, MessagesMeta } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as React from "react";
 import { useCallback, useState } from "react";
-import {
-    ContentViewData,
-    useContentView,
-} from "../contentviews/useContentView";
+import type { ContentViewData } from "../contentviews/useContentView";
+import { useContentView } from "../contentviews/useContentView";
 import ViewSelector from "../contentviews/ViewSelector";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { formatTimeStamp } from "../../utils";

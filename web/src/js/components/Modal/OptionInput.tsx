@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
-import React, { ComponentProps } from "react";
-import { Option, update as updateOptions } from "../../ducks/options";
+import type { ComponentProps } from "react";
+import React from "react";
+import type { Option } from "../../ducks/options";
+import { update as updateOptions } from "../../ducks/options";
 import classnames from "classnames";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 

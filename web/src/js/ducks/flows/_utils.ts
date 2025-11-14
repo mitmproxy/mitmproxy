@@ -1,4 +1,4 @@
-import { Comparer } from "@reduxjs/toolkit";
+import type { Comparer } from "@reduxjs/toolkit";
 import { toSpliced } from "./_compat";
 
 type Item = { id: string };
