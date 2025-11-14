@@ -140,19 +140,12 @@ exports[`FlowView 1`] = `
         <div
           class="controls"
         >
-          <h5>
-            Loading...
-          </h5>
-           
-          <button
-            class="btn-xs btn btn-default"
-          >
-            <i
-              class="fa fa-edit"
-            />
-             Edit
-          </button>
-           
+          <div>
+            <h5>
+              Loading...
+            </h5>
+          </div>
+            
           <a
             class="btn btn-default btn-xs"
             href="#"
@@ -186,6 +179,95 @@ exports[`FlowView 1`] = `
               />
             </span>
           </a>
+        </div>
+        <div
+          class="codeeditor"
+        >
+          <div
+            class="cm-theme-light"
+          >
+            <div
+              class="cm-editor ͼ1 ͼ2 ͼ4 ͼ17 ͼ15"
+            >
+              <div
+                aria-live="polite"
+                class="cm-announced"
+              />
+              <div
+                class="cm-scroller"
+                tabindex="-1"
+              >
+                <div
+                  aria-hidden="true"
+                  class="cm-gutters"
+                  style="min-height: 14px; position: sticky;"
+                >
+                  <div
+                    class="cm-gutter cm-lineNumbers"
+                  >
+                    <div
+                      class="cm-gutterElement"
+                      style="height: 0px; visibility: hidden; pointer-events: none;"
+                    >
+                      9
+                    </div>
+                    <div
+                      class="cm-gutterElement cm-activeLineGutter"
+                      style="height: 14px;"
+                    >
+                      1
+                    </div>
+                  </div>
+                  <div
+                    class="cm-gutter cm-foldGutter"
+                  >
+                    <div
+                      class="cm-gutterElement"
+                      style="height: 0px; visibility: hidden; pointer-events: none;"
+                    >
+                      <span
+                        title="Unfold line"
+                      >
+                        ›
+                      </span>
+                    </div>
+                    <div
+                      class="cm-gutterElement cm-activeLineGutter"
+                      style="height: 14px;"
+                    />
+                  </div>
+                </div>
+                <div
+                  aria-multiline="true"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  class="cm-content"
+                  contenteditable="true"
+                  role="textbox"
+                  spellcheck="false"
+                  style="tab-size: 4;"
+                  translate="no"
+                  writingsuggestions="false"
+                >
+                  <div
+                    class="cm-line"
+                  >
+                    <br />
+                  </div>
+                </div>
+                <div
+                  aria-hidden="true"
+                  class="cm-layer cm-layer-above cm-cursorLayer"
+                  style="z-index: 150; animation-duration: 1200ms;"
+                />
+                <div
+                  aria-hidden="true"
+                  class="cm-layer cm-selectionLayer"
+                  style="z-index: -2;"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -331,19 +413,12 @@ exports[`FlowView 2`] = `
         <div
           class="controls"
         >
-          <h5>
-            Loading...
-          </h5>
-           
-          <button
-            class="btn-xs btn btn-default"
-          >
-            <i
-              class="fa fa-edit"
-            />
-             Edit
-          </button>
-           
+          <div>
+            <h5>
+              Loading...
+            </h5>
+          </div>
+            
           <a
             class="btn btn-default btn-xs"
             href="#"
@@ -377,6 +452,95 @@ exports[`FlowView 2`] = `
               />
             </span>
           </a>
+        </div>
+        <div
+          class="codeeditor"
+        >
+          <div
+            class="cm-theme-light"
+          >
+            <div
+              class="cm-editor ͼ1 ͼ2 ͼ4 ͼ1a ͼ15"
+            >
+              <div
+                aria-live="polite"
+                class="cm-announced"
+              />
+              <div
+                class="cm-scroller"
+                tabindex="-1"
+              >
+                <div
+                  aria-hidden="true"
+                  class="cm-gutters"
+                  style="min-height: 14px; position: sticky;"
+                >
+                  <div
+                    class="cm-gutter cm-lineNumbers"
+                  >
+                    <div
+                      class="cm-gutterElement"
+                      style="height: 0px; visibility: hidden; pointer-events: none;"
+                    >
+                      9
+                    </div>
+                    <div
+                      class="cm-gutterElement cm-activeLineGutter"
+                      style="height: 14px;"
+                    >
+                      1
+                    </div>
+                  </div>
+                  <div
+                    class="cm-gutter cm-foldGutter"
+                  >
+                    <div
+                      class="cm-gutterElement"
+                      style="height: 0px; visibility: hidden; pointer-events: none;"
+                    >
+                      <span
+                        title="Unfold line"
+                      >
+                        ›
+                      </span>
+                    </div>
+                    <div
+                      class="cm-gutterElement cm-activeLineGutter"
+                      style="height: 14px;"
+                    />
+                  </div>
+                </div>
+                <div
+                  aria-multiline="true"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  class="cm-content"
+                  contenteditable="true"
+                  role="textbox"
+                  spellcheck="false"
+                  style="tab-size: 4;"
+                  translate="no"
+                  writingsuggestions="false"
+                >
+                  <div
+                    class="cm-line"
+                  >
+                    <br />
+                  </div>
+                </div>
+                <div
+                  aria-hidden="true"
+                  class="cm-layer cm-layer-above cm-cursorLayer"
+                  style="z-index: 150; animation-duration: 1200ms;"
+                />
+                <div
+                  aria-hidden="true"
+                  class="cm-layer cm-selectionLayer"
+                  style="z-index: -2;"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

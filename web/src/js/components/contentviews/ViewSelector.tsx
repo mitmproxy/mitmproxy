@@ -4,7 +4,7 @@ import Dropdown, { MenuItem } from "../common/Dropdown";
 
 type ViewSelectorProps = {
     value: string;
-    onChange: (string) => void;
+    onChange: (value: string) => void;
 };
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
