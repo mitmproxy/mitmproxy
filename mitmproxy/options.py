@@ -111,8 +111,8 @@ class Options(optmanager.OptManager):
             """
             The proxy server type(s) to spawn. Can be passed multiple times.
 
-            Mitmproxy supports "regular" (HTTP), "transparent", "socks5", "reverse:SPEC",
-            "upstream:SPEC", and "wireguard[:PATH]" proxy servers. For reverse and upstream proxy modes, SPEC
+            Mitmproxy supports "regular" (HTTP), "local", "transparent", "socks5","reverse:SPEC",
+            "upstream:SPEC", and "wireguard[:PATH]" proxy servers.For reverse and upstream proxy modes, SPEC
             is host specification in the form of "http[s]://host[:port]". For WireGuard mode, PATH may point to
             a file containing key material. If no such file exists, it will be created on startup.
 
