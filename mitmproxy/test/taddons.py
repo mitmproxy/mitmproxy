@@ -17,9 +17,11 @@ class context:
     """
 
     def __init__(self, *addons, options=None, loadcore=True):
+        self.owns_loop = False
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
+            self.owns_loop = True
             loop = asyncio.new_event_loop()
 
         options = options or mitmproxy.options.Options()
@@ -36,6 +38,9 @@ class context:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if self.owns_loop and not self.master.event_loop.is_closed():
+            # Close the loop if we created it
+            self.master.event_loop.close()
         return False
 
     async def cycle(self, addon, f):
