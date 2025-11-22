@@ -172,11 +172,115 @@ class HttpStream(layer.Layer):
 
     def __init__(self, context: Context, stream_id: int) -> None:
         super().__init__(context)
-        self.request_body_buf = ReceiveBuffer()
-        self.response_body_buf = ReceiveBuffer()
+        # 根据配置设置缓冲区大小限制
+        max_buffer_size = self._get_max_buffer_size()
+        self.request_body_buf = ReceiveBuffer(max_size=max_buffer_size)
+        self.response_body_buf = ReceiveBuffer(max_size=max_buffer_size)
         self.client_state = self.state_uninitialized
         self.server_state = self.state_uninitialized
         self.stream_id = stream_id
+        # 内存使用统计
+        self._total_memory_used = 0
+        self._max_memory_used = 0
+        
+    def _get_max_buffer_size(self) -> int | None:
+        """获取缓冲区大小限制（字节）"""
+        # 优先级：body_buffer_limit > stream_large_bodies > 默认无限制
+        if hasattr(self.context.options, 'body_buffer_limit') and self.context.options.body_buffer_limit:
+            return self._parse_size(self.context.options.body_buffer_limit)
+        elif hasattr(self.context.options, 'stream_large_bodies') and self.context.options.stream_large_bodies:
+            # 如果启用了stream_large_bodies，使用其阈值作为缓冲区限制
+            return self._parse_size(self.context.options.stream_large_bodies)
+        return None
+        
+    def _parse_size(self, size_str: str) -> int:
+        """解析大小字符串（如 '1m', '512k'）为字节数"""
+        size_str = size_str.lower().strip()
+        multipliers = {'k': 1024, 'm': 1024*1024, 'g': 1024*1024*1024}
+        
+        for suffix, multiplier in multipliers.items():
+            if size_str.endswith(suffix):
+                try:
+                    return int(size_str[:-1]) * multiplier
+                except ValueError:
+                    break
+        
+        try:
+            return int(size_str)
+        except ValueError:
+            return 1024 * 1024  # 默认1MB
+    
+    def _update_memory_stats(self) -> None:
+        """更新内存使用统计"""
+        current_memory = (self.request_body_buf.get_memory_usage() + 
+                         self.response_body_buf.get_memory_usage())
+        self._total_memory_used = current_memory
+        self._max_memory_used = max(self._max_memory_used, current_memory)
+    
+    def _check_memory_limits(self) -> bool:
+        """检查是否超出内存限制"""
+        self._update_memory_stats()
+        
+        # 获取当前配置的内存限制
+        max_buffer_size = self._get_max_buffer_size()
+        if max_buffer_size is None:
+            return False
+        
+        # 检查请求和响应缓冲区是否超出限制
+        if (self.request_body_buf.is_full() or 
+            self.response_body_buf.is_full()):
+            return True
+        
+        return False
+    
+    def _cleanup_buffers(self) -> None:
+        """清理缓冲区以释放内存"""
+        # 获取当前内存限制
+        max_buffer_size = self._get_max_buffer_size()
+        if max_buffer_size is None:
+            # 如果没有限制，只进行轻量级压缩
+            if self.response_body_buf._len > 1024 * 1024:  # 大于1MB时压缩
+                self.response_body_buf.compact()
+            if self.request_body_buf._len > 1024 * 1024:  # 大于1MB时压缩
+                self.request_body_buf.compact()
+        else:
+            # 有内存限制时的清理策略
+            target_size = max_buffer_size // 2  # 目标大小为限制的一半
+            
+            # 优先清理响应缓冲区（通常更大）
+            if self.response_body_buf._len > target_size:
+                # 保留最近的数据，清理老数据
+                cleared = self.response_body_buf.clear_oldest(target_size)
+                if cleared:
+                    self.context.log(f"HTTP流 {self.stream_id}: 清理响应缓冲区 {len(cleared)} 字节", "debug")
+            
+            # 检查是否仍然超出限制
+            if self._check_memory_limits():
+                # 清理请求缓冲区
+                if self.request_body_buf._len > 0:
+                    cleared = self.request_body_buf.clear_oldest(target_size // 2)
+                    if cleared:
+                        self.context.log(f"HTTP流 {self.stream_id}: 清理请求缓冲区 {len(cleared)} 字节", "debug")
+            
+            # 如果仍然超出限制，进行完全清理
+            if self._check_memory_limits():
+                self.response_body_buf.clear()
+                if self._check_memory_limits():
+                    self.request_body_buf.clear()
+        
+        self._update_memory_stats()
+    
+    def get_memory_stats(self) -> dict:
+        """获取内存使用统计信息"""
+        return {
+            'stream_id': self.stream_id,
+            'current_memory': self._total_memory_used,
+            'peak_memory': self._max_memory_used,
+            'request_buffer_size': self.request_body_buf._len,
+            'response_buffer_size': self.response_body_buf._len,
+            'request_buffer_memory': self.request_body_buf.get_memory_usage(),
+            'response_buffer_memory': self.response_body_buf.get_memory_usage()
+        }
 
     def __repr__(self):
         if self._handle_event == self.passthrough:
@@ -320,10 +424,14 @@ class HttpStream(layer.Layer):
                     chunks = [chunks]
             else:
                 chunks = [event.data]
+            
+            # 优化内存使用：只在需要存储时才累积数据
             for chunk in chunks:
                 if self.context.options.store_streamed_bodies:
                     self.request_body_buf += chunk
+                # 立即转发每个数据块，实现真正的流式传输
                 yield SendHttp(RequestData(self.stream_id, chunk), self.context.server)
+                
         elif isinstance(event, RequestTrailers):
             # we don't do anything further here, we wait for RequestEndOfMessage first to trigger the request hook.
             self.flow.request.trailers = event.trailers
@@ -337,13 +445,16 @@ class HttpStream(layer.Layer):
                 for chunk in chunks:
                     if self.context.options.store_streamed_bodies:
                         self.request_body_buf += chunk
+                    # 立即转发剩余数据
                     yield SendHttp(
                         RequestData(self.stream_id, chunk), self.context.server
                     )
 
+            # 只在需要存储完整请求时才设置内容
             if self.context.options.store_streamed_bodies:
                 self.flow.request.data.content = bytes(self.request_body_buf)
                 self.request_body_buf.clear()
+                
             self.flow.request.timestamp_end = time.time()
             yield HttpRequestHook(self.flow)
             self.client_state = self.state_done
@@ -364,15 +475,36 @@ class HttpStream(layer.Layer):
         self, event: events.Event
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
-            self.request_body_buf += event.data
-            yield from self.check_body_size(True)
+            # 检查内存限制
+            if self._check_memory_limits():
+                # 如果超出内存限制，清理缓冲区
+                self._cleanup_buffers()
+                # 记录内存警告
+                self.context.log(f"HTTP流 {self.stream_id}: 超出内存限制，已清理缓冲区", "warning")
+            
+            # 流式处理：立即转发数据，不累积到缓冲区
+            if self.context.options.stream_large_bodies or self.context.options.body_size_limit:
+                # 仅在需要检查大小时才累积数据
+                try:
+                    self.request_body_buf += event.data
+                    yield from self.check_body_size(True)
+                except MemoryError:
+                    # 内存不足时，立即清理并继续流式传输
+                    self._cleanup_buffers()
+                    self.context.log(f"HTTP流 {self.stream_id}: 内存不足，跳过大小检查", "warning")
+            
+            # 立即转发数据到服务器，实现真正的流式传输
+            yield SendHttp(RequestData(self.stream_id, event.data), self.context.server)
+            
         elif isinstance(event, RequestTrailers):
             assert self.flow.request
             self.flow.request.trailers = event.trailers
         elif isinstance(event, RequestEndOfMessage):
             self.flow.request.timestamp_end = time.time()
-            self.flow.request.data.content = bytes(self.request_body_buf)
-            self.request_body_buf.clear()
+            # 只在需要存储完整请求时才设置内容
+            if self.context.options.store_streamed_bodies or not (self.context.options.stream_large_bodies or self.context.options.body_size_limit):
+                self.flow.request.data.content = bytes(self.request_body_buf)
+                self.request_body_buf.clear()
             self.client_state = self.state_done
             yield HttpRequestHook(self.flow)
             if (yield from self.check_killed(True)):
@@ -450,10 +582,14 @@ class HttpStream(layer.Layer):
                     chunks = [chunks]
             else:
                 chunks = [event.data]
+            
+            # 优化内存使用：只在需要存储时才累积数据
             for chunk in chunks:
                 if self.context.options.store_streamed_bodies:
                     self.response_body_buf += chunk
+                # 立即转发每个数据块，实现真正的流式传输
                 yield SendHttp(ResponseData(self.stream_id, chunk), self.context.client)
+                
         elif isinstance(event, ResponseTrailers):
             self.flow.response.trailers = event.trailers
             # will be sent in send_response() after the response hook.
@@ -467,12 +603,16 @@ class HttpStream(layer.Layer):
                 for chunk in chunks:
                     if self.context.options.store_streamed_bodies:
                         self.response_body_buf += chunk
+                    # 立即转发剩余数据
                     yield SendHttp(
                         ResponseData(self.stream_id, chunk), self.context.client
                     )
+            
+            # 只在需要存储完整响应时才设置内容
             if self.context.options.store_streamed_bodies:
                 self.flow.response.data.content = bytes(self.response_body_buf)
                 self.response_body_buf.clear()
+                
             yield from self.send_response(already_streamed=True)
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
@@ -480,15 +620,36 @@ class HttpStream(layer.Layer):
         self, event: events.Event
     ) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
-            self.response_body_buf += event.data
-            yield from self.check_body_size(False)
+            # 检查内存限制
+            if self._check_memory_limits():
+                # 如果超出内存限制，清理缓冲区
+                self._cleanup_buffers()
+                # 记录内存警告
+                self.context.log(f"HTTP流 {self.stream_id}: 超出内存限制，已清理缓冲区", "warning")
+            
+            # 流式处理：立即转发数据，不累积到缓冲区
+            if self.context.options.stream_large_bodies or self.context.options.body_size_limit:
+                # 仅在需要检查大小时才累积数据
+                try:
+                    self.response_body_buf += event.data
+                    yield from self.check_body_size(False)
+                except MemoryError:
+                    # 内存不足时，立即清理并继续流式传输
+                    self._cleanup_buffers()
+                    self.context.log(f"HTTP流 {self.stream_id}: 内存不足，跳过大小检查", "warning")
+            
+            # 立即转发数据到客户端，实现真正的流式传输
+            yield SendHttp(ResponseData(self.stream_id, event.data), self.context.client)
+            
         elif isinstance(event, ResponseTrailers):
             assert self.flow.response
             self.flow.response.trailers = event.trailers
         elif isinstance(event, ResponseEndOfMessage):
             assert self.flow.response
-            self.flow.response.data.content = bytes(self.response_body_buf)
-            self.response_body_buf.clear()
+            # 只在需要存储完整响应时才设置内容
+            if self.context.options.store_streamed_bodies or not (self.context.options.stream_large_bodies or self.context.options.body_size_limit):
+                self.flow.response.data.content = bytes(self.response_body_buf)
+                self.response_body_buf.clear()
             yield from self.send_response()
 
     def send_response(self, already_streamed: bool = False):
