@@ -34,6 +34,7 @@
 - Fix event loop leak when running tests
   ([#7982](https://github.com/mitmproxy/mitmproxy/pull/7982), @DNEGEL3125)
 - Fix TypeScript build by adding React types and removing obsolete `@ts-expect-error` directives.
+  ([#7988](https://github.com/mitmproxy/mitmproxy/pull/7988), @DNEGEL3125)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
