@@ -1949,8 +1949,7 @@ def test_transparent_connect_error_407_with_body(tctx):
         playbook
         >> DataReceived(
             tctx.client,
-            b"CONNECT www.example.com:443 HTTP/1.1\r\n"
-            b"Host: www.example.com:443\r\n\r\n",
+            b"CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\n\r\n",
         )
         << http.HttpConnectHook(flow)
         >> reply()
@@ -1958,8 +1957,7 @@ def test_transparent_connect_error_407_with_body(tctx):
         >> reply(None)
         << SendData(
             server,
-            b"CONNECT www.example.com:443 HTTP/1.1\r\n"
-            b"Host: www.example.com:443\r\n\r\n",
+            b"CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\n\r\n",
         )
         # Upstream proxy requires authentication and sends HTML error page
         >> DataReceived(
@@ -1976,7 +1974,9 @@ def test_transparent_connect_error_407_with_body(tctx):
             b"HTTP/1.1 407 Proxy Authentication Required\r\n"
             b'Proxy-Authenticate: Basic realm="Corporate Proxy"\r\n'
             b"Content-Type: text/html\r\n"
-            b"Content-Length: " + str(len(error_body)).encode() + b"\r\n\r\n"
+            b"Content-Length: "
+            + str(len(error_body)).encode()
+            + b"\r\n\r\n"
             + error_body,
         )
         << http.HttpConnectErrorHook(flow)
@@ -2000,26 +2000,22 @@ def test_transparent_connect_error_502(tctx):
         playbook
         >> DataReceived(
             tctx.client,
-            b"CONNECT unreachable.example.com:443 HTTP/1.1\r\n"
-            b"Host: unreachable.example.com:443\r\n\r\n",
+            b"CONNECT unreachable.example.com:443 HTTP/1.1\r\nHost: unreachable.example.com:443\r\n\r\n",
         )
         << OpenConnection(server)
         >> reply(None)
         << SendData(
             server,
-            b"CONNECT unreachable.example.com:443 HTTP/1.1\r\n"
-            b"Host: unreachable.example.com:443\r\n\r\n",
+            b"CONNECT unreachable.example.com:443 HTTP/1.1\r\nHost: unreachable.example.com:443\r\n\r\n",
         )
         # Upstream proxy cannot reach destination
         >> DataReceived(
             server,
-            b"HTTP/1.1 502 Bad Gateway\r\n"
-            b"Content-Length: 0\r\n\r\n",
+            b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n",
         )
         << SendData(
             tctx.client,
-            b"HTTP/1.1 502 Bad Gateway\r\n"
-            b"Content-Length: 0\r\n\r\n",
+            b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n",
         )
     )
 
@@ -2035,8 +2031,7 @@ def test_transparent_connect_upstream_connection_failed(tctx):
         playbook
         >> DataReceived(
             tctx.client,
-            b"CONNECT www.example.com:443 HTTP/1.1\r\n"
-            b"Host: www.example.com:443\r\n\r\n",
+            b"CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\n\r\n",
         )
         << http.HttpConnectHook(flow)
         >> reply()
@@ -2064,15 +2059,13 @@ def test_transparent_connect_with_inspection(tctx):
         playbook
         >> DataReceived(
             tctx.client,
-            b"CONNECT www.google.com:443 HTTP/1.1\r\n"
-            b"Host: www.google.com:443\r\n\r\n",
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
         )
         << OpenConnection(server)
         >> reply(None)
         << SendData(
             server,
-            b"CONNECT www.google.com:443 HTTP/1.1\r\n"
-            b"Host: www.google.com:443\r\n\r\n",
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
         )
         >> DataReceived(
             server,
