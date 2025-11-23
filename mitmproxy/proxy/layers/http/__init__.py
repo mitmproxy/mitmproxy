@@ -43,7 +43,6 @@ from ._http2 import Http2Client
 from ._http2 import Http2Server
 from ._http3 import Http3Client
 from ._http3 import Http3Server
-from mitmproxy import connection
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.connection import Connection
@@ -790,6 +789,7 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(False)):
             return
 
+        assert self.context.server.address is not None
         connection, err = yield GetHttpConnection(
             self.context.server.address,
             False,  # no TLS to the proxy (it's HTTP proxy)
@@ -863,6 +863,7 @@ class HttpStream(layer.Layer):
 
     def handle_tunnel_response_complete(self) -> layer.CommandGenerator[None]:
         """Handle completion of CONNECT response (with or without body)"""
+        assert self.flow.response is not None
         tunnel_established = 200 <= self.flow.response.status_code < 300
 
         # Trigger either http_connected or http_connect_error handlers in addons
@@ -872,6 +873,7 @@ class HttpStream(layer.Layer):
             self._handle_event = self.passthrough
             self.client_state = self.state_done
             self.server_state = self.state_done
+            assert self.child_layer is not None
             yield from self.child_layer.handle_event(events.Start())
         else:
             yield HttpConnectErrorHook(self.flow)
