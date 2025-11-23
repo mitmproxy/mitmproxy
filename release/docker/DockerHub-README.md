@@ -50,6 +50,29 @@ Proxy server listening at http://*:8080
 If `~/.mitmproxy/mitmproxy-ca.pem` is present in the container, mitmproxy will assume uid and gid from the file owner.
 For further details, please consult the mitmproxy [documentation](https://docs.mitmproxy.org/en/stable/).
 
+## Docker Compose
+
+Many python applications run in Docker experience logging buffering issues. These are avoided when running in regular mode with the -t flag.
+When running in Docker Compose use the environmental variable PYTHONUNBUFFERED=1 to avoid logs being buffered by Python and not passed to Docker.
+
+Example Docker Compose configuration with web UI:
+
+```yaml
+services:
+  mitmproxy:
+    image: mitmproxy/mitmproxy:latest
+    container_name: mitmproxy
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ~/.mitmproxy:/home/mitmproxy/.mitmproxy
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: unless-stopped
+    command: mitmweb --web-host 0.0.0.0
+```
+
 ## Tags
 
 The available release tags can be seen
