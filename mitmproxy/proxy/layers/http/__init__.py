@@ -793,7 +793,7 @@ class HttpStream(layer.Layer):
         connection, err = yield GetHttpConnection(
             self.context.server.address,
             False,  # no TLS to the proxy (it's HTTP proxy)
-            None,   # no via (we ARE talking to the proxy)
+            None,  # no via (we ARE talking to the proxy)
             self.context.server.transport_protocol,
         )
 
@@ -831,7 +831,9 @@ class HttpStream(layer.Layer):
 
         # Forward response headers to client
         yield SendHttp(
-            ResponseHeaders(self.stream_id, self.flow.response, end_stream=event.end_stream),
+            ResponseHeaders(
+                self.stream_id, self.flow.response, end_stream=event.end_stream
+            ),
             self.context.client,
         )
 

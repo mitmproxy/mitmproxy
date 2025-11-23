@@ -121,7 +121,12 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 # Skip EndOfMessage for CONNNECT requests (no request body) and successful CONNECT responses (to allow proper transition to passthrough).
                 is_request = isinstance(self, Http1Server)
                 is_connect = self.request.data.method.upper() == b"CONNECT"
-                is_connect_error_response = not is_request and is_connect and self.response is not None and not (200 <= self.response.status_code < 300)
+                is_connect_error_response = (
+                    not is_request
+                    and is_connect
+                    and self.response is not None
+                    and not (200 <= self.response.status_code < 300)
+                )
 
                 if not is_connect or is_connect_error_response:
                     yield ReceiveHttp(self.ReceiveEndOfMessage(self.stream_id))

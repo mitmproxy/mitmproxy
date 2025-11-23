@@ -1868,8 +1868,7 @@ def test_transparent_connect_passthrough(tctx):
         playbook
         >> DataReceived(
             tctx.client,
-            b"CONNECT www.google.com:443 HTTP/1.1\r\n"
-            b"Host: www.google.com:443\r\n\r\n",
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
         )
         # Mitmproxy opens connection to upstream proxy
         << OpenConnection(server)
@@ -1877,8 +1876,7 @@ def test_transparent_connect_passthrough(tctx):
         # Mitmproxy forwards CONNECT to upstream proxy
         << SendData(
             server,
-            b"CONNECT www.google.com:443 HTTP/1.1\r\n"
-            b"Host: www.google.com:443\r\n\r\n",
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
         )
         # Upstream proxy responds with 200
         >> DataReceived(
@@ -1965,7 +1963,9 @@ def test_transparent_connect_error_407_with_body(tctx):
             b"HTTP/1.1 407 Proxy Authentication Required\r\n"
             b'Proxy-Authenticate: Basic realm="Corporate Proxy"\r\n'
             b"Content-Type: text/html\r\n"
-            b"Content-Length: " + str(len(error_body)).encode() + b"\r\n\r\n"
+            b"Content-Length: "
+            + str(len(error_body)).encode()
+            + b"\r\n\r\n"
             + error_body,
         )
         # Error response (headers + body) is forwarded to client
