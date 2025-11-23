@@ -2050,3 +2050,36 @@ def test_transparent_connect_upstream_connection_failed(tctx):
         << SendData(tctx.client, BytesMatching(b"502 Bad Gateway"))
         << CloseConnection(tctx.client)
     )
+
+
+def test_transparent_connect_with_inspection(tctx):
+    """Test CONNECT in transparent mode with TLS inspection enabled."""
+    tctx.server.address = ("proxy.corp.com", 3128)
+    tctx.options.allow_transparent_tunnel_inspection = True  # Enable inspection
+
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT www.google.com:443 HTTP/1.1\r\n"
+            b"Host: www.google.com:443\r\n\r\n",
+        )
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT www.google.com:443 HTTP/1.1\r\n"
+            b"Host: www.google.com:443\r\n\r\n",
+        )
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 200 Connection established\r\n\r\n",
+        )
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 200 Connection established\r\n\r\n",
+        )
+    )
