@@ -11,6 +11,7 @@
   ([#7985](https://github.com/mitmproxy/mitmproxy/pull/7985), @vitaly-ps)
 
 ## 24 November 2025: mitmproxy 12.2.1
+
 - Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
   Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
   ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
