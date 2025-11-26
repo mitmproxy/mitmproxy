@@ -564,25 +564,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.headers["Content-Type"] == "image/png"
         assert resp.body == app.TRANSPARENT_PNG
 
-    def test_xsrf_hardening_app(self):
-        """Ensure that xsrf token is not provided for JS requests."""
-        resp = self.fetch("/", headers={"Sec-Fetch-Mode": "same-origin"})
-        assert resp.code == 412
-        assert b"xsrf" not in resp.body
-        assert b"xsrf" in self.fetch("/", headers={"Sec-Fetch-Mode": "navigate"}).body
-
-    def test_xsrf_hardening_login(self):
-        """Ensure that xsrf token is not provided for JS requests."""
-        resp = self.fetch("/", headers={"Sec-Fetch-Mode": "same-origin", "Cookie": ""})
-        assert resp.code == 403
-        assert b"xsrf" not in resp.body
-        assert (
-            b"xsrf"
-            in self.fetch(
-                "/", headers={"Sec-Fetch-Mode": "navigate", "Cookie": ""}
-            ).body
-        )
-
     def test_login_with_token_header(self):
         web_password = self.master.addons.get("webauth")._password
         headers = {"Cookie": "", "Authorization": f"Bearer {web_password}"}

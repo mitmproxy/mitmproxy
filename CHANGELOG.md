@@ -9,6 +9,8 @@
 
 - Add support for proxy CONNECT in transparent (local) mode.
   ([#7985](https://github.com/mitmproxy/mitmproxy/pull/7985), @vitaly-ps)
+
+## 24 November 2025: mitmproxy 12.2.1
 - Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
   Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
   ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
@@ -29,8 +31,12 @@
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
   ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
+- mitmweb is now built with Vite, improving the development workflow.
+  ([#7971](https://github.com/mitmproxy/mitmproxy/pull/7971), @sleeyax, @mhils)
 - Fix URL of mitmweb when --web-host is an IPv6 address.
   ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
+- Fix event loop leak when running tests
+  ([#7982](https://github.com/mitmproxy/mitmproxy/pull/7982), @DNEGEL3125)
 
 ## 15 October 2025: mitmproxy 12.2.0
 
