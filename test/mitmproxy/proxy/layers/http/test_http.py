@@ -1305,9 +1305,7 @@ def test_error_hook_no_response_override(tctx):
         >> reply("Connection refused")
         << http.HttpErrorHook(flow)
         >> reply()
-        << SendData(
-            tctx.client, BytesMatching(b"502 Bad Gateway.+Connection refused")
-        )
+        << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection refused"))
         << CloseConnection(tctx.client)
     )
 
@@ -1342,8 +1340,7 @@ def test_error_hook_response_override_empty_body(tctx):
         >> reply(side_effect=provide_empty_response)
         << SendData(
             tctx.client,
-            b"HTTP/1.1 204 No Content\r\n"
-            b"content-length: 0\r\n\r\n",
+            b"HTTP/1.1 204 No Content\r\ncontent-length: 0\r\n\r\n",
         )
     )
 
