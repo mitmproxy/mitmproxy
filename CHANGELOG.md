@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Allow addons to override 502 error responses by setting `flow.response` in the error hook.
+  This enables serving cached responses, custom error pages, or fallback content when upstream
+  connections fail.
 
 ## 24 November 2025: mitmproxy 12.2.1
 
