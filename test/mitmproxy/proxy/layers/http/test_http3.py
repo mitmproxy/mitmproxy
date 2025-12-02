@@ -651,6 +651,106 @@ def test_upstream_error(tctx: context.Context):
     assert b"server &lt;&gt; error" in data
 
 
+def test_error_hook_response_override(tctx: context.Context):
+    """Test that an addon can override the error response in the error hook."""
+    from mitmproxy.http import Response
+
+    playbook, cff = start_h3_proxy(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    err = tutils.Placeholder(bytes)
+
+    def provide_cached_response(f: HTTPFlow):
+        # Simulate addon providing a cached response
+        f.response = Response.make(
+            200,
+            b"Cached content",
+            {"Content-Type": "text/plain"},
+        )
+
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        # request server
+        << commands.OpenConnection(server)
+        >> tutils.reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> tutils.reply(side_effect=provide_cached_response)
+        << cff.send_headers(
+            [
+                (b":status", b"200"),
+                (b"content-type", b"text/plain"),
+                (b"content-length", b"14"),
+            ]
+        )
+        << quic.SendQuicStreamData(
+            tctx.client,
+            stream_id=0,
+            data=err,
+            end_stream=False,
+        )
+        >> cff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done
+    data = decode_frame(FrameType.DATA, err())
+    assert data == b"Cached content"
+
+    assert flow().response.status_code == 200
+    assert flow().response.content == b"Cached content"
+    assert flow().error.msg == "Connection refused"
+
+
+def test_error_hook_no_response_override(tctx: context.Context):
+    """Test that the default error response is sent when addon doesn't provide one."""
+    playbook, cff = start_h3_proxy(tctx)
+    flow = tutils.Placeholder(HTTPFlow)
+    server = tutils.Placeholder(connection.Server)
+    err = tutils.Placeholder(bytes)
+
+    assert (
+        playbook
+        # request client
+        >> cff.receive_headers(example_request_headers, end_stream=True)
+        << (request := http.HttpRequestHeadersHook(flow))
+        << cff.send_decoder()  # for receive_headers
+        >> tutils.reply(to=request)
+        << http.HttpRequestHook(flow)
+        >> tutils.reply()
+        # request server
+        << commands.OpenConnection(server)
+        >> tutils.reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> tutils.reply()
+        << cff.send_headers(
+            [
+                (b":status", b"502"),
+                (b"server", version.MITMPROXY.encode()),
+                (b"content-type", b"text/html"),
+            ]
+        )
+        << quic.SendQuicStreamData(
+            tctx.client,
+            stream_id=0,
+            data=err,
+            end_stream=True,
+        )
+        >> cff.receive_decoder()  # for send_headers
+    )
+    assert cff.is_done
+    data = decode_frame(FrameType.DATA, err())
+    assert b"502 Bad Gateway" in data
+    assert b"Connection refused" in data
+
+    assert flow().response is None
+    assert flow().error.msg == "Connection refused"
+
+
 @pytest.mark.parametrize("stream", ["stream", ""])
 @pytest.mark.parametrize("when", ["request", "response"])
 @pytest.mark.parametrize("how", ["RST", "disconnect", "RST+disconnect"])
