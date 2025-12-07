@@ -117,8 +117,15 @@ class Script:
         self.ns = None
         with addonmanager.safecall():
             ns = load_script(self.fullpath)
-            ctx.master.addons.register(ns)
+            try:
+                # script can fail due to bad arguments or someother unknown reasons
+                # it should be reported to the user
+                ctx.master.addons.register(ns)
+            except Exception as e:
+                script_error_handler(self.fullpath, e)
+                return
             self.ns = ns
+
         if self.ns:
             try:
                 ctx.master.addons.invoke_addon_sync(
