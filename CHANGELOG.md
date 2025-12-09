@@ -8,7 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Update optmanager value parsing exceptions to include the option name
-
+  ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
