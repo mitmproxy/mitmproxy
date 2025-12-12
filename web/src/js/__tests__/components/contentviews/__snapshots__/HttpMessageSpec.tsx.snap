@@ -8,9 +8,12 @@ exports[`HttpMessage 1`] = `
     <div
       class="controls"
     >
-      <h5>
-        Raw
-      </h5>
+      <div>
+        <h5>
+          Raw
+        </h5>
+      </div>
+       
       <button
         class="btn-xs btn btn-default"
       >
@@ -18,15 +21,6 @@ exports[`HttpMessage 1`] = `
           class="fa fa-clipboard"
         />
          Copy
-      </button>
-       
-      <button
-        class="btn-xs btn btn-default"
-      >
-        <i
-          class="fa fa-edit"
-        />
-         Edit
       </button>
        
       <a
@@ -63,24 +57,20 @@ exports[`HttpMessage 1`] = `
         </span>
       </a>
     </div>
-    <pre>
-      <div>
+    <div
+      class="codeeditor"
+    >
+      <pre
+        data-testid="mock-editor"
+      >
         rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div />
-    </pre>
+rawdata
+rawdata
+rawdata
+rawdata
+
+      </pre>
+    </div>
   </div>
 </DocumentFragment>
 `;
@@ -93,286 +83,69 @@ exports[`HttpMessage 2`] = `
     <div
       class="controls"
     >
-      <h5>
-        [Editing]
-      </h5>
-      <button
-        class="btn-xs btn btn-default"
-      >
-        <i
-          class="fa fa-check text-success"
-        />
-         Done
-      </button>
+      <div>
+        <h5>
+          Raw
+        </h5>
+      </div>
        
       <button
         class="btn-xs btn btn-default"
       >
         <i
-          class="fa fa-times text-danger"
+          class="fa fa-clipboard"
         />
-         Cancel
+         Copy
       </button>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+        title="Upload a file to replace the content."
+      >
+        <i
+          class="fa fa-fw fa-upload"
+        />
+        Replace
+        <input
+          class="hidden"
+          type="file"
+        />
+      </a>
+       
+      <a
+        class="btn btn-default btn-xs"
+        href="#"
+      >
+        <span>
+          <i
+            class="fa fa-fw fa-files-o"
+          />
+           
+          <b>
+            View:
+          </b>
+           raw 
+          <span
+            class="caret"
+          />
+        </span>
+      </a>
     </div>
     <div
       class="codeeditor"
     >
-      <div
-        class="cm-theme-light"
+      <pre
+        data-testid="mock-editor"
       >
-        <div
-          class="cm-editor ͼ1 ͼ2 ͼ4 ͼ17 ͼ15"
-        >
-          <div
-            aria-live="polite"
-            class="cm-announced"
-          />
-          <div
-            class="cm-scroller"
-            tabindex="-1"
-          >
-            <div
-              aria-hidden="true"
-              class="cm-gutters"
-              style="min-height: 14px; position: sticky;"
-            >
-              <div
-                class="cm-gutter cm-lineNumbers"
-              >
-                <div
-                  class="cm-gutterElement"
-                  style="height: 0px; visibility: hidden; pointer-events: none;"
-                >
-                  9
-                </div>
-                <div
-                  class="cm-gutterElement cm-activeLineGutter"
-                  style="height: 14px;"
-                >
-                  1
-                </div>
-              </div>
-              <div
-                class="cm-gutter cm-foldGutter"
-              >
-                <div
-                  class="cm-gutterElement"
-                  style="height: 0px; visibility: hidden; pointer-events: none;"
-                >
-                  <span
-                    title="Unfold line"
-                  >
-                    ›
-                  </span>
-                </div>
-                <div
-                  class="cm-gutterElement cm-activeLineGutter"
-                  style="height: 14px;"
-                />
-              </div>
-            </div>
-            <div
-              aria-multiline="true"
-              autocapitalize="off"
-              autocorrect="off"
-              class="cm-content"
-              contenteditable="true"
-              role="textbox"
-              spellcheck="false"
-              style="tab-size: 4;"
-              translate="no"
-              writingsuggestions="false"
-            >
-              <div
-                class="cm-activeLine cm-line"
-              >
-                <br />
-              </div>
-            </div>
-            <div
-              aria-hidden="true"
-              class="cm-layer cm-layer-above cm-cursorLayer"
-              style="z-index: 150; animation-duration: 1200ms;"
-            />
-            <div
-              aria-hidden="true"
-              class="cm-layer cm-selectionLayer"
-              style="z-index: -2;"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</DocumentFragment>
-`;
+        rawdata
+rawdata
+rawdata
+rawdata
+rawdata
 
-exports[`HttpMessage 3`] = `
-<DocumentFragment>
-  <div
-    class="contentview"
-  >
-    <div
-      class="controls"
-    >
-      <h5>
-        Raw
-      </h5>
-      <button
-        class="btn-xs btn btn-default"
-      >
-        <i
-          class="fa fa-clipboard"
-        />
-         Copy
-      </button>
-       
-      <button
-        class="btn-xs btn btn-default"
-      >
-        <i
-          class="fa fa-edit"
-        />
-         Edit
-      </button>
-       
-      <a
-        class="btn btn-default btn-xs"
-        href="#"
-        title="Upload a file to replace the content."
-      >
-        <i
-          class="fa fa-fw fa-upload"
-        />
-        Replace
-        <input
-          class="hidden"
-          type="file"
-        />
-      </a>
-       
-      <a
-        class="btn btn-default btn-xs"
-        href="#"
-      >
-        <span>
-          <i
-            class="fa fa-fw fa-files-o"
-          />
-           
-          <b>
-            View:
-          </b>
-           raw 
-          <span
-            class="caret"
-          />
-        </span>
-      </a>
+      </pre>
     </div>
-    <pre>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div />
-    </pre>
-  </div>
-</DocumentFragment>
-`;
-
-exports[`HttpMessage 4`] = `
-<DocumentFragment>
-  <div
-    class="contentview"
-  >
-    <div
-      class="controls"
-    >
-      <h5>
-        Raw
-      </h5>
-      <button
-        class="btn-xs btn btn-default"
-      >
-        <i
-          class="fa fa-clipboard"
-        />
-         Copy
-      </button>
-       
-      <button
-        class="btn-xs btn btn-default"
-      >
-        <i
-          class="fa fa-edit"
-        />
-         Edit
-      </button>
-       
-      <a
-        class="btn btn-default btn-xs"
-        href="#"
-        title="Upload a file to replace the content."
-      >
-        <i
-          class="fa fa-fw fa-upload"
-        />
-        Replace
-        <input
-          class="hidden"
-          type="file"
-        />
-      </a>
-       
-      <a
-        class="btn btn-default btn-xs"
-        href="#"
-      >
-        <span>
-          <i
-            class="fa fa-fw fa-files-o"
-          />
-           
-          <b>
-            View:
-          </b>
-           raw 
-          <span
-            class="caret"
-          />
-        </span>
-      </a>
-    </div>
-    <pre>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div>
-        rawdata
-      </div>
-      <div />
-    </pre>
   </div>
 </DocumentFragment>
 `;

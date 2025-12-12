@@ -1,15 +1,15 @@
 import * as React from "react";
 import { useCallback, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
-import { css } from "@codemirror/lang-css";
-import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { yaml } from "@codemirror/lang-yaml";
+import { css } from "@codemirror/lang-css";
+import { html } from "@codemirror/lang-html";
 import { SyntaxHighlight } from "../../backends/consts";
 
 type CodeEditorProps = {
     initialContent: string;
-    onChange: (content: string) => void;
+    onChange?: (content: string) => void;
     readonly?: boolean;
     language?: SyntaxHighlight | null;
 };
@@ -57,6 +57,9 @@ export default function CodeEditor({
                 onChange={onChange}
                 readOnly={readonly}
                 extensions={extensions}
+                basicSetup={{
+                    highlightActiveLine: false,
+                }}
             />
         </div>
     );

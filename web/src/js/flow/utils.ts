@@ -54,19 +54,15 @@ export class MessageUtils {
         flow: Flow,
         part: HTTPMessage | "request" | "response" | "messages",
         view?: string,
-        lines?: number,
     ): string {
         if (flow.type === "http" && part === flow.request) {
             part = "request";
         } else if (flow.type === "http" && part === flow.response) {
             part = "response";
         }
-        const lineStr = lines ? `?lines=${lines}` : "";
         return (
             `./flows/${flow.id}/${part}/` +
-            (view
-                ? `content/${encodeURIComponent(view)}.json${lineStr}`
-                : "content.data")
+            (view ? `content/${encodeURIComponent(view)}.json` : "content.data")
         );
     }
 }
