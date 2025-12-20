@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "target": "es2023",
-        "moduleResolution": "node",
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
         "esModuleInterop": true,
         "jsx": "react",
         "strictNullChecks": true,

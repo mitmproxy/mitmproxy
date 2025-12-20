@@ -7,14 +7,74 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 24 November 2025: mitmproxy 12.2.1
+
+- Make TCP inactivity timeout configurable through a new `tcp_timeout` option (default: 600 seconds).
+  Previously, the timeout was hardcoded to 10 minutes for all TCP connections.
+  ([#7909](https://github.com/mitmproxy/mitmproxy/pull/7909), @keshavkrishnadav)
+- Flush flow file after each flow to allow further processing.
+  ([#7967](https://github.com/mitmproxy/mitmproxy/pull/7967), @caiquejjx)
+- infer_content_encoding: Fallback to UTF-8 for more content types
+  ([#7961](https://github.com/mitmproxy/mitmproxy/pull/7961), @xu-cheng)
+- Remove `bless` from hex editors to avoid issues with macOS
+  ([#7937](https://github.com/mitmproxy/mitmproxy/pull/7937), @caiquejjx)
+- Improves `is_mostly_bin` check to support chinese characters
+  ([#7933](https://github.com/mitmproxy/mitmproxy/pull/7933), @caiquejjx, @mhils)
+- Fix various issues in infer_content_encoding
+  ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
+- Add example addon to spoof DNS responses.
+  ([#7973](https://github.com/mitmproxy/mitmproxy/pull/7973), @mhils)
+- Gracefully handle decoding of raw binary payloads that previously caused 
+  "Raw cannot decode" or "failed to parse as JSON" errors
+  ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
+- Show query parameters for empty-body requests in the mitmproxy console.
+  ([#7923](https://github.com/mitmproxy/mitmproxy/pull/7923), @lups2000)
+- mitmweb is now built with Vite, improving the development workflow.
+  ([#7971](https://github.com/mitmproxy/mitmproxy/pull/7971), @sleeyax, @mhils)
+- Fix URL of mitmweb when --web-host is an IPv6 address.
+  ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
+- Fix event loop leak when running tests
+  ([#7982](https://github.com/mitmproxy/mitmproxy/pull/7982), @DNEGEL3125)
+
+## 15 October 2025: mitmproxy 12.2.0
+
+- mitmproxy now supports Python 3.14. Binary releases ship with 3.14 by default.
+  ([#7918](https://github.com/mitmproxy/mitmproxy/pull/7918), @mhils)
+- Replace `htpasswd` file parser with a custom implementation to migrate off unmaintained
+  `passlib` dependency. The new parser only supports bcrypt and SHA-1 hashing.
+  Contributions for additional formats are welcome as long as they don't introduce new
+  dependencies.
+  ([#7906](https://github.com/mitmproxy/mitmproxy/pull/7906), @mhils)
+
+## 24 August 2025: mitmproxy 12.1.2
+
+- Docker images are now build with Debian Trixie.
+  ([#7851](https://github.com/mitmproxy/mitmproxy/pull/7851), @mhils)
+- Fix mitmweb auth cookie always using the default `web_port` option.
+  ([#7827](https://github.com/mitmproxy/mitmproxy/pull/7827), @sujaldev)
+- fix: missing content-length header in curl export
+  ([#7810](https://github.com/mitmproxy/mitmproxy/pull/7810), @mheguy)
+- fix: update log message with correct header name
+  ([#7802](https://github.com/mitmproxy/mitmproxy/pull/7802), @kristof-mattei)
+- Update deprecated `windows-2019` runner to `windows-2025`.
+  ([#7801](https://github.com/mitmproxy/mitmproxy/pull/7801), @chedieck)
 - Do not escape non-ascii characters in the JSON contentview.
   ([#7740](https://github.com/mitmproxy/mitmproxy/pull/7740), @mhils)
 - Fix crash in mitmweb when no explicit Server-Connection is logged.
   ([#7734](https://github.com/mitmproxy/mitmproxy/pull/7734), @lups2000)
 - Add syntax highlighting for CSS and JavaScript contentviews.
   ([#7749](https://github.com/mitmproxy/mitmproxy/pull/7749), @mhils)
-- Docs: Add documentation for `--show-ignored-hosts`.
-  ([#7772](https://github.com/mitmproxy/mitmproxy/pull/7772), @NicolaiSoeborg)
+- Display local timezone in the Timing tab of mitmweb.
+  ([#7804](https://github.com/mitmproxy/mitmproxy/pull/7804), @lups2000)
+- Prevent showing the quit message in the console when no flows are available under specific configurations.
+  ([#7833](https://github.com/mitmproxy/mitmproxy/pull/7833), @lups2000)
+
+### Security Fixes
+
+* [GHSA-847f-9342-265h](https://github.com/python-hyper/h2/security/advisories/GHSA-847f-9342-265h):
+  Upgrade hyper-h2 to fix a request smuggling vulnerability that affects mitmproxy's
+  HTTP/2 -> HTTP/1 translation. (@mhils)
 
 ## 25 May 2025: mitmproxy 12.1.1
 

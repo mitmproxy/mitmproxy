@@ -89,7 +89,7 @@ class ConsoleMaster(master.Master):
             signals.status_message.send(
                 message=(
                     entry.level,
-                    f"{entry.level.title()}: {str(entry.msg).lstrip()}",
+                    f"{entry.level.title()}: {entry.msg.lstrip()}",
                 ),
                 expire=5,
             )
@@ -125,7 +125,7 @@ class ConsoleMaster(master.Master):
             return "vi"
 
     def get_hex_editor(self) -> str:
-        editors = ["ghex", "bless", "hexedit", "hxd", "hexer", "hexcurse"]
+        editors = ["ghex", "hexedit", "hxd", "hexer", "hexcurse"]
         for editor in editors:
             if shutil.which(editor):
                 return editor

@@ -381,7 +381,7 @@ most cases, the configuration will look like this:
 
 ## TUN Interface
 
-*Availability: Linux, macOS*
+*Availability: Linux*
 
 ```shell
 sudo mitmdump --mode tun

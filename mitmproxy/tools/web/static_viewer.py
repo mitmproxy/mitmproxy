@@ -27,7 +27,7 @@ def save_static(path: pathlib.Path) -> None:
     if (path / "static").exists():
         shutil.rmtree(str(path / "static"))
     shutil.copytree(str(web_dir / "static"), str(path / "static"))
-    shutil.copyfile(str(web_dir / "templates" / "index.html"), str(path / "index.html"))
+    shutil.copyfile(str(web_dir / "index.html"), str(path / "index.html"))
 
     with open(str(path / "static" / "static.js"), "w") as f:
         f.write("MITMWEB_STATIC = true;")

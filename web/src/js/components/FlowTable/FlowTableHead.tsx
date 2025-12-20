@@ -1,9 +1,10 @@
 import * as React from "react";
 import classnames from "classnames";
-import * as columns from "./FlowColumns";
+import FlowColumns from "./FlowColumns";
 
 import { setSort } from "../../ducks/flows";
 import { useAppDispatch, useAppSelector } from "../../ducks";
+import { isValidColumnName } from "../../flow/utils";
 
 export default React.memo(function FlowTableHead() {
     const dispatch = useAppDispatch();
@@ -15,35 +16,32 @@ export default React.memo(function FlowTableHead() {
 
     const sortType = sortDesc ? "sort-desc" : "sort-asc";
     const displayColumns = displayColumnNames
-        .map((x) => columns[x])
-        .filter((x) => x)
-        .concat(columns.quickactions);
+        .filter(isValidColumnName)
+        .concat("quickactions");
 
     return (
         <tr>
-            {displayColumns.map((Column) => (
+            {displayColumns.map((colName) => (
                 <th
                     className={classnames(
-                        `col-${Column.name}`,
-                        sortColumn === Column.name && sortType,
+                        `col-${colName}`,
+                        sortColumn === colName && sortType,
                     )}
-                    key={Column.name}
+                    key={colName}
                     onClick={() =>
                         dispatch(
                             setSort({
                                 column:
-                                    Column.name === sortColumn && sortDesc
+                                    colName === sortColumn && sortDesc
                                         ? undefined
-                                        : Column.name,
+                                        : colName,
                                 desc:
-                                    Column.name !== sortColumn
-                                        ? false
-                                        : !sortDesc,
+                                    colName !== sortColumn ? false : !sortDesc,
                             }),
                         )
                     }
                 >
-                    {Column.headerName}
+                    {FlowColumns[colName].headerName}
                 </th>
             ))}
         </tr>

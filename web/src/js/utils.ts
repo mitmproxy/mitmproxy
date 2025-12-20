@@ -33,12 +33,22 @@ export const formatTimeDelta = function (milliseconds) {
 
 export const formatTimeStamp = function (
     seconds: number,
-    { milliseconds = true } = {},
+    { includeMilliseconds = true } = {},
 ) {
-    const utc = new Date(seconds * 1000);
-    let ts = utc.toISOString().replace("T", " ").replace("Z", "");
-    if (!milliseconds) ts = ts.slice(0, -4);
-    return ts;
+    const date = new Date(seconds * 1000);
+
+    const yearStr = String(date.getFullYear());
+    const monthStr = String(date.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(date.getDate()).padStart(2, "0");
+    const hourStr = String(date.getHours()).padStart(2, "0");
+    const minuteStr = String(date.getMinutes()).padStart(2, "0");
+    const secondStr = String(date.getSeconds()).padStart(2, "0");
+    const millisecondStr = String(date.getMilliseconds()).padStart(3, "0");
+
+    let timestamp = `${yearStr}-${monthStr}-${dayStr} ${hourStr}:${minuteStr}:${secondStr}`;
+    if (includeMilliseconds) timestamp += `.${millisecondStr}`;
+
+    return timestamp;
 };
 
 export function formatAddress(address: [string, number]): string {
@@ -62,7 +72,16 @@ export function reverseString(s) {
     );
 }
 
-const xsrf = document.currentScript?.getAttribute("data-xsrf");
+function getCookie(name) {
+    const r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
+    return r ? r[1] : undefined;
+}
+
+let xsrf = () => {
+    const cached = getCookie("_xsrf");
+    xsrf = () => cached;
+    return xsrf();
+};
 
 export function fetchApi(
     url: string,
@@ -70,7 +89,7 @@ export function fetchApi(
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
         options.headers = options.headers || {};
-        options.headers["X-XSRFToken"] = xsrf;
+        options.headers["X-XSRFToken"] = xsrf();
     }
     if (url.startsWith("/")) {
         url = "." + url;

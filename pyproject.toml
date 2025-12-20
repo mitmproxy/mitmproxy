@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Security",
     "Topic :: Internet :: WWW/HTTP",
@@ -31,65 +32,65 @@ classifiers = [
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
     "aioquic>=1.2.0,<=1.2.0",
-    "argon2-cffi>=23.1.0,<=23.1.0",
-    "asgiref>=3.2.10,<=3.8.1",
-    "Brotli>=1.0,<=1.1.0",
+    "argon2-cffi>=23.1.0,<=25.1.0",
+    "asgiref>=3.2.10,<=3.11.0",
+    "bcrypt>=5.0.0,<=5.0.0",
+    "Brotli>=1.0,<=1.2.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
-    "cryptography>=42.0,<45.1",  # relaxed upper bound here to get security fixes
-    "flask>=3.0,<=3.1.1",
+    "cryptography>=42.0,<=46.1",  # relaxed upper bound here to get security fixes
+    "flask>=3.0,<=3.1.2",
     "h11>=0.16.0,<=0.16.0",
-    "h2>=4.1,<=4.1.0",
+    "h2>=4.3.0,<=4.3.0",
     "hyperframe>=6.0,<=6.1.0",
-    "kaitaistruct>=0.10,<=0.10",
+    "kaitaistruct>=0.10,<=0.11",
     "ldap3>=2.8,<=2.9.1",
     "mitmproxy_rs>=0.12.6,<0.13",  # relaxed upper bound here: we control this
-    "msgpack>=1.0.0,<=1.1.0",
-    "passlib>=1.6.5,<=1.7.4",
+    "msgpack>=1.0.0,<=1.1.2",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
-    "pyOpenSSL>=24.3,<=25.1.0",
-    "pyparsing>=2.4.2,<=3.2.3",
-    "pyperclip<=1.9.0,>=1.9.0",
-    "ruamel.yaml>=0.18.10,<=0.18.12",
+    "pyOpenSSL>=24.3,<=25.3.0",
+    "pyparsing>=2.4.2,<=3.2.5",
+    "pyperclip>=1.9.0,<=1.11.0",
+    "ruamel.yaml>=0.18.10,<=0.18.16",
     "sortedcontainers>=2.3,<=2.4.0",
-    "tornado>=6.5.0,<=6.5.1",
+    "tornado>=6.5.0,<=6.5.2",
     "typing-extensions>=4.13.2,<=4.14; python_version < '3.13'",
-    "urwid>=2.6.14,<=2.6.16",
-    "wsproto>=1.0,<=1.2.0",
+    "urwid>=2.6.14,<=3.0.3",
+    "wsproto>=1.0,<=1.3.2",
     "publicsuffix2>=2.20190812,<=2.20191221",
-    "zstandard>=0.15,<=0.23.0",
+    "zstandard>=0.25,<=0.25.0",
 ]
 
 [dependency-groups]
 dev = [
-    "click==8.1.8",
+    "click==8.3.1",
     "hypothesis==6.130.6",
-    "maturin==1.8.3",
-    "pdoc==15.0.2",
-    "pyinstaller==6.12.0",
-    "pyinstaller-hooks-contrib==2025.2",
-    "pytest-asyncio==0.26.0",
-    "pytest-cov==6.1.0",
-    "pytest-timeout==2.3.1",
-    "pytest-xdist==3.6.1",
-    "pytest==8.3.5",
-    "requests==2.32.3",
+    "maturin==1.10.2",
+    "pdoc==16.0.0",
+    "pyinstaller==6.16.0",
+    "pyinstaller-hooks-contrib==2025.9",
+    "pytest-asyncio==1.2.0",
+    "pytest-cov==7.0.0",
+    "pytest-timeout==2.4.0",
+    "pytest-xdist==3.8.0",
+    "pytest==8.4.2",
+    "requests==2.32.5",
     "wheel==0.45.1",
-    "build==1.2.2.post1",
-    "mypy==1.15.0",
-    "types-requests==2.32.0.20250328",
+    "build==1.3.0",
+    "mypy==1.18.2",
+    "types-requests==2.32.4.20250913",
     {include-group = "tox"},
     {include-group = "ruff"},
 ]
 tox = [
-    "tox==4.25.0",
-    "tox-uv==1.25.0",
+    "tox==4.32.0",
+    "tox-uv==1.29.0",
 ]
 ruff = [
-    "ruff==0.11.2",
+    "ruff==0.14.7",
 ]
 deploy = [
-    "awscli==1.38.34",
-    "twine==6.1.0",
+    "awscli==1.43.6",
+    "twine==6.2.0",
 ]
 
 [project.urls]
@@ -315,7 +316,7 @@ dependency_groups = []
 commands = [["mypy"]]
 
 [tool.tox.env.individual_coverage]
-commands = [["python", { default = ["./test/individual_coverage.py"], replace = "posargs", extend = true }]]
+commands = [["python", "./test/individual_coverage.py", { default = [], replace = "posargs", extend = true }]]
 
 [tool.tox.env.old-dependencies]
 uv_resolution = "lowest-direct"

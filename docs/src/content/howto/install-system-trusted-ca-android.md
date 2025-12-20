@@ -51,8 +51,7 @@ Now we have to place our CA certificate inside the system certificate store loca
 If you want to use a production build (labeled "Google Play"; it's those builds that have Google Play installed) you can use Magisk to obtain root in your AVD.
 [Magisk](https://github.com/topjohnwu/Magisk) allows root on your Android device or emulator.
 
-See the [instructions here](https://github.com/shakalaca/MagiskOnEmulator) for installing Magisk on your AVD.
-The instructions have been tested with API level 30, but are reportedly working with API levels 22 up to and including 30 and 'S' (except API level 28).
+See the [instructions here](https://gitlab.com/newbit/rootAVD) for installing Magisk on your AVD.
 Note: the instructions say to start your AVD. Do not supply an `-http-proxy` directive to mitmproxy at this point.
 
 When you are done with that, your emulator will allow root. You can check this by running a terminal emulator and typing `su`.
@@ -123,7 +122,7 @@ Tested on emulators running API LEVEL 29 and 30
    - restart adb as root: `adb root`
    - perform remount of partitions as read-write: `adb remount`. (If adb tells you that you need to reboot, reboot again `adb reboot` and run `adb remount` again.)
    - push your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}): `adb push <path_to_certificate> /system/etc/security/cacerts`
-   - set certificate permissions: `adb shell chmod 664 /system/etc/security/cacerts/<name_of_pushed_certificate>`
+   - set certificate permissions: `adb shell chmod 644 /system/etc/security/cacerts/<name_of_pushed_certificate>`
    - reboot device: `adb reboot`
 
 ### Instructions for API LEVEL <= 28 using `-writable-system`
@@ -137,7 +136,7 @@ Tested on emulators running API LEVEL 26, 27 and 28
    - restart adb as root: `adb root`
    - perform remount of partitions as read-write: `adb remount`. (If adb tells you that you need to reboot, reboot again `adb reboot` and run `adb remount` again.)
    - push your renamed certificate from [step 2]({{< ref "#2-rename-certificate" >}}): `adb push <path_to_certificate> /system/etc/security/cacerts`
-   - set certificate permissions: `adb shell chmod 664 /system/etc/security/cacerts/<name_of_pushed_certificate>`
+   - set certificate permissions: `adb shell chmod 644 /system/etc/security/cacerts/<name_of_pushed_certificate>`
    - reboot device: `adb reboot`
 
 ### Testing that your certificate is loaded from the system certificate store

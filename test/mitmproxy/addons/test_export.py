@@ -88,6 +88,13 @@ class TestExportCurlCommand:
         result = "curl -X POST http://address:22/path -d nobinarysupport"
         assert export_curl(post_request) == result
 
+    def test_post_with_no_content_has_explicit_content_length_header(
+        self, export_curl, post_request
+    ):
+        post_request.request.content = None
+        result = "curl -H 'content-length: 0' -X POST http://address:22/path"
+        assert export_curl(post_request) == result
+
     def test_fails_with_binary_data(self, export_curl, post_request):
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871

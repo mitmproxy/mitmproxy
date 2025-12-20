@@ -1,10 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Modal Component 1`] = `
-<DocumentFragment>
-  <div />
-</DocumentFragment>
-`;
+exports[`Modal Component 1`] = `<DocumentFragment />`;
 
 exports[`Modal Component 2`] = `
 <DocumentFragment>

@@ -11,7 +11,6 @@ from typing import TypedDict
 from aioquic.h3.connection import H3_ALPN
 from aioquic.tls import CipherSuite
 from cryptography import x509
-from OpenSSL import crypto
 from OpenSSL import SSL
 
 from mitmproxy import certs
@@ -240,7 +239,7 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=tuple(cipher_list),
-            ecdh_curve=ctx.options.tls_ecdh_curve_client,
+            ecdh_curve=net_tls.get_curve(ctx.options.tls_ecdh_curve_client),
             chain_file=entry.chain_file,
             request_client_cert=ctx.options.request_client_cert,
             alpn_select_callback=alpn_select_callback,
@@ -335,7 +334,7 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_server_min],
             max_version=net_tls.Version[ctx.options.tls_version_server_max],
             cipher_list=tuple(cipher_list),
-            ecdh_curve=ctx.options.tls_ecdh_curve_server,
+            ecdh_curve=net_tls.get_curve(ctx.options.tls_ecdh_curve_server),
             verify=verify,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
@@ -521,13 +520,10 @@ class TlsConfig:
                 ctx.options.tls_ecdh_curve_client,
                 ctx.options.tls_ecdh_curve_server,
             ]:
-                if ecdh_curve is not None:
-                    try:
-                        crypto.get_elliptic_curve(ecdh_curve)
-                    except Exception as e:
-                        raise exceptions.OptionsError(
-                            f"Invalid ECDH curve: {ecdh_curve!r}"
-                        ) from e
+                if ecdh_curve is not None and ecdh_curve not in net_tls.EC_CURVES:
+                    raise exceptions.OptionsError(
+                        f"Invalid ECDH curve: {ecdh_curve!r}. Valid curves are: {', '.join(net_tls.EC_CURVES)}"
+                    )
 
         if "tls_version_client_min" in updated:
             self._warn_unsupported_version("tls_version_client_min", True)

@@ -23,10 +23,10 @@ describe("formatTimeDelta", () => {
 describe("formatTimeStamp", () => {
     it("should return formatted time", () => {
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: false }),
+            utils.formatTimeStamp(1483228800, { includeMilliseconds: false }),
         ).toEqual("2017-01-01 00:00:00");
         expect(
-            utils.formatTimeStamp(1483228800, { milliseconds: true }),
+            utils.formatTimeStamp(1483228800, { includeMilliseconds: true }),
         ).toEqual("2017-01-01 00:00:00.000");
     });
 });

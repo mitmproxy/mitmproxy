@@ -98,6 +98,42 @@ async def test_tcp_start_stop(caplog_async):
         assert await caplog_async.await_log("stopped")
 
 
+async def test_tcp_timeout(caplog_async):
+    """Test that TCP connections are closed after the configured timeout period."""
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context() as tctx:
+        # Set timeout to 0 for immediate timeout (fastest test)
+        tctx.options.tcp_timeout = 0
+
+        inst = ServerInstance.make("regular@127.0.0.1:0", manager)
+        await inst.start()
+        assert await caplog_async.await_log("proxy listening")
+
+        host, port, *_ = inst.listen_addrs[0]
+        reader, writer = await asyncio.open_connection(host, port)
+        assert await caplog_async.await_log("client connect")
+
+        # Keep connection open but inactive - it should timeout after 1s
+        # The await_log below will wait for the timeout to trigger
+
+        async with asyncio.timeout(30):
+            # Verify the connection was closed due to inactivity in <60s
+            assert await caplog_async.await_log("Closing connection due to inactivity")
+            assert await caplog_async.await_log("client disconnect")
+
+        # Try to read from the closed connection to confirm it's really closed
+        data = await reader.read(1)
+        assert data == b""  # EOF indicates connection is closed
+
+        writer.close()
+        await writer.wait_closed()
+
+        await inst.stop()
+        assert await caplog_async.await_log("stopped")
+
+
 @pytest.mark.parametrize("failure", [True, False])
 async def test_transparent(failure, monkeypatch, caplog_async):
     caplog_async.set_level("INFO")

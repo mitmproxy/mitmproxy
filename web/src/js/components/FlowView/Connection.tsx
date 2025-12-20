@@ -115,7 +115,7 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
                         <td>Valid from</td>
                         <td>
                             {formatTimeStamp(cert.notbefore, {
-                                milliseconds: false,
+                                includeMilliseconds: false,
                             })}
                         </td>
                     </tr>
@@ -123,7 +123,7 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
                         <td>Valid to</td>
                         <td>
                             {formatTimeStamp(cert.notafter, {
-                                milliseconds: false,
+                                includeMilliseconds: false,
                             })}
                         </td>
                     </tr>

@@ -507,7 +507,7 @@ def migrate_flow(flow_data: dict[bytes | str, Any]) -> dict[bytes | str, Any]:
 
         # Historically, we used the mitmproxy minor version tuple as the flow format version.
         if not isinstance(flow_version, int):
-            flow_version = tuple(flow_version)[:2]
+            flow_version = tuple(flow_version)[:2]  # type: ignore
 
         if flow_version == version.FLOW_FORMAT_VERSION:
             break

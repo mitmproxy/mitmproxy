@@ -276,7 +276,7 @@ class QuicLayer(tunnel.TunnelLayer):
                 if self.debug:
                     reason = event.reason_phrase or error_code_to_str(event.error_code)
                     yield commands.Log(
-                        f"{self.debug}[quic] close_notify {self.conn} (reason={reason})",
+                        f"{self.debug}[quic] close_notify {self.conn} ({reason=!s})",
                         DEBUG,
                     )
                 # We don't rely on `ConnectionTerminated` to dispatch `QuicConnectionClosed`, because
@@ -486,7 +486,7 @@ class ClientQuicLayer(QuicLayer):
             )
         except ValueError as e:
             msgs = b"\n".join(self.handshake_datagram_buf)
-            dbg = f"Cannot parse ClientHello: {str(e)} ({msgs.hex()})"
+            dbg = f"Cannot parse ClientHello: {e} ({msgs.hex()})"
             self.handshake_datagram_buf.clear()
             return False, dbg
 

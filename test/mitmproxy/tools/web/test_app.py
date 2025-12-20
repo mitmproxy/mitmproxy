@@ -83,10 +83,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def auth_cookie(self) -> str:
         auth_cookie = create_signed_value(
             secret=self._app.settings["cookie_secret"],
-            name=self._app.settings["auth_cookie_name"],
+            name=self._app.settings["auth_cookie_name"](),
             value=app.AuthRequestHandler.AUTH_COOKIE_VALUE,
         ).decode()
-        return f"{self._app.settings['auth_cookie_name']}={auth_cookie}"
+        return f"{self._app.settings['auth_cookie_name']()}={auth_cookie}"
 
     def fetch(self, *args, **kwargs) -> httpclient.HTTPResponse:
         kwargs.setdefault("headers", {}).setdefault("Cookie", self.auth_cookie)
@@ -564,25 +564,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.headers["Content-Type"] == "image/png"
         assert resp.body == app.TRANSPARENT_PNG
 
-    def test_xsrf_hardening_app(self):
-        """Ensure that xsrf token is not provided for JS requests."""
-        resp = self.fetch("/", headers={"Sec-Fetch-Mode": "same-origin"})
-        assert resp.code == 412
-        assert b"xsrf" not in resp.body
-        assert b"xsrf" in self.fetch("/", headers={"Sec-Fetch-Mode": "navigate"}).body
-
-    def test_xsrf_hardening_login(self):
-        """Ensure that xsrf token is not provided for JS requests."""
-        resp = self.fetch("/", headers={"Sec-Fetch-Mode": "same-origin", "Cookie": ""})
-        assert resp.code == 403
-        assert b"xsrf" not in resp.body
-        assert (
-            b"xsrf"
-            in self.fetch(
-                "/", headers={"Sec-Fetch-Mode": "navigate", "Cookie": ""}
-            ).body
-        )
-
     def test_login_with_token_header(self):
         web_password = self.master.addons.get("webauth")._password
         headers = {"Cookie": "", "Authorization": f"Bearer {web_password}"}
@@ -615,3 +596,15 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             assert e.code == 403
         else:
             assert False
+
+    def test_auth_cookie_port_suffix_modification(self):
+        opts = self.master.options
+
+        old_port = opts.web_port
+        new_port = 8082
+        opts.web_port = new_port
+
+        try:
+            assert self._app.settings["auth_cookie_name"]().endswith(str(new_port))
+        finally:
+            opts.web_port = old_port

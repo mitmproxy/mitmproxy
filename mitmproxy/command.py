@@ -118,8 +118,8 @@ class Command:
         try:
             bound_arguments = self.signature.bind(*args)
         except TypeError:
-            expected = f"Expected: {str(self.signature.parameters)}"
-            received = f"Received: {str(args)}"
+            expected = f"Expected: {self.signature.parameters}"
+            received = f"Received: {args}"
             raise exceptions.CommandError(
                 f"Command argument mismatch: \n    {expected}\n    {received}"
             )

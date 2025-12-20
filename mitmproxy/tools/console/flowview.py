@@ -104,7 +104,12 @@ class FlowDetails(tabs.Tabs):
                 ]
             self.show()
         else:
-            self.master.window.pop()
+            # Get the top window from the focus stack (the currently active view).
+            # If it's NOT the "flowlist", it's safe to pop back to the previous view.
+            if self.master.window.focus_stack().stack[-1] != "flowlist":
+                self.master.window.pop()
+            # If it is the "flowlist", we’re already at the main view with no flows to show.
+            # Popping now would close the last window and prompt app exit, so we remain on the empty flow list screen instead.
 
     def tab_http_request(self):
         flow = self.flow
@@ -307,32 +312,36 @@ class FlowDetails(tabs.Tabs):
     ) -> tuple[str, list[urwid.Text]]:
         if message.raw_content is None:
             return "", [urwid.Text([("error", "[content missing]")])]
-        elif message.raw_content == b"":
+
+        if message.raw_content == b"":
             if isinstance(message, http.Request):
-                return "", [urwid.Text("No request content")]
+                query = getattr(message, "query", "")
+                if not query:
+                    # No body and no query params
+                    return "", [urwid.Text("No request content")]
+                # else: there are query params -> fall through to render them
             else:
                 return "", [urwid.Text("No content")]
-        else:
-            full = self.master.commands.execute(
-                "view.settings.getval @focus fullcontents false"
-            )
-            if full == "true":
-                limit = sys.maxsize
-            else:
-                limit = ctx.options.content_view_lines_cutoff
 
-            flow_modify_cache_invalidation = hash(
-                (
-                    message.raw_content,
-                    message.headers.fields,
-                    getattr(message, "path", None),
-                )
+        full = self.master.commands.execute(
+            "view.settings.getval @focus fullcontents false"
+        )
+
+        if full == "true":
+            limit = sys.maxsize
+        else:
+            limit = ctx.options.content_view_lines_cutoff
+
+        flow_modify_cache_invalidation = hash(
+            (
+                message.raw_content,
+                message.headers.fields,
+                getattr(message, "path", None),
             )
-            # we need to pass the message off-band because it's not hashable
-            self._get_content_view_message = message
-            return self._get_content_view(
-                viewmode, limit, flow_modify_cache_invalidation
-            )
+        )
+        # we need to pass the message off-band because it's not hashable
+        self._get_content_view_message = message
+        return self._get_content_view(viewmode, limit, flow_modify_cache_invalidation)
 
     @lru_cache(maxsize=200)
     def _get_content_view(
@@ -436,7 +445,7 @@ class FlowDetails(tabs.Tabs):
 
             def rr_text(rr: dns.ResourceRecord):
                 return urwid.Text(
-                    f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {str(rr)}"
+                    f"  {rr.name} {dns.types.to_str(rr.type)} {dns.classes.to_str(rr.class_)} {rr.ttl} {rr}"
                 )
 
             txt = []

@@ -70,6 +70,8 @@ class FlowReader:
                         tnetstring.load(self.fo),
                     )
                     try:
+                        if not isinstance(loaded, dict):
+                            raise ValueError(f"Invalid flow: {loaded=}")
                         yield flow.Flow.from_state(compat.migrate_flow(loaded))
                     except ValueError as e:
                         raise exceptions.FlowReadException(e) from e
@@ -80,7 +82,7 @@ class FlowReader:
 
 
 class FilteredFlowWriter:
-    def __init__(self, fo, flt):
+    def __init__(self, fo: BinaryIO, flt: flowfilter.TFilter | None):
         self.fo = fo
         self.flt = flt
 
@@ -89,6 +91,7 @@ class FilteredFlowWriter:
             return
         d = f.get_state()
         tnetstring.dump(d, self.fo)
+        self.fo.flush()
 
 
 def read_flows_from_paths(paths) -> list[flow.Flow]:

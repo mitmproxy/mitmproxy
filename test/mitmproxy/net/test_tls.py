@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import SSL
 
 from mitmproxy import certs
@@ -101,3 +102,7 @@ def test_is_dtls_record_magic():
     assert not tls.starts_like_dtls_record(bytes.fromhex("160300"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("160304"))
     assert not tls.starts_like_dtls_record(bytes.fromhex("150301"))
+
+
+def test_get_curve():
+    assert isinstance(tls.get_curve("secp256r1"), ec.SECP256R1)
