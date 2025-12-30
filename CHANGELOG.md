@@ -6,7 +6,8 @@
 -->
 
 ## Unreleased: mitmproxy next
-
+- content encoding inference from meta tag, especially for various unusual format
+  ([#8031](https://github.com/mitmproxy/mitmproxy/pull/8031), @edenw97)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
