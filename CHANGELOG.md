@@ -6,6 +6,7 @@
 -->
 
 ## Unreleased: mitmproxy next
+
 - content encoding inference from meta tag, especially for various unusual format
   ([#8031](https://github.com/mitmproxy/mitmproxy/pull/8031), @edenw97)
 
