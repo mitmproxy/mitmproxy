@@ -60,11 +60,80 @@ def test_assemble_content_type():
             b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
             "gb18030",
         ),
+       (
+            "text/html",
+            b'<meta http-equiv="content-type" '
+            b'content="text/html;charset =gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
+            "gb18030",
+        ),
+       (
+            "text/html",
+            b'<meta http-equiv="content-type" '
+            b'content="text/html;charset= gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
+            "gb18030",
+        ),
+        (
+            "text/html",
+            b'<meta http-equiv="content-type" '
+            b'content="text/html;charset=gb2312;">\xe6\x98\x8e\xe4\xbc\xaf',
+            "gb18030",
+        ),
         (
             "text/html",
             b"<html></html>",
             "utf8",
         ),
+        (
+            "text/html",
+            b'<meta charset="utf-8" >',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta charset= "utf-8" >',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta charset ="utf-8" >',
+            "utf-8",
+        ),
+        # Case: Mismatched quotes
+        (
+            "text/html",
+            b'<meta charset="utf-8\' >',
+            "utf8",
+        ),
+        (
+            "text/html",
+            b'<meta charset=" utf-8" >',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta charset="utf-8 " >',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta charset=utf-8 id=meta>',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta http-equiv="Content-Type" content="text/html; charset=utf-8 version=2">',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta charset=utf-8\nfoo=bar>',
+            "utf-8",
+        ),
+        (
+            "text/html",
+            b'<meta charset=utf-8\tid=head>',
+            "utf-8",
+        ),        
         # xml declaration encoding
         (
             "application/xml",
