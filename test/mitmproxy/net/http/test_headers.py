@@ -49,7 +49,7 @@ def test_assemble_content_type():
         # json
         ("application/json", b'"\xc3\xbc"', "utf8"),
         # html meta charset
-        #miss meta
+        # miss meta
         (
             "text/html",
             b'<charset="gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
@@ -66,13 +66,13 @@ def test_assemble_content_type():
             b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
             "gb18030",
         ),
-       (
+        (
             "text/html",
             b'<meta http-equiv="content-type" '
             b'content="text/html;charset =gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
             "gb18030",
         ),
-       (
+        (
             "text/html",
             b'<meta http-equiv="content-type" '
             b'content="text/html;charset= gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
@@ -107,7 +107,7 @@ def test_assemble_content_type():
         # Case: Mismatched quotes
         (
             "text/html",
-            b'<meta charset="utf-8\' >',
+            b"<meta charset=\"utf-8' >",
             "utf8",
         ),
         (
@@ -122,7 +122,7 @@ def test_assemble_content_type():
         ),
         (
             "text/html",
-            b'<meta charset=utf-8 id=meta>',
+            b"<meta charset=utf-8 id=meta>",
             "utf-8",
         ),
         (
@@ -132,14 +132,14 @@ def test_assemble_content_type():
         ),
         (
             "text/html",
-            b'<meta charset=utf-8\nfoo=bar>',
+            b"<meta charset=utf-8\nfoo=bar>",
             "utf-8",
         ),
         (
             "text/html",
-            b'<meta charset=utf-8\tid=head>',
+            b"<meta charset=utf-8\tid=head>",
             "utf-8",
-        ),        
+        ),
         # xml declaration encoding
         (
             "application/xml",
