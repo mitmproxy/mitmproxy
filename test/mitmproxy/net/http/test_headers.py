@@ -140,6 +140,16 @@ def test_assemble_content_type():
             b"<meta charset=utf-8\tid=head>",
             "utf-8",
         ),
+        (
+            "text/html",
+            b"<meta charset=''",
+            "utf8",
+        ),
+        (
+            "text/html",
+            b"<meta charset=",
+            "utf8",
+        ),
         # xml declaration encoding
         (
             "application/xml",

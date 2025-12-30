@@ -75,11 +75,11 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
             re.IGNORECASE,
         )
         if meta_charset:
-            enc = (
-                (meta_charset.group(2) or meta_charset.group(3))
-                .decode("ascii", "ignore")
-                .strip()
-            )
+            match = meta_charset.group(2) or meta_charset.group(3)
+            if match:
+                enc = match.decode("ascii", "ignore").strip()
+            else:
+                enc = "utf8"
         else:
             # Fallback to utf8 for html
             # Ref: https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
