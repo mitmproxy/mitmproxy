@@ -49,6 +49,12 @@ def test_assemble_content_type():
         # json
         ("application/json", b'"\xc3\xbc"', "utf8"),
         # html meta charset
+        #miss meta
+        (
+            "text/html",
+            b'<charset="gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
+            "utf8",
+        ),
         (
             "text/html",
             b'<meta charset="gb2312">\xe6\x98\x8e\xe4\xbc\xaf',
