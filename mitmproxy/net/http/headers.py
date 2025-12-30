@@ -70,7 +70,7 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
         # 4. (["'])(.*?)\1 : Matches a quote, then anything lazily, then the MATCHING quote (\1)
         # 5. ([^'"";\s]+)     : Unquoted - stops at quote, Semicolon (;) or Whitespace
         meta_charset = re.search(
-            rb"""meta[^>]+charset\s*=\s*(?:(["'])(.*?)\1|([^'";\s]+))""", content, re.IGNORECASE
+            rb"""<meta[^>]+charset\s*=\s*(?:(["'])(.*?)\1|([^'";\s]+))""", content, re.IGNORECASE
         )
         if meta_charset:
             enc = (meta_charset.group(2) or meta_charset.group(3)).decode("ascii", "ignore").strip()
