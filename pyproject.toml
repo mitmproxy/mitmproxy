@@ -50,7 +50,7 @@ dependencies = [
     "pyOpenSSL>=24.3,<=25.3.0",
     "pyparsing>=2.4.2,<=3.2.5",
     "pyperclip>=1.9.0,<=1.11.0",
-    "ruamel.yaml>=0.18.10,<=0.18.16",
+    "ruamel.yaml>=0.18.10,<=0.19.0",
     "sortedcontainers>=2.3,<=2.4.0",
     "tornado>=6.5.0,<=6.5.2",
     "typing-extensions>=4.13.2,<=4.14; python_version < '3.13'",
