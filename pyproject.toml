@@ -48,7 +48,7 @@ dependencies = [
     "msgpack>=1.0.0,<=1.1.2",
     "pydivert>=2.0.3,<=2.1.0; sys_platform == 'win32'",
     "pyOpenSSL>=24.3,<=25.3.0",
-    "pyparsing>=2.4.2,<=3.2.5",
+    "pyparsing>=2.4.2,<=3.3.1",
     "pyperclip>=1.9.0,<=1.11.0",
     "ruamel.yaml>=0.18.10,<=0.18.16",
     "sortedcontainers>=2.3,<=2.4.0",
