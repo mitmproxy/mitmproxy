@@ -1,4 +1,5 @@
-import { includeListenAddress, ModeState, RawSpecParts } from ".";
+import type { ModeState, RawSpecParts } from ".";
+import { includeListenAddress } from ".";
 
 export interface WireguardState extends ModeState {
     file_path?: string;

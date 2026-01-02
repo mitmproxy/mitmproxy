@@ -1,8 +1,8 @@
 import { ConnectionState } from "../../ducks/connection";
 import { TDNSFlow, THTTPFlow, TTCPFlow, TUDPFlow } from "./_tflow";
-import { RootState, RootStore } from "../../ducks";
+import type { RootState, RootStore } from "../../ducks";
 import { middlewares, reducer } from "../../ducks/store";
-import { DNSFlow, Flow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
+import type { DNSFlow, Flow, HTTPFlow, TCPFlow, UDPFlow } from "../../flow";
 import { defaultState as defaultOptions } from "../../ducks/options";
 import { TBackendState } from "./_tbackendstate";
 import { configureStore } from "@reduxjs/toolkit";

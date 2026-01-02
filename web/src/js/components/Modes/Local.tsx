@@ -2,9 +2,10 @@ import * as React from "react";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setActive, setSelectedProcesses } from "../../ducks/modes/local";
-import { getSpec, LocalState } from "../../modes/local";
+import type { LocalState } from "../../modes/local";
+import { getSpec } from "../../modes/local";
 import { ServerStatus } from "./CaptureSetup";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import LocalDropdown from "./LocalDropdown";
 import { fetchProcesses } from "../../ducks/processes";
 

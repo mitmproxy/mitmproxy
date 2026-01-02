@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { getSpec, UpstreamState } from "../../modes/upstream";
-import { ServerInfo } from "../../ducks/backendState";
+import type { UpstreamState } from "../../modes/upstream";
+import { getSpec } from "../../modes/upstream";
+import type { ServerInfo } from "../../ducks/backendState";
 import {
     setDestination,
     setActive,

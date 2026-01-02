@@ -1,4 +1,5 @@
-import { includeListenAddress, ModeState, RawSpecParts } from ".";
+import type { ModeState, RawSpecParts } from ".";
+import { includeListenAddress } from ".";
 import { ReverseProxyProtocols } from "../backends/consts";
 import { partition } from "../utils";
 

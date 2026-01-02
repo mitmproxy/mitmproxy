@@ -1,6 +1,6 @@
 import reduceOptionsMeta, * as OptionsMetaActions from "../../ducks/options_meta";
 import * as OptionsActions from "../../ducks/options";
-import { OptionsStateWithMeta } from "../../ducks/options";
+import type { OptionsStateWithMeta } from "../../ducks/options";
 
 test("options_meta", async () => {
     expect(reduceOptionsMeta(undefined, { type: "other" })).toEqual(

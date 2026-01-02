@@ -2,7 +2,7 @@ import reduceOptions, * as optionsActions from "../../ducks/options";
 import { enableFetchMocks } from "jest-fetch-mock";
 import { TStore } from "./tutils";
 import { waitFor } from "@testing-library/dom";
-import { OptionsStateWithMeta } from "../../ducks/options";
+import type { OptionsStateWithMeta } from "../../ducks/options";
 
 enableFetchMocks();
 

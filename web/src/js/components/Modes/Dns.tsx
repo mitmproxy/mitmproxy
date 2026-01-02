@@ -1,12 +1,13 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../ducks";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
 import { Popover } from "./Popover";
 import { setActive, setListenHost, setListenPort } from "../../ducks/modes/dns";
-import { DnsState, getSpec } from "../../modes/dns";
+import type { DnsState } from "../../modes/dns";
+import { getSpec } from "../../modes/dns";
 
 export default function Dns() {
     const serverState = useAppSelector((state) => state.modes.dns);
