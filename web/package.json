@@ -16,6 +16,7 @@
         "@floating-ui/react-dom": "^2.1.2",
         "@popperjs/core": "^2.11.8",
         "@reduxjs/toolkit": "^2.8.1",
+        "@types/react": "^19.2.6",
         "@uiw/react-codemirror": "^4.23.12",
         "bootstrap": "^3.4.1",
         "classnames": "^2.3.1",
