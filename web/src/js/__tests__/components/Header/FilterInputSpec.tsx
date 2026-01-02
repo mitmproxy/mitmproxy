@@ -137,6 +137,7 @@ describe("FilterInput Component", () => {
         act(() => filterInput.selectFilter("bar"));
         expect(filterInput.state.value).toEqual("bar");
         expect(input.focus).toBeCalled();
+        expect(filterInput.props.onChange).toBeCalledWith("bar");
     });
 
     it("should handle select", () => {

@@ -1,4 +1,4 @@
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
 import { canReplay, canResumeOrKill, canRevert } from "../../flow/utils";
 import { fetchApi } from "../../utils";
 

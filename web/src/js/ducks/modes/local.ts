@@ -1,7 +1,8 @@
 import { STATE_RECEIVE, STATE_UPDATE } from "../backendState";
 import { addSetter, createModeUpdateThunk, updateState } from "./utils";
 import { createSlice } from "@reduxjs/toolkit";
-import { LocalState, parseRaw } from "../../modes/local";
+import type { LocalState } from "../../modes/local";
+import { parseRaw } from "../../modes/local";
 
 export const setActive = createModeUpdateThunk<boolean>(
     "modes/local/setActive",

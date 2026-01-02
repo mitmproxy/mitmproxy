@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useRef } from "react";
-import { ServerInfo } from "../../ducks/backendState";
+import type { ServerInfo } from "../../ducks/backendState";
 import { formatAddress } from "../../utils";
 import QRCode from "qrcode";
 

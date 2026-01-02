@@ -1,5 +1,6 @@
-import { configureStore, UnknownAction } from "@reduxjs/toolkit";
-import { ThunkAction } from "redux-thunk";
+import type { UnknownAction } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
+import type { ThunkAction } from "redux-thunk";
 
 import eventLog from "./eventLog";
 import flows from "./flows";

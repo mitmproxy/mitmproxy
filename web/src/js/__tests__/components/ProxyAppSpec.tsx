@@ -2,7 +2,7 @@ import * as React from "react";
 import { render, screen, waitFor } from "../test-utils";
 import ProxyApp from "../../components/ProxyApp";
 import { enableFetchMocks } from "jest-fetch-mock";
-import { ContentViewData } from "../../components/contentviews/useContentView";
+import type { ContentViewData } from "../../components/contentviews/useContentView";
 
 enableFetchMocks();
 

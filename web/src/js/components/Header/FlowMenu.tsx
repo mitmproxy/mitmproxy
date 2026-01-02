@@ -19,7 +19,7 @@ import {
 } from "../../ducks/flows";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 import { copy } from "../../flow/export";
-import { Flow } from "../../flow";
+import type { Flow } from "../../flow";
 
 import type { JSX } from "react";
 

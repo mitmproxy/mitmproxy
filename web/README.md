@@ -1,9 +1,7 @@
 # Quick Start
 
 - Install mitmproxy as described in [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
-- Run `node --version` to make sure that you have at least Node.js 18 or above. If you are on **Ubuntu <= 22.04**, you
-  need to
-  [upgrade](https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions).
+- Run `node --version` to make sure that you have at least Node.js 24 or above.
 - Run `cd ./web` to change to the directory with package.json.
 - Run `npm install` to install dependencies.
 - Run `uv run mitmweb`

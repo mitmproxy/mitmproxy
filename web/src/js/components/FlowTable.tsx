@@ -1,11 +1,12 @@
 import * as React from "react";
 import { connect, shallowEqual } from "react-redux";
 import * as autoscroll from "./helpers/AutoScroll";
-import { calcVScroll, VScroll } from "./helpers/VirtualScroll";
+import type { VScroll } from "./helpers/VirtualScroll";
+import { calcVScroll } from "./helpers/VirtualScroll";
 import FlowTableHead from "./FlowTable/FlowTableHead";
 import FlowRow from "./FlowTable/FlowRow";
-import { Flow } from "../flow";
-import { RootState } from "../ducks";
+import type { Flow } from "../flow";
+import type { RootState } from "../ducks";
 
 type FlowTableProps = {
     flowView: Flow[];
