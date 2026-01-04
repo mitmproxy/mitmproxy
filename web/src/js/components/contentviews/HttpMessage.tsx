@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
@@ -190,6 +190,17 @@ function CopyButton({ flow, message }: CopyButtonProps) {
     const [isCopied, setIsCopied] = useState<boolean>(false);
     const [isFetchingFullContent, setIsFetchingFullContent] =
         useState<boolean>(false);
+    const copiedTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
+
+    useEffect(() => {
+        return () => {
+            if (copiedTimeout.current) {
+                clearTimeout(copiedTimeout.current);
+            }
+        };
+    }, []);
 
     const handleClickCopyButton = async () => {
         try {
@@ -207,13 +218,24 @@ function CopyButton({ flow, message }: CopyButtonProps) {
 
             await copyViewContentDataToClipboard(data);
             setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 2000);
+            if (copiedTimeout.current) {
+                clearTimeout(copiedTimeout.current);
+            }
+            copiedTimeout.current = setTimeout(() => setIsCopied(false), 1200);
         } catch (e) {
             console.error(e);
         } finally {
             setIsFetchingFullContent(false);
         }
     };
+
+    if (isCopied) {
+        return (
+            <span className="text-success" title="Copied">
+                <i className="fa fa-check text-success" />&nbsp;Copied
+            </span>
+        );
+    }
 
     return (
         <Button
@@ -222,7 +244,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
             className="btn-xs"
             disabled={isFetchingFullContent}
         >
-            {isCopied ? "Copied!" : "Copy"}
+            Copy
         </Button>
     );
 }
