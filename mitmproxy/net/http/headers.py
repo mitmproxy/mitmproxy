@@ -77,7 +77,7 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
         if meta_charset:
             match = meta_charset.group(2) or meta_charset.group(3)
             if match:
-                enc = match.decode("ascii", "ignore").strip()
+                enc = match.strip().decode("ascii", "ignore")
             else:
                 enc = "utf8"
         else:
