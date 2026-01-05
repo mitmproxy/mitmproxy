@@ -13,7 +13,11 @@ import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import ContentRenderer from "./ContentRenderer";
 import ViewSelector from "./ViewSelector";
-import { copyToClipboard, copyViewContentDataToClipboard, fetchApi } from "../../utils";
+import {
+    copyToClipboard,
+    copyViewContentDataToClipboard,
+    fetchApi,
+} from "../../utils";
 import { SyntaxHighlight } from "../../backends/consts";
 
 type HttpMessageProps = {
@@ -111,8 +115,8 @@ function HttpMessageEdit({
     })();
 
     const initialContent = usePrettifiedForCopyEdit
-        ? contentViewData?.text ?? fetchedContent ?? ""
-        : fetchedContent ?? "";
+        ? (contentViewData?.text ?? fetchedContent ?? "")
+        : (fetchedContent ?? "");
     const editorValue = editedContent ?? initialContent;
 
     const maybeReencodeGraphQL = (input: string): string | undefined => {
@@ -371,7 +375,8 @@ function CopyButton({
     if (isCopied) {
         return (
             <span className="text-success" title="Copied">
-                <i className="fa fa-check text-success" />&nbsp;Copied
+                <i className="fa fa-check text-success" />
+                &nbsp;Copied
             </span>
         );
     }

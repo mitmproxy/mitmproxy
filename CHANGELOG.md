@@ -12,6 +12,7 @@
 - mitmweb: show intercept filter tag at the bottom for default options
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
 - mitmweb: add an opt-in Format toggle so Copy/Edit can use prettified content view output.
+  ([#8039](https://github.com/mitmproxy/mitmproxy/pull/8039), @nadav96)
 
 ## 24 November 2025: mitmproxy 12.2.1
 

@@ -8,7 +8,9 @@ import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 const setClipboardMocks = () => {
     const clipboard = {
-        write: jest.fn().mockRejectedValue(new Error("clipboard.write not available")),
+        write: jest
+            .fn()
+            .mockRejectedValue(new Error("clipboard.write not available")),
         writeText: jest.fn().mockResolvedValue(undefined),
     };
     Object.defineProperty(navigator, "clipboard", {
@@ -214,7 +216,9 @@ describe("HttpMessage Format toggle", () => {
 
         fireEvent.click(screen.getByText("Copy"));
         await waitFor(() =>
-            expect(clipboard.writeText).toHaveBeenCalledWith("pretty content\n"),
+            expect(clipboard.writeText).toHaveBeenCalledWith(
+                "pretty content\n",
+            ),
         );
 
         expect(
