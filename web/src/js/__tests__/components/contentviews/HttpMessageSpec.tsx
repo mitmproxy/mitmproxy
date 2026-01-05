@@ -6,6 +6,18 @@ import HttpMessage, {
 import { fireEvent, render, screen, waitFor } from "../../test-utils";
 import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
+const setClipboardMocks = () => {
+    const clipboard = {
+        write: jest.fn().mockRejectedValue(new Error("clipboard.write not available")),
+        writeText: jest.fn().mockResolvedValue(undefined),
+    };
+    Object.defineProperty(navigator, "clipboard", {
+        value: clipboard,
+        configurable: true,
+    });
+    return clipboard;
+};
+
 enableFetchMocks();
 
 test("HttpMessage", async () => {
@@ -113,5 +125,145 @@ describe("HttpMessage Copy Button", () => {
         await waitFor(() =>
             expect(console.error).toHaveBeenCalledWith(expect.any(Error)),
         );
+    });
+});
+
+describe("HttpMessage Format toggle", () => {
+    beforeEach(() => {
+        fetchMock.resetMocks();
+        jest.clearAllMocks();
+        jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    test("toggles Format button label", async () => {
+        fetchMock.mockResponseOnce(
+            JSON.stringify({
+                text: "some content\n",
+                view_name: "Raw",
+                description: "",
+                syntax_highlight: "none",
+            }),
+        );
+
+        const tflow = TFlow();
+        render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+        await waitFor(() => screen.getByText("Copy"));
+
+        fireEvent.click(screen.getByText("Format"));
+        await waitFor(() => screen.getByText("Formatted"));
+
+        fireEvent.click(screen.getByText("Formatted"));
+        await waitFor(() => screen.getByText("Format"));
+    });
+
+    test("Copy uses raw content.data when Format is off", async () => {
+        const clipboard = setClipboardMocks();
+
+        fetchMock.mockResponses(
+            JSON.stringify({
+                text: "some content\n",
+                view_name: "Raw",
+                description: "",
+                syntax_highlight: "none",
+            }),
+            "raw content",
+        );
+
+        const tflow = TFlow();
+        render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+        await waitFor(() => screen.getByText("Copy"));
+        fireEvent.click(screen.getByText("Copy"));
+
+        await waitFor(() =>
+            expect(clipboard.writeText).toHaveBeenCalledWith("raw content"),
+        );
+
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                String(url).endsWith("/request/content.data"),
+            ),
+        ).toBe(true);
+    });
+
+    test("Copy uses prettified content view JSON when Format is on", async () => {
+        const clipboard = setClipboardMocks();
+
+        fetchMock.mockResponses(
+            JSON.stringify({
+                text: "some content\n",
+                view_name: "Raw",
+                description: "",
+                syntax_highlight: "none",
+            }),
+            JSON.stringify({
+                text: "pretty content\n",
+                view_name: "Auto",
+                description: "",
+                syntax_highlight: "none",
+            }),
+        );
+
+        const tflow = TFlow();
+        render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+        await waitFor(() => screen.getByText("Copy"));
+        fireEvent.click(screen.getByText("Format"));
+        await waitFor(() => screen.getByText("Formatted"));
+
+        fireEvent.click(screen.getByText("Copy"));
+        await waitFor(() =>
+            expect(clipboard.writeText).toHaveBeenCalledWith("pretty content\n"),
+        );
+
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                /\/request\/content\/Auto\.json(\?|$)/.test(String(url)),
+            ),
+        ).toBe(true);
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                String(url).endsWith("/request/content.data"),
+            ),
+        ).toBe(false);
+    });
+
+    test("Edit fetches prettified content view when Format is on", async () => {
+        fetchMock.mockResponses(
+            JSON.stringify({
+                text: "some content\n",
+                view_name: "Raw",
+                description: "",
+                syntax_highlight: "none",
+            }),
+            JSON.stringify({
+                text: "pretty content\n",
+                view_name: "Auto",
+                description: "",
+                syntax_highlight: "none",
+            }),
+        );
+
+        const tflow = TFlow();
+        render(<HttpMessage flow={tflow} message={tflow.request} />);
+
+        await waitFor(() => screen.getByText("Copy"));
+        fireEvent.click(screen.getByText("Format"));
+        await waitFor(() => screen.getByText("Formatted"));
+
+        fireEvent.click(screen.getByText("Edit"));
+        await waitFor(() => screen.getByText("[Editing]"));
+
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                /\/request\/content\/Auto\.json(\?|$)/.test(String(url)),
+            ),
+        ).toBe(true);
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                String(url).endsWith("/request/content.data"),
+            ),
+        ).toBe(false);
     });
 });
