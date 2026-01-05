@@ -122,7 +122,7 @@ def test_assemble_content_type():
         ),
         (
             "text/html",
-            b'<meta charset=utf-8>',
+            b"<meta charset=utf-8>",
             "utf-8",
         ),
         (
