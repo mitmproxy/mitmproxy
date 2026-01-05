@@ -22,6 +22,16 @@ exports[`HttpMessage 1`] = `
        
       <button
         class="btn-xs btn btn-default"
+        title="Use formatted view output for Copy/Edit"
+      >
+        <i
+          class="fa fa-indent"
+        />
+         Format
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-edit"
@@ -229,6 +239,16 @@ exports[`HttpMessage 3`] = `
        
       <button
         class="btn-xs btn btn-default"
+        title="Use formatted view output for Copy/Edit"
+      >
+        <i
+          class="fa fa-indent"
+        />
+         Format
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-edit"
@@ -310,6 +330,16 @@ exports[`HttpMessage 4`] = `
           class="fa fa-clipboard"
         />
          Copy
+      </button>
+       
+      <button
+        class="btn-xs btn btn-default"
+        title="Use formatted view output for Copy/Edit"
+      >
+        <i
+          class="fa fa-indent"
+        />
+         Format
       </button>
        
       <button

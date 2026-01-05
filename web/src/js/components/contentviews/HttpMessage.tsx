@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
@@ -13,7 +13,12 @@ import Button from "../common/Button";
 import CodeEditor from "./CodeEditor";
 import ContentRenderer from "./ContentRenderer";
 import ViewSelector from "./ViewSelector";
-import { copyViewContentDataToClipboard, fetchApi } from "../../utils";
+import {
+    copyToClipboard,
+    copyViewContentDataToClipboard,
+    fetchApi,
+} from "../../utils";
+import { SyntaxHighlight } from "../../backends/consts";
 
 type HttpMessageProps = {
     flow: HTTPFlow;
@@ -22,11 +27,14 @@ type HttpMessageProps = {
 
 export default function HttpMessage({ flow, message }: HttpMessageProps) {
     const [isEdited, setIsEdited] = useState<boolean>(false);
+    const [usePrettifiedForCopyEdit, setUsePrettifiedForCopyEdit] =
+        useState<boolean>(false);
     if (isEdited) {
         return (
             <HttpMessageEdit
                 flow={flow}
                 message={message}
+                usePrettifiedForCopyEdit={usePrettifiedForCopyEdit}
                 stopEdit={() => setIsEdited(false)}
             />
         );
@@ -35,6 +43,8 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
             <HttpMessageView
                 flow={flow}
                 message={message}
+                usePrettifiedForCopyEdit={usePrettifiedForCopyEdit}
+                setUsePrettifiedForCopyEdit={setUsePrettifiedForCopyEdit}
                 startEdit={() => setIsEdited(true)}
             />
         );
@@ -44,21 +54,106 @@ export default function HttpMessage({ flow, message }: HttpMessageProps) {
 type HttpMessageEditProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
+    usePrettifiedForCopyEdit: boolean;
     stopEdit: () => void;
 };
 
-function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
+function HttpMessageEdit({
+    flow,
+    message,
+    usePrettifiedForCopyEdit,
+    stopEdit,
+}: HttpMessageEditProps) {
     const dispatch = useAppDispatch();
 
     const part = flow.request === message ? "request" : "response";
-    const url = MessageUtils.getContentURL(flow, message);
-    const content = useContent(url, message.contentHash);
+    const contentView = useAppSelector(
+        (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
+    );
+    const url = MessageUtils.getContentURL(
+        flow,
+        message,
+        usePrettifiedForCopyEdit ? contentView : undefined,
+    );
+    const fetchedContent = useContent(url, message.contentHash);
+    const contentViewData: ContentViewData | undefined = (() => {
+        if (!usePrettifiedForCopyEdit || !fetchedContent) {
+            return undefined;
+        }
+        try {
+            return JSON.parse(fetchedContent);
+        } catch {
+            return undefined;
+        }
+    })();
     const [editedContent, setEditedContent] = useState<string>();
 
+    const editorLanguage = (() => {
+        if (!usePrettifiedForCopyEdit) {
+            return null;
+        }
+        const sh = contentViewData?.syntax_highlight;
+        if (!sh) {
+            return null;
+        }
+        switch (sh) {
+            case "css":
+                return SyntaxHighlight.CSS;
+            case "javascript":
+                return SyntaxHighlight.JAVASCRIPT;
+            case "xml":
+                return SyntaxHighlight.XML;
+            case "yaml":
+                return SyntaxHighlight.YAML;
+            case "none":
+                return SyntaxHighlight.NONE;
+            case "error":
+                return SyntaxHighlight.ERROR;
+            default:
+                return null;
+        }
+    })();
+
+    const initialContent = usePrettifiedForCopyEdit
+        ? (contentViewData?.text ?? fetchedContent ?? "")
+        : (fetchedContent ?? "");
+    const editorValue = editedContent ?? initialContent;
+
+    const maybeReencodeGraphQL = (input: string): string | undefined => {
+        if (!usePrettifiedForCopyEdit) {
+            return undefined;
+        }
+        if (contentViewData?.view_name?.toLowerCase() !== "graphql") {
+            return undefined;
+        }
+        const delimiter = "\n---\n";
+        const idx = input.indexOf(delimiter);
+        if (idx === -1) {
+            return undefined;
+        }
+        const headerText = input.slice(0, idx).trim();
+        const queryText = input.slice(idx + delimiter.length);
+        try {
+            const header = JSON.parse(headerText);
+            if (
+                header &&
+                typeof header === "object" &&
+                !Array.isArray(header)
+            ) {
+                header.query = queryText;
+                return JSON.stringify(header);
+            }
+        } catch {
+            return undefined;
+        }
+        return undefined;
+    };
+
     const save = async () => {
+        const contentToSave = maybeReencodeGraphQL(editorValue) ?? editorValue;
         await dispatch(
             flowActions.update(flow, {
-                [part]: { content: editedContent || content || "" },
+                [part]: { content: contentToSave },
             }),
         );
         stopEdit();
@@ -84,8 +179,9 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                 </Button>
             </div>
             <CodeEditor
-                initialContent={content || ""}
+                initialContent={editorValue}
                 onChange={setEditedContent}
+                language={editorLanguage}
             />
         </div>
     );
@@ -94,10 +190,18 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
 type HttpMessageViewProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
+    usePrettifiedForCopyEdit: boolean;
+    setUsePrettifiedForCopyEdit: (value: boolean) => void;
     startEdit: () => void;
 };
 
-function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
+function HttpMessageView({
+    flow,
+    message,
+    usePrettifiedForCopyEdit,
+    setUsePrettifiedForCopyEdit,
+    startEdit,
+}: HttpMessageViewProps) {
     const dispatch = useAppDispatch();
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
@@ -135,7 +239,34 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
             <div className="controls">
                 <h5>{desc}</h5>
                 {contentViewData && contentViewData?.text.length > 0 && (
-                    <CopyButton flow={flow} message={message} />
+                    <>
+                        <CopyButton
+                            flow={flow}
+                            message={message}
+                            usePrettifiedForCopyEdit={usePrettifiedForCopyEdit}
+                        />
+                        &nbsp;
+                        <Button
+                            onClick={() =>
+                                setUsePrettifiedForCopyEdit(
+                                    !usePrettifiedForCopyEdit,
+                                )
+                            }
+                            icon={
+                                usePrettifiedForCopyEdit
+                                    ? "fa-check text-success"
+                                    : "fa-indent"
+                            }
+                            className="btn-xs"
+                            title={
+                                usePrettifiedForCopyEdit
+                                    ? "Copy/Edit uses formatted view output"
+                                    : "Use formatted view output for Copy/Edit"
+                            }
+                        >
+                            {usePrettifiedForCopyEdit ? "Formatted" : "Format"}
+                        </Button>
+                    </>
                 )}
                 &nbsp;
                 <Button onClick={startEdit} icon="fa-edit" className="btn-xs">
@@ -179,9 +310,14 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
 type CopyButtonProps = {
     flow: HTTPFlow;
     message: HTTPMessage;
+    usePrettifiedForCopyEdit: boolean;
 };
 
-function CopyButton({ flow, message }: CopyButtonProps) {
+function CopyButton({
+    flow,
+    message,
+    usePrettifiedForCopyEdit,
+}: CopyButtonProps) {
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
         (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
@@ -190,10 +326,25 @@ function CopyButton({ flow, message }: CopyButtonProps) {
     const [isCopied, setIsCopied] = useState<boolean>(false);
     const [isFetchingFullContent, setIsFetchingFullContent] =
         useState<boolean>(false);
+    const copiedTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
+
+    useEffect(() => {
+        return () => {
+            if (copiedTimeout.current) {
+                clearTimeout(copiedTimeout.current);
+            }
+        };
+    }, []);
 
     const handleClickCopyButton = async () => {
         try {
-            const url = MessageUtils.getContentURL(flow, message, contentView);
+            const url = MessageUtils.getContentURL(
+                flow,
+                message,
+                usePrettifiedForCopyEdit ? contentView : undefined,
+            );
             setIsFetchingFullContent(true);
 
             const response = await fetchApi(url);
@@ -203,17 +354,32 @@ function CopyButton({ flow, message }: CopyButtonProps) {
                 );
             }
 
-            const data: ContentViewData = await response.json();
-
-            await copyViewContentDataToClipboard(data);
+            if (usePrettifiedForCopyEdit) {
+                const data: ContentViewData = await response.json();
+                await copyViewContentDataToClipboard(data);
+            } else {
+                await copyToClipboard(response.text());
+            }
             setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 2000);
+            if (copiedTimeout.current) {
+                clearTimeout(copiedTimeout.current);
+            }
+            copiedTimeout.current = setTimeout(() => setIsCopied(false), 1200);
         } catch (e) {
             console.error(e);
         } finally {
             setIsFetchingFullContent(false);
         }
     };
+
+    if (isCopied) {
+        return (
+            <span className="text-success" title="Copied">
+                <i className="fa fa-check text-success" />
+                &nbsp;Copied
+            </span>
+        );
+    }
 
     return (
         <Button
@@ -222,7 +388,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
             className="btn-xs"
             disabled={isFetchingFullContent}
         >
-            {isCopied ? "Copied!" : "Copy"}
+            Copy
         </Button>
     );
 }
