@@ -1,6 +1,6 @@
 import * as React from "react";
 import { formatTimeStamp } from "../../utils";
-import { Address, Client, Flow, Server } from "../../flow";
+import type { Address, Client, Flow, Server } from "../../flow";
 
 type ConnectionInfoProps = {
     conn: Client | Server;

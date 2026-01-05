@@ -1,5 +1,5 @@
 import { copyToClipboard, runCommand } from "../utils";
-import { Flow } from "../flow";
+import type { Flow } from "../flow";
 
 export const copy = async (flow: Flow, format: string): Promise<void> => {
     // Safari: We need to call copyToClipboard _right away_ with a promise,

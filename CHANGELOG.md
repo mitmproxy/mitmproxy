@@ -9,6 +9,10 @@
 
 - content encoding inference from meta tag, especially for various unusual format
   ([#8031](https://github.com/mitmproxy/mitmproxy/pull/8031), @edenw97)
+- Update optmanager value parsing exceptions to include the option name
+  ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
+- mitmweb: show intercept filter tag at the bottom for default options
+  ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
@@ -38,6 +42,8 @@
   ([#7963](https://github.com/mitmproxy/mitmproxy/pull/7963), @Julien00859)
 - Fix event loop leak when running tests
   ([#7982](https://github.com/mitmproxy/mitmproxy/pull/7982), @DNEGEL3125)
+- Fix TypeScript build by adding React types and removing obsolete `@ts-expect-error` directives.
+  ([#7988](https://github.com/mitmproxy/mitmproxy/pull/7988), @DNEGEL3125)
 
 ## 15 October 2025: mitmproxy 12.2.0
 

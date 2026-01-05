@@ -1,6 +1,7 @@
-import { ModesState } from "../../ducks/modes";
+import type { ModesState } from "../../ducks/modes";
 import { parseSpec } from "../../modes";
-import { getSpec, parseRaw, RegularState } from "../../modes/regular";
+import type { RegularState } from "../../modes/regular";
+import { getSpec, parseRaw } from "../../modes/regular";
 
 describe("getSpec regular mode", () => {
     it("should return the correct mode config", () => {

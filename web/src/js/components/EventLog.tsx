@@ -1,14 +1,10 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import {
-    EventLogItem,
-    LogLevel,
-    toggleFilter,
-    toggleVisibility,
-} from "../ducks/eventLog";
+import type { EventLogItem } from "../ducks/eventLog";
+import { LogLevel, toggleFilter, toggleVisibility } from "../ducks/eventLog";
 import ToggleButton from "./common/ToggleButton";
 import EventList from "./EventLog/EventList";
-import { RootState } from "../ducks";
+import type { RootState } from "../ducks";
 
 type EventLogState = {
     height: number;

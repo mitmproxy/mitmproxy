@@ -10,7 +10,7 @@ import { select } from "./ducks/flows";
 import { selectTab } from "./ducks/ui/flow";
 import * as eventLogActions from "./ducks/eventLog";
 import * as commandBarActions from "./ducks/commandBar";
-import { RootStore } from "./ducks/store";
+import type { RootStore } from "./ducks/store";
 import { Tab, setCurrent } from "./ducks/ui/tabs";
 
 const Query = {
