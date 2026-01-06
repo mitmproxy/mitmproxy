@@ -147,12 +147,12 @@ def test_assemble_content_type():
         ),
         (
             "text/html",
-            b"<meta charset=''",
+            b"<meta charset=''>",
             "utf8",
         ),
         (
             "text/html",
-            b"<meta charset=",
+            b"<meta charset=>",
             "utf8",
         ),
         # xml declaration encoding
