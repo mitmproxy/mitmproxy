@@ -387,7 +387,9 @@ class OptManager:
                 try:
                     return int(optstr)
                 except ValueError:
-                    raise exceptions.OptionsError(f"Not an integer: {optstr}")
+                    raise exceptions.OptionsError(
+                        f"Failed to parse option {o.name}: not an integer: {optstr}"
+                    )
             elif o.typespec is int:
                 raise exceptions.OptionsError(f"Option is required: {o.name}")
             else:
@@ -401,9 +403,11 @@ class OptManager:
                 return False
             else:
                 raise exceptions.OptionsError(
-                    'Boolean must be "true", "false", or have the value omitted (a synonym for "true").'
+                    f'Failed to parse option {o.name}: boolean must be "true", "false", or have the value omitted (a synonym for "true").'
                 )
-        raise NotImplementedError(f"Unsupported option type: {o.typespec}")
+        raise NotImplementedError(
+            f"Failed to parse option {o.name}: unsupported option type: {o.typespec}"
+        )
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         """

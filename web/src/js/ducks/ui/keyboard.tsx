@@ -3,7 +3,7 @@ import * as flowsActions from "../flows";
 import * as modalActions from "./modal";
 import { tabsForFlow } from "../../components/FlowView";
 import { runCommand } from "../../utils";
-import { AppDispatch, RootState } from "../store";
+import type { AppDispatch, RootState } from "../store";
 
 export function onKeyDown(e: KeyboardEvent) {
     //console.debug("onKeyDown", e)

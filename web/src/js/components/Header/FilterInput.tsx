@@ -111,9 +111,14 @@ export default class FilterInput extends Component<
         e.stopPropagation();
     }
 
-    selectFilter(cmd: string) {
-        this.setState({ value: cmd });
+    selectFilter(value: string) {
+        this.setState({ value });
         this.inputRef.current?.focus();
+
+        // Only propagate valid filters upwards.
+        if (this.isValid(value)) {
+            this.props.onChange(value);
+        }
     }
 
     blur() {

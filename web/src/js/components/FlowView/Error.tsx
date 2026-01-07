@@ -1,4 +1,4 @@
-import { HTTPFlow } from "../../flow";
+import type { HTTPFlow } from "../../flow";
 import { formatTimeStamp } from "../../utils";
 import * as React from "react";
 
