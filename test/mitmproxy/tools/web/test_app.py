@@ -2,6 +2,7 @@ import gzip
 import importlib
 import json
 import logging
+import mimetypes
 from pathlib import Path
 from unittest import mock
 
@@ -53,7 +54,6 @@ def test_all_handlers_have_auth():
 
 def test_javascript_mime_type():
     """Test that JavaScript files have the correct MIME type override."""
-    import mimetypes
     # Verify that .js files are served with application/javascript MIME type
     # This is critical for ES6 module scripts which enforce strict MIME type checking
     assert mimetypes.guess_type("test.js")[0] == "application/javascript"
