@@ -146,6 +146,10 @@ class RequestParser:
             logger.debug("Failed to parse request body as JSON")
             return InteractionRequest(raw=None)
 
+        # Handle ChatGPT web format specially
+        if api_format and api_format.endswith("_web"):
+            return self._parse_chatgpt_web(data, include_raw)
+
         # Get parser config
         parser_config = self._get_request_config(api_format)
 
@@ -160,6 +164,40 @@ class RequestParser:
         )
 
         return result
+
+    def _parse_chatgpt_web(self, data: dict[str, Any], include_raw: bool) -> InteractionRequest:
+        """Parse ChatGPT web format request."""
+        # ChatGPT web format:
+        # {
+        #   "action": "next",
+        #   "messages": [{"author": {"role": "user"}, "content": {"parts": ["text"]}}],
+        #   "model": "gpt-5-2",
+        #   ...
+        # }
+        messages = None
+        raw_messages = data.get("messages", [])
+        if raw_messages:
+            messages = []
+            for msg in raw_messages:
+                author = msg.get("author", {})
+                role = author.get("role", "user")
+                content = msg.get("content", {})
+                # Extract text from parts
+                parts = content.get("parts", [])
+                text = "".join(str(p) for p in parts if isinstance(p, str))
+                messages.append({
+                    "role": role,
+                    "content": text,
+                })
+
+        return InteractionRequest(
+            messages=messages,
+            model=data.get("model"),
+            temperature=None,
+            max_tokens=None,
+            tools=None,
+            raw=data if include_raw else None,
+        )
 
     def _get_request_config(self, api_format: str | None) -> dict[str, str]:
         """Get request parser config for api_format."""
