@@ -23,6 +23,10 @@ DEFAULT_BUNDLE_URL = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json"
 DEFAULT_CACHE_DIR = Path.home() / ".oximy"
 CACHE_FILENAME = "bundle_cache.json"
 
+# Local registry path (for development)
+# This is relative to the mitmproxy repo root
+LOCAL_BUNDLE_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "dist" / "oximy-bundle.json"
+
 
 @dataclass
 class CompiledDomainPattern:
@@ -110,6 +114,12 @@ class OISPBundle:
 class BundleLoader:
     """
     Manages OISP bundle loading, caching, and refresh.
+
+    Load priority:
+    1. Local bundle (registry/dist/oximy-bundle.json) - for development
+    2. Cached bundle (if fresh)
+    3. Remote URL
+    4. Stale cache (fallback)
     """
 
     def __init__(
@@ -117,10 +127,12 @@ class BundleLoader:
         bundle_url: str = DEFAULT_BUNDLE_URL,
         cache_dir: Path | None = None,
         max_age_hours: float = 24.0,
+        local_bundle_path: Path | None = None,
     ):
         self.bundle_url = bundle_url
         self.cache_dir = cache_dir or DEFAULT_CACHE_DIR
         self.max_age_hours = max_age_hours
+        self.local_bundle_path = local_bundle_path or LOCAL_BUNDLE_PATH
         self._bundle: OISPBundle | None = None
 
     @property
@@ -131,13 +143,27 @@ class BundleLoader:
         """
         Load the bundle, using cache if available and fresh.
 
+        Priority:
+        1. Local bundle (for development)
+        2. Cached bundle (if fresh)
+        3. Remote URL
+        4. Stale cache (fallback)
+
         Args:
-            force_refresh: If True, always fetch from URL
+            force_refresh: If True, skip cache and local (fetch from URL)
 
         Returns:
             Loaded OISPBundle
         """
-        # Try cache first (unless force refresh)
+        # Try local bundle first (development mode)
+        if not force_refresh:
+            local = self._load_from_local()
+            if local:
+                logger.info(f"Using local bundle (version {local.bundle_version})")
+                self._bundle = local
+                return local
+
+        # Try cache (unless force refresh)
         if not force_refresh:
             cached = self._load_from_cache()
             if cached and not cached.is_stale(self.max_age_hours):
@@ -164,6 +190,21 @@ class BundleLoader:
                 self._bundle = cached
                 return cached
             raise RuntimeError("No bundle available (fetch failed, no cache)") from e
+
+    def _load_from_local(self) -> OISPBundle | None:
+        """Load bundle from local registry (development mode)."""
+        if not self.local_bundle_path.exists():
+            return None
+
+        try:
+            with open(self.local_bundle_path, encoding="utf-8") as f:
+                data = json.load(f)
+            bundle = OISPBundle.from_dict(data)
+            logger.debug(f"Loaded local bundle from {self.local_bundle_path}")
+            return bundle
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to load local bundle: {e}")
+            return None
 
     def _fetch_from_url(self) -> OISPBundle:
         """Fetch bundle from the configured URL."""

@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "websites": {
+    "chatgpt": {
+      "name": "ChatGPT",
+      "vendor": "OpenAI",
+      "vendor_url": "https://openai.com",
+      "category": "ai-chat",
+      "domains": ["chatgpt.com", "chat.openai.com"],
+      "ai": "native",
+      "api_type": "direct",
+      "providers": ["openai"],
+      "features": {
+        "chat": {
+          "name": "Chat Conversation",
+          "patterns": [
+            { "url": "**/backend-api/conversation", "method": "POST" }
+          ]
+        },
+        "voice": {
+          "name": "Voice Mode",
+          "patterns": [
+            { "url": "**/voice/**", "method": "POST" }
+          ]
+        }
+      },
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "plus", "name": "Plus", "type": "individual", "monthly_usd": 20 },
+          { "id": "pro", "name": "Pro", "type": "individual", "monthly_usd": 200 },
+          { "id": "team", "name": "Team", "type": "team", "monthly_usd": 25 }
+        ]
+      },
+      "detection": {
+        "subscription": [
+          {
+            "type": "api_response",
+            "url": "**/backend-api/accounts/check/**",
+            "extract": { "plan": "$.accounts.*.account.plan_type" }
+          }
+        ]
+      }
+    }
+  }
+}

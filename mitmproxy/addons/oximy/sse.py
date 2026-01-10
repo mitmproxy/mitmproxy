@@ -78,15 +78,28 @@ class SSEBuffer:
                     data = json.loads(data_str)
                     self._accumulate_data(data)
                 except json.JSONDecodeError:
-                    logger.debug(f"Failed to parse SSE data: {data_str[:100]}")
+                    # Skip non-JSON data like "v1" encoding marker
+                    if data_str.strip() not in ("v1", "v2"):
+                        logger.debug(f"Failed to parse SSE data: {data_str[:100]}")
 
-    def _accumulate_data(self, data: dict[str, Any]) -> None:
+    def _accumulate_data(self, data: dict[str, Any] | str) -> None:
         """Accumulate content from a parsed SSE data object."""
+        # Handle case where data is a string (some APIs send raw strings)
+        if isinstance(data, str):
+            # Skip encoding markers
+            if data.strip() in ("v1", "v2"):
+                return
+            self.accumulated_content += data
+            return
+
         self.raw_chunks.append(data)
 
         # Try to extract model (usually in first chunk)
         if not self.model:
             self.model = data.get("model")
+            # ChatGPT web format: model in metadata.model_slug
+            if not self.model and data.get("type") == "server_ste_metadata":
+                self.model = data.get("metadata", {}).get("model_slug")
 
         # Extract content based on API format
         content_delta = self._extract_content_delta(data)
@@ -105,7 +118,28 @@ class SSEBuffer:
 
     def _extract_content_delta(self, data: dict[str, Any]) -> str | None:
         """Extract content delta from SSE chunk based on API format."""
-        # OpenAI format: choices[0].delta.content
+        # ChatGPT web format: delta patches with "o": "append" and path to content
+        # Example: {"p": "/message/content/parts/0", "o": "append", "v": "hello"}
+        if data.get("o") == "append" and "v" in data:
+            path = data.get("p", "")
+            if "/content/parts" in path or path == "":
+                value = data.get("v")
+                if isinstance(value, str):
+                    return value
+
+        # ChatGPT web format: patch array with nested operations
+        # Example: {"o": "patch", "v": [{"p": "/message/content/parts/0", "o": "append", "v": "text"}]}
+        if data.get("o") == "patch" and isinstance(data.get("v"), list):
+            content_parts = []
+            for patch in data["v"]:
+                if patch.get("o") == "append" and "/content/parts" in patch.get("p", ""):
+                    value = patch.get("v")
+                    if isinstance(value, str):
+                        content_parts.append(value)
+            if content_parts:
+                return "".join(content_parts)
+
+        # OpenAI API format: choices[0].delta.content
         choices = data.get("choices", [])
         if choices:
             delta = choices[0].get("delta", {})
@@ -187,16 +221,20 @@ def create_sse_stream_handler(buffer: SSEBuffer):
     The returned function can be assigned to flow.response.stream
     to intercept and accumulate SSE data while passing it through.
 
+    Mitmproxy calls the stream handler with each chunk of data (bytes).
+    The handler should return bytes or an iterable of bytes.
+
     Args:
         buffer: SSEBuffer to accumulate data
 
     Returns:
-        Stream handler function
+        Stream handler function that processes each chunk
     """
 
-    def handler(chunks):
-        for chunk in chunks:
-            buffer.process_chunk(chunk)
-            yield chunk
+    def handler(data: bytes) -> bytes:
+        # Process the chunk to accumulate SSE data
+        buffer.process_chunk(data)
+        # Pass through unchanged
+        return data
 
     return handler
