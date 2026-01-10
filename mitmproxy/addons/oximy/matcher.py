@@ -136,15 +136,9 @@ class TrafficMatcher:
                         endpoint=feature_name,
                     )
 
-        # Website matched but no specific endpoint - identifiable only
-        return MatchResult(
-            classification="identifiable",
-            source_type="website",
-            source_id=website_id,
-            provider_id=None,
-            api_format=None,
-            endpoint=None,
-        )
+        # Website matched but no specific endpoint - drop it
+        # We only care about actual AI conversation endpoints, not gizmos/settings/etc.
+        return MatchResult(classification="drop")
 
     def _matches_endpoint_pattern(self, path: str, pattern: dict) -> bool:
         """Check if path matches an endpoint pattern definition."""
