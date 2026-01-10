@@ -15,8 +15,27 @@ from mitmproxy import ctx, http
 
 from mitmproxy.addons.oximy.bundle import BundleLoader, DEFAULT_BUNDLE_URL
 from mitmproxy.addons.oximy.matcher import TrafficMatcher
-from mitmproxy.addons.oximy.parser import RequestParser, ResponseParser
-from mitmproxy.addons.oximy.sse import SSEBuffer, is_sse_response, create_sse_stream_handler
+from mitmproxy.addons.oximy.parser import (
+    RequestParser,
+    ResponseParser,
+    parse_gemini_request,
+    parse_gemini_response,
+    parse_deepseek_request,
+    parse_perplexity_request,
+    parse_grok_request,
+    parse_grok_response,
+)
+from mitmproxy.addons.oximy.sse import (
+    SSEBuffer,
+    GeminiBuffer,
+    GrokBuffer,
+    is_sse_response,
+    is_gemini_streaming_response,
+    is_grok_streaming_response,
+    create_sse_stream_handler,
+    create_gemini_stream_handler,
+    create_grok_stream_handler,
+)
 from mitmproxy.addons.oximy.types import (
     EventSource,
     EventTiming,
@@ -55,6 +74,8 @@ class OximyAddon:
         self._response_parser: ResponseParser | None = None
         self._writer: EventWriter | None = None
         self._sse_buffers: dict[str, SSEBuffer] = {}
+        self._gemini_buffers: dict[str, GeminiBuffer] = {}
+        self._grok_buffers: dict[str, GrokBuffer] = {}
         self._enabled: bool = False
 
     def load(self, loader) -> None:
@@ -155,12 +176,29 @@ class OximyAddon:
             )
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
-        """Set up SSE streaming if needed."""
+        """Set up SSE or Gemini streaming if needed."""
         if not self._enabled:
             return
 
         match_result: MatchResult | None = flow.metadata.get(OXIMY_METADATA_KEY)
         if not match_result or match_result.classification == "drop":
+            return
+
+        # Check if this is a Gemini streaming response (custom format, not SSE)
+        if flow.response and is_gemini_streaming_response(flow):
+            logger.info(f"Setting up Gemini buffer for {flow.id} - path: {flow.request.path}")
+            buffer = GeminiBuffer()
+            self._gemini_buffers[flow.id] = buffer
+            flow.response.stream = create_gemini_stream_handler(buffer)
+            return
+
+        # Check if this is a Grok streaming response (concatenated JSON, not SSE)
+        if flow.response and is_grok_streaming_response(flow):
+            logger.info(f"Setting up Grok buffer for {flow.id} - path: {flow.request.path}")
+            buffer = GrokBuffer()
+            self._grok_buffers[flow.id] = buffer
+            flow.response.stream = create_grok_stream_handler(buffer)
+            logger.info(f"Grok buffer setup complete for {flow.id}")
             return
 
         # Check if this is an SSE response
@@ -190,8 +228,10 @@ class OximyAddon:
         except Exception as e:
             logger.error(f"Failed to process flow: {e}", exc_info=True)
         finally:
-            # Clean up SSE buffer
+            # Clean up buffers
             self._sse_buffers.pop(flow.id, None)
+            self._gemini_buffers.pop(flow.id, None)
+            self._grok_buffers.pop(flow.id, None)
 
     def _build_event(self, flow: http.HTTPFlow, match_result: MatchResult) -> OximyEvent | None:
         """Build an OximyEvent from a flow."""
@@ -225,9 +265,51 @@ class OximyAddon:
         # Full trace event
         include_raw = ctx.options.oximy_include_raw
 
+        # Check if this is special traffic (needs custom parsing)
+        is_gemini = match_result.source_id == "gemini"
+        is_deepseek = match_result.source_id == "deepseek"
+        is_perplexity = match_result.source_id == "perplexity"
+        is_grok = match_result.source_id == "grok"
+
         # Parse request
         request_data = None
-        if self._request_parser and flow.request.content:
+        if is_grok and flow.request.content:
+            # Grok has message in JSON body
+            grok_req = parse_grok_request(flow.request.content)
+            from mitmproxy.addons.oximy.types import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": grok_req.get("prompt")}] if grok_req.get("prompt") else None,
+                model=grok_req.get("model"),
+                raw=grok_req if include_raw else None,
+            )
+        elif is_perplexity and flow.request.content:
+            # Perplexity has query_str in JSON body
+            perplexity_req = parse_perplexity_request(flow.request.content)
+            from mitmproxy.addons.oximy.types import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": perplexity_req.get("prompt")}] if perplexity_req.get("prompt") else None,
+                model=perplexity_req.get("model"),
+                raw=perplexity_req if include_raw else None,
+            )
+        elif is_deepseek and flow.request.content:
+            # DeepSeek has prompt directly in JSON body
+            deepseek_req = parse_deepseek_request(flow.request.content)
+            from mitmproxy.addons.oximy.types import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": deepseek_req.get("prompt")}] if deepseek_req.get("prompt") else None,
+                model=None,
+                raw=deepseek_req if include_raw else None,
+            )
+        elif is_gemini and flow.request.content:
+            # Use Gemini-specific parser
+            gemini_req = parse_gemini_request(flow.request.content)
+            from mitmproxy.addons.oximy.types import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": gemini_req.get("prompt")}] if gemini_req.get("prompt") else None,
+                model=None,  # Gemini doesn't expose model in request
+                raw={"prompt": gemini_req.get("prompt"), "conversation_id": gemini_req.get("conversation_id")} if include_raw else None,
+            )
+        elif self._request_parser and flow.request.content:
             request_data = self._request_parser.parse(
                 flow.request.content,
                 match_result.api_format,
@@ -237,8 +319,70 @@ class OximyAddon:
         # Parse response
         response_data = None
         sse_buffer = self._sse_buffers.get(flow.id)
+        gemini_buffer = self._gemini_buffers.get(flow.id)
+        grok_buffer = self._grok_buffers.get(flow.id)
 
-        if sse_buffer:
+        if is_grok:
+            logger.info(f"Grok flow.id={flow.id}, grok_buffer exists={grok_buffer is not None}, all_grok_buffers={list(self._grok_buffers.keys())}")
+
+        if is_gemini and gemini_buffer:
+            # Use accumulated Gemini streaming data
+            logger.info(f"Gemini buffer has {len(gemini_buffer.accumulated_bytes)} bytes")
+            gemini_resp = gemini_buffer.finalize()
+            from mitmproxy.addons.oximy.types import InteractionResponse
+            response_data = InteractionResponse(
+                content=gemini_resp.get("content"),
+                model="gemini",
+                finish_reason=None,
+                usage=None,
+                raw=None,  # Don't include raw for Gemini (too large)
+            )
+            logger.info(f"Gemini response content: {gemini_resp.get('content')[:100] if gemini_resp.get('content') else 'None'}")
+        elif is_gemini and flow.response and flow.response.content:
+            # Fallback: try parsing flow.response.content directly (non-streaming)
+            logger.info(f"Gemini fallback: no buffer, using flow.response.content ({len(flow.response.content)} bytes)")
+            gemini_resp = parse_gemini_response(flow.response.content)
+            from mitmproxy.addons.oximy.types import InteractionResponse
+            response_data = InteractionResponse(
+                content=gemini_resp.get("content"),
+                model="gemini",
+                finish_reason=None,
+                usage=None,
+                raw=None,  # Don't include raw for Gemini (too large)
+            )
+        elif is_gemini:
+            # Gemini but no buffer and no content
+            logger.warning(f"Gemini: no buffer and no response content (flow.response.content length: {len(flow.response.content or b'')})")
+        elif is_grok and grok_buffer:
+            # Use accumulated Grok streaming data
+            logger.info(f"Grok: Using buffer with {len(grok_buffer.accumulated_bytes)} bytes")
+            grok_resp = grok_buffer.finalize()
+            from mitmproxy.addons.oximy.types import InteractionResponse
+            response_data = InteractionResponse(
+                content=grok_resp.get("content"),
+                model=grok_resp.get("model"),
+                finish_reason=None,
+                usage=None,
+                raw=None,  # Don't include raw for Grok streaming (too large)
+            )
+            logger.info(f"Grok response_data content: {grok_resp.get('content')[:100] if grok_resp.get('content') else 'None'}")
+        elif is_grok and flow.response and flow.response.content:
+            # Fallback: try parsing flow.response.content directly (non-streaming)
+            logger.info(f"Grok: NO BUFFER, using flow.response.content ({len(flow.response.content)} bytes)")
+            grok_resp = parse_grok_response(flow.response.content)
+            from mitmproxy.addons.oximy.types import InteractionResponse
+            response_data = InteractionResponse(
+                content=grok_resp.get("content"),
+                model=grok_resp.get("model"),
+                finish_reason=None,
+                usage=None,
+                raw=None,  # Don't include raw for Grok streaming (too large)
+            )
+            logger.info(f"Grok fallback response_data content: {grok_resp.get('content')[:100] if grok_resp.get('content') else 'None'}")
+        elif is_grok:
+            # Grok but no buffer and no content
+            logger.warning(f"Grok: no buffer and no response content (flow.response.content length: {len(flow.response.content or b'')})")
+        elif sse_buffer:
             # Use accumulated SSE data
             sse_result = sse_buffer.finalize()
             from mitmproxy.addons.oximy.types import InteractionResponse
@@ -317,6 +461,8 @@ class OximyAddon:
             self._writer = None
 
         self._sse_buffers.clear()
+        self._gemini_buffers.clear()
+        self._grok_buffers.clear()
         self._matcher = None
         self._request_parser = None
         self._response_parser = None

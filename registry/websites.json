@@ -1,6 +1,55 @@
 {
   "version": "1.0.0",
   "websites": {
+    "gemini": {
+      "name": "Gemini",
+      "vendor": "Google",
+      "vendor_url": "https://google.com",
+      "category": "ai-chat",
+      "domains": ["gemini.google.com"],
+      "ai": "native",
+      "api_type": "direct",
+      "providers": ["google"],
+      "features": {
+        "chat": {
+          "name": "Chat Conversation",
+          "patterns": [
+            { "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate", "method": "POST" }
+          ]
+        }
+      },
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "advanced", "name": "Advanced", "type": "individual", "monthly_usd": 20 }
+        ]
+      }
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "vendor": "DeepSeek",
+      "vendor_url": "https://deepseek.com",
+      "category": "ai-chat",
+      "domains": ["chat.deepseek.com"],
+      "ai": "native",
+      "api_type": "direct",
+      "providers": ["deepseek"],
+      "features": {
+        "chat": {
+          "name": "Chat Conversation",
+          "patterns": [
+            { "url": "**/api/v0/chat/completion", "method": "POST" }
+          ]
+        }
+      },
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
     "chatgpt": {
       "name": "ChatGPT",
       "vendor": "OpenAI",
@@ -40,6 +89,59 @@
             "url": "**/backend-api/accounts/check/**",
             "extract": { "plan": "$.accounts.*.account.plan_type" }
           }
+        ]
+      }
+    },
+    "perplexity": {
+      "name": "Perplexity AI",
+      "vendor": "Perplexity AI",
+      "vendor_url": "https://perplexity.ai",
+      "category": "ai-chat",
+      "domains": ["www.perplexity.ai", "perplexity.ai"],
+      "ai": "native",
+      "api_type": "direct",
+      "providers": ["perplexity"],
+      "features": {
+        "chat": {
+          "name": "Chat Search",
+          "patterns": [
+            { "url": "**/rest/sse/perplexity_ask", "method": "POST" }
+          ]
+        }
+      },
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual", "monthly_usd": 20 }
+        ]
+      }
+    },
+    "grok": {
+      "name": "Grok",
+      "vendor": "xAI",
+      "vendor_url": "https://x.ai",
+      "category": "ai-chat",
+      "domains": ["grok.com"],
+      "ai": "native",
+      "api_type": "direct",
+      "providers": ["xai"],
+      "features": {
+        "chat": {
+          "name": "Chat Conversation",
+          "patterns": [
+            { "url": "**/rest/app-chat/conversations/new", "method": "POST" },
+            { "url": "**/rest/app-chat/conversations/**/responses", "method": "POST" }
+          ]
+        }
+      },
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual", "monthly_usd": 8 },
+          { "id": "premium_plus", "name": "Premium+", "type": "individual", "monthly_usd": 22 },
+          { "id": "superuser", "name": "SuperUser", "type": "individual", "monthly_usd": 30 }
         ]
       }
     }
