@@ -1,0 +1,41 @@
+#!/bin/bash
+# Oximy Post-Install Script
+# Runs after the app is installed
+
+set -e
+
+echo "=== Oximy Post-Install ==="
+
+# Create Oximy config directory
+OXIMY_DIR="$HOME/.oximy"
+echo "Creating config directory: $OXIMY_DIR"
+mkdir -p "$OXIMY_DIR"
+mkdir -p "$OXIMY_DIR/traces"
+mkdir -p "$OXIMY_DIR/logs"
+
+# Set proper permissions
+chmod 700 "$OXIMY_DIR"
+
+# Remove any stale LaunchAgent (in case of upgrade)
+LAUNCH_AGENT="$HOME/Library/LaunchAgents/com.oximy.agent.plist"
+if [ -f "$LAUNCH_AGENT" ]; then
+    echo "Removing old LaunchAgent..."
+    launchctl unload "$LAUNCH_AGENT" 2>/dev/null || true
+    rm -f "$LAUNCH_AGENT"
+fi
+
+# Note: We don't auto-register login item here
+# The app will do this via SMAppService when user completes setup
+
+echo ""
+echo "=== Installation Complete ==="
+echo ""
+echo "Oximy has been installed to /Applications/Oximy.app"
+echo ""
+echo "Next steps:"
+echo "1. Open Oximy from Applications or Spotlight"
+echo "2. Follow the onboarding to set up certificate and proxy"
+echo "3. Enter your 6-digit code from the Oximy dashboard"
+echo ""
+
+exit 0

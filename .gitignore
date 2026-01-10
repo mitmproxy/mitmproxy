@@ -31,3 +31,12 @@ sslkeylogfile.log
 coverage.xml
 web/coverage/
 .mypy_cache/
+
+# OximyMac (Swift app)
+OximyMac/.build/
+OximyMac/.swiftpm/
+OximyMac/build/
+OximyMac/*.xcodeproj/
+OximyMac/*.xcworkspace/
+OximyMac/DerivedData/
+OximyMac/Resources/python-embed/

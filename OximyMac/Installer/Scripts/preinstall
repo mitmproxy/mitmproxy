@@ -1,0 +1,37 @@
+#!/bin/bash
+# Oximy Pre-Install Script
+# Runs before the app is installed
+
+set -e
+
+echo "=== Oximy Pre-Install ==="
+
+# Check macOS version (require 13.0+)
+macos_version=$(sw_vers -productVersion)
+major_version=$(echo "$macos_version" | cut -d. -f1)
+
+if [ "$major_version" -lt 13 ]; then
+    echo "ERROR: Oximy requires macOS 13.0 (Ventura) or later"
+    echo "Current version: $macos_version"
+    exit 1
+fi
+
+echo "macOS version: $macos_version (OK)"
+
+# Stop existing Oximy instance if running
+if pgrep -x "Oximy" > /dev/null || pgrep -x "OximyMac" > /dev/null; then
+    echo "Stopping existing Oximy instance..."
+    pkill -x "Oximy" 2>/dev/null || true
+    pkill -x "OximyMac" 2>/dev/null || true
+    sleep 1
+fi
+
+# Disable proxy if it was enabled (safety measure)
+echo "Ensuring proxy is disabled..."
+networksetup -setwebproxystate "Wi-Fi" off 2>/dev/null || true
+networksetup -setsecurewebproxystate "Wi-Fi" off 2>/dev/null || true
+networksetup -setwebproxystate "Ethernet" off 2>/dev/null || true
+networksetup -setsecurewebproxystate "Ethernet" off 2>/dev/null || true
+
+echo "Pre-install checks passed"
+exit 0

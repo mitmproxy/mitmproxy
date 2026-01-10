@@ -1,0 +1,42 @@
+name: OximyMac
+options:
+  bundleIdPrefix: com.oximy
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    PRODUCT_NAME: Oximy
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    INFOPLIST_FILE: Info.plist
+    CODE_SIGN_ENTITLEMENTS: OximyMac.entitlements
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_VERSION: "5.9"
+
+targets:
+  OximyMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+        group: App
+      - path: Views
+        group: Views
+      - path: Services
+        group: Services
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oximy.mac
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@executable_path/../Frameworks"
+    info:
+      path: Info.plist
+      properties:
+        LSUIElement: true
+        CFBundleDisplayName: Oximy
+        NSHumanReadableCopyright: "Copyright 2024 Oximy Inc. All rights reserved."

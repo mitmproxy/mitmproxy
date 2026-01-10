@@ -93,22 +93,21 @@ class OximyAddon:
     def configure(self, updated: set[str]) -> None:
         """Handle configuration changes."""
         # Check if we need to (re)initialize
-        relevant_options = {"oximy_enabled", "oximy_bundle_url", "oximy_output_dir"}
-        if not relevant_options.intersection(updated):
+        needs_init = (
+            "oximy_enabled" in updated
+            or "oximy_bundle_url" in updated
+            or "oximy_output_dir" in updated
+        )
+
+        if not needs_init:
             return
 
-        new_enabled = ctx.options.oximy_enabled
-        logger.info(f"Oximy configure: oximy_enabled={new_enabled}")
+        self._enabled = ctx.options.oximy_enabled
 
-        # Handle disable
-        if not new_enabled:
-            if self._enabled:
-                logger.info("Oximy addon disabled")
-                self._cleanup()
-            self._enabled = False
+        if not self._enabled:
+            logger.info("Oximy addon disabled")
+            self._cleanup()
             return
-
-        self._enabled = True
 
         # Initialize bundle loader
         self._bundle_loader = BundleLoader(
