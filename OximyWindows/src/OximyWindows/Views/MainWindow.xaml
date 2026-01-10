@@ -1,0 +1,30 @@
+<Window x:Class="OximyWindows.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        Title="Oximy"
+        Visibility="Hidden"
+        ShowInTaskbar="False"
+        WindowStyle="None"
+        Width="0" Height="0">
+
+    <!-- System Tray Icon -->
+    <tb:TaskbarIcon x:Name="TrayIcon"
+                    IconSource="/Assets/oximy.ico"
+                    ToolTipText="Oximy - AI Traffic Monitor"
+                    LeftClickCommand="{Binding TogglePopupCommand}"
+                    DoubleClickCommand="{Binding OpenSettingsCommand}">
+
+        <!-- Right-Click Context Menu -->
+        <tb:TaskbarIcon.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Open Oximy" Command="{Binding ShowPopupCommand}" FontWeight="SemiBold"/>
+                <Separator/>
+                <MenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}"/>
+                <MenuItem Header="Send Feedback" Command="{Binding OpenFeedbackCommand}"/>
+                <Separator/>
+                <MenuItem Header="Quit Oximy" Command="{Binding QuitCommand}"/>
+            </ContextMenu>
+        </tb:TaskbarIcon.ContextMenu>
+    </tb:TaskbarIcon>
+</Window>
