@@ -410,7 +410,6 @@ class OximyAddon:
 
         interaction = Interaction(
             model=model,
-            provider=match_result.provider_id,
             request=request_data,
             response=response_data,
         )

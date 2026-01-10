@@ -101,17 +101,17 @@ class Interaction:
     """Full interaction data for full_trace events."""
 
     model: str | None
-    provider: str | None
     request: InteractionRequest
     response: InteractionResponse
 
     def to_dict(self) -> dict:
-        return {
-            "model": self.model,
-            "provider": self.provider,
+        result: dict = {
             "request": self.request.to_dict(),
             "response": self.response.to_dict(),
         }
+        if self.model is not None:
+            result["model"] = self.model
+        return result
 
 
 @dataclass

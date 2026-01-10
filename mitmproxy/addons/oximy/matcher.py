@@ -127,12 +127,14 @@ class TrafficMatcher:
                     # Website has parser? -> full_trace, else identifiable
                     # For now, treat all website matches as full_trace
                     # (we'll parse what we can)
+                    # Use website-specific api_format for parsing
+                    api_format = website.get("api_format", f"{website_id}_web")
                     return MatchResult(
                         classification="full_trace",
                         source_type="website",
                         source_id=website_id,
                         provider_id=None,  # Websites may use multiple providers
-                        api_format=None,  # Will need website-specific parsing
+                        api_format=api_format,
                         endpoint=feature_name,
                     )
 
