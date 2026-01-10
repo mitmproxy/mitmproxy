@@ -16,7 +16,7 @@ from mitmproxy import ctx, http
 from mitmproxy.addons.oximy.bundle import BundleLoader, DEFAULT_BUNDLE_URL
 from mitmproxy.addons.oximy.matcher import TrafficMatcher
 from mitmproxy.addons.oximy.parser import RequestParser, ResponseParser
-from mitmproxy.addons.oximy.sse import SSEBuffer, is_sse_response
+from mitmproxy.addons.oximy.sse import SSEBuffer, is_sse_response, create_sse_stream_handler
 from mitmproxy.addons.oximy.types import (
     EventSource,
     EventTiming,
@@ -169,8 +169,10 @@ class OximyAddon:
             buffer = SSEBuffer(api_format=match_result.api_format)
             self._sse_buffers[flow.id] = buffer
 
-            # Set up streaming to capture chunks
-            # Note: mitmproxy will call our response() hook after streaming completes
+            # Set up streaming to capture chunks - this is the key fix!
+            # The stream handler intercepts each chunk, accumulates content,
+            # and passes it through unchanged to the client
+            flow.response.stream = create_sse_stream_handler(buffer)
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Process responses and write events."""

@@ -1,0 +1,59 @@
+name: Oximy Bundle
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'registry/**'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      sync_models:
+        description: 'Sync models from models.dev'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  build-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Sync models from models.dev
+        if: ${{ github.event.inputs.sync_models == 'true' }}
+        run: |
+          python registry/scripts/sync-models.py
+
+          # Commit if there are changes
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add registry/providers/
+          git diff --staged --quiet || git commit -m "chore: sync models from models.dev"
+
+      - name: Build bundle
+        run: python registry/scripts/build-bundle.py
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oximy-bundle
+          path: |
+            registry/dist/oximy-bundle.json
+            registry/dist/oximy-bundle.min.json
+
+      - name: Commit bundle changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add registry/dist/
+          git diff --staged --quiet || git commit -m "chore: build oximy bundle"
+          git push

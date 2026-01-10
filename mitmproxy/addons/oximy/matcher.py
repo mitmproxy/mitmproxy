@@ -154,16 +154,30 @@ class TrafficMatcher:
         if not url_pattern:
             return False
 
+        # Strip query string from path for matching
+        path_without_query = path.split("?")[0]
+
         # Convert glob-style pattern to regex
-        # Pattern like "**/backend-api/conversation" should match "/backend-api/conversation"
+        # Pattern like "**/backend-api/conversation" should match:
+        # - "/backend-api/conversation"
+        # - "/backend-api/f/conversation" (ChatGPT uses /f/ prefix)
         # Handle ** as "any path prefix"
         if url_pattern.startswith("**/"):
-            # Match anywhere in path
+            # Match anywhere in path - the suffix can appear anywhere
             suffix = url_pattern[3:]  # Remove **/
-            return suffix in path or path.endswith(suffix)
+            # Check if suffix is contained in path or path ends with it
+            if suffix in path_without_query or path_without_query.endswith(suffix):
+                return True
+            # Also check if the final segment matches (e.g., "conversation" in "/f/conversation")
+            suffix_parts = suffix.split("/")
+            path_parts = path_without_query.split("/")
+            if suffix_parts and path_parts:
+                # Check if last part of suffix matches last part of path
+                if path_parts[-1] == suffix_parts[-1]:
+                    return True
 
         # Standard glob matching
-        return fnmatch.fnmatch(path, url_pattern)
+        return fnmatch.fnmatch(path_without_query, url_pattern)
 
 
 def matches_glob_pattern(path: str, pattern: str) -> bool:
