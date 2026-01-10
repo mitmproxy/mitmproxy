@@ -1,0 +1,21 @@
+# Build results
+bin/
+obj/
+publish/
+
+# Python embed (generated)
+src/OximyWindows/Resources/python-embed/
+
+# IDE
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# Test results
+TestResults/
+
+# Installer output
+installer/Output/
