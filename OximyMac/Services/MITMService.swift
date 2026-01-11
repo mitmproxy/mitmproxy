@@ -11,8 +11,6 @@ class MITMService: ObservableObject {
     @Published var restartCount: Int = 0
 
     private var process: Process?
-    private var outputPipe: Pipe?
-    private var errorPipe: Pipe?
 
     // Auto-restart configuration
     private var autoRestartEnabled = true
@@ -56,6 +54,12 @@ class MITMService: ObservableObject {
         guard socketFD >= 0 else { return false }
         defer { close(socketFD) }
 
+        // Enable SO_REUSEADDR to allow binding to a port in TIME_WAIT state
+        // This is important for quick restart - without it, the port stays
+        // "unavailable" for ~30-60 seconds after mitmproxy stops
+        var reuseAddr: Int32 = 1
+        setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
+
         var addr = sockaddr_in()
         addr.sin_family = sa_family_t(AF_INET)
         addr.sin_port = in_port_t(port).bigEndian
@@ -74,90 +78,105 @@ class MITMService: ObservableObject {
 
     /// Start mitmproxy with the Oximy addon
     func start() async throws {
-        guard !isRunning else { return }
+        NSLog("[MITMService]  start() called, isRunning=\(isRunning)")
+        guard !isRunning else {
+            NSLog("[MITMService]  Already running, returning early")
+            return
+        }
 
         // Find available port
         let port = findAvailablePort()
+        NSLog("[MITMService]  Found available port: \(port)")
         guard port > 0 else {
+            NSLog("[MITMService]  ERROR: No available port found")
             throw MITMError.noAvailablePort
         }
 
         // Ensure oximy directory exists
         try ensureOximyDirectoryExists()
+        NSLog("[MITMService]  Oximy directories ensured")
 
         // Get path to the addon
         let addonPath = getAddonPath()
+        NSLog("[MITMService]  Addon path: \(addonPath)")
         guard FileManager.default.fileExists(atPath: addonPath) else {
+            NSLog("[MITMService]  ERROR: Addon not found at \(addonPath)")
             throw MITMError.addonNotFound(addonPath)
         }
+        NSLog("[MITMService]  Addon file exists: YES")
 
-        // Build mitmdump command
-        // For now, use system Python/mitmdump. Later we'll bundle our own.
-        let mitmdumpPath = findMitmdump()
-        guard let mitmdumpPath = mitmdumpPath else {
-            throw MITMError.mitmdumpNotFound
+        // Find bundled Python and set up environment
+        NSLog("[MITMService]  Looking for bundled Python...")
+        guard let pythonInfo = getBundledPythonInfo() else {
+            NSLog("[MITMService]  Bundled Python NOT found, falling back to system mitmdump")
+            // Fallback to system mitmdump if bundled Python not available
+            guard let mitmdumpPath = findMitmdump() else {
+                NSLog("[MITMService]  ERROR: System mitmdump also not found")
+                throw MITMError.mitmdumpNotFound
+            }
+
+            NSLog("[MITMService]  Using system mitmdump: \(mitmdumpPath)")
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: mitmdumpPath)
+            process.arguments = [
+                "-s", addonPath,
+                "--set", "oximy_enabled=true",
+                "--set", "oximy_output_dir=\(Constants.tracesDir.path)",
+                "--set", "confdir=\(Constants.oximyDir.path)",
+                "--mode", "regular@\(port)",
+                "--listen-host", "127.0.0.1",
+                "--ssl-insecure",
+                "-q"
+            ]
+            self.process = process
+            try runProcess(process, port: port, addonPath: addonPath)
+            return
         }
 
+        NSLog("[MITMService] Found bundled Python home: %@", pythonInfo.pythonHome)
+
+        // Use the mitmdump wrapper script which handles environment setup properly
+        let mitmdumpPath = pythonInfo.pythonHome + "/bin/mitmdump"
+        guard FileManager.default.fileExists(atPath: mitmdumpPath) else {
+            NSLog("[MITMService] ERROR: mitmdump script not found at %@", mitmdumpPath)
+            throw MITMError.mitmdumpNotFound
+        }
+        NSLog("[MITMService] Using mitmdump wrapper: %@", mitmdumpPath)
+
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: mitmdumpPath)
+        process.executableURL = URL(fileURLWithPath: "/bin/bash")
+
+        // CRITICAL: Set working directory to home to avoid local mitmproxy source
+        process.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
+
+        // Run via bash wrapper script
         process.arguments = [
+            mitmdumpPath,
             "-s", addonPath,
             "--set", "oximy_enabled=true",
             "--set", "oximy_output_dir=\(Constants.tracesDir.path)",
             "--set", "confdir=\(Constants.oximyDir.path)",
             "--mode", "regular@\(port)",
             "--listen-host", "127.0.0.1",
-            "--ssl-insecure",  // Don't verify upstream certs (we're a proxy)
-            "-q"  // Quiet mode
+            "--ssl-insecure",
+            "-q"
         ]
 
-        // Capture output
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        // Handle process termination with auto-restart
-        process.terminationHandler = { [weak self] proc in
-            Task { @MainActor in
-                guard let self = self else { return }
-
-                self.isRunning = false
-                self.currentPort = nil
-
-                // Check termination reason
-                let status = proc.terminationStatus
-                let isNormalExit = status == 0 || status == 15  // 0 = success, 15 = SIGTERM
-
-                if !isNormalExit {
-                    self.lastError = "mitmproxy crashed (exit code \(status))"
-                    print("[MITMService] Process crashed with exit code \(status)")
-
-                    // Attempt auto-restart if enabled
-                    if self.autoRestartEnabled {
-                        self.scheduleRestart()
-                    }
-                }
-            }
-        }
+        NSLog("[MITMService] Process arguments: %@", process.arguments?.description ?? "nil")
 
         do {
-            try process.run()
-            self.process = process
-            self.outputPipe = outputPipe
-            self.errorPipe = errorPipe
-            self.isRunning = true
-            self.currentPort = port
-            self.lastError = nil
-
-            // Start reading output in background
-            Task.detached { [weak self] in
-                await self?.readOutput(from: errorPipe)
-            }
-
-            print("[MITMService] Started on port \(port)")
+            NSLog("[MITMService]  Calling runProcess()...")
+            try runProcess(process, port: port, addonPath: addonPath)
+            NSLog("[MITMService]  runProcess() completed successfully")
         } catch {
-            throw MITMError.processStartFailed(error.localizedDescription)
+            NSLog("[MITMService]  ERROR: runProcess() failed: \(error)")
+            let mitmError = MITMError.processStartFailed(error.localizedDescription)
+            SentryService.shared.captureError(mitmError, context: [
+                "operation": "mitm_start",
+                "port_attempted": port,
+                "addon_path": addonPath
+            ])
+            throw mitmError
         }
     }
 
@@ -170,7 +189,12 @@ class MITMService: ObservableObject {
         self.isRunning = false
         self.currentPort = nil
 
-        print("[MITMService] Stopped")
+        NSLog("[MITMService]  Stopped")
+
+        SentryService.shared.addStateBreadcrumb(
+            category: "mitm",
+            message: "Process stopped"
+        )
     }
 
     /// Restart the mitmproxy process
@@ -186,7 +210,14 @@ class MITMService: ObservableObject {
     private func scheduleRestart() {
         guard restartAttempts < maxRestartAttempts else {
             lastError = "mitmproxy crashed too many times. Please restart Oximy."
-            print("[MITMService] Max restart attempts (\(maxRestartAttempts)) exceeded")
+            NSLog("[MITMService] Max restart attempts (\(self.maxRestartAttempts)) exceeded")
+
+            // Capture critical error to Sentry
+            SentryService.shared.captureMessage(
+                "mitmproxy exceeded max restart attempts (\(maxRestartAttempts))",
+                level: .error
+            )
+
             NotificationCenter.default.post(name: .mitmproxyFailed, object: nil)
             return
         }
@@ -197,7 +228,19 @@ class MITMService: ObservableObject {
         // Exponential backoff: 2s, 4s, 8s
         let delay = UInt64(pow(2.0, Double(restartAttempts))) * 1_000_000_000
 
-        print("[MITMService] Scheduling restart attempt \(restartAttempts)/\(maxRestartAttempts) in \(delay / 1_000_000_000)s")
+        let maxAttempts = self.maxRestartAttempts
+        NSLog("[MITMService] Scheduling restart attempt \(self.restartAttempts)/\(maxAttempts) in \(delay / 1_000_000_000)s")
+
+        // Add breadcrumb for restart attempt
+        SentryService.shared.addStateBreadcrumb(
+            category: "mitm",
+            message: "Restart scheduled",
+            data: [
+                "attempt": restartAttempts,
+                "max_attempts": maxRestartAttempts,
+                "delay_seconds": delay / 1_000_000_000
+            ]
+        )
 
         restartTask?.cancel()
         restartTask = Task {
@@ -209,9 +252,9 @@ class MITMService: ObservableObject {
                 try await start()
                 // Success - reset counter
                 restartAttempts = 0
-                print("[MITMService] Auto-restart successful")
+                NSLog("[MITMService]  Auto-restart successful")
             } catch {
-                print("[MITMService] Auto-restart failed: \(error)")
+                NSLog("[MITMService]  Auto-restart failed: \(error)")
                 // Will trigger another restart attempt via termination handler
             }
         }
@@ -254,40 +297,41 @@ class MITMService: ObservableObject {
     }
 
     private func getAddonPath() -> String {
-        // First, check if addon is bundled with app (copied via .copy in Package.swift)
+        // First, check if addon is bundled with app (copied via build scripts)
         if let bundleURL = Bundle.module.url(forResource: "oximy-addon", withExtension: nil) {
             let addonPath = bundleURL.appendingPathComponent("addon.py").path
             if FileManager.default.fileExists(atPath: addonPath) {
-                print("[MITMService] Using bundled addon: \(addonPath)")
+                NSLog("[MITMService]  Using bundled addon: \(addonPath)")
                 return addonPath
             }
         }
 
-        // Development fallback: check Resources directory directly
-        let devResourcesPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources/oximy-addon/addon.py"
-        if FileManager.default.fileExists(atPath: devResourcesPath) {
-            print("[MITMService] Using dev resources addon: \(devResourcesPath)")
-            return devResourcesPath
+        // Check inside the app bundle (for release builds)
+        if let bundlePath = Bundle.main.resourcePath {
+            let addonPath = (bundlePath as NSString).appendingPathComponent("oximy-addon/addon.py")
+            if FileManager.default.fileExists(atPath: addonPath) {
+                NSLog("[MITMService]  Using app bundle addon: \(addonPath)")
+                return addonPath
+            }
         }
 
-        // Development fallback: use the addon in the mitmproxy repo
-        let devPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/mitmproxy/addons/oximy/addon.py"
+        // Development: use the standalone addon in Resources (has absolute imports)
+        // This addon is a copy from mitmproxy source with imports modified to work standalone
+        let devPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources/oximy-addon/addon.py"
         if FileManager.default.fileExists(atPath: devPath) {
-            print("[MITMService] Using mitmproxy repo addon: \(devPath)")
+            NSLog("[MITMService]  Using Resources addon: \(devPath)")
             return devPath
         }
 
-        // Alternative path
-        let altPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/addons/oximy/addon.py"
-        print("[MITMService] Fallback addon path: \(altPath)")
-        return altPath
+        NSLog("[MITMService]  WARNING: Addon not found")
+        return devPath
     }
 
     /// Find mitmdump - prefer bundled, fallback to system
     private func findMitmdump() -> String? {
         // 1. Check for bundled Python with mitmproxy (production)
         if let bundledPath = getBundledMitmdumpPath() {
-            print("[MITMService] Using bundled mitmdump: \(bundledPath)")
+            NSLog("[MITMService]  Using bundled mitmdump: \(bundledPath)")
             return bundledPath
         }
 
@@ -301,7 +345,7 @@ class MITMService: ObservableObject {
 
         for path in systemPaths {
             if FileManager.default.fileExists(atPath: path) {
-                print("[MITMService] Using system mitmdump: \(path)")
+                NSLog("[MITMService]  Using system mitmdump: \(path)")
                 return path
             }
         }
@@ -321,21 +365,66 @@ class MITMService: ObservableObject {
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
                !path.isEmpty {
-                print("[MITMService] Found mitmdump via which: \(path)")
+                NSLog("[MITMService]  Found mitmdump via which: \(path)")
                 return path
             }
         } catch {
-            print("[MITMService] Could not find mitmdump via which: \(error)")
+            NSLog("[MITMService]  Could not find mitmdump via which: \(error)")
+        }
+
+        return nil
+    }
+
+    /// Information about the bundled Python installation
+    private struct BundledPythonInfo {
+        let pythonPath: String
+        let pythonHome: String
+    }
+
+    /// Get bundled Python path and home directory
+    private func getBundledPythonInfo() -> BundledPythonInfo? {
+        // Check Bundle.module for SPM builds
+        if let pythonEmbedURL = Bundle.module.url(forResource: "python-embed", withExtension: nil) {
+            let pythonPath = pythonEmbedURL.appendingPathComponent("bin/python3").path
+            if FileManager.default.fileExists(atPath: pythonPath) {
+                return BundledPythonInfo(pythonPath: pythonPath, pythonHome: pythonEmbedURL.path)
+            }
+        }
+
+        // Check inside the app bundle (for release builds)
+        if let bundlePath = Bundle.main.resourcePath {
+            let pythonHome = (bundlePath as NSString).appendingPathComponent("python-embed")
+            let pythonPath = (pythonHome as NSString).appendingPathComponent("bin/python3")
+            if FileManager.default.fileExists(atPath: pythonPath) {
+                return BundledPythonInfo(pythonPath: pythonPath, pythonHome: pythonHome)
+            }
+        }
+
+        // Development: check Resources directory directly
+        let devPythonHome = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources/python-embed"
+        let devPythonPath = devPythonHome + "/bin/python3"
+        if FileManager.default.fileExists(atPath: devPythonPath) {
+            return BundledPythonInfo(pythonPath: devPythonPath, pythonHome: devPythonHome)
         }
 
         return nil
     }
 
     /// Get path to bundled mitmdump (inside python-embed)
+    /// The mitmdump script is a bash wrapper that sets up PYTHONHOME/PYTHONPATH
+    /// to make the bundled Python fully self-contained and relocatable
     private func getBundledMitmdumpPath() -> String? {
-        // Check Bundle.module for SPM builds (copied via .copy in Package.swift)
+        // Check Bundle.module for SPM builds (copied via build scripts)
         if let pythonEmbedURL = Bundle.module.url(forResource: "python-embed", withExtension: nil) {
             let mitmdumpPath = pythonEmbedURL.appendingPathComponent("bin/mitmdump").path
+            if FileManager.default.fileExists(atPath: mitmdumpPath) {
+                return mitmdumpPath
+            }
+        }
+
+        // Check inside the app bundle (for release builds)
+        if let bundlePath = Bundle.main.resourcePath {
+            let mitmdumpPath = (bundlePath as NSString).appendingPathComponent("python-embed/bin/mitmdump")
             if FileManager.default.fileExists(atPath: mitmdumpPath) {
                 return mitmdumpPath
             }
@@ -350,17 +439,61 @@ class MITMService: ObservableObject {
         return nil
     }
 
-    private func readOutput(from pipe: Pipe) async {
-        let handle = pipe.fileHandleForReading
+    /// Run the process with all the setup (extracted to avoid duplication)
+    private func runProcess(_ process: Process, port: Int, addonPath: String) throws {
+        NSLog("[MITMService] runProcess() - Setting up process...")
 
-        while true {
-            let data = handle.availableData
-            if data.isEmpty { break }
+        // Don't capture output - let it go to /dev/null to avoid pipe issues
+        // The process was exiting because pipes were being closed
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
 
-            if let output = String(data: data, encoding: .utf8) {
-                print("[mitmproxy] \(output)")
+        // Handle process termination with auto-restart
+        process.terminationHandler = { [weak self] proc in
+            Task { @MainActor in
+                guard let self = self else { return }
+
+                self.isRunning = false
+                self.currentPort = nil
+
+                // Check termination reason
+                let status = proc.terminationStatus
+                let isNormalExit = status == 0 || status == 15  // 0 = success, 15 = SIGTERM
+
+                if !isNormalExit {
+                    self.lastError = "mitmproxy crashed (exit code \(status))"
+                    NSLog("[MITMService] Process crashed with exit code %d", status)
+
+                    SentryService.shared.addErrorBreadcrumb(
+                        service: "mitm",
+                        error: "Process crashed with exit code \(status)"
+                    )
+
+                    if self.autoRestartEnabled {
+                        self.scheduleRestart()
+                    }
+                } else {
+                    NSLog("[MITMService] Process exited normally with code %d", status)
+                }
             }
         }
+
+        NSLog("[MITMService]  runProcess() - Calling process.run()...")
+        try process.run()
+        NSLog("[MITMService]  runProcess() - process.run() succeeded, PID: \(process.processIdentifier)")
+
+        self.process = process
+        self.isRunning = true
+        self.currentPort = port
+        self.lastError = nil
+
+        NSLog("[MITMService] Started on port %d, PID: %d", port, process.processIdentifier)
+
+        SentryService.shared.addStateBreadcrumb(
+            category: "mitm",
+            message: "Process started",
+            data: ["port": port]
+        )
     }
 }
 

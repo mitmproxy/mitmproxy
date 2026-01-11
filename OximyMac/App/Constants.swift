@@ -45,7 +45,7 @@ enum Constants {
 
     // MARK: - UserDefaults Keys
     enum Defaults {
-        static let onboardingComplete = "onboardingComplete"
+        static let setupComplete = "setupComplete"
         static let workspaceName = "workspaceName"
         static let deviceToken = "deviceToken"
         static let autoStartEnabled = "autoStartEnabled"
@@ -53,9 +53,72 @@ enum Constants {
 
     // MARK: - URLs
     static let signUpURL = URL(string: "https://app.oximy.com")!
-    static let helpURL = URL(string: "https://oximy.com/help")!
-    static let supportURL = URL(string: "https://oximy.com/support")!
+    static let helpURL = URL(string: "https://docs.oximy.com")!
     static let termsURL = URL(string: "https://oximy.com/terms")!
     static let privacyURL = URL(string: "https://oximy.com/privacy")!
-    static let githubURL = URL(string: "https://github.com/oximy")!
+    static let githubURL = URL(string: "https://github.com/oximyhq/sensor")!
+
+    // MARK: - Support Email
+    static let supportEmail = "support@oximy.com"
+
+    // MARK: - Sentry
+    enum Sentry {
+        /// Environment variable name for DSN
+        static let dsnEnvKey = "SENTRY_DSN"
+
+        /// Debug send override environment variable
+        static let debugSendEnvKey = "SENTRY_DEBUG_SEND"
+
+        /// UserDefaults key for anonymous device ID
+        static let deviceIdKey = "sentry_device_id"
+
+        /// Sample rate for performance traces in production (20%)
+        static let productionSampleRate: Double = 0.2
+
+        /// App hang timeout threshold (seconds)
+        static let appHangTimeout: TimeInterval = 5.0
+
+        /// Max breadcrumbs to retain
+        static let maxBreadcrumbs: UInt = 100
+    }
+
+    /// Generates a mailto URL with pre-filled subject and system info in the body
+    static func supportEmailURL(subject: String = "Oximy Mac Support Request") -> URL? {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let deviceModel = getDeviceModel()
+
+        let body = """
+
+
+        ---
+        Please describe your issue above this line
+        ---
+
+        System Information:
+        • App Version: \(appVersion) (\(buildNumber))
+        • macOS: \(osVersion)
+        • Device: \(deviceModel)
+        • Oximy Directory: \(oximyDir.path)
+        """
+
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = supportEmail
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+
+        return components.url
+    }
+
+    private static func getDeviceModel() -> String {
+        var size = 0
+        sysctlbyname("hw.model", nil, &size, nil, 0)
+        var model = [CChar](repeating: 0, count: size)
+        sysctlbyname("hw.model", &model, &size, nil, 0)
+        return String(cString: model)
+    }
 }

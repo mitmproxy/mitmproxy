@@ -82,6 +82,13 @@ class NetworkMonitor: ObservableObject {
         // Cancel any pending reconfiguration
         debounceTask?.cancel()
 
+        // Add breadcrumb for network change
+        SentryService.shared.addStateBreadcrumb(
+            category: "proxy",
+            message: "Network changed - reconfiguring",
+            data: ["interfaces": currentInterfaces]
+        )
+
         // Debounce to avoid rapid reconfigurations
         debounceTask = Task {
             try? await Task.sleep(nanoseconds: debounceInterval)

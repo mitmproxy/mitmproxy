@@ -21,7 +21,7 @@ from mitmproxy.addons.oximy.parser import RequestParser, ResponseParser
 from mitmproxy.addons.oximy.passthrough import TLSPassthrough
 from mitmproxy.addons.oximy.process import ClientProcess, ProcessResolver
 from mitmproxy.addons.oximy.sse import SSEBuffer, is_sse_response, create_sse_stream_handler
-from mitmproxy.addons.oximy.types import (
+from mitmproxy.addons.oximy.models import (
     EventSource,
     EventTiming,
     Interaction,
@@ -373,7 +373,7 @@ class OximyAddon:
         if sse_buffer:
             # Use accumulated SSE data
             sse_result = sse_buffer.finalize()
-            from mitmproxy.addons.oximy.types import InteractionResponse
+            from mitmproxy.addons.oximy.models import InteractionResponse
 
             response_data = InteractionResponse(
                 content=sse_result.get("content"),

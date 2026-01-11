@@ -12,7 +12,7 @@ import logging
 import re
 from typing import Any
 
-from mitmproxy.addons.oximy.types import InteractionRequest, InteractionResponse
+from mitmproxy.addons.oximy.models import InteractionRequest, InteractionResponse
 
 logger = logging.getLogger(__name__)
 

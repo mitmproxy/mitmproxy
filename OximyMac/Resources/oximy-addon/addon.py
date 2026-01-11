@@ -8,31 +8,110 @@ normalizes events, and writes to JSONL files.
 from __future__ import annotations
 
 import logging
+import subprocess
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from mitmproxy import ctx, http
 
-from mitmproxy.addons.oximy.bundle import BundleLoader, DEFAULT_BUNDLE_URL
-from mitmproxy.addons.oximy.matcher import TrafficMatcher
-from mitmproxy.addons.oximy.parser import RequestParser, ResponseParser
-from mitmproxy.addons.oximy.sse import SSEBuffer, is_sse_response
-from mitmproxy.addons.oximy.types import (
+from bundle import BundleLoader, DEFAULT_BUNDLE_URL
+from matcher import TrafficMatcher
+from parser import RequestParser, ResponseParser
+from passthrough import TLSPassthrough
+from process import ClientProcess, ProcessResolver
+from sse import SSEBuffer, is_sse_response, create_sse_stream_handler
+from models import (
     EventSource,
     EventTiming,
     Interaction,
     MatchResult,
     OximyEvent,
 )
-from mitmproxy.addons.oximy.writer import EventWriter
+from writer import EventWriter
 
 if TYPE_CHECKING:
-    from mitmproxy.addons.oximy.bundle import OISPBundle
+    from bundle import OISPBundle
 
 logger = logging.getLogger(__name__)
 
-# Metadata key for storing match result on flows
+
+class _SuppressDisconnectFilter(logging.Filter):
+    """Filter out noisy 'client disconnect' and 'server disconnect' messages."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        # Suppress generic disconnect messages (but keep TLS failure messages)
+        if msg == "client disconnect" or msg.startswith("server disconnect ") or msg.startswith("client connect") or msg.startswith("server connect"):
+            return False
+        return True
+
+
+# Apply filter to mitmproxy's proxy logger
+logging.getLogger("mitmproxy.proxy.server").addFilter(_SuppressDisconnectFilter())
+
+# Metadata keys for storing data on flows
 OXIMY_METADATA_KEY = "oximy_match"
+OXIMY_CLIENT_KEY = "oximy_client"
+
+# -------------------------------------------------------------------------
+# macOS System Proxy Configuration (Development Only)
+# Set OXIMY_AUTO_PROXY=1 to enable automatic proxy setup/teardown
+# Comment out or set to 0 for production deployments
+# -------------------------------------------------------------------------
+# DISABLED: OximyMac app handles proxy setup via ProxyService.swift
+# Setting this to True would conflict with the app's proxy management
+OXIMY_AUTO_PROXY_ENABLED = False  # Disabled - app manages proxy
+OXIMY_PROXY_HOST = "127.0.0.1"
+OXIMY_PROXY_PORT = "8088"  # Not used when OXIMY_AUTO_PROXY_ENABLED=False
+OXIMY_NETWORK_SERVICE = "Wi-Fi"  # Not used when OXIMY_AUTO_PROXY_ENABLED=False
+
+
+def _set_macos_proxy(enable: bool) -> None:
+    """
+    Enable or disable macOS system proxy settings.
+
+    This is a development convenience - comment out OXIMY_AUTO_PROXY_ENABLED
+    for production deployments where proxy should be managed externally.
+    """
+    if sys.platform != "darwin" or not OXIMY_AUTO_PROXY_ENABLED:
+        return
+
+    try:
+        if enable:
+            # Enable HTTPS proxy
+            subprocess.run(
+                ["networksetup", "-setsecurewebproxy", OXIMY_NETWORK_SERVICE,
+                 OXIMY_PROXY_HOST, OXIMY_PROXY_PORT],
+                check=True,
+                capture_output=True,
+            )
+            # Enable HTTP proxy
+            subprocess.run(
+                ["networksetup", "-setwebproxy", OXIMY_NETWORK_SERVICE,
+                 OXIMY_PROXY_HOST, OXIMY_PROXY_PORT],
+                check=True,
+                capture_output=True,
+            )
+            logger.info(f"System proxy enabled: {OXIMY_PROXY_HOST}:{OXIMY_PROXY_PORT}")
+        else:
+            # Disable HTTPS proxy
+            subprocess.run(
+                ["networksetup", "-setsecurewebproxystate", OXIMY_NETWORK_SERVICE, "off"],
+                check=True,
+                capture_output=True,
+            )
+            # Disable HTTP proxy
+            subprocess.run(
+                ["networksetup", "-setwebproxystate", OXIMY_NETWORK_SERVICE, "off"],
+                check=True,
+                capture_output=True,
+            )
+            logger.info("System proxy disabled")
+    except subprocess.CalledProcessError as e:
+        logger.warning(f"Failed to {'enable' if enable else 'disable'} system proxy: {e}")
+    except FileNotFoundError:
+        logger.warning("networksetup command not found - not on macOS?")
 
 
 class OximyAddon:
@@ -54,6 +133,8 @@ class OximyAddon:
         self._request_parser: RequestParser | None = None
         self._response_parser: ResponseParser | None = None
         self._writer: EventWriter | None = None
+        self._process_resolver: ProcessResolver | None = None
+        self._tls_passthrough: TLSPassthrough | None = None
         self._sse_buffers: dict[str, SSEBuffer] = {}
         self._enabled: bool = False
 
@@ -93,21 +174,22 @@ class OximyAddon:
     def configure(self, updated: set[str]) -> None:
         """Handle configuration changes."""
         # Check if we need to (re)initialize
-        needs_init = (
-            "oximy_enabled" in updated
-            or "oximy_bundle_url" in updated
-            or "oximy_output_dir" in updated
-        )
-
-        if not needs_init:
+        relevant_options = {"oximy_enabled", "oximy_bundle_url", "oximy_output_dir"}
+        if not relevant_options.intersection(updated):
             return
 
-        self._enabled = ctx.options.oximy_enabled
+        new_enabled = ctx.options.oximy_enabled
+        logger.info(f"Oximy configure: oximy_enabled={new_enabled}")
 
-        if not self._enabled:
-            logger.info("Oximy addon disabled")
-            self._cleanup()
+        # Handle disable
+        if not new_enabled:
+            if self._enabled:
+                logger.info("Oximy addon disabled")
+                self._cleanup()
+            self._enabled = False
             return
+
+        self._enabled = True
 
         # Initialize bundle loader
         self._bundle_loader = BundleLoader(
@@ -134,10 +216,21 @@ class OximyAddon:
         output_dir = Path(ctx.options.oximy_output_dir).expanduser()
         self._writer = EventWriter(output_dir)
 
+        # Initialize process resolver for client attribution
+        self._process_resolver = ProcessResolver()
+
+        # Initialize TLS passthrough for certificate-pinned hosts
+        passthrough_cache = output_dir / "pinned_hosts.json"
+        self._tls_passthrough = TLSPassthrough(persist_path=passthrough_cache)
+        self._tls_passthrough.set_process_resolver(self._process_resolver)
+
+        # Enable system proxy (development convenience)
+        _set_macos_proxy(enable=True)
+
         logger.info(f"Oximy addon enabled, writing to {output_dir}")
 
     def request(self, flow: http.HTTPFlow) -> None:
-        """Classify incoming requests."""
+        """Classify incoming requests and capture client process info."""
         if not self._enabled or not self._matcher:
             return
 
@@ -146,6 +239,17 @@ class OximyAddon:
 
         # Store result in flow metadata
         flow.metadata[OXIMY_METADATA_KEY] = match_result
+
+        # Capture client process info IMMEDIATELY on request
+        # This must happen as early as possible to avoid race conditions
+        # where the client process exits before we can query it
+        if match_result.classification != "drop" and self._process_resolver:
+            client_port = flow.client_conn.peername[1]
+            client_process = self._process_resolver.get_process_for_port(client_port)
+            flow.metadata[OXIMY_CLIENT_KEY] = client_process
+            logger.debug(
+                f"Client process: {client_process.name} (PID {client_process.pid})"
+            )
 
         if match_result.classification != "drop":
             logger.debug(
@@ -168,8 +272,10 @@ class OximyAddon:
             buffer = SSEBuffer(api_format=match_result.api_format)
             self._sse_buffers[flow.id] = buffer
 
-            # Set up streaming to capture chunks
-            # Note: mitmproxy will call our response() hook after streaming completes
+            # Set up streaming to capture chunks - this is the key fix!
+            # The stream handler intercepts each chunk, accumulates content,
+            # and passes it through unchanged to the client
+            flow.response.stream = create_sse_stream_handler(buffer)
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Process responses and write events."""
@@ -184,11 +290,38 @@ class OximyAddon:
             event = self._build_event(flow, match_result)
             if event:
                 self._writer.write(event)
+                self._log_captured_event(event, flow)
         except Exception as e:
             logger.error(f"Failed to process flow: {e}", exc_info=True)
         finally:
             # Clean up SSE buffer
             self._sse_buffers.pop(flow.id, None)
+
+    def _log_captured_event(self, event: OximyEvent, flow: http.HTTPFlow) -> None:
+        """Log a nicely formatted summary of captured AI traffic."""
+        # Build client info string
+        client_str = ""
+        if event.client and event.client.name:
+            client_str = f" [{event.client.name}]"
+            if event.client.parent_name and event.client.parent_name != event.client.name:
+                client_str = f" [{event.client.parent_name} > {event.client.name}]"
+
+        # Build model info
+        model_str = ""
+        if event.interaction and event.interaction.model:
+            model_str = f" model={event.interaction.model}"
+
+        # Build timing info
+        timing_str = ""
+        if event.timing.duration_ms:
+            timing_str = f" ({event.timing.duration_ms}ms)"
+
+        # Log format: [source_id] METHOD path -> status (timing) [client]
+        logger.info(
+            f"✓ [{event.source.id}]{client_str} "
+            f"{flow.request.method} {flow.request.path[:50]}{'...' if len(flow.request.path) > 50 else ''} "
+            f"-> {flow.response.status_code if flow.response else '?'}{model_str}{timing_str}"
+        )
 
     def _build_event(self, flow: http.HTTPFlow, match_result: MatchResult) -> OximyEvent | None:
         """Build an OximyEvent from a flow."""
@@ -197,6 +330,9 @@ class OximyAddon:
 
         # Calculate timing
         timing = self._calculate_timing(flow)
+
+        # Get client process info (captured during request phase)
+        client_process: ClientProcess | None = flow.metadata.get(OXIMY_CLIENT_KEY)
 
         # Build source
         source = EventSource(
@@ -211,6 +347,7 @@ class OximyAddon:
                 source=source,
                 trace_level="identifiable",
                 timing=timing,
+                client=client_process,
                 metadata={
                     "request_method": flow.request.method,
                     "request_path": flow.request.path,
@@ -238,7 +375,7 @@ class OximyAddon:
         if sse_buffer:
             # Use accumulated SSE data
             sse_result = sse_buffer.finalize()
-            from mitmproxy.addons.oximy.types import InteractionResponse
+            from models import InteractionResponse
 
             response_data = InteractionResponse(
                 content=sse_result.get("content"),
@@ -260,6 +397,7 @@ class OximyAddon:
                 source=source,
                 trace_level="identifiable",
                 timing=timing,
+                client=client_process,
                 metadata={
                     "request_method": flow.request.method,
                     "request_path": flow.request.path,
@@ -274,7 +412,6 @@ class OximyAddon:
 
         interaction = Interaction(
             model=model,
-            provider=match_result.provider_id,
             request=request_data,
             response=response_data,
         )
@@ -283,6 +420,7 @@ class OximyAddon:
             source=source,
             trace_level="full",
             timing=timing,
+            client=client_process,
             interaction=interaction,
         )
 
@@ -303,16 +441,38 @@ class OximyAddon:
 
         return EventTiming(duration_ms=duration_ms, ttfb_ms=ttfb_ms)
 
+    # -------------------------------------------------------------------------
+    # TLS Hooks - Handle certificate pinning passthrough
+    # -------------------------------------------------------------------------
+
+    def tls_clienthello(self, data) -> None:
+        """Check if host should bypass TLS interception."""
+        if self._enabled and self._tls_passthrough:
+            self._tls_passthrough.tls_clienthello(data)
+
+    def tls_failed_client(self, data) -> None:
+        """Record TLS failures to learn certificate-pinned hosts."""
+        if self._enabled and self._tls_passthrough:
+            self._tls_passthrough.tls_failed_client(data)
+
     def done(self) -> None:
         """Clean up on shutdown."""
         self._cleanup()
 
     def _cleanup(self) -> None:
         """Clean up resources."""
+        # Disable system proxy (development convenience)
+        _set_macos_proxy(enable=False)
+
         if self._writer:
             self._writer.close()
             self._writer = None
 
+        if self._process_resolver:
+            self._process_resolver.clear_cache()
+            self._process_resolver = None
+
+        self._tls_passthrough = None
         self._sse_buffers.clear()
         self._matcher = None
         self._request_parser = None
