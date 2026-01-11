@@ -111,9 +111,13 @@ else
     echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
 fi
 
-# Create app icon from Oximy.png
+# Create app icon from Oximy-rounded.png (with proper macOS rounded corners)
 echo "[6/7] Creating app icon..."
-ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
+ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
+# Fall back to original if rounded version doesn't exist
+if [ ! -f "$ICON_SOURCE" ]; then
+    ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
+fi
 if [ -f "$ICON_SOURCE" ]; then
     ICONSET_DIR="$BUILD_DIR/AppIcon.iconset"
     mkdir -p "$ICONSET_DIR"
@@ -138,132 +142,37 @@ else
     echo "    WARNING: Oximy.png not found, skipping icon generation"
 fi
 
-# Create styled DMG
-echo "[7/7] Creating styled DMG..."
+# Create DMG using create-dmg (https://github.com/sindresorhus/create-dmg)
+echo "[7/7] Creating DMG with create-dmg..."
 DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_PATH="$BUILD_DIR/$DMG_NAME"
-DMG_TEMP="$BUILD_DIR/dmg_temp.dmg"
 
-# Create temporary directory for DMG contents
-TEMP_DMG_DIR=$(mktemp -d)
-DMG_CONTENTS="$TEMP_DMG_DIR/$APP_NAME"
-mkdir -p "$DMG_CONTENTS"
-mkdir -p "$DMG_CONTENTS/.background"
+# Source nvm to get access to npm-installed create-dmg
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Copy app
-cp -R "$APP_BUNDLE" "$DMG_CONTENTS/"
+# Check if create-dmg is available
+if command -v create-dmg &> /dev/null; then
+    cd "$BUILD_DIR"
+    # Remove existing DMG if present
+    rm -f "$DMG_PATH" 2>/dev/null || true
+    rm -f "$APP_NAME $VERSION.dmg" 2>/dev/null || true
 
-# Create Applications symlink
-ln -s /Applications "$DMG_CONTENTS/Applications"
+    # create-dmg automatically handles Applications symlink and styling
+    create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite 2>&1 || true
 
-# Create background image (simple orange gradient with arrow)
-BACKGROUND="$DMG_CONTENTS/.background/background.png"
-if [ -f "$PROJECT_DIR/Installer/DMG/background.png" ]; then
-    cp "$PROJECT_DIR/Installer/DMG/background.png" "$BACKGROUND"
-else
-    # Generate a simple background using sips
-    # Create base image from Oximy.png colors
-    echo "    Generating DMG background..."
-
-    # Use Python to create a simple background (fallback)
-    python3 << 'PYEOF' || true
-import subprocess
-import os
-
-width, height = 540, 380
-bg_path = os.environ.get('BACKGROUND', '/tmp/dmg_bg.png')
-
-# Create SVG
-svg = f'''<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2d1f0f;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1a1209;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="{width}" height="{height}" fill="url(#bg)"/>
-  <path d="M 220 190 Q 270 190 270 190 L 270 170 L 320 200 L 270 230 L 270 210 Q 220 210 220 210 Z"
-        fill="#ff6b35" opacity="0.9"/>
-  <text x="270" y="300" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, Helvetica" font-size="13" opacity="0.8">
-    Drag Oximy to Applications
-  </text>
-</svg>'''
-
-svg_path = '/tmp/dmg_bg.svg'
-with open(svg_path, 'w') as f:
-    f.write(svg)
-
-# Try to convert SVG to PNG
-try:
-    # Use qlmanage (built-in macOS)
-    subprocess.run(['qlmanage', '-t', '-s', str(width), '-o', '/tmp', svg_path],
-                   capture_output=True)
-    if os.path.exists(f'{svg_path}.png'):
-        os.rename(f'{svg_path}.png', bg_path)
-        print(f'Created background: {bg_path}')
-except Exception as e:
-    print(f'Could not create background: {e}')
-PYEOF
-
-    export BACKGROUND="$BACKGROUND"
-    if [ -f "/tmp/dmg_bg.png" ]; then
-        mv "/tmp/dmg_bg.png" "$BACKGROUND"
+    # create-dmg names files as "AppName VERSION.dmg", rename to our format
+    if [ -f "$BUILD_DIR/$APP_NAME $VERSION.dmg" ]; then
+        mv "$BUILD_DIR/$APP_NAME $VERSION.dmg" "$DMG_PATH"
     fi
+else
+    echo "    WARNING: create-dmg not found, falling back to basic DMG creation"
+    # Fallback: simple DMG without styling
+    hdiutil create -volname "$APP_NAME" \
+        -srcfolder "$APP_BUNDLE" \
+        -ov -format UDZO \
+        "$DMG_PATH"
 fi
-
-# Create read-write DMG first
-hdiutil create -volname "$APP_NAME" \
-    -srcfolder "$DMG_CONTENTS" \
-    -ov -format UDRW \
-    "$DMG_TEMP"
-
-# Mount it
-MOUNT_DIR=$(hdiutil attach -readwrite -noverify "$DMG_TEMP" | grep "/Volumes/$APP_NAME" | awk '{print $3}')
-
-if [ -n "$MOUNT_DIR" ]; then
-    echo "    Styling DMG window..."
-
-    # Apply Finder view settings using AppleScript
-    osascript << EOF
-    tell application "Finder"
-        tell disk "$APP_NAME"
-            open
-            set current view of container window to icon view
-            set toolbar visible of container window to false
-            set statusbar visible of container window to false
-            set bounds of container window to {400, 200, 940, 580}
-            set viewOptions to the icon view options of container window
-            set arrangement of viewOptions to not arranged
-            set icon size of viewOptions to 100
-
-            -- Set background if exists
-            if exists file ".background:background.png" then
-                set background picture of viewOptions to file ".background:background.png"
-            end if
-
-            -- Position icons
-            set position of item "$APP_NAME.app" of container window to {130, 180}
-            set position of item "Applications" of container window to {410, 180}
-
-            close
-            open
-            update without registering applications
-            delay 1
-            close
-        end tell
-    end tell
-EOF
-
-    # Unmount
-    hdiutil detach "$MOUNT_DIR" -quiet
-fi
-
-# Convert to compressed read-only DMG
-hdiutil convert "$DMG_TEMP" -format UDZO -o "$DMG_PATH"
-rm -f "$DMG_TEMP"
-
-# Cleanup
-rm -rf "$TEMP_DMG_DIR"
 
 echo ""
 echo "=== Build Complete ==="

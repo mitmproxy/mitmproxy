@@ -152,6 +152,27 @@ fi
 # Clean up build directory
 rm -rf "$BUILD_DIR"
 
+# Fix shebangs in pip-created scripts to be relocatable
+# pip hardcodes absolute paths which breaks portability
+echo "Fixing shebangs for relocatability..."
+for script in "$EMBED_DIR/bin/"*; do
+    if [ -f "$script" ] && head -1 "$script" | grep -q "^#!.*python"; then
+        # Replace hardcoded python path with portable bash wrapper
+        SCRIPT_NAME=$(basename "$script")
+        # Skip if it's already our custom wrapper
+        if head -1 "$script" | grep -q "^#!/bin/bash"; then
+            continue
+        fi
+        # Get the Python module command from the script
+        if grep -q "from mitmproxy" "$script" 2>/dev/null; then
+            # It's a mitmproxy entry point - we already have a custom mitmdump wrapper
+            continue
+        fi
+        # For other scripts, make shebang relative using env
+        sed -i '' '1s|^#!.*/python.*|#!/usr/bin/env python3|' "$script" 2>/dev/null || true
+    fi
+done
+
 # Make all scripts executable
 chmod +x "$EMBED_DIR/bin/"*
 

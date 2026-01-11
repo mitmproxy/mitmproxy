@@ -96,10 +96,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start network monitoring
         NetworkMonitor.shared.startMonitoring()
 
-        // Auto-show popover on first launch (setup or enrollment)
-        if appState.phase == .setup || appState.phase == .enrollment {
+        // Auto-show popover on first launch (enrollment or setup - not ready)
+        // This ensures users see the UI immediately, not just the menu bar icon
+        if appState.phase != .ready {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.showPopover()
+                self?.showPopoverAndFocus()
             }
         }
     }
@@ -107,6 +108,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPopover() {
         guard let button = statusItem.button else { return }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    }
+
+    /// Show popover and ensure it's focused (for first launch)
+    private func showPopoverAndFocus() {
+        guard let button = statusItem.button else { return }
+
+        // Show the popover
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        // Make the popover window key and bring to front
+        if let popoverWindow = popover.contentViewController?.view.window {
+            popoverWindow.makeKeyAndOrderFront(nil)
+            popoverWindow.level = .floating  // Ensure it's above other windows
+        }
+
+        // Also activate the app to ensure keyboard focus works
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func handleQuitApp() {
