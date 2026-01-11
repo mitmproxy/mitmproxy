@@ -3,6 +3,8 @@ Server-Sent Events (SSE) streaming response handler.
 
 Accumulates SSE chunks to reconstruct the full response content
 for streaming AI API responses.
+
+Also handles Gemini's custom length-prefixed streaming format.
 """
 
 from __future__ import annotations
@@ -11,6 +13,8 @@ import json
 import logging
 from dataclasses import dataclass, field
 from typing import Any
+
+from mitmproxy.addons.oximy.parser import parse_gemini_response, parse_grok_response
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +122,36 @@ class SSEBuffer:
 
     def _extract_content_delta(self, data: dict[str, Any]) -> str | None:
         """Extract content delta from SSE chunk based on API format."""
+        # DeepSeek format: simple {"v": "text"} for content deltas
+        # Example: {"v": " great"} or {"v": " at"}
+        if (
+            "v" in data
+            and isinstance(data.get("v"), str)
+            and len(data) == 1
+        ):
+            return data["v"]
+
+        # DeepSeek format: {"p": "response/fragments/-1/content", "o": "APPEND", "v": "text"}
+        if data.get("o") == "APPEND" and "v" in data:
+            path = data.get("p", "")
+            if "content" in path or "fragments" in path:
+                value = data.get("v")
+                if isinstance(value, str):
+                    return value
+
+        # DeepSeek format: BATCH operations with nested content
+        # Example: {"p":"response","o":"BATCH","v":[{"p":"fragments","o":"APPEND","v":[{"content":"I",...}]}]}
+        if data.get("o") == "BATCH" and isinstance(data.get("v"), list):
+            content_parts = []
+            for op in data["v"]:
+                if op.get("o") == "APPEND" and op.get("p") == "fragments":
+                    fragments = op.get("v", [])
+                    for frag in fragments:
+                        if isinstance(frag, dict) and "content" in frag:
+                            content_parts.append(frag["content"])
+            if content_parts:
+                return "".join(content_parts)
+
         # ChatGPT web format: shorthand continuation - just {"v": "text"} with no p/o
         # This continues the previous append operation
         if "v" in data and "o" not in data and "p" not in data:
@@ -182,6 +216,13 @@ class SSEBuffer:
 
     def _extract_finish_reason(self, data: dict[str, Any]) -> str | None:
         """Extract finish reason from SSE chunk."""
+        # DeepSeek format: BATCH with status FINISHED
+        # {"p":"response","o":"BATCH","v":[{"p":"status","v":"FINISHED"},...]}
+        if data.get("o") == "BATCH" and isinstance(data.get("v"), list):
+            for op in data["v"]:
+                if op.get("p") == "status" and op.get("v") == "FINISHED":
+                    return "stop"
+
         # OpenAI format
         choices = data.get("choices", [])
         if choices:
@@ -217,6 +258,232 @@ class SSEBuffer:
             "finish_reason": self.finish_reason,
             "usage": self.usage,
         }
+
+
+@dataclass
+class GeminiBuffer:
+    """
+    Accumulates Gemini streaming response data.
+
+    Gemini uses a custom length-prefixed format, not SSE:
+    )]}'\n
+    <length>\n
+    <json_chunk>\n
+    ...
+
+    This buffer accumulates all raw bytes and parses them at the end.
+    """
+
+    accumulated_bytes: bytes = b""
+
+    def process_chunk(self, chunk: bytes) -> bytes:
+        """
+        Accumulate a chunk from the Gemini response stream.
+
+        Args:
+            chunk: Raw bytes from the response stream
+
+        Returns:
+            The original chunk (pass-through)
+        """
+        if not chunk:
+            # Empty chunk signals end of stream
+            logger.info(f"GeminiBuffer.process_chunk: END OF STREAM, total accumulated: {len(self.accumulated_bytes)} bytes")
+            return chunk
+
+        self.accumulated_bytes += chunk
+        # Log first 100 chars of chunk content for debugging
+        try:
+            preview = chunk.decode('utf-8')[:100].replace('\n', '\\n')
+        except UnicodeDecodeError:
+            preview = f"<binary: {chunk[:50]}>"
+        logger.info(f"GeminiBuffer.process_chunk: +{len(chunk)} bytes = {len(self.accumulated_bytes)} total. Preview: {preview}")
+        return chunk
+
+    def finalize(self) -> dict[str, Any]:
+        """
+        Finalize the buffer and parse the accumulated response.
+
+        Returns:
+            Dict with content, model, conversation_id, response_id
+        """
+        logger.info(f"GeminiBuffer.finalize: parsing {len(self.accumulated_bytes)} bytes")
+
+        if not self.accumulated_bytes:
+            logger.info("GeminiBuffer.finalize: no bytes accumulated!")
+            return {"content": None, "model": "gemini"}
+
+        # Log first 500 chars of accumulated data for debugging
+        try:
+            preview = self.accumulated_bytes.decode('utf-8')[:500].replace('\n', '\\n')
+        except UnicodeDecodeError:
+            preview = f"<binary data>"
+        logger.info(f"GeminiBuffer.finalize: data preview: {preview}")
+
+        result = parse_gemini_response(self.accumulated_bytes)
+        content_len = len(result.get('content') or '')
+        logger.info(f"GeminiBuffer.finalize: parsed content length = {content_len}")
+        if content_len > 0:
+            logger.info(f"GeminiBuffer.finalize: content preview: {result.get('content')[:200]}")
+        return result
+
+
+def is_gemini_streaming_response(flow) -> bool:
+    """
+    Check if a flow is a Gemini streaming response.
+
+    Args:
+        flow: mitmproxy HTTPFlow
+
+    Returns:
+        True if this is a Gemini streaming response
+    """
+    if not flow.request:
+        return False
+
+    host = flow.request.pretty_host.lower()
+    path = flow.request.path.lower()
+
+    # Gemini streaming endpoint
+    is_gemini = "gemini.google.com" in host
+    has_stream = "streamgenerate" in path
+
+    if is_gemini:
+        logger.info(f"is_gemini_streaming_response: host={host}, path={path[:100]}, has_stream={has_stream}")
+
+    return is_gemini and has_stream
+
+
+def create_gemini_stream_handler(buffer: GeminiBuffer):
+    """
+    Create a stream handler function for Gemini responses.
+
+    Args:
+        buffer: GeminiBuffer to accumulate data
+
+    Returns:
+        Stream handler function that processes each chunk
+    """
+
+    def handler(data: bytes) -> bytes:
+        # Accumulate the chunk
+        buffer.process_chunk(data)
+        # Pass through unchanged
+        return data
+
+    return handler
+
+
+@dataclass
+class GrokBuffer:
+    """
+    Accumulates Grok streaming response data.
+
+    Grok uses concatenated JSON objects (not SSE, not length-prefixed):
+    {"result":{"response":{"token":"Yo",...}}}{"result":{"response":{"token":" yo",...}}}...
+
+    This buffer accumulates all raw bytes and parses them at the end.
+    """
+
+    accumulated_bytes: bytes = b""
+
+    def process_chunk(self, chunk: bytes) -> bytes:
+        """
+        Accumulate a chunk from the Grok response stream.
+
+        Args:
+            chunk: Raw bytes from the response stream
+
+        Returns:
+            The original chunk (pass-through)
+        """
+        if not chunk:
+            logger.info(f"GrokBuffer.process_chunk: END OF STREAM, total accumulated: {len(self.accumulated_bytes)} bytes")
+            return chunk
+
+        self.accumulated_bytes += chunk
+        try:
+            preview = chunk.decode('utf-8')[:100].replace('\n', '\\n')
+        except UnicodeDecodeError:
+            preview = f"<binary: {chunk[:50]}>"
+        logger.info(f"GrokBuffer.process_chunk: +{len(chunk)} bytes = {len(self.accumulated_bytes)} total. Preview: {preview}")
+        return chunk
+
+    def finalize(self) -> dict[str, Any]:
+        """
+        Finalize the buffer and parse the accumulated response.
+
+        Returns:
+            Dict with content, model, conversation_id, response_id
+        """
+        logger.info(f"GrokBuffer.finalize: parsing {len(self.accumulated_bytes)} bytes")
+
+        if not self.accumulated_bytes:
+            logger.info("GrokBuffer.finalize: no bytes accumulated!")
+            return {"content": None, "model": None}
+
+        # Log first 500 chars of accumulated data for debugging
+        try:
+            preview = self.accumulated_bytes.decode('utf-8')[:500].replace('\n', '\\n')
+        except UnicodeDecodeError:
+            preview = "<binary data>"
+        logger.info(f"GrokBuffer.finalize: data preview: {preview}")
+
+        result = parse_grok_response(self.accumulated_bytes)
+        content_len = len(result.get('content') or '')
+        logger.info(f"GrokBuffer.finalize: parsed content length = {content_len}")
+        if content_len > 0:
+            logger.info(f"GrokBuffer.finalize: content preview: {result.get('content')[:200]}")
+        return result
+
+
+def is_grok_streaming_response(flow) -> bool:
+    """
+    Check if a flow is a Grok streaming response.
+
+    Args:
+        flow: mitmproxy HTTPFlow
+
+    Returns:
+        True if this is a Grok chat streaming response
+    """
+    if not flow.request:
+        return False
+
+    host = flow.request.pretty_host.lower()
+    path = flow.request.path.lower()
+    method = flow.request.method
+
+    # Grok chat endpoints
+    is_grok = "grok.com" in host
+    is_chat = "/rest/app-chat/conversations" in path and (
+        path.endswith("/new") or "/responses" in path
+    )
+
+    result = is_grok and is_chat and method == "POST"
+
+    if is_grok:
+        logger.info(f"is_grok_streaming_response: host={host}, path={path[:100]}, method={method}, is_chat={is_chat}, result={result}")
+
+    return result
+
+
+def create_grok_stream_handler(buffer: GrokBuffer):
+    """
+    Create a stream handler function for Grok responses.
+
+    Args:
+        buffer: GrokBuffer to accumulate data
+
+    Returns:
+        Stream handler function that processes each chunk
+    """
+
+    def handler(data: bytes) -> bytes:
+        buffer.process_chunk(data)
+        return data
+
+    return handler
 
 
 def is_sse_response(headers: dict[str, str] | Any) -> bool:
