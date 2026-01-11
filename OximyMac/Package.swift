@@ -9,9 +9,15 @@ let package = Package(
     products: [
         .executable(name: "OximyMac", targets: ["OximyMac"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.20.0")
+    ],
     targets: [
         .executableTarget(
             name: "OximyMac",
+            dependencies: [
+                .product(name: "Sentry", package: "sentry-cocoa")
+            ],
             path: ".",
             exclude: [
                 "Info.plist",
@@ -33,7 +39,7 @@ let package = Package(
                 .process("Resources/Oximy.png"),
                 // Bundled Python + mitmproxy (preserve directory structure)
                 .copy("Resources/python-embed"),
-                // Oximy addon
+                // Oximy addon with standalone imports (for bundled Python)
                 .copy("Resources/oximy-addon")
             ]
         )

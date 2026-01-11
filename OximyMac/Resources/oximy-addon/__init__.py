@@ -5,7 +5,7 @@ Captures AI API traffic based on OISP bundle whitelists,
 normalizes events, and writes to JSONL files.
 """
 
-from mitmproxy.addons.oximy.addon import OximyAddon
+from addon import OximyAddon
 
 __all__ = ["OximyAddon"]
 

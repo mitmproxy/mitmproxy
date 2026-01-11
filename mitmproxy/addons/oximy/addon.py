@@ -27,7 +27,18 @@ from mitmproxy.addons.oximy.parser import (
 )
 from mitmproxy.addons.oximy.passthrough import TLSPassthrough
 from mitmproxy.addons.oximy.process import ClientProcess, ProcessResolver
-from mitmproxy.addons.oximy.types import (
+from mitmproxy.addons.oximy.sse import (
+    SSEBuffer,
+    GeminiBuffer,
+    GrokBuffer,
+    is_sse_response,
+    is_gemini_streaming_response,
+    is_grok_streaming_response,
+    create_sse_stream_handler,
+    create_gemini_stream_handler,
+    create_grok_stream_handler,
+)
+from mitmproxy.addons.oximy.models import (
     EventSource,
     EventTiming,
     Interaction,
@@ -423,6 +434,48 @@ class OximyAddon:
         # Check if we have a configurable parser for this website
         configurable_buffer = self._configurable_buffers.get(flow.id)
         request_data = None
+        if is_grok and flow.request.content:
+            # Grok has message in JSON body
+            grok_req = parse_grok_request(flow.request.content)
+            from mitmproxy.addons.oximy.models import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": grok_req.get("prompt")}] if grok_req.get("prompt") else None,
+                model=grok_req.get("model"),
+                raw=grok_req if include_raw else None,
+            )
+        elif is_perplexity and flow.request.content:
+            # Perplexity has query_str in JSON body
+            perplexity_req = parse_perplexity_request(flow.request.content)
+            from mitmproxy.addons.oximy.models import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": perplexity_req.get("prompt")}] if perplexity_req.get("prompt") else None,
+                model=perplexity_req.get("model"),
+                raw=perplexity_req if include_raw else None,
+            )
+        elif is_deepseek and flow.request.content:
+            # DeepSeek has prompt directly in JSON body
+            deepseek_req = parse_deepseek_request(flow.request.content)
+            from mitmproxy.addons.oximy.models import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": deepseek_req.get("prompt")}] if deepseek_req.get("prompt") else None,
+                model=None,
+                raw=deepseek_req if include_raw else None,
+            )
+        elif is_gemini and flow.request.content:
+            # Use Gemini-specific parser
+            gemini_req = parse_gemini_request(flow.request.content)
+            from mitmproxy.addons.oximy.models import InteractionRequest
+            request_data = InteractionRequest(
+                messages=[{"role": "user", "content": gemini_req.get("prompt")}] if gemini_req.get("prompt") else None,
+                model=None,  # Gemini doesn't expose model in request
+                raw={"prompt": gemini_req.get("prompt"), "conversation_id": gemini_req.get("conversation_id")} if include_raw else None,
+            )
+        elif self._request_parser and flow.request.content:
+            request_data = self._request_parser.parse(
+                flow.request.content,
+                match_result.api_format,
+                include_raw=include_raw,
+            )
         response_data = None
 
         # Try configurable parsing first (new JSONata-based approach)
@@ -442,6 +495,69 @@ class OximyAddon:
                         include_raw=include_raw,
                     )
                     logger.info(f"Configurable request parsing for {match_result.source_id}: messages={request_data.messages is not None}")
+
+                # Handle streaming and other API-specific response accumulation
+                if is_gemini and gemini_buffer:
+                    # Use accumulated Gemini streaming data
+                    logger.info(f"Gemini buffer has {len(gemini_buffer.accumulated_bytes)} bytes")
+                    gemini_resp = gemini_buffer.finalize()
+                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    response_data = InteractionResponse(
+                        content=gemini_resp.get("content"),
+                        model="gemini",
+                        finish_reason=None,
+                        usage=None,
+                        raw=None,  # Don't include raw for Gemini (too large)
+                    )
+                    logger.info(f"Gemini response content: {gemini_resp.get('content')[:100] if gemini_resp.get('content') else 'None'}")
+                elif is_gemini and flow.response and flow.response.content:
+                    # Fallback: try parsing flow.response.content directly (non-streaming)
+                    logger.info(f"Gemini fallback: no buffer, using flow.response.content ({len(flow.response.content)} bytes)")
+                    gemini_resp = parse_gemini_response(flow.response.content)
+                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    response_data = InteractionResponse(
+                        content=gemini_resp.get("content"),
+                        model="gemini",
+                        finish_reason=None,
+                        usage=None,
+                        raw=None,  # Don't include raw for Gemini (too large)
+                    )
+                elif is_gemini:
+                    # Gemini but no buffer and no content
+                    logger.warning(f"Gemini: no buffer and no response content (flow.response.content length: {len(flow.response.content or b'')})")
+                elif is_grok and grok_buffer:
+                    # Use accumulated Grok streaming data
+                    logger.info(f"Grok: Using buffer with {len(grok_buffer.accumulated_bytes)} bytes")
+                    grok_resp = grok_buffer.finalize()
+                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    response_data = InteractionResponse(
+                        content=grok_resp.get("content"),
+                        model=grok_resp.get("model"),
+                        finish_reason=None,
+                        usage=None,
+                        raw=None,  # Don't include raw for Grok streaming (too large)
+                    )
+                    logger.info(f"Grok response_data content: {grok_resp.get('content')[:100] if grok_resp.get('content') else 'None'}")
+                elif is_grok and flow.response and flow.response.content:
+                    # Fallback: try parsing flow.response.content directly (non-streaming)
+                    logger.info(f"Grok: NO BUFFER, using flow.response.content ({len(flow.response.content)} bytes)")
+                    grok_resp = parse_grok_response(flow.response.content)
+                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    response_data = InteractionResponse(
+                        content=grok_resp.get("content"),
+                        model=grok_resp.get("model"),
+                        finish_reason=None,
+                        usage=None,
+                        raw=None,  # Don't include raw for Grok streaming (too large)
+                    )
+                    logger.info(f"Grok fallback response_data content: {grok_resp.get('content')[:100] if grok_resp.get('content') else 'None'}")
+                elif is_grok:
+                    # Grok but no buffer and no content
+                    logger.warning(f"Grok: no buffer and no response content (flow.response.content length: {len(flow.response.content or b'')})")
+                elif sse_buffer:
+                    # Use accumulated SSE data
+                    sse_result = sse_buffer.finalize()
+                    from mitmproxy.addons.oximy.models import InteractionResponse
 
                 # Parse response from configurable buffer
                 if configurable_buffer:

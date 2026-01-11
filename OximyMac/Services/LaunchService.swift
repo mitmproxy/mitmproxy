@@ -37,9 +37,19 @@ class LaunchService: ObservableObject {
                 isEnabled = true
                 lastError = nil
                 print("[LaunchService] Enabled auto-start via SMAppService")
+
+                SentryService.shared.addStateBreadcrumb(
+                    category: "launch",
+                    message: "Auto-start enabled"
+                )
             } catch {
                 lastError = error.localizedDescription
-                throw LaunchServiceError.registrationFailed(error.localizedDescription)
+                let launchError = LaunchServiceError.registrationFailed(error.localizedDescription)
+                SentryService.shared.captureError(launchError, context: [
+                    "operation": "launch_enable",
+                    "method": "SMAppService"
+                ])
+                throw launchError
             }
         } else {
             // Fallback: create LaunchAgent plist
@@ -47,6 +57,11 @@ class LaunchService: ObservableObject {
             isEnabled = true
             lastError = nil
             print("[LaunchService] Enabled auto-start via LaunchAgent plist")
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "launch",
+                message: "Auto-start enabled (LaunchAgent)"
+            )
         }
 
         // Save preference
@@ -61,9 +76,19 @@ class LaunchService: ObservableObject {
                 isEnabled = false
                 lastError = nil
                 print("[LaunchService] Disabled auto-start via SMAppService")
+
+                SentryService.shared.addStateBreadcrumb(
+                    category: "launch",
+                    message: "Auto-start disabled"
+                )
             } catch {
                 lastError = error.localizedDescription
-                throw LaunchServiceError.unregistrationFailed(error.localizedDescription)
+                let launchError = LaunchServiceError.unregistrationFailed(error.localizedDescription)
+                SentryService.shared.captureError(launchError, context: [
+                    "operation": "launch_disable",
+                    "method": "SMAppService"
+                ])
+                throw launchError
             }
         } else {
             // Fallback: remove LaunchAgent plist
@@ -71,6 +96,11 @@ class LaunchService: ObservableObject {
             isEnabled = false
             lastError = nil
             print("[LaunchService] Disabled auto-start via LaunchAgent plist removal")
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "launch",
+                message: "Auto-start disabled (LaunchAgent)"
+            )
         }
 
         // Save preference

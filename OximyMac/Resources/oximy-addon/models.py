@@ -6,10 +6,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 import uuid
 import time
 import random
+
+if TYPE_CHECKING:
+    from mitmproxy.addons.oximy.process import ClientProcess
 
 
 @dataclass
@@ -98,17 +101,17 @@ class Interaction:
     """Full interaction data for full_trace events."""
 
     model: str | None
-    provider: str | None
     request: InteractionRequest
     response: InteractionResponse
 
     def to_dict(self) -> dict:
-        return {
-            "model": self.model,
-            "provider": self.provider,
+        result: dict = {
             "request": self.request.to_dict(),
             "response": self.response.to_dict(),
         }
+        if self.model is not None:
+            result["model"] = self.model
+        return result
 
 
 @dataclass
@@ -142,6 +145,7 @@ class OximyEvent:
     timing: EventTiming
     interaction: Interaction | None = None
     metadata: dict | None = None
+    client: ClientProcess | None = None
 
     @classmethod
     def create(
@@ -151,6 +155,7 @@ class OximyEvent:
         timing: EventTiming,
         interaction: Interaction | None = None,
         metadata: dict | None = None,
+        client: ClientProcess | None = None,
     ) -> OximyEvent:
         """Create a new event with auto-generated ID and timestamp."""
         event_id = _generate_uuid7()
@@ -164,6 +169,7 @@ class OximyEvent:
             timing=timing,
             interaction=interaction,
             metadata=metadata,
+            client=client,
         )
 
     def to_dict(self) -> dict:
@@ -175,6 +181,9 @@ class OximyEvent:
             "trace_level": self.trace_level,
             "timing": self.timing.to_dict(),
         }
+
+        if self.client:
+            result["client"] = self.client.to_dict()
 
         if self.trace_level == "full" and self.interaction:
             result["interaction"] = self.interaction.to_dict()

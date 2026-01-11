@@ -40,6 +40,7 @@ class CertificateService: ObservableObject {
     // MARK: - CA Generation
 
     /// Generate Oximy-branded CA certificate using OpenSSL
+    /// mitmproxy expects mitmproxy-ca.pem to contain BOTH key and cert concatenated
     func generateCA() async throws {
         // Ensure directory exists
         let fm = FileManager.default
@@ -47,22 +48,32 @@ class CertificateService: ObservableObject {
             try fm.createDirectory(at: Constants.oximyDir, withIntermediateDirectories: true)
         }
 
-        // Skip if already exists
+        // Skip if already exists and is valid
         if fm.fileExists(atPath: Constants.caCertPath.path) &&
            fm.fileExists(atPath: Constants.caKeyPath.path) {
-            isCAGenerated = true
-            return
+            // Verify the combined file has both key and cert
+            if let content = try? String(contentsOf: Constants.caKeyPath, encoding: .utf8),
+               content.contains("-----BEGIN PRIVATE KEY-----") &&
+               content.contains("-----BEGIN CERTIFICATE-----") {
+                isCAGenerated = true
+                return
+            }
+            // If not valid, regenerate
+            print("[CertificateService] Regenerating CA - combined file missing or invalid")
         }
 
-        // Generate CA using OpenSSL
-        // This creates both the private key and certificate
+        // Temporary paths for separate key and cert generation
+        let tempKeyPath = Constants.oximyDir.appendingPathComponent("temp-key.pem")
+        let tempCertPath = Constants.oximyDir.appendingPathComponent("temp-cert.pem")
+
+        // Generate CA using OpenSSL (key and cert to temp files)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/openssl")
         process.arguments = [
             "req", "-x509", "-new", "-nodes",
             "-newkey", "rsa:4096",
-            "-keyout", Constants.caKeyPath.path,
-            "-out", Constants.caCertPath.path,
+            "-keyout", tempKeyPath.path,
+            "-out", tempCertPath.path,
             "-days", String(Constants.caValidityDays),
             "-subj", "/CN=\(Constants.caCommonName)/O=\(Constants.caOrganization)/C=\(Constants.caCountry)"
         ]
@@ -81,29 +92,62 @@ class CertificateService: ObservableObject {
                 throw CertificateError.generationFailed(errorMessage)
             }
 
-            // Also create a PKCS12 version for easier import
-            try await createPKCS12()
+            // Read the generated files
+            let keyData = try String(contentsOf: tempKeyPath, encoding: .utf8)
+            let certData = try String(contentsOf: tempCertPath, encoding: .utf8)
+
+            // mitmproxy expects mitmproxy-ca.pem to have: key + cert concatenated
+            // Format: private key first, then certificate
+            let combinedPEM = keyData + certData
+            try combinedPEM.write(to: Constants.caKeyPath, atomically: true, encoding: .utf8)
+
+            // Also keep the cert-only file for Keychain installation and other uses
+            try certData.write(to: Constants.caCertPath, atomically: true, encoding: .utf8)
+
+            // Set appropriate permissions (key file should be readable only by owner)
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Constants.caKeyPath.path)
+            try fm.setAttributes([.posixPermissions: 0o644], ofItemAtPath: Constants.caCertPath.path)
+
+            // Create a PKCS12 version for easier import (using temp files before cleanup)
+            try await createPKCS12(keyPath: tempKeyPath, certPath: tempCertPath)
+
+            // Clean up temp files
+            try? fm.removeItem(at: tempKeyPath)
+            try? fm.removeItem(at: tempCertPath)
 
             isCAGenerated = true
             lastError = nil
-            print("[CertificateService] CA generated successfully")
+            print("[CertificateService] CA generated successfully (combined PEM format)")
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "certificate",
+                message: "CA certificate generated"
+            )
 
         } catch {
+            // Clean up temp files on error
+            try? fm.removeItem(at: tempKeyPath)
+            try? fm.removeItem(at: tempCertPath)
+
             lastError = error.localizedDescription
+            SentryService.shared.captureError(error, context: [
+                "operation": "ca_generate",
+                "ca_path": Constants.caCertPath.path
+            ])
             throw error
         }
     }
 
     /// Create PKCS12 file for Keychain import
-    private func createPKCS12() async throws {
+    private func createPKCS12(keyPath: URL, certPath: URL) async throws {
         let p12Path = Constants.oximyDir.appendingPathComponent("mitmproxy-ca.p12")
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/openssl")
         process.arguments = [
             "pkcs12", "-export",
-            "-inkey", Constants.caKeyPath.path,
-            "-in", Constants.caCertPath.path,
+            "-inkey", keyPath.path,
+            "-in", certPath.path,
             "-out", p12Path.path,
             "-passout", "pass:"  // No password
         ]
@@ -125,14 +169,26 @@ class CertificateService: ObservableObject {
             try await generateCA()
         }
 
-        // Method 1: Use security command to add and trust the certificate
-        // This triggers the standard macOS password prompt
-        try await addCertToKeychain()
-        try await trustCertInKeychain()
+        do {
+            // Method 1: Use security command to add and trust the certificate
+            // This triggers the standard macOS password prompt
+            try await addCertToKeychain()
+            try await trustCertInKeychain()
 
-        isCAInstalled = true
-        lastError = nil
-        print("[CertificateService] CA installed to Keychain")
+            isCAInstalled = true
+            lastError = nil
+            print("[CertificateService] CA installed to Keychain")
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "certificate",
+                message: "CA installed to Keychain"
+            )
+        } catch {
+            SentryService.shared.captureError(error, context: [
+                "operation": "ca_install"
+            ])
+            throw error
+        }
     }
 
     /// Add certificate to Keychain using security command
@@ -215,11 +271,21 @@ class CertificateService: ObservableObject {
 
         let status = SecItemDelete(query as CFDictionary)
         if status != errSecSuccess && status != errSecItemNotFound {
-            throw CertificateError.removalFailed
+            let error = CertificateError.removalFailed
+            SentryService.shared.captureError(error, context: [
+                "operation": "ca_remove",
+                "sec_status": status
+            ])
+            throw error
         }
 
         isCAInstalled = false
         print("[CertificateService] CA removed from Keychain")
+
+        SentryService.shared.addStateBreadcrumb(
+            category: "certificate",
+            message: "CA removed from Keychain"
+        )
     }
 
     /// Delete CA files from disk
@@ -237,6 +303,12 @@ class CertificateService: ObservableObject {
         let p12Path = Constants.oximyDir.appendingPathComponent("mitmproxy-ca.p12")
         if fm.fileExists(atPath: p12Path.path) {
             try fm.removeItem(at: p12Path)
+        }
+
+        // Also remove DH params file that mitmproxy creates
+        let dhParamPath = Constants.oximyDir.appendingPathComponent("mitmproxy-dhparam.pem")
+        if fm.fileExists(atPath: dhParamPath.path) {
+            try fm.removeItem(at: dhParamPath)
         }
 
         isCAGenerated = false

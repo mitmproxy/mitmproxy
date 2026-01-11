@@ -89,9 +89,14 @@ if [ -d "$PROJECT_DIR/Resources/python-embed" ]; then
     cp -R "$PROJECT_DIR/Resources/python-embed" "$APP_BUNDLE/Contents/Resources/"
 fi
 
-# Copy addon
-if [ -d "$PROJECT_DIR/Resources/oximy-addon" ]; then
-    cp -R "$PROJECT_DIR/Resources/oximy-addon" "$APP_BUNDLE/Contents/Resources/"
+# Copy addon from mitmproxy source (single source of truth)
+ADDON_SRC="$PROJECT_DIR/../mitmproxy/addons/oximy"
+if [ -d "$ADDON_SRC" ]; then
+    cp -R "$ADDON_SRC" "$APP_BUNDLE/Contents/Resources/oximy-addon"
+    echo "    Copied addon from: $ADDON_SRC"
+else
+    echo "ERROR: Addon not found at $ADDON_SRC"
+    exit 1
 fi
 
 # Code signing (stub - requires Developer ID)

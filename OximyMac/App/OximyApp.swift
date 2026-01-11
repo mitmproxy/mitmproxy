@@ -2,9 +2,7 @@ import SwiftUI
 import AppKit
 
 extension Notification.Name {
-    static let openSettings = Notification.Name("openSettings")
     static let quitApp = Notification.Name("quitApp")
-    static let logout = Notification.Name("logout")
 }
 
 @main
@@ -12,10 +10,9 @@ struct OximyApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // Settings window (opened via gear icon)
+        // Empty scene - we manage windows manually via AppDelegate
         Settings {
-            SettingsView()
-                .environmentObject(appDelegate.appState)
+            EmptyView()
         }
     }
 }
@@ -29,11 +26,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
-    private var settingsWindow: NSWindow?
 
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // CRITICAL: Initialize Sentry FIRST, before any other setup
+        // This ensures we capture any crashes during initialization
+        SentryService.shared.initialize()
+
+        // Add breadcrumb for app launch
+        SentryService.shared.addStateBreadcrumb(
+            category: "app.lifecycle",
+            message: "App launched",
+            data: ["phase": appState.phase.rawValue]
+        )
+
         // Hide from dock - menu bar only app
         NSApp.setActivationPolicy(.accessory)
 
@@ -42,27 +49,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupPopover()
         setupMainMenu()
 
-        // Listen for settings notification
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleOpenSettings),
-            name: .openSettings,
-            object: nil
+        // Update Sentry context with initial state
+        SentryService.shared.updateContext(
+            phase: appState.phase.rawValue,
+            proxyEnabled: ProxyService.shared.isProxyEnabled,
+            port: MITMService.shared.currentPort
         )
+
+        // Set user context if logged in
+        if appState.isLoggedIn {
+            SentryService.shared.setUser(workspaceName: appState.workspaceName)
+        }
 
         // Listen for quit notification
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleQuitApp),
             name: .quitApp,
-            object: nil
-        )
-
-        // Listen for logout notification
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleLogout),
-            name: .logout,
             object: nil
         )
 
@@ -85,8 +88,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start network monitoring
         NetworkMonitor.shared.startMonitoring()
 
-        // Auto-show popover on first launch (onboarding)
-        if appState.phase == .onboarding {
+        // Auto-show popover on first launch (setup)
+        if appState.phase == .setup {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.showPopover()
             }
@@ -100,30 +103,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleQuitApp() {
         // Close any open windows first
-        settingsWindow?.close()
         popover.performClose(nil)
 
         // Then quit
         quitApp()
     }
 
-    @objc private func handleLogout() {
-        // Close settings window
-        settingsWindow?.close()
-
-        // Reset to onboarding
-        appState.resetOnboarding()
-    }
-
     @objc private func handleNetworkChange() {
         print("[OximyApp] Network changed - checking if proxy needs reconfiguration")
 
         Task {
-            // Only reconfigure if we're connected and proxy was enabled
-            guard appState.phase == .connected,
+            // Only reconfigure if we're ready and proxy was enabled
+            guard appState.phase == .ready,
                   ProxyService.shared.isProxyEnabled,
                   let port = MITMService.shared.currentPort else {
-                print("[OximyApp] Skipping proxy reconfiguration (not in connected state or proxy not enabled)")
+                print("[OximyApp] Skipping proxy reconfiguration (not in ready state or proxy not enabled)")
                 return
             }
 
@@ -183,21 +177,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             print("[OximyApp] Allowing termination")
             return .terminateNow
         }
-        // CMD+Q pressed - close popover and/or settings window, but don't quit
+        // CMD+Q pressed - close popover but don't quit
         if popover.isShown {
             popover.performClose(nil)
-        }
-        if let window = settingsWindow, window.isVisible {
-            window.close()
         }
         return .terminateCancel
     }
 
-    @objc private func handleOpenSettings() {
-        openSettings()
-    }
-
     func applicationWillTerminate(_ notification: Notification) {
+        // Notify Sentry of clean shutdown
+        SentryService.shared.appWillTerminate()
+
         // CRITICAL: Cleanup proxy and mitmproxy so user doesn't lose internet
         // Use synchronous version to ensure it completes before app exits
         ProxyService.shared.disableProxySync()
@@ -235,35 +225,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showStatusItemMenu() {
         let menu = NSMenu()
 
-        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettingsFromMenu), keyEquivalent: ","))
-        menu.addItem(NSMenuItem(title: "Send Feedback", action: #selector(sendFeedback), keyEquivalent: ""))
+        // Status indicator
+        let statusItem = NSMenuItem(title: statusText, action: nil, keyEquivalent: "")
+        statusItem.isEnabled = false
+        menu.addItem(statusItem)
+
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Oximy", action: #selector(quitApp), keyEquivalent: ""))
 
-        statusItem.menu = menu
-        statusItem.button?.performClick(nil)
-        statusItem.menu = nil  // Remove menu so left-click works normally again
+        self.statusItem.menu = menu
+        self.statusItem.button?.performClick(nil)
+        self.statusItem.menu = nil  // Remove menu so left-click works normally again
     }
 
-    @objc private func openSettingsFromMenu() {
-        openSettings()
-    }
-
-    @objc private func sendFeedback() {
-        NSWorkspace.shared.open(Constants.supportURL)
+    private var statusText: String {
+        if ProxyService.shared.isProxyEnabled {
+            return "● Monitoring Active"
+        } else if appState.phase == .setup {
+            return "○ Setup Required"
+        } else {
+            return "○ Proxy Disabled"
+        }
     }
 
     private var clickMonitor: Any?
 
     private func setupPopover() {
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 320, height: 400)
+        popover.contentSize = NSSize(width: 340, height: 420)
         // Use .applicationDefined so clicking buttons inside doesn't close the popover
         popover.behavior = .applicationDefined
         popover.animates = true
 
-        // Set the main content view
-        let contentView = MainContentView()
+        // Set the main content view - using MainView from Views/MainView.swift
+        let contentView = MainView()
             .environmentObject(appState)
 
         popover.contentViewController = NSHostingController(rootView: contentView)
@@ -288,82 +283,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Ensure the popover window becomes key
             popover.contentViewController?.view.window?.makeKey()
         }
-    }
-
-    func closePopover() {
-        popover.performClose(nil)
-    }
-
-    func openSettings() {
-        // Close the popover first
-        popover.performClose(nil)
-
-        // If window already exists, just bring it to front
-        if let window = settingsWindow, window.isVisible {
-            window.makeKeyAndOrderFront(nil)
-            // Show in dock & CMD+Tab when settings is open
-            NSApp.setActivationPolicy(.regular)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
-
-        // Create settings window
-        let settingsView = SettingsView()
-            .environmentObject(appState)
-
-        let hostingController = NSHostingController(rootView: settingsView)
-
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "Oximy Settings"
-        window.styleMask = [.titled, .closable, .miniaturizable]
-        window.center()
-        window.setFrameAutosaveName("SettingsWindow")
-        window.isReleasedWhenClosed = false
-        window.delegate = self
-
-        self.settingsWindow = window
-
-        // Show in dock & CMD+Tab when settings is open
-        NSApp.setActivationPolicy(.regular)
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-}
-
-// MARK: - NSWindowDelegate
-extension AppDelegate: NSWindowDelegate {
-    func windowWillClose(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow,
-              window == settingsWindow else { return }
-
-        // Hide from dock when settings closes (back to menu bar only)
-        NSApp.setActivationPolicy(.accessory)
-    }
-
-    // Prevent CMD+Q from quitting - just close the window
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return false
-    }
-}
-
-// MARK: - Main Content View (Router)
-
-struct MainContentView: View {
-    @EnvironmentObject var appState: AppState
-
-    var body: some View {
-        Group {
-            switch appState.phase {
-            case .onboarding:
-                OnboardingView()
-            case .permissions:
-                PermissionsView()
-            case .login:
-                LoginView()
-            case .connected:
-                StatusView()
-            }
-        }
-        .frame(width: 320, height: 400)
     }
 }

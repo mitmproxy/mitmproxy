@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import IO, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from mitmproxy.addons.oximy.types import OximyEvent
+    from models import OximyEvent
 
 logger = logging.getLogger(__name__)
 

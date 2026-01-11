@@ -131,19 +131,38 @@ class ProcessResolver:
         )
 
     def _find_pid_for_port(self, port: int) -> int | None:
-        """Find the PID that owns a local port using lsof."""
+        """
+        Find the PID that owns a local port as the SOURCE (client side).
+
+        When looking up port 54029, lsof returns both sides:
+        - Python ... 127.0.0.1:8088->127.0.0.1:54029 (proxy, port is DEST)
+        - Comet  ... 127.0.0.1:54029->127.0.0.1:8088 (client, port is SOURCE)
+
+        We want the client side where the port is the source.
+        """
         try:
+            # Use regular lsof output (not -F) so we can parse the connection direction
             result = subprocess.run(
-                ["lsof", "-i", f"TCP:{port}", "-n", "-P", "-F", "p"],
+                ["lsof", "-i", f"TCP:{port}", "-n", "-P"],
                 capture_output=True,
                 text=True,
                 timeout=2,
             )
 
             if result.returncode == 0:
-                for line in result.stdout.strip().split("\n"):
-                    if line.startswith("p"):
-                        return int(line[1:])
+                for line in result.stdout.strip().split("\n")[1:]:  # Skip header
+                    # Look for lines where our port is the SOURCE (left side of ->)
+                    # Format: COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME (STATE)
+                    # NAME is like: 127.0.0.1:54029->127.0.0.1:8088
+                    # STATE is like: (ESTABLISHED) or (CLOSE_WAIT)
+                    parts = line.split()
+                    if len(parts) >= 9:
+                        # Connection string can be last or second-to-last
+                        # (depends on whether state is shown)
+                        for field in [parts[-1], parts[-2]]:
+                            if f":{port}->" in field:
+                                return int(parts[1])  # PID is second field
+
         except (subprocess.TimeoutExpired, ValueError, OSError) as e:
             logger.debug(f"Failed to find PID for port {port}: {e}")
 

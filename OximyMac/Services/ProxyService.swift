@@ -83,14 +83,29 @@ class ProxyService: ObservableObject {
     func enableProxy(port: Int) async throws {
         let services = getNetworkServices()
 
-        for service in services {
-            try await setProxy(enabled: true, port: port, for: service)
-        }
+        do {
+            for service in services {
+                try await setProxy(enabled: true, port: port, for: service)
+            }
 
-        isProxyEnabled = true
-        configuredPort = port
-        lastError = nil
-        print("[ProxyService] Enabled proxy on port \(port)")
+            isProxyEnabled = true
+            configuredPort = port
+            lastError = nil
+            print("[ProxyService] Enabled proxy on port \(port)")
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "proxy",
+                message: "Proxy enabled",
+                data: ["port": port, "services": services]
+            )
+        } catch {
+            SentryService.shared.captureError(error, context: [
+                "operation": "proxy_enable",
+                "port": port,
+                "services": services
+            ])
+            throw error
+        }
     }
 
     /// Get list of network services
@@ -174,14 +189,27 @@ class ProxyService: ObservableObject {
     func disableProxy() async throws {
         let services = getNetworkServices()
 
-        for service in services {
-            try await setProxy(enabled: false, port: 0, for: service)
-        }
+        do {
+            for service in services {
+                try await setProxy(enabled: false, port: 0, for: service)
+            }
 
-        isProxyEnabled = false
-        configuredPort = nil
-        lastError = nil
-        print("[ProxyService] Disabled proxy")
+            isProxyEnabled = false
+            configuredPort = nil
+            lastError = nil
+            print("[ProxyService] Disabled proxy")
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "proxy",
+                message: "Proxy disabled"
+            )
+        } catch {
+            SentryService.shared.captureError(error, context: [
+                "operation": "proxy_disable",
+                "services": services
+            ])
+            throw error
+        }
     }
 
     /// Synchronous version for cleanup on app termination

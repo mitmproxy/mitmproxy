@@ -40,3 +40,6 @@ OximyMac/*.xcodeproj/
 OximyMac/*.xcworkspace/
 OximyMac/DerivedData/
 OximyMac/Resources/python-embed/
+
+# Secrets
+OximyMac/App/Secrets.swift

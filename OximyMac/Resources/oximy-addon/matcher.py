@@ -12,10 +12,10 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from mitmproxy.addons.oximy.types import MatchResult
+from models import MatchResult
 
 if TYPE_CHECKING:
-    from mitmproxy.addons.oximy.bundle import OISPBundle
+    from bundle import OISPBundle
     from mitmproxy.http import HTTPFlow
 
 logger = logging.getLogger(__name__)
@@ -127,24 +127,20 @@ class TrafficMatcher:
                     # Website has parser? -> full_trace, else identifiable
                     # For now, treat all website matches as full_trace
                     # (we'll parse what we can)
+                    # Use website-specific api_format for parsing
+                    api_format = website.get("api_format", f"{website_id}_web")
                     return MatchResult(
                         classification="full_trace",
                         source_type="website",
                         source_id=website_id,
                         provider_id=None,  # Websites may use multiple providers
-                        api_format=None,  # Will need website-specific parsing
+                        api_format=api_format,
                         endpoint=feature_name,
                     )
 
-        # Website matched but no specific endpoint - identifiable only
-        return MatchResult(
-            classification="identifiable",
-            source_type="website",
-            source_id=website_id,
-            provider_id=None,
-            api_format=None,
-            endpoint=None,
-        )
+        # Website matched but no specific endpoint - drop it
+        # We only care about actual AI conversation endpoints, not gizmos/settings/etc.
+        return MatchResult(classification="drop")
 
     def _matches_endpoint_pattern(self, path: str, pattern: dict) -> bool:
         """Check if path matches an endpoint pattern definition."""
@@ -154,16 +150,30 @@ class TrafficMatcher:
         if not url_pattern:
             return False
 
+        # Strip query string from path for matching
+        path_without_query = path.split("?")[0]
+
         # Convert glob-style pattern to regex
-        # Pattern like "**/backend-api/conversation" should match "/backend-api/conversation"
+        # Pattern like "**/backend-api/conversation" should match:
+        # - "/backend-api/conversation"
+        # - "/backend-api/f/conversation" (ChatGPT uses /f/ prefix)
         # Handle ** as "any path prefix"
         if url_pattern.startswith("**/"):
-            # Match anywhere in path
+            # Match anywhere in path - the suffix can appear anywhere
             suffix = url_pattern[3:]  # Remove **/
-            return suffix in path or path.endswith(suffix)
+            # Check if suffix is contained in path or path ends with it
+            if suffix in path_without_query or path_without_query.endswith(suffix):
+                return True
+            # Also check if the final segment matches (e.g., "conversation" in "/f/conversation")
+            suffix_parts = suffix.split("/")
+            path_parts = path_without_query.split("/")
+            if suffix_parts and path_parts:
+                # Check if last part of suffix matches last part of path
+                if path_parts[-1] == suffix_parts[-1]:
+                    return True
 
         # Standard glob matching
-        return fnmatch.fnmatch(path, url_pattern)
+        return fnmatch.fnmatch(path_without_query, url_pattern)
 
 
 def matches_glob_pattern(path: str, pattern: str) -> bool:

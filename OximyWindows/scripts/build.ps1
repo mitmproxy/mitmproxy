@@ -35,12 +35,21 @@ if (-not (Test-Path (Join-Path $PythonDir "python.exe"))) {
     & (Join-Path $PSScriptRoot "package-python.ps1")
 }
 
-# Step 3: Check for oximy-addon
-$AddonDir = Join-Path $ProjectDir "Resources\oximy-addon"
-if (-not (Test-Path (Join-Path $AddonDir "addon.py"))) {
-    Write-Error "oximy-addon not found at $AddonDir. Please copy from OximyMac project."
+# Step 3: Copy oximy-addon from mitmproxy source (single source of truth)
+$AddonSrc = Join-Path $PSScriptRoot "..\..\mitmproxy\addons\oximy"
+$AddonDst = Join-Path $ProjectDir "Resources\oximy-addon"
+
+if (-not (Test-Path (Join-Path $AddonSrc "addon.py"))) {
+    Write-Error "Addon source not found at $AddonSrc"
     exit 1
 }
+
+Write-Host "Copying oximy-addon from source..." -ForegroundColor Yellow
+if (Test-Path $AddonDst) {
+    Remove-Item $AddonDst -Recurse -Force
+}
+Copy-Item $AddonSrc -Destination $AddonDst -Recurse
+Write-Host "  Copied addon from: $AddonSrc" -ForegroundColor Green
 
 # Step 4: Restore packages
 Write-Host "Restoring NuGet packages..." -ForegroundColor Yellow

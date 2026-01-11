@@ -12,7 +12,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from mitmproxy.addons.oximy.types import MatchResult
+from mitmproxy.addons.oximy.models import MatchResult
 
 if TYPE_CHECKING:
     from mitmproxy.addons.oximy.bundle import OISPBundle
