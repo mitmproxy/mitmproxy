@@ -37,6 +37,30 @@ class CompiledDomainPattern:
     provider_id: str
 
 
+# Local overrides for website features not yet in the remote bundle
+# This allows us to add new endpoint patterns without waiting for bundle updates
+LOCAL_WEBSITE_OVERRIDES: dict[str, dict[str, Any]] = {
+    "chatgpt": {
+        "features": {
+            # Capture file download URLs (for DALL-E generated images, etc.)
+            "file_download": {
+                "name": "File Download",
+                "patterns": [
+                    {"method": "GET", "url": "**/backend-api/files/**"},
+                ],
+            },
+            # Capture subscription info (plan type, account_id)
+            "subscription": {
+                "name": "Subscription Info",
+                "patterns": [
+                    {"method": "GET", "url": "**/backend-api/subscriptions**"},
+                ],
+            },
+        },
+    },
+}
+
+
 @dataclass
 class OISPBundle:
     """
@@ -86,6 +110,10 @@ class OISPBundle:
             except re.error as e:
                 logger.warning(f"Invalid domain pattern '{pattern_def['pattern']}': {e}")
 
+        # Get websites from bundle and merge local overrides
+        websites = data.get("registry", {}).get("websites", {})
+        websites = cls._apply_local_overrides(websites)
+
         return cls(
             domain_lookup=data.get("domain_lookup", {}),
             domain_patterns=domain_patterns,
@@ -93,10 +121,29 @@ class OISPBundle:
             parsers=data.get("parsers", {}),
             models=data.get("models", {}),
             apps=data.get("registry", {}).get("apps", {}),
-            websites=data.get("registry", {}).get("websites", {}),
+            websites=websites,
             bundle_version=data.get("bundle_version", "unknown"),
             loaded_at=time.time(),
         )
+
+    @classmethod
+    def _apply_local_overrides(cls, websites: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        """Apply local feature overrides to websites."""
+        import copy
+        result = copy.deepcopy(websites)
+
+        for website_id, overrides in LOCAL_WEBSITE_OVERRIDES.items():
+            if website_id not in result:
+                continue  # Only extend existing websites
+
+            # Merge features
+            if "features" in overrides:
+                if "features" not in result[website_id]:
+                    result[website_id]["features"] = {}
+                result[website_id]["features"].update(overrides["features"])
+                logger.debug(f"Applied local overrides to {website_id}: {list(overrides['features'].keys())}")
+
+        return result
 
     def is_stale(self, max_age_hours: float) -> bool:
         """Check if the bundle is older than max_age_hours."""

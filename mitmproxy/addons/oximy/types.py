@@ -80,6 +80,7 @@ class InteractionResponse:
     finish_reason: str | None = None
     usage: dict | None = None
     raw: dict | None = None
+    content_analysis: dict | None = None  # Rich content analysis
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -91,6 +92,8 @@ class InteractionResponse:
             result["finish_reason"] = self.finish_reason
         if self.usage is not None:
             result["usage"] = self.usage
+        if self.content_analysis is not None:
+            result["content_analysis"] = self.content_analysis
         if self.raw is not None:
             result["_raw"] = self.raw
         return result
@@ -185,9 +188,10 @@ class OximyEvent:
         if self.client:
             result["client"] = self.client.to_dict()
 
-        if self.trace_level == "full" and self.interaction:
+        if self.interaction:
             result["interaction"] = self.interaction.to_dict()
-        elif self.trace_level == "identifiable" and self.metadata:
+
+        if self.metadata:
             result["metadata"] = self.metadata
 
         return result

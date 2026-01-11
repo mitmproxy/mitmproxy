@@ -47,6 +47,7 @@ from mitmproxy.addons.oximy.types import (
     MatchResult,
     OximyEvent,
 )
+from mitmproxy.addons.oximy.content import extract_content
 from mitmproxy.addons.oximy.writer import EventWriter
 
 if TYPE_CHECKING:
@@ -397,6 +398,19 @@ class OximyAddon:
         # Full trace event
         include_raw = ctx.options.oximy_include_raw
 
+        # Filter out noisy polling/status endpoints that don't contain conversation data
+        path = flow.request.path
+        if flow.request.method == "GET" and any(x in path for x in ["/stream_status", "/status"]):
+            return None
+
+        # Check if this is a file download endpoint (ChatGPT DALL-E images, etc.)
+        if match_result.endpoint == "file_download" and flow.response.content:
+            return self._build_file_download_event(flow, source, timing, client_process)
+
+        # Check if this is a subscription endpoint (ChatGPT plan info)
+        if match_result.endpoint == "subscription" and flow.response.content:
+            return self._build_subscription_event(flow, match_result, source, timing, client_process)
+
         # Check if this is special traffic (needs custom parsing)
         is_gemini = match_result.source_id == "gemini"
         is_deepseek = match_result.source_id == "deepseek"
@@ -534,23 +548,29 @@ class OximyAddon:
             )
 
         if not request_data or not response_data:
-            # Can't build full interaction
-            return OximyEvent.create(
-                source=source,
-                trace_level="identifiable",
-                timing=timing,
-                client=client_process,
-                metadata={
-                    "request_method": flow.request.method,
-                    "request_path": flow.request.path,
-                    "response_status": flow.response.status_code,
-                    "content_length": len(flow.response.content or b""),
-                    "parse_error": "Could not parse request or response",
-                },
-            )
+            # Can't build full interaction - drop silently
+            return None
+
+        # Check if interaction has meaningful content (not empty request/response)
+        has_request_content = request_data.messages or request_data.model or request_data.raw
+        has_response_content = response_data.content or response_data.model or response_data.raw
+        if not has_request_content and not has_response_content:
+            # Empty interaction - drop silently
+            return None
 
         # Determine model (prefer response, fall back to request)
         model = response_data.model or (request_data.model if request_data else None)
+
+        # Extract rich content analysis from response
+        if response_data.content:
+            try:
+                analysis = extract_content(response_data.content)
+                # Only include if there's interesting content to report
+                if (analysis.code_blocks or analysis.hyperlinks or analysis.tables or
+                    analysis.entities or analysis.citations or analysis.lists):
+                    response_data.content_analysis = analysis.to_dict()
+            except Exception as e:
+                logger.debug(f"Content analysis failed: {e}")
 
         interaction = Interaction(
             model=model,
@@ -564,6 +584,102 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             interaction=interaction,
+        )
+
+    def _build_file_download_event(
+        self,
+        flow: http.HTTPFlow,
+        source: EventSource,
+        timing: EventTiming,
+        client_process: ClientProcess | None,
+    ) -> OximyEvent | None:
+        """Build an event for file download endpoints (DALL-E images, etc.)."""
+        import json
+
+        path = flow.request.path
+
+        # Extract file_id from the path: /backend-api/files/download/file_xxx
+        file_id = None
+        if "/files/download/" in path:
+            parts = path.split("/files/download/")
+            if len(parts) > 1:
+                file_id = parts[1].split("?")[0]
+
+        # Parse the JSON response
+        try:
+            response_json = json.loads(flow.response.content.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            response_json = {}
+
+        metadata = {
+            "file_id": file_id,
+            "download_url": response_json.get("download_url"),
+            "file_name": response_json.get("file_name"),
+            "file_size_bytes": response_json.get("file_size_bytes"),
+        }
+        # Remove None values
+        metadata = {k: v for k, v in metadata.items() if v is not None}
+
+        logger.info(f"File download: file_id={file_id}, url={metadata.get('download_url', 'N/A')[:80] if metadata.get('download_url') else 'N/A'}")
+
+        return OximyEvent.create(
+            source=source,
+            trace_level="full",
+            timing=timing,
+            client=client_process,
+            metadata=metadata,
+        )
+
+    def _build_subscription_event(
+        self,
+        flow: http.HTTPFlow,
+        match_result: MatchResult,
+        source: EventSource,
+        timing: EventTiming,
+        client_process: ClientProcess | None,
+    ) -> OximyEvent | None:
+        """Build an event for subscription endpoints (user plan info)."""
+        import json
+        from urllib.parse import parse_qs, urlparse
+
+        # Extract account_id from query params: ?account_id=xxx
+        parsed = urlparse(flow.request.path)
+        query_params = parse_qs(parsed.query)
+        account_id = query_params.get("account_id", [None])[0]
+
+        # Parse the JSON response
+        try:
+            response_json = json.loads(flow.response.content.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            response_json = {}
+
+        # Build metadata with subscription info
+        metadata = {
+            "request_method": flow.request.method,
+            "request_path": flow.request.path,
+            "response_status": flow.response.status_code,
+            "account_id": account_id,
+            "subscription_id": response_json.get("id"),
+            "plan_type": response_json.get("plan_type"),
+            "billing_period": response_json.get("billing_period"),
+            "will_renew": response_json.get("will_renew"),
+            "active_start": response_json.get("active_start"),
+            "active_until": response_json.get("active_until"),
+            "seats_in_use": response_json.get("seats_in_use"),
+            "seats_entitled": response_json.get("seats_entitled"),
+        }
+
+        # Remove None values for cleaner output
+        metadata = {k: v for k, v in metadata.items() if v is not None}
+
+        logger.info(f"Subscription captured: account_id={account_id}, plan_type={response_json.get('plan_type')}")
+
+        return OximyEvent.create(
+            source=source,
+            trace_level="full",
+            timing=timing,
+            client=client_process,
+            metadata=metadata,
         )
 
     def _calculate_timing(self, flow: http.HTTPFlow) -> EventTiming:

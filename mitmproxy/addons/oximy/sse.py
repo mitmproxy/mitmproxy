@@ -62,29 +62,64 @@ class SSEBuffer:
 
     def _process_buffer(self) -> None:
         """Process complete SSE events from the buffer."""
+        # Standard SSE uses double newline to separate events
         while "\n\n" in self._buffer:
             event, self._buffer = self._buffer.split("\n\n", 1)
             self._process_event(event)
+
+        # ChatGPT uses single newline between delta/message events
+        # Process any complete lines in the remaining buffer
+        while "\n" in self._buffer:
+            line, rest = self._buffer.split("\n", 1)
+            line = line.strip()
+            # Check if this looks like a complete ChatGPT event
+            if line.startswith(("delta ", "message ", "data: ")):
+                self._process_event(line)
+                self._buffer = rest
+            else:
+                # Not a complete event, wait for more data
+                break
 
     def _process_event(self, event: str) -> None:
         """Process a single SSE event."""
         lines = event.strip().split("\n")
 
         for line in lines:
+            data_str = None
+            event_type = None
+
+            # Standard SSE format: data: {...}
             if line.startswith("data: "):
                 data_str = line[6:]  # Remove "data: " prefix
+                event_type = "data"
+            # ChatGPT format: delta {...} or message {...}
+            elif line.startswith("delta "):
+                data_str = line[6:]  # Remove "delta " prefix
+                event_type = "delta"
+            elif line.startswith("message "):
+                data_str = line[8:]  # Remove "message " prefix
+                event_type = "message"
+            # Skip encoding markers and other non-data lines
+            elif line.strip() in ("delta_encoding v1", "delta_encoding v2", "v1", "v2", ""):
+                continue
+            else:
+                continue
 
-                # Check for stream end signals
-                if data_str.strip() in ("[DONE]", ""):
-                    continue
+            if data_str is None:
+                continue
 
-                try:
-                    data = json.loads(data_str)
-                    self._accumulate_data(data)
-                except json.JSONDecodeError:
-                    # Skip non-JSON data like "v1" encoding marker
-                    if data_str.strip() not in ("v1", "v2"):
-                        logger.debug(f"Failed to parse SSE data: {data_str[:100]}")
+            # Check for stream end signals
+            if data_str.strip() in ("[DONE]", ""):
+                logger.debug(f"SSE stream end signal: {data_str}")
+                continue
+
+            try:
+                data = json.loads(data_str)
+                self._accumulate_data(data)
+            except json.JSONDecodeError:
+                # Skip non-JSON data like "v1" encoding marker
+                if data_str.strip() not in ("v1", "v2"):
+                    logger.debug(f"Failed to parse SSE {event_type} data: {data_str[:100]}")
 
     def _accumulate_data(self, data: dict[str, Any] | str) -> None:
         """Accumulate content from a parsed SSE data object."""
@@ -109,6 +144,10 @@ class SSEBuffer:
         content_delta = self._extract_content_delta(data)
         if content_delta:
             self.accumulated_content += content_delta
+            # Log significant content additions (every 500 chars or first 100)
+            total_len = len(self.accumulated_content)
+            if total_len <= 100 or total_len % 500 < len(content_delta):
+                logger.debug(f"SSE content: +{len(content_delta)} chars = {total_len} total")
 
         # Extract finish reason (usually in last chunk)
         finish_reason = self._extract_finish_reason(data)
@@ -122,61 +161,32 @@ class SSEBuffer:
 
     def _extract_content_delta(self, data: dict[str, Any]) -> str | None:
         """Extract content delta from SSE chunk based on API format."""
-        # DeepSeek format: simple {"v": "text"} for content deltas
-        # Example: {"v": " great"} or {"v": " at"}
-        if (
-            "v" in data
-            and isinstance(data.get("v"), str)
-            and len(data) == 1
-        ):
+        # ChatGPT/DeepSeek shorthand: {"v": "text"} - simple string value
+        if "v" in data and isinstance(data.get("v"), str):
+            # Skip if this is a non-content operation with a path
+            if "p" in data and not self._is_content_path(data.get("p", "")):
+                return None
             return data["v"]
 
-        # DeepSeek format: {"p": "response/fragments/-1/content", "o": "APPEND", "v": "text"}
-        if data.get("o") == "APPEND" and "v" in data:
-            path = data.get("p", "")
-            if "content" in path or "fragments" in path:
-                value = data.get("v")
-                if isinstance(value, str):
-                    return value
-
-        # DeepSeek format: BATCH operations with nested content
-        # Example: {"p":"response","o":"BATCH","v":[{"p":"fragments","o":"APPEND","v":[{"content":"I",...}]}]}
-        if data.get("o") == "BATCH" and isinstance(data.get("v"), list):
-            content_parts = []
-            for op in data["v"]:
-                if op.get("o") == "APPEND" and op.get("p") == "fragments":
-                    fragments = op.get("v", [])
-                    for frag in fragments:
-                        if isinstance(frag, dict) and "content" in frag:
-                            content_parts.append(frag["content"])
-            if content_parts:
-                return "".join(content_parts)
-
-        # ChatGPT web format: shorthand continuation - just {"v": "text"} with no p/o
-        # This continues the previous append operation
-        if "v" in data and "o" not in data and "p" not in data:
-            value = data.get("v")
-            if isinstance(value, str):
-                return value
-
-        # ChatGPT web format: delta patches with "o": "append" and path to content
-        # Example: {"p": "/message/content/parts/0", "o": "append", "v": "hello"}
-        if data.get("o") == "append" and "v" in data:
-            path = data.get("p", "")
-            value = data.get("v")
-            if isinstance(value, str) and self._is_content_path(path):
-                return value
-
-        # ChatGPT web format: patch array with nested operations
-        # Example: {"o": "patch", "v": [{"p": "/message/content/parts/0", "o": "append", "v": "text"}]}
+        # ChatGPT patch array: {"o": "patch", "v": [{...}, {...}]}
         if data.get("o") == "patch" and isinstance(data.get("v"), list):
             content_parts = []
             for patch in data["v"]:
-                if patch.get("o") == "append":
-                    path = patch.get("p", "")
-                    value = patch.get("v")
-                    if isinstance(value, str) and self._is_content_path(path):
-                        content_parts.append(value)
+                value = patch.get("v")
+                path = patch.get("p", "")
+                if isinstance(value, str) and self._is_content_path(path):
+                    content_parts.append(value)
+            if content_parts:
+                return "".join(content_parts)
+
+        # DeepSeek BATCH format
+        if data.get("o") == "BATCH" and isinstance(data.get("v"), list):
+            content_parts = []
+            for op in data["v"]:
+                if op.get("p") == "fragments" and isinstance(op.get("v"), list):
+                    for frag in op["v"]:
+                        if isinstance(frag, dict) and "content" in frag:
+                            content_parts.append(frag["content"])
             if content_parts:
                 return "".join(content_parts)
 
@@ -184,32 +194,21 @@ class SSEBuffer:
         choices = data.get("choices", [])
         if choices:
             delta = choices[0].get("delta", {})
-            content = delta.get("content")
-            if content:
-                return content
+            if "content" in delta:
+                return delta["content"]
 
-        # Anthropic format: delta.text or content_block_delta
-        delta = data.get("delta", {})
-        if "text" in delta:
-            return delta["text"]
-
-        # Anthropic content_block_delta
+        # Anthropic format: delta.text
         if data.get("type") == "content_block_delta":
-            delta = data.get("delta", {})
-            return delta.get("text")
+            return data.get("delta", {}).get("text")
 
         return None
 
     def _is_content_path(self, path: str) -> bool:
         """Check if a JSON patch path is for message content."""
-        # Match paths like:
-        # - /message/content/parts/0
-        # - /content/parts/0
-        # - /parts/0
-        # - /text
-        # Avoid paths like /status, /metadata, /create_time
         if not path:
-            return False
+            return True  # No path means it's a shorthand continuation
+        # Match paths like /message/content/parts/0, /content/parts/0, /text
+        # Exclude paths like /status, /metadata, /create_time
         content_indicators = ("/content", "/parts", "/text")
         exclude_indicators = ("/status", "/metadata", "/create_time", "/id", "/author")
         return any(ind in path for ind in content_indicators) and not any(ind in path for ind in exclude_indicators)
@@ -250,7 +249,12 @@ class SSEBuffer:
             self._process_event(self._buffer)
             self._buffer = ""
 
-        logger.debug(f"SSE finalized: content={self.accumulated_content!r} chunks={len(self.raw_chunks)}")
+        # Log warning if content looks truncated (ends mid-word or mid-entity)
+        if self.accumulated_content:
+            if self.accumulated_content.rstrip().endswith(('["', '["turn', '\ue200entity\ue202["', '- **')):
+                logger.warning(f"SSE content appears truncated: ends with '{self.accumulated_content[-50:]}'")
+
+        logger.info(f"SSE finalized: content_len={len(self.accumulated_content)} chunks={len(self.raw_chunks)} model={self.model}")
 
         return {
             "content": self.accumulated_content,
@@ -520,10 +524,20 @@ def create_sse_stream_handler(buffer: SSEBuffer):
     Returns:
         Stream handler function that processes each chunk
     """
+    chunk_count = [0]  # Use list to allow mutation in closure
 
     def handler(data: bytes) -> bytes:
+        chunk_count[0] += 1
         # Process the chunk to accumulate SSE data
         buffer.process_chunk(data)
+
+        # Log progress periodically
+        if chunk_count[0] % 20 == 0:
+            logger.debug(f"SSE chunk #{chunk_count[0]}: accumulated {len(buffer.accumulated_content)} chars")
+
+        if not data:
+            logger.info(f"SSE stream ended after {chunk_count[0]} chunks, total content: {len(buffer.accumulated_content)} chars")
+
         # Pass through unchanged
         return data
 
