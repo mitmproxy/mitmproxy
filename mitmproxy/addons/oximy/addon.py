@@ -27,17 +27,7 @@ from mitmproxy.addons.oximy.parser import (
 )
 from mitmproxy.addons.oximy.passthrough import TLSPassthrough
 from mitmproxy.addons.oximy.process import ClientProcess, ProcessResolver
-from mitmproxy.addons.oximy.sse import (
-    SSEBuffer,
-    GeminiBuffer,
-    GrokBuffer,
-    is_sse_response,
-    is_gemini_streaming_response,
-    is_grok_streaming_response,
-    create_sse_stream_handler,
-    create_gemini_stream_handler,
-    create_grok_stream_handler,
-)
+from mitmproxy.addons.oximy.sse import is_sse_response
 from mitmproxy.addons.oximy.models import (
     EventSource,
     EventTiming,
@@ -281,7 +271,7 @@ class OximyAddon:
             )
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
-        """Set up SSE or Gemini streaming if needed."""
+        """Set up streaming handler only for actual streaming responses (SSE)."""
         if not self._enabled:
             return
 
@@ -289,29 +279,36 @@ class OximyAddon:
         if not match_result or match_result.classification == "drop":
             return
 
-        # Check if this is a website with configurable parser
+        # Only set up streaming for actual streaming content types
+        # For regular JSON responses (like Grok), we parse in response() hook
+        if not flow.response:
+            return
+
+        content_type = flow.response.headers.get("content-type", "").lower()
+        is_streaming = (
+            "text/event-stream" in content_type or
+            "application/x-ndjson" in content_type or
+            "text/plain" in content_type  # Some APIs stream as text/plain
+        )
+
+        if not is_streaming:
+            # Regular JSON response - will be parsed in response() hook
+            logger.debug(f"Non-streaming response for {match_result.source_id}: {content_type}")
+            return
+
+        # Check if this is a website with configurable parser for streaming
         if match_result.source_type == "website" and self._bundle and JSONATA_AVAILABLE:
             website = self._bundle.websites.get(match_result.source_id or "")
-            logger.debug(f"Looking up website '{match_result.source_id}': found={website is not None}")
-
             if website:
                 feature = website.get("features", {}).get(match_result.endpoint or "", {})
                 parser_config = feature.get("parser", {})
                 response_stream_config = parser_config.get("response", {}).get("stream")
 
-                logger.debug(
-                    f"Website {match_result.source_id}: endpoint={match_result.endpoint}, "
-                    f"feature_found={bool(feature)}, parser_found={bool(parser_config)}, "
-                    f"stream_config_found={bool(response_stream_config)}"
-                )
-
-                if response_stream_config and flow.response:
-                    logger.info(f"Setting up ConfigurableStreamBuffer for {match_result.source_id}/{match_result.endpoint}")
+                if response_stream_config:
+                    logger.info(f"Setting up streaming buffer for {match_result.source_id}/{match_result.endpoint} (content-type: {content_type})")
                     buffer = ConfigurableStreamBuffer(response_stream_config)
                     self._configurable_buffers[flow.id] = buffer
 
-                    # Create stream handler that passes through while accumulating
-                    # mitmproxy calls this with each data chunk as bytes
                     def create_configurable_handler(buf: ConfigurableStreamBuffer):
                         def handler(data: bytes) -> bytes:
                             buf.process_chunk(data)
@@ -319,22 +316,6 @@ class OximyAddon:
                         return handler
 
                     flow.response.stream = create_configurable_handler(buffer)
-                    return
-                elif not response_stream_config:
-                    logger.warning(
-                        f"No stream config in parser for {match_result.source_id}/{match_result.endpoint}. "
-                        f"parser_config keys: {list(parser_config.keys())}"
-                    )
-            else:
-                logger.warning(
-                    f"Website '{match_result.source_id}' not found in bundle. "
-                    f"Available websites: {list(self._bundle.websites.keys())}"
-                )
-        elif match_result.source_type == "website":
-            if not JSONATA_AVAILABLE:
-                logger.error("JSONata not available - cannot use data-driven parsing")
-            elif not self._bundle:
-                logger.error("Bundle not loaded - cannot look up website config")
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Process responses and write events."""
@@ -434,58 +415,15 @@ class OximyAddon:
         # Check if we have a configurable parser for this website
         configurable_buffer = self._configurable_buffers.get(flow.id)
         request_data = None
-        if is_grok and flow.request.content:
-            # Grok has message in JSON body
-            grok_req = parse_grok_request(flow.request.content)
-            from mitmproxy.addons.oximy.models import InteractionRequest
-            request_data = InteractionRequest(
-                messages=[{"role": "user", "content": grok_req.get("prompt")}] if grok_req.get("prompt") else None,
-                model=grok_req.get("model"),
-                raw=grok_req if include_raw else None,
-            )
-        elif is_perplexity and flow.request.content:
-            # Perplexity has query_str in JSON body
-            perplexity_req = parse_perplexity_request(flow.request.content)
-            from mitmproxy.addons.oximy.models import InteractionRequest
-            request_data = InteractionRequest(
-                messages=[{"role": "user", "content": perplexity_req.get("prompt")}] if perplexity_req.get("prompt") else None,
-                model=perplexity_req.get("model"),
-                raw=perplexity_req if include_raw else None,
-            )
-        elif is_deepseek and flow.request.content:
-            # DeepSeek has prompt directly in JSON body
-            deepseek_req = parse_deepseek_request(flow.request.content)
-            from mitmproxy.addons.oximy.models import InteractionRequest
-            request_data = InteractionRequest(
-                messages=[{"role": "user", "content": deepseek_req.get("prompt")}] if deepseek_req.get("prompt") else None,
-                model=None,
-                raw=deepseek_req if include_raw else None,
-            )
-        elif is_gemini and flow.request.content:
-            # Use Gemini-specific parser
-            gemini_req = parse_gemini_request(flow.request.content)
-            from mitmproxy.addons.oximy.models import InteractionRequest
-            request_data = InteractionRequest(
-                messages=[{"role": "user", "content": gemini_req.get("prompt")}] if gemini_req.get("prompt") else None,
-                model=None,  # Gemini doesn't expose model in request
-                raw={"prompt": gemini_req.get("prompt"), "conversation_id": gemini_req.get("conversation_id")} if include_raw else None,
-            )
-        elif self._request_parser and flow.request.content:
-            request_data = self._request_parser.parse(
-                flow.request.content,
-                match_result.api_format,
-                include_raw=include_raw,
-            )
         response_data = None
 
-        # Try configurable parsing first (new JSONata-based approach)
+        # Use configurable parsing for websites (JSONata-based approach)
         if match_result.source_type == "website" and self._bundle and JSONATA_AVAILABLE:
             website = self._bundle.websites.get(match_result.source_id or "")
             if website:
                 feature = website.get("features", {}).get(match_result.endpoint or "", {})
                 parser_config = feature.get("parser", {})
                 request_config = parser_config.get("request")
-                response_config = parser_config.get("response")
 
                 # Parse request with configurable parser
                 if request_config and self._configurable_request_parser and flow.request.content:
@@ -496,81 +434,33 @@ class OximyAddon:
                     )
                     logger.info(f"Configurable request parsing for {match_result.source_id}: messages={request_data.messages is not None}")
 
-                # Handle streaming and other API-specific response accumulation
-                if is_gemini and gemini_buffer:
-                    # Use accumulated Gemini streaming data
-                    logger.info(f"Gemini buffer has {len(gemini_buffer.accumulated_bytes)} bytes")
-                    gemini_resp = gemini_buffer.finalize()
+                # Parse response - either from streaming buffer or direct response body
+                response_stream_config = parser_config.get("response", {}).get("stream")
+                if response_stream_config:
                     from mitmproxy.addons.oximy.models import InteractionResponse
-                    response_data = InteractionResponse(
-                        content=gemini_resp.get("content"),
-                        model="gemini",
-                        finish_reason=None,
-                        usage=None,
-                        raw=None,  # Don't include raw for Gemini (too large)
-                    )
-                    logger.info(f"Gemini response content: {gemini_resp.get('content')[:100] if gemini_resp.get('content') else 'None'}")
-                elif is_gemini and flow.response and flow.response.content:
-                    # Fallback: try parsing flow.response.content directly (non-streaming)
-                    logger.info(f"Gemini fallback: no buffer, using flow.response.content ({len(flow.response.content)} bytes)")
-                    gemini_resp = parse_gemini_response(flow.response.content)
-                    from mitmproxy.addons.oximy.models import InteractionResponse
-                    response_data = InteractionResponse(
-                        content=gemini_resp.get("content"),
-                        model="gemini",
-                        finish_reason=None,
-                        usage=None,
-                        raw=None,  # Don't include raw for Gemini (too large)
-                    )
-                elif is_gemini:
-                    # Gemini but no buffer and no content
-                    logger.warning(f"Gemini: no buffer and no response content (flow.response.content length: {len(flow.response.content or b'')})")
-                elif is_grok and grok_buffer:
-                    # Use accumulated Grok streaming data
-                    logger.info(f"Grok: Using buffer with {len(grok_buffer.accumulated_bytes)} bytes")
-                    grok_resp = grok_buffer.finalize()
-                    from mitmproxy.addons.oximy.models import InteractionResponse
-                    response_data = InteractionResponse(
-                        content=grok_resp.get("content"),
-                        model=grok_resp.get("model"),
-                        finish_reason=None,
-                        usage=None,
-                        raw=None,  # Don't include raw for Grok streaming (too large)
-                    )
-                    logger.info(f"Grok response_data content: {grok_resp.get('content')[:100] if grok_resp.get('content') else 'None'}")
-                elif is_grok and flow.response and flow.response.content:
-                    # Fallback: try parsing flow.response.content directly (non-streaming)
-                    logger.info(f"Grok: NO BUFFER, using flow.response.content ({len(flow.response.content)} bytes)")
-                    grok_resp = parse_grok_response(flow.response.content)
-                    from mitmproxy.addons.oximy.models import InteractionResponse
-                    response_data = InteractionResponse(
-                        content=grok_resp.get("content"),
-                        model=grok_resp.get("model"),
-                        finish_reason=None,
-                        usage=None,
-                        raw=None,  # Don't include raw for Grok streaming (too large)
-                    )
-                    logger.info(f"Grok fallback response_data content: {grok_resp.get('content')[:100] if grok_resp.get('content') else 'None'}")
-                elif is_grok:
-                    # Grok but no buffer and no content
-                    logger.warning(f"Grok: no buffer and no response content (flow.response.content length: {len(flow.response.content or b'')})")
-                elif sse_buffer:
-                    # Use accumulated SSE data
-                    sse_result = sse_buffer.finalize()
-                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    from mitmproxy.addons.oximy.parser import ConfigurableStreamBuffer as CSB
 
-                # Parse response from configurable buffer
-                if configurable_buffer:
-                    from mitmproxy.addons.oximy.types import InteractionResponse
-                    result = configurable_buffer.finalize()
+                    if configurable_buffer:
+                        # Streaming response - finalize the buffer
+                        result = configurable_buffer.finalize()
+                        logger.info(f"Streaming buffer finalized for {match_result.source_id}: content_len={len(result.get('content') or '')}")
+                    elif flow.response and flow.response.content:
+                        # Non-streaming response - parse the body directly
+                        logger.info(f"Parsing response body for {match_result.source_id} ({len(flow.response.content)} bytes)")
+                        buffer = CSB(response_stream_config)
+                        buffer.process_chunk(flow.response.content)
+                        result = buffer.finalize()
+                    else:
+                        result = {}
+
                     response_data = InteractionResponse(
                         content=result.get("content"),
                         model=result.get("model"),
                         finish_reason=result.get("finish_reason"),
                         usage=result.get("usage"),
-                        raw=None,  # Don't include raw for streaming (too large)
+                        raw=None,
                     )
-                    logger.info(f"Configurable response parsing for {match_result.source_id}: content_len={len(result.get('content') or '')}")
+                    logger.info(f"Response parsing for {match_result.source_id}: content_len={len(result.get('content') or '')}")
 
         # For websites without parser config, log warning
         if match_result.source_type == "website" and (request_data is None or response_data is None):
