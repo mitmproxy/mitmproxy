@@ -22,11 +22,12 @@ import argparse
 import json
 import ssl
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
-from typing import Any
-from urllib.request import urlopen, Request
 from urllib.error import URLError
+from urllib.request import Request
+from urllib.request import urlopen
 
 # models.dev API URL
 MODELS_DEV_URL = "https://models.dev/api.json"
@@ -252,6 +253,7 @@ def extract_domain(api_endpoint: str) -> str | None:
         return None
     try:
         from urllib.parse import urlparse
+
         parsed = urlparse(api_endpoint)
         return parsed.netloc
     except Exception:
@@ -314,7 +316,10 @@ def fetch_models_dev_data(local_file: Path | None = None) -> dict:
         print(f"Error fetching data: {e}", file=sys.stderr)
         print("Try downloading manually and using --input-file:", file=sys.stderr)
         print(f"  curl -sL '{MODELS_DEV_URL}' -o /tmp/models.json", file=sys.stderr)
-        print(f"  python scripts/sync-models.py --input-file /tmp/models.json", file=sys.stderr)
+        print(
+            f"  python scripts/sync-models.py --input-file /tmp/models.json",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
@@ -370,7 +375,9 @@ def determine_mode(model_data: dict) -> str:
     return "chat"
 
 
-def parse_provider(provider_id: str, provider_data: dict) -> tuple[str, dict, list[dict]]:
+def parse_provider(
+    provider_id: str, provider_data: dict
+) -> tuple[str, dict, list[dict]]:
     """Parse a provider entry from models.dev format to OISP format.
 
     Returns: (canonical_provider_id, provider_info, models_list)
@@ -521,13 +528,19 @@ def generate_yaml(providers: dict, models_by_provider: dict, output_path: Path):
                 lines.append(f"        input_cost_per_1k: {model['input_cost_per_1k']}")
 
             if "output_cost_per_1k" in model:
-                lines.append(f"        output_cost_per_1k: {model['output_cost_per_1k']}")
+                lines.append(
+                    f"        output_cost_per_1k: {model['output_cost_per_1k']}"
+                )
 
             if "cache_read_cost_per_1k" in model:
-                lines.append(f"        cache_read_cost_per_1k: {model['cache_read_cost_per_1k']}")
+                lines.append(
+                    f"        cache_read_cost_per_1k: {model['cache_read_cost_per_1k']}"
+                )
 
             if "cache_write_cost_per_1k" in model:
-                lines.append(f"        cache_write_cost_per_1k: {model['cache_write_cost_per_1k']}")
+                lines.append(
+                    f"        cache_write_cost_per_1k: {model['cache_write_cost_per_1k']}"
+                )
 
             if "capabilities" in model:
                 caps = ", ".join(model["capabilities"])
@@ -546,7 +559,9 @@ def generate_yaml(providers: dict, models_by_provider: dict, output_path: Path):
     print(f"Generated: {output_path}")
 
 
-def generate_json(providers: dict, models_by_provider: dict, all_models: list[dict], output_path: Path):
+def generate_json(
+    providers: dict, models_by_provider: dict, all_models: list[dict], output_path: Path
+):
     """Generate JSON output with parsers, domain_lookup, and api_format."""
     total_models = sum(len(models) for models in models_by_provider.values())
 
@@ -602,9 +617,11 @@ def generate_typescript_types(providers: dict, output_path: Path):
     """Generate TypeScript type definitions for the model registry."""
     # Generate provider union type from actual providers
     provider_ids = sorted(providers.keys())
-    provider_union = "\n  | ".join([f"'{p}'" for p in provider_ids[:20]])  # Top 20 for readability
+    provider_union = "\n  | ".join(
+        [f"'{p}'" for p in provider_ids[:20]]
+    )  # Top 20 for readability
 
-    content = f'''// OISP Model Registry Types
+    content = f"""// OISP Model Registry Types
 // Auto-generated from models.dev - DO NOT EDIT MANUALLY
 // Source: {MODELS_DEV_URL}
 // Generated: {datetime.now(timezone.utc).isoformat()}
@@ -876,7 +893,7 @@ export function estimateCost(
 export function getProviderLogoUrl(providerId: string): string {{
   return `{MODELS_DEV_LOGOS_URL}/${{providerId}}.svg`;
 }}
-'''
+"""
     output_path.write_text(content)
     print(f"Generated: {output_path}")
 
@@ -918,15 +935,15 @@ def main():
 
     # Generate outputs
     generate_yaml(providers, models_by_provider, args.output_dir / "models.yaml")
-    generate_json(providers, models_by_provider, all_models, args.output_dir / "models.json")
+    generate_json(
+        providers, models_by_provider, all_models, args.output_dir / "models.json"
+    )
     generate_typescript_types(providers, args.output_dir / "models.ts")
 
     # Print summary
     print("\nProvider Summary (top 20 by model count):")
     sorted_providers = sorted(
-        models_by_provider.items(),
-        key=lambda x: len(x[1]),
-        reverse=True
+        models_by_provider.items(), key=lambda x: len(x[1]), reverse=True
     )[:20]
     for provider_id, models in sorted_providers:
         print(f"  {provider_id}: {len(models)} models")

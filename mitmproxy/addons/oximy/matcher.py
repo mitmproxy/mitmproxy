@@ -226,7 +226,9 @@ class TrafficMatcher:
         if client_process.path:
             for signature, app_id in self._app_signature_index.items():
                 if signature in client_process.path:
-                    logger.debug(f"Matched app {app_id} by signature '{signature}' in path")
+                    logger.debug(
+                        f"Matched app {app_id} by signature '{signature}' in path"
+                    )
                     return app_id
 
         # Check by process name (Windows exe)

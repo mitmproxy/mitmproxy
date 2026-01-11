@@ -14,8 +14,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.request import urlopen
 from urllib.error import URLError
+from urllib.request import urlopen
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,12 @@ CACHE_FILENAME = "bundle_cache.json"
 
 # Local registry path (for development)
 # This is relative to the mitmproxy repo root
-LOCAL_BUNDLE_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "dist" / "oximy-bundle.json"
+LOCAL_BUNDLE_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "registry"
+    / "dist"
+    / "oximy-bundle.json"
+)
 
 
 @dataclass
@@ -84,7 +89,9 @@ class OISPBundle:
                     )
                 )
             except re.error as e:
-                logger.warning(f"Invalid domain pattern '{pattern_def['pattern']}': {e}")
+                logger.warning(
+                    f"Invalid domain pattern '{pattern_def['pattern']}': {e}"
+                )
 
         return cls(
             domain_lookup=data.get("domain_lookup", {}),

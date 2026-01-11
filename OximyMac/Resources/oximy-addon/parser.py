@@ -12,7 +12,8 @@ import logging
 import re
 from typing import Any
 
-from models import InteractionRequest, InteractionResponse
+from models import InteractionRequest
+from models import InteractionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +160,9 @@ class RequestParser:
 
         return result
 
-    def _parse_chatgpt_web(self, data: dict[str, Any], include_raw: bool) -> InteractionRequest:
+    def _parse_chatgpt_web(
+        self, data: dict[str, Any], include_raw: bool
+    ) -> InteractionRequest:
         """Parse ChatGPT web format request."""
         # ChatGPT web format:
         # {
@@ -179,10 +182,12 @@ class RequestParser:
                 # Extract text from parts
                 parts = content.get("parts", [])
                 text = "".join(str(p) for p in parts if isinstance(p, str))
-                messages.append({
-                    "role": role,
-                    "content": text,
-                })
+                messages.append(
+                    {
+                        "role": role,
+                        "content": text,
+                    }
+                )
 
         return InteractionRequest(
             messages=messages,
@@ -265,7 +270,11 @@ class ResponseParser:
             usage = self._normalize_usage(usage, parser_config)
 
         result = InteractionResponse(
-            content=content if isinstance(content, str) else str(content) if content else None,
+            content=content
+            if isinstance(content, str)
+            else str(content)
+            if content
+            else None,
             model=self._extract(data, parser_config.get("model")),
             finish_reason=self._extract(data, parser_config.get("finish_reason"))
             or self._extract(data, parser_config.get("stop_reason")),
@@ -325,7 +334,9 @@ class ResponseParser:
         for key, value in usage.items():
             if key not in normalized and value is not None:
                 # Check if this is already mapped
-                already_mapped = any(key in pk for _, pk in key_mappings if key in normalized)
+                already_mapped = any(
+                    key in pk for _, pk in key_mappings if key in normalized
+                )
                 if not already_mapped:
                     normalized[key] = value
 

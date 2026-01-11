@@ -29,14 +29,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 
-def run_proxy(output_dir: Path, port: int = 8088, ready_event: threading.Event | None = None):
+def run_proxy(
+    output_dir: Path, port: int = 8088, ready_event: threading.Event | None = None
+):
     """Run mitmproxy in a new event loop (for threading)."""
     import asyncio
 
     from mitmproxy import options
-    from mitmproxy.tools import dump
-
     from mitmproxy.addons.oximy import OximyAddon
+    from mitmproxy.tools import dump
 
     # Create new event loop for this thread
     loop = asyncio.new_event_loop()
@@ -69,6 +70,7 @@ def run_proxy(output_dir: Path, port: int = 8088, ready_event: threading.Event |
         def signal_ready():
             time.sleep(1)
             ready_event.set()
+
         threading.Thread(target=signal_ready, daemon=True).start()
 
     try:
@@ -86,10 +88,12 @@ def make_openai_request(api_key: str, proxy_port: int = 8088) -> dict:
     import urllib.request
 
     # Create proxy handler
-    proxy_handler = urllib.request.ProxyHandler({
-        'http': f'http://localhost:{proxy_port}',
-        'https': f'http://localhost:{proxy_port}',
-    })
+    proxy_handler = urllib.request.ProxyHandler(
+        {
+            "http": f"http://localhost:{proxy_port}",
+            "https": f"http://localhost:{proxy_port}",
+        }
+    )
 
     # Create SSL context that doesn't verify (for mitmproxy)
     ssl_context = ssl.create_default_context()
@@ -101,13 +105,18 @@ def make_openai_request(api_key: str, proxy_port: int = 8088) -> dict:
 
     # Build request
     url = "https://api.openai.com/v1/chat/completions"
-    data = json.dumps({
-        "model": "gpt-4o-mini",
-        "messages": [
-            {"role": "user", "content": "Say 'Hello from Oximy!' in exactly 5 words."}
-        ],
-        "max_tokens": 50,
-    }).encode('utf-8')
+    data = json.dumps(
+        {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Say 'Hello from Oximy!' in exactly 5 words.",
+                }
+            ],
+            "max_tokens": 50,
+        }
+    ).encode("utf-8")
 
     req = urllib.request.Request(
         url,
@@ -121,9 +130,9 @@ def make_openai_request(api_key: str, proxy_port: int = 8088) -> dict:
 
     try:
         with opener.open(req, timeout=30) as response:
-            return json.loads(response.read().decode('utf-8'))
+            return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        return {"error": e.read().decode('utf-8'), "status": e.code}
+        return {"error": e.read().decode("utf-8"), "status": e.code}
     except Exception as e:
         return {"error": str(e)}
 
@@ -132,7 +141,7 @@ def read_captured_events(output_dir: Path) -> list[dict]:
     """Read all captured events from JSONL files."""
     events = []
     for jsonl_file in output_dir.glob("*.jsonl"):
-        with open(jsonl_file, 'r') as f:
+        with open(jsonl_file, "r") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -191,12 +200,16 @@ def main():
         if "error" in response:
             print(f"    Response: ERROR - {response}")
         else:
-            content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            content = (
+                response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            )
             model = response.get("model", "unknown")
             usage = response.get("usage", {})
-            print(f"    Response: \"{content}\"")
+            print(f'    Response: "{content}"')
             print(f"    Model: {model}")
-            print(f"    Tokens: {usage.get('prompt_tokens', '?')} in, {usage.get('completion_tokens', '?')} out")
+            print(
+                f"    Tokens: {usage.get('prompt_tokens', '?')} in, {usage.get('completion_tokens', '?')} out"
+            )
         print()
 
         # Give writer time to flush
@@ -231,23 +244,25 @@ def main():
                 req = interaction.get("request", {})
                 if req.get("messages"):
                     msg = req["messages"][0] if req["messages"] else {}
-                    content_text = msg.get('content', '')
+                    content_text = msg.get("content", "")
                     if len(content_text) > 50:
-                        print(f"  Request: \"{content_text[:50]}...\"")
+                        print(f'  Request: "{content_text[:50]}..."')
                     else:
-                        print(f"  Request: \"{content_text}\"")
+                        print(f'  Request: "{content_text}"')
 
                 resp = interaction.get("response", {})
                 resp_content = resp.get("content", "")
                 if resp_content:
                     if len(resp_content) > 50:
-                        print(f"  Response: \"{resp_content[:50]}...\"")
+                        print(f'  Response: "{resp_content[:50]}..."')
                     else:
-                        print(f"  Response: \"{resp_content}\"")
+                        print(f'  Response: "{resp_content}"')
 
                 usage = resp.get("usage", {})
                 if usage:
-                    print(f"  Usage: {usage.get('input_tokens', '?')} input, {usage.get('output_tokens', '?')} output tokens")
+                    print(
+                        f"  Usage: {usage.get('input_tokens', '?')} input, {usage.get('output_tokens', '?')} output tokens"
+                    )
 
         print()
         print("-" * 60)

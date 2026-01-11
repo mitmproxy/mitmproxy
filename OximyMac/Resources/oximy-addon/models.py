@@ -4,12 +4,14 @@ Core type definitions for the Oximy addon.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Literal, TYPE_CHECKING
-import uuid
-import time
 import random
+import time
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
+from datetime import timezone
+from typing import Literal
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from mitmproxy.addons.oximy.process import ClientProcess
@@ -159,7 +161,11 @@ class OximyEvent:
     ) -> OximyEvent:
         """Create a new event with auto-generated ID and timestamp."""
         event_id = _generate_uuid7()
-        timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        timestamp = (
+            datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z")
+        )
 
         return cls(
             event_id=event_id,

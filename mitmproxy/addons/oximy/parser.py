@@ -16,17 +16,20 @@ from __future__ import annotations
 import json
 import logging
 import re
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from typing import Any
 
 try:
     import jsonata
+
     JSONATA_AVAILABLE = True
 except ImportError:
     JSONATA_AVAILABLE = False
     jsonata = None
 
-from mitmproxy.addons.oximy.models import InteractionRequest, InteractionResponse
+from mitmproxy.addons.oximy.models import InteractionRequest
+from mitmproxy.addons.oximy.models import InteractionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +244,11 @@ class ResponseParser:
             usage = self._normalize_usage(usage, parser_config)
 
         result = InteractionResponse(
-            content=content if isinstance(content, str) else str(content) if content else None,
+            content=content
+            if isinstance(content, str)
+            else str(content)
+            if content
+            else None,
             model=self._extract(data, parser_config.get("model")),
             finish_reason=self._extract(data, parser_config.get("finish_reason"))
             or self._extract(data, parser_config.get("stop_reason")),
@@ -301,7 +308,9 @@ class ResponseParser:
         for key, value in usage.items():
             if key not in normalized and value is not None:
                 # Check if this is already mapped
-                already_mapped = any(key in pk for _, pk in key_mappings if key in normalized)
+                already_mapped = any(
+                    key in pk for _, pk in key_mappings if key in normalized
+                )
                 if not already_mapped:
                     normalized[key] = value
 
@@ -318,7 +327,9 @@ class JSONataEvaluator:
 
     def __init__(self):
         if not JSONATA_AVAILABLE:
-            raise RuntimeError("jsonata-python is not installed. Run: pip install jsonata-python")
+            raise RuntimeError(
+                "jsonata-python is not installed. Run: pip install jsonata-python"
+            )
 
     def evaluate(self, expression: str, data: Any) -> Any:
         """
@@ -334,10 +345,14 @@ class JSONataEvaluator:
         if not expression:
             return None
         try:
-            logger.info(f"JSONata.evaluate: expr='{expression}', data_type={type(data).__name__}")
+            logger.info(
+                f"JSONata.evaluate: expr='{expression}', data_type={type(data).__name__}"
+            )
             expr = jsonata.Jsonata(expression)
             result = expr.evaluate(data)
-            logger.info(f"JSONata.evaluate: result_type={type(result).__name__}, result={str(result)[:200] if result else None}")
+            logger.info(
+                f"JSONata.evaluate: result_type={type(result).__name__}, result={str(result)[:200] if result else None}"
+            )
             return result
         except Exception as e:
             logger.info(f"JSONata evaluation EXCEPTION for '{expression}': {e}")
@@ -346,7 +361,9 @@ class JSONataEvaluator:
     def evaluate_bool(self, expression: str, data: Any) -> bool:
         """Evaluate expression and return as boolean."""
         result = self.evaluate(expression, data)
-        logger.info(f"JSONata.evaluate_bool: expr='{expression}', result={result}, bool={bool(result)}")
+        logger.info(
+            f"JSONata.evaluate_bool: expr='{expression}', result={result}, bool={bool(result)}"
+        )
         return bool(result)
 
 
@@ -422,7 +439,7 @@ class SSEFormatHandler(FormatHandler):
             line = line.strip()
             for prefix in self.prefixes:
                 if line.startswith(prefix):
-                    data_str = line[len(prefix):]
+                    data_str = line[len(prefix) :]
                     if data_str.strip() in self.skip_values:
                         return None
                     try:
@@ -466,7 +483,9 @@ class NDJSONFormatHandler(FormatHandler):
         # Check if this is a custom string delimiter (not }{)
         self._is_custom_delimiter = self.delimiter != "}{"
         self._buffer = ""
-        logger.debug(f"NDJSONFormatHandler initialized with delimiter='{self.delimiter}', custom={self._is_custom_delimiter}")
+        logger.debug(
+            f"NDJSONFormatHandler initialized with delimiter='{self.delimiter}', custom={self._is_custom_delimiter}"
+        )
 
     def process(self, data: bytes) -> list[dict]:
         try:
@@ -475,7 +494,9 @@ class NDJSONFormatHandler(FormatHandler):
             return []
 
         self._buffer += text
-        logger.info(f"NDJSON process: received {len(text)} chars, buffer now {len(self._buffer)} chars")
+        logger.info(
+            f"NDJSON process: received {len(text)} chars, buffer now {len(self._buffer)} chars"
+        )
         objects = self._extract_objects()
         if objects:
             logger.info(f"NDJSON extracted {len(objects)} objects")
@@ -488,7 +509,9 @@ class NDJSONFormatHandler(FormatHandler):
         # These delimiters separate complete JSON objects, no reconstruction needed
         if self._is_custom_delimiter and self.delimiter in self._buffer:
             parts = self._buffer.split(self.delimiter)
-            logger.info(f"NDJSON split by custom delimiter '{self.delimiter[:20]}...' into {len(parts)} parts")
+            logger.info(
+                f"NDJSON split by custom delimiter '{self.delimiter[:20]}...' into {len(parts)} parts"
+            )
 
             # Process all complete parts (all but last which may be incomplete)
             for i, part in enumerate(parts[:-1]):
@@ -500,13 +523,17 @@ class NDJSONFormatHandler(FormatHandler):
                     objects.append(obj)
                     logger.debug(f"NDJSON parsed part {i}: keys={list(obj.keys())[:5]}")
                 except json.JSONDecodeError as e:
-                    logger.warning(f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}")
+                    logger.warning(
+                        f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}"
+                    )
 
             # Keep last part in buffer (may be incomplete)
             self._buffer = parts[-1]
 
             if objects:
-                logger.info(f"NDJSON extracted {len(objects)} objects from custom delimiter split")
+                logger.info(
+                    f"NDJSON extracted {len(objects)} objects from custom delimiter split"
+                )
                 return objects
 
         # Handle }{ delimiter - concatenated JSON objects like Grok
@@ -529,7 +556,9 @@ class NDJSONFormatHandler(FormatHandler):
                     objects.append(obj)
                     logger.debug(f"NDJSON parsed part {i}: keys={list(obj.keys())[:5]}")
                 except json.JSONDecodeError as e:
-                    logger.warning(f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}")
+                    logger.warning(
+                        f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}"
+                    )
 
             # Keep last part in buffer (may be incomplete)
             last = parts[-1]
@@ -538,7 +567,9 @@ class NDJSONFormatHandler(FormatHandler):
             self._buffer = last
 
             if objects:
-                logger.info(f"NDJSON extracted {len(objects)} objects from delimiter split")
+                logger.info(
+                    f"NDJSON extracted {len(objects)} objects from delimiter split"
+                )
                 return objects
 
         # Fallback: Try newline-delimited (standard NDJSON with one object per line)
@@ -561,14 +592,20 @@ class NDJSONFormatHandler(FormatHandler):
 
             if objects:
                 self._buffer = lines[-1]  # Keep last line in buffer
-                logger.info(f"NDJSON extracted {len(objects)} objects from newline split")
+                logger.info(
+                    f"NDJSON extracted {len(objects)} objects from newline split"
+                )
                 return objects
 
-        logger.debug(f"NDJSON buffer now {len(self._buffer)} chars, no complete objects yet")
+        logger.debug(
+            f"NDJSON buffer now {len(self._buffer)} chars, no complete objects yet"
+        )
         return objects
 
     def finalize(self) -> list[dict]:
-        logger.info(f"NDJSON finalize: buffer={len(self._buffer)} chars, first 200={self._buffer[:200]}")
+        logger.info(
+            f"NDJSON finalize: buffer={len(self._buffer)} chars, first 200={self._buffer[:200]}"
+        )
         if not self._buffer.strip():
             return []
 
@@ -583,7 +620,9 @@ class NDJSONFormatHandler(FormatHandler):
                     results.append(obj)
                     logger.debug(f"NDJSON finalize parsed: keys={list(obj.keys())[:5]}")
                 except json.JSONDecodeError as e:
-                    logger.debug(f"NDJSON finalize failed: {e}, json_str={json_str[:100]}")
+                    logger.debug(
+                        f"NDJSON finalize failed: {e}, json_str={json_str[:100]}"
+                    )
             self._buffer = ""
             return results
 
@@ -601,7 +640,9 @@ class NDJSONFormatHandler(FormatHandler):
                 results.append(obj)
                 logger.debug(f"NDJSON finalize parsed: keys={list(obj.keys())[:5]}")
             except json.JSONDecodeError as e:
-                logger.debug(f"NDJSON finalize line failed: {e}, json_str={json_str[:100]}")
+                logger.debug(
+                    f"NDJSON finalize line failed: {e}, json_str={json_str[:100]}"
+                )
 
         self._buffer = ""
         return results
@@ -613,14 +654,18 @@ class LengthPrefixedFormatHandler(FormatHandler):
     def __init__(self, options: dict):
         header_strip = options.get("header_strip", ")]}'")
         # Handle escape sequences from JSON config (\\n -> \n)
-        self.header_strip = header_strip.encode().decode('unicode_escape')
+        self.header_strip = header_strip.encode().decode("unicode_escape")
         self._buffer = b""
         self._header_stripped = False
-        logger.info(f"LengthPrefixedFormatHandler init: header_strip={repr(self.header_strip)}")
+        logger.info(
+            f"LengthPrefixedFormatHandler init: header_strip={repr(self.header_strip)}"
+        )
 
     def process(self, data: bytes) -> list[dict]:
         self._buffer += data
-        logger.info(f"LengthPrefixed process: received {len(data)} bytes, buffer now {len(self._buffer)} bytes")
+        logger.info(
+            f"LengthPrefixed process: received {len(data)} bytes, buffer now {len(self._buffer)} bytes"
+        )
         chunks = self._extract_chunks()
         logger.info(f"LengthPrefixed extracted {len(chunks)} chunks")
         return chunks
@@ -632,11 +677,15 @@ class LengthPrefixedFormatHandler(FormatHandler):
         if not self._header_stripped:
             try:
                 text = self._buffer.decode("utf-8")
-                logger.info(f"LengthPrefixed checking header: starts_with={repr(text[:20])}, header_strip={repr(self.header_strip)}")
+                logger.info(
+                    f"LengthPrefixed checking header: starts_with={repr(text[:20])}, header_strip={repr(self.header_strip)}"
+                )
                 if text.startswith(self.header_strip):
-                    text = text[len(self.header_strip):]
+                    text = text[len(self.header_strip) :]
                     self._buffer = text.encode("utf-8")
-                    logger.info(f"LengthPrefixed header stripped, buffer now starts with: {repr(text[:50])}")
+                    logger.info(
+                        f"LengthPrefixed header stripped, buffer now starts with: {repr(text[:50])}"
+                    )
                 else:
                     logger.info(f"LengthPrefixed header NOT found at start")
                 self._header_stripped = True
@@ -682,8 +731,10 @@ class LengthPrefixedFormatHandler(FormatHandler):
                 return objects
 
             # Extract chunk
-            chunk = text[pos:pos + chunk_length]
-            logger.info(f"LengthPrefixed: length={chunk_length}, chunk_start={repr(chunk[:50])}, chunk_end={repr(chunk[-50:])}")
+            chunk = text[pos : pos + chunk_length]
+            logger.info(
+                f"LengthPrefixed: length={chunk_length}, chunk_start={repr(chunk[:50])}, chunk_end={repr(chunk[-50:])}"
+            )
             pos += chunk_length
 
             try:
@@ -691,9 +742,13 @@ class LengthPrefixedFormatHandler(FormatHandler):
                 chunk_stripped = chunk.rstrip()
                 obj = json.loads(chunk_stripped)
                 objects.append(obj)
-                logger.info(f"LengthPrefixed parsed chunk: type={type(obj).__name__}, preview={str(obj)[:200]}")
+                logger.info(
+                    f"LengthPrefixed parsed chunk: type={type(obj).__name__}, preview={str(obj)[:200]}"
+                )
             except json.JSONDecodeError as e:
-                logger.info(f"Failed to parse length-prefixed chunk: {e}, len={len(chunk)}, stripped_len={len(chunk_stripped)}")
+                logger.info(
+                    f"Failed to parse length-prefixed chunk: {e}, len={len(chunk)}, stripped_len={len(chunk_stripped)}"
+                )
 
         self._buffer = text[pos:].encode("utf-8") if pos < len(text) else b""
         return objects
@@ -723,24 +778,36 @@ class Preprocessor:
         result = data
         for step in steps:
             op = step.get("op")
-            logger.info(f"Preprocess op={op}, input type={type(result).__name__}, preview={str(result)[:200]}")
+            logger.info(
+                f"Preprocess op={op}, input type={type(result).__name__}, preview={str(result)[:200]}"
+            )
             if op == "json_parse":
                 if isinstance(result, str):
                     try:
                         result = json.loads(result)
-                        logger.info(f"json_parse success: type={type(result).__name__}, preview={str(result)[:200]}")
+                        logger.info(
+                            f"json_parse success: type={type(result).__name__}, preview={str(result)[:200]}"
+                        )
                     except json.JSONDecodeError as e:
-                        logger.info(f"json_parse failed: {e}, input={str(result)[:100]}")
+                        logger.info(
+                            f"json_parse failed: {e}, input={str(result)[:100]}"
+                        )
                         return None
                 else:
-                    logger.info(f"json_parse skipped: input is not string, is {type(result).__name__}")
+                    logger.info(
+                        f"json_parse skipped: input is not string, is {type(result).__name__}"
+                    )
             elif op == "index":
                 value = step.get("value", 0)
                 if isinstance(result, (list, tuple)) and value < len(result):
                     result = result[value]
-                    logger.info(f"index {value} success: type={type(result).__name__}, preview={str(result)[:200]}")
+                    logger.info(
+                        f"index {value} success: type={type(result).__name__}, preview={str(result)[:200]}"
+                    )
                 else:
-                    logger.info(f"index {value} failed: result is {type(result).__name__}, len={len(result) if hasattr(result, '__len__') else 'N/A'}")
+                    logger.info(
+                        f"index {value} failed: result is {type(result).__name__}, len={len(result) if hasattr(result, '__len__') else 'N/A'}"
+                    )
                     return None
             elif op == "form_decode":
                 field = step.get("field")
@@ -755,7 +822,7 @@ class Preprocessor:
             elif op == "strip_prefix":
                 prefix = step.get("prefix", "")
                 if isinstance(result, str) and result.startswith(prefix):
-                    result = result[len(prefix):]
+                    result = result[len(prefix) :]
 
         return result
 
@@ -769,22 +836,21 @@ class ContentAnalyzer:
     """
 
     # Regex patterns for content analysis
-    CODE_BLOCK_PATTERN = re.compile(r'```(\w*)\n(.*?)```', re.DOTALL)
-    MARKDOWN_LINK_PATTERN = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+    CODE_BLOCK_PATTERN = re.compile(r"```(\w*)\n(.*?)```", re.DOTALL)
+    MARKDOWN_LINK_PATTERN = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
     URL_PATTERN = re.compile(r'https?://[^\s<>\[\]()"\',]+[^\s<>\[\]()"\',.]')
     TABLE_PATTERN = re.compile(
-        r'^\|(.+)\|\s*\n\|[-:\s|]+\|\s*\n((?:\|.+\|\s*\n?)+)',
-        re.MULTILINE
+        r"^\|(.+)\|\s*\n\|[-:\s|]+\|\s*\n((?:\|.+\|\s*\n?)+)", re.MULTILINE
     )
-    HEADER_PATTERN = re.compile(r'^#{1,6}\s+.+$', re.MULTILINE)
-    BOLD_PATTERN = re.compile(r'\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_')
-    ORDERED_LIST_PATTERN = re.compile(r'(?:^|\n)(\d+\.\s+.+)', re.MULTILINE)
-    UNORDERED_LIST_PATTERN = re.compile(r'(?:^|\n)([-*•]\s+.+)', re.MULTILINE)
-    CHECKLIST_PATTERN = re.compile(r'(?:^|\n)(-\s+\[[ xX]\]\s+.+)', re.MULTILINE)
+    HEADER_PATTERN = re.compile(r"^#{1,6}\s+.+$", re.MULTILINE)
+    BOLD_PATTERN = re.compile(r"\*\*[^*]+\*\*|\*[^*]+\*|__[^_]+__|_[^_]+_")
+    ORDERED_LIST_PATTERN = re.compile(r"(?:^|\n)(\d+\.\s+.+)", re.MULTILINE)
+    UNORDERED_LIST_PATTERN = re.compile(r"(?:^|\n)([-*•]\s+.+)", re.MULTILINE)
+    CHECKLIST_PATTERN = re.compile(r"(?:^|\n)(-\s+\[[ xX]\]\s+.+)", re.MULTILINE)
     EMOJI_PATTERN = re.compile(
-        r'[\U0001F300-\U0001F9FF]|[\U00002600-\U000027BF]|[\U0001F600-\U0001F64F]'
+        r"[\U0001F300-\U0001F9FF]|[\U00002600-\U000027BF]|[\U0001F600-\U0001F64F]"
     )
-    MATH_PATTERN = re.compile(r'\$\$?.+?\$\$?', re.DOTALL)
+    MATH_PATTERN = re.compile(r"\$\$?.+?\$\$?", re.DOTALL)
 
     def analyze(self, content: str) -> dict:
         """
@@ -803,7 +869,7 @@ class ContentAnalyzer:
             "stats": {
                 "chars": len(content),
                 "words": len(content.split()),
-                "lines": content.count('\n') + 1,
+                "lines": content.count("\n") + 1,
             },
             "flags": {
                 "has_markdown": self._has_markdown(content),
@@ -840,12 +906,14 @@ class ContentAnalyzer:
         for match in self.CODE_BLOCK_PATTERN.finditer(content):
             language = match.group(1) or None
             code = match.group(2).strip()
-            blocks.append({
-                "type": "code",
-                "language": language,
-                "code": code,
-                "line_count": code.count('\n') + 1,
-            })
+            blocks.append(
+                {
+                    "type": "code",
+                    "language": language,
+                    "code": code,
+                    "line_count": code.count("\n") + 1,
+                }
+            )
         return blocks
 
     def _extract_hyperlinks(self, content: str) -> list[dict]:
@@ -877,20 +945,22 @@ class ContentAnalyzer:
             header_row = match.group(1)
             body_rows = match.group(2)
 
-            headers = [h.strip() for h in header_row.split('|') if h.strip()]
+            headers = [h.strip() for h in header_row.split("|") if h.strip()]
             rows = []
-            for row_line in body_rows.strip().split('\n'):
-                cells = [c.strip() for c in row_line.split('|') if c.strip()]
+            for row_line in body_rows.strip().split("\n"):
+                cells = [c.strip() for c in row_line.split("|") if c.strip()]
                 if cells:
                     rows.append(cells)
 
             if headers and rows:
-                tables.append({
-                    "type": "table",
-                    "headers": headers,
-                    "rows": rows,
-                    "row_count": len(rows),
-                })
+                tables.append(
+                    {
+                        "type": "table",
+                        "headers": headers,
+                        "rows": rows,
+                        "row_count": len(rows),
+                    }
+                )
         return tables
 
     def _extract_lists(self, content: str) -> list[dict]:
@@ -902,47 +972,53 @@ class ContentAnalyzer:
         if checklist_matches:
             items = [m.strip() for m in checklist_matches]
             if items:
-                lists.append({
-                    "type": "list",
-                    "list_type": "checklist",
-                    "items": items,
-                    "item_count": len(items),
-                })
+                lists.append(
+                    {
+                        "type": "list",
+                        "list_type": "checklist",
+                        "items": items,
+                        "item_count": len(items),
+                    }
+                )
 
         # Ordered
         ordered_matches = self.ORDERED_LIST_PATTERN.findall(content)
         if ordered_matches:
-            items = [re.sub(r'^\d+\.\s+', '', m.strip()) for m in ordered_matches]
+            items = [re.sub(r"^\d+\.\s+", "", m.strip()) for m in ordered_matches]
             if items:
-                lists.append({
-                    "type": "list",
-                    "list_type": "ordered",
-                    "items": items,
-                    "item_count": len(items),
-                })
+                lists.append(
+                    {
+                        "type": "list",
+                        "list_type": "ordered",
+                        "items": items,
+                        "item_count": len(items),
+                    }
+                )
 
         # Unordered
         unordered_matches = self.UNORDERED_LIST_PATTERN.findall(content)
         if unordered_matches:
-            items = [re.sub(r'^[-*•]\s+', '', m.strip()) for m in unordered_matches]
+            items = [re.sub(r"^[-*•]\s+", "", m.strip()) for m in unordered_matches]
             if items:
-                lists.append({
-                    "type": "list",
-                    "list_type": "unordered",
-                    "items": items,
-                    "item_count": len(items),
-                })
+                lists.append(
+                    {
+                        "type": "list",
+                        "list_type": "unordered",
+                        "items": items,
+                        "item_count": len(items),
+                    }
+                )
 
         return lists
 
     def _has_markdown(self, content: str) -> bool:
         """Check if content contains markdown formatting."""
         return bool(
-            self.HEADER_PATTERN.search(content) or
-            self.BOLD_PATTERN.search(content) or
-            self.CODE_BLOCK_PATTERN.search(content) or
-            self.TABLE_PATTERN.search(content) or
-            self.MARKDOWN_LINK_PATTERN.search(content)
+            self.HEADER_PATTERN.search(content)
+            or self.BOLD_PATTERN.search(content)
+            or self.CODE_BLOCK_PATTERN.search(content)
+            or self.TABLE_PATTERN.search(content)
+            or self.MARKDOWN_LINK_PATTERN.search(content)
         )
 
 
@@ -1014,21 +1090,31 @@ class ConfigurableStreamBuffer:
             return chunk
 
         # Parse into JSON objects
-        logger.info(f"process_chunk: calling format_handler.process (handler type={type(self.format_handler).__name__})")
+        logger.info(
+            f"process_chunk: calling format_handler.process (handler type={type(self.format_handler).__name__})"
+        )
         json_objects = self.format_handler.process(chunk)
-        logger.info(f"process_chunk: format_handler returned {len(json_objects)} JSON objects")
+        logger.info(
+            f"process_chunk: format_handler returned {len(json_objects)} JSON objects"
+        )
 
         # Apply rules to each object
         for i, obj in enumerate(json_objects):
-            logger.info(f"process_chunk: applying rules to object {i}/{len(json_objects)}")
+            logger.info(
+                f"process_chunk: applying rules to object {i}/{len(json_objects)}"
+            )
             self._apply_rules(obj)
 
-        logger.info(f"process_chunk: done, accumulated so far: {list(self.accumulated.keys())}")
+        logger.info(
+            f"process_chunk: done, accumulated so far: {list(self.accumulated.keys())}"
+        )
         return chunk
 
     def _apply_rules(self, obj: dict) -> None:
         """Apply extraction rules to a JSON object."""
-        logger.info(f"_apply_rules called with obj type={type(obj).__name__}, preview={str(obj)[:300]}")
+        logger.info(
+            f"_apply_rules called with obj type={type(obj).__name__}, preview={str(obj)[:300]}"
+        )
 
         if not self.evaluator:
             logger.info("_apply_rules: No evaluator available, returning")
@@ -1047,7 +1133,9 @@ class ConfigurableStreamBuffer:
                 if not matched:
                     continue
             except Exception as e:
-                logger.info(f"_apply_rules: Rule {i} condition exception: when='{when}', error={e}")
+                logger.info(
+                    f"_apply_rules: Rule {i} condition exception: when='{when}', error={e}"
+                )
                 continue
 
             logger.info(f"Rule matched: when='{when}'")
@@ -1055,13 +1143,21 @@ class ConfigurableStreamBuffer:
             # Apply preprocessing if any
             preprocess_steps = rule.get("preprocess", [])
             logger.info(f"_apply_rules: preprocess_steps={preprocess_steps}")
-            processed = self.preprocessor.process(obj, preprocess_steps) if preprocess_steps else obj
+            processed = (
+                self.preprocessor.process(obj, preprocess_steps)
+                if preprocess_steps
+                else obj
+            )
 
             if processed is None:
-                logger.info(f"_apply_rules: preprocessing returned None, skipping this rule")
+                logger.info(
+                    f"_apply_rules: preprocessing returned None, skipping this rule"
+                )
                 continue
 
-            logger.info(f"_apply_rules: after preprocessing, type={type(processed).__name__}, preview={str(processed)[:300]}")
+            logger.info(
+                f"_apply_rules: after preprocessing, type={type(processed).__name__}, preview={str(processed)[:300]}"
+            )
 
             # Extract values
             for field, expr in rule.get("extract", {}).items():
@@ -1069,14 +1165,18 @@ class ConfigurableStreamBuffer:
                 if expr == "$_perplexity_blocks":
                     value = self._extract_perplexity_content(processed)
                 else:
-                    logger.info(f"Evaluating JSONata expr='{expr}' on data type={type(processed).__name__}, preview={str(processed)[:200]}")
+                    logger.info(
+                        f"Evaluating JSONata expr='{expr}' on data type={type(processed).__name__}, preview={str(processed)[:200]}"
+                    )
                     value = self.evaluator.evaluate(expr, processed)
 
                 if value is not None and value != "":
                     logger.info(f"Extracted {field}={str(value)[:100]}...")
                     self._accumulate(field, value)
                 else:
-                    logger.info(f"Extraction returned None/empty for {field} with expr={expr}")
+                    logger.info(
+                        f"Extraction returned None/empty for {field} with expr={expr}"
+                    )
 
     def _extract_perplexity_content(self, obj: dict) -> str | None:
         """
@@ -1141,16 +1241,24 @@ class ConfigurableStreamBuffer:
         Returns:
             Dict with content, model, etc.
         """
-        logger.info(f"finalize called, accumulated so far: {list(self.accumulated.keys())}")
-        logger.info(f"finalize: accumulated values preview: { {k: str(v)[:100] for k, v in self.accumulated.items()} }")
+        logger.info(
+            f"finalize called, accumulated so far: {list(self.accumulated.keys())}"
+        )
+        logger.info(
+            f"finalize: accumulated values preview: { {k: str(v)[:100] for k, v in self.accumulated.items()} }"
+        )
 
         # Process any remaining buffered data
         remaining = self.format_handler.finalize()
-        logger.info(f"finalize: format_handler.finalize() returned {len(remaining)} remaining objects")
+        logger.info(
+            f"finalize: format_handler.finalize() returned {len(remaining)} remaining objects"
+        )
         for obj in remaining:
             self._apply_rules(obj)
 
-        logger.info(f"finalize: after processing remaining, accumulated: {list(self.accumulated.keys())}")
+        logger.info(
+            f"finalize: after processing remaining, accumulated: {list(self.accumulated.keys())}"
+        )
 
         # Apply finalize expressions
         result = {}
@@ -1172,7 +1280,9 @@ class ConfigurableStreamBuffer:
         if "model" not in result:
             result["model"] = self.accumulated.get("model")
 
-        logger.info(f"ConfigurableStreamBuffer finalized: content_len={len(result.get('content') or '')} model={result.get('model')}")
+        logger.info(
+            f"ConfigurableStreamBuffer finalized: content_len={len(result.get('content') or '')} model={result.get('model')}"
+        )
 
         return result
 
@@ -1211,7 +1321,9 @@ class ConfigurableRequestParser:
 
         if encoding == "form":
             form_field = config.get("form_field")
-            preprocess_steps = [{"op": "form_decode", "field": form_field}] + preprocess_steps
+            preprocess_steps = [
+                {"op": "form_decode", "field": form_field}
+            ] + preprocess_steps
             data = self.preprocessor.process(body, preprocess_steps)
         elif encoding == "json":
             try:

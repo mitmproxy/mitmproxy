@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -178,7 +179,9 @@ class SSEBuffer:
             return False
         content_indicators = ("/content", "/parts", "/text")
         exclude_indicators = ("/status", "/metadata", "/create_time", "/id", "/author")
-        return any(ind in path for ind in content_indicators) and not any(ind in path for ind in exclude_indicators)
+        return any(ind in path for ind in content_indicators) and not any(
+            ind in path for ind in exclude_indicators
+        )
 
     def _extract_finish_reason(self, data: dict[str, Any]) -> str | None:
         """Extract finish reason from SSE chunk."""
@@ -209,7 +212,9 @@ class SSEBuffer:
             self._process_event(self._buffer)
             self._buffer = ""
 
-        logger.debug(f"SSE finalized: content={self.accumulated_content!r} chunks={len(self.raw_chunks)}")
+        logger.debug(
+            f"SSE finalized: content={self.accumulated_content!r} chunks={len(self.raw_chunks)}"
+        )
 
         return {
             "content": self.accumulated_content,
