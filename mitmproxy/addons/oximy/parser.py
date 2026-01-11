@@ -18,7 +18,6 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from typing import Any
-from urllib.parse import parse_qs
 
 try:
     import jsonata
@@ -155,10 +154,6 @@ class RequestParser:
             logger.debug("Failed to parse request body as JSON")
             return InteractionRequest(raw=None)
 
-        # Handle ChatGPT web format specially
-        if api_format and api_format.endswith("_web"):
-            return self._parse_chatgpt_web(data, include_raw)
-
         # Get parser config
         parser_config = self._get_request_config(api_format)
 
@@ -173,40 +168,6 @@ class RequestParser:
         )
 
         return result
-
-    def _parse_chatgpt_web(self, data: dict[str, Any], include_raw: bool) -> InteractionRequest:
-        """Parse ChatGPT web format request."""
-        # ChatGPT web format:
-        # {
-        #   "action": "next",
-        #   "messages": [{"author": {"role": "user"}, "content": {"parts": ["text"]}}],
-        #   "model": "gpt-5-2",
-        #   ...
-        # }
-        messages = None
-        raw_messages = data.get("messages", [])
-        if raw_messages:
-            messages = []
-            for msg in raw_messages:
-                author = msg.get("author", {})
-                role = author.get("role", "user")
-                content = msg.get("content", {})
-                # Extract text from parts
-                parts = content.get("parts", [])
-                text = "".join(str(p) for p in parts if isinstance(p, str))
-                messages.append({
-                    "role": role,
-                    "content": text,
-                })
-
-        return InteractionRequest(
-            messages=messages,
-            model=data.get("model"),
-            temperature=None,
-            max_tokens=None,
-            tools=None,
-            raw=data if include_raw else None,
-        )
 
     def _get_request_config(self, api_format: str | None) -> dict[str, str]:
         """Get request parser config for api_format."""
@@ -347,386 +308,6 @@ class ResponseParser:
         return normalized
 
 
-def parse_gemini_request(body: bytes) -> dict:
-    """
-    Parse Gemini request body.
-
-    Gemini uses form-encoded requests with an `f.req` parameter containing
-    a JSON array structure like: [null, "[[\"prompt text\",...], ...]"]
-
-    Args:
-        body: Raw request body bytes
-
-    Returns:
-        Dict with extracted prompt and metadata
-    """
-    result = {
-        "prompt": None,
-        "conversation_id": None,
-        "response_id": None,
-        "language": None,
-    }
-
-    try:
-        decoded = body.decode("utf-8")
-        params = parse_qs(decoded)
-
-        f_req = params.get("f.req", [None])[0]
-        if not f_req:
-            return result
-
-        # The f.req value is a JSON array where [1] contains the actual data
-        outer = json.loads(f_req)
-        if not isinstance(outer, list) or len(outer) < 2:
-            return result
-
-        # The second element is a JSON string that needs to be parsed again
-        inner_json = outer[1]
-        if not isinstance(inner_json, str):
-            return result
-
-        inner = json.loads(inner_json)
-        if not isinstance(inner, list):
-            return result
-
-        # Extract prompt from [0][0]
-        if len(inner) > 0 and isinstance(inner[0], list) and len(inner[0]) > 0:
-            result["prompt"] = inner[0][0]
-
-        # Extract language from [1][0] if available
-        if len(inner) > 1 and isinstance(inner[1], list) and len(inner[1]) > 0:
-            result["language"] = inner[1][0]
-
-        # Extract conversation IDs from [2] if available
-        if len(inner) > 2 and isinstance(inner[2], list):
-            ids = inner[2]
-            if len(ids) > 0 and isinstance(ids[0], str):
-                result["conversation_id"] = ids[0]
-            if len(ids) > 1 and isinstance(ids[1], str):
-                result["response_id"] = ids[1]
-
-    except (json.JSONDecodeError, UnicodeDecodeError, IndexError, TypeError) as e:
-        logger.debug(f"Failed to parse Gemini request: {e}")
-
-    return result
-
-
-def parse_gemini_response(body: bytes) -> dict:
-    """
-    Parse Gemini streaming response body.
-
-    Gemini response format:
-    )]}'\\n
-    <length>\\n
-    <json_chunk>\\n
-    ...
-
-    Each JSON chunk is: [[\"wrb.fr\", null, \"<nested_json_string>\"]]
-    The nested JSON contains the response text at [4][0][1][0].
-
-    Args:
-        body: Raw response body bytes
-
-    Returns:
-        Dict with extracted content and metadata
-    """
-    result = {
-        "content": None,
-        "model": "gemini",
-        "conversation_id": None,
-        "response_id": None,
-    }
-
-    try:
-        decoded = body.decode("utf-8")
-        logger.info(f"parse_gemini_response: raw body length={len(decoded)}, first 200 chars: {decoded[:200]}")
-
-        # Remove the )]}' prefix if present
-        if decoded.startswith(")]}'"):
-            decoded = decoded[4:]
-        decoded = decoded.strip()
-
-        if not decoded:
-            logger.info("parse_gemini_response: decoded is empty after strip")
-            return result
-
-        # Parse length-prefixed chunks and get the last one with content
-        chunks = _parse_gemini_chunks(decoded)
-        logger.info(f"parse_gemini_response: found {len(chunks)} chunks")
-
-        for i, chunk_data in enumerate(reversed(chunks)):
-            logger.info(f"parse_gemini_response: chunk {i} length={len(chunk_data)}, first 100 chars: {chunk_data[:100]}")
-            parsed = _extract_gemini_content(chunk_data)
-            if parsed.get("content"):
-                result.update(parsed)
-                logger.info(f"parse_gemini_response: found content in chunk {i}")
-                break
-
-    except (UnicodeDecodeError, IndexError, TypeError) as e:
-        logger.debug(f"Failed to parse Gemini response: {e}")
-
-    return result
-
-
-def _parse_gemini_chunks(data: str) -> list[str]:
-    """Parse length-prefixed chunks from Gemini response."""
-    chunks = []
-    pos = 0
-
-    while pos < len(data):
-        # Skip whitespace
-        while pos < len(data) and data[pos] in " \n\r\t":
-            pos += 1
-
-        if pos >= len(data):
-            break
-
-        # Read length (digits until newline)
-        length_start = pos
-        while pos < len(data) and data[pos].isdigit():
-            pos += 1
-
-        if pos == length_start:
-            pos += 1
-            continue
-
-        try:
-            chunk_length = int(data[length_start:pos])
-        except ValueError:
-            pos += 1
-            continue
-
-        # Skip newline after length
-        if pos < len(data) and data[pos] == "\n":
-            pos += 1
-
-        # Read chunk data
-        if pos + chunk_length <= len(data):
-            chunk = data[pos:pos + chunk_length]
-            chunks.append(chunk)
-            pos += chunk_length
-        else:
-            chunks.append(data[pos:])
-            break
-
-    return chunks
-
-
-def _extract_gemini_content(chunk: str) -> dict:
-    """Extract content from a single Gemini response chunk."""
-    result = {
-        "content": None,
-        "conversation_id": None,
-        "response_id": None,
-    }
-
-    try:
-        outer = json.loads(chunk)
-        if not isinstance(outer, list) or len(outer) == 0:
-            return result
-
-        # First element is typically ["wrb.fr", null, "<json_string>"]
-        first = outer[0]
-        if not isinstance(first, list) or len(first) < 3:
-            return result
-
-        inner_json = first[2]
-        if not isinstance(inner_json, str):
-            return result
-
-        inner = json.loads(inner_json)
-        if not isinstance(inner, list):
-            return result
-
-        # Extract conversation/response IDs from [1]
-        if len(inner) > 1 and isinstance(inner[1], list):
-            ids = inner[1]
-            if len(ids) > 0:
-                result["conversation_id"] = ids[0]
-            if len(ids) > 1:
-                result["response_id"] = ids[1]
-
-        # Extract content from [4][0][1][0]
-        if len(inner) > 4 and isinstance(inner[4], list):
-            responses = inner[4]
-            if len(responses) > 0 and isinstance(responses[0], list):
-                response_data = responses[0]
-                if len(response_data) > 1 and isinstance(response_data[1], list):
-                    content_array = response_data[1]
-                    if len(content_array) > 0:
-                        result["content"] = content_array[0]
-
-    except (json.JSONDecodeError, IndexError, TypeError) as e:
-        logger.debug(f"Failed to extract Gemini content: {e}")
-
-    return result
-
-
-def parse_deepseek_request(body: bytes) -> dict:
-    """
-    Parse DeepSeek request body.
-
-    DeepSeek uses simple JSON with a `prompt` field.
-
-    Args:
-        body: Raw request body bytes
-
-    Returns:
-        Dict with extracted prompt and metadata
-    """
-    result = {
-        "prompt": None,
-        "chat_session_id": None,
-    }
-
-    try:
-        data = json.loads(body.decode("utf-8"))
-        result["prompt"] = data.get("prompt")
-        result["chat_session_id"] = data.get("chat_session_id")
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        logger.debug(f"Failed to parse DeepSeek request: {e}")
-
-    return result
-
-
-def parse_perplexity_request(body: bytes) -> dict:
-    """
-    Parse Perplexity AI request body.
-
-    Perplexity uses JSON with query_str field and params object.
-
-    Args:
-        body: Raw request body bytes
-
-    Returns:
-        Dict with extracted prompt and metadata
-    """
-    result = {
-        "prompt": None,
-        "model": None,
-        "search_focus": None,
-    }
-
-    try:
-        data = json.loads(body.decode("utf-8"))
-        result["prompt"] = data.get("query_str")
-        params = data.get("params", {})
-        result["model"] = params.get("model_preference")
-        result["search_focus"] = params.get("search_focus")
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        logger.debug(f"Failed to parse Perplexity request: {e}")
-
-    return result
-
-
-def parse_grok_request(body: bytes) -> dict:
-    """
-    Parse Grok (xAI) request body.
-
-    Grok uses JSON with message field and modelName.
-
-    Args:
-        body: Raw request body bytes
-
-    Returns:
-        Dict with extracted prompt and metadata
-    """
-    result = {
-        "prompt": None,
-        "model": None,
-        "conversation_id": None,
-    }
-
-    try:
-        data = json.loads(body.decode("utf-8"))
-        result["prompt"] = data.get("message")
-        result["model"] = data.get("modelName")
-        # responseMetadata may contain additional model info
-        response_meta = data.get("responseMetadata", {})
-        request_model = response_meta.get("requestModelDetails", {})
-        if request_model.get("modelId"):
-            result["model"] = request_model.get("modelId")
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        logger.debug(f"Failed to parse Grok request: {e}")
-
-    return result
-
-
-def parse_grok_response(body: bytes) -> dict:
-    """
-    Parse Grok (xAI) streaming response body.
-
-    Grok uses newline-delimited JSON objects where tokens are in
-    result.response.token and the final message is in
-    result.response.modelResponse.message.
-
-    Args:
-        body: Raw response body bytes
-
-    Returns:
-        Dict with extracted content and metadata
-    """
-    result = {
-        "content": None,
-        "model": None,
-        "conversation_id": None,
-        "response_id": None,
-    }
-
-    try:
-        decoded = body.decode("utf-8")
-
-        # Parse newline-delimited JSON objects
-        accumulated_tokens = []
-        final_message = None
-
-        for line in decoded.strip().split("}{"):
-            # Reconstruct JSON objects that were split
-            if not line.startswith("{"):
-                line = "{" + line
-            if not line.endswith("}"):
-                line = line + "}"
-
-            try:
-                data = json.loads(line)
-                response = data.get("result", {}).get("response", {})
-
-                # Accumulate tokens
-                token = response.get("token")
-                if token:
-                    accumulated_tokens.append(token)
-
-                # Extract model from modelResponse (final chunk)
-                model_response = response.get("modelResponse", {})
-                if model_response:
-                    final_message = model_response.get("message")
-                    result["model"] = model_response.get("model")
-                    result["response_id"] = model_response.get("responseId")
-                    # Get request metadata for model info
-                    request_meta = model_response.get("requestMetadata", {})
-                    if request_meta.get("model"):
-                        result["model"] = request_meta.get("model")
-
-                # Get conversation ID from conversation object
-                conversation = data.get("result", {}).get("conversation", {})
-                if conversation.get("conversationId"):
-                    result["conversation_id"] = conversation.get("conversationId")
-
-            except json.JSONDecodeError:
-                continue
-
-        # Prefer final message over accumulated tokens
-        if final_message:
-            result["content"] = final_message
-        elif accumulated_tokens:
-            result["content"] = "".join(accumulated_tokens)
-
-    except (UnicodeDecodeError, IndexError, TypeError) as e:
-        logger.debug(f"Failed to parse Grok response: {e}")
-
-    return result
-
-
 # ==============================================================================
 # JSONata-based Configurable Parsing
 # ==============================================================================
@@ -753,15 +334,19 @@ class JSONataEvaluator:
         if not expression:
             return None
         try:
+            logger.info(f"JSONata.evaluate: expr='{expression}', data_type={type(data).__name__}")
             expr = jsonata.Jsonata(expression)
-            return expr.evaluate(data)
+            result = expr.evaluate(data)
+            logger.info(f"JSONata.evaluate: result_type={type(result).__name__}, result={str(result)[:200] if result else None}")
+            return result
         except Exception as e:
-            logger.debug(f"JSONata evaluation failed for '{expression[:50]}...': {e}")
+            logger.info(f"JSONata evaluation EXCEPTION for '{expression}': {e}")
             return None
 
     def evaluate_bool(self, expression: str, data: Any) -> bool:
         """Evaluate expression and return as boolean."""
         result = self.evaluate(expression, data)
+        logger.info(f"JSONata.evaluate_bool: expr='{expression}', result={result}, bool={bool(result)}")
         return bool(result)
 
 
@@ -868,12 +453,20 @@ class SSEFormatHandler(FormatHandler):
 
 
 class NDJSONFormatHandler(FormatHandler):
-    """Handler for newline-delimited JSON (NDJSON) format."""
+    """Handler for newline-delimited JSON (NDJSON) format.
+
+    Supports multiple delimiter types:
+    - Standard NDJSON: newline-separated complete JSON objects
+    - Concatenated JSON: }{ delimiter between objects (Grok style)
+    - Custom delimiters: any string separator between objects (Granola style)
+    """
 
     def __init__(self, options: dict):
         self.delimiter = options.get("delimiter", "}{")
+        # Check if this is a custom string delimiter (not }{)
+        self._is_custom_delimiter = self.delimiter != "}{"
         self._buffer = ""
-        logger.debug(f"NDJSONFormatHandler initialized with delimiter='{self.delimiter}'")
+        logger.debug(f"NDJSONFormatHandler initialized with delimiter='{self.delimiter}', custom={self._is_custom_delimiter}")
 
     def process(self, data: bytes) -> list[dict]:
         try:
@@ -891,9 +484,34 @@ class NDJSONFormatHandler(FormatHandler):
     def _extract_objects(self) -> list[dict]:
         objects = []
 
-        # Use }{ delimiter (configured delimiter) - this handles concatenated JSON objects
-        # like Grok: {"result":{...}}{"result":{...}}
-        if self.delimiter in self._buffer:
+        # Handle custom string delimiters (e.g., "-----CHUNK_BOUNDARY-----" for Granola)
+        # These delimiters separate complete JSON objects, no reconstruction needed
+        if self._is_custom_delimiter and self.delimiter in self._buffer:
+            parts = self._buffer.split(self.delimiter)
+            logger.info(f"NDJSON split by custom delimiter '{self.delimiter[:20]}...' into {len(parts)} parts")
+
+            # Process all complete parts (all but last which may be incomplete)
+            for i, part in enumerate(parts[:-1]):
+                json_str = part.strip()
+                if not json_str:
+                    continue
+                try:
+                    obj = json.loads(json_str)
+                    objects.append(obj)
+                    logger.debug(f"NDJSON parsed part {i}: keys={list(obj.keys())[:5]}")
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}")
+
+            # Keep last part in buffer (may be incomplete)
+            self._buffer = parts[-1]
+
+            if objects:
+                logger.info(f"NDJSON extracted {len(objects)} objects from custom delimiter split")
+                return objects
+
+        # Handle }{ delimiter - concatenated JSON objects like Grok
+        # {"result":{...}}{"result":{...}}
+        if not self._is_custom_delimiter and self.delimiter in self._buffer:
             parts = self._buffer.split(self.delimiter)
             logger.info(f"NDJSON split by '{self.delimiter}' into {len(parts)} parts")
 
@@ -956,7 +574,20 @@ class NDJSONFormatHandler(FormatHandler):
 
         results = []
 
-        # Try to parse remaining buffer - could be multiple lines or a single object
+        # For custom delimiters, just try to parse the remaining buffer as-is
+        if self._is_custom_delimiter:
+            json_str = self._buffer.strip()
+            if json_str:
+                try:
+                    obj = json.loads(json_str)
+                    results.append(obj)
+                    logger.debug(f"NDJSON finalize parsed: keys={list(obj.keys())[:5]}")
+                except json.JSONDecodeError as e:
+                    logger.debug(f"NDJSON finalize failed: {e}, json_str={json_str[:100]}")
+            self._buffer = ""
+            return results
+
+        # For }{ delimiter, try to parse remaining buffer with reconstruction
         for line in self._buffer.strip().split("\n"):
             line = line.strip()
             if not line:
@@ -980,13 +611,19 @@ class LengthPrefixedFormatHandler(FormatHandler):
     """Handler for length-prefixed format (Gemini style)."""
 
     def __init__(self, options: dict):
-        self.header_strip = options.get("header_strip", ")]}'")
+        header_strip = options.get("header_strip", ")]}'")
+        # Handle escape sequences from JSON config (\\n -> \n)
+        self.header_strip = header_strip.encode().decode('unicode_escape')
         self._buffer = b""
         self._header_stripped = False
+        logger.info(f"LengthPrefixedFormatHandler init: header_strip={repr(self.header_strip)}")
 
     def process(self, data: bytes) -> list[dict]:
         self._buffer += data
-        return self._extract_chunks()
+        logger.info(f"LengthPrefixed process: received {len(data)} bytes, buffer now {len(self._buffer)} bytes")
+        chunks = self._extract_chunks()
+        logger.info(f"LengthPrefixed extracted {len(chunks)} chunks")
+        return chunks
 
     def _extract_chunks(self) -> list[dict]:
         objects = []
@@ -995,9 +632,13 @@ class LengthPrefixedFormatHandler(FormatHandler):
         if not self._header_stripped:
             try:
                 text = self._buffer.decode("utf-8")
+                logger.info(f"LengthPrefixed checking header: starts_with={repr(text[:20])}, header_strip={repr(self.header_strip)}")
                 if text.startswith(self.header_strip):
                     text = text[len(self.header_strip):]
                     self._buffer = text.encode("utf-8")
+                    logger.info(f"LengthPrefixed header stripped, buffer now starts with: {repr(text[:50])}")
+                else:
+                    logger.info(f"LengthPrefixed header NOT found at start")
                 self._header_stripped = True
             except UnicodeDecodeError:
                 pass
@@ -1042,13 +683,17 @@ class LengthPrefixedFormatHandler(FormatHandler):
 
             # Extract chunk
             chunk = text[pos:pos + chunk_length]
+            logger.info(f"LengthPrefixed: length={chunk_length}, chunk_start={repr(chunk[:50])}, chunk_end={repr(chunk[-50:])}")
             pos += chunk_length
 
             try:
-                obj = json.loads(chunk)
+                # Strip trailing whitespace - length sometimes includes newline
+                chunk_stripped = chunk.rstrip()
+                obj = json.loads(chunk_stripped)
                 objects.append(obj)
-            except json.JSONDecodeError:
-                logger.debug(f"Failed to parse length-prefixed chunk: {chunk[:100]}")
+                logger.info(f"LengthPrefixed parsed chunk: type={type(obj).__name__}, preview={str(obj)[:200]}")
+            except json.JSONDecodeError as e:
+                logger.info(f"Failed to parse length-prefixed chunk: {e}, len={len(chunk)}, stripped_len={len(chunk_stripped)}")
 
         self._buffer = text[pos:].encode("utf-8") if pos < len(text) else b""
         return objects
@@ -1078,18 +723,24 @@ class Preprocessor:
         result = data
         for step in steps:
             op = step.get("op")
+            logger.info(f"Preprocess op={op}, input type={type(result).__name__}, preview={str(result)[:200]}")
             if op == "json_parse":
                 if isinstance(result, str):
                     try:
                         result = json.loads(result)
-                    except json.JSONDecodeError:
-                        logger.debug(f"json_parse failed: {str(result)[:50]}")
+                        logger.info(f"json_parse success: type={type(result).__name__}, preview={str(result)[:200]}")
+                    except json.JSONDecodeError as e:
+                        logger.info(f"json_parse failed: {e}, input={str(result)[:100]}")
                         return None
+                else:
+                    logger.info(f"json_parse skipped: input is not string, is {type(result).__name__}")
             elif op == "index":
                 value = step.get("value", 0)
                 if isinstance(result, (list, tuple)) and value < len(result):
                     result = result[value]
+                    logger.info(f"index {value} success: type={type(result).__name__}, preview={str(result)[:200]}")
                 else:
+                    logger.info(f"index {value} failed: result is {type(result).__name__}, len={len(result) if hasattr(result, '__len__') else 'N/A'}")
                     return None
             elif op == "form_decode":
                 field = step.get("field")
@@ -1134,10 +785,6 @@ class ContentAnalyzer:
         r'[\U0001F300-\U0001F9FF]|[\U00002600-\U000027BF]|[\U0001F600-\U0001F64F]'
     )
     MATH_PATTERN = re.compile(r'\$\$?.+?\$\$?', re.DOTALL)
-
-    # ChatGPT entity markers
-    CHATGPT_ENTITY_PATTERN = re.compile(r'\ue200entity\ue202\[([^\]]+)\]\ue201')
-    CHATGPT_CITE_PATTERN = re.compile(r'\ue200cite\ue202([^\ue201]+)\ue201')
 
     def analyze(self, content: str) -> dict:
         """
@@ -1184,15 +831,6 @@ class ContentAnalyzer:
         lists = self._extract_lists(content)
         if lists:
             result["lists"] = lists
-
-        # Extract ChatGPT-specific elements
-        entities = self._extract_chatgpt_entities(content)
-        if entities:
-            result["entities"] = entities
-
-        citations = self._extract_chatgpt_citations(content)
-        if citations:
-            result["citations"] = citations
 
         return result
 
@@ -1297,59 +935,6 @@ class ContentAnalyzer:
 
         return lists
 
-    def _extract_chatgpt_entities(self, content: str) -> list[dict]:
-        """Extract ChatGPT entity markers."""
-        entities = []
-        for match in self.CHATGPT_ENTITY_PATTERN.finditer(content):
-            entity_data = match.group(1)
-            try:
-                parts = json.loads(f'[{entity_data}]')
-                if len(parts) >= 2:
-                    entity_id = parts[0] if isinstance(parts[0], str) else None
-                    name = parts[1] if isinstance(parts[1], str) else str(parts[1])
-
-                    entity_type = "other"
-                    if entity_id:
-                        if "business" in entity_id:
-                            entity_type = "business"
-                        elif "location" in entity_id or "place" in entity_id:
-                            entity_type = "location"
-                        elif "person" in entity_id:
-                            entity_type = "person"
-                        elif "org" in entity_id:
-                            entity_type = "organization"
-
-                    entities.append({
-                        "type": "entity",
-                        "entity_type": entity_type,
-                        "name": name,
-                        "id": entity_id,
-                    })
-            except (json.JSONDecodeError, IndexError, TypeError):
-                entities.append({
-                    "type": "entity",
-                    "entity_type": "other",
-                    "name": entity_data,
-                })
-        return entities
-
-    def _extract_chatgpt_citations(self, content: str) -> list[dict]:
-        """Extract ChatGPT citation markers."""
-        citations = []
-        seen_ids: set[str] = set()
-        for match in self.CHATGPT_CITE_PATTERN.finditer(content):
-            cite_data = match.group(1)
-            for cite_id in cite_data.split('\ue202'):
-                cite_id = cite_id.strip()
-                if cite_id and cite_id not in seen_ids:
-                    seen_ids.add(cite_id)
-                    citations.append({
-                        "type": "citation",
-                        "id": cite_id,
-                        "source": "chatgpt_search" if "search" in cite_id else None,
-                    })
-        return citations
-
     def _has_markdown(self, content: str) -> bool:
         """Check if content contains markdown formatting."""
         return bool(
@@ -1422,42 +1007,61 @@ class ConfigurableStreamBuffer:
         Returns:
             Original chunk (pass-through)
         """
+        logger.info(f"process_chunk called with {len(chunk)} bytes")
+
         if not chunk:
+            logger.info("process_chunk: empty chunk, returning")
             return chunk
 
         # Parse into JSON objects
+        logger.info(f"process_chunk: calling format_handler.process (handler type={type(self.format_handler).__name__})")
         json_objects = self.format_handler.process(chunk)
+        logger.info(f"process_chunk: format_handler returned {len(json_objects)} JSON objects")
 
         # Apply rules to each object
-        for obj in json_objects:
+        for i, obj in enumerate(json_objects):
+            logger.info(f"process_chunk: applying rules to object {i}/{len(json_objects)}")
             self._apply_rules(obj)
 
+        logger.info(f"process_chunk: done, accumulated so far: {list(self.accumulated.keys())}")
         return chunk
 
     def _apply_rules(self, obj: dict) -> None:
         """Apply extraction rules to a JSON object."""
+        logger.info(f"_apply_rules called with obj type={type(obj).__name__}, preview={str(obj)[:300]}")
+
         if not self.evaluator:
+            logger.info("_apply_rules: No evaluator available, returning")
             return
 
-        for rule in self.config.get("rules", []):
+        rules = self.config.get("rules", [])
+        logger.info(f"_apply_rules: Found {len(rules)} rules to check")
+
+        for i, rule in enumerate(rules):
             # Check condition
             when = rule.get("when", "true")
+            logger.info(f"_apply_rules: Checking rule {i}, when='{when}'")
             try:
                 matched = self.evaluator.evaluate_bool(when, obj)
+                logger.info(f"_apply_rules: Rule {i} matched={matched}")
                 if not matched:
                     continue
             except Exception as e:
-                logger.debug(f"Rule condition failed: when='{when}', error={e}")
+                logger.info(f"_apply_rules: Rule {i} condition exception: when='{when}', error={e}")
                 continue
 
-            logger.debug(f"Rule matched: when='{when}'")
+            logger.info(f"Rule matched: when='{when}'")
 
             # Apply preprocessing if any
             preprocess_steps = rule.get("preprocess", [])
+            logger.info(f"_apply_rules: preprocess_steps={preprocess_steps}")
             processed = self.preprocessor.process(obj, preprocess_steps) if preprocess_steps else obj
 
             if processed is None:
+                logger.info(f"_apply_rules: preprocessing returned None, skipping this rule")
                 continue
+
+            logger.info(f"_apply_rules: after preprocessing, type={type(processed).__name__}, preview={str(processed)[:300]}")
 
             # Extract values
             for field, expr in rule.get("extract", {}).items():
@@ -1465,11 +1069,14 @@ class ConfigurableStreamBuffer:
                 if expr == "$_perplexity_blocks":
                     value = self._extract_perplexity_content(processed)
                 else:
+                    logger.info(f"Evaluating JSONata expr='{expr}' on data type={type(processed).__name__}, preview={str(processed)[:200]}")
                     value = self.evaluator.evaluate(expr, processed)
 
                 if value is not None and value != "":
-                    logger.debug(f"Extracted {field}={str(value)[:50]}...")
+                    logger.info(f"Extracted {field}={str(value)[:100]}...")
                     self._accumulate(field, value)
+                else:
+                    logger.info(f"Extraction returned None/empty for {field} with expr={expr}")
 
     def _extract_perplexity_content(self, obj: dict) -> str | None:
         """
@@ -1534,14 +1141,21 @@ class ConfigurableStreamBuffer:
         Returns:
             Dict with content, model, etc.
         """
+        logger.info(f"finalize called, accumulated so far: {list(self.accumulated.keys())}")
+        logger.info(f"finalize: accumulated values preview: { {k: str(v)[:100] for k, v in self.accumulated.items()} }")
+
         # Process any remaining buffered data
         remaining = self.format_handler.finalize()
+        logger.info(f"finalize: format_handler.finalize() returned {len(remaining)} remaining objects")
         for obj in remaining:
             self._apply_rules(obj)
+
+        logger.info(f"finalize: after processing remaining, accumulated: {list(self.accumulated.keys())}")
 
         # Apply finalize expressions
         result = {}
         finalize_config = self.config.get("finalize", {})
+        logger.info(f"finalize: finalize_config={finalize_config}")
 
         if self.evaluator and finalize_config:
             context = {"accumulated": self.accumulated}
@@ -1624,12 +1238,11 @@ class ConfigurableRequestParser:
         messages_expr = config.get("messages")
         if messages_expr:
             messages = self._extract(messages_expr, data)
-        elif prompt:
-            messages = [{"role": "user", "content": str(prompt)}]
         else:
             messages = None
 
         return InteractionRequest(
+            prompt=str(prompt) if prompt else None,
             messages=messages,
             model=self._extract(config.get("model"), data),
             temperature=self._extract(config.get("temperature"), data),
