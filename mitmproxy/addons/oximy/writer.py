@@ -11,7 +11,8 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
-from typing import IO, TYPE_CHECKING
+from typing import IO
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from mitmproxy.addons.oximy.models import OximyEvent
@@ -62,7 +63,9 @@ class EventWriter:
             self._event_count += 1
 
             if self._event_count % 100 == 0:
-                logger.debug(f"Written {self._event_count} events to {self._current_file}")
+                logger.debug(
+                    f"Written {self._event_count} events to {self._current_file}"
+                )
 
         except (IOError, OSError) as e:
             logger.error(f"Failed to write event: {e}")

@@ -22,7 +22,8 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 
 REGISTRY_ROOT = Path(__file__).parent.parent
@@ -58,7 +59,10 @@ def load_models() -> dict:
     """Load the generated models registry (source of truth)."""
     models_path = PROVIDERS_DIR / "_generated" / "models.json"
     if not models_path.exists():
-        print(f"Error: {models_path} not found. Run sync-models.py first.", file=sys.stderr)
+        print(
+            f"Error: {models_path} not found. Run sync-models.py first.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     return load_json(models_path)
 
@@ -76,31 +80,24 @@ def build_bundle() -> dict:
         "source": "oisp-spec",
         "source_url": models_data.get("source_url", "https://models.dev/api.json"),
         "logos_url": models_data.get("logos_url", "https://models.dev/logos"),
-
         # Stats
         "stats": models_data.get("stats", {}),
-
         # Provider registry with api_format
         "providers": models_data.get("providers", {}),
-
         # Domain lookup for provider detection
         "domain_lookup": models_data.get("domain_lookup", {}),
-
         # Domain patterns for wildcard matching (Azure, Bedrock)
         "domain_patterns": models_data.get("domain_patterns", []),
-
         # Parsers for each API format
         "parsers": models_data.get("parsers", {}),
-
         # Model registry
         "models": models_data.get("models", {}),
-
         # App and website registry
         "registry": {
             "version": registry_data.get("version", "1.0.0"),
             "apps": registry_data.get("apps", {}),
             "websites": registry_data.get("websites", {}),
-            "icons_url": "https://oisp.dev/registry/icons"
+            "icons_url": "https://oisp.dev/registry/icons",
         },
     }
 
@@ -113,13 +110,9 @@ def main():
         "--output",
         type=Path,
         default=REGISTRY_ROOT / "dist" / "oximy-bundle.json",
-        help="Output path for bundle"
+        help="Output path for bundle",
     )
-    parser.add_argument(
-        "--minify",
-        action="store_true",
-        help="Minify JSON output"
-    )
+    parser.add_argument("--minify", action="store_true", help="Minify JSON output")
     args = parser.parse_args()
 
     # Build bundle
@@ -158,4 +151,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

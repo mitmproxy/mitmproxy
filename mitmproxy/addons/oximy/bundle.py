@@ -14,8 +14,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.request import urlopen
 from urllib.error import URLError
+from urllib.request import urlopen
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,15 @@ CACHE_FILENAME = "bundle_cache.json"
 
 # Local registry path (for development)
 # This is relative to the mitmproxy repo root
-LOCAL_BUNDLE_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "dist" / "oximy-bundle.json"
-LOCAL_WEBSITES_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "websites.json"
+LOCAL_BUNDLE_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "registry"
+    / "dist"
+    / "oximy-bundle.json"
+)
+LOCAL_WEBSITES_PATH = (
+    Path(__file__).parent.parent.parent.parent / "registry" / "websites.json"
+)
 LOCAL_APPS_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "apps.json"
 
 
@@ -92,7 +99,9 @@ class OISPBundle:
                     )
                 )
             except re.error as e:
-                logger.warning(f"Invalid domain pattern '{pattern_def['pattern']}': {e}")
+                logger.warning(
+                    f"Invalid domain pattern '{pattern_def['pattern']}': {e}"
+                )
 
         # Get websites from bundle and merge local overrides
         websites = data.get("registry", {}).get("websites", {})
@@ -115,9 +124,12 @@ class OISPBundle:
         )
 
     @classmethod
-    def _apply_local_overrides(cls, websites: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    def _apply_local_overrides(
+        cls, websites: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
         """Apply local feature overrides and parser configs to websites."""
         import copy
+
         result = copy.deepcopy(websites)
 
         # Apply hardcoded overrides (file_download, subscription endpoints)
@@ -130,7 +142,9 @@ class OISPBundle:
                 if "features" not in result[website_id]:
                     result[website_id]["features"] = {}
                 result[website_id]["features"].update(overrides["features"])
-                logger.debug(f"Applied local overrides to {website_id}: {list(overrides['features'].keys())}")
+                logger.debug(
+                    f"Applied local overrides to {website_id}: {list(overrides['features'].keys())}"
+                )
 
         # Load parser configs from local websites.json
         result = cls._apply_websites_json(result)
@@ -138,7 +152,9 @@ class OISPBundle:
         return result
 
     @classmethod
-    def _apply_websites_json(cls, websites: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    def _apply_websites_json(
+        cls, websites: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
         """Load and merge parser configs from local websites.json."""
         if not LOCAL_WEBSITES_PATH.exists():
             logger.debug(f"Local websites.json not found at {LOCAL_WEBSITES_PATH}")
@@ -149,7 +165,9 @@ class OISPBundle:
                 local_data = json.load(f)
 
             local_websites = local_data.get("websites", {})
-            logger.info(f"Loading parser configs from websites.json: {list(local_websites.keys())}")
+            logger.info(
+                f"Loading parser configs from websites.json: {list(local_websites.keys())}"
+            )
 
             for website_id, local_website in local_websites.items():
                 if website_id not in websites:
@@ -164,12 +182,18 @@ class OISPBundle:
 
                     for feature_name, local_feature in local_features.items():
                         if feature_name not in websites[website_id]["features"]:
-                            websites[website_id]["features"][feature_name] = local_feature
+                            websites[website_id]["features"][feature_name] = (
+                                local_feature
+                            )
                         else:
                             # Merge parser config into existing feature
                             if "parser" in local_feature:
-                                websites[website_id]["features"][feature_name]["parser"] = local_feature["parser"]
-                                logger.debug(f"Merged parser config for {website_id}/{feature_name}")
+                                websites[website_id]["features"][feature_name][
+                                    "parser"
+                                ] = local_feature["parser"]
+                                logger.debug(
+                                    f"Merged parser config for {website_id}/{feature_name}"
+                                )
 
             return websites
         except (json.JSONDecodeError, OSError) as e:
@@ -177,7 +201,9 @@ class OISPBundle:
             return websites
 
     @classmethod
-    def _apply_apps_json(cls, apps: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    def _apply_apps_json(
+        cls, apps: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
         """Load and merge parser configs from local apps.json."""
         if not LOCAL_APPS_PATH.exists():
             logger.debug(f"Local apps.json not found at {LOCAL_APPS_PATH}")
@@ -188,7 +214,9 @@ class OISPBundle:
                 local_data = json.load(f)
 
             local_apps = local_data.get("apps", {})
-            logger.info(f"Loading parser configs from apps.json: {list(local_apps.keys())}")
+            logger.info(
+                f"Loading parser configs from apps.json: {list(local_apps.keys())}"
+            )
 
             for app_id, local_app in local_apps.items():
                 if app_id not in apps:
@@ -209,16 +237,26 @@ class OISPBundle:
                     for feature_name, local_feature in local_features.items():
                         if feature_name not in apps[app_id]["features"]:
                             apps[app_id]["features"][feature_name] = local_feature
-                            logger.debug(f"Added feature {feature_name} for app {app_id}")
+                            logger.debug(
+                                f"Added feature {feature_name} for app {app_id}"
+                            )
                         else:
                             # Merge parser config into existing feature
                             if "parser" in local_feature:
-                                apps[app_id]["features"][feature_name]["parser"] = local_feature["parser"]
-                                logger.debug(f"Merged parser config for {app_id}/{feature_name}")
+                                apps[app_id]["features"][feature_name]["parser"] = (
+                                    local_feature["parser"]
+                                )
+                                logger.debug(
+                                    f"Merged parser config for {app_id}/{feature_name}"
+                                )
                             # Merge patterns if present
                             if "patterns" in local_feature:
-                                apps[app_id]["features"][feature_name]["patterns"] = local_feature["patterns"]
-                                logger.debug(f"Merged patterns for {app_id}/{feature_name}")
+                                apps[app_id]["features"][feature_name]["patterns"] = (
+                                    local_feature["patterns"]
+                                )
+                                logger.debug(
+                                    f"Merged patterns for {app_id}/{feature_name}"
+                                )
 
             return apps
         except (json.JSONDecodeError, OSError) as e:

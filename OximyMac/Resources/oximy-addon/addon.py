@@ -13,22 +13,26 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from mitmproxy import ctx, http
-
-from bundle import BundleLoader, DEFAULT_BUNDLE_URL
+from bundle import BundleLoader
+from bundle import DEFAULT_BUNDLE_URL
 from matcher import TrafficMatcher
-from parser import RequestParser, ResponseParser
+from models import EventSource
+from models import EventTiming
+from models import Interaction
+from models import MatchResult
+from models import OximyEvent
+from parser import RequestParser
+from parser import ResponseParser
 from passthrough import TLSPassthrough
-from process import ClientProcess, ProcessResolver
-from sse import SSEBuffer, is_sse_response, create_sse_stream_handler
-from models import (
-    EventSource,
-    EventTiming,
-    Interaction,
-    MatchResult,
-    OximyEvent,
-)
+from process import ClientProcess
+from process import ProcessResolver
+from sse import create_sse_stream_handler
+from sse import is_sse_response
+from sse import SSEBuffer
 from writer import EventWriter
+
+from mitmproxy import ctx
+from mitmproxy import http
 
 if TYPE_CHECKING:
     from bundle import OISPBundle
@@ -42,7 +46,12 @@ class _SuppressDisconnectFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage()
         # Suppress generic disconnect messages (but keep TLS failure messages)
-        if msg == "client disconnect" or msg.startswith("server disconnect ") or msg.startswith("client connect") or msg.startswith("server connect"):
+        if (
+            msg == "client disconnect"
+            or msg.startswith("server disconnect ")
+            or msg.startswith("client connect")
+            or msg.startswith("server connect")
+        ):
             return False
         return True
 
@@ -81,15 +90,25 @@ def _set_macos_proxy(enable: bool) -> None:
         if enable:
             # Enable HTTPS proxy
             subprocess.run(
-                ["networksetup", "-setsecurewebproxy", OXIMY_NETWORK_SERVICE,
-                 OXIMY_PROXY_HOST, OXIMY_PROXY_PORT],
+                [
+                    "networksetup",
+                    "-setsecurewebproxy",
+                    OXIMY_NETWORK_SERVICE,
+                    OXIMY_PROXY_HOST,
+                    OXIMY_PROXY_PORT,
+                ],
                 check=True,
                 capture_output=True,
             )
             # Enable HTTP proxy
             subprocess.run(
-                ["networksetup", "-setwebproxy", OXIMY_NETWORK_SERVICE,
-                 OXIMY_PROXY_HOST, OXIMY_PROXY_PORT],
+                [
+                    "networksetup",
+                    "-setwebproxy",
+                    OXIMY_NETWORK_SERVICE,
+                    OXIMY_PROXY_HOST,
+                    OXIMY_PROXY_PORT,
+                ],
                 check=True,
                 capture_output=True,
             )
@@ -97,7 +116,12 @@ def _set_macos_proxy(enable: bool) -> None:
         else:
             # Disable HTTPS proxy
             subprocess.run(
-                ["networksetup", "-setsecurewebproxystate", OXIMY_NETWORK_SERVICE, "off"],
+                [
+                    "networksetup",
+                    "-setsecurewebproxystate",
+                    OXIMY_NETWORK_SERVICE,
+                    "off",
+                ],
                 check=True,
                 capture_output=True,
             )
@@ -109,7 +133,9 @@ def _set_macos_proxy(enable: bool) -> None:
             )
             logger.info("System proxy disabled")
     except subprocess.CalledProcessError as e:
-        logger.warning(f"Failed to {'enable' if enable else 'disable'} system proxy: {e}")
+        logger.warning(
+            f"Failed to {'enable' if enable else 'disable'} system proxy: {e}"
+        )
     except FileNotFoundError:
         logger.warning("networksetup command not found - not on macOS?")
 
@@ -303,7 +329,10 @@ class OximyAddon:
         client_str = ""
         if event.client and event.client.name:
             client_str = f" [{event.client.name}]"
-            if event.client.parent_name and event.client.parent_name != event.client.name:
+            if (
+                event.client.parent_name
+                and event.client.parent_name != event.client.name
+            ):
                 client_str = f" [{event.client.parent_name} > {event.client.name}]"
 
         # Build model info
@@ -323,7 +352,9 @@ class OximyAddon:
             f"-> {flow.response.status_code if flow.response else '?'}{model_str}{timing_str}"
         )
 
-    def _build_event(self, flow: http.HTTPFlow, match_result: MatchResult) -> OximyEvent | None:
+    def _build_event(
+        self, flow: http.HTTPFlow, match_result: MatchResult
+    ) -> OximyEvent | None:
         """Build an OximyEvent from a flow."""
         if not flow.response:
             return None
@@ -436,7 +467,8 @@ class OximyAddon:
                 )
             if flow.response.timestamp_start:
                 ttfb_ms = int(
-                    (flow.response.timestamp_start - flow.request.timestamp_start) * 1000
+                    (flow.response.timestamp_start - flow.request.timestamp_start)
+                    * 1000
                 )
 
         return EventTiming(duration_ms=duration_ms, ttfb_ms=ttfb_ms)

@@ -31,14 +31,11 @@ KNOWN_PINNED_HOSTS = [
     r".*\.itunes\.com$",
     r".*\.mzstatic\.com$",
     r".*\.apple-cloudkit\.com$",
-
     # Google certificate transparency / pinned services
     r".*\.googleapis\.com$",  # Some Google APIs are pinned
     r"accounts\.google\.com$",
-
     # Banking/Financial (commonly pinned)
     # Add specific ones as discovered
-
     # Other known pinners
     r".*\.pinning\.test$",  # For testing
 ]
@@ -93,10 +90,7 @@ class TLSPassthrough:
         return False, None
 
     def record_tls_failure(
-        self,
-        host: str,
-        error: str,
-        client_process: ClientProcess | None = None
+        self, host: str, error: str, client_process: ClientProcess | None = None
     ) -> bool:
         """
         Record a TLS handshake failure and determine if it's certificate pinning.
@@ -187,9 +181,7 @@ class TLSPassthrough:
         """
         # Get the server hostname (SNI or address)
         server = data.context.server
-        host = data.client_hello.sni or (
-            server.address[0] if server.address else None
-        )
+        host = data.client_hello.sni or (server.address[0] if server.address else None)
 
         if not host:
             return
