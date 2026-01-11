@@ -15,6 +15,7 @@ MANIFEST
 .tox*/
 build/
 dist/
+!registry/dist/
 mitmproxy/contrib/kaitaistruct/**/*.ksy
 .pytest_cache
 __pycache__
