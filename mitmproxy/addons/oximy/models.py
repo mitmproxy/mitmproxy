@@ -34,19 +34,27 @@ class EventSource:
     type: Literal["api", "app", "website"]
     id: str
     endpoint: str | None = None
+    referer: str | None = None
+    origin: str | None = None
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "type": self.type,
             "id": self.id,
             "endpoint": self.endpoint,
         }
+        if self.referer:
+            result["referer"] = self.referer
+        if self.origin:
+            result["origin"] = self.origin
+        return result
 
 
 @dataclass
 class InteractionRequest:
     """Parsed request data."""
 
+    prompt: str | None = None  # Single prompt (for apps like Granola that send chat history)
     messages: list[dict] | None = None
     model: str | None = None
     temperature: float | None = None
@@ -56,6 +64,8 @@ class InteractionRequest:
 
     def to_dict(self) -> dict:
         result: dict = {}
+        if self.prompt is not None:
+            result["prompt"] = self.prompt
         if self.messages is not None:
             result["messages"] = self.messages
         if self.model is not None:
@@ -103,18 +113,23 @@ class InteractionResponse:
 class Interaction:
     """Full interaction data for full_trace events."""
 
+    type: str  # "chat", "completion", etc.
     model: str | None
     request: InteractionRequest
     response: InteractionResponse
 
     def to_dict(self) -> dict:
-        result: dict = {
+        data: dict = {
             "request": self.request.to_dict(),
             "response": self.response.to_dict(),
         }
         if self.model is not None:
-            result["model"] = self.model
-        return result
+            data["model"] = self.model
+
+        return {
+            "type": self.type,
+            "data": data,
+        }
 
 
 @dataclass

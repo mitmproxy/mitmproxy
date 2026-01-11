@@ -247,27 +247,30 @@ class OximyAddon:
         if not self._enabled or not self._matcher:
             return
 
-        # Match the flow
-        match_result = self._matcher.match(flow)
+        # Capture client process info FIRST, before matching
+        # This must happen as early as possible to avoid race conditions
+        # where the client process exits before we can query it
+        # Also needed for app matching which requires process info
+        client_process: ClientProcess | None = None
+        if self._process_resolver:
+            client_port = flow.client_conn.peername[1]
+            client_process = self._process_resolver.get_process_for_port(client_port)
+            flow.metadata[OXIMY_CLIENT_KEY] = client_process
+
+        # Match the flow (with client_process for app matching)
+        match_result = self._matcher.match(flow, client_process)
 
         # Store result in flow metadata
         flow.metadata[OXIMY_METADATA_KEY] = match_result
 
-        # Capture client process info IMMEDIATELY on request
-        # This must happen as early as possible to avoid race conditions
-        # where the client process exits before we can query it
-        if match_result.classification != "drop" and self._process_resolver:
-            client_port = flow.client_conn.peername[1]
-            client_process = self._process_resolver.get_process_for_port(client_port)
-            flow.metadata[OXIMY_CLIENT_KEY] = client_process
-            logger.debug(
-                f"Client process: {client_process.name} (PID {client_process.pid})"
-            )
-
         if match_result.classification != "drop":
+            if client_process:
+                logger.debug(
+                    f"Client process: {client_process.name} (PID {client_process.pid})"
+                )
             logger.debug(
                 f"Matched: {flow.request.pretty_host} -> "
-                f"{match_result.classification} ({match_result.source_id})"
+                f"{match_result.classification} ({match_result.source_type}/{match_result.source_id})"
             )
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
@@ -296,26 +299,39 @@ class OximyAddon:
             logger.debug(f"Non-streaming response for {match_result.source_id}: {content_type}")
             return
 
-        # Check if this is a website with configurable parser for streaming
-        if match_result.source_type == "website" and self._bundle and JSONATA_AVAILABLE:
-            website = self._bundle.websites.get(match_result.source_id or "")
-            if website:
-                feature = website.get("features", {}).get(match_result.endpoint or "", {})
-                parser_config = feature.get("parser", {})
-                response_stream_config = parser_config.get("response", {}).get("stream")
+        # Get parser config based on source type (website or app)
+        response_stream_config = None
+        if self._bundle and JSONATA_AVAILABLE:
+            if match_result.source_type == "website":
+                website = self._bundle.websites.get(match_result.source_id or "")
+                if website:
+                    feature = website.get("features", {}).get(match_result.endpoint or "", {})
+                    parser_config = feature.get("parser", {})
+                    response_stream_config = parser_config.get("response", {}).get("stream")
 
-                if response_stream_config:
-                    logger.info(f"Setting up streaming buffer for {match_result.source_id}/{match_result.endpoint} (content-type: {content_type})")
-                    buffer = ConfigurableStreamBuffer(response_stream_config)
-                    self._configurable_buffers[flow.id] = buffer
+            elif match_result.source_type == "app":
+                app = self._bundle.apps.get(match_result.source_id or "")
+                if app:
+                    feature = app.get("features", {}).get(match_result.endpoint or "", {})
+                    parser_config = feature.get("parser", {})
+                    response_stream_config = parser_config.get("response", {}).get("stream")
 
-                    def create_configurable_handler(buf: ConfigurableStreamBuffer):
-                        def handler(data: bytes) -> bytes:
-                            buf.process_chunk(data)
-                            return data
-                        return handler
+        # Set up streaming buffer if we have a config
+        if response_stream_config:
+            logger.info(f"Setting up streaming buffer for {match_result.source_type}/{match_result.source_id}/{match_result.endpoint} (content-type: {content_type})")
+            buffer = ConfigurableStreamBuffer(response_stream_config)
+            self._configurable_buffers[flow.id] = buffer
+            source_id = match_result.source_id  # Capture for closure
 
-                    flow.response.stream = create_configurable_handler(buffer)
+            def create_configurable_handler(buf: ConfigurableStreamBuffer, src_id: str):
+                def handler(data: bytes) -> bytes:
+                    # Log raw streaming data for debugging
+                    logger.info(f"[{src_id}] RAW STREAM ({len(data)} bytes): {data[:500]}")
+                    buf.process_chunk(data)
+                    return data
+                return handler
+
+            flow.response.stream = create_configurable_handler(buffer, source_id)
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Process responses and write events."""
@@ -374,11 +390,16 @@ class OximyAddon:
         # Get client process info (captured during request phase)
         client_process: ClientProcess | None = flow.metadata.get(OXIMY_CLIENT_KEY)
 
-        # Build source
+        # Build source with referer/origin headers
+        referer = flow.request.headers.get("referer") or flow.request.headers.get("referrer")
+        origin = flow.request.headers.get("origin")
+
         source = EventSource(
             type=match_result.source_type or "api",
             id=match_result.source_id or "unknown",
             endpoint=match_result.endpoint,
+            referer=referer,
+            origin=origin,
         )
 
         if match_result.classification == "identifiable":
@@ -418,35 +439,110 @@ class OximyAddon:
         response_data = None
 
         # Use configurable parsing for websites (JSONata-based approach)
+        logger.info(f"_build_event: source_type={match_result.source_type}, source_id={match_result.source_id}, endpoint={match_result.endpoint}")
+        logger.info(f"_build_event: JSONATA_AVAILABLE={JSONATA_AVAILABLE}, has_bundle={self._bundle is not None}")
+
         if match_result.source_type == "website" and self._bundle and JSONATA_AVAILABLE:
             website = self._bundle.websites.get(match_result.source_id or "")
+            logger.info(f"_build_event: website found={website is not None}")
             if website:
                 feature = website.get("features", {}).get(match_result.endpoint or "", {})
                 parser_config = feature.get("parser", {})
                 request_config = parser_config.get("request")
+                logger.info(f"_build_event: feature found={feature is not None}, parser_config keys={list(parser_config.keys())}")
 
                 # Parse request with configurable parser
+                # Don't include raw for configurable parsers - we extract what we need
+                # and raw would include redundant data (like full chat_history)
                 if request_config and self._configurable_request_parser and flow.request.content:
                     request_data = self._configurable_request_parser.parse(
                         flow.request.content,
                         request_config,
-                        include_raw=include_raw,
+                        include_raw=False,
                     )
                     logger.info(f"Configurable request parsing for {match_result.source_id}: messages={request_data.messages is not None}")
 
                 # Parse response - either from streaming buffer or direct response body
                 response_stream_config = parser_config.get("response", {}).get("stream")
+                logger.info(f"_build_event: response_stream_config={response_stream_config is not None}, format={response_stream_config.get('format') if response_stream_config else None}")
+
+                if response_stream_config:
+                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    from mitmproxy.addons.oximy.parser import ConfigurableStreamBuffer as CSB
+
+                    logger.info(f"_build_event: configurable_buffer in dict={flow.id in self._configurable_buffers}, has_response_content={flow.response and flow.response.content is not None}")
+
+                    if configurable_buffer:
+                        # Streaming response - finalize the buffer
+                        logger.info(f"_build_event: Using streaming buffer for {match_result.source_id}")
+                        result = configurable_buffer.finalize()
+                        logger.info(f"Streaming buffer finalized for {match_result.source_id}: content_len={len(result.get('content') or '')}")
+                    elif flow.response and flow.response.content:
+                        # Non-streaming response - parse the body directly
+                        logger.info(f"Parsing response body for {match_result.source_id} ({len(flow.response.content)} bytes)")
+                        logger.info(f"_build_event: response body first 200 bytes: {flow.response.content[:200]}")
+                        buffer = CSB(response_stream_config)
+                        buffer.process_chunk(flow.response.content)
+                        result = buffer.finalize()
+                        logger.info(f"_build_event: buffer.finalize() returned: {list(result.keys())}")
+                    else:
+                        logger.info(f"_build_event: No response content available")
+                        result = {}
+
+                    response_data = InteractionResponse(
+                        content=result.get("content"),
+                        model=result.get("model"),
+                        finish_reason=result.get("finish_reason"),
+                        usage=result.get("usage"),
+                        raw=None,
+                    )
+                    logger.info(f"Response parsing for {match_result.source_id}: content_len={len(result.get('content') or '')}, model={result.get('model')}")
+
+        # For websites without parser config, log warning
+        if match_result.source_type == "website" and (request_data is None or response_data is None):
+            logger.warning(
+                f"Website {match_result.source_id}/{match_result.endpoint} has no parser config. "
+                f"Add configuration to websites.json"
+            )
+            return None
+
+        # Use configurable parsing for apps (JSONata-based, same as websites)
+        if match_result.source_type == "app" and self._bundle and JSONATA_AVAILABLE:
+            app = self._bundle.apps.get(match_result.source_id or "")
+            logger.info(f"_build_event: app found={app is not None}")
+            if app:
+                feature = app.get("features", {}).get(match_result.endpoint or "", {})
+                parser_config = feature.get("parser", {})
+                request_config = parser_config.get("request")
+                logger.info(f"_build_event: app feature found={feature is not None}, parser_config keys={list(parser_config.keys())}")
+
+                # Parse request with configurable parser
+                # Don't include raw for configurable parsers - we extract what we need
+                # and raw would include redundant data (like full chat_history)
+                if request_config and self._configurable_request_parser and flow.request.content:
+                    request_data = self._configurable_request_parser.parse(
+                        flow.request.content,
+                        request_config,
+                        include_raw=False,
+                    )
+                    logger.info(f"Configurable request parsing for app {match_result.source_id}: messages={request_data.messages is not None}")
+
+                # Parse response - either from streaming buffer or direct response body
+                response_stream_config = parser_config.get("response", {}).get("stream")
+                logger.info(f"_build_event: app response_stream_config={response_stream_config is not None}")
+
                 if response_stream_config:
                     from mitmproxy.addons.oximy.models import InteractionResponse
                     from mitmproxy.addons.oximy.parser import ConfigurableStreamBuffer as CSB
 
                     if configurable_buffer:
                         # Streaming response - finalize the buffer
+                        logger.info(f"_build_event: Using streaming buffer for app {match_result.source_id}")
                         result = configurable_buffer.finalize()
-                        logger.info(f"Streaming buffer finalized for {match_result.source_id}: content_len={len(result.get('content') or '')}")
+                        logger.info(f"Streaming buffer finalized for app {match_result.source_id}: content_len={len(result.get('content') or '')}")
                     elif flow.response and flow.response.content:
                         # Non-streaming response - parse the body directly
-                        logger.info(f"Parsing response body for {match_result.source_id} ({len(flow.response.content)} bytes)")
+                        logger.info(f"Parsing response body for app {match_result.source_id} ({len(flow.response.content)} bytes)")
                         buffer = CSB(response_stream_config)
                         buffer.process_chunk(flow.response.content)
                         result = buffer.finalize()
@@ -460,13 +556,13 @@ class OximyAddon:
                         usage=result.get("usage"),
                         raw=None,
                     )
-                    logger.info(f"Response parsing for {match_result.source_id}: content_len={len(result.get('content') or '')}")
+                    logger.info(f"Response parsing for app {match_result.source_id}: content_len={len(result.get('content') or '')}, model={result.get('model')}")
 
-        # For websites without parser config, log warning
-        if match_result.source_type == "website" and (request_data is None or response_data is None):
+        # For apps without parser config, log warning
+        if match_result.source_type == "app" and (request_data is None or response_data is None):
             logger.warning(
-                f"Website {match_result.source_id}/{match_result.endpoint} has no parser config. "
-                f"Add configuration to websites.json"
+                f"App {match_result.source_id}/{match_result.endpoint} has no parser config. "
+                f"Add configuration to apps.json"
             )
             return None
 
@@ -490,7 +586,7 @@ class OximyAddon:
             return None
 
         # Check if interaction has meaningful content (not empty request/response)
-        has_request_content = request_data.messages or request_data.model or request_data.raw
+        has_request_content = request_data.prompt or request_data.messages or request_data.model or request_data.raw
         has_response_content = response_data.content or response_data.model or response_data.raw
         if not has_request_content and not has_response_content:
             # Empty interaction - drop silently
@@ -512,6 +608,7 @@ class OximyAddon:
                 logger.debug(f"Content analysis failed: {e}")
 
         interaction = Interaction(
+            type=match_result.endpoint or "chat",
             model=model,
             request=request_data,
             response=response_data,

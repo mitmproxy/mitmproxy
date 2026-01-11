@@ -27,6 +27,7 @@ CACHE_FILENAME = "bundle_cache.json"
 # This is relative to the mitmproxy repo root
 LOCAL_BUNDLE_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "dist" / "oximy-bundle.json"
 LOCAL_WEBSITES_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "websites.json"
+LOCAL_APPS_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "apps.json"
 
 
 @dataclass
@@ -40,26 +41,8 @@ class CompiledDomainPattern:
 
 # Local overrides for website features not yet in the remote bundle
 # This allows us to add new endpoint patterns without waiting for bundle updates
-LOCAL_WEBSITE_OVERRIDES: dict[str, dict[str, Any]] = {
-    "chatgpt": {
-        "features": {
-            # Capture file download URLs (for DALL-E generated images, etc.)
-            "file_download": {
-                "name": "File Download",
-                "patterns": [
-                    {"method": "GET", "url": "**/backend-api/files/**"},
-                ],
-            },
-            # Capture subscription info (plan type, account_id)
-            "subscription": {
-                "name": "Subscription Info",
-                "patterns": [
-                    {"method": "GET", "url": "**/backend-api/subscriptions**"},
-                ],
-            },
-        },
-    },
-}
+# NOTE: All website-specific configs should be in websites.json, not hardcoded here
+LOCAL_WEBSITE_OVERRIDES: dict[str, dict[str, Any]] = {}
 
 
 @dataclass
@@ -115,13 +98,17 @@ class OISPBundle:
         websites = data.get("registry", {}).get("websites", {})
         websites = cls._apply_local_overrides(websites)
 
+        # Get apps from bundle and merge local apps.json configs
+        apps = data.get("registry", {}).get("apps", {})
+        apps = cls._apply_apps_json(apps)
+
         return cls(
             domain_lookup=data.get("domain_lookup", {}),
             domain_patterns=domain_patterns,
             providers=data.get("providers", {}),
             parsers=data.get("parsers", {}),
             models=data.get("models", {}),
-            apps=data.get("registry", {}).get("apps", {}),
+            apps=apps,
             websites=websites,
             bundle_version=data.get("bundle_version", "unknown"),
             loaded_at=time.time(),
@@ -188,6 +175,55 @@ class OISPBundle:
         except (json.JSONDecodeError, OSError) as e:
             logger.warning(f"Failed to load websites.json: {e}")
             return websites
+
+    @classmethod
+    def _apply_apps_json(cls, apps: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        """Load and merge parser configs from local apps.json."""
+        if not LOCAL_APPS_PATH.exists():
+            logger.debug(f"Local apps.json not found at {LOCAL_APPS_PATH}")
+            return apps
+
+        try:
+            with open(LOCAL_APPS_PATH, encoding="utf-8") as f:
+                local_data = json.load(f)
+
+            local_apps = local_data.get("apps", {})
+            logger.info(f"Loading parser configs from apps.json: {list(local_apps.keys())}")
+
+            for app_id, local_app in local_apps.items():
+                if app_id not in apps:
+                    # Add new app entirely
+                    apps[app_id] = local_app
+                    logger.debug(f"Added app from apps.json: {app_id}")
+                else:
+                    # Merge api_domains if present
+                    if "api_domains" in local_app:
+                        apps[app_id]["api_domains"] = local_app["api_domains"]
+                        logger.debug(f"Merged api_domains for app {app_id}")
+
+                    # Merge features with parser configs
+                    local_features = local_app.get("features", {})
+                    if "features" not in apps[app_id]:
+                        apps[app_id]["features"] = {}
+
+                    for feature_name, local_feature in local_features.items():
+                        if feature_name not in apps[app_id]["features"]:
+                            apps[app_id]["features"][feature_name] = local_feature
+                            logger.debug(f"Added feature {feature_name} for app {app_id}")
+                        else:
+                            # Merge parser config into existing feature
+                            if "parser" in local_feature:
+                                apps[app_id]["features"][feature_name]["parser"] = local_feature["parser"]
+                                logger.debug(f"Merged parser config for {app_id}/{feature_name}")
+                            # Merge patterns if present
+                            if "patterns" in local_feature:
+                                apps[app_id]["features"][feature_name]["patterns"] = local_feature["patterns"]
+                                logger.debug(f"Merged patterns for {app_id}/{feature_name}")
+
+            return apps
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to load apps.json: {e}")
+            return apps
 
     def is_stale(self, max_age_hours: float) -> bool:
         """Check if the bundle is older than max_age_hours."""
