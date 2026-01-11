@@ -36,7 +36,7 @@
                 },
                 "rules": [
                   {
-                    "when": "true",
+                    "when": "$[0][0] = 'wrb.fr'",
                     "preprocess": [
                       { "op": "index", "value": 0 },
                       { "op": "index", "value": 2 },
