@@ -26,6 +26,7 @@ CACHE_FILENAME = "bundle_cache.json"
 # Local registry path (for development)
 # This is relative to the mitmproxy repo root
 LOCAL_BUNDLE_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "dist" / "oximy-bundle.json"
+LOCAL_WEBSITES_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "websites.json"
 
 
 @dataclass
@@ -128,10 +129,11 @@ class OISPBundle:
 
     @classmethod
     def _apply_local_overrides(cls, websites: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-        """Apply local feature overrides to websites."""
+        """Apply local feature overrides and parser configs to websites."""
         import copy
         result = copy.deepcopy(websites)
 
+        # Apply hardcoded overrides (file_download, subscription endpoints)
         for website_id, overrides in LOCAL_WEBSITE_OVERRIDES.items():
             if website_id not in result:
                 continue  # Only extend existing websites
@@ -143,7 +145,49 @@ class OISPBundle:
                 result[website_id]["features"].update(overrides["features"])
                 logger.debug(f"Applied local overrides to {website_id}: {list(overrides['features'].keys())}")
 
+        # Load parser configs from local websites.json
+        result = cls._apply_websites_json(result)
+
         return result
+
+    @classmethod
+    def _apply_websites_json(cls, websites: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        """Load and merge parser configs from local websites.json."""
+        if not LOCAL_WEBSITES_PATH.exists():
+            logger.debug(f"Local websites.json not found at {LOCAL_WEBSITES_PATH}")
+            return websites
+
+        try:
+            with open(LOCAL_WEBSITES_PATH, encoding="utf-8") as f:
+                local_data = json.load(f)
+
+            local_websites = local_data.get("websites", {})
+            logger.info(f"Loading parser configs from websites.json: {list(local_websites.keys())}")
+
+            for website_id, local_website in local_websites.items():
+                if website_id not in websites:
+                    # Add new website entirely
+                    websites[website_id] = local_website
+                    logger.debug(f"Added website from websites.json: {website_id}")
+                else:
+                    # Merge features with parser configs
+                    local_features = local_website.get("features", {})
+                    if "features" not in websites[website_id]:
+                        websites[website_id]["features"] = {}
+
+                    for feature_name, local_feature in local_features.items():
+                        if feature_name not in websites[website_id]["features"]:
+                            websites[website_id]["features"][feature_name] = local_feature
+                        else:
+                            # Merge parser config into existing feature
+                            if "parser" in local_feature:
+                                websites[website_id]["features"][feature_name]["parser"] = local_feature["parser"]
+                                logger.debug(f"Merged parser config for {website_id}/{feature_name}")
+
+            return websites
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to load websites.json: {e}")
+            return websites
 
     def is_stale(self, max_age_hours: float) -> bool:
         """Check if the bundle is older than max_age_hours."""

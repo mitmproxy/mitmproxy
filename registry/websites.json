@@ -15,7 +15,50 @@
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "encoding": "form",
+              "form_field": "f.req",
+              "preprocess": [
+                { "op": "json_parse" },
+                { "op": "index", "value": 1 },
+                { "op": "json_parse" }
+              ],
+              "prompt": "$[0][0]",
+              "conversation_id": "$[2][0]"
+            },
+            "response": {
+              "stream": {
+                "format": "length_prefixed",
+                "format_options": {
+                  "header_strip": ")]}'\\n"
+                },
+                "rules": [
+                  {
+                    "when": "true",
+                    "preprocess": [
+                      { "op": "index", "value": 0 },
+                      { "op": "index", "value": 2 },
+                      { "op": "json_parse" }
+                    ],
+                    "extract": {
+                      "content": "$[4][0][1][0]",
+                      "conversation_id": "$[1][0]"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "last" },
+                  "conversation_id": { "from": "conversation_id", "op": "last" }
+                },
+                "finalize": {
+                  "content": "accumulated.content",
+                  "model": "'gemini'"
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -40,7 +83,38 @@
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/api/v0/chat/completion", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "prompt": "prompt",
+              "chat_session_id": "chat_session_id"
+            },
+            "response": {
+              "stream": {
+                "format": "sse",
+                "format_options": {
+                  "prefixes": ["data: "]
+                },
+                "rules": [
+                  {
+                    "when": "o = 'BATCH'",
+                    "extract": {
+                      "content": "$join(v[p = 'fragments'].v.content)"
+                    }
+                  },
+                  {
+                    "when": "$exists(v) and $type(v) = 'string'",
+                    "extract": {
+                      "content": "v"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "concat" }
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -64,7 +138,56 @@
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/backend-api/conversation", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "model": "model",
+              "messages": "messages.({'role': author.role, 'content': $join(content.parts)})"
+            },
+            "response": {
+              "stream": {
+                "format": "sse",
+                "format_options": {
+                  "prefixes": ["data: ", "delta ", "message "],
+                  "skip_values": ["[DONE]", "delta_encoding v1", "delta_encoding v2", "v1", "v2"]
+                },
+                "rules": [
+                  {
+                    "when": "type = 'server_ste_metadata'",
+                    "extract": {
+                      "model": "metadata.model_slug"
+                    }
+                  },
+                  {
+                    "when": "$exists(v) and $not($exists(o)) and $not($exists(p)) and $type(v) = 'string'",
+                    "extract": {
+                      "content": "v"
+                    }
+                  },
+                  {
+                    "when": "o = 'append' and $exists(v) and $type(v) = 'string'",
+                    "extract": {
+                      "content": "v"
+                    }
+                  },
+                  {
+                    "when": "$exists(choices[0].delta.content)",
+                    "extract": {
+                      "content": "choices[0].delta.content"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "concat" },
+                  "model": { "from": "model", "op": "first" }
+                },
+                "finalize": {
+                  "content": "accumulated.content",
+                  "model": "accumulated.model"
+                }
+              }
+            }
+          }
         },
         "voice": {
           "name": "Voice Mode",
@@ -106,7 +229,39 @@
           "name": "Chat Search",
           "patterns": [
             { "url": "**/rest/sse/perplexity_ask", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "prompt": "query_str",
+              "model": "params.model_preference",
+              "search_focus": "params.search_focus"
+            },
+            "response": {
+              "stream": {
+                "format": "sse",
+                "format_options": {
+                  "prefixes": ["data: "]
+                },
+                "rules": [
+                  {
+                    "when": "$exists(text)",
+                    "extract": {
+                      "content": "text"
+                    }
+                  },
+                  {
+                    "when": "$exists(answer)",
+                    "extract": {
+                      "content": "answer"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "concat" }
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -132,7 +287,53 @@
           "patterns": [
             { "url": "**/rest/app-chat/conversations/new", "method": "POST" },
             { "url": "**/rest/app-chat/conversations/**/responses", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "prompt": "message",
+              "model": "modelName"
+            },
+            "response": {
+              "stream": {
+                "format": "ndjson",
+                "format_options": {
+                  "delimiter": "}{"
+                },
+                "rules": [
+                  {
+                    "when": "$exists(result.response.modelResponse)",
+                    "extract": {
+                      "final_content": "result.response.modelResponse.message",
+                      "model": "result.response.modelResponse.model",
+                      "response_id": "result.response.modelResponse.responseId"
+                    }
+                  },
+                  {
+                    "when": "$exists(result.response.token)",
+                    "extract": {
+                      "token": "result.response.token"
+                    }
+                  },
+                  {
+                    "when": "$exists(result.conversation.conversationId)",
+                    "extract": {
+                      "conversation_id": "result.conversation.conversationId"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "tokens": { "from": "token", "op": "concat" },
+                  "model": { "from": "model", "op": "first" },
+                  "final_content": { "from": "final_content", "op": "last" },
+                  "conversation_id": { "from": "conversation_id", "op": "first" }
+                },
+                "finalize": {
+                  "content": "accumulated.final_content ? accumulated.final_content : accumulated.tokens",
+                  "model": "accumulated.model"
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
