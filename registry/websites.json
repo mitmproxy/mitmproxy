@@ -244,20 +244,31 @@
                 },
                 "rules": [
                   {
-                    "when": "$exists(text)",
+                    "when": "$exists(display_model)",
                     "extract": {
-                      "content": "text"
+                      "model": "display_model"
                     }
                   },
                   {
-                    "when": "$exists(answer)",
+                    "when": "$exists(text_completed) and text_completed = true",
                     "extract": {
-                      "content": "answer"
+                      "text_completed": "true"
+                    }
+                  },
+                  {
+                    "when": "$exists(blocks[0])",
+                    "extract": {
+                      "content": "$_perplexity_blocks"
                     }
                   }
                 ],
                 "accumulate": {
-                  "content": { "from": "content", "op": "concat" }
+                  "content": { "from": "content", "op": "concat" },
+                  "model": { "from": "model", "op": "first" }
+                },
+                "finalize": {
+                  "content": "accumulated.content",
+                  "model": "accumulated.model"
                 }
               }
             }
@@ -301,17 +312,17 @@
                 },
                 "rules": [
                   {
-                    "when": "$exists(result.response.modelResponse)",
+                    "when": "$exists(result.modelResponse)",
                     "extract": {
-                      "final_content": "result.response.modelResponse.message",
-                      "model": "result.response.modelResponse.model",
-                      "response_id": "result.response.modelResponse.responseId"
+                      "final_content": "result.modelResponse.message",
+                      "model": "result.modelResponse.model",
+                      "response_id": "result.modelResponse.responseId"
                     }
                   },
                   {
-                    "when": "$exists(result.response.token)",
+                    "when": "$exists(result.token)",
                     "extract": {
-                      "token": "result.response.token"
+                      "token": "result.token"
                     }
                   },
                   {

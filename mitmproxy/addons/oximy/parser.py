@@ -810,35 +810,29 @@ class SSEFormatHandler(FormatHandler):
         return self._extract_events()
 
     def _extract_events(self) -> list[dict]:
+        """
+        Extract complete SSE events from buffer.
+
+        SSE events are separated by double newlines.
+        Handles both \n\n and \r\n\r\n delimiters.
+        """
         objects = []
 
-        # Process double newlines (standard SSE)
+        # Normalize line endings - some servers use \r\n
+        self._buffer = self._buffer.replace("\r\n", "\n")
+
+        # Standard SSE: events are separated by double newlines
+        # Process all complete events (ending with \n\n)
         while "\n\n" in self._buffer:
             event, self._buffer = self._buffer.split("\n\n", 1)
             obj = self._parse_event(event)
             if obj is not None:
                 objects.append(obj)
 
-        # Process single newlines for ChatGPT-style events
-        lines = self._buffer.split("\n")
-        self._buffer = ""
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            # Check if this looks like a complete event
-            if any(line.startswith(p) for p in self.prefixes):
-                obj = self._parse_event(line)
-                if obj is not None:
-                    objects.append(obj)
-            else:
-                # Keep incomplete lines in buffer
-                self._buffer += line + "\n"
-
         return objects
 
     def _parse_event(self, event: str) -> dict | None:
-        """Parse a single SSE event."""
+        """Parse a single SSE event, extracting JSON from data: lines."""
         for line in event.strip().split("\n"):
             line = line.strip()
             for prefix in self.prefixes:
@@ -849,15 +843,28 @@ class SSEFormatHandler(FormatHandler):
                     try:
                         return json.loads(data_str)
                     except json.JSONDecodeError:
+                        # JSON incomplete or invalid, skip this line
                         continue
         return None
 
     def finalize(self) -> list[dict]:
+        """Process any remaining buffer content."""
+        # Normalize line endings
+        self._buffer = self._buffer.replace("\r\n", "\n")
+
         if not self._buffer.strip():
             return []
-        obj = self._parse_event(self._buffer)
+
+        # Try to parse remaining buffer as events
+        results = []
+        parts = self._buffer.split("\n\n")
+        for part in parts:
+            if part.strip():
+                obj = self._parse_event(part)
+                if obj is not None:
+                    results.append(obj)
         self._buffer = ""
-        return [obj] if obj else []
+        return results
 
 
 class NDJSONFormatHandler(FormatHandler):
@@ -866,6 +873,7 @@ class NDJSONFormatHandler(FormatHandler):
     def __init__(self, options: dict):
         self.delimiter = options.get("delimiter", "}{")
         self._buffer = ""
+        logger.debug(f"NDJSONFormatHandler initialized with delimiter='{self.delimiter}'")
 
     def process(self, data: bytes) -> list[dict]:
         try:
@@ -874,51 +882,98 @@ class NDJSONFormatHandler(FormatHandler):
             return []
 
         self._buffer += text
-        return self._extract_objects()
+        logger.info(f"NDJSON process: received {len(text)} chars, buffer now {len(self._buffer)} chars")
+        objects = self._extract_objects()
+        if objects:
+            logger.info(f"NDJSON extracted {len(objects)} objects")
+        return objects
 
     def _extract_objects(self) -> list[dict]:
         objects = []
 
-        # Split by delimiter (e.g., "}{")
-        parts = self._buffer.split(self.delimiter)
-        if len(parts) == 1:
-            # No delimiter found, keep in buffer
-            return []
+        # Use }{ delimiter (configured delimiter) - this handles concatenated JSON objects
+        # like Grok: {"result":{...}}{"result":{...}}
+        if self.delimiter in self._buffer:
+            parts = self._buffer.split(self.delimiter)
+            logger.info(f"NDJSON split by '{self.delimiter}' into {len(parts)} parts")
 
-        # Process all complete parts
-        for i, part in enumerate(parts[:-1]):
-            # Reconstruct JSON object boundaries
-            json_str = part
-            if i > 0 and not json_str.startswith("{"):
-                json_str = "{" + json_str
-            if not json_str.endswith("}"):
-                json_str = json_str + "}"
+            # Process all complete parts
+            for i, part in enumerate(parts[:-1]):
+                # Reconstruct JSON object boundaries
+                json_str = part
+                if i > 0 and not json_str.startswith("{"):
+                    json_str = "{" + json_str
+                if not json_str.endswith("}"):
+                    json_str = json_str + "}"
 
-            try:
-                obj = json.loads(json_str)
-                objects.append(obj)
-            except json.JSONDecodeError:
-                logger.debug(f"Failed to parse NDJSON part: {json_str[:100]}")
+                try:
+                    obj = json.loads(json_str)
+                    objects.append(obj)
+                    logger.debug(f"NDJSON parsed part {i}: keys={list(obj.keys())[:5]}")
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}")
 
-        # Keep last part in buffer (may be incomplete)
-        last = parts[-1]
-        if not last.startswith("{"):
-            last = "{" + last
-        self._buffer = last
+            # Keep last part in buffer (may be incomplete)
+            last = parts[-1]
+            if not last.startswith("{"):
+                last = "{" + last
+            self._buffer = last
 
+            if objects:
+                logger.info(f"NDJSON extracted {len(objects)} objects from delimiter split")
+                return objects
+
+        # Fallback: Try newline-delimited (standard NDJSON with one object per line)
+        # Only if buffer contains newlines AND starts with a complete JSON object on first line
+        if "\n" in self._buffer and self._buffer.strip().startswith("{"):
+            lines = self._buffer.split("\n")
+            complete_lines = lines[:-1]  # All but last (may be incomplete)
+
+            for line in complete_lines:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    objects.append(obj)
+                    logger.debug(f"NDJSON parsed line: keys={list(obj.keys())[:5]}")
+                except json.JSONDecodeError:
+                    # Not valid JSON line, skip
+                    pass
+
+            if objects:
+                self._buffer = lines[-1]  # Keep last line in buffer
+                logger.info(f"NDJSON extracted {len(objects)} objects from newline split")
+                return objects
+
+        logger.debug(f"NDJSON buffer now {len(self._buffer)} chars, no complete objects yet")
         return objects
 
     def finalize(self) -> list[dict]:
+        logger.info(f"NDJSON finalize: buffer={len(self._buffer)} chars, first 200={self._buffer[:200]}")
         if not self._buffer.strip():
             return []
-        json_str = self._buffer
-        if not json_str.endswith("}"):
-            json_str = json_str + "}"
+
+        results = []
+
+        # Try to parse remaining buffer - could be multiple lines or a single object
+        for line in self._buffer.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            # Add closing brace if needed
+            json_str = line
+            if not json_str.endswith("}"):
+                json_str = json_str + "}"
+            try:
+                obj = json.loads(json_str)
+                results.append(obj)
+                logger.debug(f"NDJSON finalize parsed: keys={list(obj.keys())[:5]}")
+            except json.JSONDecodeError as e:
+                logger.debug(f"NDJSON finalize line failed: {e}, json_str={json_str[:100]}")
+
         self._buffer = ""
-        try:
-            return [json.loads(json_str)]
-        except json.JSONDecodeError:
-            return []
+        return results
 
 
 class LengthPrefixedFormatHandler(FormatHandler):
@@ -1384,10 +1439,6 @@ class ConfigurableStreamBuffer:
         if not self.evaluator:
             return
 
-        # Debug: log the object being processed
-        obj_preview = str(obj)[:200] if obj else "None"
-        logger.debug(f"Processing SSE object: {obj_preview}")
-
         for rule in self.config.get("rules", []):
             # Check condition
             when = rule.get("when", "true")
@@ -1395,10 +1446,11 @@ class ConfigurableStreamBuffer:
                 matched = self.evaluator.evaluate_bool(when, obj)
                 if not matched:
                     continue
-                logger.debug(f"Rule matched: when='{when}'")
             except Exception as e:
                 logger.debug(f"Rule condition failed: when='{when}', error={e}")
                 continue
+
+            logger.debug(f"Rule matched: when='{when}'")
 
             # Apply preprocessing if any
             preprocess_steps = rule.get("preprocess", [])
@@ -1409,10 +1461,51 @@ class ConfigurableStreamBuffer:
 
             # Extract values
             for field, expr in rule.get("extract", {}).items():
-                value = self.evaluator.evaluate(expr, processed)
-                if value is not None:
-                    logger.debug(f"Extracted {field}={repr(value)[:100]}")
+                # Check for special extraction markers (Python fallbacks)
+                if expr == "$_perplexity_blocks":
+                    value = self._extract_perplexity_content(processed)
+                else:
+                    value = self.evaluator.evaluate(expr, processed)
+
+                if value is not None and value != "":
+                    logger.debug(f"Extracted {field}={str(value)[:50]}...")
                     self._accumulate(field, value)
+
+    def _extract_perplexity_content(self, obj: dict) -> str | None:
+        """
+        Extract content from Perplexity's complex nested structure.
+
+        Perplexity sends blocks with intended_usage containing 'markdown'
+        containing diff_block.patches[].value which can be:
+        - A dict with 'chunks' array
+        - A string directly (the content)
+        """
+        blocks = obj.get("blocks", [])
+        if not blocks:
+            return None
+
+        all_chunks = []
+        for block in blocks:
+            intended_usage = block.get("intended_usage", "")
+            # Match any markdown block (ask_text_0_markdown, etc.)
+            if "markdown" in intended_usage.lower():
+                diff_block = block.get("diff_block", {})
+                patches = diff_block.get("patches", [])
+                for patch in patches:
+                    value = patch.get("value")
+                    if value is None:
+                        continue
+                    # value can be a string or a dict with chunks
+                    if isinstance(value, str):
+                        all_chunks.append(value)
+                    elif isinstance(value, dict):
+                        chunks = value.get("chunks", [])
+                        if chunks:
+                            all_chunks.extend(str(c) for c in chunks)
+
+        if all_chunks:
+            return "".join(all_chunks)
+        return None
 
     def _accumulate(self, field: str, value: Any) -> None:
         """Accumulate a value based on configuration."""
