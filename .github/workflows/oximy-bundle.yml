@@ -13,8 +13,11 @@ on:
       sync_models:
         description: 'Sync models from models.dev'
         required: false
-        default: 'false'
+        default: false
         type: boolean
+
+permissions:
+  contents: write
 
 jobs:
   build-bundle:
@@ -22,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
