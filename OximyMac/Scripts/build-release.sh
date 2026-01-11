@@ -66,6 +66,16 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 Oximy. All rights reserved.</string>
+    <key>SUFeedURL</key>
+    <string>https://github.com/OximyHQ/mitmproxy/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>${SPARKLE_PUBLIC_KEY:-3oJZV2w0DvQ80LCetz3lgL+DwfsFFYfqxsFHPlj0KQE=}</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUAllowsAutomaticUpdates</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
 </dict>
 </plist>
 EOF
@@ -174,11 +184,82 @@ else
         "$DMG_PATH"
 fi
 
+# Step 8: Sign for Sparkle updates and generate appcast
+echo "[8/8] Sparkle update signing..."
+if [ -n "$SPARKLE_PRIVATE_KEY" ] && [ -f "$DMG_PATH" ]; then
+    # Try to find Sparkle's sign_update tool (check artifacts first, then checkouts)
+    SPARKLE_SIGN="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/bin/sign_update"
+    if [ ! -f "$SPARKLE_SIGN" ]; then
+        SPARKLE_SIGN="$PROJECT_DIR/.build/checkouts/Sparkle/sign_update"
+    fi
+
+    if [ -f "$SPARKLE_SIGN" ]; then
+        echo "    Signing DMG with Sparkle EdDSA key..."
+
+        # Generate EdDSA signature
+        SIGNATURE=$("$SPARKLE_SIGN" "$DMG_PATH" -s "$SPARKLE_PRIVATE_KEY" 2>/dev/null | grep "sparkle:edSignature" | cut -d'"' -f2 || echo "")
+
+        if [ -n "$SIGNATURE" ]; then
+            echo "    EdDSA Signature: ${SIGNATURE:0:20}..."
+
+            # Get file size and generate date
+            DMG_SIZE=$(stat -f%z "$DMG_PATH")
+            PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+
+            # Generate appcast.xml
+            cat > "$BUILD_DIR/appcast.xml" << APPCAST_EOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Oximy Updates</title>
+    <link>https://github.com/OximyHQ/mitmproxy/releases</link>
+    <description>Updates for Oximy macOS</description>
+    <language>en</language>
+    <item>
+      <title>Version $VERSION</title>
+      <pubDate>$PUB_DATE</pubDate>
+      <sparkle:version>$VERSION</sparkle:version>
+      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$DMG_NAME"
+        length="$DMG_SIZE"
+        type="application/octet-stream"
+        sparkle:edSignature="$SIGNATURE"
+      />
+      <sparkle:releaseNotesLink>
+        https://github.com/OximyHQ/mitmproxy/releases/tag/oximy-v$VERSION
+      </sparkle:releaseNotesLink>
+    </item>
+  </channel>
+</rss>
+APPCAST_EOF
+            echo "    Generated appcast.xml"
+        else
+            echo "    WARNING: Failed to generate EdDSA signature"
+        fi
+    else
+        echo "    WARNING: Sparkle sign_update tool not found at $SPARKLE_SIGN"
+        echo "    Run 'swift build' first to fetch Sparkle package"
+    fi
+else
+    if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+        echo "    STUB: Skipping Sparkle signing (no SPARKLE_PRIVATE_KEY set)"
+        echo "    To sign for updates:"
+        echo "    1. Generate keys: .build/checkouts/Sparkle/bin/generate_keys"
+        echo "    2. Set SPARKLE_PRIVATE_KEY environment variable"
+        echo "    3. Set SPARKLE_PUBLIC_KEY for Info.plist"
+    fi
+fi
+
 echo ""
 echo "=== Build Complete ==="
 echo ""
 echo "App Bundle: $APP_BUNDLE"
 echo "DMG:        $DMG_PATH"
+if [ -f "$BUILD_DIR/appcast.xml" ]; then
+    echo "Appcast:    $BUILD_DIR/appcast.xml"
+fi
 echo ""
 
 if [ -z "$DEVELOPER_ID" ]; then
@@ -186,6 +267,14 @@ if [ -z "$DEVELOPER_ID" ]; then
     echo "  1. Set DEVELOPER_ID environment variable"
     echo "  2. Run this script again"
     echo "  3. Notarize with: xcrun notarytool submit $DMG_PATH"
+fi
+
+if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+    echo ""
+    echo "NOTE: Update signing not configured. For auto-updates:"
+    echo "  1. Generate keys: swift build && .build/checkouts/Sparkle/bin/generate_keys"
+    echo "  2. Set SPARKLE_PRIVATE_KEY (keep secret!)"
+    echo "  3. Set SPARKLE_PUBLIC_KEY (add to Info.plist)"
 fi
 
 echo ""

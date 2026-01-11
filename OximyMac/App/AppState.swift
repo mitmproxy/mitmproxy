@@ -162,6 +162,14 @@ final class AppState: ObservableObject {
         phase = .enrollment
     }
 
+    /// Skip setup and go to ready state without enabling proxy
+    func skipSetup() {
+        UserDefaults.standard.set(true, forKey: Constants.Defaults.setupComplete)
+        phase = .ready
+        connectionStatus = .disconnected
+        startServices()
+    }
+
     /// Handle auth failure after retries exhausted
     func handleAuthFailure() {
         logout()

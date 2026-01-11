@@ -5,12 +5,62 @@ struct SettingsTab: View {
     @StateObject private var certService = CertificateService.shared
     @StateObject private var proxyService = ProxyService.shared
     @StateObject private var mitmService = MITMService.shared
+    @StateObject private var updateService = UpdateService.shared
 
     @State private var isProcessingCert = false
+    @State private var isCheckingForUpdates = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
+                // Updates Section
+                SettingsSection(title: "Updates", icon: "arrow.down.circle.fill") {
+                    VStack(spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("App Updates")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+
+                                if updateService.updateAvailable, let version = updateService.latestVersion {
+                                    Text("Version \(version) available")
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                } else {
+                                    Text("Version \(updateService.currentVersion)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            Button {
+                                updateService.checkForUpdates()
+                            } label: {
+                                if isCheckingForUpdates {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                } else {
+                                    Text("Check for Updates")
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .disabled(!updateService.canCheckForUpdates || isCheckingForUpdates)
+                        }
+
+                        Divider()
+
+                        Toggle("Automatic Updates", isOn: Binding(
+                            get: { updateService.automaticallyChecksForUpdates },
+                            set: { updateService.automaticallyChecksForUpdates = $0 }
+                        ))
+                        .toggleStyle(.switch)
+                        .font(.caption)
+                    }
+                }
+
                 // Certificate Section
                 SettingsSection(title: "Certificate", icon: "lock.shield.fill") {
                     VStack(spacing: 12) {

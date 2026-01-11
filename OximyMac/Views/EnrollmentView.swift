@@ -92,22 +92,25 @@ struct EnrollmentView: View {
             .padding(.top, 20)
             .padding(.horizontal, 24)
 
-            // Error message
-            if let error = errorMessage {
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11))
-                    Text(error)
-                        .font(.system(size: 12))
+            // Error message - fixed height container to prevent layout shifts
+            VStack {
+                if let error = errorMessage {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11))
+                        Text(error)
+                            .font(.system(size: 12))
+                    }
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(8)
                 }
-                .foregroundColor(.red)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Color.red.opacity(0.1))
-                .cornerRadius(8)
-                .padding(.top, 12)
-                .padding(.horizontal, 24)
             }
+            .frame(height: 44) // Fixed height to prevent layout shifts
+            .padding(.top, 8)
+            .padding(.horizontal, 24)
 
             Spacer()
 

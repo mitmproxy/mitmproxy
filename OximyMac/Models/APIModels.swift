@@ -65,7 +65,7 @@ struct DeviceConfig: Codable {
             heartbeatIntervalSeconds: defaults.integer(forKey: Constants.Defaults.heartbeatInterval).nonZero ?? 60,
             eventBatchSize: defaults.integer(forKey: Constants.Defaults.eventBatchSize).nonZero ?? 100,
             eventFlushIntervalSeconds: defaults.integer(forKey: Constants.Defaults.eventFlushInterval).nonZero ?? 5,
-            apiEndpoint: defaults.string(forKey: Constants.Defaults.apiEndpoint) ?? Constants.defaultAPIEndpoint
+            apiEndpoint: Constants.defaultAPIEndpoint  // Always use Constants, ignore backend value
         )
     }
 }

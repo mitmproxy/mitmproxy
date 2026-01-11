@@ -121,30 +121,46 @@ struct SetupView: View {
             }
             .padding(.horizontal, 24)
 
-            // Error
-            if let error = errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .padding(.top, 12)
-                    .padding(.horizontal)
-                    .lineLimit(2)
+            // Error - fixed height container to prevent layout shifts
+            VStack {
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .frame(height: 32)
+            .padding(.top, 8)
+            .padding(.horizontal)
 
             Spacer()
 
             // Start Button
-            Button(action: startMonitoring) {
-                HStack {
-                    if allComplete {
-                        Image(systemName: "play.fill")
+            VStack(spacing: 12) {
+                Button(action: startMonitoring) {
+                    HStack {
+                        if allComplete {
+                            Image(systemName: "play.fill")
+                        }
+                        Text(allComplete ? "Start Monitoring" : "Complete Setup Above")
                     }
-                    Text(allComplete ? "Start Monitoring" : "Complete Setup Above")
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.borderedProminent)
+                .disabled(!allComplete)
+
+                // Skip for now option
+                if !allComplete {
+                    Button(action: { appState.skipSetup() }) {
+                        Text("Set Up Later")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(!allComplete)
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }

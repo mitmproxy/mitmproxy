@@ -58,7 +58,8 @@ enum Constants {
     }
 
     // MARK: - API
-    static let defaultAPIEndpoint = "https://api.oximy.com/api/v1"
+    // static let defaultAPIEndpoint = "https://api.oximy.com/api/v1"
+    static let defaultAPIEndpoint = "http://localhost:4000/api/v1"
 
     // MARK: - URLs
     static let signUpURL = URL(string: "https://app.oximy.com")!

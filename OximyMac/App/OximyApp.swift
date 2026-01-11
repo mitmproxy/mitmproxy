@@ -103,6 +103,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.showPopoverAndFocus()
             }
         }
+
+        // Check for updates in background after startup (5 second delay)
+        // This avoids blocking the main thread during launch
+        Task {
+            try? await Task.sleep(for: .seconds(5))
+            UpdateService.shared.checkForUpdatesInBackground()
+        }
     }
 
     private func showPopover() {

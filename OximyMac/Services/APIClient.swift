@@ -145,17 +145,50 @@ final class APIClient: ObservableObject {
     }
 
     private func performRequest<T: Decodable>(_ request: URLRequest, authenticated: Bool) async throws -> T {
+        // Log request details
+        print("[APIClient] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("[APIClient] REQUEST: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "nil")")
+        print("[APIClient] Headers:")
+        request.allHTTPHeaderFields?.forEach { key, value in
+            if key == "Authorization" {
+                // Mask the token but show prefix
+                let masked = value.prefix(20) + "..." + value.suffix(4)
+                print("[APIClient]   \(key): \(masked)")
+            } else {
+                print("[APIClient]   \(key): \(value)")
+            }
+        }
+        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
+            // Truncate if too long
+            let truncated = bodyString.count > 500 ? String(bodyString.prefix(500)) + "...[truncated]" : bodyString
+            print("[APIClient] Body: \(truncated)")
+        }
+
         let (data, response): (Data, URLResponse)
 
         do {
             (data, response) = try await session.data(for: request)
         } catch {
+            print("[APIClient] Network error: \(error.localizedDescription)")
             throw APIError.networkUnavailable
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("[APIClient] Invalid response type")
             throw APIError.serverError(0, "Invalid response")
         }
+
+        // Log response details
+        print("[APIClient] RESPONSE: \(httpResponse.statusCode)")
+        print("[APIClient] Response Headers:")
+        httpResponse.allHeaderFields.forEach { key, value in
+            print("[APIClient]   \(key): \(value)")
+        }
+        if let responseString = String(data: data, encoding: .utf8) {
+            let truncated = responseString.count > 1000 ? String(responseString.prefix(1000)) + "...[truncated]" : responseString
+            print("[APIClient] Response Body: \(truncated)")
+        }
+        print("[APIClient] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         switch httpResponse.statusCode {
         case 200, 201:
