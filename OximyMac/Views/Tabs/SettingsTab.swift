@@ -7,7 +7,6 @@ struct SettingsTab: View {
     @StateObject private var mitmService = MITMService.shared
 
     @State private var isProcessingCert = false
-    @State private var expandedSection: String? = nil
 
     var body: some View {
         ScrollView {

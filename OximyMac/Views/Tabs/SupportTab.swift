@@ -14,7 +14,7 @@ struct SupportTab: View {
                     Text("Oximy")
                         .font(.headline)
 
-                    Text("Version 1.0.0")
+                    Text("Version \(Bundle.main.appVersion) (\(Bundle.main.buildNumber))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

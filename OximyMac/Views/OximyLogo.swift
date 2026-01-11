@@ -1,9 +1,6 @@
 import SwiftUI
 import AppKit
 
-// Development path for resources (used when running via swift build)
-private let devResourcesPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources"
-
 /// Load Oximy logo from PNG file
 struct OximyLogo: View {
     var size: CGFloat = 90
@@ -23,38 +20,48 @@ struct OximyLogo: View {
     }
 }
 
-/// Load logo NSImage from PNG in Resources
-/// Uses Oximy.png (the full color logo with orange background)
-func loadLogoPNG() -> NSImage? {
-    // Try Bundle.module first (SPM way)
-    // Use Oximy.png which is the full color logo
-    if let url = Bundle.module.url(forResource: "Oximy", withExtension: "png") {
-        return NSImage(contentsOf: url)
+/// Resolve path to a resource file using the same priority as MITMService
+/// 1. Bundle.module (SPM builds)
+/// 2. Bundle.main.resourcePath (Xcode release builds)
+/// 3. Source-relative via #filePath (development)
+private func resolveResourcePath(_ filename: String, extension ext: String, filePath: String = #filePath) -> String? {
+    // Priority 1: Bundle.module (SPM builds)
+    if let url = Bundle.module.url(forResource: filename, withExtension: ext) {
+        return url.path
     }
 
-    // Development fallback: check source directory
-    let devPath = "\(devResourcesPath)/Oximy.png"
+    // Priority 2: App bundle Resources (Xcode release builds)
+    if let bundlePath = Bundle.main.resourcePath {
+        let resourcePath = (bundlePath as NSString).appendingPathComponent("\(filename).\(ext)")
+        if FileManager.default.fileExists(atPath: resourcePath) {
+            return resourcePath
+        }
+    }
+
+    // Priority 3: Development - relative to source file
+    let sourceDir = URL(fileURLWithPath: filePath).deletingLastPathComponent().deletingLastPathComponent().path
+    let devPath = sourceDir + "/Resources/\(filename).\(ext)"
     if FileManager.default.fileExists(atPath: devPath) {
-        return NSImage(contentsOfFile: devPath)
+        return devPath
     }
 
     return nil
 }
 
+/// Load logo NSImage from PNG in Resources
+/// Uses Oximy.png (the full color logo with orange background)
+func loadLogoPNG() -> NSImage? {
+    if let path = resolveResourcePath("Oximy", extension: "png") {
+        return NSImage(contentsOfFile: path)
+    }
+    return nil
+}
+
 /// Creates an NSImage from the logo for use in menu bar
 func createMenuBarIcon() -> NSImage {
-    let image: NSImage?
-
     // Use frame.png (transparent background) for menu bar
-    if let url = Bundle.module.url(forResource: "frame", withExtension: "png") {
-        image = NSImage(contentsOf: url)
-    } else {
-        // Development fallback
-        let framePath = "\(devResourcesPath)/frame.png"
-        image = NSImage(contentsOfFile: framePath)
-    }
-
-    if let image = image {
+    if let path = resolveResourcePath("frame", extension: "png"),
+       let image = NSImage(contentsOfFile: path) {
         // Set as template so macOS can adapt for light/dark mode
         image.isTemplate = true
         // Ensure correct size for menu bar

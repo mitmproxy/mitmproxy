@@ -26,12 +26,16 @@ let package = Package(
                 "Installer",
                 "build",
                 "project.yml",
-                "create-xcode-project.sh"
+                "create-xcode-project.sh",
+                "App/Secrets.example.swift",
+                "api-docs.md",
+                "README.md"
             ],
             sources: [
                 "App",
                 "Views",
-                "Services"
+                "Services",
+                "Models"
             ],
             resources: [
                 // PNG files for logos

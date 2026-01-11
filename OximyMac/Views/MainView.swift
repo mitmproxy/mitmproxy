@@ -9,6 +9,8 @@ struct MainView: View {
             switch appState.phase {
             case .setup:
                 SetupView()
+            case .enrollment:
+                EnrollmentView()
             case .ready:
                 DashboardView()
             }
@@ -29,26 +31,68 @@ struct SetupView: View {
     @State private var isProcessingProxy = false
     @State private var errorMessage: String?
 
+    private var allComplete: Bool {
+        certService.isCAInstalled && proxyService.isProxyEnabled
+    }
+
     var body: some View {
         VStack(spacing: 0) {
+            // Back button and Progress indicator
+            HStack {
+                Button(action: { appState.goBackToEnrollment() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(.accentColor)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                // Progress indicator - Step 2 of 2
+                HStack(spacing: 8) {
+                    ProgressDot(step: 1, isComplete: true, isCurrent: false)
+                    ProgressLine(isComplete: true)
+                    ProgressDot(step: 2, isComplete: allComplete, isCurrent: !allComplete)
+                }
+
+                Spacer()
+
+                // Invisible spacer to balance the back button
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Back")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .opacity(0)
+            }
+            .padding(.top, 16)
+            .padding(.horizontal, 20)
+
             // Header
-            VStack(spacing: 12) {
+            VStack(spacing: 6) {
                 Image("Oximy")
                     .resizable()
-                    .frame(width: 60, height: 60)
+                    .frame(width: 52, height: 52)
                     .cornerRadius(12)
+                    .padding(.top, 20)
 
-                Text("Welcome to Oximy")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                Text("STEP 2")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.accentColor)
+                    .tracking(1.5)
 
-                Text("Enable these permissions to start monitoring AI traffic")
-                    .font(.caption)
+                Text("Enable Permissions")
+                    .font(.system(size: 18, weight: .bold))
+
+                Text("Allow Oximy to monitor AI traffic")
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
             }
-            .padding(.top, 24)
 
             Spacer()
 
@@ -109,10 +153,6 @@ struct SetupView: View {
             certService.checkStatus()
             proxyService.checkStatus()
         }
-    }
-
-    private var allComplete: Bool {
-        certService.isCAInstalled && proxyService.isProxyEnabled
     }
 
     private func installCertificate() {

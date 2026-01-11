@@ -158,28 +158,69 @@ class ProxyService: ObservableObject {
         }
     }
 
-    /// Run networksetup command
+    /// Run networksetup command (async version with error reporting)
     private func runNetworkSetup(_ arguments: [String]) async throws {
+        let result = executeNetworkSetup(arguments, captureErrors: true)
+
+        if let errorMessage = result.errorMessage {
+            // Log warning to Sentry for visibility
+            SentryService.shared.addErrorBreadcrumb(
+                service: "proxy",
+                error: "networksetup warning: \(errorMessage)"
+            )
+
+            // Update lastError so UI can show it (but don't throw for minor errors)
+            lastError = "Proxy warning: \(errorMessage.trimmingCharacters(in: .whitespacesAndNewlines))"
+            NSLog("[ProxyService] Warning: %@", errorMessage)
+        }
+
+        if let launchError = result.launchError {
+            throw ProxyError.commandFailed(launchError)
+        }
+    }
+
+    /// Core networksetup execution - shared between async and sync versions
+    private struct NetworkSetupResult {
+        let exitCode: Int32
+        let errorMessage: String?
+        let launchError: String?
+    }
+
+    private func executeNetworkSetup(_ arguments: [String], captureErrors: Bool) -> NetworkSetupResult {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
         process.arguments = arguments
-
-        let errorPipe = Pipe()
-        process.standardError = errorPipe
         process.standardOutput = FileHandle.nullDevice
+
+        var errorPipe: Pipe?
+        if captureErrors {
+            errorPipe = Pipe()
+            process.standardError = errorPipe
+        } else {
+            process.standardError = FileHandle.nullDevice
+        }
 
         do {
             try process.run()
             process.waitUntilExit()
 
-            if process.terminationStatus != 0 {
-                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-                // Don't throw for minor errors (like service not found)
-                print("[ProxyService] Warning: \(errorMessage)")
+            var errorMessage: String?
+            if process.terminationStatus != 0, let pipe = errorPipe {
+                let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
+                errorMessage = String(data: errorData, encoding: .utf8)
             }
+
+            return NetworkSetupResult(
+                exitCode: process.terminationStatus,
+                errorMessage: errorMessage,
+                launchError: nil
+            )
         } catch {
-            throw ProxyError.commandFailed(error.localizedDescription)
+            return NetworkSetupResult(
+                exitCode: -1,
+                errorMessage: nil,
+                launchError: error.localizedDescription
+            )
         }
     }
 
@@ -218,31 +259,15 @@ class ProxyService: ObservableObject {
         let services = getNetworkServices()
 
         for service in services {
-            // Disable HTTP proxy
-            runNetworkSetupSync(["-setwebproxystate", service, "off"])
+            // Disable HTTP proxy - use shared executor without error capture for speed
+            _ = executeNetworkSetup(["-setwebproxystate", service, "off"], captureErrors: false)
             // Disable HTTPS proxy
-            runNetworkSetupSync(["-setsecurewebproxystate", service, "off"])
+            _ = executeNetworkSetup(["-setsecurewebproxystate", service, "off"], captureErrors: false)
         }
 
         isProxyEnabled = false
         configuredPort = nil
         print("[ProxyService] Disabled proxy (sync)")
-    }
-
-    /// Synchronous networksetup for cleanup
-    private func runNetworkSetupSync(_ arguments: [String]) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
-        process.arguments = arguments
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            print("[ProxyService] Sync cleanup error: \(error)")
-        }
     }
 
     // MARK: - Bypass List

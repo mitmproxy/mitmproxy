@@ -5,6 +5,7 @@ struct HomeTab: View {
     @StateObject private var proxyService = ProxyService.shared
     @StateObject private var mitmService = MITMService.shared
     @StateObject private var certService = CertificateService.shared
+    @StateObject private var syncService = SyncService.shared
 
     @State private var isToggling = false
 
@@ -64,12 +65,52 @@ struct HomeTab: View {
 
             Spacer()
 
-            // Device Info
+            // Device Info & Sync Status
             VStack(spacing: 8) {
                 InfoRow(label: "Device", value: appState.deviceName)
 
                 if appState.isLoggedIn && !appState.workspaceName.isEmpty {
                     InfoRow(label: "Organization", value: appState.workspaceName)
+                }
+
+                Divider()
+                    .padding(.vertical, 4)
+
+                // Sync Status
+                HStack {
+                    Text("Events Pending")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    if syncService.isSyncing {
+                        HStack(spacing: 4) {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                            Text("Syncing...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        Text("\(syncService.pendingEventCount)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                }
+
+                if let lastSync = syncService.lastSyncTime {
+                    InfoRow(label: "Last Sync", value: lastSync.relativeFormatted)
+                }
+
+                if let error = syncService.syncError {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption)
+                        Text(error)
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                            .lineLimit(1)
+                    }
                 }
             }
             .padding()
