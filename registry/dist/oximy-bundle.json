@@ -79,7 +79,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-10T03:49:50.425563+00:00",
+  "generated_at": "2026-01-11T23:50:01.696120+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -8699,70 +8699,24 @@
       "provider": "cerebras",
       "release_date": "2025-11-05"
     },
-    "chutes/Alibaba-NLP/Tongyi-DeepResearch-30B-A3B": {
+    "cerebras/zai-glm-4.7": {
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
-        "json_mode",
-        "reasoning",
         "temperature"
       ],
-      "family": "alibaba-nlp",
-      "id": "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
-      "input_cost_per_1k": 0.0001,
+      "family": null,
+      "id": "zai-glm-4.7",
+      "input_cost_per_1k": 0.0,
       "max_input_tokens": 131072,
-      "max_output_tokens": 131072,
+      "max_output_tokens": 40000,
       "mode": "chat",
-      "name": "Tongyi DeepResearch 30B A3B",
+      "name": "Z.AI GLM-4.7",
       "open_weights": true,
-      "output_cost_per_1k": 0.00039,
-      "provider": "chutes",
-      "reasoning_cost_per_1k": 0.000585,
-      "release_date": "2025-12-29"
-    },
-    "chutes/ArliAI/QwQ-32B-ArliAI-RpR-v1": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "family": "arliai",
-      "id": "ArliAI/QwQ-32B-ArliAI-RpR-v1",
-      "input_cost_per_1k": 3e-05,
-      "max_input_tokens": 32768,
-      "max_output_tokens": 32768,
-      "mode": "chat",
-      "name": "QwQ 32B ArliAI RpR v1",
-      "open_weights": true,
-      "output_cost_per_1k": 0.00011,
-      "provider": "chutes",
-      "reasoning_cost_per_1k": 0.000165,
-      "release_date": "2025-12-29"
-    },
-    "chutes/MiniMaxAI/MiniMax-M2": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "family": "minimaxai",
-      "id": "MiniMaxAI/MiniMax-M2",
-      "input_cost_per_1k": 0.00026,
-      "max_input_tokens": 196608,
-      "max_output_tokens": 196608,
-      "mode": "chat",
-      "name": "MiniMax M2",
-      "open_weights": true,
-      "output_cost_per_1k": 0.00102,
-      "provider": "chutes",
-      "reasoning_cost_per_1k": 0.00153,
-      "release_date": "2025-12-29"
+      "output_cost_per_1k": 0.0,
+      "provider": "cerebras",
+      "release_date": "2026-01-10"
     },
     "chutes/MiniMaxAI/MiniMax-M2.1-TEE": {
       "cache_read_cost_per_1k": 0.0,
@@ -8828,9 +8782,7 @@
       "reasoning_cost_per_1k": 7.5e-05,
       "release_date": "2025-12-29"
     },
-    "chutes/NousResearch/Hermes-4-405B-FP8": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
+    "chutes/NousResearch/Hermes-4-405B-FP8-TEE": {
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -8838,34 +8790,16 @@
         "temperature"
       ],
       "family": "nousresearch",
-      "id": "NousResearch/Hermes-4-405B-FP8",
-      "input_cost_per_1k": 0.0003,
-      "max_input_tokens": 131072,
-      "max_output_tokens": 131072,
-      "mode": "chat",
-      "name": "Hermes 4 405B FP8",
-      "open_weights": true,
-      "output_cost_per_1k": 0.0012,
-      "provider": "chutes",
-      "reasoning_cost_per_1k": 0.0018,
-      "release_date": "2025-12-29"
-    },
-    "chutes/NousResearch/Hermes-4-405B-FP8-TEE": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "temperature"
-      ],
-      "family": "nousresearch",
       "id": "NousResearch/Hermes-4-405B-FP8-TEE",
       "input_cost_per_1k": 0.0003,
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 131072,
+      "max_output_tokens": 65536,
       "mode": "chat",
       "name": "Hermes 4 405B FP8 TEE",
       "open_weights": true,
       "output_cost_per_1k": 0.0012,
       "provider": "chutes",
+      "reasoning_cost_per_1k": 0.0018,
       "release_date": "2025-12-29"
     },
     "chutes/NousResearch/Hermes-4-70B": {
@@ -8899,8 +8833,8 @@
       "family": "nousresearch",
       "id": "NousResearch/Hermes-4.3-36B",
       "input_cost_per_1k": 0.0001,
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 524288,
+      "max_output_tokens": 524288,
       "mode": "chat",
       "name": "Hermes 4.3 36B",
       "open_weights": true,
@@ -8908,25 +8842,23 @@
       "provider": "chutes",
       "release_date": "2025-12-29"
     },
-    "chutes/OpenGVLab/InternVL3-78B": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
+    "chutes/OpenGVLab/InternVL3-78B-TEE": {
       "capabilities": [
         "json_mode",
         "temperature",
         "vision"
       ],
       "family": "opengvlab",
-      "id": "OpenGVLab/InternVL3-78B",
+      "id": "OpenGVLab/InternVL3-78B-TEE",
       "input_cost_per_1k": 0.0001,
       "max_input_tokens": 32768,
       "max_output_tokens": 32768,
       "mode": "chat",
-      "name": "InternVL3 78B",
+      "name": "InternVL3 78B TEE",
       "open_weights": true,
       "output_cost_per_1k": 0.00039,
       "provider": "chutes",
-      "release_date": "2025-12-29"
+      "release_date": "2025-01-06"
     },
     "chutes/Qwen/Qwen2.5-72B-Instruct": {
       "cache_read_cost_per_1k": 0.0,
@@ -8987,31 +8919,12 @@
       "provider": "chutes",
       "release_date": "2025-12-29"
     },
-    "chutes/Qwen/Qwen2.5-VL-72B-Instruct": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "json_mode",
-        "temperature",
-        "vision"
-      ],
-      "family": "qwen",
-      "id": "Qwen/Qwen2.5-VL-72B-Instruct",
-      "input_cost_per_1k": 7e-05,
-      "max_input_tokens": 32768,
-      "max_output_tokens": 32768,
-      "mode": "chat",
-      "name": "Qwen2.5 VL 72B Instruct",
-      "open_weights": true,
-      "output_cost_per_1k": 0.00026,
-      "provider": "chutes",
-      "release_date": "2025-12-29"
-    },
     "chutes/Qwen/Qwen2.5-VL-72B-Instruct-TEE": {
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
       "capabilities": [
-        "temperature"
+        "temperature",
+        "vision"
       ],
       "family": "qwen",
       "id": "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
@@ -9067,26 +8980,6 @@
       "output_cost_per_1k": 0.0012,
       "provider": "chutes",
       "reasoning_cost_per_1k": 0.0018,
-      "release_date": "2025-12-29"
-    },
-    "chutes/Qwen/Qwen3-235B-A22B-Instruct-2507": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "temperature"
-      ],
-      "family": "qwen",
-      "id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
-      "input_cost_per_1k": 8e-05,
-      "max_input_tokens": 262144,
-      "max_output_tokens": 262144,
-      "mode": "chat",
-      "name": "Qwen3 235B A22B Instruct 2507",
-      "open_weights": true,
-      "output_cost_per_1k": 0.00055,
-      "provider": "chutes",
       "release_date": "2025-12-29"
     },
     "chutes/Qwen/Qwen3-235B-A22B-Instruct-2507-TEE": {
@@ -9255,29 +9148,6 @@
       "provider": "chutes",
       "release_date": "2025-12-29"
     },
-    "chutes/Qwen/Qwen3-VL-235B-A22B-Thinking": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature",
-        "vision"
-      ],
-      "family": "qwen",
-      "id": "Qwen/Qwen3-VL-235B-A22B-Thinking",
-      "input_cost_per_1k": 0.0003,
-      "max_input_tokens": 262144,
-      "max_output_tokens": 262144,
-      "mode": "chat",
-      "name": "Qwen3 VL 235B A22B Thinking",
-      "open_weights": true,
-      "output_cost_per_1k": 0.0012,
-      "provider": "chutes",
-      "reasoning_cost_per_1k": 0.0018,
-      "release_date": "2025-12-29"
-    },
     "chutes/Qwen/Qwen3Guard-Gen-0.6B": {
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
@@ -9287,8 +9157,8 @@
       "family": "qwen",
       "id": "Qwen/Qwen3Guard-Gen-0.6B",
       "input_cost_per_1k": 1e-05,
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
       "mode": "chat",
       "name": "Qwen3Guard Gen 0.6B",
       "open_weights": true,
@@ -9305,8 +9175,8 @@
       "family": "xiaomimimo",
       "id": "XiaomiMiMo/MiMo-V2-Flash",
       "input_cost_per_1k": 0.00017,
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 262144,
+      "max_output_tokens": 262144,
       "mode": "chat",
       "name": "MiMo V2 Flash",
       "open_weights": true,
@@ -9369,7 +9239,7 @@
       "id": "deepseek-ai/DeepSeek-R1-0528-TEE",
       "input_cost_per_1k": 0.0004,
       "max_input_tokens": 163840,
-      "max_output_tokens": 163840,
+      "max_output_tokens": 65536,
       "mode": "chat",
       "name": "DeepSeek R1 0528 TEE",
       "open_weights": true,
@@ -9450,36 +9320,14 @@
       ],
       "family": "deepseek-ai",
       "id": "deepseek-ai/DeepSeek-V3-0324-TEE",
-      "input_cost_per_1k": 0.00024,
+      "input_cost_per_1k": 0.00019,
       "max_input_tokens": 163840,
       "max_output_tokens": 65536,
       "mode": "chat",
       "name": "DeepSeek V3 0324 TEE",
       "open_weights": true,
-      "output_cost_per_1k": 0.00084,
+      "output_cost_per_1k": 0.00087,
       "provider": "chutes",
-      "release_date": "2025-12-29"
-    },
-    "chutes/deepseek-ai/DeepSeek-V3.1": {
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "family": "deepseek-ai",
-      "id": "deepseek-ai/DeepSeek-V3.1",
-      "input_cost_per_1k": 0.0002,
-      "max_input_tokens": 163840,
-      "max_output_tokens": 65536,
-      "mode": "chat",
-      "name": "DeepSeek V3.1",
-      "open_weights": true,
-      "output_cost_per_1k": 0.0008,
-      "provider": "chutes",
-      "reasoning_cost_per_1k": 0.0012,
       "release_date": "2025-12-29"
     },
     "chutes/deepseek-ai/DeepSeek-V3.1-TEE": {
@@ -9558,15 +9406,15 @@
       ],
       "family": "deepseek-ai",
       "id": "deepseek-ai/DeepSeek-V3.2-TEE",
-      "input_cost_per_1k": 0.00027,
+      "input_cost_per_1k": 0.00025,
       "max_input_tokens": 163840,
-      "max_output_tokens": 16384,
+      "max_output_tokens": 65536,
       "mode": "chat",
       "name": "DeepSeek V3.2 TEE",
       "open_weights": true,
-      "output_cost_per_1k": 0.00041,
+      "output_cost_per_1k": 0.00038,
       "provider": "chutes",
-      "reasoning_cost_per_1k": 0.000615,
+      "reasoning_cost_per_1k": 0.00057,
       "release_date": "2025-12-29"
     },
     "chutes/mistralai/Devstral-2-123B-Instruct-2512": {
@@ -9668,9 +9516,9 @@
       "mode": "chat",
       "name": "gpt oss 120b TEE",
       "open_weights": true,
-      "output_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00018,
       "provider": "chutes",
-      "reasoning_cost_per_1k": 0.000375,
+      "reasoning_cost_per_1k": 0.00027,
       "release_date": "2025-12-29"
     },
     "chutes/openai/gpt-oss-20b": {
@@ -9747,16 +9595,36 @@
       ],
       "family": "tngtech",
       "id": "tngtech/DeepSeek-TNG-R1T2-Chimera",
-      "input_cost_per_1k": 0.0003,
+      "input_cost_per_1k": 0.00025,
       "max_input_tokens": 163840,
       "max_output_tokens": 163840,
       "mode": "chat",
       "name": "DeepSeek TNG R1T2 Chimera",
       "open_weights": true,
-      "output_cost_per_1k": 0.0012,
+      "output_cost_per_1k": 0.00085,
       "provider": "chutes",
-      "reasoning_cost_per_1k": 0.0018,
+      "reasoning_cost_per_1k": 0.001275,
       "release_date": "2025-12-29"
+    },
+    "chutes/tngtech/DeepSeek-TNG-R1T2-Chimera-TEE": {
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "temperature"
+      ],
+      "family": "tngtech",
+      "id": "tngtech/DeepSeek-TNG-R1T2-Chimera-TEE",
+      "input_cost_per_1k": 0.00025,
+      "max_input_tokens": 163840,
+      "max_output_tokens": 65536,
+      "mode": "chat",
+      "name": "DeepSeek TNG R1T2 Chimera TEE",
+      "open_weights": true,
+      "output_cost_per_1k": 0.00085,
+      "provider": "chutes",
+      "reasoning_cost_per_1k": 0.001275,
+      "release_date": "2025-01-06"
     },
     "chutes/tngtech/TNG-R1T-Chimera-TEE": {
       "cache_read_cost_per_1k": 0.0,
@@ -9769,15 +9637,15 @@
       ],
       "family": "tngtech",
       "id": "tngtech/TNG-R1T-Chimera-TEE",
-      "input_cost_per_1k": 0.0003,
+      "input_cost_per_1k": 0.00025,
       "max_input_tokens": 163840,
       "max_output_tokens": 65536,
       "mode": "chat",
       "name": "TNG R1T Chimera TEE",
       "open_weights": true,
-      "output_cost_per_1k": 0.0012,
+      "output_cost_per_1k": 0.00085,
       "provider": "chutes",
-      "reasoning_cost_per_1k": 0.0018,
+      "reasoning_cost_per_1k": 0.001275,
       "release_date": "2025-12-29"
     },
     "chutes/unsloth/Mistral-Nemo-Instruct-2407": {
@@ -9935,15 +9803,15 @@
       ],
       "family": "zai-org",
       "id": "zai-org/GLM-4.6-TEE",
-      "input_cost_per_1k": 0.0004,
+      "input_cost_per_1k": 0.00035,
       "max_input_tokens": 202752,
       "max_output_tokens": 65536,
       "mode": "chat",
       "name": "GLM 4.6 TEE",
       "open_weights": true,
-      "output_cost_per_1k": 0.00175,
+      "output_cost_per_1k": 0.0015,
       "provider": "chutes",
-      "reasoning_cost_per_1k": 0.002625,
+      "reasoning_cost_per_1k": 0.00225,
       "release_date": "2025-12-29"
     },
     "chutes/zai-org/GLM-4.6V": {
@@ -18429,24 +18297,24 @@
       "provider": "helicone",
       "release_date": "2025-01-27"
     },
-    "huggingface/MiniMaxAI/MiniMax-M2": {
+    "huggingface/MiniMaxAI/MiniMax-M2.1": {
       "capabilities": [
         "function_calling",
         "reasoning",
         "temperature"
       ],
       "family": "minimax",
-      "id": "MiniMaxAI/MiniMax-M2",
+      "id": "MiniMaxAI/MiniMax-M2.1",
       "input_cost_per_1k": 0.0003,
       "knowledge_cutoff": "2025-10",
       "max_input_tokens": 204800,
-      "max_output_tokens": 204800,
+      "max_output_tokens": 131072,
       "mode": "chat",
-      "name": "MiniMax-M2",
+      "name": "MiniMax-M2.1",
       "open_weights": true,
       "output_cost_per_1k": 0.0012,
       "provider": "huggingface",
-      "release_date": "2025-10-27"
+      "release_date": "2025-12-23"
     },
     "huggingface/Qwen/Qwen3-235B-A22B-Thinking-2507": {
       "capabilities": [
@@ -18549,6 +18417,25 @@
       "provider": "huggingface",
       "release_date": "2025-09-11"
     },
+    "huggingface/XiaomiMiMo/MiMo-V2-Flash": {
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "family": "mimo",
+      "id": "XiaomiMiMo/MiMo-V2-Flash",
+      "input_cost_per_1k": 0.0001,
+      "knowledge_cutoff": "2024-12",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 4096,
+      "mode": "chat",
+      "name": "MiMo-V2-Flash",
+      "open_weights": true,
+      "output_cost_per_1k": 0.0003,
+      "provider": "huggingface",
+      "release_date": "2025-12-16"
+    },
     "huggingface/deepseek-ai/DeepSeek-R1-0528": {
       "capabilities": [
         "function_calling",
@@ -18568,23 +18455,24 @@
       "provider": "huggingface",
       "release_date": "2025-05-28"
     },
-    "huggingface/deepseek-ai/Deepseek-V3-0324": {
+    "huggingface/deepseek-ai/DeepSeek-V3.2": {
       "capabilities": [
         "function_calling",
+        "reasoning",
         "temperature"
       ],
       "family": "deepseek-v3",
-      "id": "deepseek-ai/Deepseek-V3-0324",
-      "input_cost_per_1k": 0.00125,
-      "knowledge_cutoff": "2024-10",
-      "max_input_tokens": 16384,
-      "max_output_tokens": 8192,
+      "id": "deepseek-ai/DeepSeek-V3.2",
+      "input_cost_per_1k": 0.00028,
+      "knowledge_cutoff": "2024-07",
+      "max_input_tokens": 163840,
+      "max_output_tokens": 65536,
       "mode": "chat",
-      "name": "DeepSeek-V3-0324",
+      "name": "DeepSeek-V3.2",
       "open_weights": true,
-      "output_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.0004,
       "provider": "huggingface",
-      "release_date": "2025-03-24"
+      "release_date": "2025-12-01"
     },
     "huggingface/moonshotai/Kimi-K2-Instruct": {
       "capabilities": [
@@ -18622,63 +18510,45 @@
       "provider": "huggingface",
       "release_date": "2025-09-04"
     },
-    "huggingface/zai-org/GLM-4.5": {
+    "huggingface/moonshotai/Kimi-K2-Thinking": {
+      "cache_read_cost_per_1k": 0.00015,
       "capabilities": [
         "function_calling",
         "reasoning",
         "temperature"
       ],
-      "family": "glm-4.5",
-      "id": "zai-org/GLM-4.5",
+      "family": "kimi-k2",
+      "id": "moonshotai/Kimi-K2-Thinking",
       "input_cost_per_1k": 0.0006,
-      "knowledge_cutoff": "2025-04",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 98304,
+      "knowledge_cutoff": "2024-08",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 262144,
       "mode": "chat",
-      "name": "GLM-4.5",
+      "name": "Kimi-K2-Thinking",
       "open_weights": true,
-      "output_cost_per_1k": 0.0022,
+      "output_cost_per_1k": 0.0025,
       "provider": "huggingface",
-      "release_date": "2025-07-28"
+      "release_date": "2025-11-06"
     },
-    "huggingface/zai-org/GLM-4.5-Air": {
-      "capabilities": [
-        "function_calling",
-        "reasoning",
-        "temperature"
-      ],
-      "family": "glm-4.5-air",
-      "id": "zai-org/GLM-4.5-Air",
-      "input_cost_per_1k": 0.0002,
-      "knowledge_cutoff": "2025-04",
-      "max_input_tokens": 128000,
-      "max_output_tokens": 96000,
-      "mode": "chat",
-      "name": "GLM-4.5-Air",
-      "open_weights": true,
-      "output_cost_per_1k": 0.0011,
-      "provider": "huggingface",
-      "release_date": "2025-07-28"
-    },
-    "huggingface/zai-org/GLM-4.6": {
+    "huggingface/zai-org/GLM-4.7": {
       "cache_read_cost_per_1k": 0.00011,
       "capabilities": [
         "function_calling",
         "reasoning",
         "temperature"
       ],
-      "family": "glm-4.6",
-      "id": "zai-org/GLM-4.6",
+      "family": "glm-4.7",
+      "id": "zai-org/GLM-4.7",
       "input_cost_per_1k": 0.0006,
       "knowledge_cutoff": "2025-04",
-      "max_input_tokens": 200000,
-      "max_output_tokens": 128000,
+      "max_input_tokens": 204800,
+      "max_output_tokens": 131072,
       "mode": "chat",
-      "name": "GLM-4.6",
+      "name": "GLM-4.7",
       "open_weights": true,
       "output_cost_per_1k": 0.0022,
       "provider": "huggingface",
-      "release_date": "2025-09-30"
+      "release_date": "2025-12-22"
     },
     "iflowcn/deepseek-r1": {
       "capabilities": [
@@ -29718,6 +29588,23 @@
       "provider": "scaleway",
       "release_date": "2025-01-20"
     },
+    "scaleway/devstral-2-123b-instruct-2512": {
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "family": "devstral",
+      "id": "devstral-2-123b-instruct-2512",
+      "input_cost_per_1k": 0.0004,
+      "max_input_tokens": 256000,
+      "max_output_tokens": 8192,
+      "mode": "chat",
+      "name": "Devstral 2 123B Instruct (2512)",
+      "open_weights": true,
+      "output_cost_per_1k": 0.002,
+      "provider": "scaleway",
+      "release_date": "2026-01-07"
+    },
     "scaleway/gemma-3-27b-it": {
       "capabilities": [
         "function_calling",
@@ -33800,18 +33687,19 @@
       "capabilities": [
         "function_calling",
         "json_mode",
+        "reasoning",
         "temperature"
       ],
       "family": "glm-4.7",
       "id": "zai-org-glm-4.7",
-      "input_cost_per_1k": 0.00085,
+      "input_cost_per_1k": 0.00055,
       "knowledge_cutoff": "2025-04",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 32768,
+      "max_input_tokens": 202752,
+      "max_output_tokens": 50688,
       "mode": "chat",
       "name": "GLM 4.7",
       "open_weights": true,
-      "output_cost_per_1k": 0.00275,
+      "output_cost_per_1k": 0.00265,
       "provider": "venice",
       "release_date": "2025-12-24"
     },
@@ -38581,11 +38469,12 @@
         "CEREBRAS_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/cerebras.svg",
-      "model_count": 3,
+      "model_count": 4,
       "models": [
         "gpt-oss-120b",
         "qwen-3-235b-a22b-instruct-2507",
-        "zai-glm-4.6"
+        "zai-glm-4.6",
+        "zai-glm-4.7"
       ],
       "name": "Cerebras"
     },
@@ -38597,27 +38486,21 @@
         "CHUTES_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/chutes.svg",
-      "model_count": 62,
+      "model_count": 55,
       "models": [
-        "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
-        "ArliAI/QwQ-32B-ArliAI-RpR-v1",
-        "MiniMaxAI/MiniMax-M2",
         "MiniMaxAI/MiniMax-M2.1-TEE",
         "NousResearch/DeepHermes-3-Mistral-24B-Preview",
         "NousResearch/Hermes-4-14B",
-        "NousResearch/Hermes-4-405B-FP8",
         "NousResearch/Hermes-4-405B-FP8-TEE",
         "NousResearch/Hermes-4-70B",
         "NousResearch/Hermes-4.3-36B",
-        "OpenGVLab/InternVL3-78B",
+        "OpenGVLab/InternVL3-78B-TEE",
         "Qwen/Qwen2.5-72B-Instruct",
         "Qwen/Qwen2.5-Coder-32B-Instruct",
         "Qwen/Qwen2.5-VL-32B-Instruct",
-        "Qwen/Qwen2.5-VL-72B-Instruct",
         "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
         "Qwen/Qwen3-14B",
         "Qwen/Qwen3-235B-A22B",
-        "Qwen/Qwen3-235B-A22B-Instruct-2507",
         "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
         "Qwen/Qwen3-235B-A22B-Thinking-2507",
         "Qwen/Qwen3-30B-A3B",
@@ -38626,7 +38509,6 @@
         "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE",
         "Qwen/Qwen3-Next-80B-A3B-Instruct",
         "Qwen/Qwen3-VL-235B-A22B-Instruct",
-        "Qwen/Qwen3-VL-235B-A22B-Thinking",
         "Qwen/Qwen3Guard-Gen-0.6B",
         "XiaomiMiMo/MiMo-V2-Flash",
         "chutesai/Mistral-Small-3.1-24B-Instruct-2503",
@@ -38636,7 +38518,6 @@
         "deepseek-ai/DeepSeek-R1-TEE",
         "deepseek-ai/DeepSeek-V3",
         "deepseek-ai/DeepSeek-V3-0324-TEE",
-        "deepseek-ai/DeepSeek-V3.1",
         "deepseek-ai/DeepSeek-V3.1-TEE",
         "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
         "deepseek-ai/DeepSeek-V3.2-Speciale-TEE",
@@ -38650,6 +38531,7 @@
         "rednote-hilab/dots.ocr",
         "tngtech/DeepSeek-R1T-Chimera",
         "tngtech/DeepSeek-TNG-R1T2-Chimera",
+        "tngtech/DeepSeek-TNG-R1T2-Chimera-TEE",
         "tngtech/TNG-R1T-Chimera-TEE",
         "unsloth/Mistral-Nemo-Instruct-2407",
         "unsloth/Mistral-Small-24B-Instruct-2501",
@@ -39347,20 +39229,20 @@
       "logo_url": "https://models.dev/logos/huggingface.svg",
       "model_count": 14,
       "models": [
-        "MiniMaxAI/MiniMax-M2",
+        "MiniMaxAI/MiniMax-M2.1",
         "Qwen/Qwen3-235B-A22B-Thinking-2507",
         "Qwen/Qwen3-Coder-480B-A35B-Instruct",
         "Qwen/Qwen3-Embedding-4B",
         "Qwen/Qwen3-Embedding-8B",
         "Qwen/Qwen3-Next-80B-A3B-Instruct",
         "Qwen/Qwen3-Next-80B-A3B-Thinking",
+        "XiaomiMiMo/MiMo-V2-Flash",
         "deepseek-ai/DeepSeek-R1-0528",
-        "deepseek-ai/Deepseek-V3-0324",
+        "deepseek-ai/DeepSeek-V3.2",
         "moonshotai/Kimi-K2-Instruct",
         "moonshotai/Kimi-K2-Instruct-0905",
-        "zai-org/GLM-4.5",
-        "zai-org/GLM-4.5-Air",
-        "zai-org/GLM-4.6"
+        "moonshotai/Kimi-K2-Thinking",
+        "zai-org/GLM-4.7"
       ],
       "name": "Hugging Face"
     },
@@ -40317,10 +40199,11 @@
         "SCALEWAY_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/scaleway.svg",
-      "model_count": 13,
+      "model_count": 14,
       "models": [
         "bge-multilingual-gemma2",
         "deepseek-r1-distill-llama-70b",
+        "devstral-2-123b-instruct-2512",
         "gemma-3-27b-it",
         "gpt-oss-120b",
         "llama-3.1-8b-instruct",
@@ -41171,6 +41054,11 @@
       },
       "granola": {
         "ai": "native",
+        "api_domains": [
+          "stream.api.granola.ai",
+          "api.granola.ai",
+          "*.granola.ai"
+        ],
         "category": "productivity",
         "detection": {
           "subscription": [
@@ -41188,6 +41076,48 @@
           "chat": {
             "description": "Chat with your meeting notes and documents using AI",
             "name": "AI Chat with Documents",
+            "parser": {
+              "request": {
+                "context": "document_ids",
+                "model": "prompt_config.model",
+                "prompt": "chat_history[-1].text"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "content": {
+                      "from": "content",
+                      "op": "last"
+                    },
+                    "reasoning": {
+                      "from": "reasoning",
+                      "op": "last"
+                    }
+                  },
+                  "finalize": {
+                    "content": "accumulated.content"
+                  },
+                  "format": "ndjson",
+                  "format_options": {
+                    "delimiter": "-----CHUNK_BOUNDARY-----"
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "content": "outputs[type = 'text_with_citations'].plain_text"
+                      },
+                      "when": "$exists(outputs) and $exists(outputs[type = 'text_with_citations'].plain_text)"
+                    },
+                    {
+                      "extract": {
+                        "reasoning": "outputs[type = 'reasoning'].text"
+                      },
+                      "when": "$exists(outputs) and $exists(outputs[type = 'reasoning'].text)"
+                    }
+                  ]
+                }
+              }
+            },
             "patterns": [
               {
                 "method": "POST",
@@ -41567,6 +41497,71 @@
         "features": {
           "chat": {
             "name": "Chat Conversation",
+            "parser": {
+              "request": {
+                "messages": "messages.({'role': author.role, 'content': $join(content.parts)})",
+                "model": "model"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "content": {
+                      "from": "content",
+                      "op": "concat"
+                    },
+                    "model": {
+                      "from": "model",
+                      "op": "first"
+                    }
+                  },
+                  "finalize": {
+                    "content": "accumulated.content",
+                    "model": "accumulated.model"
+                  },
+                  "format": "sse",
+                  "format_options": {
+                    "prefixes": [
+                      "data: ",
+                      "delta ",
+                      "message "
+                    ],
+                    "skip_values": [
+                      "[DONE]",
+                      "delta_encoding v1",
+                      "delta_encoding v2",
+                      "v1",
+                      "v2"
+                    ]
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "model": "metadata.model_slug"
+                      },
+                      "when": "type = 'server_ste_metadata'"
+                    },
+                    {
+                      "extract": {
+                        "content": "v"
+                      },
+                      "when": "$exists(v) and $not($exists(o)) and $not($exists(p)) and $type(v) = 'string'"
+                    },
+                    {
+                      "extract": {
+                        "content": "v"
+                      },
+                      "when": "o = 'append' and $exists(v) and $type(v) = 'string'"
+                    },
+                    {
+                      "extract": {
+                        "content": "choices[0].delta.content"
+                      },
+                      "when": "$exists(choices[0].delta.content)"
+                    }
+                  ]
+                }
+              }
+            },
             "patterns": [
               {
                 "method": "POST",
@@ -41621,6 +41616,405 @@
         ],
         "vendor": "OpenAI",
         "vendor_url": "https://openai.com"
+      },
+      "deepseek": {
+        "ai": "native",
+        "api_type": "direct",
+        "category": "ai-chat",
+        "domains": [
+          "chat.deepseek.com"
+        ],
+        "features": {
+          "chat": {
+            "name": "Chat Conversation",
+            "parser": {
+              "request": {
+                "chat_session_id": "chat_session_id",
+                "prompt": "prompt"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "content": {
+                      "from": "content",
+                      "op": "concat"
+                    }
+                  },
+                  "format": "sse",
+                  "format_options": {
+                    "prefixes": [
+                      "data: "
+                    ]
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "content": "$join(v[p = 'fragments'].v.content)"
+                      },
+                      "when": "o = 'BATCH'"
+                    },
+                    {
+                      "extract": {
+                        "content": "v"
+                      },
+                      "when": "$exists(v) and $type(v) = 'string'"
+                    }
+                  ]
+                }
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/api/v0/chat/completion"
+              }
+            ]
+          }
+        },
+        "name": "DeepSeek",
+        "pricing": {
+          "model": [
+            "free",
+            "subscription"
+          ],
+          "tiers": [
+            {
+              "id": "free",
+              "monthly_usd": 0,
+              "name": "Free",
+              "type": "free"
+            }
+          ]
+        },
+        "providers": [
+          "deepseek"
+        ],
+        "vendor": "DeepSeek",
+        "vendor_url": "https://deepseek.com"
+      },
+      "gemini": {
+        "ai": "native",
+        "api_type": "direct",
+        "category": "ai-chat",
+        "domains": [
+          "gemini.google.com"
+        ],
+        "features": {
+          "chat": {
+            "name": "Chat Conversation",
+            "parser": {
+              "request": {
+                "conversation_id": "$[2][0]",
+                "encoding": "form",
+                "form_field": "f.req",
+                "preprocess": [
+                  {
+                    "op": "json_parse"
+                  },
+                  {
+                    "op": "index",
+                    "value": 1
+                  },
+                  {
+                    "op": "json_parse"
+                  }
+                ],
+                "prompt": "$[0][0]"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "content": {
+                      "from": "content",
+                      "op": "last"
+                    },
+                    "conversation_id": {
+                      "from": "conversation_id",
+                      "op": "last"
+                    }
+                  },
+                  "finalize": {
+                    "content": "accumulated.content",
+                    "model": "'gemini'"
+                  },
+                  "format": "length_prefixed",
+                  "format_options": {
+                    "header_strip": ")]}'\\n"
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "content": "$[4][0][1][0]",
+                        "conversation_id": "$[1][0]"
+                      },
+                      "preprocess": [
+                        {
+                          "op": "index",
+                          "value": 0
+                        },
+                        {
+                          "op": "index",
+                          "value": 2
+                        },
+                        {
+                          "op": "json_parse"
+                        }
+                      ],
+                      "when": "$[0][0] = 'wrb.fr'"
+                    }
+                  ]
+                }
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
+              }
+            ]
+          }
+        },
+        "name": "Gemini",
+        "pricing": {
+          "model": [
+            "subscription"
+          ],
+          "tiers": [
+            {
+              "id": "free",
+              "monthly_usd": 0,
+              "name": "Free",
+              "type": "free"
+            },
+            {
+              "id": "advanced",
+              "monthly_usd": 20,
+              "name": "Advanced",
+              "type": "individual"
+            }
+          ]
+        },
+        "providers": [
+          "google"
+        ],
+        "vendor": "Google",
+        "vendor_url": "https://google.com"
+      },
+      "grok": {
+        "ai": "native",
+        "api_type": "direct",
+        "category": "ai-chat",
+        "domains": [
+          "grok.com"
+        ],
+        "features": {
+          "chat": {
+            "name": "Chat Conversation",
+            "parser": {
+              "request": {
+                "model": "modelName",
+                "prompt": "message"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "conversation_id": {
+                      "from": "conversation_id",
+                      "op": "first"
+                    },
+                    "final_content": {
+                      "from": "final_content",
+                      "op": "last"
+                    },
+                    "model": {
+                      "from": "model",
+                      "op": "first"
+                    },
+                    "tokens": {
+                      "from": "token",
+                      "op": "concat"
+                    }
+                  },
+                  "finalize": {
+                    "content": "accumulated.final_content ? accumulated.final_content : accumulated.tokens",
+                    "model": "accumulated.model"
+                  },
+                  "format": "ndjson",
+                  "format_options": {
+                    "delimiter": "}{"
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "final_content": "result.modelResponse.message",
+                        "model": "result.modelResponse.model",
+                        "response_id": "result.modelResponse.responseId"
+                      },
+                      "when": "$exists(result.modelResponse)"
+                    },
+                    {
+                      "extract": {
+                        "token": "result.token"
+                      },
+                      "when": "$exists(result.token)"
+                    },
+                    {
+                      "extract": {
+                        "conversation_id": "result.conversation.conversationId"
+                      },
+                      "when": "$exists(result.conversation.conversationId)"
+                    }
+                  ]
+                }
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/rest/app-chat/conversations/new"
+              },
+              {
+                "method": "POST",
+                "url": "**/rest/app-chat/conversations/**/responses"
+              }
+            ]
+          }
+        },
+        "name": "Grok",
+        "pricing": {
+          "model": [
+            "free",
+            "subscription"
+          ],
+          "tiers": [
+            {
+              "id": "free",
+              "monthly_usd": 0,
+              "name": "Free",
+              "type": "free"
+            },
+            {
+              "id": "premium",
+              "monthly_usd": 8,
+              "name": "Premium",
+              "type": "individual"
+            },
+            {
+              "id": "premium_plus",
+              "monthly_usd": 22,
+              "name": "Premium+",
+              "type": "individual"
+            },
+            {
+              "id": "superuser",
+              "monthly_usd": 30,
+              "name": "SuperUser",
+              "type": "individual"
+            }
+          ]
+        },
+        "providers": [
+          "xai"
+        ],
+        "vendor": "xAI",
+        "vendor_url": "https://x.ai"
+      },
+      "perplexity": {
+        "ai": "native",
+        "api_type": "direct",
+        "category": "ai-chat",
+        "domains": [
+          "www.perplexity.ai",
+          "perplexity.ai"
+        ],
+        "features": {
+          "chat": {
+            "name": "Chat Search",
+            "parser": {
+              "request": {
+                "model": "params.model_preference",
+                "prompt": "query_str",
+                "search_focus": "params.search_focus"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "content": {
+                      "from": "content",
+                      "op": "concat"
+                    },
+                    "model": {
+                      "from": "model",
+                      "op": "first"
+                    }
+                  },
+                  "finalize": {
+                    "content": "accumulated.content",
+                    "model": "accumulated.model"
+                  },
+                  "format": "sse",
+                  "format_options": {
+                    "prefixes": [
+                      "data: "
+                    ]
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "model": "display_model"
+                      },
+                      "when": "$exists(display_model)"
+                    },
+                    {
+                      "extract": {
+                        "text_completed": "true"
+                      },
+                      "when": "$exists(text_completed) and text_completed = true"
+                    },
+                    {
+                      "extract": {
+                        "content": "$_perplexity_blocks"
+                      },
+                      "when": "$exists(blocks[0])"
+                    }
+                  ]
+                }
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/rest/sse/perplexity_ask"
+              }
+            ]
+          }
+        },
+        "name": "Perplexity AI",
+        "pricing": {
+          "model": [
+            "free",
+            "subscription"
+          ],
+          "tiers": [
+            {
+              "id": "free",
+              "monthly_usd": 0,
+              "name": "Free",
+              "type": "free"
+            },
+            {
+              "id": "pro",
+              "monthly_usd": 20,
+              "name": "Pro",
+              "type": "individual"
+            }
+          ]
+        },
+        "providers": [
+          "perplexity"
+        ],
+        "vendor": "Perplexity AI",
+        "vendor_url": "https://perplexity.ai"
       }
     }
   },
@@ -41629,7 +42023,7 @@
   "stats": {
     "api_formats": 5,
     "providers": 75,
-    "total_models": 2028
+    "total_models": 2023
   },
   "version": "0.1"
 }
