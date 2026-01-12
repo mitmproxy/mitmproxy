@@ -52,8 +52,7 @@ from mitmproxy.websocket import WebSocketMessage
 # Fix for Windows systems where .js files may have text/plain MIME type in registry.
 # Modern browsers with ES6 module scripts require proper JavaScript MIME types.
 # See: https://github.com/mitmproxy/mitmproxy/issues/7971
-mimetypes.add_type("application/javascript", ".js")
-mimetypes.add_type("application/javascript", ".mjs")
+mimetypes.add_type("text/javascript", ".js")
 
 TRANSPARENT_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08"
