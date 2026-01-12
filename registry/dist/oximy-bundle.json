@@ -79,7 +79,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-11T23:57:03.182893+00:00",
+  "generated_at": "2026-01-12T03:54:49.427540+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
