@@ -428,7 +428,31 @@ class CertStore:
     Implements an in-memory certificate store.
     """
 
-    STORE_CAP = 100
+    STORE_CAP = 10000  # Increased from 100 for better cache hit rate
+
+    # Common AI/API domains to pre-warm certificates for
+    PREWARM_DOMAINS = [
+        "api.openai.com",
+        "api.anthropic.com",
+        "generativelanguage.googleapis.com",
+        "api.cohere.ai",
+        "api.mistral.ai",
+        "api.groq.com",
+        "api.perplexity.ai",
+        "api.together.xyz",
+        "api.fireworks.ai",
+        "api.replicate.com",
+        "huggingface.co",
+        "api-inference.huggingface.co",
+        "chat.openai.com",
+        "claude.ai",
+        "gemini.google.com",
+        "copilot.github.com",
+        "api.github.com",
+        "codeium.com",
+        "api.cursor.sh",
+    ]
+
     default_privatekey: rsa.RSAPrivateKey
     default_ca: Cert
     default_chain_file: Path | None
@@ -462,6 +486,17 @@ class CertStore:
         self.dhparams = dhparams
         self.certs = {}
         self.expire_queue = []
+
+    def prewarm(self) -> None:
+        """Pre-generate certificates for common domains to speed up initial connections."""
+        for domain in self.PREWARM_DOMAINS:
+            try:
+                self.get_cert(
+                    commonname=domain,
+                    sans=(x509.DNSName(domain),),
+                )
+            except Exception:
+                pass  # Ignore errors during prewarm
 
     def expire(self, entry: CertStoreEntry) -> None:
         self.expire_queue.append(entry)

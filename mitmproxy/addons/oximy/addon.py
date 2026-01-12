@@ -307,7 +307,7 @@ class OximyAddon:
         logger.info(f"========== OXIMY ADDON READY ==========")
         logger.info(f"Listening for AI traffic...")
 
-    def request(self, flow: http.HTTPFlow) -> None:
+    async def request(self, flow: http.HTTPFlow) -> None:
         """Classify incoming requests and capture client process info."""
         if not self._enabled or not self._matcher:
             return
@@ -321,7 +321,7 @@ class OximyAddon:
             if self._process_resolver:
                 try:
                     client_port = flow.client_conn.peername[1]
-                    client_process = self._process_resolver.get_process_for_port(
+                    client_process = await self._process_resolver.get_process_for_port(
                         client_port
                     )
                     flow.metadata[OXIMY_CLIENT_KEY] = client_process
@@ -413,10 +413,6 @@ class OximyAddon:
 
             def create_configurable_handler(buf: ConfigurableStreamBuffer, src_id: str):
                 def handler(data: bytes) -> bytes:
-                    # Log raw streaming data for debugging
-                    logger.info(
-                        f"[{src_id}] RAW STREAM ({len(data)} bytes): {data[:500]}"
-                    )
                     buf.process_chunk(data)
                     return data
 

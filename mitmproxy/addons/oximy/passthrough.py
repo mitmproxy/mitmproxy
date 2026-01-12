@@ -197,7 +197,7 @@ class TLSPassthrough:
             else:
                 logger.info(f"⏭️  TLS passthrough (previously failed): {host}")
 
-    def tls_failed_client(self, data: tls.TlsData) -> None:
+    async def tls_failed_client(self, data: tls.TlsData) -> None:
         """
         Called when TLS handshake with client fails.
 
@@ -218,7 +218,7 @@ class TLSPassthrough:
             try:
                 client_addr = data.context.client.peername
                 if client_addr:
-                    client_process = self._process_resolver.get_process_for_port(
+                    client_process = await self._process_resolver.get_process_for_port(
                         client_addr[1]
                     )
             except Exception:
