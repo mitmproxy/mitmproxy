@@ -44,7 +44,7 @@ class TrafficMatcher:
         """Build reverse index from domain -> website_id."""
         index: dict[str, str] = {}
         for website_id, website in self.bundle.websites.items():
-            for domain in website.get("domains", []):
+            for domain in website.get("api_domains", []):
                 index[domain] = website_id
         return index
 

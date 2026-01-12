@@ -17,7 +17,7 @@ from datetime import timezone
 from typing import Any
 from typing import Literal
 
-from mitmproxy.addons.oximy.process import ClientProcess
+from process import ClientProcess
 
 
 def _generate_uuid7() -> str:

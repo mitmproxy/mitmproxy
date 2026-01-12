@@ -32,6 +32,8 @@ from pathlib import Path
 from typing import Any
 from typing import IO
 
+from mitmproxy import ctx
+from mitmproxy import http
 from investigator_types import InvestigationEvent
 from investigator_types import InvestigationSession
 from investigator_types import MatchAttempt
@@ -39,9 +41,6 @@ from investigator_types import ParseAttempt
 from investigator_types import SSEChunk
 from process import ClientProcess
 from process import ProcessResolver
-
-from mitmproxy import ctx
-from mitmproxy import http
 
 logger = logging.getLogger(__name__)
 

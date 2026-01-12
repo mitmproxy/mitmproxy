@@ -14,7 +14,7 @@ from typing import Literal
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from mitmproxy.addons.oximy.process import ClientProcess
+    from process import ClientProcess
 
 
 @dataclass
@@ -36,19 +36,29 @@ class EventSource:
     type: Literal["api", "app", "website"]
     id: str
     endpoint: str | None = None
+    referer: str | None = None
+    origin: str | None = None
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "type": self.type,
             "id": self.id,
             "endpoint": self.endpoint,
         }
+        if self.referer:
+            result["referer"] = self.referer
+        if self.origin:
+            result["origin"] = self.origin
+        return result
 
 
 @dataclass
 class InteractionRequest:
     """Parsed request data."""
 
+    prompt: str | None = (
+        None  # Single prompt (for apps like Granola that send chat history)
+    )
     messages: list[dict] | None = None
     model: str | None = None
     temperature: float | None = None
@@ -58,6 +68,8 @@ class InteractionRequest:
 
     def to_dict(self) -> dict:
         result: dict = {}
+        if self.prompt is not None:
+            result["prompt"] = self.prompt
         if self.messages is not None:
             result["messages"] = self.messages
         if self.model is not None:
@@ -82,6 +94,7 @@ class InteractionResponse:
     finish_reason: str | None = None
     usage: dict | None = None
     raw: dict | None = None
+    content_analysis: dict | None = None  # Rich content analysis
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -93,6 +106,8 @@ class InteractionResponse:
             result["finish_reason"] = self.finish_reason
         if self.usage is not None:
             result["usage"] = self.usage
+        if self.content_analysis is not None:
+            result["content_analysis"] = self.content_analysis
         if self.raw is not None:
             result["_raw"] = self.raw
         return result
@@ -102,18 +117,23 @@ class InteractionResponse:
 class Interaction:
     """Full interaction data for full_trace events."""
 
+    type: str  # "chat", "completion", etc.
     model: str | None
     request: InteractionRequest
     response: InteractionResponse
 
     def to_dict(self) -> dict:
-        result: dict = {
+        data: dict = {
             "request": self.request.to_dict(),
             "response": self.response.to_dict(),
         }
         if self.model is not None:
-            result["model"] = self.model
-        return result
+            data["model"] = self.model
+
+        return {
+            "type": self.type,
+            "data": data,
+        }
 
 
 @dataclass
@@ -191,9 +211,10 @@ class OximyEvent:
         if self.client:
             result["client"] = self.client.to_dict()
 
-        if self.trace_level == "full" and self.interaction:
+        if self.interaction:
             result["interaction"] = self.interaction.to_dict()
-        elif self.trace_level == "identifiable" and self.metadata:
+
+        if self.metadata:
             result["metadata"] = self.metadata
 
         return result

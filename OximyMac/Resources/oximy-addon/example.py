@@ -36,7 +36,7 @@ def run_proxy(
     import asyncio
 
     from mitmproxy import options
-    from mitmproxy.addons.oximy import OximyAddon
+    from  OximyAddon
     from mitmproxy.tools import dump
 
     # Create new event loop for this thread

@@ -23,6 +23,7 @@ from mitmproxy.addons.oximy.models import EventTiming
 from mitmproxy.addons.oximy.models import Interaction
 from mitmproxy.addons.oximy.models import MatchResult
 from mitmproxy.addons.oximy.models import OximyEvent
+from mitmproxy.addons.oximy.models import Subscription
 from mitmproxy.addons.oximy.parser import analyze_content
 from mitmproxy.addons.oximy.parser import ConfigurableRequestParser
 from mitmproxy.addons.oximy.parser import ConfigurableStreamBuffer
@@ -456,6 +457,7 @@ class OximyAddon:
                     "response_status": flow.response.status_code,
                     "content_length": len(flow.response.content or b""),
                 },
+                subscription=Subscription(plan=""),
             )
 
         # Full trace event
@@ -737,6 +739,7 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             interaction=interaction,
+            subscription=Subscription(plan=""),
         )
 
     def _build_file_download_event(
@@ -783,6 +786,7 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             metadata=metadata,
+            subscription=Subscription(plan=""),
         )
 
     def _build_subscription_event(
@@ -838,6 +842,7 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             metadata=metadata,
+            subscription=Subscription(plan=response_json.get("plan_type", "")),
         )
 
     def _calculate_timing(self, flow: http.HTTPFlow) -> EventTiming:

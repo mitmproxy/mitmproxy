@@ -15,8 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
-from urllib.request import build_opener
-from urllib.request import ProxyHandler
+from urllib.request import urlopen
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +23,18 @@ DEFAULT_BUNDLE_URL = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json"
 DEFAULT_CACHE_DIR = Path.home() / ".oximy"
 CACHE_FILENAME = "bundle_cache.json"
 
-# Production builds: No local bundle path - always fetch from remote URL
-# Local bundle is only used in development when running from mitmproxy source
-LOCAL_BUNDLE_PATH = None
+# Local registry path (for development)
+# This is relative to the mitmproxy repo root
+LOCAL_BUNDLE_PATH = (
+    Path(__file__).parent.parent.parent.parent
+    / "registry"
+    / "dist"
+    / "oximy-bundle.json"
+)
+LOCAL_WEBSITES_PATH = (
+    Path(__file__).parent.parent.parent.parent / "registry" / "websites.json"
+)
+LOCAL_APPS_PATH = Path(__file__).parent.parent.parent.parent / "registry" / "apps.json"
 
 
 @dataclass
@@ -36,6 +44,12 @@ class CompiledDomainPattern:
     pattern_str: str
     compiled: re.Pattern[str]
     provider_id: str
+
+
+# Local overrides for website features not yet in the remote bundle
+# This allows us to add new endpoint patterns without waiting for bundle updates
+# NOTE: All website-specific configs should be in websites.json, not hardcoded here
+LOCAL_WEBSITE_OVERRIDES: dict[str, dict[str, Any]] = {}
 
 
 @dataclass
@@ -89,17 +103,165 @@ class OISPBundle:
                     f"Invalid domain pattern '{pattern_def['pattern']}': {e}"
                 )
 
+        # Get websites from bundle and merge local overrides
+        websites = data.get("registry", {}).get("websites", {})
+        websites = cls._apply_local_overrides(websites)
+
+        # Get apps from bundle and merge local apps.json configs
+        apps = data.get("registry", {}).get("apps", {})
+        apps = cls._apply_apps_json(apps)
+
         return cls(
             domain_lookup=data.get("domain_lookup", {}),
             domain_patterns=domain_patterns,
             providers=data.get("providers", {}),
             parsers=data.get("parsers", {}),
             models=data.get("models", {}),
-            apps=data.get("registry", {}).get("apps", {}),
-            websites=data.get("registry", {}).get("websites", {}),
+            apps=apps,
+            websites=websites,
             bundle_version=data.get("bundle_version", "unknown"),
             loaded_at=time.time(),
         )
+
+    @classmethod
+    def _apply_local_overrides(
+        cls, websites: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
+        """Apply local feature overrides and parser configs to websites."""
+        import copy
+
+        result = copy.deepcopy(websites)
+
+        # Apply hardcoded overrides (file_download, subscription endpoints)
+        for website_id, overrides in LOCAL_WEBSITE_OVERRIDES.items():
+            if website_id not in result:
+                continue  # Only extend existing websites
+
+            # Merge features
+            if "features" in overrides:
+                if "features" not in result[website_id]:
+                    result[website_id]["features"] = {}
+                result[website_id]["features"].update(overrides["features"])
+                logger.debug(
+                    f"Applied local overrides to {website_id}: {list(overrides['features'].keys())}"
+                )
+
+        # Load parser configs from local websites.json
+        result = cls._apply_websites_json(result)
+
+        return result
+
+    @classmethod
+    def _apply_websites_json(
+        cls, websites: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
+        """Load and merge parser configs from local websites.json."""
+        if not LOCAL_WEBSITES_PATH.exists():
+            logger.debug(f"Local websites.json not found at {LOCAL_WEBSITES_PATH}")
+            return websites
+
+        try:
+            with open(LOCAL_WEBSITES_PATH, encoding="utf-8") as f:
+                local_data = json.load(f)
+
+            local_websites = local_data.get("websites", {})
+            logger.info(
+                f"Loading parser configs from websites.json: {list(local_websites.keys())}"
+            )
+
+            for website_id, local_website in local_websites.items():
+                if website_id not in websites:
+                    # Add new website entirely
+                    websites[website_id] = local_website
+                    logger.debug(f"Added website from websites.json: {website_id}")
+                else:
+                    # Merge features with parser configs
+                    local_features = local_website.get("features", {})
+                    if "features" not in websites[website_id]:
+                        websites[website_id]["features"] = {}
+
+                    for feature_name, local_feature in local_features.items():
+                        if feature_name not in websites[website_id]["features"]:
+                            websites[website_id]["features"][feature_name] = (
+                                local_feature
+                            )
+                        else:
+                            # Merge parser config into existing feature
+                            if "parser" in local_feature:
+                                websites[website_id]["features"][feature_name][
+                                    "parser"
+                                ] = local_feature["parser"]
+                                logger.debug(
+                                    f"Merged parser config for {website_id}/{feature_name}"
+                                )
+
+            return websites
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to load websites.json: {e}")
+            return websites
+
+    @classmethod
+    def _apply_apps_json(
+        cls, apps: dict[str, dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
+        """Load and merge parser configs from local apps.json."""
+        if not LOCAL_APPS_PATH.exists():
+            logger.debug(f"Local apps.json not found at {LOCAL_APPS_PATH}")
+            return apps
+
+        try:
+            with open(LOCAL_APPS_PATH, encoding="utf-8") as f:
+                local_data = json.load(f)
+
+            local_apps = local_data.get("apps", {})
+            logger.info(
+                f"Loading parser configs from apps.json: {list(local_apps.keys())}"
+            )
+
+            for app_id, local_app in local_apps.items():
+                if app_id not in apps:
+                    # Add new app entirely
+                    apps[app_id] = local_app
+                    logger.debug(f"Added app from apps.json: {app_id}")
+                else:
+                    # Merge api_domains if present
+                    if "api_domains" in local_app:
+                        apps[app_id]["api_domains"] = local_app["api_domains"]
+                        logger.debug(f"Merged api_domains for app {app_id}")
+
+                    # Merge features with parser configs
+                    local_features = local_app.get("features", {})
+                    if "features" not in apps[app_id]:
+                        apps[app_id]["features"] = {}
+
+                    for feature_name, local_feature in local_features.items():
+                        if feature_name not in apps[app_id]["features"]:
+                            apps[app_id]["features"][feature_name] = local_feature
+                            logger.debug(
+                                f"Added feature {feature_name} for app {app_id}"
+                            )
+                        else:
+                            # Merge parser config into existing feature
+                            if "parser" in local_feature:
+                                apps[app_id]["features"][feature_name]["parser"] = (
+                                    local_feature["parser"]
+                                )
+                                logger.debug(
+                                    f"Merged parser config for {app_id}/{feature_name}"
+                                )
+                            # Merge patterns if present
+                            if "patterns" in local_feature:
+                                apps[app_id]["features"][feature_name]["patterns"] = (
+                                    local_feature["patterns"]
+                                )
+                                logger.debug(
+                                    f"Merged patterns for {app_id}/{feature_name}"
+                                )
+
+            return apps
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to load apps.json: {e}")
+            return apps
 
     def is_stale(self, max_age_hours: float) -> bool:
         """Check if the bundle is older than max_age_hours."""
@@ -129,16 +291,13 @@ class BundleLoader:
         self,
         bundle_url: str = DEFAULT_BUNDLE_URL,
         cache_dir: Path | None = None,
-        max_age_hours: float = 0.5,  # 30 minutes default for production
+        max_age_hours: float = 24.0,
         local_bundle_path: Path | None = None,
     ):
         self.bundle_url = bundle_url
         self.cache_dir = cache_dir or DEFAULT_CACHE_DIR
         self.max_age_hours = max_age_hours
-        # In production, LOCAL_BUNDLE_PATH is None, so no local bundle loading
-        self.local_bundle_path = (
-            local_bundle_path if local_bundle_path else LOCAL_BUNDLE_PATH
-        )
+        self.local_bundle_path = local_bundle_path or LOCAL_BUNDLE_PATH
         self._bundle: OISPBundle | None = None
 
     @property
@@ -198,10 +357,7 @@ class BundleLoader:
             raise RuntimeError("No bundle available (fetch failed, no cache)") from e
 
     def _load_from_local(self) -> OISPBundle | None:
-        """Load bundle from local registry (development mode only)."""
-        # In production, local_bundle_path is None - skip local loading
-        if self.local_bundle_path is None:
-            return None
+        """Load bundle from local registry (development mode)."""
         if not self.local_bundle_path.exists():
             return None
 
@@ -216,16 +372,10 @@ class BundleLoader:
             return None
 
     def _fetch_from_url(self) -> OISPBundle:
-        """Fetch bundle from the configured URL, bypassing system proxy."""
+        """Fetch bundle from the configured URL."""
         logger.debug(f"Fetching bundle from {self.bundle_url}")
         try:
-            # IMPORTANT: Use a direct connection without proxy
-            # This is necessary because when mitmproxy restarts, the system proxy
-            # may still be enabled but the proxy isn't running yet, causing
-            # "Connection refused" errors
-            no_proxy_handler = ProxyHandler({})  # Empty dict = no proxy
-            opener = build_opener(no_proxy_handler)
-            with opener.open(self.bundle_url, timeout=30) as response:
+            with urlopen(self.bundle_url, timeout=30) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except URLError as e:
             raise RuntimeError(f"Failed to fetch bundle: {e}") from e
