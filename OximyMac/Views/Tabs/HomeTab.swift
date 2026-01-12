@@ -10,62 +10,62 @@ struct HomeTab: View {
     @State private var isToggling = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        VStack(spacing: 0) {
+            // Main content area - centered
+            VStack(spacing: 20) {
+                // Connection Status Card
+                VStack(spacing: 16) {
+                    // Status Icon
+                    ZStack {
+                        Circle()
+                            .fill(statusColor.opacity(0.15))
+                            .frame(width: 80, height: 80)
 
-            // Connection Status Card
-            VStack(spacing: 16) {
-                // Status Icon
-                ZStack {
-                    Circle()
-                        .fill(statusColor.opacity(0.15))
-                        .frame(width: 80, height: 80)
+                        if isToggling {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                        } else {
+                            Image(systemName: statusIcon)
+                                .font(.system(size: 36))
+                                .foregroundColor(statusColor)
+                        }
+                    }
 
-                    if isToggling {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                    } else {
-                        Image(systemName: statusIcon)
-                            .font(.system(size: 36))
-                            .foregroundColor(statusColor)
+                    // Status Text
+                    Text(statusText)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+
+                    if proxyService.isProxyEnabled, let port = proxyService.configuredPort {
+                        Text("Port \(port)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
 
-                // Status Text
-                Text(statusText)
-                    .font(.title3)
-                    .fontWeight(.semibold)
+                // Toggle Button
+                Button(action: toggleProxy) {
+                    HStack {
+                        Image(systemName: proxyService.isProxyEnabled ? "stop.fill" : "play.fill")
+                        Text(proxyService.isProxyEnabled ? "Stop Monitoring" : "Start Monitoring")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(proxyService.isProxyEnabled ? .orange : .accentColor)
+                .disabled(isToggling || !certService.isCAInstalled)
+                .padding(.horizontal, 32)
 
-                if proxyService.isProxyEnabled, let port = proxyService.configuredPort {
-                    Text("Port \(port)")
+                if !certService.isCAInstalled {
+                    Text("Install certificate in Settings first")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
+            .frame(maxHeight: .infinity)
 
-            // Toggle Button
-            Button(action: toggleProxy) {
-                HStack {
-                    Image(systemName: proxyService.isProxyEnabled ? "stop.fill" : "play.fill")
-                    Text(proxyService.isProxyEnabled ? "Stop Monitoring" : "Start Monitoring")
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(proxyService.isProxyEnabled ? .orange : .accentColor)
-            .disabled(isToggling || !certService.isCAInstalled)
-            .padding(.horizontal, 32)
-
-            if !certService.isCAInstalled {
-                Text("Install certificate in Settings first")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            // Device Info & Sync Status
+            // Device Info & Sync Status - pinned to bottom
             VStack(spacing: 8) {
                 InfoRow(label: "Device", value: appState.deviceName)
 
@@ -82,36 +82,12 @@ struct HomeTab: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Spacer()
-                    if syncService.isSyncing {
-                        HStack(spacing: 4) {
-                            ProgressView()
-                                .scaleEffect(0.5)
-                            Text("Syncing...")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    } else {
-                        Text("\(syncService.pendingEventCount)")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
+                    Text("\(syncService.pendingEventCount)")
+                        .font(.caption)
+                        .fontWeight(.medium)
                 }
 
-                if let lastSync = syncService.lastSyncTime {
-                    InfoRow(label: "Last Sync", value: lastSync.relativeFormatted)
-                }
-
-                if let error = syncService.syncError {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                            .font(.caption)
-                        Text(error)
-                            .font(.caption2)
-                            .foregroundColor(.orange)
-                            .lineLimit(1)
-                    }
-                }
+                InfoRow(label: "Last Sync", value: lastSyncText)
             }
             .padding()
             .background(Color(nsColor: .controlBackgroundColor))
@@ -152,6 +128,14 @@ struct HomeTab: View {
             return "Setup Required"
         } else {
             return "Monitoring Paused"
+        }
+    }
+
+    private var lastSyncText: String {
+        if let lastSync = syncService.lastSyncTime {
+            return lastSync.relativeFormatted
+        } else {
+            return "–"
         }
     }
 

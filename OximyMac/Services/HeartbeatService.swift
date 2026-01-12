@@ -85,6 +85,16 @@ final class HeartbeatService: ObservableObject {
                 data: ["status": response.status]
             )
 
+            // Update workspace name if returned from server
+            if let workspaceName = response.workspaceName, !workspaceName.isEmpty {
+                let defaults = UserDefaults.standard
+                let currentName = defaults.string(forKey: Constants.Defaults.workspaceName)
+                if currentName != workspaceName {
+                    defaults.set(workspaceName, forKey: Constants.Defaults.workspaceName)
+                    NotificationCenter.default.post(name: .workspaceNameUpdated, object: workspaceName)
+                }
+            }
+
             // Process any commands from the server
             if let commands = response.commands, !commands.isEmpty {
                 await processCommands(commands)

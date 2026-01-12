@@ -489,8 +489,10 @@ class MITMService: ObservableObject {
     private func runProcess(_ process: Process, port: Int, addonPath: String) throws {
         NSLog("[MITMService] runProcess() - Setting up process...")
 
-        // Don't capture output - let it go to /dev/null to avoid pipe issues
-        // The process was exiting because pipes were being closed
+        // Redirect all standard file handles to /dev/null to fully detach the process
+        // Without this, the child process may exit when the parent's stdin/stdout/stderr
+        // are closed or when EOF is received on stdin
+        process.standardInput = FileHandle.nullDevice
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
 

@@ -225,7 +225,7 @@ final class APIClient: ObservableObject {
         defaults.set(data.deviceToken, forKey: Constants.Defaults.deviceToken)
         defaults.set(data.deviceId, forKey: Constants.Defaults.deviceId)
         defaults.set(data.workspaceId, forKey: Constants.Defaults.workspaceId)
-        defaults.set(data.deviceName, forKey: Constants.Defaults.workspaceName)
+        defaults.set(data.workspaceName ?? data.workspaceId, forKey: Constants.Defaults.workspaceName)
 
         // Save config
         data.config.save()

@@ -180,7 +180,7 @@ struct EnrollmentView: View {
                 try? await Task.sleep(nanoseconds: 500_000_000)
 
                 appState.login(
-                    workspaceName: deviceData.deviceName,
+                    workspaceName: deviceData.workspaceName ?? deviceData.workspaceId,
                     deviceToken: deviceData.deviceToken
                 )
                 appState.deviceId = deviceData.deviceId

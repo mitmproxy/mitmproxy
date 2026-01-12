@@ -68,7 +68,7 @@ Filename: "taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
 
 [UninstallDelete]
 ; Clean up user data (optional - ask user?)
-Type: filesandordirs; Name: "{userprofile}\.oximy"
+Type: filesandordirs; Name: "{%USERPROFILE}\.oximy"
 
 [Code]
 var

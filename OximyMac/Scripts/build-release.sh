@@ -16,17 +16,17 @@ echo "Project: $PROJECT_DIR"
 echo ""
 
 # Clean previous build
-echo "[1/6] Cleaning previous build..."
+echo "[1/7] Cleaning previous build..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 # Build in release mode
-echo "[2/6] Building in release mode..."
+echo "[2/7] Building in release mode..."
 cd "$PROJECT_DIR"
 swift build -c release
 
 # Create app bundle structure
-echo "[3/6] Creating app bundle..."
+echo "[3/7] Creating app bundle..."
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
@@ -81,7 +81,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 EOF
 
 # Copy resources
-echo "[4/6] Copying resources..."
+echo "[4/7] Copying resources..."
 if [ -d "$PROJECT_DIR/Resources" ]; then
     cp -R "$PROJECT_DIR/Resources/"* "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
 fi
@@ -109,10 +109,42 @@ else
     exit 1
 fi
 
-# Code signing (stub - requires Developer ID)
-echo "[5/6] Code signing..."
+# Create app icon from Oximy-rounded.png BEFORE signing (critical!)
+echo "[5/7] Creating app icon..."
+ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
+# Fall back to original if rounded version doesn't exist
+if [ ! -f "$ICON_SOURCE" ]; then
+    ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
+fi
+if [ -f "$ICON_SOURCE" ]; then
+    ICONSET_DIR="$BUILD_DIR/AppIcon.iconset"
+    mkdir -p "$ICONSET_DIR"
+
+    # Generate icon sizes
+    sips -z 16 16     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_16x16.png" 2>/dev/null
+    sips -z 32 32     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_16x16@2x.png" 2>/dev/null
+    sips -z 32 32     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_32x32.png" 2>/dev/null
+    sips -z 64 64     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_32x32@2x.png" 2>/dev/null
+    sips -z 128 128   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_128x128.png" 2>/dev/null
+    sips -z 256 256   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_128x128@2x.png" 2>/dev/null
+    sips -z 256 256   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_256x256.png" 2>/dev/null
+    sips -z 512 512   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_256x256@2x.png" 2>/dev/null
+    sips -z 512 512   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_512x512.png" 2>/dev/null
+    sips -z 1024 1024 "$ICON_SOURCE" --out "$ICONSET_DIR/icon_512x512@2x.png" 2>/dev/null
+
+    # Convert to icns
+    iconutil -c icns "$ICONSET_DIR" -o "$APP_BUNDLE/Contents/Resources/AppIcon.icns" 2>/dev/null || true
+    rm -rf "$ICONSET_DIR"
+    echo "    Created AppIcon.icns from Oximy.png"
+else
+    echo "    WARNING: Oximy.png not found, skipping icon generation"
+fi
+
+# Code signing (requires Developer ID)
+echo "[6/7] Code signing..."
 if [ -n "$DEVELOPER_ID" ]; then
     echo "    Signing with: $DEVELOPER_ID"
+    ENTITLEMENTS_FILE="$PROJECT_DIR/OximyMac.entitlements"
 
     # Sign embedded frameworks first (required for notarization)
     # Sparkle framework
@@ -169,47 +201,47 @@ if [ -n "$DEVELOPER_ID" ]; then
         done
     fi
 
-    # Finally sign the main app bundle
+    # Sign the main binary (with entitlements)
+    echo "    Signing main binary..."
+    if [ -f "$ENTITLEMENTS_FILE" ]; then
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS_FILE" \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    else
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    fi
+
+    # Finally sign the main app bundle (with entitlements)
     echo "    Signing main app bundle..."
-    codesign --force --options runtime --timestamp \
-        --sign "$DEVELOPER_ID" \
-        "$APP_BUNDLE"
+    if [ -f "$ENTITLEMENTS_FILE" ]; then
+        echo "    Using entitlements: $ENTITLEMENTS_FILE"
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS_FILE" \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE"
+    else
+        echo "    WARNING: Entitlements file not found, signing without entitlements"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE"
+    fi
 
     echo "    Code signing complete"
+
+    # Verify signature
+    echo "    Verifying signature..."
+    if codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE" 2>&1; then
+        echo "    ✓ Signature verification passed"
+    else
+        echo "    ✗ Signature verification FAILED"
+        exit 1
+    fi
 else
     echo "    STUB: Skipping code signing (no DEVELOPER_ID set)"
     echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
-fi
-
-# Create app icon from Oximy-rounded.png (with proper macOS rounded corners)
-echo "[6/7] Creating app icon..."
-ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
-# Fall back to original if rounded version doesn't exist
-if [ ! -f "$ICON_SOURCE" ]; then
-    ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
-fi
-if [ -f "$ICON_SOURCE" ]; then
-    ICONSET_DIR="$BUILD_DIR/AppIcon.iconset"
-    mkdir -p "$ICONSET_DIR"
-
-    # Generate icon sizes
-    sips -z 16 16     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_16x16.png" 2>/dev/null
-    sips -z 32 32     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_16x16@2x.png" 2>/dev/null
-    sips -z 32 32     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_32x32.png" 2>/dev/null
-    sips -z 64 64     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_32x32@2x.png" 2>/dev/null
-    sips -z 128 128   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_128x128.png" 2>/dev/null
-    sips -z 256 256   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_128x128@2x.png" 2>/dev/null
-    sips -z 256 256   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_256x256.png" 2>/dev/null
-    sips -z 512 512   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_256x256@2x.png" 2>/dev/null
-    sips -z 512 512   "$ICON_SOURCE" --out "$ICONSET_DIR/icon_512x512.png" 2>/dev/null
-    sips -z 1024 1024 "$ICON_SOURCE" --out "$ICONSET_DIR/icon_512x512@2x.png" 2>/dev/null
-
-    # Convert to icns
-    iconutil -c icns "$ICONSET_DIR" -o "$APP_BUNDLE/Contents/Resources/AppIcon.icns" 2>/dev/null || true
-    rm -rf "$ICONSET_DIR"
-    echo "    Created AppIcon.icns from Oximy.png"
-else
-    echo "    WARNING: Oximy.png not found, skipping icon generation"
 fi
 
 # Create DMG using create-dmg (https://github.com/sindresorhus/create-dmg)
