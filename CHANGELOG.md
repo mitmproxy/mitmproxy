@@ -11,9 +11,7 @@
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
-- Fix mitmweb blank page on Windows systems where `.js` files have incorrect MIME type in registry.
-  mitmweb now explicitly sets the MIME type for JavaScript files to `text/javascript` to work around
-  Windows registry entries that incorrectly map `.js` to `text/plain`.
+- Fix a bug where mitmweb would show a blank page on Windows.
 
 ## 24 November 2025: mitmproxy 12.2.1
 
