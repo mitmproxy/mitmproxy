@@ -27,6 +27,7 @@ class ClientProcess:
     user: str | None
     port: int  # The ephemeral port used for lookup
     bundle_id: str | None = None  # macOS bundle identifier
+    id: str | None = None  # App ID from registry (e.g., "granola")
 
     def to_dict(self) -> dict:
         """Serialize to dictionary for JSON output."""
@@ -46,6 +47,8 @@ class ClientProcess:
             result["user"] = self.user
         if self.bundle_id is not None:
             result["bundle_id"] = self.bundle_id
+        if self.id is not None:
+            result["id"] = self.id
 
         return result
 
@@ -63,6 +66,11 @@ class ProcessResolver:
         self._cache: dict[int, dict] = {}  # PID -> process info
         self._is_macos = platform.system() == "Darwin"
         self._is_linux = platform.system() == "Linux"
+        self._bundle_id_to_app_id: dict[str, str] = {}  # bundle_id -> app_id
+
+    def set_bundle_id_index(self, index: dict[str, str]) -> None:
+        """Set the bundle_id -> app_id mapping from the registry."""
+        self._bundle_id_to_app_id = index
 
     def get_process_for_port(self, port: int) -> ClientProcess:
         """
@@ -129,6 +137,9 @@ class ProcessResolver:
         # Step 5: Extract bundle_id from path (macOS apps)
         bundle_id = self._extract_bundle_id(proc_info.get("path"))
 
+        # Step 6: Look up app_id from bundle_id
+        app_id = self._bundle_id_to_app_id.get(bundle_id) if bundle_id else None
+
         return ClientProcess(
             pid=pid,
             name=name,
@@ -138,6 +149,7 @@ class ProcessResolver:
             user=proc_info.get("user"),
             port=port,
             bundle_id=bundle_id,
+            id=app_id,
         )
 
     def _find_pid_for_port(self, port: int) -> int | None:
