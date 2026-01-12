@@ -507,16 +507,65 @@ class MITMService: ObservableObject {
         // Redirect stdin to /dev/null
         process.standardInput = FileHandle.nullDevice
 
-        // Capture stderr to see any Python errors
+        // Create log file for mitmproxy output
+        let logFilePath = Constants.logsDir.appendingPathComponent("mitmdump.log")
+
+        // Rotate log if it exists and is too large (> 10MB)
+        let fm = FileManager.default
+        if fm.fileExists(atPath: logFilePath.path),
+           let attrs = try? fm.attributesOfItem(atPath: logFilePath.path),
+           let size = attrs[.size] as? Int64,
+           size > 10_000_000 {
+            let rotatedPath = Constants.logsDir.appendingPathComponent("mitmdump.log.old")
+            try? fm.removeItem(at: rotatedPath)
+            try? fm.moveItem(at: logFilePath, to: rotatedPath)
+        }
+
+        // Create or append to log file
+        if !fm.fileExists(atPath: logFilePath.path) {
+            fm.createFile(atPath: logFilePath.path, contents: nil, attributes: nil)
+        }
+
+        let logFileHandle: FileHandle?
+        do {
+            logFileHandle = try FileHandle(forWritingTo: logFilePath)
+            logFileHandle?.seekToEndOfFile()
+
+            // Write startup marker
+            let startupMarker = "\n\n========== MITM STARTED at \(Date()) ==========\n"
+            if let data = startupMarker.data(using: .utf8) {
+                logFileHandle?.write(data)
+            }
+        } catch {
+            NSLog("[MITMService] WARNING: Could not open log file: \(error)")
+            logFileHandle = nil
+        }
+
+        // Capture both stdout and stderr
+        let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
-        process.standardOutput = FileHandle.nullDevice
+        process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        // Read stderr in background
+        // Read stdout in background and write to both NSLog and file
+        stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            if !data.isEmpty {
+                if let str = String(data: data, encoding: .utf8) {
+                    NSLog("[MITMService] STDOUT: %@", str)
+                }
+                logFileHandle?.write(data)
+            }
+        }
+
+        // Read stderr in background and write to both NSLog and file
         stderrPipe.fileHandleForReading.readabilityHandler = { handle in
             let data = handle.availableData
-            if !data.isEmpty, let str = String(data: data, encoding: .utf8) {
-                NSLog("[MITMService] STDERR: %@", str)
+            if !data.isEmpty {
+                if let str = String(data: data, encoding: .utf8) {
+                    NSLog("[MITMService] STDERR: %@", str)
+                }
+                logFileHandle?.write(data)
             }
         }
 

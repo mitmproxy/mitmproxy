@@ -6,9 +6,7 @@ struct SupportTab: View {
             VStack(spacing: 16) {
                 // App Info
                 VStack(spacing: 8) {
-                    Image("Oximy")
-                        .resizable()
-                        .frame(width: 48, height: 48)
+                    OximyLogo(size: 48)
                         .cornerRadius(10)
 
                     Text("Oximy")

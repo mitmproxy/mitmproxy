@@ -46,6 +46,7 @@ class TrafficMatcher:
         for website_id, website in self.bundle.websites.items():
             for domain in website.get("api_domains", []):
                 index[domain] = website_id
+        logger.debug(f"Website domain index: {list(index.keys())}")
         return index
 
     def _build_app_signature_index(self) -> dict[str, str]:

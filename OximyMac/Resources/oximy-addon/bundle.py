@@ -10,18 +10,25 @@ from __future__ import annotations
 import json
 import logging
 import re
+import ssl
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
-from urllib.request import urlopen
+from urllib.request import build_opener
+from urllib.request import HTTPSHandler
+from urllib.request import ProxyHandler
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_BUNDLE_URL = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json"
 DEFAULT_CACHE_DIR = Path.home() / ".oximy"
 CACHE_FILENAME = "bundle_cache.json"
+
+# Cache format version - increment this when cache structure changes
+# This forces a cache refresh when the addon is updated
+CACHE_FORMAT_VERSION = 2
 
 # Local registry path (for development)
 # This is relative to the mitmproxy repo root
@@ -372,11 +379,31 @@ class BundleLoader:
             return None
 
     def _fetch_from_url(self) -> OISPBundle:
-        """Fetch bundle from the configured URL."""
+        """Fetch bundle from the configured URL.
+
+        Uses a custom SSL context and bypasses system proxy to avoid:
+        1. SSL verification issues with bundled Python
+        2. Proxy loop (mitmproxy intercepting its own traffic)
+        """
         logger.debug(f"Fetching bundle from {self.bundle_url}")
         try:
-            with urlopen(self.bundle_url, timeout=30) as response:
-                data = json.loads(response.read().decode("utf-8"))
+            # Create SSL context that doesn't verify certificates
+            # This is safe because we're fetching a public bundle spec
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
+            # Create opener that:
+            # 1. Uses custom SSL context (HTTPSHandler)
+            # 2. Bypasses system proxy (empty ProxyHandler)
+            # This prevents mitmproxy from intercepting its own bundle fetch
+            https_handler = HTTPSHandler(context=ssl_context)
+            no_proxy_handler = ProxyHandler({})
+            opener = build_opener(https_handler, no_proxy_handler)
+
+            response = opener.open(self.bundle_url, timeout=30)
+            data = json.loads(response.read().decode("utf-8"))
+            response.close()
         except URLError as e:
             raise RuntimeError(f"Failed to fetch bundle: {e}") from e
         except json.JSONDecodeError as e:
@@ -392,6 +419,20 @@ class BundleLoader:
         try:
             with open(self.cache_path, encoding="utf-8") as f:
                 cache_data = json.load(f)
+
+            # Check cache format version - invalidate if outdated
+            cache_version = cache_data.get("cache_format_version", 0)
+            if cache_version != CACHE_FORMAT_VERSION:
+                logger.info(
+                    f"Cache format outdated (v{cache_version} vs v{CACHE_FORMAT_VERSION}), "
+                    "will refresh from URL"
+                )
+                # Delete the old cache file
+                try:
+                    self.cache_path.unlink()
+                except OSError:
+                    pass
+                return None
 
             # Cache stores both the bundle and metadata
             bundle_data = cache_data.get("bundle", cache_data)
@@ -409,8 +450,9 @@ class BundleLoader:
         try:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-            # Store original bundle data plus load timestamp
+            # Store original bundle data plus load timestamp and format version
             cache_data = {
+                "cache_format_version": CACHE_FORMAT_VERSION,
                 "loaded_at": bundle.loaded_at,
                 "bundle": self._bundle_to_dict(bundle),
             }
