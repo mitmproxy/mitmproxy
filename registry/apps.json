@@ -1,6 +1,110 @@
 {
   "version": "1.0.0",
   "apps": {
+    "arc": {
+      "name": "Arc",
+      "vendor": "The Browser Company",
+      "vendor_url": "https://arc.net",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "company.thebrowser.Browser"
+        }
+      },
+      "icon": "arc.png"
+    },
+    "chrome": {
+      "name": "Google Chrome",
+      "vendor": "Google",
+      "vendor_url": "https://google.com/chrome",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.google.Chrome"
+        }
+      },
+      "icon": "google-chrome.png"
+    },
+    "safari": {
+      "name": "Safari",
+      "vendor": "Apple",
+      "vendor_url": "https://apple.com/safari",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.apple.Safari"
+        }
+      },
+      "icon": "safari.png"
+    },
+    "firefox": {
+      "name": "Firefox",
+      "vendor": "Mozilla",
+      "vendor_url": "https://mozilla.org/firefox",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "org.mozilla.firefox"
+        }
+      },
+      "icon": "firefox.png"
+    },
+    "edge": {
+      "name": "Microsoft Edge",
+      "vendor": "Microsoft",
+      "vendor_url": "https://microsoft.com/edge",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.microsoft.edgemac"
+        }
+      },
+      "icon": "edge.png"
+    },
+    "brave": {
+      "name": "Brave",
+      "vendor": "Brave Software",
+      "vendor_url": "https://brave.com",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.brave.Browser"
+        }
+      },
+      "icon": "brave.png"
+    },
+    "opera": {
+      "name": "Opera",
+      "vendor": "Opera Software",
+      "vendor_url": "https://opera.com",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.operasoftware.Opera"
+        }
+      },
+      "icon": "opera.png"
+    },
+    "vivaldi": {
+      "name": "Vivaldi",
+      "vendor": "Vivaldi Technologies",
+      "vendor_url": "https://vivaldi.com",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.vivaldi.Vivaldi"
+        }
+      },
+      "icon": "vivaldi.png"
+    },
     "granola": {
       "name": "Granola",
       "vendor": "Granola",
