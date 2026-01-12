@@ -294,7 +294,9 @@ class OximyAddon:
         _set_macos_proxy(enable=True)
 
         logger.info(f"Output directory: {output_dir}")
-        logger.info(f"JSONata parsing: {'ENABLED' if JSONATA_AVAILABLE else 'DISABLED (install jsonata-python for advanced parsing)'}")
+        logger.info(
+            f"JSONata parsing: {'ENABLED' if JSONATA_AVAILABLE else 'DISABLED (install jsonata-python for advanced parsing)'}"
+        )
         logger.info(f"========== OXIMY ADDON READY ==========")
         logger.info(f"Listening for AI traffic...")
 
@@ -312,7 +314,9 @@ class OximyAddon:
             if self._process_resolver:
                 try:
                     client_port = flow.client_conn.peername[1]
-                    client_process = self._process_resolver.get_process_for_port(client_port)
+                    client_process = self._process_resolver.get_process_for_port(
+                        client_port
+                    )
                     flow.metadata[OXIMY_CLIENT_KEY] = client_process
                 except Exception as e:
                     logger.debug(f"Could not resolve client process: {e}")
@@ -333,7 +337,10 @@ class OximyAddon:
                     f"{match_result.classification} ({match_result.source_type}/{match_result.source_id})"
                 )
         except Exception as e:
-            logger.error(f"Error in request hook for {flow.request.pretty_host}: {e}", exc_info=True)
+            logger.error(
+                f"Error in request hook for {flow.request.pretty_host}: {e}",
+                exc_info=True,
+            )
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
         """Set up streaming handler only for actual streaming responses (SSE)."""

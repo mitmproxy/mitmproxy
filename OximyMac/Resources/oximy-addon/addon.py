@@ -13,8 +13,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from mitmproxy import ctx
-from mitmproxy import http
 from bundle import BundleLoader
 from bundle import DEFAULT_BUNDLE_URL
 from matcher import TrafficMatcher
@@ -33,6 +31,9 @@ from passthrough import TLSPassthrough
 from process import ClientProcess
 from process import ProcessResolver
 from writer import EventWriter
+
+from mitmproxy import ctx
+from mitmproxy import http
 
 if TYPE_CHECKING:
     from bundle import OISPBundle
@@ -294,7 +295,9 @@ class OximyAddon:
         _set_macos_proxy(enable=True)
 
         logger.info(f"Output directory: {output_dir}")
-        logger.info(f"JSONata parsing: {'ENABLED' if JSONATA_AVAILABLE else 'DISABLED (install jsonata-python for advanced parsing)'}")
+        logger.info(
+            f"JSONata parsing: {'ENABLED' if JSONATA_AVAILABLE else 'DISABLED (install jsonata-python for advanced parsing)'}"
+        )
         logger.info(f"========== OXIMY ADDON READY ==========")
         logger.info(f"Listening for AI traffic...")
 
@@ -312,7 +315,9 @@ class OximyAddon:
             if self._process_resolver:
                 try:
                     client_port = flow.client_conn.peername[1]
-                    client_process = self._process_resolver.get_process_for_port(client_port)
+                    client_process = self._process_resolver.get_process_for_port(
+                        client_port
+                    )
                     flow.metadata[OXIMY_CLIENT_KEY] = client_process
                 except Exception as e:
                     logger.debug(f"Could not resolve client process: {e}")
@@ -333,7 +338,10 @@ class OximyAddon:
                     f"{match_result.classification} ({match_result.source_type}/{match_result.source_id})"
                 )
         except Exception as e:
-            logger.error(f"Error in request hook for {flow.request.pretty_host}: {e}", exc_info=True)
+            logger.error(
+                f"Error in request hook for {flow.request.pretty_host}: {e}",
+                exc_info=True,
+            )
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
         """Set up streaming handler only for actual streaming responses (SSE)."""
@@ -572,9 +580,7 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import (
-                        ConfigurableStreamBuffer as CSB,
-                    )
+                    from parser import ConfigurableStreamBuffer as CSB
 
                     logger.info(
                         f"_build_event: configurable_buffer in dict={flow.id in self._configurable_buffers}, has_response_content={flow.response and flow.response.content is not None}"
@@ -665,9 +671,7 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import (
-                        ConfigurableStreamBuffer as CSB,
-                    )
+                    from parser import ConfigurableStreamBuffer as CSB
 
                     if configurable_buffer:
                         # Streaming response - finalize the buffer
