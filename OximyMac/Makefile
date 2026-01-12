@@ -38,6 +38,16 @@ release: sync
 	@echo "==> Building release..."
 	swift build -c release
 
+# Build app bundle (for testing features like auto-update that require .app structure)
+bundle: sync
+	@echo "==> Building debug app bundle..."
+	BUILD_CONFIG=debug ./Scripts/build-release.sh
+
+# Build release app bundle with DMG
+dmg: sync
+	@echo "==> Building release DMG..."
+	./Scripts/build-release.sh
+
 # Help
 help:
 	@echo "OximyMac Build System"
@@ -48,6 +58,8 @@ help:
 	@echo "  make run       - Sync + build + run"
 	@echo "  make clean     - Clean build artifacts"
 	@echo "  make release   - Build release version"
+	@echo "  make bundle    - Build debug app bundle (for testing auto-update)"
+	@echo "  make dmg       - Build release DMG for distribution"
 	@echo ""
 	@echo "The 'sync' step automatically copies Python files from"
 	@echo "mitmproxy/addons/oximy/ to Resources/oximy-addon/"

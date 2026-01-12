@@ -9,6 +9,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_DIR/build"
 APP_NAME="Oximy"
 VERSION="${VERSION:-1.0.0}"
+BUILD_CONFIG="${BUILD_CONFIG:-release}"  # Can be 'release' or 'debug'
 
 # Detect architecture for DMG naming
 ARCH=$(uname -m)
@@ -18,8 +19,9 @@ else
     ARCH_SUFFIX="-intel"
 fi
 
-echo "=== Oximy Release Build ==="
+echo "=== Oximy Build ==="
 echo "Version: $VERSION"
+echo "Configuration: $BUILD_CONFIG"
 echo "Architecture: $ARCH ($ARCH_SUFFIX)"
 echo "Project: $PROJECT_DIR"
 echo ""
@@ -29,10 +31,10 @@ echo "[1/7] Cleaning previous build..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Build in release mode
-echo "[2/7] Building in release mode..."
+# Build
+echo "[2/7] Building in $BUILD_CONFIG mode..."
 cd "$PROJECT_DIR"
-swift build -c release
+swift build -c "$BUILD_CONFIG"
 
 # Create app bundle structure
 echo "[3/7] Creating app bundle..."
@@ -41,7 +43,7 @@ mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 # Copy binary
-cp ".build/release/OximyMac" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+cp ".build/$BUILD_CONFIG/OximyMac" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
 # Create Info.plist
 cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
@@ -89,8 +91,40 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 </plist>
 EOF
 
-# Copy resources
-echo "[4/7] Copying resources..."
+# Copy frameworks (Sparkle, Sentry)
+echo "[4/7] Copying frameworks..."
+mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+
+# Copy Sparkle.framework - check build output first, then artifacts
+SPARKLE_FRAMEWORK="$PROJECT_DIR/.build/$BUILD_CONFIG/Sparkle.framework"
+if [ ! -d "$SPARKLE_FRAMEWORK" ]; then
+    # Fallback to xcframework artifacts
+    SPARKLE_FRAMEWORK="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+fi
+if [ -d "$SPARKLE_FRAMEWORK" ]; then
+    echo "    Copying Sparkle.framework from $SPARKLE_FRAMEWORK..."
+    cp -R "$SPARKLE_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/"
+else
+    echo "    ERROR: Sparkle.framework not found"
+    echo "    Run 'swift build -c $BUILD_CONFIG' first to fetch Sparkle package"
+    exit 1
+fi
+
+# Copy Sentry.framework - check build output first, then artifacts
+SENTRY_FRAMEWORK="$PROJECT_DIR/.build/$BUILD_CONFIG/Sentry.framework"
+if [ ! -d "$SENTRY_FRAMEWORK" ]; then
+    # Fallback to xcframework artifacts (dynamic version for macOS)
+    SENTRY_FRAMEWORK="$PROJECT_DIR/.build/artifacts/sentry-cocoa/Sentry-Dynamic/Sentry-Dynamic.xcframework/macos-arm64_x86_64/Sentry.framework"
+fi
+if [ -d "$SENTRY_FRAMEWORK" ]; then
+    echo "    Copying Sentry.framework from $SENTRY_FRAMEWORK..."
+    cp -R "$SENTRY_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/Sentry.framework"
+else
+    echo "    WARNING: Sentry.framework not found, Sentry may be statically linked"
+fi
+
+# Copy other resources
+echo "    Copying resources..."
 if [ -d "$PROJECT_DIR/Resources" ]; then
     cp -R "$PROJECT_DIR/Resources/"* "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
 fi
