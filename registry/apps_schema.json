@@ -164,49 +164,38 @@
           "type": "other",
           "name": "Miscellaneous Feature",
           "description": "Other or experimental feature types."
-        },
-        "pricing": {
-          "model": [
-            "subscription"
-          ],
-          "tiers": [
-            {
-              "id": "free",
-              "name": "Free",
-              "type": "free",
-              "monthly_usd": 0
-            },
-            {
-              "id": "plus",
-              "name": "Plus",
-              "type": "individual",
-              "monthly_usd": 20
-            },
-            {
-              "id": "pro",
-              "name": "Pro",
-              "type": "individual",
-              "monthly_usd": 200
-            },
-            {
-              "id": "team",
-              "name": "Team",
-              "type": "team",
-              "monthly_usd": 25
-            }
-          ]
-        },
-        "detection": {
-          "subscription": [
-            {
-              "type": "api_response",
-              "url": "**/backend-api/accounts/check/**",
-              "extract": {
-                "plan": "$.accounts.*.account.plan_type"
-              }
-            }
-          ]
         }
+      },
+      "pricing": {
+        "model": [
+          "subscription"
+        ],
+        "tiers": [
+          {
+            "id": "free",
+            "name": "Free",
+            "type": "free",
+            "monthly_usd": 0
+          },
+          {
+            "id": "plus",
+            "name": "Plus",
+            "type": "individual",
+            "monthly_usd": 20
+          },
+          {
+            "id": "pro",
+            "name": "Pro",
+            "type": "individual",
+            "monthly_usd": 200
+          },
+          {
+            "id": "team",
+            "name": "Team",
+            "type": "team",
+            "monthly_usd": 25
+          }
+        ]
       },
       "detection": {
         "subscription": [
