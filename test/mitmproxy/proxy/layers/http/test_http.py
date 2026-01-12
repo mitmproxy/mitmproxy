@@ -1023,19 +1023,6 @@ def test_proxy_chain(tctx, strategy):
         playbook >> reply(None)
     playbook << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
 
-    playbook >> DataReceived(
-        tctx.client, b"CONNECT second-proxy:8080 HTTP/1.1\r\nHost: proxy:8080\r\n\r\n"
-    )
-    playbook << layer.NextLayerHook(Placeholder())
-    playbook >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
-    playbook << SendData(
-        tctx.client,
-        BytesMatching(
-            b"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode."
-        ),
-    )
-    playbook << CloseConnection(tctx.client)
-
     assert playbook
 
 
@@ -1864,4 +1851,228 @@ def test_drop_stream_with_paused_events(tctx):
         >> reply()
         << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection killed"))
         << CloseConnection(tctx.client)
+    )
+
+
+def test_transparent_connect_passthrough(tctx):
+    """Test CONNECT request in transparent mode with default passthrough."""
+    # Setup: transparent mode with upstream proxy at server address
+    tctx.server.address = ("proxy.corp.com", 3128)
+    tctx.options.allow_transparent_tunnel_inspection = False  # Default: passthrough
+
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+
+    # Client sends CONNECT (intercepted in transparent mode)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
+        )
+        # Mitmproxy opens connection to upstream proxy
+        << OpenConnection(server)
+        >> reply(None)
+        # Mitmproxy forwards CONNECT to upstream proxy
+        << SendData(
+            server,
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
+        )
+        # Upstream proxy responds with 200
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 200 Connection established\r\n\r\n",
+        )
+        # Mitmproxy forwards response to client
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 200 Connection established\r\n\r\n",
+        )
+        # Client starts sending encrypted data through tunnel
+        >> DataReceived(tctx.client, b"\x16\x03\x03\x00\x00")
+        # Data is forwarded (passthrough mode - TCPLayer)
+        << SendData(server, b"\x16\x03\x03\x00\x00")
+    )
+
+
+def test_transparent_connect_error_407(tctx):
+    """Test CONNECT in transparent mode when upstream proxy returns 407."""
+    tctx.server.address = ("proxy.corp.com", 3128)
+
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT www.example.com:443 HTTP/1.1\r\n"
+            b"Host: www.example.com:443\r\n\r\n",
+        )
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT www.example.com:443 HTTP/1.1\r\n"
+            b"Host: www.example.com:443\r\n\r\n",
+        )
+        # Upstream proxy requires authentication
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 407 Proxy Authentication Required\r\n"
+            b'Proxy-Authenticate: Basic realm="Corporate Proxy"\r\n'
+            b"Content-Length: 0\r\n\r\n",
+        )
+        # Error response is forwarded to client
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 407 Proxy Authentication Required\r\n"
+            b'Proxy-Authenticate: Basic realm="Corporate Proxy"\r\n'
+            b"Content-Length: 0\r\n\r\n",
+        )
+    )
+
+
+def test_transparent_connect_error_407_with_body(tctx):
+    """Test CONNECT in transparent mode when upstream proxy returns 407 with HTML error body."""
+    tctx.server.address = ("proxy.corp.com", 3128)
+
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+
+    error_body = b"<html><body><h1>407 Proxy Authentication Required</h1></body></html>"
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\n\r\n",
+        )
+        << http.HttpConnectHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\n\r\n",
+        )
+        # Upstream proxy requires authentication and sends HTML error page
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 407 Proxy Authentication Required\r\n"
+            b'Proxy-Authenticate: Basic realm="Corporate Proxy"\r\n'
+            b"Content-Type: text/html\r\n"
+            b"Content-Length: "
+            + str(len(error_body)).encode()
+            + b"\r\n\r\n"
+            + error_body,
+        )
+        # Error response (headers + body) is forwarded to client
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 407 Proxy Authentication Required\r\n"
+            b'Proxy-Authenticate: Basic realm="Corporate Proxy"\r\n'
+            b"Content-Type: text/html\r\n"
+            b"Content-Length: "
+            + str(len(error_body)).encode()
+            + b"\r\n\r\n"
+            + error_body,
+        )
+        << http.HttpConnectErrorHook(flow)
+        >> reply()
+    )
+
+    # Verify the flow object contains the error response body
+    assert flow().response.status_code == 407
+    assert flow().response.content == error_body
+    assert flow().response.headers["Content-Type"] == "text/html"
+
+
+def test_transparent_connect_error_502(tctx):
+    """Test CONNECT in transparent mode when upstream proxy returns 502."""
+    tctx.server.address = ("proxy.corp.com", 3128)
+
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT unreachable.example.com:443 HTTP/1.1\r\nHost: unreachable.example.com:443\r\n\r\n",
+        )
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT unreachable.example.com:443 HTTP/1.1\r\nHost: unreachable.example.com:443\r\n\r\n",
+        )
+        # Upstream proxy cannot reach destination
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n",
+        )
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n",
+        )
+    )
+
+
+def test_transparent_connect_upstream_connection_failed(tctx):
+    """Test CONNECT in transparent mode when connection to upstream proxy fails."""
+    tctx.server.address = ("unreachable.proxy.com", 3128)
+
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\n\r\n",
+        )
+        << http.HttpConnectHook(flow)
+        >> reply()
+        << OpenConnection(Placeholder())
+        # Connection to upstream proxy fails
+        >> reply("Connection refused")
+        # Error hook is triggered
+        << http.HttpErrorHook(flow)
+        >> reply()
+        # Error response sent to client
+        << SendData(tctx.client, BytesMatching(b"502 Bad Gateway"))
+        << CloseConnection(tctx.client)
+    )
+
+
+def test_transparent_connect_with_inspection(tctx):
+    """Test CONNECT in transparent mode with TLS inspection enabled."""
+    tctx.server.address = ("proxy.corp.com", 3128)
+    tctx.options.allow_transparent_tunnel_inspection = True  # Enable inspection
+
+    server = Placeholder(Server)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
+        )
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT www.google.com:443 HTTP/1.1\r\nHost: www.google.com:443\r\n\r\n",
+        )
+        >> DataReceived(
+            server,
+            b"HTTP/1.1 200 Connection established\r\n\r\n",
+        )
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 200 Connection established\r\n\r\n",
+        )
     )

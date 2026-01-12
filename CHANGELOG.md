@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Add support for proxy CONNECT in transparent (local) mode.
+  ([#7985](https://github.com/mitmproxy/mitmproxy/pull/7985), @vitaly-ps)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
