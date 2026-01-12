@@ -23,6 +23,7 @@ from models import EventTiming
 from models import Interaction
 from models import MatchResult
 from models import OximyEvent
+from models import Subscription
 from parser import analyze_content
 from parser import ConfigurableRequestParser
 from parser import ConfigurableStreamBuffer
@@ -76,7 +77,7 @@ OXIMY_CLIENT_KEY = "oximy_client"
 # Set OXIMY_AUTO_PROXY=1 to enable automatic proxy setup/teardown
 # Comment out or set to 0 for production deployments
 # -------------------------------------------------------------------------
-OXIMY_AUTO_PROXY_ENABLED = False  # Disabled - proxy management handled by OximyMac app
+OXIMY_AUTO_PROXY_ENABLED = True  # Disabled - proxy management handled by OximyMac app
 OXIMY_PROXY_HOST = "127.0.0.1"
 OXIMY_PROXY_PORT = "8088"
 OXIMY_NETWORK_SERVICE = "Wi-Fi"  # Change if using different network interface
@@ -154,7 +155,7 @@ class OximyAddon:
         mitmdump -s path/to/oximy/__init__.py --set oximy_enabled=true
 
     Or load programmatically:
-        from  OximyAddon
+        from mitmproxy.addons.oximy import OximyAddon
         addons = [OximyAddon()]
     """
 
@@ -284,6 +285,12 @@ class OximyAddon:
 
         # Initialize process resolver for client attribution
         self._process_resolver = ProcessResolver()
+
+        # Build bundle_id -> app_id index from registry
+        bundle_id_index = self._build_bundle_id_index()
+        self._process_resolver.set_bundle_id_index(bundle_id_index)
+        if bundle_id_index:
+            logger.info(f"  - Bundle ID index: {len(bundle_id_index)} mappings")
 
         # Initialize TLS passthrough for certificate-pinned hosts
         passthrough_cache = output_dir / "pinned_hosts.json"
@@ -506,6 +513,7 @@ class OximyAddon:
                     "response_status": flow.response.status_code,
                     "content_length": len(flow.response.content or b""),
                 },
+                subscription=Subscription(plan=""),
             )
 
         # Full trace event
@@ -579,7 +587,9 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import ConfigurableStreamBuffer as CSB
+                    from parser import (
+                        ConfigurableStreamBuffer as CSB,
+                    )
 
                     logger.info(
                         f"_build_event: configurable_buffer in dict={flow.id in self._configurable_buffers}, has_response_content={flow.response and flow.response.content is not None}"
@@ -670,7 +680,9 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import ConfigurableStreamBuffer as CSB
+                    from parser import (
+                        ConfigurableStreamBuffer as CSB,
+                    )
 
                     if configurable_buffer:
                         # Streaming response - finalize the buffer
@@ -783,6 +795,7 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             interaction=interaction,
+            subscription=Subscription(plan=""),
         )
 
     def _build_file_download_event(
@@ -829,6 +842,7 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             metadata=metadata,
+            subscription=Subscription(plan=""),
         )
 
     def _build_subscription_event(
@@ -884,6 +898,7 @@ class OximyAddon:
             timing=timing,
             client=client_process,
             metadata=metadata,
+            subscription=Subscription(plan=response_json.get("plan_type", "")),
         )
 
     def _calculate_timing(self, flow: http.HTTPFlow) -> EventTiming:
@@ -903,6 +918,23 @@ class OximyAddon:
                 )
 
         return EventTiming(duration_ms=duration_ms, ttfb_ms=ttfb_ms)
+
+    def _build_bundle_id_index(self) -> dict[str, str]:
+        """Build a reverse index from bundle_id -> app_id from the registry.
+
+        Apps include both native apps and browsers (category: browser).
+        """
+        index: dict[str, str] = {}
+        if not self._bundle:
+            return index
+
+        for app_id, app in self._bundle.apps.items():
+            signatures = app.get("signatures", {})
+            macos_sig = signatures.get("macos", {})
+            if bundle_id := macos_sig.get("bundle_id"):
+                index[bundle_id] = app_id
+
+        return index
 
     # -------------------------------------------------------------------------
     # TLS Hooks - Handle certificate pinning passthrough
