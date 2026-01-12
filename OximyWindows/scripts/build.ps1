@@ -55,6 +55,19 @@ if (Test-Path $AddonDst) {
 Copy-Item $AddonSrc -Destination $AddonDst -Recurse
 Write-Host "  Copied addon from: $AddonSrc" -ForegroundColor Green
 
+# Step 3b: Fix imports for standalone addon (same as Mac approach)
+# Replace "from mitmproxy.addons.oximy.xxx" with "from xxx" for local imports
+Write-Host "Fixing addon imports for standalone use..." -ForegroundColor Yellow
+Get-ChildItem $AddonDst -Filter "*.py" | ForEach-Object {
+    $content = Get-Content $_.FullName -Raw
+    # Replace "from mitmproxy.addons.oximy.xxx import" with "from xxx import"
+    $content = $content -replace 'from mitmproxy\.addons\.oximy\.', 'from '
+    # Replace "from mitmproxy.addons.oximy import" with "from " (for direct module imports)
+    $content = $content -replace 'from mitmproxy\.addons\.oximy import', 'from . import'
+    Set-Content $_.FullName $content -NoNewline
+}
+Write-Host "  Imports fixed for standalone addon" -ForegroundColor Green
+
 # Step 4: Restore packages
 Write-Host "Restoring NuGet packages..." -ForegroundColor Yellow
 dotnet restore (Join-Path $ProjectDir "OximyWindows.csproj")

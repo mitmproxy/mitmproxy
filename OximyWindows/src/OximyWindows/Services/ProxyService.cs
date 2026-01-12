@@ -77,6 +77,7 @@ public class ProxyService : INotifyPropertyChanged
     /// </summary>
     public void EnableProxy(int port)
     {
+        System.Diagnostics.Debug.WriteLine($"[ProxyService] EnableProxy called with port {port}");
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(InternetSettingsKey, writable: true);
@@ -88,19 +89,25 @@ public class ProxyService : INotifyPropertyChanged
             _originalProxyServer = key.GetValue("ProxyServer") as string;
             _originalProxyOverride = key.GetValue("ProxyOverride") as string;
 
+            System.Diagnostics.Debug.WriteLine($"[ProxyService] Original values - Enable: {_originalProxyEnable}, Server: {_originalProxyServer}");
+
             // Set new proxy values
             key.SetValue("ProxyEnable", 1, RegistryValueKind.DWord);
             key.SetValue("ProxyServer", $"127.0.0.1:{port}", RegistryValueKind.String);
             key.SetValue("ProxyOverride", Constants.ProxyBypassList, RegistryValueKind.String);
+
+            System.Diagnostics.Debug.WriteLine($"[ProxyService] Set proxy to 127.0.0.1:{port}");
 
             // Notify Windows and applications of the change
             NotifySettingsChange();
 
             IsProxyEnabled = true;
             ConfiguredPort = port;
+            System.Diagnostics.Debug.WriteLine("[ProxyService] Proxy enabled successfully");
         }
         catch (Exception ex) when (ex is not ProxyException)
         {
+            System.Diagnostics.Debug.WriteLine($"[ProxyService] ERROR enabling proxy: {ex.Message}");
             throw new ProxyException($"Failed to enable proxy: {ex.Message}", ex);
         }
     }
@@ -110,39 +117,29 @@ public class ProxyService : INotifyPropertyChanged
     /// </summary>
     public void DisableProxy()
     {
+        System.Diagnostics.Debug.WriteLine("[ProxyService] DisableProxy called");
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(InternetSettingsKey, writable: true);
             if (key == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[ProxyService] WARNING: Could not open registry key");
                 return;
-
-            // Restore original values or just disable
-            if (_originalProxyEnable.HasValue)
-            {
-                key.SetValue("ProxyEnable", _originalProxyEnable.Value, RegistryValueKind.DWord);
-
-                if (_originalProxyServer != null)
-                    key.SetValue("ProxyServer", _originalProxyServer, RegistryValueKind.String);
-                else
-                    key.DeleteValue("ProxyServer", throwOnMissingValue: false);
-
-                if (_originalProxyOverride != null)
-                    key.SetValue("ProxyOverride", _originalProxyOverride, RegistryValueKind.String);
             }
-            else
-            {
-                // Just disable if we don't have original values
-                key.SetValue("ProxyEnable", 0, RegistryValueKind.DWord);
-            }
+
+            // Always disable the proxy - don't rely on original values
+            key.SetValue("ProxyEnable", 0, RegistryValueKind.DWord);
+            System.Diagnostics.Debug.WriteLine("[ProxyService] Set ProxyEnable to 0");
 
             NotifySettingsChange();
 
             IsProxyEnabled = false;
             ConfiguredPort = null;
+            System.Diagnostics.Debug.WriteLine("[ProxyService] Proxy disabled successfully");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to disable proxy: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[ProxyService] ERROR disabling proxy: {ex.Message}");
             // Don't throw - we want cleanup to succeed even if there are errors
         }
     }

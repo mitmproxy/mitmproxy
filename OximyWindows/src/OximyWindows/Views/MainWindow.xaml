@@ -8,9 +8,8 @@
         WindowStyle="None"
         Width="0" Height="0">
 
-    <!-- System Tray Icon -->
+    <!-- System Tray Icon - Icon is set programmatically in code-behind -->
     <tb:TaskbarIcon x:Name="TrayIcon"
-                    IconSource="/Assets/oximy.ico"
                     ToolTipText="Oximy - AI Traffic Monitor"
                     LeftClickCommand="{Binding TogglePopupCommand}"
                     DoubleClickCommand="{Binding OpenSettingsCommand}">

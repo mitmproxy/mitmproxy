@@ -4,17 +4,15 @@ Core type definitions for the Oximy addon.
 
 from __future__ import annotations
 
-import random
-import time
-import uuid
 from dataclasses import dataclass
-from datetime import datetime
-from datetime import timezone
-from typing import Literal
-from typing import TYPE_CHECKING
+from datetime import datetime, timezone
+from typing import Literal, TYPE_CHECKING
+import uuid
+import time
+import random
 
 if TYPE_CHECKING:
-    from mitmproxy.addons.oximy.process import ClientProcess
+    from process import ClientProcess
 
 
 @dataclass
@@ -36,29 +34,19 @@ class EventSource:
     type: Literal["api", "app", "website"]
     id: str
     endpoint: str | None = None
-    referer: str | None = None
-    origin: str | None = None
 
     def to_dict(self) -> dict:
-        result = {
+        return {
             "type": self.type,
             "id": self.id,
             "endpoint": self.endpoint,
         }
-        if self.referer:
-            result["referer"] = self.referer
-        if self.origin:
-            result["origin"] = self.origin
-        return result
 
 
 @dataclass
 class InteractionRequest:
     """Parsed request data."""
 
-    prompt: str | None = (
-        None  # Single prompt (for apps like Granola that send chat history)
-    )
     messages: list[dict] | None = None
     model: str | None = None
     temperature: float | None = None
@@ -68,8 +56,6 @@ class InteractionRequest:
 
     def to_dict(self) -> dict:
         result: dict = {}
-        if self.prompt is not None:
-            result["prompt"] = self.prompt
         if self.messages is not None:
             result["messages"] = self.messages
         if self.model is not None:
@@ -94,7 +80,6 @@ class InteractionResponse:
     finish_reason: str | None = None
     usage: dict | None = None
     raw: dict | None = None
-    content_analysis: dict | None = None  # Rich content analysis
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -106,8 +91,6 @@ class InteractionResponse:
             result["finish_reason"] = self.finish_reason
         if self.usage is not None:
             result["usage"] = self.usage
-        if self.content_analysis is not None:
-            result["content_analysis"] = self.content_analysis
         if self.raw is not None:
             result["_raw"] = self.raw
         return result
@@ -117,23 +100,18 @@ class InteractionResponse:
 class Interaction:
     """Full interaction data for full_trace events."""
 
-    type: str  # "chat", "completion", etc.
     model: str | None
     request: InteractionRequest
     response: InteractionResponse
 
     def to_dict(self) -> dict:
-        data: dict = {
+        result: dict = {
             "request": self.request.to_dict(),
             "response": self.response.to_dict(),
         }
         if self.model is not None:
-            data["model"] = self.model
-
-        return {
-            "type": self.type,
-            "data": data,
-        }
+            result["model"] = self.model
+        return result
 
 
 @dataclass
@@ -153,16 +131,6 @@ class EventTiming:
 
 
 @dataclass
-class Subscription:
-    """User's subscription/plan information for an AI service."""
-
-    plan: str | None = None
-
-    def to_dict(self) -> dict:
-        return {"plan": self.plan if self.plan is not None else ""}
-
-
-@dataclass
 class OximyEvent:
     """
     An OISP event representing an AI interaction.
@@ -178,7 +146,6 @@ class OximyEvent:
     interaction: Interaction | None = None
     metadata: dict | None = None
     client: ClientProcess | None = None
-    subscription: Subscription | None = None
 
     @classmethod
     def create(
@@ -189,15 +156,10 @@ class OximyEvent:
         interaction: Interaction | None = None,
         metadata: dict | None = None,
         client: ClientProcess | None = None,
-        subscription: Subscription | None = None,
     ) -> OximyEvent:
         """Create a new event with auto-generated ID and timestamp."""
         event_id = _generate_uuid7()
-        timestamp = (
-            datetime.now(timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z")
-        )
+        timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
         return cls(
             event_id=event_id,
@@ -208,7 +170,6 @@ class OximyEvent:
             interaction=interaction,
             metadata=metadata,
             client=client,
-            subscription=subscription,
         )
 
     def to_dict(self) -> dict:
@@ -224,13 +185,9 @@ class OximyEvent:
         if self.client:
             result["client"] = self.client.to_dict()
 
-        if self.interaction:
+        if self.trace_level == "full" and self.interaction:
             result["interaction"] = self.interaction.to_dict()
-
-        if self.subscription:
-            result["subscription"] = self.subscription.to_dict()
-
-        if self.metadata:
+        elif self.trace_level == "identifiable" and self.metadata:
             result["metadata"] = self.metadata
 
         return result

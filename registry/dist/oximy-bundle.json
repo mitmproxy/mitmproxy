@@ -79,7 +79,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-12T04:15:24.208700+00:00",
+  "generated_at": "2026-01-12T06:36:47.184671+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -40877,6 +40877,81 @@
   },
   "registry": {
     "apps": {
+      "arc": {
+        "category": "browser",
+        "icon": "arc.png",
+        "name": "Arc",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "company.thebrowser.Browser"
+          }
+        },
+        "vendor": "The Browser Company",
+        "vendor_url": "https://arc.net"
+      },
+      "brave": {
+        "category": "browser",
+        "icon": "brave.png",
+        "name": "Brave",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.brave.Browser"
+          }
+        },
+        "vendor": "Brave Software",
+        "vendor_url": "https://brave.com"
+      },
+      "chrome": {
+        "category": "browser",
+        "icon": "google-chrome.png",
+        "name": "Google Chrome",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.google.Chrome"
+          }
+        },
+        "vendor": "Google",
+        "vendor_url": "https://google.com/chrome"
+      },
+      "edge": {
+        "category": "browser",
+        "icon": "edge.png",
+        "name": "Microsoft Edge",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.microsoft.edgemac"
+          }
+        },
+        "vendor": "Microsoft",
+        "vendor_url": "https://microsoft.com/edge"
+      },
+      "firefox": {
+        "category": "browser",
+        "icon": "firefox.png",
+        "name": "Firefox",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "org.mozilla.firefox"
+          }
+        },
+        "vendor": "Mozilla",
+        "vendor_url": "https://mozilla.org/firefox"
+      },
       "granola": {
         "ai": "native",
         "api_domains": [
@@ -40965,6 +41040,51 @@
         },
         "vendor": "Granola",
         "vendor_url": "https://granola.ai"
+      },
+      "opera": {
+        "category": "browser",
+        "icon": "opera.png",
+        "name": "Opera",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.operasoftware.Opera"
+          }
+        },
+        "vendor": "Opera Software",
+        "vendor_url": "https://opera.com"
+      },
+      "safari": {
+        "category": "browser",
+        "icon": "safari.png",
+        "name": "Safari",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.apple.Safari"
+          }
+        },
+        "vendor": "Apple",
+        "vendor_url": "https://apple.com/safari"
+      },
+      "vivaldi": {
+        "category": "browser",
+        "icon": "vivaldi.png",
+        "name": "Vivaldi",
+        "platforms": [
+          "macos"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.vivaldi.Vivaldi"
+          }
+        },
+        "vendor": "Vivaldi Technologies",
+        "vendor_url": "https://vivaldi.com"
       }
     },
     "icons_url": "https://oisp.dev/registry/icons",

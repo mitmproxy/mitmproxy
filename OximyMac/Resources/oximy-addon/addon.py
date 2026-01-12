@@ -154,7 +154,7 @@ class OximyAddon:
         mitmdump -s path/to/oximy/__init__.py --set oximy_enabled=true
 
     Or load programmatically:
-        from mitmproxy.addons.oximy import OximyAddon
+        from  OximyAddon
         addons = [OximyAddon()]
     """
 
@@ -579,9 +579,7 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import (
-                        ConfigurableStreamBuffer as CSB,
-                    )
+                    from parser import ConfigurableStreamBuffer as CSB
 
                     logger.info(
                         f"_build_event: configurable_buffer in dict={flow.id in self._configurable_buffers}, has_response_content={flow.response and flow.response.content is not None}"
@@ -672,9 +670,7 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import (
-                        ConfigurableStreamBuffer as CSB,
-                    )
+                    from parser import ConfigurableStreamBuffer as CSB
 
                     if configurable_buffer:
                         # Streaming response - finalize the buffer

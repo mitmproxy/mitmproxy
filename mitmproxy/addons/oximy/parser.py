@@ -19,6 +19,7 @@ import re
 from abc import ABC
 from abc import abstractmethod
 from typing import Any
+from urllib.parse import parse_qs
 
 try:
     import jsonata

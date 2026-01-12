@@ -9,28 +9,44 @@ namespace OximyWindows.Views;
 public partial class StatusView : UserControl
 {
     private readonly DispatcherTimer _refreshTimer;
+    private bool _isToggling;
 
     public StatusView()
     {
         InitializeComponent();
 
-        // Set up refresh timer for events count
+        // Set up refresh timer for events count (30 seconds is sufficient)
         _refreshTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromSeconds(5)
+            Interval = TimeSpan.FromSeconds(30)
         };
-        _refreshTimer.Tick += (s, e) => RefreshEventsCount();
+        _refreshTimer.Tick += OnRefreshTimerTick;
 
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
-
-        // Subscribe to state changes
-        AppState.Instance.PropertyChanged += OnAppStateChanged;
-        App.NetworkMonitorService.PropertyChanged += OnNetworkChanged;
     }
+
+    private void SubscribeToEvents()
+    {
+        AppState.Instance.PropertyChanged += OnAppStateChanged;
+        App.MitmService.Started += OnMitmStarted;
+        App.MitmService.Stopped += OnMitmStopped;
+    }
+
+    private void UnsubscribeFromEvents()
+    {
+        AppState.Instance.PropertyChanged -= OnAppStateChanged;
+        App.MitmService.Started -= OnMitmStarted;
+        App.MitmService.Stopped -= OnMitmStopped;
+    }
+
+    private void OnMitmStarted(object? sender, EventArgs e) => Dispatcher.Invoke(UpdateUI);
+    private void OnMitmStopped(object? sender, EventArgs e) => Dispatcher.Invoke(UpdateUI);
+    private void OnRefreshTimerTick(object? sender, EventArgs e) => AppState.Instance.RefreshEventsCount();
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        SubscribeToEvents();
         UpdateUI();
         _refreshTimer.Start();
     }
@@ -38,6 +54,7 @@ public partial class StatusView : UserControl
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _refreshTimer.Stop();
+        UnsubscribeFromEvents();
     }
 
     private void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -45,24 +62,16 @@ public partial class StatusView : UserControl
         Dispatcher.Invoke(UpdateUI);
     }
 
-    private void OnNetworkChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        Dispatcher.Invoke(UpdateNetworkUI);
-    }
-
     private void UpdateUI()
     {
         var state = AppState.Instance;
 
-        // Update status
-        UpdateStatusUI(state.ConnectionStatus);
-
         // Update device info
         DeviceText.Text = state.DeviceName;
-        WorkspaceText.Text = state.WorkspaceName;
+        WorkspaceText.Text = string.IsNullOrEmpty(state.WorkspaceName) ? "Not connected" : state.WorkspaceName;
 
-        // Update stats
-        EventsCountText.Text = state.EventsCapturedToday.ToString();
+        // Update status display
+        UpdateStatusUI();
 
         // Update error panel
         if (state.ConnectionStatus == ConnectionStatus.Error && !string.IsNullOrEmpty(state.ErrorMessage))
@@ -75,63 +84,81 @@ public partial class StatusView : UserControl
             ErrorPanel.Visibility = Visibility.Collapsed;
         }
 
-        // Update version
-        VersionText.Text = $"Oximy v{Constants.Version}";
+        // Update certificate warning
+        App.CertificateService.CheckStatus();
+        CertWarningText.Visibility = App.CertificateService.IsCAInstalled ? Visibility.Collapsed : Visibility.Visible;
 
-        // Update network
-        UpdateNetworkUI();
+        // Update capture button
+        UpdateCaptureButton();
     }
 
-    private void UpdateStatusUI(ConnectionStatus status)
+    private void UpdateStatusUI()
     {
         var successBrush = TryFindResource("SuccessBrush") as SolidColorBrush ?? Brushes.Green;
         var warningBrush = TryFindResource("WarningBrush") as SolidColorBrush ?? Brushes.Orange;
         var errorBrush = TryFindResource("ErrorBrush") as SolidColorBrush ?? Brushes.Red;
-        var borderBrush = TryFindResource("BorderBrush") as SolidColorBrush ?? Brushes.Gray;
+        var grayBrush = TryFindResource("TextSecondaryBrush") as SolidColorBrush ?? Brushes.Gray;
 
-        switch (status)
+        var isRunning = App.MitmService.IsRunning;
+        var isCertInstalled = App.CertificateService.IsCAInstalled;
+        var status = AppState.Instance.ConnectionStatus;
+
+        // Determine status color and icon based on state (like Mac)
+        SolidColorBrush statusColor;
+        string statusIcon;
+        string statusText;
+
+        if (isRunning && status == ConnectionStatus.Connected)
         {
-            case ConnectionStatus.Connected:
-                StatusText.Text = "Connected";
-                StatusDot.Fill = successBrush;
-                StatusCircle.Fill = successBrush;
-                break;
+            // Monitoring Active - Green
+            statusColor = successBrush;
+            statusIcon = "\uEA18"; // Shield with checkmark
+            statusText = "Monitoring Active";
 
-            case ConnectionStatus.Connecting:
-                StatusText.Text = "Connecting...";
-                StatusDot.Fill = warningBrush;
-                StatusCircle.Fill = warningBrush;
-                break;
-
-            case ConnectionStatus.Error:
-                StatusText.Text = "Error";
-                StatusDot.Fill = errorBrush;
-                StatusCircle.Fill = errorBrush;
-                break;
-
-            default:
-                StatusText.Text = "Disconnected";
-                StatusDot.Fill = borderBrush;
-                StatusCircle.Fill = borderBrush;
-                break;
+            // Show port info
+            if (App.MitmService.CurrentPort.HasValue)
+            {
+                PortText.Text = $"Port {App.MitmService.CurrentPort.Value}";
+                PortText.Visibility = Visibility.Visible;
+            }
         }
-    }
+        else if (status == ConnectionStatus.Connecting)
+        {
+            // Starting - Orange
+            statusColor = warningBrush;
+            statusIcon = "\uE916"; // Progress ring
+            statusText = "Starting...";
+            PortText.Visibility = Visibility.Collapsed;
+        }
+        else if (status == ConnectionStatus.Error)
+        {
+            // Error - Red
+            statusColor = errorBrush;
+            statusIcon = "\uEA39"; // Shield error
+            statusText = "Error";
+            PortText.Visibility = Visibility.Collapsed;
+        }
+        else if (!isCertInstalled)
+        {
+            // Setup Required - Gray
+            statusColor = grayBrush;
+            statusIcon = "\uEAFC"; // Shield slash
+            statusText = "Setup Required";
+            PortText.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            // Monitoring Paused - Orange
+            statusColor = warningBrush;
+            statusIcon = "\uEA18"; // Shield
+            statusText = "Monitoring Paused";
+            PortText.Visibility = Visibility.Collapsed;
+        }
 
-    private void UpdateNetworkUI()
-    {
-        var networkMonitor = App.NetworkMonitorService;
-        NetworkText.Text = networkMonitor.NetworkDescription;
-
-        var successBrush = TryFindResource("SuccessBrush") as SolidColorBrush ?? Brushes.Green;
-        var errorBrush = TryFindResource("ErrorBrush") as SolidColorBrush ?? Brushes.Red;
-
-        NetworkIndicator.Fill = networkMonitor.IsConnected ? successBrush : errorBrush;
-    }
-
-    private void RefreshEventsCount()
-    {
-        AppState.Instance.RefreshEventsCount();
-        EventsCountText.Text = AppState.Instance.EventsCapturedToday.ToString();
+        StatusCircle.Fill = statusColor;
+        StatusIcon.Text = statusIcon;
+        StatusIcon.Foreground = statusColor;
+        StatusText.Text = statusText;
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -162,5 +189,75 @@ public partial class StatusView : UserControl
             AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
             AppState.Instance.ErrorMessage = ex.Message;
         }
+    }
+
+    private async void CaptureToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isToggling) return;
+        _isToggling = true;
+        CaptureToggleButton.IsEnabled = false;
+
+        try
+        {
+            if (App.MitmService.IsRunning)
+            {
+                // Stop monitoring
+                App.ProxyService.DisableProxy();
+                App.MitmService.Stop();
+                AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
+            }
+            else
+            {
+                // Verify certificate is installed first
+                App.CertificateService.CheckStatus();
+                if (!App.CertificateService.IsCAInstalled)
+                {
+                    MessageBox.Show(
+                        "Please install the CA certificate first.\n\nGo to Settings to install the certificate.",
+                        "Certificate Required",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Start monitoring
+                AppState.Instance.ConnectionStatus = ConnectionStatus.Connecting;
+                await App.MitmService.StartAsync();
+
+                if (App.MitmService.CurrentPort.HasValue)
+                {
+                    App.ProxyService.EnableProxy(App.MitmService.CurrentPort.Value);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
+            AppState.Instance.ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            _isToggling = false;
+            CaptureToggleButton.IsEnabled = true;
+            UpdateUI();
+        }
+    }
+
+    private void UpdateCaptureButton()
+    {
+        var isRunning = App.MitmService.IsRunning;
+        var isCertInstalled = App.CertificateService.IsCAInstalled;
+
+        // Update icon and text
+        CaptureButtonIcon.Text = isRunning ? "\uE71A" : "\uE768"; // Stop : Play
+        CaptureButtonText.Text = isRunning ? "Stop Monitoring" : "Start Monitoring";
+
+        // Update button color (orange when running, accent when stopped)
+        var accentBrush = TryFindResource("AccentBrush") as SolidColorBrush ?? Brushes.Blue;
+        var warningBrush = TryFindResource("WarningBrush") as SolidColorBrush ?? Brushes.Orange;
+        CaptureToggleButton.Background = isRunning ? warningBrush : accentBrush;
+
+        // Disable button if certificate not installed
+        CaptureToggleButton.IsEnabled = isCertInstalled || isRunning;
     }
 }

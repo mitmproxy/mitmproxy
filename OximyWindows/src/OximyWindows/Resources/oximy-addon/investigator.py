@@ -26,21 +26,20 @@ from __future__ import annotations
 import json
 import logging
 import time
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-from typing import IO
+from typing import Any, IO
 
-from mitmproxy import ctx
-from mitmproxy import http
-from investigator_types import InvestigationEvent
-from investigator_types import InvestigationSession
-from investigator_types import MatchAttempt
-from investigator_types import ParseAttempt
-from investigator_types import SSEChunk
-from process import ClientProcess
-from process import ProcessResolver
+from mitmproxy import ctx, http
+
+from process import ProcessResolver, ClientProcess
+from investigator_types import (
+    InvestigationEvent,
+    InvestigationSession,
+    SSEChunk,
+    MatchAttempt,
+    ParseAttempt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,8 +127,8 @@ class InvestigationSSEBuffer:
         chunk = SSEChunk(
             index=self._chunk_index,
             timestamp=datetime.fromtimestamp(timestamp, tz=timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z"),
+                .isoformat(timespec="milliseconds")
+                .replace("+00:00", "Z"),
             event_type=event_type,
             data_raw=data_raw[:10000],  # Truncate very long data
             data_parsed=data_parsed,
@@ -352,9 +351,7 @@ class InvestigatorAddon:
 
         # Parse filters
         domains_str = ctx.options.investigate_domains.strip()
-        self._domains = set(
-            d.strip().lower() for d in domains_str.split(",") if d.strip()
-        )
+        self._domains = set(d.strip().lower() for d in domains_str.split(",") if d.strip())
 
         apps_str = ctx.options.investigate_apps.strip()
         self._apps = set(a.strip() for a in apps_str.split(",") if a.strip())
@@ -375,9 +372,7 @@ class InvestigatorAddon:
             output_path = Path(output_str).expanduser()
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = (
-                Path.home() / ".oximy" / "investigations" / f"session_{timestamp}.jsonl"
-            )
+            output_path = Path.home() / ".oximy" / "investigations" / f"session_{timestamp}.jsonl"
 
         self._writer = InvestigationWriter(output_path)
         self._writer.open()
@@ -410,9 +405,7 @@ class InvestigatorAddon:
             if self._apps:
                 filter_desc.append(f"apps: {', '.join(sorted(self._apps))}")
 
-        logger.info(
-            f"Investigation mode enabled: {' | '.join(filter_desc) or 'no filters'}"
-        )
+        logger.info(f"Investigation mode enabled: {' | '.join(filter_desc) or 'no filters'}")
         logger.info(f"Output: {output_path}")
 
     def _init_production_matcher(self) -> None:
@@ -420,8 +413,7 @@ class InvestigatorAddon:
         try:
             from bundle import BundleLoader
             from matcher import TrafficMatcher
-            from parser import RequestParser
-            from parser import ResponseParser
+            from parser import RequestParser, ResponseParser
 
             loader = BundleLoader()
             bundle = loader.load()
@@ -448,9 +440,7 @@ class InvestigatorAddon:
         if self._process_resolver:
             try:
                 client_port = flow.client_conn.peername[1]
-                client_process = self._process_resolver.get_process_for_port(
-                    client_port
-                )
+                client_process = self._process_resolver.get_process_for_port(client_port)
                 flow.metadata[INVESTIGATE_CLIENT_KEY] = client_process
 
                 # Re-check app filter with actual process info
@@ -458,9 +448,7 @@ class InvestigatorAddon:
                     del flow.metadata[INVESTIGATE_CLIENT_KEY]
                     return
 
-                logger.debug(
-                    f"Investigating: {flow.request.pretty_host} from {client_process.name}"
-                )
+                logger.debug(f"Investigating: {flow.request.pretty_host} from {client_process.name}")
             except Exception as e:
                 logger.debug(f"Failed to get process info: {e}")
 
@@ -502,9 +490,7 @@ class InvestigatorAddon:
         finally:
             self._sse_buffers.pop(flow.id, None)
 
-    def _should_capture(
-        self, flow: http.HTTPFlow, client_process: ClientProcess | None
-    ) -> bool:
+    def _should_capture(self, flow: http.HTTPFlow, client_process: ClientProcess | None) -> bool:
         """Check if this flow should be captured based on filters."""
         if self._capture_all:
             return True
@@ -533,9 +519,7 @@ class InvestigatorAddon:
         content_type = headers.get("content-type", "")
         return "text/event-stream" in content_type.lower()
 
-    def _build_event(
-        self, flow: http.HTTPFlow, client_process: ClientProcess | None
-    ) -> InvestigationEvent | None:
+    def _build_event(self, flow: http.HTTPFlow, client_process: ClientProcess | None) -> InvestigationEvent | None:
         """Build an investigation event from a flow."""
         if not flow.response or not self._session:
             return None
@@ -597,14 +581,9 @@ class InvestigatorAddon:
 
         if flow.request.timestamp_start and flow.response:
             if flow.response.timestamp_end:
-                duration_ms = int(
-                    (flow.response.timestamp_end - flow.request.timestamp_start) * 1000
-                )
+                duration_ms = int((flow.response.timestamp_end - flow.request.timestamp_start) * 1000)
             if flow.response.timestamp_start:
-                ttfb_ms = int(
-                    (flow.response.timestamp_start - flow.request.timestamp_start)
-                    * 1000
-                )
+                ttfb_ms = int((flow.response.timestamp_start - flow.request.timestamp_start) * 1000)
 
         # Match attempt (if matcher available)
         match_attempt: MatchAttempt | None = None
@@ -631,12 +610,7 @@ class InvestigatorAddon:
 
         # Parse attempt (if parsers available)
         parse_attempt: ParseAttempt | None = None
-        if (
-            self._request_parser
-            and self._response_parser
-            and match_attempt
-            and match_attempt.api_format
-        ):
+        if self._request_parser and self._response_parser and match_attempt and match_attempt.api_format:
             parse_attempt = self._try_parse(flow, match_attempt.api_format)
 
         # Build headers dict
@@ -692,18 +666,14 @@ class InvestigatorAddon:
 
         if self._request_parser and flow.request.content:
             try:
-                result = self._request_parser.parse(
-                    flow.request.content, api_format, include_raw=False
-                )
+                result = self._request_parser.parse(flow.request.content, api_format, include_raw=False)
                 request_extracted = result.to_dict() if result else None
             except Exception as e:
                 errors.append(f"Request parse error: {e}")
 
         if self._response_parser and flow.response and flow.response.content:
             try:
-                result = self._response_parser.parse(
-                    flow.response.content, api_format, include_raw=False
-                )
+                result = self._response_parser.parse(flow.response.content, api_format, include_raw=False)
                 response_extracted = result.to_dict() if result else None
             except Exception as e:
                 errors.append(f"Response parse error: {e}")

@@ -48,22 +48,32 @@ public partial class MainWindow : Window
 
     private void SetupTrayIcon()
     {
-        // Create icon from embedded resource or use default
+        // Create icon from file or use default
         try
         {
-            var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "oximy.ico");
-            if (System.IO.File.Exists(iconPath))
+            // Try multiple possible locations
+            var possiblePaths = new[]
             {
-                TrayIcon.Icon = new Icon(iconPath);
-            }
-            else
+                System.IO.Path.Combine(AppContext.BaseDirectory, "oximy.ico"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "oximy.ico"),
+            };
+
+            foreach (var iconPath in possiblePaths)
             {
-                // Use system default icon
-                TrayIcon.Icon = SystemIcons.Application;
+                if (System.IO.File.Exists(iconPath))
+                {
+                    TrayIcon.Icon = new Icon(iconPath);
+                    Debug.WriteLine($"Loaded tray icon from: {iconPath}");
+                    break;
+                }
             }
+
+            // Fallback to system icon if no custom icon found
+            TrayIcon.Icon ??= SystemIcons.Application;
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"Failed to load tray icon: {ex.Message}");
             TrayIcon.Icon = SystemIcons.Application;
         }
 

@@ -8,7 +8,7 @@
         Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
-        Width="380" Height="480"
+        Width="340" Height="420"
         Deactivated="Window_Deactivated">
 
     <Border Background="{DynamicResource BackgroundBrush}"

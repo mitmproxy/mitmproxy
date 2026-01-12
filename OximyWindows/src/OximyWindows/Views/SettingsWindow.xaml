@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Oximy Settings"
-        Width="400" Height="550"
+        Width="400" Height="700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
@@ -137,6 +137,72 @@
                             <Grid>
                                 <TextBlock Text="Send Feedback" HorizontalAlignment="Left"/>
                                 <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Certificate Section -->
+                <TextBlock Text="CERTIFICATE"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,0,0,8"/>
+
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        CornerRadius="8"
+                        Margin="0,0,0,20">
+                    <StackPanel>
+                        <!-- Certificate Status -->
+                        <Grid Margin="16,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="CA Certificate"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock x:Name="CertStatusText"
+                                           Text="Not installed"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                            <Ellipse x:Name="CertStatusIndicator"
+                                     Grid.Column="1"
+                                     Width="10" Height="10"
+                                     Fill="{DynamicResource ErrorBrush}"
+                                     VerticalAlignment="Center"/>
+                        </Grid>
+                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
+                        <!-- Generate Certificate Button -->
+                        <Button x:Name="GenerateCertButton"
+                                Style="{DynamicResource SettingsButtonStyle}"
+                                Click="GenerateCertButton_Click">
+                            <Grid>
+                                <TextBlock x:Name="GenerateCertText" Text="Generate Certificate" HorizontalAlignment="Left"/>
+                                <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Button>
+                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
+                        <!-- Install Certificate Button -->
+                        <Button x:Name="InstallCertButton"
+                                Style="{DynamicResource SettingsButtonStyle}"
+                                Click="InstallCertButton_Click">
+                            <Grid>
+                                <TextBlock x:Name="InstallCertText" Text="Install Certificate" HorizontalAlignment="Left"/>
+                                <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Button>
+                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
+                        <!-- Uninstall Certificate Button -->
+                        <Button x:Name="UninstallCertButton"
+                                Style="{DynamicResource SettingsButtonStyle}"
+                                Click="UninstallCertButton_Click"
+                                Visibility="Collapsed">
+                            <Grid>
+                                <TextBlock Text="Uninstall Certificate" HorizontalAlignment="Left" Foreground="{DynamicResource ErrorBrush}"/>
+                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource ErrorBrush}"/>
                             </Grid>
                         </Button>
                     </StackPanel>
