@@ -135,7 +135,9 @@ class BundleLoader:
         self.cache_dir = cache_dir or DEFAULT_CACHE_DIR
         self.max_age_hours = max_age_hours
         # In production, LOCAL_BUNDLE_PATH is None, so no local bundle loading
-        self.local_bundle_path = local_bundle_path if local_bundle_path else LOCAL_BUNDLE_PATH
+        self.local_bundle_path = (
+            local_bundle_path if local_bundle_path else LOCAL_BUNDLE_PATH
+        )
         self._bundle: OISPBundle | None = None
 
     @property
