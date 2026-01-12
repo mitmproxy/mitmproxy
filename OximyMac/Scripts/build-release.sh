@@ -11,18 +11,13 @@ APP_NAME="Oximy"
 VERSION="${VERSION:-1.0.0}"
 BUILD_CONFIG="${BUILD_CONFIG:-release}"  # Can be 'release' or 'debug'
 
-# Detect architecture for DMG naming
+# Architecture info (ARM64 native, Intel via Rosetta 2)
 ARCH=$(uname -m)
-if [ "$ARCH" = "arm64" ]; then
-    ARCH_SUFFIX="-arm64"
-else
-    ARCH_SUFFIX="-intel"
-fi
 
 echo "=== Oximy Build ==="
 echo "Version: $VERSION"
 echo "Configuration: $BUILD_CONFIG"
-echo "Architecture: $ARCH ($ARCH_SUFFIX)"
+echo "Architecture: $ARCH (Intel Macs use Rosetta 2)"
 echo "Project: $PROJECT_DIR"
 echo ""
 
@@ -78,7 +73,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 Oximy. All rights reserved.</string>
     <key>SUFeedURL</key>
-    <string>https://github.com/OximyHQ/mitmproxy/releases/latest/download/appcast$ARCH_SUFFIX.xml</string>
+    <string>https://github.com/OximyHQ/mitmproxy/releases/latest/download/appcast.xml</string>
     <key>SUPublicEDKey</key>
     <string>${SPARKLE_PUBLIC_KEY:-3oJZV2w0DvQ80LCetz3lgL+DwfsFFYfqxsFHPlj0KQE=}</string>
     <key>SUEnableAutomaticChecks</key>
@@ -289,7 +284,7 @@ fi
 
 # Create DMG using create-dmg (https://github.com/sindresorhus/create-dmg)
 echo "[7/7] Creating DMG with create-dmg..."
-DMG_NAME="$APP_NAME-$VERSION$ARCH_SUFFIX.dmg"
+DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_PATH="$BUILD_DIR/$DMG_NAME"
 
 # Source nvm to get access to npm-installed create-dmg
@@ -355,15 +350,14 @@ if [ -n "$SPARKLE_PRIVATE_KEY" ] && [ -f "$DMG_PATH" ]; then
             DMG_SIZE=$(stat -f%z "$DMG_PATH")
             PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
 
-            # Generate appcast.xml with architecture-specific DMG name
-            ARCH_DMG_NAME="$APP_NAME-$VERSION$ARCH_SUFFIX.dmg"
+            # Generate appcast.xml
             cat > "$BUILD_DIR/appcast.xml" << APPCAST_EOF
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>Oximy Updates</title>
     <link>https://github.com/OximyHQ/mitmproxy/releases</link>
-    <description>Updates for Oximy macOS ($ARCH)</description>
+    <description>Updates for Oximy macOS</description>
     <language>en</language>
     <item>
       <title>Version $VERSION</title>
@@ -372,7 +366,7 @@ if [ -n "$SPARKLE_PRIVATE_KEY" ] && [ -f "$DMG_PATH" ]; then
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$ARCH_DMG_NAME"
+        url="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$DMG_NAME"
         length="$DMG_SIZE"
         type="application/octet-stream"
         sparkle:edSignature="$SIGNATURE"
@@ -384,7 +378,7 @@ if [ -n "$SPARKLE_PRIVATE_KEY" ] && [ -f "$DMG_PATH" ]; then
   </channel>
 </rss>
 APPCAST_EOF
-            echo "    Generated appcast.xml for $ARCH"
+            echo "    Generated appcast.xml"
         else
             echo "    WARNING: Failed to generate EdDSA signature"
         fi

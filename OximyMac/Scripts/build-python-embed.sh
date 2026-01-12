@@ -2,6 +2,8 @@
 # Build FULLY STANDALONE Python environment with mitmproxy for OximyMac
 # This creates a completely self-contained, relocatable Python that works on any Mac
 # No system Python or mitmproxy installation required!
+#
+# Note: Builds for the current architecture (ARM64). Intel Macs run via Rosetta 2.
 
 set -e
 
