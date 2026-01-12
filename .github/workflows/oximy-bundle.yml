@@ -76,10 +76,14 @@ jobs:
       - name: Create site structure
         run: |
           mkdir -p _site/spec/v0.1
+          mkdir -p _site/registry/icons
 
           # Copy bundle files
           cp registry/dist/oximy-bundle.json _site/spec/v0.1/oisp-spec-bundle.json
           cp registry/dist/oximy-bundle.min.json _site/spec/v0.1/oisp-spec-bundle.min.json
+
+          # Copy icons for hosting
+          cp -r registry/icons/* _site/registry/icons/
 
           # Create CNAME for custom domain
           echo "oisp.dev" > _site/CNAME
