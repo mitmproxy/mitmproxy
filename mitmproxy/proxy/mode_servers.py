@@ -263,7 +263,10 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
                     self.mode.custom_listen_host is None
                 )  # since [@ [listen_addr:]listen_port]
                 message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
+                                if isinstance(self.mode, mode_specs.WireGuardMode):
+                                                        message += "\nIf you already have WireGuard running, stop it first or use a different port."
             raise OSError(e.errno, message, e.filename) from e
+            
 
     async def _stop(self) -> None:
         assert self._servers
