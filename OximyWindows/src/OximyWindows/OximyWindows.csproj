@@ -34,9 +34,16 @@
     </None>
   </ItemGroup>
 
-  <!-- Include assets -->
+  <!-- Include assets as embedded resources for WPF -->
   <ItemGroup>
     <Resource Include="Assets\*.png" />
-    <Resource Include="Assets\*.ico" />
+  </ItemGroup>
+
+  <!-- Copy Assets folder to output for tray icon -->
+  <ItemGroup>
+    <Content Include="Assets\oximy.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

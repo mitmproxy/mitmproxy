@@ -60,9 +60,12 @@ public class MitmService : IDisposable
             WorkingDirectory = Constants.PythonEmbedDir
         };
 
-        // Set environment for embedded Python
+        // Set environment for embedded Python - critical for Windows embeddable package
+        var sitePackages = Path.Combine(Constants.PythonEmbedDir, "Lib", "site-packages");
         startInfo.Environment["PYTHONHOME"] = Constants.PythonEmbedDir;
-        startInfo.Environment["PYTHONPATH"] = Constants.AddonDir;
+        startInfo.Environment["PYTHONPATH"] = $"{sitePackages};{Constants.AddonDir}";
+        startInfo.Environment["PYTHONNOUSERSITE"] = "1";
+        startInfo.Environment["PYTHONDONTWRITEBYTECODE"] = "1";
 
         _mitmProcess = new Process { StartInfo = startInfo };
         _mitmProcess.EnableRaisingEvents = true;
@@ -70,13 +73,25 @@ public class MitmService : IDisposable
         _mitmProcess.OutputDataReceived += (s, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
+            {
+                Debug.WriteLine($"[mitmdump] {e.Data}");
                 OutputReceived?.Invoke(this, e.Data);
+            }
         };
         _mitmProcess.ErrorDataReceived += (s, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
+            {
+                Debug.WriteLine($"[mitmdump ERROR] {e.Data}");
                 ErrorReceived?.Invoke(this, e.Data);
+            }
         };
+
+        Debug.WriteLine($"Starting mitmdump: {startInfo.FileName}");
+        Debug.WriteLine($"Arguments: {startInfo.Arguments}");
+        Debug.WriteLine($"Working Directory: {startInfo.WorkingDirectory}");
+        Debug.WriteLine($"PYTHONHOME: {startInfo.Environment["PYTHONHOME"]}");
+        Debug.WriteLine($"PYTHONPATH: {startInfo.Environment["PYTHONPATH"]}");
 
         try
         {
@@ -90,13 +105,21 @@ public class MitmService : IDisposable
             CurrentPort = port;
             _restartAttempts = 0;
 
-            // Wait a moment for process to stabilize
-            await Task.Delay(500);
+            // Wait for mitmproxy to be ready (actually listening on the port)
+            Debug.WriteLine($"[MitmService] Waiting for mitmproxy to start listening on port {port}...");
+            var ready = await WaitForPortListeningAsync(port, timeoutSeconds: 10);
 
             if (_mitmProcess.HasExited)
             {
                 throw new MitmException($"mitmproxy exited immediately with code {_mitmProcess.ExitCode}");
             }
+
+            if (!ready)
+            {
+                throw new MitmException($"mitmproxy failed to start listening on port {port} within timeout");
+            }
+
+            Debug.WriteLine($"[MitmService] mitmproxy is ready and listening on port {port}");
 
             AppState.Instance.CurrentPort = port;
             AppState.Instance.ConnectionStatus = ConnectionStatus.Connected;
@@ -118,15 +141,23 @@ public class MitmService : IDisposable
     {
         _restartCts?.Cancel();
 
-        if (_mitmProcess != null && !_mitmProcess.HasExited)
+        if (_mitmProcess != null)
         {
             try
             {
-                _mitmProcess.Kill(entireProcessTree: true);
+                if (!_mitmProcess.HasExited)
+                {
+                    _mitmProcess.Kill(entireProcessTree: true);
+                }
             }
             catch
             {
                 // Process may have already exited
+            }
+            finally
+            {
+                _mitmProcess.Dispose();
+                _mitmProcess = null;
             }
         }
 
@@ -182,6 +213,68 @@ public class MitmService : IDisposable
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Wait for mitmproxy to start listening on the specified port.
+    /// This ensures the proxy is fully ready before we route traffic through it.
+    /// </summary>
+    private async Task<bool> WaitForPortListeningAsync(int port, int timeoutSeconds = 10)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            // Check if process has exited
+            if (_mitmProcess == null || _mitmProcess.HasExited)
+            {
+                Debug.WriteLine("[MitmService] Process exited while waiting for port");
+                return false;
+            }
+
+            // Try to connect to the port
+            if (await IsPortListeningAsync(port))
+            {
+                Debug.WriteLine($"[MitmService] Port {port} is now accepting connections (took {stopwatch.ElapsedMilliseconds}ms)");
+                return true;
+            }
+
+            // Wait a bit before retrying
+            await Task.Delay(100);
+        }
+
+        Debug.WriteLine($"[MitmService] Timeout waiting for port {port} to accept connections");
+        return false;
+    }
+
+    /// <summary>
+    /// Check if a port is actively listening and accepting connections.
+    /// Unlike IsPortAvailable, this checks if something IS listening, not if the port is free.
+    /// </summary>
+    private static async Task<bool> IsPortListeningAsync(int port)
+    {
+        try
+        {
+            using var client = new TcpClient();
+            var connectTask = client.ConnectAsync(IPAddress.Loopback, port);
+            var completed = await Task.WhenAny(connectTask, Task.Delay(500)) == connectTask;
+
+            if (completed && client.Connected)
+            {
+                return true;
+            }
+        }
+        catch (SocketException)
+        {
+            // Port not yet listening
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MitmService] Error checking port: {ex.Message}");
+        }
+
+        return false;
     }
 
     private static string BuildArguments(int port)

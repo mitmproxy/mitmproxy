@@ -87,21 +87,25 @@ public static class Constants
     }
 
     /// <summary>
-    /// Count events captured today.
+    /// Count events captured today by counting newlines efficiently.
+    /// Uses buffered reading instead of reading all lines into memory.
     /// </summary>
     public static int CountTodayEvents()
     {
         var today = DateTime.UtcNow.Date;
-        var pattern = $"events-{today:yyyy-MM-dd}-*.jsonl";
+        var pattern = $"traces_{today:yyyy-MM-dd}.jsonl";
 
         try
         {
+            if (!Directory.Exists(TracesDir))
+                return 0;
+
             var files = Directory.GetFiles(TracesDir, pattern);
             var count = 0;
 
             foreach (var file in files)
             {
-                count += File.ReadLines(file).Count();
+                count += CountLinesInFile(file);
             }
 
             return count;
@@ -110,5 +114,37 @@ public static class Constants
         {
             return 0;
         }
+    }
+
+    /// <summary>
+    /// Efficiently count lines in a file using buffered reading.
+    /// Much faster than File.ReadLines().Count() for large files.
+    /// </summary>
+    private static int CountLinesInFile(string filePath)
+    {
+        const int bufferSize = 65536; // 64KB buffer
+        var buffer = new byte[bufferSize];
+        var lineCount = 0;
+
+        try
+        {
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize);
+            int bytesRead;
+
+            while ((bytesRead = stream.Read(buffer, 0, bufferSize)) > 0)
+            {
+                for (int i = 0; i < bytesRead; i++)
+                {
+                    if (buffer[i] == '\n')
+                        lineCount++;
+                }
+            }
+        }
+        catch
+        {
+            // File might be locked or deleted
+        }
+
+        return lineCount;
     }
 }

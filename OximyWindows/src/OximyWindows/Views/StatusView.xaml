@@ -4,119 +4,84 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="480" d:DesignWidth="380">
+             d:DesignHeight="420" d:DesignWidth="340">
 
-    <Grid>
+    <Grid Background="{DynamicResource BackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0"
-                Background="{DynamicResource SurfaceBrush}"
-                Padding="20">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Status Indicator -->
-                <Grid Grid.Column="0" Width="48" Height="48">
-                    <Ellipse x:Name="StatusCircle"
-                             Width="48" Height="48"
-                             Fill="{DynamicResource SuccessBrush}"
-                             Opacity="0.15"/>
-                    <Ellipse x:Name="StatusDot"
-                             Width="16" Height="16"
-                             Fill="{DynamicResource SuccessBrush}"/>
-                </Grid>
-
-                <!-- Status Text -->
-                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
-                    <TextBlock x:Name="StatusText"
-                               Text="Connected"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="DeviceText"
-                               Text="Device Name"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                </StackPanel>
-
-                <!-- Settings Button -->
-                <Button Grid.Column="2"
-                        Style="{DynamicResource SecondaryButtonStyle}"
-                        Padding="10"
-                        Click="SettingsButton_Click">
-                    <TextBlock Text="&#xE713;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="16"/>
-                </Button>
-            </Grid>
-        </Border>
-
         <!-- Main Content -->
-        <StackPanel Grid.Row="1" Margin="20">
-            <!-- Workspace Info -->
-            <Border Background="{DynamicResource SurfaceBrush}"
-                    CornerRadius="8"
-                    Padding="16"
-                    Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="24,20,24,0">
 
-                    <TextBlock Grid.Column="0"
-                               Text="&#xE80F;"
+            <!-- Status Icon (80x80 circle like Mac) -->
+            <Grid Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,16">
+                <Ellipse x:Name="StatusCircle"
+                         Width="80" Height="80"
+                         Opacity="0.15"/>
+                <TextBlock x:Name="StatusIcon"
+                           Text="&#xEA18;"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="36"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Status Text -->
+            <TextBlock x:Name="StatusText"
+                       Text="Monitoring Active"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,4"/>
+
+            <!-- Port Info (shown when connected) -->
+            <TextBlock x:Name="PortText"
+                       Text="Port 1030"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20"
+                       Visibility="Collapsed"/>
+
+            <!-- Toggle Button -->
+            <Button x:Name="CaptureToggleButton"
+                    Style="{DynamicResource PrimaryButtonStyle}"
+                    Padding="16,10"
+                    Margin="32,0,32,8"
+                    HorizontalAlignment="Stretch"
+                    Click="CaptureToggleButton_Click">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock x:Name="CaptureButtonIcon"
+                               Text="&#xE768;"
                                FontFamily="Segoe MDL2 Assets"
-                               FontSize="20"
-                               Foreground="{DynamicResource AccentBrush}"
-                               VerticalAlignment="Center"/>
-
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="Workspace"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock x:Name="WorkspaceText"
-                                   Text="My Workspace"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- Events Today -->
-            <Border Background="{DynamicResource SurfaceBrush}"
-                    CornerRadius="8"
-                    Padding="16"
-                    Margin="0,0,0,12">
-                <StackPanel HorizontalAlignment="Center">
-                    <TextBlock x:Name="EventsCountText"
-                               Text="0"
-                               FontSize="28"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource AccentBrush}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Events Captured Today"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               HorizontalAlignment="Center"/>
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+                    <TextBlock x:Name="CaptureButtonText"
+                               Text="Start Monitoring"
+                               FontSize="14"
+                               FontWeight="SemiBold"/>
                 </StackPanel>
-            </Border>
+            </Button>
+
+            <!-- Certificate Warning -->
+            <TextBlock x:Name="CertWarningText"
+                       Text="Install certificate in Settings first"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"
+                       Visibility="Collapsed"/>
 
             <!-- Error Message (if any) -->
             <Border x:Name="ErrorPanel"
                     Background="#FEF2F2"
                     CornerRadius="8"
                     Padding="12"
-                    Margin="0,0,0,12"
+                    Margin="0,16,0,0"
                     Visibility="Collapsed">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -128,7 +93,7 @@
                     <TextBlock Grid.Column="0"
                                Text="&#xE783;"
                                FontFamily="Segoe MDL2 Assets"
-                               FontSize="16"
+                               FontSize="14"
                                Foreground="{DynamicResource ErrorBrush}"
                                VerticalAlignment="Center"/>
 
@@ -145,55 +110,72 @@
                             Content="Retry"
                             Style="{DynamicResource SecondaryButtonStyle}"
                             Padding="8,4"
-                            FontSize="12"
+                            FontSize="11"
                             Click="RetryButton_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- Health Status -->
-            <Border Background="{DynamicResource SurfaceBrush}"
-                    CornerRadius="8"
-                    Padding="16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Column="0"
-                               Text="&#xE95E;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="20"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               VerticalAlignment="Center"/>
-
-                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="Network"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                        <TextBlock x:Name="NetworkText"
-                                   Text="Connected"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </StackPanel>
-
-                    <Ellipse Grid.Column="2"
-                             x:Name="NetworkIndicator"
-                             Width="8" Height="8"
-                             Fill="{DynamicResource SuccessBrush}"
-                             VerticalAlignment="Center"/>
                 </Grid>
             </Border>
         </StackPanel>
 
-        <!-- Footer -->
-        <TextBlock Grid.Row="2"
-                   x:Name="VersionText"
-                   Text="Oximy v1.0.0"
-                   FontSize="11"
-                   Foreground="{DynamicResource TextSecondaryBrush}"
-                   HorizontalAlignment="Center"
-                   Margin="0,0,0,16"/>
+        <!-- Bottom Info Card -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource SurfaceBrush}"
+                CornerRadius="10"
+                Margin="16,0,16,16"
+                Padding="16,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Device Row -->
+                <Grid Grid.Row="0">
+                    <TextBlock Text="Device"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="DeviceText"
+                               Text="Device Name"
+                               FontSize="12"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Separator -->
+                <Rectangle Grid.Row="1"
+                           Height="1"
+                           Fill="{DynamicResource BorderBrush}"
+                           Margin="0,10"/>
+
+                <!-- Organization Row -->
+                <Grid Grid.Row="2">
+                    <TextBlock Text="Organization"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock x:Name="WorkspaceText"
+                                   Text="My Workspace"
+                                   FontSize="12"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                        <Button Style="{DynamicResource IconButtonStyle}"
+                                Padding="4"
+                                Margin="8,0,0,0"
+                                Click="SettingsButton_Click"
+                                ToolTip="Settings">
+                            <TextBlock Text="&#xE76C;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

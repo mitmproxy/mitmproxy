@@ -66,6 +66,13 @@ public partial class App : Application
             // Ignore errors during shutdown
         }
 
+        // Dispose services
+        MitmService.Dispose();
+        NetworkMonitorService.Dispose();
+
+        // Unsubscribe from system events
+        SystemEvents.SessionEnding -= OnSessionEnding;
+
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
 

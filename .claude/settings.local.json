@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass -File build.ps1 -Release)",
+      "Bash(taskkill:*)",
+      "Bash(start \"\" \"src\\\\OximyWindows\\\\bin\\\\Debug\\\\net8.0-windows\\\\win-x64\\\\OximyWindows.exe\")",
+      "Bash(dotnet build:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(wc:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File:*)",
+      "Bash(dir:*)",
+      "Bash(set PYTHONHOME=%CD%)",
+      "Bash(set PYTHONPATH=%CD%Libsite-packages)",
+      "Bash(%CD%..oximy-addon)",
+      "Bash(set:*)",
+      "Bash(Scriptsmitmdump.exe --version:*)",
+      "Bash(powershell:*)",
+      "Bash(\"d:\\\\Hirak Desai\\\\Developer\\\\Oximy\\\\mitmproxy\\\\OximyWindows\\\\src\\\\OximyWindows\\\\Resources\\\\python-embed\\\\Scripts\\\\mitmdump.exe\" --version)",
+      "Bash(\"d:\\\\Hirak Desai\\\\Developer\\\\Oximy\\\\mitmproxy\\\\OximyWindows\\\\src\\\\OximyWindows\\\\Resources\\\\python-embed\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, r''d:\\\\Hirak Desai\\\\Developer\\\\Oximy\\\\mitmproxy\\\\OximyWindows\\\\src\\\\OximyWindows\\\\Resources\\\\oximy-addon''\\); import addon; print\\(''Addon loaded successfully''\\)\")",
+      "Bash(reg query \"HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Internet Settings\" /v ProxyEnable)",
+      "Bash(certutil:*)"
+    ]
+  }
+}
