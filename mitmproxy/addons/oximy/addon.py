@@ -432,6 +432,9 @@ class OximyAddon:
         try:
             event = self._build_event(flow, match_result)
             if event:
+                # Skip metadata_only events from trace logs for now
+                if event.trace_level == "metadata_only":
+                    return
                 self._writer.write(event)
                 self._log_captured_event(event, flow)
         except Exception as e:
