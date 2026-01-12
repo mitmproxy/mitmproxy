@@ -20,6 +20,12 @@ class NetworkMonitor: ObservableObject {
 
     private init() {}
 
+    deinit {
+        // Ensure monitor and tasks are cleaned up
+        monitor?.cancel()
+        debounceTask?.cancel()
+    }
+
     // MARK: - Monitoring
 
     func startMonitoring() {
@@ -27,7 +33,7 @@ class NetworkMonitor: ObservableObject {
 
         monitor = NWPathMonitor()
         monitor?.pathUpdateHandler = { [weak self] path in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.handlePathUpdate(path)
             }
         }
@@ -100,42 +106,7 @@ class NetworkMonitor: ObservableObject {
         }
     }
 
-    // MARK: - Network Services
-
-    /// Get all network service names (Wi-Fi, Ethernet, etc.)
-    func getActiveNetworkServices() -> [String] {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
-        process.arguments = ["-listallnetworkservices"]
-
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            guard let output = String(data: data, encoding: .utf8) else { return ["Wi-Fi"] }
-
-            return output.components(separatedBy: "\n")
-                .dropFirst()  // Skip "An asterisk (*) denotes..." header
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty && !$0.hasPrefix("*") }
-        } catch {
-            print("[NetworkMonitor] Error getting network services: \(error)")
-            return ["Wi-Fi"]  // Fallback
-        }
-    }
-
-    /// Check if a specific interface type is available
-    func hasInterfaceType(_ type: NWInterface.InterfaceType) -> Bool {
-        guard monitor != nil else { return false }
-        // Note: We can't directly query the monitor, so check currentInterfaces
-        // This is a simplified check
-        return isConnected
-    }
+    // MARK: - Network Status
 
     /// Get a human-readable description of current network
     var networkDescription: String {

@@ -5,14 +5,16 @@ import SwiftUI
 @MainActor
 final class AppState: ObservableObject {
 
-    // MARK: - App Phase (simplified: setup or ready)
+    // MARK: - App Phase
+    // Flow: enrollment → setup → ready
 
     enum Phase: String {
-        case setup      // Needs cert + proxy
-        case ready      // Monitoring active
+        case enrollment // Step 1: Connect to workspace (6-digit code)
+        case setup      // Step 2: Install cert + enable proxy
+        case ready      // Done: Monitoring active
     }
 
-    @Published var phase: Phase = .setup {
+    @Published var phase: Phase = .enrollment {
         didSet {
             guard oldValue != phase else { return }
             SentryService.shared.addStateBreadcrumb(
@@ -72,9 +74,10 @@ final class AppState: ObservableObject {
     @Published var eventsCapturedToday: Int = 0
     @Published var currentPort: Int = Constants.preferredPort
 
-    // MARK: - Account (stub for future)
+    // MARK: - Account
 
     @Published var workspaceName: String = ""
+    @Published var deviceId: String = ""
     @Published var isLoggedIn: Bool = false
 
     // MARK: - Main Tabs
@@ -105,6 +108,19 @@ final class AppState: ObservableObject {
 
     init() {
         loadPersistedState()
+        setupNotificationObservers()
+    }
+
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: .workspaceNameUpdated,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let newName = notification.object as? String {
+                self?.workspaceName = newName
+            }
+        }
     }
 
     // MARK: - State Management
@@ -112,25 +128,76 @@ final class AppState: ObservableObject {
     private func loadPersistedState() {
         let defaults = UserDefaults.standard
 
-        // Check if setup was completed previously
-        if defaults.bool(forKey: Constants.Defaults.setupComplete) {
-            phase = .ready
-        } else {
-            phase = .setup
-        }
-
         // Load account info if available
         if let workspace = defaults.string(forKey: Constants.Defaults.workspaceName) {
             workspaceName = workspace
             isLoggedIn = true
         }
+        if let device = defaults.string(forKey: Constants.Defaults.deviceId) {
+            deviceId = device
+        }
+
+        // Determine phase based on what's been completed
+        let hasDeviceToken = defaults.string(forKey: Constants.Defaults.deviceToken) != nil
+        let setupComplete = defaults.bool(forKey: Constants.Defaults.setupComplete)
+
+        if hasDeviceToken && setupComplete {
+            // Both enrollment and setup done
+            phase = .ready
+            startServices()
+        } else if hasDeviceToken {
+            // Enrolled but setup not complete
+            phase = .setup
+        } else {
+            // Fresh install - start with enrollment
+            phase = .enrollment
+        }
     }
 
-    /// Called when both cert and proxy are enabled
+    // MARK: - Phase Transitions
+
+    /// Called after successful enrollment (step 1 complete)
+    func completeEnrollment() {
+        // Move to setup phase
+        phase = .setup
+    }
+
+    /// Called when both cert and proxy are enabled (step 2 complete)
     func completeSetup() {
         UserDefaults.standard.set(true, forKey: Constants.Defaults.setupComplete)
         phase = .ready
         connectionStatus = .connected
+        startServices()
+    }
+
+    /// Go back to enrollment from setup
+    func goBackToEnrollment() {
+        phase = .enrollment
+    }
+
+    /// Skip setup and go to ready state without enabling proxy
+    func skipSetup() {
+        UserDefaults.standard.set(true, forKey: Constants.Defaults.setupComplete)
+        phase = .ready
+        connectionStatus = .disconnected
+        startServices()
+    }
+
+    /// Handle auth failure after retries exhausted
+    func handleAuthFailure() {
+        logout()
+    }
+
+    /// Start background services
+    private func startServices() {
+        HeartbeatService.shared.start()
+        SyncService.shared.start()
+    }
+
+    /// Stop background services
+    private func stopServices() {
+        HeartbeatService.shared.stop()
+        SyncService.shared.stop()
     }
 
     /// Check if setup requirements are met
@@ -140,20 +207,25 @@ final class AppState: ObservableObject {
 
     /// Reset everything (for debugging/logout)
     func reset() {
+        stopServices()
+
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: Constants.Defaults.setupComplete)
         defaults.removeObject(forKey: Constants.Defaults.workspaceName)
         defaults.removeObject(forKey: Constants.Defaults.deviceToken)
+        defaults.removeObject(forKey: Constants.Defaults.deviceId)
+        defaults.removeObject(forKey: Constants.Defaults.workspaceId)
 
-        phase = .setup
+        phase = .enrollment
         connectionStatus = .disconnected
         workspaceName = ""
+        deviceId = ""
         isLoggedIn = false
         isCertificateInstalled = false
         isProxyEnabled = false
     }
 
-    // MARK: - Account (stub)
+    // MARK: - Account
 
     func login(workspaceName: String, deviceToken: String) {
         let defaults = UserDefaults.standard
@@ -174,9 +246,15 @@ final class AppState: ObservableObject {
     }
 
     func logout() {
+        // Stop services first
+        stopServices()
+
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: Constants.Defaults.workspaceName)
         defaults.removeObject(forKey: Constants.Defaults.deviceToken)
+        defaults.removeObject(forKey: Constants.Defaults.deviceId)
+        defaults.removeObject(forKey: Constants.Defaults.workspaceId)
+        defaults.removeObject(forKey: Constants.Defaults.setupComplete)
 
         // Clear Sentry user context
         SentryService.shared.clearUser()
@@ -187,6 +265,10 @@ final class AppState: ObservableObject {
         )
 
         workspaceName = ""
+        deviceId = ""
         isLoggedIn = false
+
+        // Return to enrollment (step 1)
+        phase = .enrollment
     }
 }

@@ -10,23 +10,32 @@ BUILD_DIR="$PROJECT_DIR/build"
 APP_NAME="Oximy"
 VERSION="${VERSION:-1.0.0}"
 
+# Detect architecture for DMG naming
+ARCH=$(uname -m)
+if [ "$ARCH" = "arm64" ]; then
+    ARCH_SUFFIX="-arm64"
+else
+    ARCH_SUFFIX="-intel"
+fi
+
 echo "=== Oximy Release Build ==="
 echo "Version: $VERSION"
+echo "Architecture: $ARCH ($ARCH_SUFFIX)"
 echo "Project: $PROJECT_DIR"
 echo ""
 
 # Clean previous build
-echo "[1/6] Cleaning previous build..."
+echo "[1/7] Cleaning previous build..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 # Build in release mode
-echo "[2/6] Building in release mode..."
+echo "[2/7] Building in release mode..."
 cd "$PROJECT_DIR"
 swift build -c release
 
 # Create app bundle structure
-echo "[3/6] Creating app bundle..."
+echo "[3/7] Creating app bundle..."
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
@@ -66,12 +75,22 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 Oximy. All rights reserved.</string>
+    <key>SUFeedURL</key>
+    <string>https://github.com/OximyHQ/mitmproxy/releases/latest/download/appcast$ARCH_SUFFIX.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>${SPARKLE_PUBLIC_KEY:-3oJZV2w0DvQ80LCetz3lgL+DwfsFFYfqxsFHPlj0KQE=}</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUAllowsAutomaticUpdates</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
 </dict>
 </plist>
 EOF
 
 # Copy resources
-echo "[4/6] Copying resources..."
+echo "[4/7] Copying resources..."
 if [ -d "$PROJECT_DIR/Resources" ]; then
     cp -R "$PROJECT_DIR/Resources/"* "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
 fi
@@ -99,21 +118,13 @@ else
     exit 1
 fi
 
-# Code signing (stub - requires Developer ID)
-echo "[5/6] Code signing..."
-if [ -n "$DEVELOPER_ID" ]; then
-    echo "    Signing with: $DEVELOPER_ID"
-    codesign --deep --force --options runtime \
-        --sign "$DEVELOPER_ID" \
-        "$APP_BUNDLE"
-else
-    echo "    STUB: Skipping code signing (no DEVELOPER_ID set)"
-    echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
+# Create app icon from Oximy-rounded.png BEFORE signing (critical!)
+echo "[5/7] Creating app icon..."
+ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
+# Fall back to original if rounded version doesn't exist
+if [ ! -f "$ICON_SOURCE" ]; then
+    ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
 fi
-
-# Create app icon from Oximy.png
-echo "[6/7] Creating app icon..."
-ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
 if [ -f "$ICON_SOURCE" ]; then
     ICONSET_DIR="$BUILD_DIR/AppIcon.iconset"
     mkdir -p "$ICONSET_DIR"
@@ -138,138 +149,233 @@ else
     echo "    WARNING: Oximy.png not found, skipping icon generation"
 fi
 
-# Create styled DMG
-echo "[7/7] Creating styled DMG..."
-DMG_NAME="$APP_NAME-$VERSION.dmg"
-DMG_PATH="$BUILD_DIR/$DMG_NAME"
-DMG_TEMP="$BUILD_DIR/dmg_temp.dmg"
+# Code signing (requires Developer ID)
+echo "[6/7] Code signing..."
+if [ -n "$DEVELOPER_ID" ]; then
+    echo "    Signing with: $DEVELOPER_ID"
+    ENTITLEMENTS_FILE="$PROJECT_DIR/OximyMac.entitlements"
 
-# Create temporary directory for DMG contents
-TEMP_DMG_DIR=$(mktemp -d)
-DMG_CONTENTS="$TEMP_DMG_DIR/$APP_NAME"
-mkdir -p "$DMG_CONTENTS"
-mkdir -p "$DMG_CONTENTS/.background"
+    # Sign embedded frameworks first (required for notarization)
+    # Sparkle framework
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]; then
+        echo "    Signing Sparkle.framework..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    fi
 
-# Copy app
-cp -R "$APP_BUNDLE" "$DMG_CONTENTS/"
+    # Sentry framework
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sentry.framework" ]; then
+        echo "    Signing Sentry.framework..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sentry.framework"
+    fi
 
-# Create Applications symlink
-ln -s /Applications "$DMG_CONTENTS/Applications"
+    # Sign any other frameworks
+    find "$APP_BUNDLE/Contents/Frameworks" -name "*.framework" -type d 2>/dev/null | while read framework; do
+        echo "    Signing $(basename "$framework")..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$framework" 2>/dev/null || true
+    done
 
-# Create background image (simple orange gradient with arrow)
-BACKGROUND="$DMG_CONTENTS/.background/background.png"
-if [ -f "$PROJECT_DIR/Installer/DMG/background.png" ]; then
-    cp "$PROJECT_DIR/Installer/DMG/background.png" "$BACKGROUND"
+    # Sign any dylibs
+    find "$APP_BUNDLE" -name "*.dylib" -type f 2>/dev/null | while read dylib; do
+        echo "    Signing $(basename "$dylib")..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$dylib" 2>/dev/null || true
+    done
+
+    # Sign bundled Python if present
+    if [ -d "$APP_BUNDLE/Contents/Resources/python-embed" ]; then
+        echo "    Signing bundled Python..."
+        find "$APP_BUNDLE/Contents/Resources/python-embed" -type f \( -name "*.so" -o -name "*.dylib" -o -perm +111 \) 2>/dev/null | while read binary; do
+            codesign --force --options runtime --timestamp \
+                --sign "$DEVELOPER_ID" \
+                "$binary" 2>/dev/null || true
+        done
+    fi
+
+    # Sign the main binary (with entitlements)
+    echo "    Signing main binary..."
+    if [ -f "$ENTITLEMENTS_FILE" ]; then
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS_FILE" \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    else
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    fi
+
+    # Finally sign the main app bundle (with entitlements)
+    echo "    Signing main app bundle..."
+    if [ -f "$ENTITLEMENTS_FILE" ]; then
+        echo "    Using entitlements: $ENTITLEMENTS_FILE"
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS_FILE" \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE"
+    else
+        echo "    WARNING: Entitlements file not found, signing without entitlements"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE"
+    fi
+
+    echo "    Code signing complete"
+
+    # Verify signature
+    echo "    Verifying signature..."
+    if codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE" 2>&1; then
+        echo "    ✓ Signature verification passed"
+    else
+        echo "    ✗ Signature verification FAILED"
+        exit 1
+    fi
 else
-    # Generate a simple background using sips
-    # Create base image from Oximy.png colors
-    echo "    Generating DMG background..."
+    echo "    STUB: Skipping code signing (no DEVELOPER_ID set)"
+    echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
+fi
 
-    # Use Python to create a simple background (fallback)
-    python3 << 'PYEOF' || true
-import subprocess
-import os
+# Create DMG using create-dmg (https://github.com/sindresorhus/create-dmg)
+echo "[7/7] Creating DMG with create-dmg..."
+DMG_NAME="$APP_NAME-$VERSION$ARCH_SUFFIX.dmg"
+DMG_PATH="$BUILD_DIR/$DMG_NAME"
 
-width, height = 540, 380
-bg_path = os.environ.get('BACKGROUND', '/tmp/dmg_bg.png')
+# Source nvm to get access to npm-installed create-dmg
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Create SVG
-svg = f'''<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2d1f0f;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1a1209;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="{width}" height="{height}" fill="url(#bg)"/>
-  <path d="M 220 190 Q 270 190 270 190 L 270 170 L 320 200 L 270 230 L 270 210 Q 220 210 220 210 Z"
-        fill="#ff6b35" opacity="0.9"/>
-  <text x="270" y="300" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, Helvetica" font-size="13" opacity="0.8">
-    Drag Oximy to Applications
-  </text>
-</svg>'''
+# Check if create-dmg is available
+if command -v create-dmg &> /dev/null; then
+    echo "    Found create-dmg at: $(which create-dmg)"
+    cd "$BUILD_DIR"
+    # Remove existing DMG if present
+    rm -f "$DMG_PATH" 2>/dev/null || true
+    rm -f "$APP_NAME $VERSION.dmg" 2>/dev/null || true
 
-svg_path = '/tmp/dmg_bg.svg'
-with open(svg_path, 'w') as f:
-    f.write(svg)
+    # create-dmg automatically handles Applications symlink and styling
+    # Use --no-code-sign since the app is already signed, and DMG will be signed during notarization
+    if create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite --no-code-sign 2>&1; then
+        echo "    create-dmg succeeded"
+    else
+        echo "    create-dmg exited with non-zero status (may still have created DMG)"
+    fi
 
-# Try to convert SVG to PNG
-try:
-    # Use qlmanage (built-in macOS)
-    subprocess.run(['qlmanage', '-t', '-s', str(width), '-o', '/tmp', svg_path],
-                   capture_output=True)
-    if os.path.exists(f'{svg_path}.png'):
-        os.rename(f'{svg_path}.png', bg_path)
-        print(f'Created background: {bg_path}')
-except Exception as e:
-    print(f'Could not create background: {e}')
-PYEOF
+    # create-dmg names files as "AppName VERSION.dmg", rename to our format
+    if [ -f "$BUILD_DIR/$APP_NAME $VERSION.dmg" ]; then
+        mv "$BUILD_DIR/$APP_NAME $VERSION.dmg" "$DMG_PATH"
+        echo "    DMG created: $DMG_PATH"
+    else
+        echo "    ERROR: Expected DMG not found at $BUILD_DIR/$APP_NAME $VERSION.dmg"
+        echo "    Falling back to hdiutil..."
+        hdiutil create -volname "$APP_NAME" \
+            -srcfolder "$APP_BUNDLE" \
+            -ov -format UDZO \
+            "$DMG_PATH"
+    fi
+else
+    echo "    WARNING: create-dmg not found, falling back to basic DMG creation"
+    # Fallback: simple DMG without styling
+    hdiutil create -volname "$APP_NAME" \
+        -srcfolder "$APP_BUNDLE" \
+        -ov -format UDZO \
+        "$DMG_PATH"
+fi
 
-    export BACKGROUND="$BACKGROUND"
-    if [ -f "/tmp/dmg_bg.png" ]; then
-        mv "/tmp/dmg_bg.png" "$BACKGROUND"
+# Step 8: Sign for Sparkle updates and generate appcast
+echo "[8/8] Sparkle update signing..."
+if [ -n "$SPARKLE_PRIVATE_KEY" ] && [ -f "$DMG_PATH" ]; then
+    # Try to find Sparkle's sign_update tool (check artifacts first, then checkouts)
+    SPARKLE_SIGN="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/bin/sign_update"
+    if [ ! -f "$SPARKLE_SIGN" ]; then
+        SPARKLE_SIGN="$PROJECT_DIR/.build/checkouts/Sparkle/sign_update"
+    fi
+
+    if [ -f "$SPARKLE_SIGN" ]; then
+        echo "    Signing DMG with Sparkle EdDSA key..."
+
+        # Generate EdDSA signature
+        SIGNATURE=$("$SPARKLE_SIGN" "$DMG_PATH" -s "$SPARKLE_PRIVATE_KEY" 2>/dev/null | grep "sparkle:edSignature" | cut -d'"' -f2 || echo "")
+
+        if [ -n "$SIGNATURE" ]; then
+            echo "    EdDSA Signature: ${SIGNATURE:0:20}..."
+
+            # Get file size and generate date
+            DMG_SIZE=$(stat -f%z "$DMG_PATH")
+            PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+
+            # Generate appcast.xml with architecture-specific DMG name
+            ARCH_DMG_NAME="$APP_NAME-$VERSION$ARCH_SUFFIX.dmg"
+            cat > "$BUILD_DIR/appcast.xml" << APPCAST_EOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Oximy Updates</title>
+    <link>https://github.com/OximyHQ/mitmproxy/releases</link>
+    <description>Updates for Oximy macOS ($ARCH)</description>
+    <language>en</language>
+    <item>
+      <title>Version $VERSION</title>
+      <pubDate>$PUB_DATE</pubDate>
+      <sparkle:version>$VERSION</sparkle:version>
+      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$ARCH_DMG_NAME"
+        length="$DMG_SIZE"
+        type="application/octet-stream"
+        sparkle:edSignature="$SIGNATURE"
+      />
+      <sparkle:releaseNotesLink>
+        https://github.com/OximyHQ/mitmproxy/releases/tag/oximy-v$VERSION
+      </sparkle:releaseNotesLink>
+    </item>
+  </channel>
+</rss>
+APPCAST_EOF
+            echo "    Generated appcast.xml for $ARCH"
+        else
+            echo "    WARNING: Failed to generate EdDSA signature"
+        fi
+    else
+        echo "    WARNING: Sparkle sign_update tool not found at $SPARKLE_SIGN"
+        echo "    Run 'swift build' first to fetch Sparkle package"
+    fi
+else
+    if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+        echo "    STUB: Skipping Sparkle signing (no SPARKLE_PRIVATE_KEY set)"
+        echo "    To sign for updates:"
+        echo "    1. Generate keys: .build/checkouts/Sparkle/bin/generate_keys"
+        echo "    2. Set SPARKLE_PRIVATE_KEY environment variable"
+        echo "    3. Set SPARKLE_PUBLIC_KEY for Info.plist"
     fi
 fi
-
-# Create read-write DMG first
-hdiutil create -volname "$APP_NAME" \
-    -srcfolder "$DMG_CONTENTS" \
-    -ov -format UDRW \
-    "$DMG_TEMP"
-
-# Mount it
-MOUNT_DIR=$(hdiutil attach -readwrite -noverify "$DMG_TEMP" | grep "/Volumes/$APP_NAME" | awk '{print $3}')
-
-if [ -n "$MOUNT_DIR" ]; then
-    echo "    Styling DMG window..."
-
-    # Apply Finder view settings using AppleScript
-    osascript << EOF
-    tell application "Finder"
-        tell disk "$APP_NAME"
-            open
-            set current view of container window to icon view
-            set toolbar visible of container window to false
-            set statusbar visible of container window to false
-            set bounds of container window to {400, 200, 940, 580}
-            set viewOptions to the icon view options of container window
-            set arrangement of viewOptions to not arranged
-            set icon size of viewOptions to 100
-
-            -- Set background if exists
-            if exists file ".background:background.png" then
-                set background picture of viewOptions to file ".background:background.png"
-            end if
-
-            -- Position icons
-            set position of item "$APP_NAME.app" of container window to {130, 180}
-            set position of item "Applications" of container window to {410, 180}
-
-            close
-            open
-            update without registering applications
-            delay 1
-            close
-        end tell
-    end tell
-EOF
-
-    # Unmount
-    hdiutil detach "$MOUNT_DIR" -quiet
-fi
-
-# Convert to compressed read-only DMG
-hdiutil convert "$DMG_TEMP" -format UDZO -o "$DMG_PATH"
-rm -f "$DMG_TEMP"
-
-# Cleanup
-rm -rf "$TEMP_DMG_DIR"
 
 echo ""
 echo "=== Build Complete ==="
 echo ""
 echo "App Bundle: $APP_BUNDLE"
 echo "DMG:        $DMG_PATH"
+if [ -f "$BUILD_DIR/appcast.xml" ]; then
+    echo "Appcast:    $BUILD_DIR/appcast.xml"
+fi
 echo ""
 
 if [ -z "$DEVELOPER_ID" ]; then
@@ -277,6 +383,14 @@ if [ -z "$DEVELOPER_ID" ]; then
     echo "  1. Set DEVELOPER_ID environment variable"
     echo "  2. Run this script again"
     echo "  3. Notarize with: xcrun notarytool submit $DMG_PATH"
+fi
+
+if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+    echo ""
+    echo "NOTE: Update signing not configured. For auto-updates:"
+    echo "  1. Generate keys: swift build && .build/checkouts/Sparkle/bin/generate_keys"
+    echo "  2. Set SPARKLE_PRIVATE_KEY (keep secret!)"
+    echo "  3. Set SPARKLE_PUBLIC_KEY (add to Info.plist)"
 fi
 
 echo ""

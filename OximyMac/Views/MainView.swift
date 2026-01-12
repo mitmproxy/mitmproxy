@@ -9,6 +9,8 @@ struct MainView: View {
             switch appState.phase {
             case .setup:
                 SetupView()
+            case .enrollment:
+                EnrollmentView()
             case .ready:
                 DashboardView()
             }
@@ -29,26 +31,66 @@ struct SetupView: View {
     @State private var isProcessingProxy = false
     @State private var errorMessage: String?
 
+    private var allComplete: Bool {
+        certService.isCAInstalled && proxyService.isProxyEnabled
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            VStack(spacing: 12) {
-                Image("Oximy")
-                    .resizable()
-                    .frame(width: 60, height: 60)
-                    .cornerRadius(12)
+            // Back button and Progress indicator
+            HStack {
+                Button(action: { appState.goBackToEnrollment() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(.accentColor)
+                }
+                .buttonStyle(.plain)
 
-                Text("Welcome to Oximy")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                Spacer()
 
-                Text("Enable these permissions to start monitoring AI traffic")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                // Progress indicator - Step 2 of 2
+                HStack(spacing: 8) {
+                    ProgressDot(step: 1, isComplete: true, isCurrent: false)
+                    ProgressLine(isComplete: true)
+                    ProgressDot(step: 2, isComplete: allComplete, isCurrent: !allComplete)
+                }
+
+                Spacer()
+
+                // Invisible spacer to balance the back button
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Back")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .opacity(0)
             }
-            .padding(.top, 24)
+            .padding(.top, 16)
+            .padding(.horizontal, 20)
+
+            // Header
+            VStack(spacing: 6) {
+                OximyLogo(size: 52)
+                    .cornerRadius(12)
+                    .padding(.top, 20)
+
+                Text("STEP 2")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.accentColor)
+                    .tracking(1.5)
+
+                Text("Enable Permissions")
+                    .font(.system(size: 18, weight: .bold))
+
+                Text("Allow Oximy to monitor AI traffic")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
 
             Spacer()
 
@@ -77,42 +119,56 @@ struct SetupView: View {
             }
             .padding(.horizontal, 24)
 
-            // Error
-            if let error = errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .padding(.top, 12)
-                    .padding(.horizontal)
-                    .lineLimit(2)
+            // Error - fixed height container to prevent layout shifts
+            VStack {
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .frame(height: 32)
+            .padding(.top, 8)
+            .padding(.horizontal)
 
             Spacer()
 
             // Start Button
-            Button(action: startMonitoring) {
-                HStack {
-                    if allComplete {
-                        Image(systemName: "play.fill")
+            VStack(spacing: 12) {
+                Button(action: startMonitoring) {
+                    HStack {
+                        if allComplete {
+                            Image(systemName: "play.fill")
+                        }
+                        Text(allComplete ? "Start Monitoring" : "Complete Setup Above")
                     }
-                    Text(allComplete ? "Start Monitoring" : "Complete Setup Above")
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(.borderedProminent)
+                .disabled(!allComplete)
+
+                // Skip for now option
+                if !allComplete {
+                    Button(action: { appState.skipSetup() }) {
+                        Text("Set Up Later")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(!allComplete)
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
+            // Only check cert status on appear - it rarely changes
+            // DO NOT call proxyService.checkStatus() here - it overwrites the known state
+            // and can cause flickering when moving screens
             certService.checkStatus()
-            proxyService.checkStatus()
         }
-    }
-
-    private var allComplete: Bool {
-        certService.isCAInstalled && proxyService.isProxyEnabled
     }
 
     private func installCertificate() {

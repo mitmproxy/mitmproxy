@@ -6,16 +6,57 @@
       "vendor": "Google",
       "vendor_url": "https://google.com",
       "category": "ai-chat",
-      "domains": ["gemini.google.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["google"],
+      "api_domains": ["gemini.google.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "encoding": "form",
+              "form_field": "f.req",
+              "preprocess": [
+                { "op": "json_parse" },
+                { "op": "index", "value": 1 },
+                { "op": "json_parse" }
+              ],
+              "prompt": "$[0][0]",
+              "conversation_id": "$[2][0]"
+            },
+            "response": {
+              "stream": {
+                "format": "length_prefixed",
+                "format_options": {
+                  "header_strip": ")]}'\\n"
+                },
+                "rules": [
+                  {
+                    "when": "$[0][0] = 'wrb.fr'",
+                    "preprocess": [
+                      { "op": "index", "value": 0 },
+                      { "op": "index", "value": 2 },
+                      { "op": "json_parse" }
+                    ],
+                    "extract": {
+                      "content": "$[4][0][1][0]",
+                      "conversation_id": "$[1][0]"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "last" },
+                  "conversation_id": { "from": "conversation_id", "op": "last" }
+                },
+                "finalize": {
+                  "content": "accumulated.content",
+                  "model": "'gemini'"
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -31,16 +72,45 @@
       "vendor": "DeepSeek",
       "vendor_url": "https://deepseek.com",
       "category": "ai-chat",
-      "domains": ["chat.deepseek.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["deepseek"],
+      "api_domains": ["chat.deepseek.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/api/v0/chat/completion", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "prompt": "prompt",
+              "chat_session_id": "chat_session_id"
+            },
+            "response": {
+              "stream": {
+                "format": "sse",
+                "format_options": {
+                  "prefixes": ["data: "]
+                },
+                "rules": [
+                  {
+                    "when": "o = 'BATCH'",
+                    "extract": {
+                      "content": "$join(v[p = 'fragments'].v.content)"
+                    }
+                  },
+                  {
+                    "when": "$exists(v) and $type(v) = 'string'",
+                    "extract": {
+                      "content": "v"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "concat" }
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -55,22 +125,63 @@
       "vendor": "OpenAI",
       "vendor_url": "https://openai.com",
       "category": "ai-chat",
-      "domains": ["chatgpt.com", "chat.openai.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["openai"],
+      "api_domains": ["chatgpt.com", "chat.openai.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/backend-api/conversation", "method": "POST" }
-          ]
-        },
-        "voice": {
-          "name": "Voice Mode",
-          "patterns": [
-            { "url": "**/voice/**", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "model": "model",
+              "messages": "messages.({'role': author.role, 'content': $join(content.parts)})"
+            },
+            "response": {
+              "stream": {
+                "format": "sse",
+                "format_options": {
+                  "prefixes": ["data: ", "delta ", "message "],
+                  "skip_values": ["[DONE]", "delta_encoding v1", "delta_encoding v2", "v1", "v2"]
+                },
+                "rules": [
+                  {
+                    "when": "type = 'server_ste_metadata'",
+                    "extract": {
+                      "model": "metadata.model_slug"
+                    }
+                  },
+                  {
+                    "when": "$exists(v) and $not($exists(o)) and $not($exists(p)) and $type(v) = 'string'",
+                    "extract": {
+                      "content": "v"
+                    }
+                  },
+                  {
+                    "when": "o = 'append' and $exists(v) and $type(v) = 'string'",
+                    "extract": {
+                      "content": "v"
+                    }
+                  },
+                  {
+                    "when": "$exists(choices[0].delta.content)",
+                    "extract": {
+                      "content": "choices[0].delta.content"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "concat" },
+                  "model": { "from": "model", "op": "first" }
+                },
+                "finalize": {
+                  "content": "accumulated.content",
+                  "model": "accumulated.model"
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -97,16 +208,57 @@
       "vendor": "Perplexity AI",
       "vendor_url": "https://perplexity.ai",
       "category": "ai-chat",
-      "domains": ["www.perplexity.ai", "perplexity.ai"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["perplexity"],
+      "api_domains": ["www.perplexity.ai", "perplexity.ai"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Search",
           "patterns": [
             { "url": "**/rest/sse/perplexity_ask", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "prompt": "query_str",
+              "model": "params.model_preference",
+              "search_focus": "params.search_focus"
+            },
+            "response": {
+              "stream": {
+                "format": "sse",
+                "format_options": {
+                  "prefixes": ["data: "]
+                },
+                "rules": [
+                  {
+                    "when": "$exists(display_model)",
+                    "extract": {
+                      "model": "display_model"
+                    }
+                  },
+                  {
+                    "when": "$exists(text_completed) and text_completed = true",
+                    "extract": {
+                      "text_completed": "true"
+                    }
+                  },
+                  {
+                    "when": "$exists(blocks[0])",
+                    "extract": {
+                      "content": "$_perplexity_blocks"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "concat" },
+                  "model": { "from": "model", "op": "first" }
+                },
+                "finalize": {
+                  "content": "accumulated.content",
+                  "model": "accumulated.model"
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {
@@ -122,17 +274,61 @@
       "vendor": "xAI",
       "vendor_url": "https://x.ai",
       "category": "ai-chat",
-      "domains": ["grok.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["xai"],
+      "api_domains": ["grok.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/rest/app-chat/conversations/new", "method": "POST" },
             { "url": "**/rest/app-chat/conversations/**/responses", "method": "POST" }
-          ]
+          ],
+          "parser": {
+            "request": {
+              "prompt": "message",
+              "model": "modelName"
+            },
+            "response": {
+              "stream": {
+                "format": "ndjson",
+                "format_options": {
+                  "delimiter": "}{"
+                },
+                "rules": [
+                  {
+                    "when": "$exists(result.modelResponse)",
+                    "extract": {
+                      "final_content": "result.modelResponse.message",
+                      "model": "result.modelResponse.model",
+                      "response_id": "result.modelResponse.responseId"
+                    }
+                  },
+                  {
+                    "when": "$exists(result.token)",
+                    "extract": {
+                      "token": "result.token"
+                    }
+                  },
+                  {
+                    "when": "$exists(result.conversation.conversationId)",
+                    "extract": {
+                      "conversation_id": "result.conversation.conversationId"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "tokens": { "from": "token", "op": "concat" },
+                  "model": { "from": "model", "op": "first" },
+                  "final_content": { "from": "final_content", "op": "last" },
+                  "conversation_id": { "from": "conversation_id", "op": "first" }
+                },
+                "finalize": {
+                  "content": "accumulated.final_content ? accumulated.final_content : accumulated.tokens",
+                  "model": "accumulated.model"
+                }
+              }
+            }
+          }
         }
       },
       "pricing": {

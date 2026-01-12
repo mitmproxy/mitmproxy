@@ -6,15 +6,13 @@ struct SupportTab: View {
             VStack(spacing: 16) {
                 // App Info
                 VStack(spacing: 8) {
-                    Image("Oximy")
-                        .resizable()
-                        .frame(width: 48, height: 48)
+                    OximyLogo(size: 48)
                         .cornerRadius(10)
 
                     Text("Oximy")
                         .font(.headline)
 
-                    Text("Version 1.0.0")
+                    Text("Version \(Bundle.main.appVersion) (\(Bundle.main.buildNumber))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

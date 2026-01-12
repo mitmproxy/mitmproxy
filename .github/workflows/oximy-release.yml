@@ -1,0 +1,348 @@
+# Oximy Release Workflow
+#
+# This workflow builds and releases the Oximy desktop applications for macOS and Windows.
+# It creates signed, notarized builds with auto-update support via Sparkle (macOS) and Velopack (Windows).
+#
+# Trigger: Manual dispatch with version number input
+#
+# Required Secrets:
+#   - APPLE_CERTIFICATE: Base64-encoded Developer ID certificate (.p12)
+#   - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
+#   - APPLE_ID: Apple ID email for notarization
+#   - APPLE_APP_PASSWORD: App-specific password for notarization
+#   - SPARKLE_PRIVATE_KEY: EdDSA private key for Sparkle update signing
+#   - SPARKLE_PUBLIC_KEY: EdDSA public key for Info.plist
+
+name: Oximy Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.2.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+env:
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  # ===========================================
+  # Build macOS App with Sparkle (both architectures)
+  # ===========================================
+  build-macos:
+    name: Build macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-14
+            dmg_suffix: "-arm64"
+          - arch: x86_64
+            runner: macos-15-large
+            dmg_suffix: "-intel"
+    outputs:
+      dmg-name-arm64: ${{ steps.build.outputs.dmg-name-arm64 }}
+      dmg-name-intel: ${{ steps.build.outputs.dmg-name-intel }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.2'
+
+      - name: Import code signing certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Create Secrets.swift
+        working-directory: OximyMac
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          # Create Secrets.swift with Sentry DSN from GitHub secret
+          if [ -n "$SENTRY_DSN" ]; then
+            cat > App/Secrets.swift << EOF
+          import Foundation
+
+          enum Secrets {
+              static let sentryDSN: String? = "$SENTRY_DSN"
+          }
+          EOF
+            echo "Created Secrets.swift with Sentry DSN"
+          else
+            cp App/Secrets.example.swift App/Secrets.swift
+            echo "Created Secrets.swift from example (no SENTRY_DSN secret)"
+          fi
+
+      - name: Fetch Sparkle dependency
+        working-directory: OximyMac
+        run: swift build --target OximyMac 2>/dev/null || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install create-dmg
+        run: |
+          npm install -g create-dmg
+          echo "create-dmg installed at: $(which create-dmg)"
+
+      - name: Build bundled Python for ${{ matrix.arch }}
+        working-directory: OximyMac
+        run: |
+          echo "Building Python embed for architecture: $(uname -m)"
+          chmod +x Scripts/build-python-embed.sh
+          ./Scripts/build-python-embed.sh
+
+      - name: Build macOS app
+        id: build
+        working-directory: OximyMac
+        env:
+          VERSION: ${{ inputs.version }}
+          DEVELOPER_ID: "Developer ID Application: Oximy, Inc. (K6H6LCASRA)"
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
+        run: |
+          chmod +x Scripts/build-release.sh
+          ./Scripts/build-release.sh
+          # Build script now creates architecture-specific DMG and appcast names
+          echo "dmg-name-${{ matrix.arch }}=Oximy-${{ inputs.version }}${{ matrix.dmg_suffix }}.dmg" >> $GITHUB_OUTPUT
+
+      - name: Notarize app
+        working-directory: OximyMac/build
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          TEAM_ID: "K6H6LCASRA"
+          DMG_NAME: "Oximy-${{ inputs.version }}${{ matrix.dmg_suffix }}.dmg"
+        run: |
+          # Submit for notarization and capture submission ID
+          SUBMIT_OUTPUT=$(xcrun notarytool submit "$DMG_NAME" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$TEAM_ID" \
+            --wait 2>&1) || true
+
+          echo "$SUBMIT_OUTPUT"
+
+          # Extract submission ID
+          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep -o 'id: [a-f0-9-]*' | head -1 | cut -d' ' -f2)
+
+          # Check if notarization succeeded
+          if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
+            echo "Notarization succeeded!"
+            # Staple the notarization ticket to the DMG
+            xcrun stapler staple "$DMG_NAME"
+            echo "Notarization complete and stapled"
+          else
+            echo "Notarization failed. Fetching log..."
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_APP_PASSWORD" \
+                --team-id "$TEAM_ID" \
+                notarization-log.json || true
+              cat notarization-log.json
+            fi
+            exit 1
+          fi
+
+      - name: Verify signature
+        working-directory: OximyMac/build
+        run: |
+          echo "Verifying code signature..."
+          codesign -dvv Oximy.app
+          echo ""
+          echo "Verifying notarization..."
+          spctl -a -v Oximy.app || true
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release-${{ matrix.arch }}
+          path: |
+            OximyMac/build/Oximy-${{ inputs.version }}${{ matrix.dmg_suffix }}.dmg
+            OximyMac/build/appcast.xml
+          retention-days: 30
+
+  # ===========================================
+  # Build Windows App with Velopack
+  # ===========================================
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    outputs:
+      setup-name: ${{ steps.build.outputs.setup-name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Update version in project files
+        working-directory: OximyWindows
+        run: |
+          # Update version in csproj
+          $csproj = "src\OximyWindows\OximyWindows.csproj"
+          (Get-Content $csproj) -replace '<Version>.*</Version>', "<Version>${{ inputs.version }}</Version>" | Set-Content $csproj
+
+          # Update version in Constants.cs
+          $constants = "src\OximyWindows\Constants.cs"
+          (Get-Content $constants) -replace 'Version = ".*"', 'Version = "${{ inputs.version }}"' | Set-Content $constants
+
+          Write-Host "Updated version to ${{ inputs.version }}"
+
+      - name: Build Windows app
+        id: build
+        working-directory: OximyWindows
+        run: |
+          # Build with Velopack packaging
+          ./scripts/build.ps1 -Release -Clean -CreateVelopack -Version "${{ inputs.version }}"
+          echo "setup-name=OximySetup-${{ inputs.version }}.exe" >> $env:GITHUB_OUTPUT
+
+      - name: Create Inno Setup installer
+        working-directory: OximyWindows
+        run: |
+          # Update version in ISS file
+          $iss = "installer\OximySetup.iss"
+          (Get-Content $iss) -replace '#define MyAppVersion ".*"', '#define MyAppVersion "${{ inputs.version }}"' | Set-Content $iss
+
+          # Check if Inno Setup is available
+          $innoPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (Test-Path $innoPath) {
+            & $innoPath $iss
+          } else {
+            Write-Warning "Inno Setup not found, skipping installer creation"
+          }
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            OximyWindows/releases/*
+            OximyWindows/installer/Output/*.exe
+          retention-days: 30
+
+  # ===========================================
+  # Create GitHub Release
+  # ===========================================
+  create-release:
+    name: Create Release
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download macOS ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-release-arm64
+          path: release-assets/macos-arm64
+
+      - name: Download macOS Intel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-release-x86_64
+          path: release-assets/macos-intel
+
+      - name: Organize macOS artifacts
+        run: |
+          mkdir -p release-assets/macos
+          # Move DMGs
+          mv release-assets/macos-arm64/*.dmg release-assets/macos/
+          mv release-assets/macos-intel/*.dmg release-assets/macos/
+          # Rename appcasts to include architecture suffix
+          mv release-assets/macos-arm64/appcast.xml release-assets/macos/appcast-arm64.xml
+          mv release-assets/macos-intel/appcast.xml release-assets/macos/appcast-intel.xml
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: release-assets/windows
+
+      - name: List release assets
+        run: |
+          echo "=== macOS ==="
+          ls -la release-assets/macos/ || echo "No macOS files"
+          echo ""
+          echo "=== Windows ==="
+          ls -la release-assets/windows/ || echo "No Windows files"
+          ls -la release-assets/windows/releases/ || echo "No Velopack releases"
+          ls -la release-assets/windows/Output/ || echo "No Inno Setup output"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: oximy-v${{ inputs.version }}
+          name: Oximy v${{ inputs.version }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          files: |
+            release-assets/macos/Oximy-${{ inputs.version }}-arm64.dmg
+            release-assets/macos/Oximy-${{ inputs.version }}-intel.dmg
+            release-assets/macos/appcast-arm64.xml
+            release-assets/macos/appcast-intel.xml
+            release-assets/windows/releases/*
+            release-assets/windows/Output/*.exe
+          body: |
+            ## Oximy v${{ inputs.version }}
+
+            ### Downloads
+
+            | Platform | Download |
+            |----------|----------|
+            | macOS (Apple Silicon) | [Oximy-${{ inputs.version }}-arm64.dmg](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}-arm64.dmg) |
+            | macOS (Intel) | [Oximy-${{ inputs.version }}-intel.dmg](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}-intel.dmg) |
+            | Windows (64-bit) | [OximySetup-${{ inputs.version }}.exe](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe) |
+
+            ### Auto-Updates
+
+            Existing installations will be automatically notified of this update.
+
+            - **macOS**: Sparkle framework checks for updates every 24 hours
+            - **Windows**: Velopack checks for updates on app startup
+
+            ---
+
+            **Full Changelog**: https://github.com/OximyHQ/mitmproxy/compare/...oximy-v${{ inputs.version }}
+
+      - name: Summary
+        run: |
+          echo "## Release Created!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag**: oximy-v${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Pre-release**: ${{ inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Download Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [macOS DMG (Apple Silicon)](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}-arm64.dmg)" >> $GITHUB_STEP_SUMMARY
+          echo "- [macOS DMG (Intel)](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}-intel.dmg)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Windows Installer](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe)" >> $GITHUB_STEP_SUMMARY

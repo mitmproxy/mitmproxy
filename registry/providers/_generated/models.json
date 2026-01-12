@@ -1,11 +1,11 @@
 {
   "version": "0.1",
-  "generated_at": "2026-01-06T20:38:56.700045+00:00",
+  "generated_at": "2026-01-12T06:11:27.728092+00:00",
   "source": "models.dev",
   "source_url": "https://models.dev/api.json",
   "logos_url": "https://models.dev/logos",
   "stats": {
-    "total_models": 2028,
+    "total_models": 2023,
     "providers": 75,
     "api_formats": 5
   },
@@ -616,11 +616,12 @@
         "CEREBRAS_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/cerebras.svg",
-      "model_count": 3,
+      "model_count": 4,
       "models": [
         "gpt-oss-120b",
         "qwen-3-235b-a22b-instruct-2507",
-        "zai-glm-4.6"
+        "zai-glm-4.6",
+        "zai-glm-4.7"
       ]
     },
     "chutes": {
@@ -632,27 +633,21 @@
         "CHUTES_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/chutes.svg",
-      "model_count": 62,
+      "model_count": 55,
       "models": [
-        "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
-        "ArliAI/QwQ-32B-ArliAI-RpR-v1",
-        "MiniMaxAI/MiniMax-M2",
         "MiniMaxAI/MiniMax-M2.1-TEE",
         "NousResearch/DeepHermes-3-Mistral-24B-Preview",
         "NousResearch/Hermes-4-14B",
-        "NousResearch/Hermes-4-405B-FP8",
         "NousResearch/Hermes-4-405B-FP8-TEE",
         "NousResearch/Hermes-4-70B",
         "NousResearch/Hermes-4.3-36B",
-        "OpenGVLab/InternVL3-78B",
+        "OpenGVLab/InternVL3-78B-TEE",
         "Qwen/Qwen2.5-72B-Instruct",
         "Qwen/Qwen2.5-Coder-32B-Instruct",
         "Qwen/Qwen2.5-VL-32B-Instruct",
-        "Qwen/Qwen2.5-VL-72B-Instruct",
         "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
         "Qwen/Qwen3-14B",
         "Qwen/Qwen3-235B-A22B",
-        "Qwen/Qwen3-235B-A22B-Instruct-2507",
         "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
         "Qwen/Qwen3-235B-A22B-Thinking-2507",
         "Qwen/Qwen3-30B-A3B",
@@ -661,7 +656,6 @@
         "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE",
         "Qwen/Qwen3-Next-80B-A3B-Instruct",
         "Qwen/Qwen3-VL-235B-A22B-Instruct",
-        "Qwen/Qwen3-VL-235B-A22B-Thinking",
         "Qwen/Qwen3Guard-Gen-0.6B",
         "XiaomiMiMo/MiMo-V2-Flash",
         "chutesai/Mistral-Small-3.1-24B-Instruct-2503",
@@ -671,7 +665,6 @@
         "deepseek-ai/DeepSeek-R1-TEE",
         "deepseek-ai/DeepSeek-V3",
         "deepseek-ai/DeepSeek-V3-0324-TEE",
-        "deepseek-ai/DeepSeek-V3.1",
         "deepseek-ai/DeepSeek-V3.1-TEE",
         "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
         "deepseek-ai/DeepSeek-V3.2-Speciale-TEE",
@@ -685,6 +678,7 @@
         "rednote-hilab/dots.ocr",
         "tngtech/DeepSeek-R1T-Chimera",
         "tngtech/DeepSeek-TNG-R1T2-Chimera",
+        "tngtech/DeepSeek-TNG-R1T2-Chimera-TEE",
         "tngtech/TNG-R1T-Chimera-TEE",
         "unsloth/Mistral-Nemo-Instruct-2407",
         "unsloth/Mistral-Small-24B-Instruct-2501",
@@ -1382,20 +1376,20 @@
       "logo_url": "https://models.dev/logos/huggingface.svg",
       "model_count": 14,
       "models": [
-        "MiniMaxAI/MiniMax-M2",
+        "MiniMaxAI/MiniMax-M2.1",
         "Qwen/Qwen3-235B-A22B-Thinking-2507",
         "Qwen/Qwen3-Coder-480B-A35B-Instruct",
         "Qwen/Qwen3-Embedding-4B",
         "Qwen/Qwen3-Embedding-8B",
         "Qwen/Qwen3-Next-80B-A3B-Instruct",
         "Qwen/Qwen3-Next-80B-A3B-Thinking",
+        "XiaomiMiMo/MiMo-V2-Flash",
         "deepseek-ai/DeepSeek-R1-0528",
-        "deepseek-ai/Deepseek-V3-0324",
+        "deepseek-ai/DeepSeek-V3.2",
         "moonshotai/Kimi-K2-Instruct",
         "moonshotai/Kimi-K2-Instruct-0905",
-        "zai-org/GLM-4.5",
-        "zai-org/GLM-4.5-Air",
-        "zai-org/GLM-4.6"
+        "moonshotai/Kimi-K2-Thinking",
+        "zai-org/GLM-4.7"
       ]
     },
     "iflowcn": {
@@ -2352,10 +2346,11 @@
         "SCALEWAY_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/scaleway.svg",
-      "model_count": 13,
+      "model_count": 14,
       "models": [
         "bge-multilingual-gemma2",
         "deepseek-r1-distill-llama-70b",
+        "devstral-2-123b-instruct-2512",
         "gemma-3-27b-it",
         "gpt-oss-120b",
         "llama-3.1-8b-instruct",
@@ -11947,13 +11942,14 @@
       "name": "GLM 4.7",
       "family": "glm-4.7",
       "mode": "chat",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 32768,
-      "input_cost_per_1k": 0.00085,
-      "output_cost_per_1k": 0.00275,
+      "max_input_tokens": 202752,
+      "max_output_tokens": 50688,
+      "input_cost_per_1k": 0.00055,
+      "output_cost_per_1k": 0.00265,
       "capabilities": [
         "function_calling",
         "json_mode",
+        "reasoning",
         "temperature"
       ],
       "knowledge_cutoff": "2025-04",
@@ -13563,8 +13559,8 @@
       "name": "Hermes 4.3 36B",
       "family": "nousresearch",
       "mode": "chat",
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 524288,
+      "max_output_tokens": 524288,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.00039,
       "cache_read_cost_per_1k": 0.0,
@@ -13625,30 +13621,10 @@
       "name": "Hermes 4 405B FP8 TEE",
       "family": "nousresearch",
       "mode": "chat",
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
-      "input_cost_per_1k": 0.0003,
-      "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "temperature"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
-    "chutes/NousResearch/Hermes-4-405B-FP8": {
-      "id": "NousResearch/Hermes-4-405B-FP8",
-      "provider": "chutes",
-      "name": "Hermes 4 405B FP8",
-      "family": "nousresearch",
-      "mode": "chat",
       "max_input_tokens": 131072,
-      "max_output_tokens": 131072,
+      "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "reasoning_cost_per_1k": 0.0018,
       "capabilities": [
         "function_calling",
@@ -13741,28 +13717,6 @@
       "release_date": "2025-12-29",
       "open_weights": true
     },
-    "chutes/MiniMaxAI/MiniMax-M2": {
-      "id": "MiniMaxAI/MiniMax-M2",
-      "provider": "chutes",
-      "name": "MiniMax M2",
-      "family": "minimaxai",
-      "mode": "chat",
-      "max_input_tokens": 196608,
-      "max_output_tokens": 196608,
-      "input_cost_per_1k": 0.00026,
-      "output_cost_per_1k": 0.00102,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00153,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
     "chutes/MiniMaxAI/MiniMax-M2.1-TEE": {
       "id": "MiniMaxAI/MiniMax-M2.1-TEE",
       "provider": "chutes",
@@ -13805,27 +13759,6 @@
       "release_date": "2025-12-29",
       "open_weights": true
     },
-    "chutes/ArliAI/QwQ-32B-ArliAI-RpR-v1": {
-      "id": "ArliAI/QwQ-32B-ArliAI-RpR-v1",
-      "provider": "chutes",
-      "name": "QwQ 32B ArliAI RpR v1",
-      "family": "arliai",
-      "mode": "chat",
-      "max_input_tokens": 32768,
-      "max_output_tokens": 32768,
-      "input_cost_per_1k": 3e-05,
-      "output_cost_per_1k": 0.00011,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.000165,
-      "capabilities": [
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
     "chutes/tngtech/DeepSeek-R1T-Chimera": {
       "id": "tngtech/DeepSeek-R1T-Chimera",
       "provider": "chutes",
@@ -13847,6 +13780,26 @@
       "release_date": "2025-12-29",
       "open_weights": true
     },
+    "chutes/tngtech/DeepSeek-TNG-R1T2-Chimera-TEE": {
+      "id": "tngtech/DeepSeek-TNG-R1T2-Chimera-TEE",
+      "provider": "chutes",
+      "name": "DeepSeek TNG R1T2 Chimera TEE",
+      "family": "tngtech",
+      "mode": "chat",
+      "max_input_tokens": 163840,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00085,
+      "reasoning_cost_per_1k": 0.001275,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "temperature"
+      ],
+      "release_date": "2025-01-06",
+      "open_weights": true
+    },
     "chutes/tngtech/DeepSeek-TNG-R1T2-Chimera": {
       "id": "tngtech/DeepSeek-TNG-R1T2-Chimera",
       "provider": "chutes",
@@ -13855,11 +13808,11 @@
       "mode": "chat",
       "max_input_tokens": 163840,
       "max_output_tokens": 163840,
-      "input_cost_per_1k": 0.0003,
-      "output_cost_per_1k": 0.0012,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00085,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
+      "reasoning_cost_per_1k": 0.001275,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13877,11 +13830,11 @@
       "mode": "chat",
       "max_input_tokens": 163840,
       "max_output_tokens": 65536,
-      "input_cost_per_1k": 0.0003,
-      "output_cost_per_1k": 0.0012,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00085,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
+      "reasoning_cost_per_1k": 0.001275,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13897,8 +13850,8 @@
       "name": "MiMo V2 Flash",
       "family": "xiaomimimo",
       "mode": "chat",
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 262144,
+      "max_output_tokens": 262144,
       "input_cost_per_1k": 0.00017,
       "output_cost_per_1k": 0.00065,
       "cache_read_cost_per_1k": 0.0,
@@ -13909,24 +13862,22 @@
       "release_date": "2025-12-29",
       "open_weights": true
     },
-    "chutes/OpenGVLab/InternVL3-78B": {
-      "id": "OpenGVLab/InternVL3-78B",
+    "chutes/OpenGVLab/InternVL3-78B-TEE": {
+      "id": "OpenGVLab/InternVL3-78B-TEE",
       "provider": "chutes",
-      "name": "InternVL3 78B",
+      "name": "InternVL3 78B TEE",
       "family": "opengvlab",
       "mode": "chat",
       "max_input_tokens": 32768,
       "max_output_tokens": 32768,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.00039,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature",
         "vision"
       ],
-      "release_date": "2025-12-29",
+      "release_date": "2025-01-06",
       "open_weights": true
     },
     "chutes/openai/gpt-oss-120b-TEE": {
@@ -13938,10 +13889,10 @@
       "max_input_tokens": 131072,
       "max_output_tokens": 65536,
       "input_cost_per_1k": 4e-05,
-      "output_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00018,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.000375,
+      "reasoning_cost_per_1k": 0.00027,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14011,28 +13962,6 @@
         "json_mode",
         "temperature",
         "vision"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
-    "chutes/Alibaba-NLP/Tongyi-DeepResearch-30B-A3B": {
-      "id": "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
-      "provider": "chutes",
-      "name": "Tongyi DeepResearch 30B A3B",
-      "family": "alibaba-nlp",
-      "mode": "chat",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 131072,
-      "input_cost_per_1k": 0.0001,
-      "output_cost_per_1k": 0.00039,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.000585,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature"
       ],
       "release_date": "2025-12-29",
       "open_weights": true
@@ -14227,33 +14156,13 @@
       "name": "Qwen3Guard Gen 0.6B",
       "family": "qwen",
       "mode": "chat",
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
       "input_cost_per_1k": 1e-05,
       "output_cost_per_1k": 1e-05,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
       "capabilities": [
-        "temperature"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
-    "chutes/Qwen/Qwen3-235B-A22B-Instruct-2507": {
-      "id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
-      "provider": "chutes",
-      "name": "Qwen3 235B A22B Instruct 2507",
-      "family": "qwen",
-      "mode": "chat",
-      "max_input_tokens": 262144,
-      "max_output_tokens": 262144,
-      "input_cost_per_1k": 8e-05,
-      "output_cost_per_1k": 0.00055,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
         "temperature"
       ],
       "release_date": "2025-12-29",
@@ -14311,7 +14220,8 @@
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
       "capabilities": [
-        "temperature"
+        "temperature",
+        "vision"
       ],
       "release_date": "2025-12-29",
       "open_weights": true
@@ -14334,26 +14244,6 @@
         "json_mode",
         "reasoning",
         "temperature"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
-    "chutes/Qwen/Qwen2.5-VL-72B-Instruct": {
-      "id": "Qwen/Qwen2.5-VL-72B-Instruct",
-      "provider": "chutes",
-      "name": "Qwen2.5 VL 72B Instruct",
-      "family": "qwen",
-      "mode": "chat",
-      "max_input_tokens": 32768,
-      "max_output_tokens": 32768,
-      "input_cost_per_1k": 7e-05,
-      "output_cost_per_1k": 0.00026,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "capabilities": [
-        "json_mode",
-        "temperature",
-        "vision"
       ],
       "release_date": "2025-12-29",
       "open_weights": true
@@ -14414,29 +14304,6 @@
       "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
-        "temperature",
-        "vision"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
-    "chutes/Qwen/Qwen3-VL-235B-A22B-Thinking": {
-      "id": "Qwen/Qwen3-VL-235B-A22B-Thinking",
-      "provider": "chutes",
-      "name": "Qwen3 VL 235B A22B Thinking",
-      "family": "qwen",
-      "mode": "chat",
-      "max_input_tokens": 262144,
-      "max_output_tokens": 262144,
-      "input_cost_per_1k": 0.0003,
-      "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
         "temperature",
         "vision"
       ],
@@ -14533,11 +14400,11 @@
       "mode": "chat",
       "max_input_tokens": 202752,
       "max_output_tokens": 65536,
-      "input_cost_per_1k": 0.0004,
-      "output_cost_per_1k": 0.00175,
+      "input_cost_per_1k": 0.00035,
+      "output_cost_per_1k": 0.0015,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.002625,
+      "reasoning_cost_per_1k": 0.00225,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14644,8 +14511,8 @@
       "mode": "chat",
       "max_input_tokens": 163840,
       "max_output_tokens": 65536,
-      "input_cost_per_1k": 0.00024,
-      "output_cost_per_1k": 0.00084,
+      "input_cost_per_1k": 0.00019,
+      "output_cost_per_1k": 0.00087,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
       "capabilities": [
@@ -14761,28 +14628,6 @@
       "release_date": "2025-12-29",
       "open_weights": true
     },
-    "chutes/deepseek-ai/DeepSeek-V3.1": {
-      "id": "deepseek-ai/DeepSeek-V3.1",
-      "provider": "chutes",
-      "name": "DeepSeek V3.1",
-      "family": "deepseek-ai",
-      "mode": "chat",
-      "max_input_tokens": 163840,
-      "max_output_tokens": 65536,
-      "input_cost_per_1k": 0.0002,
-      "output_cost_per_1k": 0.0008,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0012,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "release_date": "2025-12-29",
-      "open_weights": true
-    },
     "chutes/deepseek-ai/DeepSeek-R1-0528-TEE": {
       "id": "deepseek-ai/DeepSeek-R1-0528-TEE",
       "provider": "chutes",
@@ -14790,7 +14635,7 @@
       "family": "deepseek-ai",
       "mode": "chat",
       "max_input_tokens": 163840,
-      "max_output_tokens": 163840,
+      "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0004,
       "output_cost_per_1k": 0.00175,
       "cache_read_cost_per_1k": 0.0,
@@ -14812,12 +14657,12 @@
       "family": "deepseek-ai",
       "mode": "chat",
       "max_input_tokens": 163840,
-      "max_output_tokens": 16384,
-      "input_cost_per_1k": 0.00027,
-      "output_cost_per_1k": 0.00041,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00038,
       "cache_read_cost_per_1k": 0.0,
       "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.000615,
+      "reasoning_cost_per_1k": 0.00057,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -21123,14 +20968,34 @@
       "release_date": "2025-09-04",
       "open_weights": true
     },
-    "huggingface/MiniMaxAI/MiniMax-M2": {
-      "id": "MiniMaxAI/MiniMax-M2",
+    "huggingface/moonshotai/Kimi-K2-Thinking": {
+      "id": "moonshotai/Kimi-K2-Thinking",
       "provider": "huggingface",
-      "name": "MiniMax-M2",
+      "name": "Kimi-K2-Thinking",
+      "family": "kimi-k2",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 262144,
+      "input_cost_per_1k": 0.0006,
+      "output_cost_per_1k": 0.0025,
+      "cache_read_cost_per_1k": 0.00015,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-08",
+      "release_date": "2025-11-06",
+      "open_weights": true
+    },
+    "huggingface/MiniMaxAI/MiniMax-M2.1": {
+      "id": "MiniMaxAI/MiniMax-M2.1",
+      "provider": "huggingface",
+      "name": "MiniMax-M2.1",
       "family": "minimax",
       "mode": "chat",
       "max_input_tokens": 204800,
-      "max_output_tokens": 204800,
+      "max_output_tokens": 131072,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
       "capabilities": [
@@ -21139,7 +21004,26 @@
         "temperature"
       ],
       "knowledge_cutoff": "2025-10",
-      "release_date": "2025-10-27",
+      "release_date": "2025-12-23",
+      "open_weights": true
+    },
+    "huggingface/XiaomiMiMo/MiMo-V2-Flash": {
+      "id": "XiaomiMiMo/MiMo-V2-Flash",
+      "provider": "huggingface",
+      "name": "MiMo-V2-Flash",
+      "family": "mimo",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.0003,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-12",
+      "release_date": "2025-12-16",
       "open_weights": true
     },
     "huggingface/Qwen/Qwen3-Embedding-8B": {
@@ -21243,33 +21127,14 @@
       "release_date": "2025-09-11",
       "open_weights": true
     },
-    "huggingface/zai-org/GLM-4.5": {
-      "id": "zai-org/GLM-4.5",
+    "huggingface/zai-org/GLM-4.7": {
+      "id": "zai-org/GLM-4.7",
       "provider": "huggingface",
-      "name": "GLM-4.5",
-      "family": "glm-4.5",
+      "name": "GLM-4.7",
+      "family": "glm-4.7",
       "mode": "chat",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 98304,
-      "input_cost_per_1k": 0.0006,
-      "output_cost_per_1k": 0.0022,
-      "capabilities": [
-        "function_calling",
-        "reasoning",
-        "temperature"
-      ],
-      "knowledge_cutoff": "2025-04",
-      "release_date": "2025-07-28",
-      "open_weights": true
-    },
-    "huggingface/zai-org/GLM-4.6": {
-      "id": "zai-org/GLM-4.6",
-      "provider": "huggingface",
-      "name": "GLM-4.6",
-      "family": "glm-4.6",
-      "mode": "chat",
-      "max_input_tokens": 200000,
-      "max_output_tokens": 128000,
+      "max_input_tokens": 204800,
+      "max_output_tokens": 131072,
       "input_cost_per_1k": 0.0006,
       "output_cost_per_1k": 0.0022,
       "cache_read_cost_per_1k": 0.00011,
@@ -21279,44 +21144,7 @@
         "temperature"
       ],
       "knowledge_cutoff": "2025-04",
-      "release_date": "2025-09-30",
-      "open_weights": true
-    },
-    "huggingface/zai-org/GLM-4.5-Air": {
-      "id": "zai-org/GLM-4.5-Air",
-      "provider": "huggingface",
-      "name": "GLM-4.5-Air",
-      "family": "glm-4.5-air",
-      "mode": "chat",
-      "max_input_tokens": 128000,
-      "max_output_tokens": 96000,
-      "input_cost_per_1k": 0.0002,
-      "output_cost_per_1k": 0.0011,
-      "capabilities": [
-        "function_calling",
-        "reasoning",
-        "temperature"
-      ],
-      "knowledge_cutoff": "2025-04",
-      "release_date": "2025-07-28",
-      "open_weights": true
-    },
-    "huggingface/deepseek-ai/Deepseek-V3-0324": {
-      "id": "deepseek-ai/Deepseek-V3-0324",
-      "provider": "huggingface",
-      "name": "DeepSeek-V3-0324",
-      "family": "deepseek-v3",
-      "mode": "chat",
-      "max_input_tokens": 16384,
-      "max_output_tokens": 8192,
-      "input_cost_per_1k": 0.00125,
-      "output_cost_per_1k": 0.00125,
-      "capabilities": [
-        "function_calling",
-        "temperature"
-      ],
-      "knowledge_cutoff": "2024-10",
-      "release_date": "2025-03-24",
+      "release_date": "2025-12-22",
       "open_weights": true
     },
     "huggingface/deepseek-ai/DeepSeek-R1-0528": {
@@ -21336,6 +21164,25 @@
       ],
       "knowledge_cutoff": "2025-05",
       "release_date": "2025-05-28",
+      "open_weights": true
+    },
+    "huggingface/deepseek-ai/DeepSeek-V3.2": {
+      "id": "deepseek-ai/DeepSeek-V3.2",
+      "provider": "huggingface",
+      "name": "DeepSeek-V3.2",
+      "family": "deepseek-v3",
+      "mode": "chat",
+      "max_input_tokens": 163840,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.00028,
+      "output_cost_per_1k": 0.0004,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2025-12-01",
       "open_weights": true
     },
     "opencode/qwen3-coder": {
@@ -37366,6 +37213,23 @@
       "release_date": "2025-07-01",
       "open_weights": true
     },
+    "scaleway/devstral-2-123b-instruct-2512": {
+      "id": "devstral-2-123b-instruct-2512",
+      "provider": "scaleway",
+      "name": "Devstral 2 123B Instruct (2512)",
+      "family": "devstral",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.0004,
+      "output_cost_per_1k": 0.002,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "release_date": "2026-01-07",
+      "open_weights": true
+    },
     "scaleway/pixtral-12b-2409": {
       "id": "pixtral-12b-2409",
       "provider": "scaleway",
@@ -40735,6 +40599,25 @@
         "vision"
       ],
       "release_date": "2025-11-11"
+    },
+    "cerebras/zai-glm-4.7": {
+      "id": "zai-glm-4.7",
+      "provider": "cerebras",
+      "name": "Z.AI GLM-4.7",
+      "family": null,
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 40000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "cache_read_cost_per_1k": 0.0,
+      "cache_write_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "release_date": "2026-01-10",
+      "open_weights": true
     },
     "cerebras/qwen-3-235b-a22b-instruct-2507": {
       "id": "qwen-3-235b-a22b-instruct-2507",

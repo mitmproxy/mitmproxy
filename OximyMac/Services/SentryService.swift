@@ -30,10 +30,12 @@ class SentryService: ObservableObject {
     /// Initialize Sentry SDK with configuration
     /// Call this FIRST in applicationDidFinishLaunching, before any other setup
     func initialize() {
-        // Get DSN from environment variable
-        guard let dsn = ProcessInfo.processInfo.environment[Constants.Sentry.dsnEnvKey],
-              !dsn.isEmpty else {
-            print("[SentryService] \(Constants.Sentry.dsnEnvKey) not set - Sentry disabled")
+        // Get DSN: prefer Secrets.swift, fall back to environment variable
+        let dsn: String? = Secrets.sentryDSN ?? ProcessInfo.processInfo.environment[Constants.Sentry.dsnEnvKey]
+
+        guard let dsn = dsn, !dsn.isEmpty else {
+            print("[SentryService] No Sentry DSN configured - Sentry disabled")
+            print("[SentryService] Set DSN in App/Secrets.swift or \(Constants.Sentry.dsnEnvKey) env var")
             return
         }
 

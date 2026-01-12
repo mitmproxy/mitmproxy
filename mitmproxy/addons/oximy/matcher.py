@@ -13,6 +13,7 @@ import re
 from typing import TYPE_CHECKING
 
 from mitmproxy.addons.oximy.models import MatchResult
+from mitmproxy.addons.oximy.process import ClientProcess
 
 if TYPE_CHECKING:
     from mitmproxy.addons.oximy.bundle import OISPBundle
@@ -26,53 +27,99 @@ class TrafficMatcher:
     Classifies HTTP traffic against OISP bundle definitions.
 
     Classification hierarchy:
-    1. domain_lookup - exact domain match to known AI API providers
-    2. domain_patterns - regex match for dynamic domains (Azure, Bedrock)
-    3. websites - known AI websites with endpoint patterns
-    4. Unknown - drop silently
+    1. apps - desktop apps identified by process signature + API patterns
+    2. domain_lookup - exact domain match to known AI API providers
+    3. domain_patterns - regex match for dynamic domains (Azure, Bedrock)
+    4. websites - known AI websites with endpoint patterns
+    5. Unknown - drop silently
     """
 
     def __init__(self, bundle: OISPBundle):
         self.bundle = bundle
         self._website_domain_index: dict[str, str] = self._build_website_domain_index()
+        self._app_signature_index: dict[str, str] = self._build_app_signature_index()
+        self._app_domain_index: dict[str, set[str]] = self._build_app_domain_index()
 
     def _build_website_domain_index(self) -> dict[str, str]:
         """Build reverse index from domain -> website_id."""
         index: dict[str, str] = {}
         for website_id, website in self.bundle.websites.items():
-            for domain in website.get("domains", []):
+            # Support both "api_domains" (current spec) and "domains" (legacy)
+            domains = website.get("api_domains") or website.get("domains", [])
+            for domain in domains:
                 index[domain] = website_id
+        logger.debug(f"Website domain index: {list(index.keys())}")
         return index
 
-    def match(self, flow: HTTPFlow) -> MatchResult:
+    def _build_app_signature_index(self) -> dict[str, str]:
+        """Build reverse index from bundle_id/exe/app_name -> app_id."""
+        index: dict[str, str] = {}
+        for app_id, app in self.bundle.apps.items():
+            # Index by app name for macOS path matching (e.g., "Granola.app" in path)
+            app_name = app.get("name", "")
+            if app_name:
+                # Store "AppName.app" pattern for macOS path matching
+                index[f"{app_name}.app"] = app_id
+                # Also store lowercase variant
+                index[f"{app_name.lower()}.app"] = app_id
+
+            signatures = app.get("signatures", {})
+            for platform, sig in signatures.items():
+                if "bundle_id" in sig:
+                    index[sig["bundle_id"]] = app_id
+                if "exe" in sig:
+                    # Store both original case and lowercase for Windows matching
+                    index[sig["exe"]] = app_id
+                    index[sig["exe"].lower()] = app_id
+        return index
+
+    def _build_app_domain_index(self) -> dict[str, set[str]]:
+        """Build index of which API domains each app uses."""
+        index: dict[str, set[str]] = {}
+        for app_id, app in self.bundle.apps.items():
+            domains = app.get("api_domains", [])
+            if domains:
+                index[app_id] = set(domains)
+        return index
+
+    def match(
+        self, flow: HTTPFlow, client_process: ClientProcess | None = None
+    ) -> MatchResult:
         """
         Classify a flow against OISP definitions.
 
         Args:
             flow: The HTTP flow to classify
+            client_process: Optional process info for app matching
 
         Returns:
             MatchResult with classification and metadata
         """
         host = flow.request.pretty_host
         path = flow.request.path
+        method = flow.request.method
 
-        # 1. Direct API provider lookup (exact domain match)
+        # 1. App matching (highest priority - requires process info)
+        result = self._match_app(host, path, method, client_process)
+        if result:
+            return result
+
+        # 2. Direct API provider lookup (exact domain match)
         result = self._match_domain_lookup(host)
         if result:
             return result
 
-        # 2. Regex patterns (Azure, Bedrock, etc.)
+        # 3. Regex patterns (Azure, Bedrock, etc.)
         result = self._match_domain_patterns(host)
         if result:
             return result
 
-        # 3. Website matching
+        # 4. Website matching
         result = self._match_website(host, path)
         if result:
             return result
 
-        # 4. Unknown - drop
+        # 5. Unknown - drop
         return MatchResult(classification="drop")
 
     def _match_domain_lookup(self, host: str) -> MatchResult | None:
@@ -107,6 +154,111 @@ class TrafficMatcher:
                     endpoint=None,
                 )
         return None
+
+    def _match_app(
+        self,
+        host: str,
+        path: str,
+        method: str,
+        client_process: ClientProcess | None,
+    ) -> MatchResult | None:
+        """
+        Match traffic from known desktop apps.
+
+        Apps are matched by:
+        1. Process signature (bundle_id on macOS, exe on Windows)
+        2. API domain restrictions (if specified)
+        3. Endpoint URL patterns (like website features)
+        """
+        if not client_process:
+            return None
+
+        # Find app by process signature
+        app_id = self._find_app_by_process(client_process)
+        if not app_id:
+            return None
+
+        app = self.bundle.apps.get(app_id)
+        if not app:
+            return None
+
+        # Check if app has features with parser configs
+        features = app.get("features", {})
+        if not features:
+            return None
+
+        # Check domain restriction if present
+        allowed_domains = self._app_domain_index.get(app_id)
+        if allowed_domains and not self._domain_matches_pattern(host, allowed_domains):
+            return None
+
+        # Check feature patterns
+        for feature_name, feature_def in features.items():
+            patterns = feature_def.get("patterns", [])
+            for pattern in patterns:
+                # Check method if specified
+                pattern_method = pattern.get("method")
+                if pattern_method and pattern_method.upper() != method.upper():
+                    continue
+
+                if self._matches_endpoint_pattern(path, pattern):
+                    logger.debug(
+                        f"App match: {app_id}/{feature_name} for {client_process.name}"
+                    )
+                    return MatchResult(
+                        classification="full_trace",
+                        source_type="app",
+                        source_id=app_id,
+                        provider_id=None,
+                        api_format=f"{app_id}_app",
+                        endpoint=feature_name,
+                    )
+
+        return None
+
+    def _find_app_by_process(self, client_process: ClientProcess) -> str | None:
+        """
+        Find app_id by matching process info against signatures.
+
+        Matches against:
+        - Process path containing app name or bundle_id (macOS apps)
+        - Process name matching exe name (Windows apps)
+        - Parent process name (for helper processes)
+        """
+        # Check by path (contains app name like "Granola.app" on macOS)
+        if client_process.path:
+            for signature, app_id in self._app_signature_index.items():
+                if signature in client_process.path:
+                    logger.debug(
+                        f"Matched app {app_id} by signature '{signature}' in path"
+                    )
+                    return app_id
+
+        # Check by process name (Windows exe)
+        if client_process.name:
+            name_lower = client_process.name.lower()
+            if name_lower in self._app_signature_index:
+                return self._app_signature_index[name_lower]
+
+        # Check by parent process name (for helper processes)
+        if client_process.parent_name:
+            parent_lower = client_process.parent_name.lower()
+            if parent_lower in self._app_signature_index:
+                return self._app_signature_index[parent_lower]
+
+        return None
+
+    def _domain_matches_pattern(self, host: str, allowed: set[str]) -> bool:
+        """Check if host matches any of the allowed domain patterns."""
+        for domain in allowed:
+            if domain.startswith("*."):
+                # Wildcard pattern - match suffix
+                suffix = domain[2:]
+                if host.endswith(suffix) or host == suffix:
+                    return True
+            elif host == domain:
+                return True
+        return False
 
     def _match_website(self, host: str, path: str) -> MatchResult | None:
         """Check if host/path matches a known website definition."""

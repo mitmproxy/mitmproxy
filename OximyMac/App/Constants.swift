@@ -49,7 +49,18 @@ enum Constants {
         static let workspaceName = "workspaceName"
         static let deviceToken = "deviceToken"
         static let autoStartEnabled = "autoStartEnabled"
+        static let deviceId = "deviceId"
+        static let workspaceId = "workspaceId"
+        static let heartbeatInterval = "heartbeatInterval"
+        static let eventBatchSize = "eventBatchSize"
+        static let eventFlushInterval = "eventFlushInterval"
+        static let apiEndpoint = "apiEndpoint"
     }
+
+    // MARK: - API
+    // static let defaultAPIEndpoint = "https://api.oximy.com/api/v1"
+    static let defaultAPIEndpoint = "http://localhost:4000/api/v1"
+
 
     // MARK: - URLs
     static let signUpURL = URL(string: "https://app.oximy.com")!

@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using OximyWindows.Core;
 using OximyWindows.Services;
 using OximyWindows.Views;
+using Velopack;
 
 namespace OximyWindows;
 
@@ -20,6 +21,10 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // CRITICAL: Velopack hooks must be called FIRST before any other code.
+        // This handles update installation, uninstallation, and first-run scenarios.
+        VelopackApp.Build().Run();
+
         // Single instance check
         const string mutexName = "OximyWindowsSingleInstance";
         _mutex = new Mutex(true, mutexName, out var createdNew);
@@ -51,6 +56,13 @@ public partial class App : Application
 
         // Create and show main window (hidden, hosts tray icon)
         _mainWindow = new MainWindow();
+
+        // Check for updates in background after startup (5 second delay)
+        Task.Run(async () =>
+        {
+            await Task.Delay(5000);
+            await UpdateService.Instance.CheckForUpdatesAsync();
+        });
     }
 
     protected override void OnExit(ExitEventArgs e)

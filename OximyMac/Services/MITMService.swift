@@ -20,6 +20,12 @@ class MITMService: ObservableObject {
 
     private init() {}
 
+    deinit {
+        // Ensure restart task is cancelled to prevent memory leaks
+        restartTask?.cancel()
+        restartTask = nil
+    }
+
     // MARK: - Port Selection
 
     /// Find an available port starting from preferred port
@@ -158,9 +164,7 @@ class MITMService: ObservableObject {
             "--set", "confdir=\(Constants.oximyDir.path)",
             "--mode", "regular@\(port)",
             "--listen-host", "127.0.0.1",
-            "--ssl-insecure",
-            "-q"
-        ]
+            "--ssl-insecure"        ]
 
         NSLog("[MITMService] Process arguments: %@", process.arguments?.description ?? "nil")
 
@@ -202,6 +206,23 @@ class MITMService: ObservableObject {
         stop()
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
         try await start()
+    }
+
+    /// Force refresh the OISP bundle by restarting mitmproxy
+    /// This triggers a fresh fetch from the remote URL
+    func refreshBundle() async throws {
+        NSLog("[MITMService] Force bundle refresh requested - restarting proxy")
+
+        // Delete the cached bundle to force a fresh fetch
+        let bundleCachePath = Constants.bundleCachePath
+        if FileManager.default.fileExists(atPath: bundleCachePath.path) {
+            try? FileManager.default.removeItem(at: bundleCachePath)
+            NSLog("[MITMService] Deleted bundle cache at %@", bundleCachePath.path)
+        }
+
+        // Restart to pick up fresh bundle
+        try await restart()
+        NSLog("[MITMService] Bundle refresh complete")
     }
 
     // MARK: - Auto-Restart
@@ -296,35 +317,113 @@ class MITMService: ObservableObject {
         }
     }
 
-    private func getAddonPath() -> String {
-        // First, check if addon is bundled with app (copied via build scripts)
-        if let bundleURL = Bundle.module.url(forResource: "oximy-addon", withExtension: nil) {
-            let addonPath = bundleURL.appendingPathComponent("addon.py").path
-            if FileManager.default.fileExists(atPath: addonPath) {
-                NSLog("[MITMService]  Using bundled addon: \(addonPath)")
-                return addonPath
+    // MARK: - Resource Location
+
+    /// Locate a bundled resource using 4-priority search:
+    /// 1. Bundle.module (SPM builds)
+    /// 2. Bundle.main.resourcePath (Xcode release)
+    /// 3. Source-relative via #filePath (development)
+    /// 4. Executable-relative (standalone binary fallback)
+    private func locateResource(
+        bundleResource: String,
+        subpath: String,
+        sourceFile: String = #file
+    ) -> String? {
+        let fm = FileManager.default
+
+        // Priority 1: Bundle.module (SPM builds with copied resources)
+        if let bundleURL = Bundle.module.url(forResource: bundleResource, withExtension: nil) {
+            let path = bundleURL.appendingPathComponent(subpath).path
+            if fm.fileExists(atPath: path) {
+                NSLog("[MITMService]  Found via Bundle.module: \(path)")
+                return path
             }
         }
 
-        // Check inside the app bundle (for release builds)
+        // Priority 2: App bundle Resources (Xcode release builds)
         if let bundlePath = Bundle.main.resourcePath {
-            let addonPath = (bundlePath as NSString).appendingPathComponent("oximy-addon/addon.py")
-            if FileManager.default.fileExists(atPath: addonPath) {
-                NSLog("[MITMService]  Using app bundle addon: \(addonPath)")
-                return addonPath
+            let path = (bundlePath as NSString).appendingPathComponent("\(bundleResource)/\(subpath)")
+            if fm.fileExists(atPath: path) {
+                NSLog("[MITMService]  Found via app bundle: \(path)")
+                return path
             }
         }
 
-        // Development: use the standalone addon in Resources (has absolute imports)
-        // This addon is a copy from mitmproxy source with imports modified to work standalone
-        let devPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources/oximy-addon/addon.py"
-        if FileManager.default.fileExists(atPath: devPath) {
-            NSLog("[MITMService]  Using Resources addon: \(devPath)")
+        // Priority 3: Development - relative to source file
+        let sourceDir = URL(fileURLWithPath: sourceFile).deletingLastPathComponent().deletingLastPathComponent().path
+        let devPath = sourceDir + "/Resources/\(bundleResource)/\(subpath)"
+        if fm.fileExists(atPath: devPath) {
+            NSLog("[MITMService]  Found via source-relative: \(devPath)")
             return devPath
         }
 
-        NSLog("[MITMService]  WARNING: Addon not found")
-        return devPath
+        // Priority 4: Fallback to executable directory
+        if let executablePath = Bundle.main.executablePath {
+            let execDir = (executablePath as NSString).deletingLastPathComponent
+            let fallbackPath = (execDir as NSString).appendingPathComponent("Resources/\(bundleResource)/\(subpath)")
+            if fm.fileExists(atPath: fallbackPath) {
+                NSLog("[MITMService]  Found via executable-relative: \(fallbackPath)")
+                return fallbackPath
+            }
+        }
+
+        NSLog("[MITMService]  Resource not found: \(bundleResource)/\(subpath)")
+        return nil
+    }
+
+    /// Locate a bundled resource directory and return its base path
+    private func locateResourceDirectory(
+        bundleResource: String,
+        verifySubpath: String,
+        sourceFile: String = #file
+    ) -> String? {
+        let fm = FileManager.default
+
+        // Priority 1: Bundle.module (SPM builds with copied resources)
+        if let bundleURL = Bundle.module.url(forResource: bundleResource, withExtension: nil) {
+            let verifyPath = bundleURL.appendingPathComponent(verifySubpath).path
+            if fm.fileExists(atPath: verifyPath) {
+                NSLog("[MITMService]  Found directory via Bundle.module: \(bundleURL.path)")
+                return bundleURL.path
+            }
+        }
+
+        // Priority 2: App bundle Resources (Xcode release builds)
+        if let bundlePath = Bundle.main.resourcePath {
+            let basePath = (bundlePath as NSString).appendingPathComponent(bundleResource)
+            let verifyPath = (basePath as NSString).appendingPathComponent(verifySubpath)
+            if fm.fileExists(atPath: verifyPath) {
+                NSLog("[MITMService]  Found directory via app bundle: \(basePath)")
+                return basePath
+            }
+        }
+
+        // Priority 3: Development - relative to source file
+        let sourceDir = URL(fileURLWithPath: sourceFile).deletingLastPathComponent().deletingLastPathComponent().path
+        let devPath = sourceDir + "/Resources/\(bundleResource)"
+        let devVerifyPath = devPath + "/\(verifySubpath)"
+        if fm.fileExists(atPath: devVerifyPath) {
+            NSLog("[MITMService]  Found directory via source-relative: \(devPath)")
+            return devPath
+        }
+
+        // Priority 4: Fallback to executable directory
+        if let executablePath = Bundle.main.executablePath {
+            let execDir = (executablePath as NSString).deletingLastPathComponent
+            let fallbackPath = (execDir as NSString).appendingPathComponent("Resources/\(bundleResource)")
+            let fallbackVerifyPath = (fallbackPath as NSString).appendingPathComponent(verifySubpath)
+            if fm.fileExists(atPath: fallbackVerifyPath) {
+                NSLog("[MITMService]  Found directory via executable-relative: \(fallbackPath)")
+                return fallbackPath
+            }
+        }
+
+        NSLog("[MITMService]  Resource directory not found: \(bundleResource)")
+        return nil
+    }
+
+    private func getAddonPath() -> String {
+        locateResource(bundleResource: "oximy-addon", subpath: "addon.py") ?? ""
     }
 
     /// Find mitmdump - prefer bundled, fallback to system
@@ -383,74 +482,96 @@ class MITMService: ObservableObject {
 
     /// Get bundled Python path and home directory
     private func getBundledPythonInfo() -> BundledPythonInfo? {
-        // Check Bundle.module for SPM builds
-        if let pythonEmbedURL = Bundle.module.url(forResource: "python-embed", withExtension: nil) {
-            let pythonPath = pythonEmbedURL.appendingPathComponent("bin/python3").path
-            if FileManager.default.fileExists(atPath: pythonPath) {
-                return BundledPythonInfo(pythonPath: pythonPath, pythonHome: pythonEmbedURL.path)
-            }
+        // Use shared locator to find python-embed directory
+        guard let pythonHome = locateResourceDirectory(
+            bundleResource: "python-embed",
+            verifySubpath: "bin/python3"
+        ) else {
+            return nil
         }
-
-        // Check inside the app bundle (for release builds)
-        if let bundlePath = Bundle.main.resourcePath {
-            let pythonHome = (bundlePath as NSString).appendingPathComponent("python-embed")
-            let pythonPath = (pythonHome as NSString).appendingPathComponent("bin/python3")
-            if FileManager.default.fileExists(atPath: pythonPath) {
-                return BundledPythonInfo(pythonPath: pythonPath, pythonHome: pythonHome)
-            }
-        }
-
-        // Development: check Resources directory directly
-        let devPythonHome = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources/python-embed"
-        let devPythonPath = devPythonHome + "/bin/python3"
-        if FileManager.default.fileExists(atPath: devPythonPath) {
-            return BundledPythonInfo(pythonPath: devPythonPath, pythonHome: devPythonHome)
-        }
-
-        return nil
+        let pythonPath = (pythonHome as NSString).appendingPathComponent("bin/python3")
+        return BundledPythonInfo(pythonPath: pythonPath, pythonHome: pythonHome)
     }
 
     /// Get path to bundled mitmdump (inside python-embed)
     /// The mitmdump script is a bash wrapper that sets up PYTHONHOME/PYTHONPATH
     /// to make the bundled Python fully self-contained and relocatable
     private func getBundledMitmdumpPath() -> String? {
-        // Check Bundle.module for SPM builds (copied via build scripts)
-        if let pythonEmbedURL = Bundle.module.url(forResource: "python-embed", withExtension: nil) {
-            let mitmdumpPath = pythonEmbedURL.appendingPathComponent("bin/mitmdump").path
-            if FileManager.default.fileExists(atPath: mitmdumpPath) {
-                return mitmdumpPath
-            }
-        }
-
-        // Check inside the app bundle (for release builds)
-        if let bundlePath = Bundle.main.resourcePath {
-            let mitmdumpPath = (bundlePath as NSString).appendingPathComponent("python-embed/bin/mitmdump")
-            if FileManager.default.fileExists(atPath: mitmdumpPath) {
-                return mitmdumpPath
-            }
-        }
-
-        // Development: check Resources directory directly
-        let devPath = "/Users/namanambavi/Desktop/Oximy/Code/mitmproxy/OximyMac/Resources/python-embed/bin/mitmdump"
-        if FileManager.default.fileExists(atPath: devPath) {
-            return devPath
-        }
-
-        return nil
+        locateResource(bundleResource: "python-embed", subpath: "bin/mitmdump")
     }
 
     /// Run the process with all the setup (extracted to avoid duplication)
     private func runProcess(_ process: Process, port: Int, addonPath: String) throws {
         NSLog("[MITMService] runProcess() - Setting up process...")
 
-        // Don't capture output - let it go to /dev/null to avoid pipe issues
-        // The process was exiting because pipes were being closed
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
+        // Redirect stdin to /dev/null
+        process.standardInput = FileHandle.nullDevice
+
+        // Create log file for mitmproxy output
+        let logFilePath = Constants.logsDir.appendingPathComponent("mitmdump.log")
+
+        // Rotate log if it exists and is too large (> 10MB)
+        let fm = FileManager.default
+        if fm.fileExists(atPath: logFilePath.path),
+           let attrs = try? fm.attributesOfItem(atPath: logFilePath.path),
+           let size = attrs[.size] as? Int64,
+           size > 10_000_000 {
+            let rotatedPath = Constants.logsDir.appendingPathComponent("mitmdump.log.old")
+            try? fm.removeItem(at: rotatedPath)
+            try? fm.moveItem(at: logFilePath, to: rotatedPath)
+        }
+
+        // Create or append to log file
+        if !fm.fileExists(atPath: logFilePath.path) {
+            fm.createFile(atPath: logFilePath.path, contents: nil, attributes: nil)
+        }
+
+        let logFileHandle: FileHandle?
+        do {
+            logFileHandle = try FileHandle(forWritingTo: logFilePath)
+            logFileHandle?.seekToEndOfFile()
+
+            // Write startup marker
+            let startupMarker = "\n\n========== MITM STARTED at \(Date()) ==========\n"
+            if let data = startupMarker.data(using: .utf8) {
+                logFileHandle?.write(data)
+            }
+        } catch {
+            NSLog("[MITMService] WARNING: Could not open log file: \(error)")
+            logFileHandle = nil
+        }
+
+        // Capture both stdout and stderr
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+
+        // Read stdout in background and write to both NSLog and file
+        stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            if !data.isEmpty {
+                if let str = String(data: data, encoding: .utf8) {
+                    NSLog("[MITMService] STDOUT: %@", str)
+                }
+                logFileHandle?.write(data)
+            }
+        }
+
+        // Read stderr in background and write to both NSLog and file
+        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            if !data.isEmpty {
+                if let str = String(data: data, encoding: .utf8) {
+                    NSLog("[MITMService] STDERR: %@", str)
+                }
+                logFileHandle?.write(data)
+            }
+        }
 
         // Handle process termination with auto-restart
         process.terminationHandler = { [weak self] proc in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self = self else { return }
 
                 self.isRunning = false

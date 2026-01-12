@@ -7,14 +7,17 @@ preserving information that the production addon normalizes away.
 
 from __future__ import annotations
 
+import random
 import time
 import uuid
-import random
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Literal
+from dataclasses import dataclass
+from dataclasses import field
+from datetime import datetime
+from datetime import timezone
+from typing import Any
+from typing import Literal
 
-from mitmproxy.addons.oximy.process import ClientProcess
+from process import ClientProcess
 
 
 def _generate_uuid7() -> str:
@@ -190,7 +193,9 @@ class InvestigationEvent:
         """Create a new investigation event with auto-generated ID and timestamp."""
         return cls(
             event_id=_generate_uuid7(),
-            timestamp=datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            timestamp=datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z"),
             host=host,
             url=url,
             path=path,
@@ -208,7 +213,6 @@ class InvestigationEvent:
             "timestamp": self.timestamp,
             "session_id": self.session_id,
             "flow_id": self.flow_id,
-
             # Connection
             "connection": {
                 "host": self.host,
@@ -217,7 +221,6 @@ class InvestigationEvent:
                 "method": self.method,
                 "scheme": self.scheme,
             },
-
             # Timing
             "timing": {
                 "duration_ms": self.duration_ms,
@@ -297,10 +300,14 @@ class InvestigationSession:
     filters: dict[str, Any]  # Active filters (domains, apps, etc.)
 
     @classmethod
-    def create(cls, description: str | None = None, filters: dict[str, Any] | None = None) -> InvestigationSession:
+    def create(
+        cls, description: str | None = None, filters: dict[str, Any] | None = None
+    ) -> InvestigationSession:
         return cls(
             session_id=_generate_uuid7(),
-            started_at=datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            started_at=datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z"),
             description=description,
             filters=filters or {},
         )

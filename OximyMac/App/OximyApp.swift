@@ -85,20 +85,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        // Listen for auth failures (401 after retries exhausted)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAuthFailure),
+            name: .authenticationFailed,
+            object: nil
+        )
+
         // Start network monitoring
         NetworkMonitor.shared.startMonitoring()
 
-        // Auto-show popover on first launch (setup)
-        if appState.phase == .setup {
+        // Auto-show popover on first launch (enrollment or setup - not ready)
+        // This ensures users see the UI immediately, not just the menu bar icon
+        if appState.phase != .ready {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.showPopover()
+                self?.showPopoverAndFocus()
             }
+        }
+
+        // Check for updates in background after startup (5 second delay)
+        // This avoids blocking the main thread during launch
+        Task {
+            try? await Task.sleep(for: .seconds(5))
+            UpdateService.shared.checkForUpdatesInBackground()
         }
     }
 
     private func showPopover() {
         guard let button = statusItem.button else { return }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    }
+
+    /// Show popover and ensure it's focused (for first launch)
+    private func showPopoverAndFocus() {
+        guard let button = statusItem.button else { return }
+
+        // Show the popover
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        // Make the popover window key and bring to front
+        if let popoverWindow = popover.contentViewController?.view.window {
+            popoverWindow.makeKeyAndOrderFront(nil)
+            popoverWindow.level = .floating  // Ensure it's above other windows
+        }
+
+        // Also activate the app to ensure keyboard focus works
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func handleQuitApp() {
@@ -135,6 +168,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func handleMitmproxyFailed() {
         print("[OximyApp] mitmproxy failed permanently")
         appState.connectionStatus = .error("Proxy service failed")
+    }
+
+    @objc private func handleAuthFailure() {
+        print("[OximyApp] Authentication failed after retries - returning to enrollment")
+        appState.handleAuthFailure()
+
+        // Show the popover so user sees the enrollment screen
+        showPopover()
     }
 
     private func setupMainMenu() {
@@ -185,6 +226,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Remove all notification observers to prevent leaks
+        NotificationCenter.default.removeObserver(self, name: .quitApp, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .networkChanged, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .mitmproxyFailed, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .authenticationFailed, object: nil)
+
+        // Remove global event monitor
+        if let monitor = clickMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickMonitor = nil
+        }
+
+        // Stop network monitoring
+        NetworkMonitor.shared.stopMonitoring()
+
+        // Stop API services
+        HeartbeatService.shared.stop()
+        SyncService.shared.flushSync()
+
         // Notify Sentry of clean shutdown
         SentryService.shared.appWillTerminate()
 
@@ -251,6 +311,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var clickMonitor: Any?
 
     private func setupPopover() {
+        // Clean up any existing monitor before creating a new one (prevents accumulation)
+        if let existingMonitor = clickMonitor {
+            NSEvent.removeMonitor(existingMonitor)
+            clickMonitor = nil
+        }
+
         popover = NSPopover()
         popover.contentSize = NSSize(width: 340, height: 420)
         // Use .applicationDefined so clicking buttons inside doesn't close the popover

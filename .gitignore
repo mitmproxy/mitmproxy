@@ -15,6 +15,7 @@ MANIFEST
 .tox*/
 build/
 dist/
+!registry/dist/
 mitmproxy/contrib/kaitaistruct/**/*.ksy
 .pytest_cache
 __pycache__
@@ -40,3 +41,6 @@ OximyMac/*.xcodeproj/
 OximyMac/*.xcworkspace/
 OximyMac/DerivedData/
 OximyMac/Resources/python-embed/
+
+# Secrets
+OximyMac/App/Secrets.swift

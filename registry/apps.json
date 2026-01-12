@@ -1,64 +1,118 @@
 {
   "version": "1.0.0",
   "apps": {
-    "cursor": {
-      "name": "Cursor",
-      "vendor": "Anysphere Inc.",
-      "vendor_url": "https://cursor.sh",
-      "category": "ai-code-editor",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.todesktop.230313mzl4w4u92",
-          "team_id": "VDXQ22DGB9"
-        },
-        "windows": {
-          "exe": "Cursor.exe",
-          "publisher": "Anysphere Inc."
-        },
-        "linux": {
-          "exe": "cursor"
-        }
-      },
-      "ai": "native",
-      "icon": "cursor.png"
-    },
-    "comet": {
-      "name": "Comet",
-      "vendor": "Perplexity AI",
-      "vendor_url": "https://perplexity.ai",
+    "arc": {
+      "name": "Arc",
+      "vendor": "The Browser Company",
+      "vendor_url": "https://arc.net",
       "category": "browser",
       "platforms": ["macos"],
       "signatures": {
         "macos": {
-          "bundle_id": "ai.perplexity.comet",
-          "team_id": "7S8W4W365S"
+          "bundle_id": "company.thebrowser.Browser"
         }
       },
-      "ai": "native",
-      "icon": "comet.png"
+      "icon": "arc.png"
     },
-    "wispr-flow": {
-      "name": "Wispr Flow",
-      "vendor": "Wispr AI",
-      "vendor_url": "https://wispr.ai",
-      "category": "productivity",
+    "chrome": {
+      "name": "Google Chrome",
+      "vendor": "Google",
+      "vendor_url": "https://google.com/chrome",
+      "category": "browser",
       "platforms": ["macos"],
       "signatures": {
         "macos": {
-          "bundle_id": "com.electron.wispr-flow",
-          "team_id": "C9VQZ78H85"
+          "bundle_id": "com.google.Chrome"
         }
       },
-      "ai": "native",
-      "icon": "wispr-flow.png"
+      "icon": "google-chrome.png"
+    },
+    "safari": {
+      "name": "Safari",
+      "vendor": "Apple",
+      "vendor_url": "https://apple.com/safari",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.apple.Safari"
+        }
+      },
+      "icon": "safari.png"
+    },
+    "firefox": {
+      "name": "Firefox",
+      "vendor": "Mozilla",
+      "vendor_url": "https://mozilla.org/firefox",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "org.mozilla.firefox"
+        }
+      },
+      "icon": "firefox.png"
+    },
+    "edge": {
+      "name": "Microsoft Edge",
+      "vendor": "Microsoft",
+      "vendor_url": "https://microsoft.com/edge",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.microsoft.edgemac"
+        }
+      },
+      "icon": "edge.png"
+    },
+    "brave": {
+      "name": "Brave",
+      "vendor": "Brave Software",
+      "vendor_url": "https://brave.com",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.brave.Browser"
+        }
+      },
+      "icon": "brave.png"
+    },
+    "opera": {
+      "name": "Opera",
+      "vendor": "Opera Software",
+      "vendor_url": "https://opera.com",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.operasoftware.Opera"
+        }
+      },
+      "icon": "opera.png"
+    },
+    "vivaldi": {
+      "name": "Vivaldi",
+      "vendor": "Vivaldi Technologies",
+      "vendor_url": "https://vivaldi.com",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "com.vivaldi.Vivaldi"
+        }
+      },
+      "icon": "vivaldi.png"
     },
     "granola": {
       "name": "Granola",
       "vendor": "Granola",
       "vendor_url": "https://granola.ai",
       "category": "productivity",
-      "platforms": ["macos"],
+      "platforms": [
+        "macos"
+      ],
       "signatures": {
         "macos": {
           "bundle_id": "com.granola.app",
@@ -67,13 +121,64 @@
       },
       "ai": "native",
       "icon": "granola.png",
+      "api_domains": [
+        "stream.api.granola.ai",
+        "api.granola.ai",
+        "*.granola.ai"
+      ],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "AI Chat with Documents",
           "description": "Chat with your meeting notes and documents using AI",
           "patterns": [
-            { "url": "**/v1/chat-with-documents", "method": "POST" }
-          ]
+            {
+              "url": "**/v1/chat-with-documents",
+              "method": "POST"
+            }
+          ],
+          "parser": {
+            "request": {
+              "prompt": "chat_history[-1].text",
+              "model": "prompt_config.model",
+              "context": "document_ids"
+            },
+            "response": {
+              "stream": {
+                "format": "ndjson",
+                "format_options": {
+                  "delimiter": "-----CHUNK_BOUNDARY-----"
+                },
+                "rules": [
+                  {
+                    "when": "$exists(outputs) and $exists(outputs[type = 'text_with_citations'].plain_text)",
+                    "extract": {
+                      "content": "outputs[type = 'text_with_citations'].plain_text"
+                    }
+                  },
+                  {
+                    "when": "$exists(outputs) and $exists(outputs[type = 'reasoning'].text)",
+                    "extract": {
+                      "reasoning": "outputs[type = 'reasoning'].text"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": {
+                    "from": "content",
+                    "op": "last"
+                  },
+                  "reasoning": {
+                    "from": "reasoning",
+                    "op": "last"
+                  }
+                },
+                "finalize": {
+                  "content": "accumulated.content"
+                }
+              }
+            }
+          }
         }
       },
       "detection": {
@@ -88,387 +193,6 @@
           }
         ]
       }
-    },
-    "figma": {
-      "name": "Figma",
-      "vendor": "Figma Inc.",
-      "vendor_url": "https://figma.com",
-      "category": "creative",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.figma.Desktop",
-          "team_id": "T8RA8NE3B7"
-        },
-        "windows": {
-          "exe": "Figma.exe",
-          "publisher": "Figma, Inc."
-        }
-      },
-      "ai": "enabled",
-      "icon": "figma.png"
-    },
-    "loom": {
-      "name": "Loom",
-      "vendor": "Loom Inc.",
-      "vendor_url": "https://loom.com",
-      "category": "productivity",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.loom.desktop",
-          "team_id": "QGD2ZPXZZG"
-        },
-        "windows": {
-          "exe": "Loom.exe",
-          "publisher": "Loom, Inc."
-        }
-      },
-      "ai": "enabled",
-      "icon": "loom.png"
-    },
-    "microsoft-excel": {
-      "name": "Microsoft Excel",
-      "vendor": "Microsoft Corporation",
-      "vendor_url": "https://microsoft.com/excel",
-      "category": "productivity",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.microsoft.Excel",
-          "team_id": "UBF8T346G9"
-        },
-        "windows": {
-          "exe": "EXCEL.EXE",
-          "publisher": "Microsoft Corporation"
-        }
-      },
-      "ai": "enabled",
-      "icon": "microsoft-excel.png"
-    },
-    "microsoft-powerpoint": {
-      "name": "Microsoft PowerPoint",
-      "vendor": "Microsoft Corporation",
-      "vendor_url": "https://microsoft.com/powerpoint",
-      "category": "productivity",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.microsoft.Powerpoint",
-          "team_id": "UBF8T346G9"
-        },
-        "windows": {
-          "exe": "POWERPNT.EXE",
-          "publisher": "Microsoft Corporation"
-        }
-      },
-      "ai": "enabled",
-      "icon": "microsoft-powerpoint.png"
-    },
-    "microsoft-word": {
-      "name": "Microsoft Word",
-      "vendor": "Microsoft Corporation",
-      "vendor_url": "https://microsoft.com/word",
-      "category": "productivity",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.microsoft.Word",
-          "team_id": "UBF8T346G9"
-        },
-        "windows": {
-          "exe": "WINWORD.EXE",
-          "publisher": "Microsoft Corporation"
-        }
-      },
-      "ai": "enabled",
-      "icon": "microsoft-word.png"
-    },
-    "microsoft-teams": {
-      "name": "Microsoft Teams",
-      "vendor": "Microsoft Corporation",
-      "vendor_url": "https://microsoft.com/teams",
-      "category": "productivity",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.microsoft.teams2",
-          "team_id": "UBF8T346G9"
-        },
-        "windows": {
-          "exe": "ms-teams.exe",
-          "publisher": "Microsoft Corporation"
-        },
-        "linux": {
-          "exe": "teams"
-        }
-      },
-      "ai": "enabled",
-      "icon": "microsoft-teams.png"
-    },
-    "postman": {
-      "name": "Postman",
-      "vendor": "Postman Inc.",
-      "vendor_url": "https://postman.com",
-      "category": "productivity",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.postmanlabs.mac",
-          "team_id": "H7H8Q7M5CK"
-        },
-        "windows": {
-          "exe": "Postman.exe",
-          "publisher": "Postman, Inc."
-        },
-        "linux": {
-          "exe": "postman"
-        }
-      },
-      "ai": "enabled",
-      "icon": "postman.png"
-    },
-    "raycast": {
-      "name": "Raycast",
-      "vendor": "Raycast Technologies Ltd",
-      "vendor_url": "https://raycast.com",
-      "category": "productivity",
-      "platforms": ["macos"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.raycast.macos",
-          "team_id": "SY64MV22J9"
-        }
-      },
-      "ai": "enabled",
-      "icon": "raycast.png"
-    },
-    "slack": {
-      "name": "Slack",
-      "vendor": "Salesforce (Slack Technologies)",
-      "vendor_url": "https://slack.com",
-      "category": "productivity",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.tinyspeck.slackmacgap",
-          "team_id": "BQR82RBBHL"
-        },
-        "windows": {
-          "exe": "slack.exe",
-          "publisher": "Slack Technologies LLC"
-        },
-        "linux": {
-          "exe": "slack"
-        }
-      },
-      "ai": "enabled",
-      "icon": "slack.png"
-    },
-    "zed": {
-      "name": "Zed",
-      "vendor": "Zed Industries",
-      "vendor_url": "https://zed.dev",
-      "category": "code-editor",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "dev.zed.Zed",
-          "team_id": "MQ55VZLNZQ"
-        },
-        "windows": {
-          "exe": "zed.exe",
-          "publisher": "Zed Industries"
-        },
-        "linux": {
-          "exe": "zed"
-        }
-      },
-      "ai": "enabled",
-      "icon": "zed.png"
-    },
-    "zoom": {
-      "name": "Zoom",
-      "vendor": "Zoom Video Communications",
-      "vendor_url": "https://zoom.us",
-      "category": "productivity",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "us.zoom.xos",
-          "team_id": "BJ4HAAB9B3"
-        },
-        "windows": {
-          "exe": "Zoom.exe",
-          "publisher": "Zoom Video Communications, Inc."
-        },
-        "linux": {
-          "exe": "zoom"
-        }
-      },
-      "ai": "enabled",
-      "icon": "zoom.png"
-    },
-    "whatsapp": {
-      "name": "WhatsApp",
-      "vendor": "Meta Platforms",
-      "vendor_url": "https://whatsapp.com",
-      "category": "productivity",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "net.whatsapp.WhatsApp",
-          "team_id": "57T9237FN3"
-        },
-        "windows": {
-          "exe": "WhatsApp.exe",
-          "publisher": "WhatsApp LLC"
-        }
-      },
-      "ai": "enabled",
-      "icon": "whatsapp.png"
-    },
-    "google-chrome": {
-      "name": "Google Chrome",
-      "vendor": "Google LLC",
-      "vendor_url": "https://google.com/chrome",
-      "category": "browser",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.google.Chrome",
-          "team_id": "EQHXZ8M8AV"
-        },
-        "windows": {
-          "exe": "chrome.exe",
-          "publisher": "Google LLC"
-        },
-        "linux": {
-          "exe": "google-chrome"
-        }
-      },
-      "ai": "host",
-      "icon": "google-chrome.png"
-    },
-    "safari": {
-      "name": "Safari",
-      "vendor": "Apple Inc.",
-      "vendor_url": "https://apple.com/safari",
-      "category": "browser",
-      "platforms": ["macos"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.apple.Safari"
-        }
-      },
-      "ai": "host",
-      "icon": "safari.png"
-    },
-    "firefox": {
-      "name": "Firefox",
-      "vendor": "Mozilla Foundation",
-      "vendor_url": "https://mozilla.org/firefox",
-      "category": "browser",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "org.mozilla.firefox"
-        },
-        "windows": {
-          "exe": "firefox.exe"
-        },
-        "linux": {
-          "exe": "firefox"
-        }
-      },
-      "ai": "host",
-      "icon": "firefox.png"
-    },
-    "arc": {
-      "name": "Arc",
-      "vendor": "The Browser Company",
-      "vendor_url": "https://arc.net",
-      "category": "browser",
-      "platforms": ["macos"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "company.thebrowser.Browser"
-        }
-      },
-      "ai": "host",
-      "icon": "arc.png"
-    },
-    "brave": {
-      "name": "Brave",
-      "vendor": "Brave Software",
-      "vendor_url": "https://brave.com",
-      "category": "browser",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.brave.Browser"
-        },
-        "windows": {
-          "exe": "brave.exe"
-        },
-        "linux": {
-          "exe": "brave"
-        }
-      },
-      "ai": "host",
-      "icon": "brave.png"
-    },
-    "edge": {
-      "name": "Microsoft Edge",
-      "vendor": "Microsoft Corporation",
-      "vendor_url": "https://microsoft.com/edge",
-      "category": "browser",
-      "platforms": ["macos", "windows"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.microsoft.edgemac"
-        },
-        "windows": {
-          "exe": "msedge.exe"
-        }
-      },
-      "ai": "host",
-      "icon": "edge.png"
-    },
-    "opera": {
-      "name": "Opera",
-      "vendor": "Opera Software",
-      "vendor_url": "https://opera.com",
-      "category": "browser",
-      "platforms": ["macos", "windows", "linux"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "com.operasoftware.Opera"
-        },
-        "windows": {
-          "exe": "opera.exe"
-        },
-        "linux": {
-          "exe": "opera"
-        }
-      },
-      "ai": "host",
-      "icon": "opera.png"
-    },
-    "orbstack": {
-      "name": "OrbStack",
-      "vendor": "OrbStack",
-      "vendor_url": "https://orbstack.dev",
-      "category": "productivity",
-      "platforms": ["macos"],
-      "signatures": {
-        "macos": {
-          "bundle_id": "dev.kdrag0n.MacVirt",
-          "team_id": "HUAQ24HBR6"
-        }
-      },
-      "ai": "host",
-      "icon": "orbstack.png"
     }
   }
 }

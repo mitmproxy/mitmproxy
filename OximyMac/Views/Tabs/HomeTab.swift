@@ -5,72 +5,89 @@ struct HomeTab: View {
     @StateObject private var proxyService = ProxyService.shared
     @StateObject private var mitmService = MITMService.shared
     @StateObject private var certService = CertificateService.shared
+    @StateObject private var syncService = SyncService.shared
 
     @State private var isToggling = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        VStack(spacing: 0) {
+            // Main content area - centered
+            VStack(spacing: 20) {
+                // Connection Status Card
+                VStack(spacing: 16) {
+                    // Status Icon
+                    ZStack {
+                        Circle()
+                            .fill(statusColor.opacity(0.15))
+                            .frame(width: 80, height: 80)
 
-            // Connection Status Card
-            VStack(spacing: 16) {
-                // Status Icon
-                ZStack {
-                    Circle()
-                        .fill(statusColor.opacity(0.15))
-                        .frame(width: 80, height: 80)
+                        if isToggling {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                        } else {
+                            Image(systemName: statusIcon)
+                                .font(.system(size: 36))
+                                .foregroundColor(statusColor)
+                        }
+                    }
 
-                    if isToggling {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                    } else {
-                        Image(systemName: statusIcon)
-                            .font(.system(size: 36))
-                            .foregroundColor(statusColor)
+                    // Status Text
+                    Text(statusText)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+
+                    if proxyService.isProxyEnabled, let port = proxyService.configuredPort {
+                        Text("Port \(port)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
 
-                // Status Text
-                Text(statusText)
-                    .font(.title3)
-                    .fontWeight(.semibold)
+                // Toggle Button
+                Button(action: toggleProxy) {
+                    HStack {
+                        Image(systemName: proxyService.isProxyEnabled ? "stop.fill" : "play.fill")
+                        Text(proxyService.isProxyEnabled ? "Stop Monitoring" : "Start Monitoring")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(proxyService.isProxyEnabled ? .orange : .accentColor)
+                .disabled(isToggling || !certService.isCAInstalled)
+                .padding(.horizontal, 32)
 
-                if proxyService.isProxyEnabled, let port = proxyService.configuredPort {
-                    Text("Port \(port)")
+                if !certService.isCAInstalled {
+                    Text("Install certificate in Settings first")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
+            .frame(maxHeight: .infinity)
 
-            // Toggle Button
-            Button(action: toggleProxy) {
-                HStack {
-                    Image(systemName: proxyService.isProxyEnabled ? "stop.fill" : "play.fill")
-                    Text(proxyService.isProxyEnabled ? "Stop Monitoring" : "Start Monitoring")
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(proxyService.isProxyEnabled ? .orange : .accentColor)
-            .disabled(isToggling || !certService.isCAInstalled)
-            .padding(.horizontal, 32)
-
-            if !certService.isCAInstalled {
-                Text("Install certificate in Settings first")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            // Device Info
+            // Device Info & Sync Status - pinned to bottom
             VStack(spacing: 8) {
                 InfoRow(label: "Device", value: appState.deviceName)
 
                 if appState.isLoggedIn && !appState.workspaceName.isEmpty {
                     InfoRow(label: "Organization", value: appState.workspaceName)
                 }
+
+                Divider()
+                    .padding(.vertical, 4)
+
+                // Sync Status
+                HStack {
+                    Text("Events Pending")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(syncService.pendingEventCount)")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+
+                InfoRow(label: "Last Sync", value: lastSyncText)
             }
             .padding()
             .background(Color(nsColor: .controlBackgroundColor))
@@ -79,8 +96,11 @@ struct HomeTab: View {
             .padding(.bottom, 8)
         }
         .onAppear {
+            // Only check cert status on appear - it rarely changes
+            // DO NOT call proxyService.checkStatus() here - it overwrites the known state
+            // by querying the system, which can cause flickering when moving screens
+            // ProxyService.isProxyEnabled is already tracked and updated by enableProxy/disableProxy
             certService.checkStatus()
-            proxyService.checkStatus()
         }
     }
 
@@ -111,6 +131,14 @@ struct HomeTab: View {
             return "Setup Required"
         } else {
             return "Monitoring Paused"
+        }
+    }
+
+    private var lastSyncText: String {
+        if let lastSync = syncService.lastSyncTime {
+            return lastSync.relativeFormatted
+        } else {
+            return "–"
         }
     }
 
