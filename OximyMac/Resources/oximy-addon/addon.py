@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from mitmproxy import ctx
+from mitmproxy import http
 from bundle import BundleLoader
 from bundle import DEFAULT_BUNDLE_URL
 from matcher import TrafficMatcher
@@ -31,9 +33,6 @@ from passthrough import TLSPassthrough
 from process import ClientProcess
 from process import ProcessResolver
 from writer import EventWriter
-
-from mitmproxy import ctx
-from mitmproxy import http
 
 if TYPE_CHECKING:
     from bundle import OISPBundle
@@ -580,7 +579,9 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import ConfigurableStreamBuffer as CSB
+                    from parser import (
+                        ConfigurableStreamBuffer as CSB,
+                    )
 
                     logger.info(
                         f"_build_event: configurable_buffer in dict={flow.id in self._configurable_buffers}, has_response_content={flow.response and flow.response.content is not None}"
@@ -671,7 +672,9 @@ class OximyAddon:
 
                 if response_stream_config:
                     from models import InteractionResponse
-                    from parser import ConfigurableStreamBuffer as CSB
+                    from parser import (
+                        ConfigurableStreamBuffer as CSB,
+                    )
 
                     if configurable_buffer:
                         # Streaming response - finalize the buffer

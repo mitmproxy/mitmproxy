@@ -17,7 +17,6 @@ from process import ClientProcess
 
 if TYPE_CHECKING:
     from bundle import OISPBundle
-
     from mitmproxy.http import HTTPFlow
 
 logger = logging.getLogger(__name__)
