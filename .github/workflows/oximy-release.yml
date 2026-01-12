@@ -49,7 +49,7 @@ jobs:
             runner: macos-14
             dmg_suffix: "-arm64"
           - arch: x86_64
-            runner: macos-13
+            runner: macos-15-large
             dmg_suffix: "-intel"
     outputs:
       dmg-name-arm64: ${{ steps.build.outputs.dmg-name-arm64 }}
