@@ -12,6 +12,8 @@ struct SettingsTab: View {
     @State private var isCheckingForUpdates = false
     @State private var showClearDataConfirmation = false
     @State private var isClearingData = false
+    @State private var isRefreshingBundle = false
+    @State private var lastBundleRefresh: Date? = nil
 
     var body: some View {
         ScrollView {
@@ -61,6 +63,51 @@ struct SettingsTab: View {
                         ))
                         .toggleStyle(.switch)
                         .font(.caption)
+                    }
+                }
+
+                // Bundle Section
+                SettingsSection(title: "Detection Bundle", icon: "doc.text.fill") {
+                    VStack(spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("OISP Bundle")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+
+                                if let lastRefresh = lastBundleRefresh {
+                                    Text("Last updated: \(lastRefresh, formatter: Self.timeFormatter)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("Auto-refreshes every 30 minutes")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            Button {
+                                refreshBundle()
+                            } label: {
+                                if isRefreshingBundle {
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                } else {
+                                    Text("Refresh Now")
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .disabled(isRefreshingBundle || !mitmService.isRunning)
+                        }
+
+                        if !mitmService.isRunning {
+                            Text("Start proxy to enable bundle refresh")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
 
@@ -315,6 +362,29 @@ struct SettingsTab: View {
             isClearingData = false
         }
     }
+
+    private func refreshBundle() {
+        isRefreshingBundle = true
+
+        Task {
+            do {
+                // Force bundle refresh by restarting mitmproxy with force_refresh flag
+                try await mitmService.refreshBundle()
+                lastBundleRefresh = Date()
+            } catch {
+                print("Failed to refresh bundle: \(error)")
+            }
+            isRefreshingBundle = false
+        }
+    }
+
+    // Time formatter for last bundle refresh
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
 }
 
 struct SettingsSection<Content: View>: View {

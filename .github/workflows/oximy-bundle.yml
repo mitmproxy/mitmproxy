@@ -18,6 +18,12 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build-bundle:
@@ -62,3 +68,33 @@ jobs:
           git add registry/dist/
           git diff --staged --quiet || git commit -m "chore: build oximy bundle"
           git push
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Create site structure
+        run: |
+          mkdir -p _site/spec/v0.1
+
+          # Copy bundle files
+          cp registry/dist/oximy-bundle.json _site/spec/v0.1/oisp-spec-bundle.json
+          cp registry/dist/oximy-bundle.min.json _site/spec/v0.1/oisp-spec-bundle.min.json
+
+          # Create CNAME for custom domain
+          echo "oisp.dev" > _site/CNAME
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-bundle
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

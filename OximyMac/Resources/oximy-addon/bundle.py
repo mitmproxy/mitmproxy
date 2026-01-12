@@ -23,14 +23,9 @@ DEFAULT_BUNDLE_URL = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json"
 DEFAULT_CACHE_DIR = Path.home() / ".oximy"
 CACHE_FILENAME = "bundle_cache.json"
 
-# Local registry path (for development)
-# This is relative to the mitmproxy repo root
-LOCAL_BUNDLE_PATH = (
-    Path(__file__).parent.parent.parent.parent
-    / "registry"
-    / "dist"
-    / "oximy-bundle.json"
-)
+# Production builds: No local bundle path - always fetch from remote URL
+# Local bundle is only used in development when running from mitmproxy source
+LOCAL_BUNDLE_PATH = None
 
 
 @dataclass
@@ -133,13 +128,14 @@ class BundleLoader:
         self,
         bundle_url: str = DEFAULT_BUNDLE_URL,
         cache_dir: Path | None = None,
-        max_age_hours: float = 24.0,
+        max_age_hours: float = 0.5,  # 30 minutes default for production
         local_bundle_path: Path | None = None,
     ):
         self.bundle_url = bundle_url
         self.cache_dir = cache_dir or DEFAULT_CACHE_DIR
         self.max_age_hours = max_age_hours
-        self.local_bundle_path = local_bundle_path or LOCAL_BUNDLE_PATH
+        # In production, LOCAL_BUNDLE_PATH is None, so no local bundle loading
+        self.local_bundle_path = local_bundle_path if local_bundle_path else LOCAL_BUNDLE_PATH
         self._bundle: OISPBundle | None = None
 
     @property
@@ -199,7 +195,10 @@ class BundleLoader:
             raise RuntimeError("No bundle available (fetch failed, no cache)") from e
 
     def _load_from_local(self) -> OISPBundle | None:
-        """Load bundle from local registry (development mode)."""
+        """Load bundle from local registry (development mode only)."""
+        # In production, local_bundle_path is None - skip local loading
+        if self.local_bundle_path is None:
+            return None
         if not self.local_bundle_path.exists():
             return None
 
