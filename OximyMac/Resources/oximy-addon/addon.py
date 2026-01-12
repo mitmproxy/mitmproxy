@@ -260,7 +260,9 @@ class OximyAddon:
         # Bundle refresh is handled by cache expiry in BundleLoader
         # When cache expires (default: 30 min), bundle is re-fetched from URL on next request
 
-        logger.info(f"Oximy addon enabled, writing to {output_dir} (bundle cache: {cache_minutes} min)")
+        logger.info(
+            f"Oximy addon enabled, writing to {output_dir} (bundle refresh every {refresh_minutes} min)"
+        )
 
     def request(self, flow: http.HTTPFlow) -> None:
         """Classify incoming requests and capture client process info."""

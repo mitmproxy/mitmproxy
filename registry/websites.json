@@ -6,12 +6,10 @@
       "vendor": "Google",
       "vendor_url": "https://google.com",
       "category": "ai-chat",
-      "domains": ["gemini.google.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["google"],
+      "api_domains": ["gemini.google.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate", "method": "POST" }
@@ -74,12 +72,10 @@
       "vendor": "DeepSeek",
       "vendor_url": "https://deepseek.com",
       "category": "ai-chat",
-      "domains": ["chat.deepseek.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["deepseek"],
+      "api_domains": ["chat.deepseek.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/api/v0/chat/completion", "method": "POST" }
@@ -129,12 +125,10 @@
       "vendor": "OpenAI",
       "vendor_url": "https://openai.com",
       "category": "ai-chat",
-      "domains": ["chatgpt.com", "chat.openai.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["openai"],
+      "api_domains": ["chatgpt.com", "chat.openai.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/backend-api/conversation", "method": "POST" }
@@ -188,12 +182,6 @@
               }
             }
           }
-        },
-        "voice": {
-          "name": "Voice Mode",
-          "patterns": [
-            { "url": "**/voice/**", "method": "POST" }
-          ]
         }
       },
       "pricing": {
@@ -220,12 +208,10 @@
       "vendor": "Perplexity AI",
       "vendor_url": "https://perplexity.ai",
       "category": "ai-chat",
-      "domains": ["www.perplexity.ai", "perplexity.ai"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["perplexity"],
+      "api_domains": ["www.perplexity.ai", "perplexity.ai"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Search",
           "patterns": [
             { "url": "**/rest/sse/perplexity_ask", "method": "POST" }
@@ -288,12 +274,10 @@
       "vendor": "xAI",
       "vendor_url": "https://x.ai",
       "category": "ai-chat",
-      "domains": ["grok.com"],
-      "ai": "native",
-      "api_type": "direct",
-      "providers": ["xai"],
+      "api_domains": ["grok.com"],
       "features": {
         "chat": {
+          "type": "chat",
           "name": "Chat Conversation",
           "patterns": [
             { "url": "**/rest/app-chat/conversations/new", "method": "POST" },

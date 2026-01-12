@@ -79,7 +79,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-12T03:56:52.347115+00:00",
+  "generated_at": "2026-01-12T04:15:24.208700+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -40877,181 +40877,6 @@
   },
   "registry": {
     "apps": {
-      "arc": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "arc.png",
-        "name": "Arc",
-        "platforms": [
-          "macos"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "company.thebrowser.Browser"
-          }
-        },
-        "vendor": "The Browser Company",
-        "vendor_url": "https://arc.net"
-      },
-      "brave": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "brave.png",
-        "name": "Brave",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "brave"
-          },
-          "macos": {
-            "bundle_id": "com.brave.Browser"
-          },
-          "windows": {
-            "exe": "brave.exe"
-          }
-        },
-        "vendor": "Brave Software",
-        "vendor_url": "https://brave.com"
-      },
-      "comet": {
-        "ai": "native",
-        "category": "browser",
-        "icon": "comet.png",
-        "name": "Comet",
-        "platforms": [
-          "macos"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "ai.perplexity.comet",
-            "team_id": "7S8W4W365S"
-          }
-        },
-        "vendor": "Perplexity AI",
-        "vendor_url": "https://perplexity.ai"
-      },
-      "cursor": {
-        "ai": "native",
-        "category": "ai-code-editor",
-        "icon": "cursor.png",
-        "name": "Cursor",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "cursor"
-          },
-          "macos": {
-            "bundle_id": "com.todesktop.230313mzl4w4u92",
-            "team_id": "VDXQ22DGB9"
-          },
-          "windows": {
-            "exe": "Cursor.exe",
-            "publisher": "Anysphere Inc."
-          }
-        },
-        "vendor": "Anysphere Inc.",
-        "vendor_url": "https://cursor.sh"
-      },
-      "edge": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "edge.png",
-        "name": "Microsoft Edge",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.microsoft.edgemac"
-          },
-          "windows": {
-            "exe": "msedge.exe"
-          }
-        },
-        "vendor": "Microsoft Corporation",
-        "vendor_url": "https://microsoft.com/edge"
-      },
-      "figma": {
-        "ai": "enabled",
-        "category": "creative",
-        "icon": "figma.png",
-        "name": "Figma",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.figma.Desktop",
-            "team_id": "T8RA8NE3B7"
-          },
-          "windows": {
-            "exe": "Figma.exe",
-            "publisher": "Figma, Inc."
-          }
-        },
-        "vendor": "Figma Inc.",
-        "vendor_url": "https://figma.com"
-      },
-      "firefox": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "firefox.png",
-        "name": "Firefox",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "firefox"
-          },
-          "macos": {
-            "bundle_id": "org.mozilla.firefox"
-          },
-          "windows": {
-            "exe": "firefox.exe"
-          }
-        },
-        "vendor": "Mozilla Foundation",
-        "vendor_url": "https://mozilla.org/firefox"
-      },
-      "google-chrome": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "google-chrome.png",
-        "name": "Google Chrome",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "google-chrome"
-          },
-          "macos": {
-            "bundle_id": "com.google.Chrome",
-            "team_id": "EQHXZ8M8AV"
-          },
-          "windows": {
-            "exe": "chrome.exe",
-            "publisher": "Google LLC"
-          }
-        },
-        "vendor": "Google LLC",
-        "vendor_url": "https://google.com/chrome"
-      },
       "granola": {
         "ai": "native",
         "api_domains": [
@@ -41123,7 +40948,8 @@
                 "method": "POST",
                 "url": "**/v1/chat-with-documents"
               }
-            ]
+            ],
+            "type": "chat"
           }
         },
         "icon": "granola.png",
@@ -41139,414 +40965,16 @@
         },
         "vendor": "Granola",
         "vendor_url": "https://granola.ai"
-      },
-      "loom": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "loom.png",
-        "name": "Loom",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.loom.desktop",
-            "team_id": "QGD2ZPXZZG"
-          },
-          "windows": {
-            "exe": "Loom.exe",
-            "publisher": "Loom, Inc."
-          }
-        },
-        "vendor": "Loom Inc.",
-        "vendor_url": "https://loom.com"
-      },
-      "microsoft-excel": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "microsoft-excel.png",
-        "name": "Microsoft Excel",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.microsoft.Excel",
-            "team_id": "UBF8T346G9"
-          },
-          "windows": {
-            "exe": "EXCEL.EXE",
-            "publisher": "Microsoft Corporation"
-          }
-        },
-        "vendor": "Microsoft Corporation",
-        "vendor_url": "https://microsoft.com/excel"
-      },
-      "microsoft-powerpoint": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "microsoft-powerpoint.png",
-        "name": "Microsoft PowerPoint",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.microsoft.Powerpoint",
-            "team_id": "UBF8T346G9"
-          },
-          "windows": {
-            "exe": "POWERPNT.EXE",
-            "publisher": "Microsoft Corporation"
-          }
-        },
-        "vendor": "Microsoft Corporation",
-        "vendor_url": "https://microsoft.com/powerpoint"
-      },
-      "microsoft-teams": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "microsoft-teams.png",
-        "name": "Microsoft Teams",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "teams"
-          },
-          "macos": {
-            "bundle_id": "com.microsoft.teams2",
-            "team_id": "UBF8T346G9"
-          },
-          "windows": {
-            "exe": "ms-teams.exe",
-            "publisher": "Microsoft Corporation"
-          }
-        },
-        "vendor": "Microsoft Corporation",
-        "vendor_url": "https://microsoft.com/teams"
-      },
-      "microsoft-word": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "microsoft-word.png",
-        "name": "Microsoft Word",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.microsoft.Word",
-            "team_id": "UBF8T346G9"
-          },
-          "windows": {
-            "exe": "WINWORD.EXE",
-            "publisher": "Microsoft Corporation"
-          }
-        },
-        "vendor": "Microsoft Corporation",
-        "vendor_url": "https://microsoft.com/word"
-      },
-      "notion": {
-        "ai": "native",
-        "api_domains": [
-          "www.notion.so",
-          "notion.so"
-        ],
-        "category": "productivity",
-        "features": {
-          "chat": {
-            "description": "AI assistant for writing, editing, and workspace tasks",
-            "name": "Notion AI Chat",
-            "parser": {
-              "request": {
-                "model": "transcript[type='config'][0].value.model",
-                "prompt": "transcript[type='user'][-1].value[0][0]"
-              },
-              "response": {
-                "stream": {
-                  "accumulate": {
-                    "content": {
-                      "from": "content",
-                      "op": "last"
-                    }
-                  },
-                  "finalize": {
-                    "content": "accumulated.content"
-                  },
-                  "format": "ndjson",
-                  "format_options": {
-                    "delimiter": "}{"
-                  },
-                  "rules": [
-                    {
-                      "extract": {
-                        "content": "$values(recordMap.thread_message)[0].value.value.step.value[0].content"
-                      },
-                      "when": "$exists(recordMap.thread_message)"
-                    }
-                  ]
-                }
-              }
-            },
-            "patterns": [
-              {
-                "method": "POST",
-                "url": "**/api/v3/runInferenceTranscript"
-              }
-            ]
-          }
-        },
-        "icon": "notion.png",
-        "name": "Notion",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "notion.id",
-            "team_id": "LBQJ96FQ8D"
-          },
-          "windows": {
-            "exe": "Notion.exe",
-            "publisher": "Notion Labs, Inc."
-          }
-        },
-        "vendor": "Notion Labs Inc.",
-        "vendor_url": "https://notion.so"
-      },
-      "opera": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "opera.png",
-        "name": "Opera",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "opera"
-          },
-          "macos": {
-            "bundle_id": "com.operasoftware.Opera"
-          },
-          "windows": {
-            "exe": "opera.exe"
-          }
-        },
-        "vendor": "Opera Software",
-        "vendor_url": "https://opera.com"
-      },
-      "orbstack": {
-        "ai": "host",
-        "category": "productivity",
-        "icon": "orbstack.png",
-        "name": "OrbStack",
-        "platforms": [
-          "macos"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "dev.kdrag0n.MacVirt",
-            "team_id": "HUAQ24HBR6"
-          }
-        },
-        "vendor": "OrbStack",
-        "vendor_url": "https://orbstack.dev"
-      },
-      "postman": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "postman.png",
-        "name": "Postman",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "postman"
-          },
-          "macos": {
-            "bundle_id": "com.postmanlabs.mac",
-            "team_id": "H7H8Q7M5CK"
-          },
-          "windows": {
-            "exe": "Postman.exe",
-            "publisher": "Postman, Inc."
-          }
-        },
-        "vendor": "Postman Inc.",
-        "vendor_url": "https://postman.com"
-      },
-      "raycast": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "raycast.png",
-        "name": "Raycast",
-        "platforms": [
-          "macos"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.raycast.macos",
-            "team_id": "SY64MV22J9"
-          }
-        },
-        "vendor": "Raycast Technologies Ltd",
-        "vendor_url": "https://raycast.com"
-      },
-      "safari": {
-        "ai": "host",
-        "category": "browser",
-        "icon": "safari.png",
-        "name": "Safari",
-        "platforms": [
-          "macos"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.apple.Safari"
-          }
-        },
-        "vendor": "Apple Inc.",
-        "vendor_url": "https://apple.com/safari"
-      },
-      "slack": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "slack.png",
-        "name": "Slack",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "slack"
-          },
-          "macos": {
-            "bundle_id": "com.tinyspeck.slackmacgap",
-            "team_id": "BQR82RBBHL"
-          },
-          "windows": {
-            "exe": "slack.exe",
-            "publisher": "Slack Technologies LLC"
-          }
-        },
-        "vendor": "Salesforce (Slack Technologies)",
-        "vendor_url": "https://slack.com"
-      },
-      "whatsapp": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "whatsapp.png",
-        "name": "WhatsApp",
-        "platforms": [
-          "macos",
-          "windows"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "net.whatsapp.WhatsApp",
-            "team_id": "57T9237FN3"
-          },
-          "windows": {
-            "exe": "WhatsApp.exe",
-            "publisher": "WhatsApp LLC"
-          }
-        },
-        "vendor": "Meta Platforms",
-        "vendor_url": "https://whatsapp.com"
-      },
-      "wispr-flow": {
-        "ai": "native",
-        "category": "productivity",
-        "icon": "wispr-flow.png",
-        "name": "Wispr Flow",
-        "platforms": [
-          "macos"
-        ],
-        "signatures": {
-          "macos": {
-            "bundle_id": "com.electron.wispr-flow",
-            "team_id": "C9VQZ78H85"
-          }
-        },
-        "vendor": "Wispr AI",
-        "vendor_url": "https://wispr.ai"
-      },
-      "zed": {
-        "ai": "enabled",
-        "category": "code-editor",
-        "icon": "zed.png",
-        "name": "Zed",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "zed"
-          },
-          "macos": {
-            "bundle_id": "dev.zed.Zed",
-            "team_id": "MQ55VZLNZQ"
-          },
-          "windows": {
-            "exe": "zed.exe",
-            "publisher": "Zed Industries"
-          }
-        },
-        "vendor": "Zed Industries",
-        "vendor_url": "https://zed.dev"
-      },
-      "zoom": {
-        "ai": "enabled",
-        "category": "productivity",
-        "icon": "zoom.png",
-        "name": "Zoom",
-        "platforms": [
-          "macos",
-          "windows",
-          "linux"
-        ],
-        "signatures": {
-          "linux": {
-            "exe": "zoom"
-          },
-          "macos": {
-            "bundle_id": "us.zoom.xos",
-            "team_id": "BJ4HAAB9B3"
-          },
-          "windows": {
-            "exe": "Zoom.exe",
-            "publisher": "Zoom Video Communications, Inc."
-          }
-        },
-        "vendor": "Zoom Video Communications",
-        "vendor_url": "https://zoom.us"
       }
     },
     "icons_url": "https://oisp.dev/registry/icons",
     "version": "1.0.0",
     "websites": {
       "chatgpt": {
-        "ai": "native",
-        "api_type": "direct",
+        "api_domains": [
+          "chatgpt.com",
+          "chat.openai.com"
+        ],
         "category": "ai-chat",
         "detection": {
           "subscription": [
@@ -41559,10 +40987,6 @@
             }
           ]
         },
-        "domains": [
-          "chatgpt.com",
-          "chat.openai.com"
-        ],
         "features": {
           "chat": {
             "name": "Chat Conversation",
@@ -41636,16 +41060,8 @@
                 "method": "POST",
                 "url": "**/backend-api/conversation"
               }
-            ]
-          },
-          "voice": {
-            "name": "Voice Mode",
-            "patterns": [
-              {
-                "method": "POST",
-                "url": "**/voice/**"
-              }
-            ]
+            ],
+            "type": "chat"
           }
         },
         "name": "ChatGPT",
@@ -41680,19 +41096,14 @@
             }
           ]
         },
-        "providers": [
-          "openai"
-        ],
         "vendor": "OpenAI",
         "vendor_url": "https://openai.com"
       },
       "deepseek": {
-        "ai": "native",
-        "api_type": "direct",
-        "category": "ai-chat",
-        "domains": [
+        "api_domains": [
           "chat.deepseek.com"
         ],
+        "category": "ai-chat",
         "features": {
           "chat": {
             "name": "Chat Conversation",
@@ -41737,7 +41148,8 @@
                 "method": "POST",
                 "url": "**/api/v0/chat/completion"
               }
-            ]
+            ],
+            "type": "chat"
           }
         },
         "name": "DeepSeek",
@@ -41755,19 +41167,14 @@
             }
           ]
         },
-        "providers": [
-          "deepseek"
-        ],
         "vendor": "DeepSeek",
         "vendor_url": "https://deepseek.com"
       },
       "gemini": {
-        "ai": "native",
-        "api_type": "direct",
-        "category": "ai-chat",
-        "domains": [
+        "api_domains": [
           "gemini.google.com"
         ],
+        "category": "ai-chat",
         "features": {
           "chat": {
             "name": "Chat Conversation",
@@ -41840,7 +41247,8 @@
                 "method": "POST",
                 "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
               }
-            ]
+            ],
+            "type": "chat"
           }
         },
         "name": "Gemini",
@@ -41863,19 +41271,14 @@
             }
           ]
         },
-        "providers": [
-          "google"
-        ],
         "vendor": "Google",
         "vendor_url": "https://google.com"
       },
       "grok": {
-        "ai": "native",
-        "api_type": "direct",
-        "category": "ai-chat",
-        "domains": [
+        "api_domains": [
           "grok.com"
         ],
+        "category": "ai-chat",
         "features": {
           "chat": {
             "name": "Chat Conversation",
@@ -41946,7 +41349,8 @@
                 "method": "POST",
                 "url": "**/rest/app-chat/conversations/**/responses"
               }
-            ]
+            ],
+            "type": "chat"
           }
         },
         "name": "Grok",
@@ -41982,20 +41386,15 @@
             }
           ]
         },
-        "providers": [
-          "xai"
-        ],
         "vendor": "xAI",
         "vendor_url": "https://x.ai"
       },
       "perplexity": {
-        "ai": "native",
-        "api_type": "direct",
-        "category": "ai-chat",
-        "domains": [
+        "api_domains": [
           "www.perplexity.ai",
           "perplexity.ai"
         ],
+        "category": "ai-chat",
         "features": {
           "chat": {
             "name": "Chat Search",
@@ -42055,7 +41454,8 @@
                 "method": "POST",
                 "url": "**/rest/sse/perplexity_ask"
               }
-            ]
+            ],
+            "type": "chat"
           }
         },
         "name": "Perplexity AI",
@@ -42079,9 +41479,6 @@
             }
           ]
         },
-        "providers": [
-          "perplexity"
-        ],
         "vendor": "Perplexity AI",
         "vendor_url": "https://perplexity.ai"
       }
