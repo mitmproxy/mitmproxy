@@ -103,17 +103,36 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
         run: |
-          # Submit for notarization
-          xcrun notarytool submit "Oximy-${{ inputs.version }}.dmg" \
+          # Submit for notarization and capture submission ID
+          SUBMIT_OUTPUT=$(xcrun notarytool submit "Oximy-${{ inputs.version }}.dmg" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$TEAM_ID" \
-            --wait
+            --wait 2>&1) || true
 
-          # Staple the notarization ticket to the DMG
-          xcrun stapler staple "Oximy-${{ inputs.version }}.dmg"
+          echo "$SUBMIT_OUTPUT"
 
-          echo "Notarization complete and stapled"
+          # Extract submission ID
+          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep -o 'id: [a-f0-9-]*' | head -1 | cut -d' ' -f2)
+
+          # Check if notarization succeeded
+          if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
+            echo "Notarization succeeded!"
+            # Staple the notarization ticket to the DMG
+            xcrun stapler staple "Oximy-${{ inputs.version }}.dmg"
+            echo "Notarization complete and stapled"
+          else
+            echo "Notarization failed. Fetching log..."
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_APP_PASSWORD" \
+                --team-id "$TEAM_ID" \
+                notarization-log.json || true
+              cat notarization-log.json
+            fi
+            exit 1
+          fi
 
       - name: Verify signature
         working-directory: OximyMac/build

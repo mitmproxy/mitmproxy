@@ -113,9 +113,69 @@ fi
 echo "[5/6] Code signing..."
 if [ -n "$DEVELOPER_ID" ]; then
     echo "    Signing with: $DEVELOPER_ID"
-    codesign --deep --force --options runtime \
+
+    # Sign embedded frameworks first (required for notarization)
+    # Sparkle framework
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]; then
+        echo "    Signing Sparkle.framework..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    fi
+
+    # Sentry framework
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sentry.framework" ]; then
+        echo "    Signing Sentry.framework..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sentry.framework"
+    fi
+
+    # Sign any other frameworks
+    find "$APP_BUNDLE/Contents/Frameworks" -name "*.framework" -type d 2>/dev/null | while read framework; do
+        echo "    Signing $(basename "$framework")..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$framework" 2>/dev/null || true
+    done
+
+    # Sign any dylibs
+    find "$APP_BUNDLE" -name "*.dylib" -type f 2>/dev/null | while read dylib; do
+        echo "    Signing $(basename "$dylib")..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$dylib" 2>/dev/null || true
+    done
+
+    # Sign bundled Python if present
+    if [ -d "$APP_BUNDLE/Contents/Resources/python-embed" ]; then
+        echo "    Signing bundled Python..."
+        find "$APP_BUNDLE/Contents/Resources/python-embed" -type f \( -name "*.so" -o -name "*.dylib" -o -perm +111 \) 2>/dev/null | while read binary; do
+            codesign --force --options runtime --timestamp \
+                --sign "$DEVELOPER_ID" \
+                "$binary" 2>/dev/null || true
+        done
+    fi
+
+    # Finally sign the main app bundle
+    echo "    Signing main app bundle..."
+    codesign --force --options runtime --timestamp \
         --sign "$DEVELOPER_ID" \
         "$APP_BUNDLE"
+
+    echo "    Code signing complete"
 else
     echo "    STUB: Skipping code signing (no DEVELOPER_ID set)"
     echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
