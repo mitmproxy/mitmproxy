@@ -432,7 +432,7 @@ class InvestigatorAddon:
         except Exception as e:
             logger.warning(f"Could not load production matcher: {e}")
 
-    def request(self, flow: http.HTTPFlow) -> None:
+    async def request(self, flow: http.HTTPFlow) -> None:
         """Capture client process info immediately on request."""
         if not self._enabled:
             return
@@ -448,7 +448,7 @@ class InvestigatorAddon:
         if self._process_resolver:
             try:
                 client_port = flow.client_conn.peername[1]
-                client_process = self._process_resolver.get_process_for_port(
+                client_process = await self._process_resolver.get_process_for_port(
                     client_port
                 )
                 flow.metadata[INVESTIGATE_CLIENT_KEY] = client_process

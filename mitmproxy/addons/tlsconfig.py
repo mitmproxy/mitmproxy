@@ -484,6 +484,8 @@ class TlsConfig:
                 if ctx.options.cert_passphrase
                 else None,
             )
+            # Pre-warm certificate cache for common AI/LLM domains
+            self.certstore.prewarm()
             if self.certstore.default_ca.has_expired():
                 logger.warning(
                     "The mitmproxy certificate authority has expired!\n"
