@@ -63,11 +63,23 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
         enc = "utf8"
 
     if not enc and "html" in content_type:
+        # Strict implementation of your provided algorithm
+        # 1. charset       : Matches literal "charset"
+        # 2. \s*=\s*       : Handles whitespace before AND after the equals sign
+        # 3. (?: ... )     : Non-capturing group for the OR logic
+        # 4. (["'])(.*?)\1 : Matches a quote, then anything lazily, then the MATCHING quote (\1)
+        # 5. ([^'"";\s]+)     : Unquoted - stops at quote, Semicolon (;) or Whitespace
         meta_charset = re.search(
-            rb"""<meta[^>]+charset=['"]?([^'">]+)""", content, re.IGNORECASE
+            rb"""<meta[^>]+charset\s*=\s*(?:(["'])(.*?)\1|([^'";>\s]+))""",
+            content,
+            re.IGNORECASE,
         )
         if meta_charset:
-            enc = meta_charset.group(1).decode("ascii", "ignore")
+            match = meta_charset.group(2) or meta_charset.group(3)
+            if match:
+                enc = match.strip().decode("ascii", "ignore")
+            else:
+                enc = "utf8"
         else:
             # Fallback to utf8 for html
             # Ref: https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
