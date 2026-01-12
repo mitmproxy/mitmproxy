@@ -1,13 +1,44 @@
+import AppKit
 import Foundation
 
 @MainActor
 final class SyncService: ObservableObject {
     static let shared = SyncService()
 
+    enum SyncStatus: Equatable {
+        case idle
+        case syncing
+        case synced
+        case offline(retryIn: Int)  // seconds until retry
+        case error(String)
+
+        var displayText: String {
+            switch self {
+            case .idle:
+                return "Ready"
+            case .syncing:
+                return "Syncing..."
+            case .synced:
+                return "Synced"
+            case .offline(let seconds):
+                return "Offline - retry in \(seconds)s"
+            case .error(let message):
+                return message
+            }
+        }
+
+        var isOffline: Bool {
+            if case .offline = self { return true }
+            return false
+        }
+    }
+
     @Published var isSyncing = false
     @Published var lastSyncTime: Date?
     @Published var pendingEventCount = 0
     @Published var syncError: String?
+    @Published var syncStatus: SyncStatus = .idle
+    @Published var consecutiveFailures = 0
 
     private var timer: Timer?
     private var syncState: SyncState
@@ -32,7 +63,7 @@ final class SyncService: ObservableObject {
 
         // Schedule recurring sync
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(config.eventFlushIntervalSeconds), repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 await self?.syncAllEvents()
             }
         }
@@ -60,6 +91,8 @@ final class SyncService: ObservableObject {
         guard APIClient.shared.isAuthenticated, !isSyncing else { return }
 
         isSyncing = true
+        syncStatus = .syncing
+
         defer {
             isSyncing = false
             updatePendingCount()
@@ -79,10 +112,13 @@ final class SyncService: ObservableObject {
                 totalSynced += synced
             }
 
-            if totalSynced > 0 {
-                lastSyncTime = Date()
-                syncError = nil
+            // Success - reset failure count
+            consecutiveFailures = 0
+            lastSyncTime = Date()
+            syncError = nil
+            syncStatus = pendingEventCount > 0 ? .idle : .synced
 
+            if totalSynced > 0 {
                 SentryService.shared.addStateBreadcrumb(
                     category: "sync",
                     message: "Events synced",
@@ -93,8 +129,31 @@ final class SyncService: ObservableObject {
         } catch APIError.unauthorized {
             // Auth failure handled by APIClient
             syncError = "Authentication failed"
+            syncStatus = .error("Auth failed")
+            consecutiveFailures += 1
+        } catch APIError.networkUnavailable {
+            consecutiveFailures += 1
+            let retrySeconds = min(60, config.eventFlushIntervalSeconds * consecutiveFailures)
+            syncError = "Network unavailable - storing locally"
+            syncStatus = .offline(retryIn: retrySeconds)
+
+            SentryService.shared.addErrorBreadcrumb(
+                service: "sync",
+                error: "Network unavailable - events stored locally, will retry"
+            )
         } catch {
-            syncError = error.localizedDescription
+            consecutiveFailures += 1
+            let retrySeconds = min(60, config.eventFlushIntervalSeconds * consecutiveFailures)
+
+            // Check if it's a network-related error
+            let nsError = error as NSError
+            if nsError.domain == NSURLErrorDomain {
+                syncError = "Connection failed - storing locally"
+                syncStatus = .offline(retryIn: retrySeconds)
+            } else {
+                syncError = error.localizedDescription
+                syncStatus = .error("Sync failed")
+            }
 
             SentryService.shared.addErrorBreadcrumb(
                 service: "sync",
@@ -288,6 +347,76 @@ final class SyncService: ObservableObject {
             try? mutableSyncState.save()
             NSLog("[SyncService] flushSync: synced \(allEvents.count) events on termination")
         }
+    }
+
+    // MARK: - Storage Management
+
+    /// Get total size of local traces in bytes
+    func getLocalStorageSize() -> Int64 {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: Constants.tracesDir.path) else { return 0 }
+
+        var totalSize: Int64 = 0
+        if let files = try? fm.contentsOfDirectory(at: Constants.tracesDir, includingPropertiesForKeys: [.fileSizeKey]) {
+            for file in files {
+                if let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                    totalSize += Int64(size)
+                }
+            }
+        }
+        return totalSize
+    }
+
+    /// Get formatted storage size string
+    var localStorageSizeFormatted: String {
+        let bytes = getLocalStorageSize()
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
+    }
+
+    /// Get count of trace files
+    var traceFileCount: Int {
+        (try? getTraceFiles().count) ?? 0
+    }
+
+    /// Clear all local trace data and sync state
+    func clearLocalData() throws {
+        let fm = FileManager.default
+
+        // Delete all trace files
+        if fm.fileExists(atPath: Constants.tracesDir.path) {
+            let files = try fm.contentsOfDirectory(at: Constants.tracesDir, includingPropertiesForKeys: nil)
+            for file in files where file.pathExtension == "jsonl" {
+                try fm.removeItem(at: file)
+            }
+        }
+
+        // Reset sync state
+        syncState = .empty
+        try syncState.save()
+
+        // Update UI
+        pendingEventCount = 0
+        syncStatus = .idle
+        syncError = nil
+
+        SentryService.shared.addStateBreadcrumb(
+            category: "sync",
+            message: "Local data cleared by user"
+        )
+    }
+
+    /// Open traces folder in Finder
+    func openTracesFolder() {
+        let fm = FileManager.default
+
+        // Ensure directory exists
+        if !fm.fileExists(atPath: Constants.tracesDir.path) {
+            try? fm.createDirectory(at: Constants.tracesDir, withIntermediateDirectories: true)
+        }
+
+        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Constants.tracesDir.path)
     }
 }
 

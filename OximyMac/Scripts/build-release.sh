@@ -16,17 +16,17 @@ echo "Project: $PROJECT_DIR"
 echo ""
 
 # Clean previous build
-echo "[1/6] Cleaning previous build..."
+echo "[1/7] Cleaning previous build..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 # Build in release mode
-echo "[2/6] Building in release mode..."
+echo "[2/7] Building in release mode..."
 cd "$PROJECT_DIR"
 swift build -c release
 
 # Create app bundle structure
-echo "[3/6] Creating app bundle..."
+echo "[3/7] Creating app bundle..."
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
@@ -81,7 +81,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 EOF
 
 # Copy resources
-echo "[4/6] Copying resources..."
+echo "[4/7] Copying resources..."
 if [ -d "$PROJECT_DIR/Resources" ]; then
     cp -R "$PROJECT_DIR/Resources/"* "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
 fi
@@ -109,20 +109,8 @@ else
     exit 1
 fi
 
-# Code signing (stub - requires Developer ID)
-echo "[5/6] Code signing..."
-if [ -n "$DEVELOPER_ID" ]; then
-    echo "    Signing with: $DEVELOPER_ID"
-    codesign --deep --force --options runtime \
-        --sign "$DEVELOPER_ID" \
-        "$APP_BUNDLE"
-else
-    echo "    STUB: Skipping code signing (no DEVELOPER_ID set)"
-    echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
-fi
-
-# Create app icon from Oximy-rounded.png (with proper macOS rounded corners)
-echo "[6/7] Creating app icon..."
+# Create app icon from Oximy-rounded.png BEFORE signing (critical!)
+echo "[5/7] Creating app icon..."
 ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
 # Fall back to original if rounded version doesn't exist
 if [ ! -f "$ICON_SOURCE" ]; then
@@ -152,6 +140,110 @@ else
     echo "    WARNING: Oximy.png not found, skipping icon generation"
 fi
 
+# Code signing (requires Developer ID)
+echo "[6/7] Code signing..."
+if [ -n "$DEVELOPER_ID" ]; then
+    echo "    Signing with: $DEVELOPER_ID"
+    ENTITLEMENTS_FILE="$PROJECT_DIR/OximyMac.entitlements"
+
+    # Sign embedded frameworks first (required for notarization)
+    # Sparkle framework
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]; then
+        echo "    Signing Sparkle.framework..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    fi
+
+    # Sentry framework
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sentry.framework" ]; then
+        echo "    Signing Sentry.framework..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/Frameworks/Sentry.framework"
+    fi
+
+    # Sign any other frameworks
+    find "$APP_BUNDLE/Contents/Frameworks" -name "*.framework" -type d 2>/dev/null | while read framework; do
+        echo "    Signing $(basename "$framework")..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$framework" 2>/dev/null || true
+    done
+
+    # Sign any dylibs
+    find "$APP_BUNDLE" -name "*.dylib" -type f 2>/dev/null | while read dylib; do
+        echo "    Signing $(basename "$dylib")..."
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$dylib" 2>/dev/null || true
+    done
+
+    # Sign bundled Python if present
+    if [ -d "$APP_BUNDLE/Contents/Resources/python-embed" ]; then
+        echo "    Signing bundled Python..."
+        find "$APP_BUNDLE/Contents/Resources/python-embed" -type f \( -name "*.so" -o -name "*.dylib" -o -perm +111 \) 2>/dev/null | while read binary; do
+            codesign --force --options runtime --timestamp \
+                --sign "$DEVELOPER_ID" \
+                "$binary" 2>/dev/null || true
+        done
+    fi
+
+    # Sign the main binary (with entitlements)
+    echo "    Signing main binary..."
+    if [ -f "$ENTITLEMENTS_FILE" ]; then
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS_FILE" \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    else
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    fi
+
+    # Finally sign the main app bundle (with entitlements)
+    echo "    Signing main app bundle..."
+    if [ -f "$ENTITLEMENTS_FILE" ]; then
+        echo "    Using entitlements: $ENTITLEMENTS_FILE"
+        codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS_FILE" \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE"
+    else
+        echo "    WARNING: Entitlements file not found, signing without entitlements"
+        codesign --force --options runtime --timestamp \
+            --sign "$DEVELOPER_ID" \
+            "$APP_BUNDLE"
+    fi
+
+    echo "    Code signing complete"
+
+    # Verify signature
+    echo "    Verifying signature..."
+    if codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE" 2>&1; then
+        echo "    ✓ Signature verification passed"
+    else
+        echo "    ✗ Signature verification FAILED"
+        exit 1
+    fi
+else
+    echo "    STUB: Skipping code signing (no DEVELOPER_ID set)"
+    echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
+fi
+
 # Create DMG using create-dmg (https://github.com/sindresorhus/create-dmg)
 echo "[7/7] Creating DMG with create-dmg..."
 DMG_NAME="$APP_NAME-$VERSION.dmg"
@@ -163,17 +255,31 @@ export NVM_DIR="$HOME/.nvm"
 
 # Check if create-dmg is available
 if command -v create-dmg &> /dev/null; then
+    echo "    Found create-dmg at: $(which create-dmg)"
     cd "$BUILD_DIR"
     # Remove existing DMG if present
     rm -f "$DMG_PATH" 2>/dev/null || true
     rm -f "$APP_NAME $VERSION.dmg" 2>/dev/null || true
 
     # create-dmg automatically handles Applications symlink and styling
-    create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite 2>&1 || true
+    # Use --no-code-sign since the app is already signed, and DMG will be signed during notarization
+    if create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite --no-code-sign 2>&1; then
+        echo "    create-dmg succeeded"
+    else
+        echo "    create-dmg exited with non-zero status (may still have created DMG)"
+    fi
 
     # create-dmg names files as "AppName VERSION.dmg", rename to our format
     if [ -f "$BUILD_DIR/$APP_NAME $VERSION.dmg" ]; then
         mv "$BUILD_DIR/$APP_NAME $VERSION.dmg" "$DMG_PATH"
+        echo "    DMG created: $DMG_PATH"
+    else
+        echo "    ERROR: Expected DMG not found at $BUILD_DIR/$APP_NAME $VERSION.dmg"
+        echo "    Falling back to hdiutil..."
+        hdiutil create -volname "$APP_NAME" \
+            -srcfolder "$APP_BUNDLE" \
+            -ov -format UDZO \
+            "$DMG_PATH"
     fi
 else
     echo "    WARNING: create-dmg not found, falling back to basic DMG creation"

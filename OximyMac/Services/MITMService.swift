@@ -210,6 +210,23 @@ class MITMService: ObservableObject {
         try await start()
     }
 
+    /// Force refresh the OISP bundle by restarting mitmproxy
+    /// This triggers a fresh fetch from the remote URL
+    func refreshBundle() async throws {
+        NSLog("[MITMService] Force bundle refresh requested - restarting proxy")
+
+        // Delete the cached bundle to force a fresh fetch
+        let bundleCachePath = Constants.bundleCachePath
+        if FileManager.default.fileExists(atPath: bundleCachePath.path) {
+            try? FileManager.default.removeItem(at: bundleCachePath)
+            NSLog("[MITMService] Deleted bundle cache at %@", bundleCachePath.path)
+        }
+
+        // Restart to pick up fresh bundle
+        try await restart()
+        NSLog("[MITMService] Bundle refresh complete")
+    }
+
     // MARK: - Auto-Restart
 
     /// Schedule an automatic restart with exponential backoff
@@ -489,14 +506,16 @@ class MITMService: ObservableObject {
     private func runProcess(_ process: Process, port: Int, addonPath: String) throws {
         NSLog("[MITMService] runProcess() - Setting up process...")
 
-        // Don't capture output - let it go to /dev/null to avoid pipe issues
-        // The process was exiting because pipes were being closed
+        // Redirect all standard file handles to /dev/null to fully detach the process
+        // Without this, the child process may exit when the parent's stdin/stdout/stderr
+        // are closed or when EOF is received on stdin
+        process.standardInput = FileHandle.nullDevice
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
 
         // Handle process termination with auto-restart
         process.terminationHandler = { [weak self] proc in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self = self else { return }
 
                 self.isRunning = false

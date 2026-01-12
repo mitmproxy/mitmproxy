@@ -59,9 +59,39 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
+      - name: Create Secrets.swift
+        working-directory: OximyMac
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          # Create Secrets.swift with Sentry DSN from GitHub secret
+          if [ -n "$SENTRY_DSN" ]; then
+            cat > App/Secrets.swift << EOF
+          import Foundation
+
+          enum Secrets {
+              static let sentryDSN: String? = "$SENTRY_DSN"
+          }
+          EOF
+            echo "Created Secrets.swift with Sentry DSN"
+          else
+            cp App/Secrets.example.swift App/Secrets.swift
+            echo "Created Secrets.swift from example (no SENTRY_DSN secret)"
+          fi
+
       - name: Fetch Sparkle dependency
         working-directory: OximyMac
         run: swift build --target OximyMac 2>/dev/null || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install create-dmg
+        run: |
+          npm install -g create-dmg
+          echo "create-dmg installed at: $(which create-dmg)"
 
       - name: Build macOS app
         id: build
@@ -83,17 +113,36 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
         run: |
-          # Submit for notarization
-          xcrun notarytool submit "Oximy-${{ inputs.version }}.dmg" \
+          # Submit for notarization and capture submission ID
+          SUBMIT_OUTPUT=$(xcrun notarytool submit "Oximy-${{ inputs.version }}.dmg" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$TEAM_ID" \
-            --wait
+            --wait 2>&1) || true
 
-          # Staple the notarization ticket to the DMG
-          xcrun stapler staple "Oximy-${{ inputs.version }}.dmg"
+          echo "$SUBMIT_OUTPUT"
 
-          echo "Notarization complete and stapled"
+          # Extract submission ID
+          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep -o 'id: [a-f0-9-]*' | head -1 | cut -d' ' -f2)
+
+          # Check if notarization succeeded
+          if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
+            echo "Notarization succeeded!"
+            # Staple the notarization ticket to the DMG
+            xcrun stapler staple "Oximy-${{ inputs.version }}.dmg"
+            echo "Notarization complete and stapled"
+          else
+            echo "Notarization failed. Fetching log..."
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_APP_PASSWORD" \
+                --team-id "$TEAM_ID" \
+                notarization-log.json || true
+              cat notarization-log.json
+            fi
+            exit 1
+          fi
 
       - name: Verify signature
         working-directory: OximyMac/build

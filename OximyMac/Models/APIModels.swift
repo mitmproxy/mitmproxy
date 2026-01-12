@@ -30,6 +30,7 @@ struct DeviceRegistrationResponse: Decodable {
         let deviceName: String
         let deviceToken: String
         let workspaceId: String
+        let workspaceName: String?
         let config: DeviceConfig
     }
 }
@@ -95,6 +96,7 @@ struct HeartbeatResponse: Decodable {
         let status: String
         let configUpdate: DeviceConfig?
         let commands: [String]?
+        let workspaceName: String?
     }
 }
 
@@ -197,6 +199,7 @@ enum APIError: LocalizedError {
 
 extension Notification.Name {
     static let authenticationFailed = Notification.Name("authenticationFailed")
+    static let workspaceNameUpdated = Notification.Name("workspaceNameUpdated")
 }
 
 // MARK: - JSONValue (for passing raw JSONL events)

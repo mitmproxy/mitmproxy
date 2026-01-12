@@ -44,7 +44,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "startupicon"; Description: "Start {#MyAppName} when Windows starts"; GroupDescription: "Startup:"; Flags: checked
+Name: "startupicon"; Description: "Start {#MyAppName} when Windows starts"; GroupDescription: "Startup:"
 
 [Files]
 ; Main application and all dependencies
@@ -68,7 +68,7 @@ Filename: "taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden
 
 [UninstallDelete]
 ; Clean up user data (optional - ask user?)
-Type: filesandordirs; Name: "{userprofile}\.oximy"
+Type: filesandordirs; Name: "{%USERPROFILE}\.oximy"
 
 [Code]
 var

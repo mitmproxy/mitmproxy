@@ -79,7 +79,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-11T23:50:01.696120+00:00",
+  "generated_at": "2026-01-12T03:56:52.347115+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -41253,6 +41253,75 @@
         },
         "vendor": "Microsoft Corporation",
         "vendor_url": "https://microsoft.com/word"
+      },
+      "notion": {
+        "ai": "native",
+        "api_domains": [
+          "www.notion.so",
+          "notion.so"
+        ],
+        "category": "productivity",
+        "features": {
+          "chat": {
+            "description": "AI assistant for writing, editing, and workspace tasks",
+            "name": "Notion AI Chat",
+            "parser": {
+              "request": {
+                "model": "transcript[type='config'][0].value.model",
+                "prompt": "transcript[type='user'][-1].value[0][0]"
+              },
+              "response": {
+                "stream": {
+                  "accumulate": {
+                    "content": {
+                      "from": "content",
+                      "op": "last"
+                    }
+                  },
+                  "finalize": {
+                    "content": "accumulated.content"
+                  },
+                  "format": "ndjson",
+                  "format_options": {
+                    "delimiter": "}{"
+                  },
+                  "rules": [
+                    {
+                      "extract": {
+                        "content": "$values(recordMap.thread_message)[0].value.value.step.value[0].content"
+                      },
+                      "when": "$exists(recordMap.thread_message)"
+                    }
+                  ]
+                }
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/api/v3/runInferenceTranscript"
+              }
+            ]
+          }
+        },
+        "icon": "notion.png",
+        "name": "Notion",
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "signatures": {
+          "macos": {
+            "bundle_id": "notion.id",
+            "team_id": "LBQJ96FQ8D"
+          },
+          "windows": {
+            "exe": "Notion.exe",
+            "publisher": "Notion Labs, Inc."
+          }
+        },
+        "vendor": "Notion Labs Inc.",
+        "vendor_url": "https://notion.so"
       },
       "opera": {
         "ai": "host",

@@ -108,6 +108,19 @@ final class AppState: ObservableObject {
 
     init() {
         loadPersistedState()
+        setupNotificationObservers()
+    }
+
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: .workspaceNameUpdated,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let newName = notification.object as? String {
+                self?.workspaceName = newName
+            }
+        }
     }
 
     // MARK: - State Management

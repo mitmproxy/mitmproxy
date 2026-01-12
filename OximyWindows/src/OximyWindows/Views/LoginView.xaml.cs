@@ -82,18 +82,10 @@ public partial class LoginView : UserControl
             ErrorText.Visibility = Visibility.Collapsed;
             SetInputsEnabled(false);
 
-            // TODO: Replace with actual API call
-            // For now, simulate verification
-            await Task.Delay(1000);
-
-            // Simulate success (in production, this would call the API)
-            var workspaceName = "Demo Workspace";
-            var deviceToken = Guid.NewGuid().ToString();
-
-            // In production:
-            // var response = await VerifyWithApiAsync(code);
-            // workspaceName = response.WorkspaceName;
-            // deviceToken = response.DeviceToken;
+            // Call the actual API
+            var response = await VerifyWithApiAsync(code);
+            var workspaceName = response.WorkspaceName;
+            var deviceToken = response.DeviceToken;
 
             // Complete login
             AppState.Instance.CompleteLogin(workspaceName, deviceToken);
@@ -114,34 +106,86 @@ public partial class LoginView : UserControl
     {
         var requestBody = new
         {
-            code,
-            device_name = AppState.Instance.DeviceName,
-            platform = "windows"
+            hostname = Environment.MachineName,
+            displayName = AppState.Instance.DeviceName,
+            os = "windows",
+            osVersion = Environment.OSVersion.VersionString,
+            sensorVersion = Constants.Version,
+            hardwareId = GetHardwareId(),
+            permissions = new
+            {
+                networkCapture = true,
+                systemExtension = false,
+                fullDiskAccess = false
+            }
         };
 
         var json = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync($"{Constants.ApiBaseUrl}/v1/auth/verify", content);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{Constants.ApiBaseUrl}/devices/register");
+        request.Content = content;
+        request.Headers.Add("X-Enrollment-Token", code);
+
+        var response = await _httpClient.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
             throw new Exception(response.StatusCode == System.Net.HttpStatusCode.Unauthorized
                 ? "Invalid code. Please try again."
-                : $"Verification failed: {response.StatusCode}");
+                : response.StatusCode == System.Net.HttpStatusCode.BadRequest
+                    ? "Invalid or expired code. Please try again."
+                    : $"Verification failed: {response.StatusCode}");
         }
 
         var responseBody = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<VerifyResponse>(responseBody);
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var result = JsonSerializer.Deserialize<DeviceRegistrationResponse>(responseBody, options);
 
-        return (result?.WorkspaceName ?? "Workspace", result?.DeviceToken ?? "");
+        if (result?.Success != true || result.Data == null)
+        {
+            throw new Exception(result?.Error?.Message ?? "Registration failed");
+        }
+
+        // Use workspaceName if available, fall back to workspaceId
+        var workspaceName = result.Data.WorkspaceName ?? result.Data.WorkspaceId;
+        return (workspaceName, result.Data.DeviceToken);
     }
 
-    private class VerifyResponse
+    private static string GetHardwareId()
     {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Cryptography");
+            return key?.GetValue("MachineGuid")?.ToString() ?? Guid.NewGuid().ToString();
+        }
+        catch
+        {
+            return Guid.NewGuid().ToString();
+        }
+    }
+
+    private class DeviceRegistrationResponse
+    {
+        public bool Success { get; set; }
+        public DeviceData? Data { get; set; }
+        public ApiError? Error { get; set; }
+    }
+
+    private class DeviceData
+    {
+        public string DeviceId { get; set; } = "";
+        public string DeviceName { get; set; } = "";
+        public string DeviceToken { get; set; } = "";
+        public string WorkspaceId { get; set; } = "";
         public string? WorkspaceName { get; set; }
-        public string? DeviceToken { get; set; }
+    }
+
+    private class ApiError
+    {
+        public string? Code { get; set; }
+        public string? Message { get; set; }
     }
 
     private void ShowError(string message)
