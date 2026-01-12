@@ -506,6 +506,63 @@
       },
       "ai": "host",
       "icon": "orbstack.png"
+    },
+    "notion": {
+      "name": "Notion",
+      "vendor": "Notion Labs Inc.",
+      "vendor_url": "https://notion.so",
+      "category": "productivity",
+      "platforms": ["macos", "windows"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "notion.id",
+          "team_id": "LBQJ96FQ8D"
+        },
+        "windows": {
+          "exe": "Notion.exe",
+          "publisher": "Notion Labs, Inc."
+        }
+      },
+      "ai": "native",
+      "icon": "notion.png",
+      "api_domains": ["www.notion.so", "notion.so"],
+      "features": {
+        "chat": {
+          "name": "Notion AI Chat",
+          "description": "AI assistant for writing, editing, and workspace tasks",
+          "patterns": [
+            { "url": "**/api/v3/runInferenceTranscript", "method": "POST" }
+          ],
+          "parser": {
+            "request": {
+              "prompt": "transcript[type='user'][-1].value[0][0]",
+              "model": "transcript[type='config'][0].value.model"
+            },
+            "response": {
+              "stream": {
+                "format": "ndjson",
+                "format_options": {
+                  "delimiter": "}{"
+                },
+                "rules": [
+                  {
+                    "when": "$exists(recordMap.thread_message)",
+                    "extract": {
+                      "content": "$values(recordMap.thread_message)[0].value.value.step.value[0].content"
+                    }
+                  }
+                ],
+                "accumulate": {
+                  "content": { "from": "content", "op": "last" }
+                },
+                "finalize": {
+                  "content": "accumulated.content"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
