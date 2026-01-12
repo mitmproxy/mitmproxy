@@ -145,76 +145,67 @@ final class APIClient: ObservableObject {
     }
 
     private func performRequest<T: Decodable>(_ request: URLRequest, authenticated: Bool) async throws -> T {
-        // Log request details
-        print("[APIClient] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        print("[APIClient] REQUEST: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "nil")")
-        print("[APIClient] Headers:")
-        request.allHTTPHeaderFields?.forEach { key, value in
-            if key == "Authorization" {
-                // Mask the token but show prefix
-                let masked = value.prefix(20) + "..." + value.suffix(4)
-                print("[APIClient]   \(key): \(masked)")
-            } else {
-                print("[APIClient]   \(key): \(value)")
-            }
-        }
-        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
-            // Truncate if too long
-            let truncated = bodyString.count > 500 ? String(bodyString.prefix(500)) + "...[truncated]" : bodyString
-            print("[APIClient] Body: \(truncated)")
-        }
-
         let (data, response): (Data, URLResponse)
 
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            print("[APIClient] Network error: \(error.localizedDescription)")
+            logFailure(request: request, responseBody: nil, error: "Network error: \(error.localizedDescription)")
             throw APIError.networkUnavailable
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("[APIClient] Invalid response type")
+            logFailure(request: request, responseBody: nil, error: "Invalid response type")
             throw APIError.serverError(0, "Invalid response")
         }
 
-        // Log response details
-        print("[APIClient] RESPONSE: \(httpResponse.statusCode)")
-        print("[APIClient] Response Headers:")
-        httpResponse.allHeaderFields.forEach { key, value in
-            print("[APIClient]   \(key): \(value)")
-        }
-        if let responseString = String(data: data, encoding: .utf8) {
-            let truncated = responseString.count > 1000 ? String(responseString.prefix(1000)) + "...[truncated]" : responseString
-            print("[APIClient] Response Body: \(truncated)")
-        }
-        print("[APIClient] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        let responseString = String(data: data, encoding: .utf8)
 
         switch httpResponse.statusCode {
         case 200, 201:
             do {
                 return try JSONDecoder().decode(T.self, from: data)
             } catch {
+                logFailure(request: request, responseBody: responseString, error: "Decoding error: \(error.localizedDescription)")
                 throw APIError.decodingError(error.localizedDescription)
             }
         case 400:
             let apiResponse = try? JSONDecoder().decode(APIErrorResponse.self, from: data)
+            logFailure(request: request, responseBody: responseString, error: "400 Bad Request")
             if apiResponse?.error?.code == "bad_request" {
                 throw APIError.invalidEnrollmentCode
             }
             throw APIError.serverError(400, apiResponse?.error?.message ?? "Bad request")
         case 401:
+            logFailure(request: request, responseBody: responseString, error: "401 Unauthorized")
             throw APIError.unauthorized
         case 404:
+            logFailure(request: request, responseBody: responseString, error: "404 Not Found")
             throw APIError.deviceNotFound
         case 409:
             let apiResponse = try? JSONDecoder().decode(APIErrorResponse.self, from: data)
+            logFailure(request: request, responseBody: responseString, error: "409 Conflict")
             throw APIError.conflict(apiResponse?.error?.message ?? "Conflict")
         case 429:
             let retryAfter = httpResponse.value(forHTTPHeaderField: "Retry-After").flatMap(Int.init)
+            logFailure(request: request, responseBody: responseString, error: "429 Rate Limited")
             throw APIError.rateLimited(retryAfter: retryAfter)
         default:
+            logFailure(request: request, responseBody: responseString, error: "\(httpResponse.statusCode) Server Error")
             throw APIError.serverError(httpResponse.statusCode, "Server error")
+        }
+    }
+
+    private func logFailure(request: URLRequest, responseBody: String?, error: String) {
+        print("[APIClient] Request failed: \(error)")
+        print("[APIClient] URL: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "nil")")
+        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
+            let truncated = bodyString.count > 500 ? String(bodyString.prefix(500)) + "...[truncated]" : bodyString
+            print("[APIClient] Request Body: \(truncated)")
+        }
+        if let responseBody = responseBody {
+            let truncated = responseBody.count > 500 ? String(responseBody.prefix(500)) + "...[truncated]" : responseBody
+            print("[APIClient] Response: \(truncated)")
         }
     }
 

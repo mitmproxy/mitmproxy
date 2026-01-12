@@ -164,9 +164,7 @@ class MITMService: ObservableObject {
             "--set", "confdir=\(Constants.oximyDir.path)",
             "--mode", "regular@\(port)",
             "--listen-host", "127.0.0.1",
-            "--ssl-insecure",
-            "-q"
-        ]
+            "--ssl-insecure"        ]
 
         NSLog("[MITMService] Process arguments: %@", process.arguments?.description ?? "nil")
 
