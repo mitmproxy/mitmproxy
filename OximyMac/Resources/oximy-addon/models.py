@@ -153,6 +153,16 @@ class EventTiming:
 
 
 @dataclass
+class Subscription:
+    """User's subscription/plan information for an AI service."""
+
+    plan: str | None = None
+
+    def to_dict(self) -> dict:
+        return {"plan": self.plan if self.plan is not None else ""}
+
+
+@dataclass
 class OximyEvent:
     """
     An OISP event representing an AI interaction.
@@ -168,6 +178,7 @@ class OximyEvent:
     interaction: Interaction | None = None
     metadata: dict | None = None
     client: ClientProcess | None = None
+    subscription: Subscription | None = None
 
     @classmethod
     def create(
@@ -178,6 +189,7 @@ class OximyEvent:
         interaction: Interaction | None = None,
         metadata: dict | None = None,
         client: ClientProcess | None = None,
+        subscription: Subscription | None = None,
     ) -> OximyEvent:
         """Create a new event with auto-generated ID and timestamp."""
         event_id = _generate_uuid7()
@@ -196,6 +208,7 @@ class OximyEvent:
             interaction=interaction,
             metadata=metadata,
             client=client,
+            subscription=subscription,
         )
 
     def to_dict(self) -> dict:
@@ -213,6 +226,9 @@ class OximyEvent:
 
         if self.interaction:
             result["interaction"] = self.interaction.to_dict()
+
+        if self.subscription:
+            result["subscription"] = self.subscription.to_dict()
 
         if self.metadata:
             result["metadata"] = self.metadata

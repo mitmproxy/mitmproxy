@@ -29,14 +29,6 @@ except ImportError:
     JSONATA_AVAILABLE = False
     jsonata = None
 
-try:
-    import jsonata
-
-    JSONATA_AVAILABLE = True
-except ImportError:
-    JSONATA_AVAILABLE = False
-    jsonata = None
-
 from models import InteractionRequest
 from models import InteractionResponse
 
