@@ -22,7 +22,10 @@
       "Bash(reg query \"HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Internet Settings\" /v ProxyEnable)",
       "Bash(certutil:*)",
       "Bash(dotnet run)",
-      "Bash(start OximyWindows.exe)"
+      "Bash(start OximyWindows.exe)",
+      "Bash(ls:*)",
+      "Bash(log show:*)",
+      "Bash(mdfind:*)"
     ]
   }
 }

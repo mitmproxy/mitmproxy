@@ -98,7 +98,7 @@ class MatchAttempt:
     Records how the traffic matcher classified this request.
     """
 
-    classification: Literal["full_trace", "identifiable", "drop"]
+    classification: Literal["full_extraction", "feature_extraction", "metadata_only", "drop"]
     source_type: str | None  # api, app, website
     source_id: str | None  # openai, chatgpt, etc.
     api_format: str | None

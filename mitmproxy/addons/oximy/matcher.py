@@ -131,7 +131,7 @@ class TrafficMatcher:
         api_format = self.bundle.get_provider_api_format(provider_id)
 
         return MatchResult(
-            classification="full_trace",
+            classification="full_extraction",
             source_type="api",
             source_id=provider_id,
             provider_id=provider_id,
@@ -146,7 +146,7 @@ class TrafficMatcher:
                 api_format = self.bundle.get_provider_api_format(pattern.provider_id)
 
                 return MatchResult(
-                    classification="full_trace",
+                    classification="full_extraction",
                     source_type="api",
                     source_id=pattern.provider_id,
                     provider_id=pattern.provider_id,
@@ -202,19 +202,31 @@ class TrafficMatcher:
                     continue
 
                 if self._matches_endpoint_pattern(path, pattern):
+                    # Determine classification based on parser presence
+                    has_parser = "parser" in feature_def
+                    classification = "full_extraction" if has_parser else "feature_extraction"
+                    feature_type = feature_def.get("type")
+
                     logger.debug(
-                        f"App match: {app_id}/{feature_name} for {client_process.name}"
+                        f"App match: {app_id}/{feature_name} for {client_process.name} "
+                        f"(classification={classification})"
                     )
                     return MatchResult(
-                        classification="full_trace",
+                        classification=classification,
                         source_type="app",
                         source_id=app_id,
                         provider_id=None,
                         api_format=f"{app_id}_app",
                         endpoint=feature_name,
+                        feature_type=feature_type,
                     )
 
-        return None
+        # App matched but no specific feature endpoint - metadata_only
+        return MatchResult(
+            classification="metadata_only",
+            source_type="app",
+            source_id=app_id,
+        )
 
     def _find_app_by_process(self, client_process: ClientProcess) -> str | None:
         """
@@ -276,23 +288,33 @@ class TrafficMatcher:
             patterns = feature_def.get("patterns", [])
             for pattern in patterns:
                 if self._matches_endpoint_pattern(path, pattern):
-                    # Website has parser? -> full_trace, else identifiable
-                    # For now, treat all website matches as full_trace
-                    # (we'll parse what we can)
+                    # Determine classification based on parser presence
+                    # full_extraction: feature matched AND has parser config
+                    # feature_extraction: feature matched BUT no parser (we know the feature type)
+                    has_parser = "parser" in feature_def
+                    classification = "full_extraction" if has_parser else "feature_extraction"
+
                     # Use website-specific api_format for parsing
                     api_format = website.get("api_format", f"{website_id}_web")
+                    feature_type = feature_def.get("type")  # e.g., "chat", "asset_creation"
+
                     return MatchResult(
-                        classification="full_trace",
+                        classification=classification,
                         source_type="website",
                         source_id=website_id,
                         provider_id=None,  # Websites may use multiple providers
                         api_format=api_format,
                         endpoint=feature_name,
+                        feature_type=feature_type,
                     )
 
-        # Website matched but no specific endpoint - drop it
-        # We only care about actual AI conversation endpoints, not gizmos/settings/etc.
-        return MatchResult(classification="drop")
+        # Website matched but no specific endpoint - metadata_only
+        # We know it's AI traffic but don't know which specific feature
+        return MatchResult(
+            classification="metadata_only",
+            source_type="website",
+            source_id=website_id,
+        )
 
     def _matches_endpoint_pattern(self, path: str, pattern: dict) -> bool:
         """Check if path matches an endpoint pattern definition."""

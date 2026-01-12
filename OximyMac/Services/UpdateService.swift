@@ -156,9 +156,8 @@ extension UpdateService: SPUUpdaterDelegate {
     /// This can be used to dynamically determine the feed URL at runtime.
     /// If nil is returned, Sparkle uses the `SUFeedURL` from Info.plist.
     nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
-        // Use Info.plist value by default, or override here if needed
-        // Return nil to use SUFeedURL from Info.plist
-        return "https://github.com/OximyHQ/mitmproxy/releases/latest/download/appcast.xml"
+        // Use SUFeedURL from Info.plist (includes architecture suffix)
+        return nil
     }
 
     /// Called when Sparkle finds a valid update.

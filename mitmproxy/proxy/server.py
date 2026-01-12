@@ -11,12 +11,14 @@ import abc
 import asyncio
 import collections
 import logging
+import socket
 import time
 from collections.abc import Awaitable
 from collections.abc import Callable
 from collections.abc import MutableMapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import lru_cache
 from types import TracebackType
 from typing import Literal
 
@@ -45,6 +47,77 @@ from mitmproxy.utils.data import pkg_data
 logger = logging.getLogger(__name__)
 
 UDP_TIMEOUT = 20
+
+
+# DNS cache to avoid repeated lookups
+class DNSCache:
+    """Simple DNS cache with LRU eviction."""
+
+    def __init__(self, maxsize: int = 1000):
+        self._cache: dict[str, tuple[str, float]] = {}
+        self._maxsize = maxsize
+        self._ttl = 300  # 5 minutes TTL
+
+    async def resolve(self, host: str, port: int) -> tuple[str, int]:
+        """Resolve hostname to IP, using cache if available."""
+        # If already an IP, return as-is
+        if self._is_ip(host):
+            return (host, port)
+
+        now = time.time()
+
+        # Check cache
+        if host in self._cache:
+            ip, expiry = self._cache[host]
+            if now < expiry:
+                return (ip, port)
+            # Expired, remove
+            del self._cache[host]
+
+        # Resolve in thread pool (non-blocking)
+        loop = asyncio.get_event_loop()
+        try:
+            infos = await loop.getaddrinfo(
+                host, port,
+                family=socket.AF_UNSPEC,
+                type=socket.SOCK_STREAM,
+            )
+            if infos:
+                # Use first result, extract IP
+                ip = infos[0][4][0]
+
+                # Cache with TTL
+                if len(self._cache) >= self._maxsize:
+                    # Simple eviction: remove oldest entry
+                    oldest = min(self._cache.items(), key=lambda x: x[1][1])
+                    del self._cache[oldest[0]]
+
+                self._cache[host] = (ip, now + self._ttl)
+                return (ip, port)
+        except (socket.gaierror, OSError) as e:
+            logger.debug(f"DNS resolution failed for {host}: {e}")
+
+        # Fallback to original host
+        return (host, port)
+
+    @staticmethod
+    def _is_ip(host: str) -> bool:
+        """Check if host is already an IP address."""
+        try:
+            socket.inet_pton(socket.AF_INET, host)
+            return True
+        except socket.error:
+            pass
+        try:
+            socket.inet_pton(socket.AF_INET6, host)
+            return True
+        except socket.error:
+            pass
+        return False
+
+
+# Global DNS cache instance
+_dns_cache = DNSCache()
 
 
 class TimeoutWatchdog:
@@ -99,14 +172,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     transports: MutableMapping[Connection, ConnectionIO]
     timeout_watchdog: TimeoutWatchdog
     client: Client
-    max_conns: collections.defaultdict[Address, asyncio.Semaphore]
     layer: "layer.Layer"
     wakeup_timer: set[asyncio.Task]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
-        self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
         self.wakeup_timer = set()
 
         # Ask for the first layer right away.
@@ -120,9 +191,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.timeout_watchdog = TimeoutWatchdog(timeout, self.on_timeout)
 
         self._server_event_lock = asyncio.Lock()
-
-        # workaround for https://bugs.python.org/issue40124 / https://bugs.python.org/issue29930
-        self._drain_lock = asyncio.Lock()
 
     async def handle_client(self) -> None:
         asyncio_utils.set_current_task_debug_info(
@@ -203,66 +271,69 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             )
             return
 
-        async with self.max_conns[command.connection.address]:
-            reader: asyncio.StreamReader | mitmproxy_rs.Stream
-            writer: asyncio.StreamWriter | mitmproxy_rs.Stream
-            try:
-                command.connection.timestamp_start = time.time()
-                if command.connection.transport_protocol == "tcp":
-                    reader, writer = await asyncio.open_connection(
-                        *command.connection.address,
-                        local_addr=command.connection.sockname,
-                    )
-                elif command.connection.transport_protocol == "udp":
-                    reader = writer = await mitmproxy_rs.udp.open_udp_connection(
-                        *command.connection.address,
-                        local_addr=command.connection.sockname,
-                    )
-                else:
-                    raise AssertionError(command.connection.transport_protocol)
-            except (OSError, asyncio.CancelledError) as e:
-                err = str(e)
-                if not err:  # str(CancelledError()) returns empty string.
-                    err = "connection cancelled"
-                self.log(f"error establishing server connection: {err}")
-                command.connection.error = err
-                await self.handle_hook(server_hooks.ServerConnectErrorHook(hook_data))
-                await self.server_event(events.OpenConnectionCompleted(command, err))
-                if isinstance(e, asyncio.CancelledError):
-                    # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
-                    # > In almost all situations the exception must be re-raised.
-                    # It is not really defined what almost means here, but we play safe.
-                    raise
-            else:
-                if command.connection.transport_protocol == "tcp":
-                    # TODO: Rename to `timestamp_setup` and make it agnostic for both TCP (SYN/ACK) and UDP (DNS resl.)
-                    command.connection.timestamp_tcp_setup = time.time()
-                command.connection.state = ConnectionState.OPEN
-                command.connection.peername = writer.get_extra_info("peername")
-                command.connection.sockname = writer.get_extra_info("sockname")
-                self.transports[command.connection] = ConnectionIO(
-                    handler=asyncio.current_task(),
-                    reader=reader,
-                    writer=writer,
+        reader: asyncio.StreamReader | mitmproxy_rs.Stream
+        writer: asyncio.StreamWriter | mitmproxy_rs.Stream
+        try:
+            command.connection.timestamp_start = time.time()
+            if command.connection.transport_protocol == "tcp":
+                # Use cached DNS resolution for faster connection setup
+                host, port = command.connection.address
+                resolved_host, resolved_port = await _dns_cache.resolve(host, port)
+                reader, writer = await asyncio.open_connection(
+                    resolved_host,
+                    resolved_port,
+                    local_addr=command.connection.sockname,
                 )
+            elif command.connection.transport_protocol == "udp":
+                reader = writer = await mitmproxy_rs.udp.open_udp_connection(
+                    *command.connection.address,
+                    local_addr=command.connection.sockname,
+                )
+            else:
+                raise AssertionError(command.connection.transport_protocol)
+        except (OSError, asyncio.CancelledError) as e:
+            err = str(e)
+            if not err:  # str(CancelledError()) returns empty string.
+                err = "connection cancelled"
+            self.log(f"error establishing server connection: {err}")
+            command.connection.error = err
+            await self.handle_hook(server_hooks.ServerConnectErrorHook(hook_data))
+            await self.server_event(events.OpenConnectionCompleted(command, err))
+            if isinstance(e, asyncio.CancelledError):
+                # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
+                # > In almost all situations the exception must be re-raised.
+                # It is not really defined what almost means here, but we play safe.
+                raise
+        else:
+            if command.connection.transport_protocol == "tcp":
+                # TODO: Rename to `timestamp_setup` and make it agnostic for both TCP (SYN/ACK) and UDP (DNS resl.)
+                command.connection.timestamp_tcp_setup = time.time()
+            command.connection.state = ConnectionState.OPEN
+            command.connection.peername = writer.get_extra_info("peername")
+            command.connection.sockname = writer.get_extra_info("sockname")
+            self.transports[command.connection] = ConnectionIO(
+                handler=asyncio.current_task(),
+                reader=reader,
+                writer=writer,
+            )
 
-                assert command.connection.peername
-                if command.connection.address[0] != command.connection.peername[0]:
-                    addr = f"{human.format_address(command.connection.address)} ({human.format_address(command.connection.peername)})"
-                else:
-                    addr = human.format_address(command.connection.address)
-                self.log(f"server connect {addr}")
-                await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
-                await self.server_event(events.OpenConnectionCompleted(command, None))
+            assert command.connection.peername
+            if command.connection.address[0] != command.connection.peername[0]:
+                addr = f"{human.format_address(command.connection.address)} ({human.format_address(command.connection.peername)})"
+            else:
+                addr = human.format_address(command.connection.address)
+            self.log(f"server connect {addr}")
+            await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
+            await self.server_event(events.OpenConnectionCompleted(command, None))
 
-                try:
-                    await self.handle_connection(command.connection)
-                finally:
-                    self.log(f"server disconnect {addr}")
-                    command.connection.timestamp_end = time.time()
-                    await self.handle_hook(
-                        server_hooks.ServerDisconnectedHook(hook_data)
-                    )
+            try:
+                await self.handle_connection(command.connection)
+            finally:
+                self.log(f"server disconnect {addr}")
+                command.connection.timestamp_end = time.time()
+                await self.handle_hook(
+                    server_hooks.ServerDisconnectedHook(hook_data)
+                )
 
     async def wakeup(self, request: commands.RequestWakeup) -> None:
         await asyncio.sleep(request.delay)
@@ -332,14 +403,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         Drain all writers to create some backpressure. We won't continue reading until there's space available in our
         write buffers, so if we cannot write fast enough our own read buffers run full and the TCP recv stream is throttled.
         """
-        async with self._drain_lock:
-            for transport in list(self.transports.values()):
-                if transport.writer is not None:
-                    try:
-                        await transport.writer.drain()
-                    except OSError as e:
-                        if transport.handler is not None:
-                            transport.handler.cancel(f"Error sending data: {e}")
+        for transport in list(self.transports.values()):
+            if transport.writer is not None:
+                try:
+                    await transport.writer.drain()
+                except OSError as e:
+                    if transport.handler is not None:
+                        transport.handler.cancel(f"Error sending data: {e}")
 
     async def on_timeout(self) -> None:
         try:

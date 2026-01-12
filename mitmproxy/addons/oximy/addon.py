@@ -307,7 +307,7 @@ class OximyAddon:
         logger.info(f"========== OXIMY ADDON READY ==========")
         logger.info(f"Listening for AI traffic...")
 
-    def request(self, flow: http.HTTPFlow) -> None:
+    async def request(self, flow: http.HTTPFlow) -> None:
         """Classify incoming requests and capture client process info."""
         if not self._enabled or not self._matcher:
             return
@@ -321,7 +321,7 @@ class OximyAddon:
             if self._process_resolver:
                 try:
                     client_port = flow.client_conn.peername[1]
-                    client_process = self._process_resolver.get_process_for_port(
+                    client_process = await self._process_resolver.get_process_for_port(
                         client_port
                     )
                     flow.metadata[OXIMY_CLIENT_KEY] = client_process
@@ -413,10 +413,6 @@ class OximyAddon:
 
             def create_configurable_handler(buf: ConfigurableStreamBuffer, src_id: str):
                 def handler(data: bytes) -> bytes:
-                    # Log raw streaming data for debugging
-                    logger.info(
-                        f"[{src_id}] RAW STREAM ({len(data)} bytes): {data[:500]}"
-                    )
                     buf.process_chunk(data)
                     return data
 
@@ -436,6 +432,9 @@ class OximyAddon:
         try:
             event = self._build_event(flow, match_result)
             if event:
+                # Skip metadata_only events from trace logs for now
+                if event.trace_level == "metadata_only":
+                    return
                 self._writer.write(event)
                 self._log_captured_event(event, flow)
         except Exception as e:
@@ -500,11 +499,11 @@ class OximyAddon:
             origin=origin,
         )
 
-        if match_result.classification == "identifiable":
+        if match_result.classification == "metadata_only":
             # Metadata-only event
             return OximyEvent.create(
                 source=source,
-                trace_level="identifiable",
+                trace_level="metadata_only",
                 timing=timing,
                 client=client_process,
                 metadata={
@@ -633,15 +632,36 @@ class OximyAddon:
                         f"Response parsing for {match_result.source_id}: content_len={len(result.get('content') or '')}, model={result.get('model')}"
                     )
 
-        # For websites without parser config, log warning
+        # For websites without parser config (feature_extraction)
+        # We know the feature type but can't parse the content yet
         if match_result.source_type == "website" and (
             request_data is None or response_data is None
         ):
-            logger.warning(
-                f"Website {match_result.source_id}/{match_result.endpoint} has no parser config. "
-                f"Add configuration to websites.json"
-            )
-            return None
+            if match_result.classification == "feature_extraction":
+                logger.info(
+                    f"Feature extraction for {match_result.source_id}/{match_result.endpoint} "
+                    f"(type: {match_result.feature_type}) - no parser available"
+                )
+                return OximyEvent.create(
+                    source=source,
+                    trace_level="feature_extraction",
+                    timing=timing,
+                    client=client_process,
+                    metadata={
+                        "request_method": flow.request.method,
+                        "request_path": flow.request.path,
+                        "response_status": flow.response.status_code,
+                        "content_length": len(flow.response.content or b""),
+                        "feature_type": match_result.feature_type,
+                    },
+                    subscription=Subscription(plan=""),
+                )
+            else:
+                logger.warning(
+                    f"Website {match_result.source_id}/{match_result.endpoint} has no parser config. "
+                    f"Add configuration to websites.json"
+                )
+                return None
 
         # Use configurable parsing for apps (JSONata-based, same as websites)
         if match_result.source_type == "app" and self._bundle and JSONATA_AVAILABLE:
@@ -715,15 +735,36 @@ class OximyAddon:
                         f"Response parsing for app {match_result.source_id}: content_len={len(result.get('content') or '')}, model={result.get('model')}"
                     )
 
-        # For apps without parser config, log warning
+        # For apps without parser config (feature_extraction)
+        # We know the feature type but can't parse the content yet
         if match_result.source_type == "app" and (
             request_data is None or response_data is None
         ):
-            logger.warning(
-                f"App {match_result.source_id}/{match_result.endpoint} has no parser config. "
-                f"Add configuration to apps.json"
-            )
-            return None
+            if match_result.classification == "feature_extraction":
+                logger.info(
+                    f"Feature extraction for app {match_result.source_id}/{match_result.endpoint} "
+                    f"(type: {match_result.feature_type}) - no parser available"
+                )
+                return OximyEvent.create(
+                    source=source,
+                    trace_level="feature_extraction",
+                    timing=timing,
+                    client=client_process,
+                    metadata={
+                        "request_method": flow.request.method,
+                        "request_path": flow.request.path,
+                        "response_status": flow.response.status_code,
+                        "content_length": len(flow.response.content or b""),
+                        "feature_type": match_result.feature_type,
+                    },
+                    subscription=Subscription(plan=""),
+                )
+            else:
+                logger.warning(
+                    f"App {match_result.source_id}/{match_result.endpoint} has no parser config. "
+                    f"Add configuration to apps.json"
+                )
+                return None
 
         # For API providers, use the legacy parsers (still needed for non-website traffic)
         if match_result.source_type == "api":
@@ -791,7 +832,7 @@ class OximyAddon:
 
         return OximyEvent.create(
             source=source,
-            trace_level="full",
+            trace_level="full_extraction",
             timing=timing,
             client=client_process,
             interaction=interaction,
@@ -838,7 +879,7 @@ class OximyAddon:
 
         return OximyEvent.create(
             source=source,
-            trace_level="full",
+            trace_level="full_extraction",
             timing=timing,
             client=client_process,
             metadata=metadata,
@@ -894,7 +935,7 @@ class OximyAddon:
 
         return OximyEvent.create(
             source=source,
-            trace_level="full",
+            trace_level="full_extraction",
             timing=timing,
             client=client_process,
             metadata=metadata,
