@@ -36,7 +36,8 @@ final class HeartbeatService: ObservableObject {
 
         // Schedule recurring heartbeats
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(intervalSeconds), repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
                 await self?.sendHeartbeat()
             }
         }

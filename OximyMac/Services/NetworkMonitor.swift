@@ -33,7 +33,7 @@ class NetworkMonitor: ObservableObject {
 
         monitor = NWPathMonitor()
         monitor?.pathUpdateHandler = { [weak self] path in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.handlePathUpdate(path)
             }
         }

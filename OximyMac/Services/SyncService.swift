@@ -32,7 +32,7 @@ final class SyncService: ObservableObject {
 
         // Schedule recurring sync
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(config.eventFlushIntervalSeconds), repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 await self?.syncAllEvents()
             }
         }

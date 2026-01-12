@@ -496,7 +496,7 @@ class MITMService: ObservableObject {
 
         // Handle process termination with auto-restart
         process.terminationHandler = { [weak self] proc in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self = self else { return }
 
                 self.isRunning = false
