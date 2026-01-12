@@ -37,6 +37,14 @@ from mitmproxy.addons.oximy.writer import EventWriter
 if TYPE_CHECKING:
     from mitmproxy.addons.oximy.bundle import OISPBundle
 
+# Configure logging to output to stderr (which will be captured by MITMService)
+# Set INFO level by default so we can see what's happening
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(name)s: %(message)s",
+    stream=sys.stderr,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +76,7 @@ OXIMY_CLIENT_KEY = "oximy_client"
 # Set OXIMY_AUTO_PROXY=1 to enable automatic proxy setup/teardown
 # Comment out or set to 0 for production deployments
 # -------------------------------------------------------------------------
-OXIMY_AUTO_PROXY_ENABLED = True  # Set to False for production
+OXIMY_AUTO_PROXY_ENABLED = False  # Disabled - proxy management handled by OximyMac app
 OXIMY_PROXY_HOST = "127.0.0.1"
 OXIMY_PROXY_PORT = "8088"
 OXIMY_NETWORK_SERVICE = "Wi-Fi"  # Change if using different network interface
@@ -195,9 +203,23 @@ class OximyAddon:
             default=True,
             help="Include raw request/response bodies in events",
         )
+        loader.add_option(
+            name="oximy_verbose",
+            typespec=bool,
+            default=False,
+            help="Enable verbose/debug logging for troubleshooting",
+        )
 
     def configure(self, updated: set[str]) -> None:
         """Handle configuration changes."""
+        # Handle verbose logging toggle
+        if "oximy_verbose" in updated:
+            if ctx.options.oximy_verbose:
+                logging.getLogger("mitmproxy.addons.oximy").setLevel(logging.DEBUG)
+                logger.info("Verbose logging ENABLED")
+            else:
+                logging.getLogger("mitmproxy.addons.oximy").setLevel(logging.INFO)
+
         # Check if we need to (re)initialize
         relevant_options = {"oximy_enabled", "oximy_bundle_url", "oximy_output_dir"}
         if not relevant_options.intersection(updated):
@@ -224,9 +246,21 @@ class OximyAddon:
 
         try:
             self._bundle = self._bundle_loader.load()
-            logger.info(f"Loaded OISP bundle version {self._bundle.bundle_version}")
+            logger.info(f"========== OXIMY ADDON STARTING ==========")
+            logger.info(f"OISP Bundle loaded: version {self._bundle.bundle_version}")
+            logger.info(f"  - Websites: {len(self._bundle.websites)} sites")
+            logger.info(f"  - Apps: {len(self._bundle.apps)} applications")
+            logger.info(f"  - Parsers: {len(self._bundle.parsers)} parser configs")
         except RuntimeError as e:
+            logger.error(f"========== OXIMY ADDON FAILED TO START ==========")
             logger.error(f"Failed to load OISP bundle: {e}")
+            logger.error(f"Bundle URL: {ctx.options.oximy_bundle_url}")
+            logger.error("The addon will be DISABLED - no AI traffic will be captured!")
+            self._enabled = False
+            return
+        except Exception as e:
+            logger.error(f"========== OXIMY ADDON FAILED TO START ==========")
+            logger.error(f"Unexpected error loading bundle: {e}", exc_info=True)
             self._enabled = False
             return
 
@@ -259,38 +293,47 @@ class OximyAddon:
         # Enable system proxy (development convenience)
         _set_macos_proxy(enable=True)
 
-        logger.info(f"Oximy addon enabled, writing to {output_dir}")
+        logger.info(f"Output directory: {output_dir}")
+        logger.info(f"JSONata parsing: {'ENABLED' if JSONATA_AVAILABLE else 'DISABLED (install jsonata-python for advanced parsing)'}")
+        logger.info(f"========== OXIMY ADDON READY ==========")
+        logger.info(f"Listening for AI traffic...")
 
     def request(self, flow: http.HTTPFlow) -> None:
         """Classify incoming requests and capture client process info."""
         if not self._enabled or not self._matcher:
             return
 
-        # Capture client process info FIRST, before matching
-        # This must happen as early as possible to avoid race conditions
-        # where the client process exits before we can query it
-        # Also needed for app matching which requires process info
-        client_process: ClientProcess | None = None
-        if self._process_resolver:
-            client_port = flow.client_conn.peername[1]
-            client_process = self._process_resolver.get_process_for_port(client_port)
-            flow.metadata[OXIMY_CLIENT_KEY] = client_process
+        try:
+            # Capture client process info FIRST, before matching
+            # This must happen as early as possible to avoid race conditions
+            # where the client process exits before we can query it
+            # Also needed for app matching which requires process info
+            client_process: ClientProcess | None = None
+            if self._process_resolver:
+                try:
+                    client_port = flow.client_conn.peername[1]
+                    client_process = self._process_resolver.get_process_for_port(client_port)
+                    flow.metadata[OXIMY_CLIENT_KEY] = client_process
+                except Exception as e:
+                    logger.debug(f"Could not resolve client process: {e}")
 
-        # Match the flow (with client_process for app matching)
-        match_result = self._matcher.match(flow, client_process)
+            # Match the flow (with client_process for app matching)
+            match_result = self._matcher.match(flow, client_process)
 
-        # Store result in flow metadata
-        flow.metadata[OXIMY_METADATA_KEY] = match_result
+            # Store result in flow metadata
+            flow.metadata[OXIMY_METADATA_KEY] = match_result
 
-        if match_result.classification != "drop":
-            if client_process:
+            if match_result.classification != "drop":
+                if client_process:
+                    logger.debug(
+                        f"Client process: {client_process.name} (PID {client_process.pid})"
+                    )
                 logger.debug(
-                    f"Client process: {client_process.name} (PID {client_process.pid})"
+                    f"Matched: {flow.request.pretty_host} -> "
+                    f"{match_result.classification} ({match_result.source_type}/{match_result.source_id})"
                 )
-            logger.debug(
-                f"Matched: {flow.request.pretty_host} -> "
-                f"{match_result.classification} ({match_result.source_type}/{match_result.source_id})"
-            )
+        except Exception as e:
+            logger.error(f"Error in request hook for {flow.request.pretty_host}: {e}", exc_info=True)
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
         """Set up streaming handler only for actual streaming responses (SSE)."""

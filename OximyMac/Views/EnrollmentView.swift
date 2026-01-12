@@ -27,9 +27,7 @@ struct EnrollmentView: View {
 
             // Header
             VStack(spacing: 6) {
-                Image("Oximy")
-                    .resizable()
-                    .frame(width: 52, height: 52)
+                OximyLogo(size: 52)
                     .cornerRadius(12)
                     .padding(.top, 20)
 
