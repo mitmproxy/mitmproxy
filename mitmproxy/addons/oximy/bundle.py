@@ -16,7 +16,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
-from urllib.request import HTTPSHandler, ProxyHandler, build_opener, urlopen
+from urllib.request import build_opener
+from urllib.request import HTTPSHandler
+from urllib.request import ProxyHandler
 
 logger = logging.getLogger(__name__)
 
