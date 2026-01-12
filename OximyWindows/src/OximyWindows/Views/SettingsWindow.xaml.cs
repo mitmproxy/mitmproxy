@@ -145,6 +145,34 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            CheckUpdateButton.IsEnabled = false;
+            UpdateStatusText.Text = "Checking for updates...";
+
+            await Services.UpdateService.Instance.CheckForUpdatesAsync();
+
+            if (Services.UpdateService.Instance.IsUpdateAvailable)
+            {
+                UpdateStatusText.Text = $"Update available: v{Services.UpdateService.Instance.LatestVersion}";
+            }
+            else
+            {
+                UpdateStatusText.Text = "You're up to date!";
+            }
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusText.Text = $"Check failed: {ex.Message}";
+        }
+        finally
+        {
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
     private async void GenerateCertButton_Click(object sender, RoutedEventArgs e)
     {
         try

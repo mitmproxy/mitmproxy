@@ -1,0 +1,185 @@
+using System.Diagnostics;
+using OximyWindows.Core;
+using OximyWindows.Models;
+
+namespace OximyWindows.Services;
+
+/// <summary>
+/// Service for sending periodic heartbeats to the backend.
+/// Collects system metrics and processes server commands.
+/// </summary>
+public class HeartbeatService : IDisposable
+{
+    private static HeartbeatService? _instance;
+    public static HeartbeatService Instance => _instance ??= new HeartbeatService();
+
+    private Timer? _heartbeatTimer;
+    private int _heartbeatIntervalMs;
+    private bool _disposed;
+    private readonly object _lock = new();
+
+    public event EventHandler? SyncRequested;
+    public event EventHandler? RestartProxyRequested;
+    public event EventHandler? DisableProxyRequested;
+    public event EventHandler? LogoutRequested;
+
+    private HeartbeatService()
+    {
+        _heartbeatIntervalMs = Constants.DefaultHeartbeatIntervalSeconds * 1000;
+
+        // Subscribe to API events
+        APIClient.Instance.AuthenticationFailed += OnAuthenticationFailed;
+        APIClient.Instance.WorkspaceNameUpdated += OnWorkspaceNameUpdated;
+    }
+
+    /// <summary>
+    /// Start the heartbeat timer.
+    /// </summary>
+    public void Start()
+    {
+        lock (_lock)
+        {
+            if (_heartbeatTimer != null)
+                return;
+
+            Debug.WriteLine($"[HeartbeatService] Starting with interval {_heartbeatIntervalMs}ms");
+
+            _heartbeatTimer = new Timer(
+                OnHeartbeatTick,
+                null,
+                TimeSpan.FromSeconds(5), // Initial delay
+                TimeSpan.FromMilliseconds(_heartbeatIntervalMs));
+        }
+    }
+
+    /// <summary>
+    /// Stop the heartbeat timer.
+    /// </summary>
+    public void Stop()
+    {
+        lock (_lock)
+        {
+            _heartbeatTimer?.Dispose();
+            _heartbeatTimer = null;
+            Debug.WriteLine("[HeartbeatService] Stopped");
+        }
+    }
+
+    /// <summary>
+    /// Update the heartbeat interval (called when config is received from server).
+    /// </summary>
+    public void UpdateInterval(int intervalSeconds)
+    {
+        lock (_lock)
+        {
+            _heartbeatIntervalMs = intervalSeconds * 1000;
+
+            if (_heartbeatTimer != null)
+            {
+                _heartbeatTimer.Change(
+                    TimeSpan.FromMilliseconds(_heartbeatIntervalMs),
+                    TimeSpan.FromMilliseconds(_heartbeatIntervalMs));
+
+                Debug.WriteLine($"[HeartbeatService] Updated interval to {intervalSeconds}s");
+            }
+        }
+    }
+
+    private async void OnHeartbeatTick(object? state)
+    {
+        if (AppState.Instance.Phase != Phase.Connected)
+            return;
+
+        try
+        {
+            var eventsQueued = SyncService.Instance.PendingEventCount;
+            var response = await APIClient.Instance.SendHeartbeatAsync(eventsQueued);
+
+            // Update config if provided
+            if (response.Config != null)
+            {
+                if (response.Config.HeartbeatIntervalSeconds > 0)
+                {
+                    UpdateInterval(response.Config.HeartbeatIntervalSeconds);
+                }
+
+                SyncService.Instance.UpdateConfig(response.Config);
+            }
+
+            // Process server commands
+            if (response.Commands != null)
+            {
+                foreach (var command in response.Commands)
+                {
+                    ProcessCommand(command);
+                }
+            }
+
+            Debug.WriteLine("[HeartbeatService] Heartbeat sent successfully");
+        }
+        catch (ApiException ex)
+        {
+            Debug.WriteLine($"[HeartbeatService] Heartbeat failed: {ex.Message}");
+
+            if (ex.IsUnauthorized)
+            {
+                // Auth failure is handled by APIClient
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HeartbeatService] Heartbeat error: {ex.Message}");
+        }
+    }
+
+    private void ProcessCommand(ServerCommand command)
+    {
+        Debug.WriteLine($"[HeartbeatService] Processing command: {command.Type}");
+
+        switch (command.Type.ToLowerInvariant())
+        {
+            case "sync_now":
+                SyncRequested?.Invoke(this, EventArgs.Empty);
+                break;
+
+            case "restart_proxy":
+                RestartProxyRequested?.Invoke(this, EventArgs.Empty);
+                break;
+
+            case "disable_proxy":
+                DisableProxyRequested?.Invoke(this, EventArgs.Empty);
+                break;
+
+            case "logout":
+                LogoutRequested?.Invoke(this, EventArgs.Empty);
+                break;
+
+            default:
+                Debug.WriteLine($"[HeartbeatService] Unknown command: {command.Type}");
+                break;
+        }
+    }
+
+    private void OnAuthenticationFailed(object? sender, EventArgs e)
+    {
+        Debug.WriteLine("[HeartbeatService] Authentication failed, triggering logout");
+        LogoutRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnWorkspaceNameUpdated(object? sender, string workspaceName)
+    {
+        AppState.Instance.WorkspaceName = workspaceName;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        Stop();
+
+        APIClient.Instance.AuthenticationFailed -= OnAuthenticationFailed;
+        APIClient.Instance.WorkspaceNameUpdated -= OnWorkspaceNameUpdated;
+    }
+}

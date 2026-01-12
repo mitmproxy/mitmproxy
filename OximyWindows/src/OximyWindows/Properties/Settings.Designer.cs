@@ -97,4 +97,49 @@ internal sealed partial class Settings : global::System.Configuration.Applicatio
             this["LaunchAtStartup"] = value;
         }
     }
+
+    [global::System.Configuration.UserScopedSettingAttribute()]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Configuration.DefaultSettingValueAttribute("")]
+    public string DeviceId
+    {
+        get
+        {
+            return ((string)(this["DeviceId"]));
+        }
+        set
+        {
+            this["DeviceId"] = value;
+        }
+    }
+
+    [global::System.Configuration.UserScopedSettingAttribute()]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Configuration.DefaultSettingValueAttribute("")]
+    public string WorkspaceId
+    {
+        get
+        {
+            return ((string)(this["WorkspaceId"]));
+        }
+        set
+        {
+            this["WorkspaceId"] = value;
+        }
+    }
+
+    [global::System.Configuration.UserScopedSettingAttribute()]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Configuration.DefaultSettingValueAttribute("False")]
+    public bool SetupComplete
+    {
+        get
+        {
+            return ((bool)(this["SetupComplete"]));
+        }
+        set
+        {
+            this["SetupComplete"] = value;
+        }
+    }
 }
