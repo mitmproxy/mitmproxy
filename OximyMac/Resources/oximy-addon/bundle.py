@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
+from urllib.request import ProxyHandler
+from urllib.request import build_opener
 from urllib.request import urlopen
 
 logger = logging.getLogger(__name__)
@@ -213,10 +215,16 @@ class BundleLoader:
             return None
 
     def _fetch_from_url(self) -> OISPBundle:
-        """Fetch bundle from the configured URL."""
+        """Fetch bundle from the configured URL, bypassing system proxy."""
         logger.debug(f"Fetching bundle from {self.bundle_url}")
         try:
-            with urlopen(self.bundle_url, timeout=30) as response:
+            # IMPORTANT: Use a direct connection without proxy
+            # This is necessary because when mitmproxy restarts, the system proxy
+            # may still be enabled but the proxy isn't running yet, causing
+            # "Connection refused" errors
+            no_proxy_handler = ProxyHandler({})  # Empty dict = no proxy
+            opener = build_opener(no_proxy_handler)
+            with opener.open(self.bundle_url, timeout=30) as response:
                 data = json.loads(response.read().decode("utf-8"))
         except URLError as e:
             raise RuntimeError(f"Failed to fetch bundle: {e}") from e

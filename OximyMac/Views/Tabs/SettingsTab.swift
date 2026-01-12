@@ -319,8 +319,10 @@ struct SettingsTab: View {
             .padding(16)
         }
         .onAppear {
+            // Only check cert status on appear - it rarely changes
+            // DO NOT call proxyService.checkStatus() here - it overwrites the known state
+            // and can cause flickering when moving screens
             certService.checkStatus()
-            proxyService.checkStatus()
         }
     }
 
@@ -368,8 +370,14 @@ struct SettingsTab: View {
 
         Task {
             do {
-                // Force bundle refresh by restarting mitmproxy with force_refresh flag
+                // Force bundle refresh by restarting mitmproxy
                 try await mitmService.refreshBundle()
+
+                // Re-enable proxy on the new port (port may change after restart)
+                if let newPort = mitmService.currentPort {
+                    try await proxyService.enableProxy(port: newPort)
+                }
+
                 lastBundleRefresh = Date()
             } catch {
                 print("Failed to refresh bundle: \(error)")

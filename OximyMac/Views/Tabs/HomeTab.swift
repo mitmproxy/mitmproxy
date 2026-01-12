@@ -96,8 +96,11 @@ struct HomeTab: View {
             .padding(.bottom, 8)
         }
         .onAppear {
+            // Only check cert status on appear - it rarely changes
+            // DO NOT call proxyService.checkStatus() here - it overwrites the known state
+            // by querying the system, which can cause flickering when moving screens
+            // ProxyService.isProxyEnabled is already tracked and updated by enableProxy/disableProxy
             certService.checkStatus()
-            proxyService.checkStatus()
         }
     }
 

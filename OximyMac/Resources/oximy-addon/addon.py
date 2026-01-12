@@ -7,11 +7,9 @@ normalizes events, and writes to JSONL files.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import subprocess
 import sys
-import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -165,8 +163,6 @@ class OximyAddon:
         self._tls_passthrough: TLSPassthrough | None = None
         self._sse_buffers: dict[str, SSEBuffer] = {}
         self._enabled: bool = False
-        self._refresh_task: asyncio.Task | None = None
-        self._last_bundle_refresh: float = 0
 
     def load(self, loader) -> None:
         """Register addon options."""
@@ -189,16 +185,10 @@ class OximyAddon:
             help="URL of the OISP bundle JSON",
         )
         loader.add_option(
-            name="oximy_bundle_refresh_minutes",
+            name="oximy_bundle_cache_minutes",
             typespec=int,
             default=30,
-            help="Bundle refresh interval in minutes (default: 30)",
-        )
-        loader.add_option(
-            name="oximy_bundle_force_refresh",
-            typespec=bool,
-            default=False,
-            help="Force refresh bundle from URL on next check (resets to False after refresh)",
+            help="Bundle cache expiry in minutes (default: 30). Bundle is re-fetched from URL when cache expires.",
         )
         loader.add_option(
             name="oximy_include_raw",
@@ -227,19 +217,18 @@ class OximyAddon:
 
         self._enabled = True
 
-        # Convert minutes to hours for BundleLoader
-        refresh_minutes = ctx.options.oximy_bundle_refresh_minutes
-        refresh_hours = refresh_minutes / 60.0
+        # Convert minutes to hours for BundleLoader cache expiry
+        cache_minutes = ctx.options.oximy_bundle_cache_minutes
+        cache_hours = cache_minutes / 60.0
 
         # Initialize bundle loader
         self._bundle_loader = BundleLoader(
             bundle_url=ctx.options.oximy_bundle_url,
-            max_age_hours=refresh_hours,
+            max_age_hours=cache_hours,
         )
 
         try:
             self._bundle = self._bundle_loader.load()
-            self._last_bundle_refresh = time.time()
             logger.info(f"Loaded OISP bundle version {self._bundle.bundle_version}")
         except RuntimeError as e:
             logger.error(f"Failed to load OISP bundle: {e}")
@@ -268,10 +257,10 @@ class OximyAddon:
         # Enable system proxy (development convenience)
         _set_macos_proxy(enable=True)
 
-        # Start periodic bundle refresh task
-        self._start_periodic_refresh()
+        # Bundle refresh is handled by cache expiry in BundleLoader
+        # When cache expires (default: 30 min), bundle is re-fetched from URL on next request
 
-        logger.info(f"Oximy addon enabled, writing to {output_dir} (bundle refresh every {refresh_minutes} min)")
+        logger.info(f"Oximy addon enabled, writing to {output_dir} (bundle cache: {cache_minutes} min)")
 
     def request(self, flow: http.HTTPFlow) -> None:
         """Classify incoming requests and capture client process info."""
@@ -505,78 +494,12 @@ class OximyAddon:
         if self._enabled and self._tls_passthrough:
             self._tls_passthrough.tls_failed_client(data)
 
-    # -------------------------------------------------------------------------
-    # Periodic Bundle Refresh
-    # -------------------------------------------------------------------------
-
-    def _start_periodic_refresh(self) -> None:
-        """Start the periodic bundle refresh background task."""
-        if self._refresh_task is not None:
-            self._refresh_task.cancel()
-
-        async def refresh_loop():
-            while self._enabled:
-                try:
-                    refresh_minutes = ctx.options.oximy_bundle_refresh_minutes
-                    await asyncio.sleep(refresh_minutes * 60)
-
-                    if not self._enabled:
-                        break
-
-                    # Check if force refresh was requested
-                    force = ctx.options.oximy_bundle_force_refresh
-                    if force:
-                        logger.info("Force bundle refresh requested")
-                        # Reset the flag
-                        ctx.options.update(oximy_bundle_force_refresh=False)
-
-                    await self._refresh_bundle(force_refresh=force)
-                except asyncio.CancelledError:
-                    break
-                except Exception as e:
-                    logger.error(f"Error in bundle refresh loop: {e}")
-
-        try:
-            loop = asyncio.get_event_loop()
-            self._refresh_task = loop.create_task(refresh_loop())
-            logger.debug("Started periodic bundle refresh task")
-        except RuntimeError:
-            logger.warning("No event loop available for periodic refresh")
-
-    async def _refresh_bundle(self, force_refresh: bool = False) -> None:
-        """Refresh the bundle from URL if stale or forced."""
-        if not self._bundle_loader:
-            return
-
-        try:
-            old_version = self._bundle.bundle_version if self._bundle else "none"
-            new_bundle = self._bundle_loader.load(force_refresh=force_refresh)
-
-            if new_bundle.bundle_version != old_version:
-                self._bundle = new_bundle
-                self._matcher = TrafficMatcher(self._bundle)
-                self._request_parser = RequestParser(self._bundle.parsers)
-                self._response_parser = ResponseParser(self._bundle.parsers)
-                self._last_bundle_refresh = time.time()
-                logger.info(
-                    f"Bundle refreshed: {old_version} -> {new_bundle.bundle_version}"
-                )
-            else:
-                logger.debug(f"Bundle unchanged (version {old_version})")
-        except Exception as e:
-            logger.warning(f"Failed to refresh bundle: {e}")
-
     def done(self) -> None:
         """Clean up on shutdown."""
         self._cleanup()
 
     def _cleanup(self) -> None:
         """Clean up resources."""
-        # Cancel periodic refresh task
-        if self._refresh_task is not None:
-            self._refresh_task.cancel()
-            self._refresh_task = None
-
         # Disable system proxy (development convenience)
         _set_macos_proxy(enable=False)
 

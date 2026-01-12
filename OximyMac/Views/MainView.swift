@@ -166,8 +166,10 @@ struct SetupView: View {
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
+            // Only check cert status on appear - it rarely changes
+            // DO NOT call proxyService.checkStatus() here - it overwrites the known state
+            // and can cause flickering when moving screens
             certService.checkStatus()
-            proxyService.checkStatus()
         }
     }
 
