@@ -14,6 +14,7 @@ struct SettingsTab: View {
     @State private var isClearingData = false
     @State private var isRefreshingBundle = false
     @State private var lastBundleRefresh: Date? = nil
+    @State private var isForceSyncing = false
 
     var body: some View {
         ScrollView {
@@ -231,6 +232,22 @@ struct SettingsTab: View {
                                 Text("\(syncService.pendingEventCount) events pending sync")
                                     .font(.caption)
                                     .foregroundColor(.orange)
+
+                                Spacer()
+
+                                Button {
+                                    forceSync()
+                                } label: {
+                                    if isForceSyncing {
+                                        ProgressView()
+                                            .scaleEffect(0.6)
+                                    } else {
+                                        Text("Sync Now")
+                                    }
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                                .disabled(isForceSyncing || !appState.isLoggedIn)
                             }
                         }
 
@@ -362,6 +379,15 @@ struct SettingsTab: View {
                 print("Failed to clear local data: \(error)")
             }
             isClearingData = false
+        }
+    }
+
+    private func forceSync() {
+        isForceSyncing = true
+
+        Task {
+            await syncService.syncNow()
+            isForceSyncing = false
         }
     }
 
