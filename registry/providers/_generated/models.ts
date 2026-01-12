@@ -1,7 +1,7 @@
 // OISP Model Registry Types
 // Auto-generated from models.dev - DO NOT EDIT MANUALLY
 // Source: https://models.dev/api.json
-// Generated: 2026-01-12T03:54:49.160263+00:00
+// Generated: 2026-01-12T03:56:52.176090+00:00
 
 export type AIProvider =
   | 'abacus'
