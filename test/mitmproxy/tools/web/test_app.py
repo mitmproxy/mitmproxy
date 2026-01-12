@@ -115,7 +115,19 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         """Test that JavaScript files are served with the correct MIME type."""
         # Verify that .js files are served with text/javascript MIME type
         # This is critical for ES6 module scripts which enforce strict MIME type checking
-        resp = self.fetch("/static/index-Bt--WL1e.js")
+        import glob
+        import os
+        
+        # Find any .js file in the static directory
+        static_dir = os.path.join(os.path.dirname(app.__file__), "static")
+        js_files = glob.glob(os.path.join(static_dir, "*.js"))
+        assert js_files, "No .js files found in static directory"
+        
+        # Get the filename of the first .js file
+        js_filename = os.path.basename(js_files[0])
+        
+        # Fetch the JavaScript file and verify the Content-Type header
+        resp = self.fetch(f"/static/{js_filename}")
         assert resp.code == 200
         assert resp.headers.get("Content-Type") == "text/javascript"
 
