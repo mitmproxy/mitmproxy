@@ -255,17 +255,31 @@ export NVM_DIR="$HOME/.nvm"
 
 # Check if create-dmg is available
 if command -v create-dmg &> /dev/null; then
+    echo "    Found create-dmg at: $(which create-dmg)"
     cd "$BUILD_DIR"
     # Remove existing DMG if present
     rm -f "$DMG_PATH" 2>/dev/null || true
     rm -f "$APP_NAME $VERSION.dmg" 2>/dev/null || true
 
     # create-dmg automatically handles Applications symlink and styling
-    create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite 2>&1 || true
+    # Use --no-code-sign since the app is already signed, and DMG will be signed during notarization
+    if create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite --no-code-sign 2>&1; then
+        echo "    create-dmg succeeded"
+    else
+        echo "    create-dmg exited with non-zero status (may still have created DMG)"
+    fi
 
     # create-dmg names files as "AppName VERSION.dmg", rename to our format
     if [ -f "$BUILD_DIR/$APP_NAME $VERSION.dmg" ]; then
         mv "$BUILD_DIR/$APP_NAME $VERSION.dmg" "$DMG_PATH"
+        echo "    DMG created: $DMG_PATH"
+    else
+        echo "    ERROR: Expected DMG not found at $BUILD_DIR/$APP_NAME $VERSION.dmg"
+        echo "    Falling back to hdiutil..."
+        hdiutil create -volname "$APP_NAME" \
+            -srcfolder "$APP_BUNDLE" \
+            -ov -format UDZO \
+            "$DMG_PATH"
     fi
 else
     echo "    WARNING: create-dmg not found, falling back to basic DMG creation"

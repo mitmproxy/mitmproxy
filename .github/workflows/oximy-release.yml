@@ -83,6 +83,16 @@ jobs:
         working-directory: OximyMac
         run: swift build --target OximyMac 2>/dev/null || true
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install create-dmg
+        run: |
+          npm install -g create-dmg
+          echo "create-dmg installed at: $(which create-dmg)"
+
       - name: Build macOS app
         id: build
         working-directory: OximyMac
