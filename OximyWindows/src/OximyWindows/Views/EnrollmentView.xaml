@@ -1,0 +1,224 @@
+<UserControl x:Class="OximyWindows.Views.EnrollmentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignWidth="320" d:DesignHeight="400"
+             Background="#1A1A2E">
+
+    <UserControl.Resources>
+        <!-- Digit TextBox Style -->
+        <Style x:Key="DigitTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="MaxLength" Value="1"/>
+            <Setter Property="Background" Value="#2D2D44"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3D3D5C"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CaretBrush" Value="#6C63FF"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#6C63FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary Button Style -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#6C63FF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="24,12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#5B54E6"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#4A4A6A"/>
+                                <Setter Property="Foreground" Value="#8A8AAA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Link Button Style -->
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#6C63FF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   TextDecorations="Underline"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#8B84FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Progress Indicator -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+            <Ellipse Width="10" Height="10" Fill="#6C63FF"/>
+            <Rectangle Width="40" Height="2" Fill="#3D3D5C" Margin="8,0"/>
+            <Ellipse Width="10" Height="10" Fill="#3D3D5C"/>
+        </StackPanel>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="1"
+                   Text="Connect to Workspace"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Foreground="White"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,8"/>
+
+        <!-- Subtitle -->
+        <TextBlock Grid.Row="2"
+                   Text="Enter the 6-digit code from your workspace"
+                   FontSize="13"
+                   Foreground="#9999AA"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Margin="0,0,0,32"/>
+
+        <!-- 6-Digit Code Entry -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
+            <TextBox x:Name="Digit1" Style="{StaticResource DigitTextBoxStyle}"
+                     PreviewTextInput="OnDigitPreviewTextInput"
+                     PreviewKeyDown="OnDigitKeyDown"
+                     TextChanged="OnDigitTextChanged"
+                     GotFocus="OnDigitGotFocus"
+                     Margin="0,0,8,0"/>
+            <TextBox x:Name="Digit2" Style="{StaticResource DigitTextBoxStyle}"
+                     PreviewTextInput="OnDigitPreviewTextInput"
+                     PreviewKeyDown="OnDigitKeyDown"
+                     TextChanged="OnDigitTextChanged"
+                     GotFocus="OnDigitGotFocus"
+                     Margin="0,0,8,0"/>
+            <TextBox x:Name="Digit3" Style="{StaticResource DigitTextBoxStyle}"
+                     PreviewTextInput="OnDigitPreviewTextInput"
+                     PreviewKeyDown="OnDigitKeyDown"
+                     TextChanged="OnDigitTextChanged"
+                     GotFocus="OnDigitGotFocus"
+                     Margin="0,0,16,0"/>
+            <TextBox x:Name="Digit4" Style="{StaticResource DigitTextBoxStyle}"
+                     PreviewTextInput="OnDigitPreviewTextInput"
+                     PreviewKeyDown="OnDigitKeyDown"
+                     TextChanged="OnDigitTextChanged"
+                     GotFocus="OnDigitGotFocus"
+                     Margin="0,0,8,0"/>
+            <TextBox x:Name="Digit5" Style="{StaticResource DigitTextBoxStyle}"
+                     PreviewTextInput="OnDigitPreviewTextInput"
+                     PreviewKeyDown="OnDigitKeyDown"
+                     TextChanged="OnDigitTextChanged"
+                     GotFocus="OnDigitGotFocus"
+                     Margin="0,0,8,0"/>
+            <TextBox x:Name="Digit6" Style="{StaticResource DigitTextBoxStyle}"
+                     PreviewTextInput="OnDigitPreviewTextInput"
+                     PreviewKeyDown="OnDigitKeyDown"
+                     TextChanged="OnDigitTextChanged"
+                     GotFocus="OnDigitGotFocus"/>
+        </StackPanel>
+
+        <!-- Error Message (fixed height to prevent layout shifts) -->
+        <Border Grid.Row="4" Height="40">
+            <TextBlock x:Name="ErrorText"
+                       FontSize="13"
+                       Foreground="#FF6B6B"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Visibility="Collapsed"/>
+        </Border>
+
+        <!-- Connect Button -->
+        <Button Grid.Row="5"
+                x:Name="ConnectButton"
+                Content="Connect"
+                Style="{StaticResource PrimaryButtonStyle}"
+                Click="OnConnectClick"
+                IsEnabled="False"
+                HorizontalAlignment="Center"
+                MinWidth="200"/>
+
+        <!-- Loading Indicator -->
+        <StackPanel Grid.Row="5"
+                    x:Name="LoadingPanel"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Visibility="Collapsed">
+            <TextBlock Text="Connecting..."
+                       Foreground="#9999AA"
+                       FontSize="14"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Sign Up Link -->
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+            <TextBlock Text="Don't have a workspace? "
+                       Foreground="#9999AA"
+                       FontSize="13"
+                       VerticalAlignment="Center"/>
+            <Button Content="Sign up"
+                    Style="{StaticResource LinkButtonStyle}"
+                    Click="OnSignUpClick"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

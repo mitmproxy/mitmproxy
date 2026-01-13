@@ -31,10 +31,16 @@ public partial class TrayPopup : Window
     {
         ContentHost.Content = AppState.Instance.Phase switch
         {
-            Phase.Onboarding => new OnboardingView(),
-            Phase.Permissions => new PermissionsView(),
-            Phase.Login => new LoginView(),
-            Phase.Connected => new StatusView(),
+            // New three-phase flow
+            Phase.Enrollment => new EnrollmentView(),
+            Phase.Setup => new SetupView(),
+            Phase.Connected or Phase.Ready => new StatusView(),
+
+            // Legacy phases for backwards compatibility
+            Phase.Onboarding => new EnrollmentView(),
+            Phase.Permissions => new SetupView(),
+            Phase.Login => new EnrollmentView(),
+
             _ => new StatusView()
         };
     }

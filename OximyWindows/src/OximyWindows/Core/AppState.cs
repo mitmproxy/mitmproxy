@@ -6,13 +6,14 @@ namespace OximyWindows.Core;
 /// <summary>
 /// Global application state management.
 /// Implements singleton pattern with observable properties.
+/// Matches the Mac app's three-phase flow: Enrollment -> Setup -> Ready
 /// </summary>
 public class AppState : INotifyPropertyChanged
 {
     private static AppState? _instance;
     public static AppState Instance => _instance ??= new AppState();
 
-    private Phase _phase = Phase.Onboarding;
+    private Phase _phase = Phase.Enrollment;
     public Phase Phase
     {
         get => _phase;
@@ -40,6 +41,20 @@ public class AppState : INotifyPropertyChanged
         set => SetProperty(ref _workspaceName, value);
     }
 
+    private string _workspaceId = string.Empty;
+    public string WorkspaceId
+    {
+        get => _workspaceId;
+        private set => SetProperty(ref _workspaceId, value);
+    }
+
+    private string _deviceId = string.Empty;
+    public string DeviceId
+    {
+        get => _deviceId;
+        private set => SetProperty(ref _deviceId, value);
+    }
+
     private string _deviceToken = string.Empty;
     public string DeviceToken
     {
@@ -61,11 +76,39 @@ public class AppState : INotifyPropertyChanged
         set => SetProperty(ref _eventsCapturedToday, value);
     }
 
+    private int _eventsPending;
+    public int EventsPending
+    {
+        get => _eventsPending;
+        set => SetProperty(ref _eventsPending, value);
+    }
+
+    private DateTime? _lastSyncTime;
+    public DateTime? LastSyncTime
+    {
+        get => _lastSyncTime;
+        set => SetProperty(ref _lastSyncTime, value);
+    }
+
     private string _errorMessage = string.Empty;
     public string ErrorMessage
     {
         get => _errorMessage;
         set => SetProperty(ref _errorMessage, value);
+    }
+
+    private bool _isSetupCertificateComplete;
+    public bool IsSetupCertificateComplete
+    {
+        get => _isSetupCertificateComplete;
+        set => SetProperty(ref _isSetupCertificateComplete, value);
+    }
+
+    private bool _isSetupProxyComplete;
+    public bool IsSetupProxyComplete
+    {
+        get => _isSetupProxyComplete;
+        set => SetProperty(ref _isSetupProxyComplete, value);
     }
 
     private AppState()
@@ -84,22 +127,27 @@ public class AppState : INotifyPropertyChanged
             ? Environment.MachineName
             : settings.DeviceName;
 
-        if (settings.OnboardingComplete)
+        // Load saved credentials
+        if (!string.IsNullOrEmpty(settings.DeviceToken))
         {
-            if (!string.IsNullOrEmpty(settings.DeviceToken))
+            DeviceToken = settings.DeviceToken;
+            DeviceId = settings.DeviceId;
+            WorkspaceName = settings.WorkspaceName;
+            WorkspaceId = settings.WorkspaceId;
+
+            // Check if setup is complete
+            if (settings.SetupComplete)
             {
-                WorkspaceName = settings.WorkspaceName;
-                DeviceToken = settings.DeviceToken;
                 Phase = Phase.Connected;
             }
             else
             {
-                Phase = Phase.Login;
+                Phase = Phase.Setup;
             }
         }
         else
         {
-            Phase = Phase.Onboarding;
+            Phase = Phase.Enrollment;
         }
 
         // Update events count
@@ -107,27 +155,82 @@ public class AppState : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Complete the onboarding phase.
+    /// Complete enrollment with device registration response.
+    /// Transitions to Setup phase.
     /// </summary>
-    public void CompleteOnboarding()
+    public void CompleteEnrollment(string deviceId, string deviceToken, string workspaceName, string workspaceId)
     {
         var settings = Properties.Settings.Default;
-        settings.OnboardingComplete = true;
+        settings.DeviceId = deviceId;
+        settings.DeviceToken = deviceToken;
+        settings.WorkspaceName = workspaceName;
+        settings.WorkspaceId = workspaceId;
         settings.Save();
 
-        Phase = Phase.Permissions;
+        DeviceId = deviceId;
+        DeviceToken = deviceToken;
+        WorkspaceName = workspaceName;
+        WorkspaceId = workspaceId;
+        Phase = Phase.Setup;
     }
 
     /// <summary>
-    /// Complete the permissions phase.
+    /// Mark certificate setup as complete.
     /// </summary>
-    public void CompletePermissions()
+    public void CompleteCertificateSetup()
     {
-        Phase = Phase.Login;
+        IsSetupCertificateComplete = true;
+        CheckSetupComplete();
     }
 
     /// <summary>
-    /// Complete login with workspace credentials.
+    /// Mark proxy setup as complete.
+    /// </summary>
+    public void CompleteProxySetup()
+    {
+        IsSetupProxyComplete = true;
+        CheckSetupComplete();
+    }
+
+    /// <summary>
+    /// Check if all setup steps are complete and transition to Connected phase.
+    /// </summary>
+    private void CheckSetupComplete()
+    {
+        if (IsSetupCertificateComplete && IsSetupProxyComplete)
+        {
+            var settings = Properties.Settings.Default;
+            settings.SetupComplete = true;
+            settings.Save();
+
+            Phase = Phase.Connected;
+        }
+    }
+
+    /// <summary>
+    /// Complete the entire setup and transition to Connected phase.
+    /// </summary>
+    public void CompleteSetup()
+    {
+        var settings = Properties.Settings.Default;
+        settings.SetupComplete = true;
+        settings.Save();
+
+        IsSetupCertificateComplete = true;
+        IsSetupProxyComplete = true;
+        Phase = Phase.Connected;
+    }
+
+    /// <summary>
+    /// Skip setup for now (set up later).
+    /// </summary>
+    public void SkipSetup()
+    {
+        Phase = Phase.Connected;
+    }
+
+    /// <summary>
+    /// Complete login with workspace credentials (legacy method for compatibility).
     /// </summary>
     public void CompleteLogin(string workspaceName, string deviceToken)
     {
@@ -142,34 +245,57 @@ public class AppState : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Log out and return to login phase.
+    /// Log out and return to enrollment phase.
     /// </summary>
     public void Logout()
     {
         var settings = Properties.Settings.Default;
         settings.DeviceToken = string.Empty;
+        settings.DeviceId = string.Empty;
         settings.WorkspaceName = string.Empty;
+        settings.WorkspaceId = string.Empty;
+        settings.SetupComplete = false;
         settings.Save();
 
-        WorkspaceName = string.Empty;
         DeviceToken = string.Empty;
-        Phase = Phase.Login;
+        DeviceId = string.Empty;
+        WorkspaceName = string.Empty;
+        WorkspaceId = string.Empty;
+        IsSetupCertificateComplete = false;
+        IsSetupProxyComplete = false;
+        Phase = Phase.Enrollment;
     }
 
     /// <summary>
-    /// Reset to initial onboarding state.
+    /// Reset to initial enrollment state.
+    /// </summary>
+    public void Reset()
+    {
+        Logout();
+    }
+
+    /// <summary>
+    /// Complete the onboarding phase (legacy).
+    /// </summary>
+    public void CompleteOnboarding()
+    {
+        Phase = Phase.Enrollment;
+    }
+
+    /// <summary>
+    /// Complete the permissions phase (legacy).
+    /// </summary>
+    public void CompletePermissions()
+    {
+        Phase = Phase.Connected;
+    }
+
+    /// <summary>
+    /// Reset to initial onboarding state (legacy).
     /// </summary>
     public void ResetOnboarding()
     {
-        var settings = Properties.Settings.Default;
-        settings.OnboardingComplete = false;
-        settings.DeviceToken = string.Empty;
-        settings.WorkspaceName = string.Empty;
-        settings.Save();
-
-        WorkspaceName = string.Empty;
-        DeviceToken = string.Empty;
-        Phase = Phase.Onboarding;
+        Reset();
     }
 
     /// <summary>
@@ -190,6 +316,26 @@ public class AppState : INotifyPropertyChanged
     public void RefreshEventsCount()
     {
         EventsCapturedToday = Constants.CountTodayEvents();
+    }
+
+    /// <summary>
+    /// Get relative time string for last sync.
+    /// </summary>
+    public string GetLastSyncRelativeTime()
+    {
+        if (!LastSyncTime.HasValue)
+            return "Never";
+
+        var elapsed = DateTime.UtcNow - LastSyncTime.Value;
+
+        if (elapsed.TotalSeconds < 60)
+            return "Just now";
+        if (elapsed.TotalMinutes < 60)
+            return $"{(int)elapsed.TotalMinutes} min ago";
+        if (elapsed.TotalHours < 24)
+            return $"{(int)elapsed.TotalHours} hours ago";
+
+        return $"{(int)elapsed.TotalDays} days ago";
     }
 
     #region INotifyPropertyChanged

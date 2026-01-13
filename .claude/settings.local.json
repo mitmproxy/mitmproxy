@@ -21,9 +21,15 @@
       "Bash(\"d:\\\\Hirak Desai\\\\Developer\\\\Oximy\\\\mitmproxy\\\\OximyWindows\\\\src\\\\OximyWindows\\\\Resources\\\\python-embed\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, r''d:\\\\Hirak Desai\\\\Developer\\\\Oximy\\\\mitmproxy\\\\OximyWindows\\\\src\\\\OximyWindows\\\\Resources\\\\oximy-addon''\\); import addon; print\\(''Addon loaded successfully''\\)\")",
       "Bash(reg query \"HKCU\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Internet Settings\" /v ProxyEnable)",
       "Bash(certutil:*)",
+      "Bash(dotnet run)",
+      "Bash(start OximyWindows.exe)",
       "Bash(ls:*)",
       "Bash(log show:*)",
-      "Bash(mdfind:*)"
+      "Bash(mdfind:*)",
+      "Bash(find:*)",
+      "Bash(plutil:*)",
+      "Bash(./Scripts/build-release.sh:*)",
+      "Bash(open:*)"
     ]
   }
 }

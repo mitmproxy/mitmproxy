@@ -23,6 +23,8 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Velopack" Version="0.0.630" />
+    <PackageReference Include="Sentry" Version="4.3.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
   <!-- Copy Python embed and addon to output -->

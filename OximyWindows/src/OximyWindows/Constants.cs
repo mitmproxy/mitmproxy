@@ -31,6 +31,7 @@ public static class Constants
     public static string TracesDir => Path.Combine(OximyDir, "traces");
     public static string LogsDir => Path.Combine(OximyDir, "logs");
     public static string CacheDir => Path.Combine(OximyDir, "cache");
+    public static string SyncStatePath => Path.Combine(OximyDir, "sync_state.json");
 
     // Certificate file paths
     public static string CACertPath => Path.Combine(OximyDir, "mitmproxy-ca-cert.pem");
@@ -43,18 +44,31 @@ public static class Constants
     public static string AddonDir => Path.Combine(AppContext.BaseDirectory, "Resources", "oximy-addon");
     public static string AddonPath => Path.Combine(AddonDir, "addon.py");
 
-    // URLs
-    public const string SignUpUrl = "https://oximy.com/signup";
-    public const string HelpUrl = "https://oximy.com/help";
+    // URLs (matching Mac app)
+    public const string SignUpUrl = "https://app.oximy.com";
+    public const string HelpUrl = "https://docs.oximy.com";
     public const string SupportEmail = "support@oximy.com";
     public const string TermsUrl = "https://oximy.com/terms";
     public const string PrivacyUrl = "https://oximy.com/privacy";
-    public const string GitHubUrl = "https://github.com/oximy/oximy";
-    public const string FeedbackUrl = "https://github.com/oximy/oximy/issues";
+    public const string GitHubUrl = "https://github.com/oximyhq/sensor";
+    public const string FeedbackUrl = "https://github.com/oximyhq/sensor/issues";
 
-    // API URLs
-    public const string ApiBaseUrl = "https://api.oximy.com";
+    // API URLs (must end with trailing slash for proper URI resolution)
+    public const string ApiBaseUrl = "https://api.oximy.com/api/v1/";  // Production API
+    // public const string ApiBaseUrl = "http://localhost:4000/api/v1/";  // For local development
     public const string OispBundleUrl = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json";
+
+    // API Endpoints (no leading slash - relative to BaseAddress)
+    public const string DeviceRegisterEndpoint = "devices/register";
+    public const string DeviceHeartbeatEndpoint = "devices/heartbeat";
+    public const string DeviceEventsEndpoint = "devices/events";
+
+    // Sync Configuration
+    public const int DefaultHeartbeatIntervalSeconds = 60;
+    public const int DefaultEventBatchSize = 100;
+    public const int DefaultEventFlushIntervalSeconds = 5;
+    public const int MaxAuthRetries = 5;
+    public const int ApiTimeoutSeconds = 30;
 
     // Proxy bypass list
     public const string ProxyBypassList = "localhost;127.0.0.1;<local>";

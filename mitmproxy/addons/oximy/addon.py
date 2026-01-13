@@ -73,26 +73,65 @@ OXIMY_METADATA_KEY = "oximy_match"
 OXIMY_CLIENT_KEY = "oximy_client"
 
 # -------------------------------------------------------------------------
-# macOS System Proxy Configuration (Development Only)
+# System Proxy Configuration (Development Only)
 # Set OXIMY_AUTO_PROXY=1 to enable automatic proxy setup/teardown
 # Comment out or set to 0 for production deployments
 # -------------------------------------------------------------------------
-OXIMY_AUTO_PROXY_ENABLED = True  # Disabled - proxy management handled by OximyMac app
+OXIMY_AUTO_PROXY_ENABLED = True
 OXIMY_PROXY_HOST = "127.0.0.1"
 OXIMY_PROXY_PORT = "8088"
-OXIMY_NETWORK_SERVICE = "Wi-Fi"  # Change if using different network interface
+OXIMY_NETWORK_SERVICE = "Wi-Fi"  # macOS: Change if using different network interface
+
+
+def _set_system_proxy(enable: bool) -> None:
+    """
+    Enable or disable system proxy settings (cross-platform).
+
+    This is a development convenience - set OXIMY_AUTO_PROXY_ENABLED=False
+    for production deployments where proxy should be managed externally.
+    """
+    if not OXIMY_AUTO_PROXY_ENABLED:
+        return
+
+    if sys.platform == "darwin":
+        _set_macos_proxy(enable)
+    elif sys.platform == "win32":
+        _set_windows_proxy(enable)
+    else:
+        logger.debug("Auto proxy configuration not supported on this platform")
+
+
+def _set_windows_proxy(enable: bool) -> None:
+    """
+    Enable or disable Windows system proxy settings via registry.
+
+    Modifies Internet Settings in the Windows registry to set/unset
+    the system-wide HTTP/HTTPS proxy.
+    """
+    import winreg
+
+    INTERNET_SETTINGS = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+    proxy_server = f"{OXIMY_PROXY_HOST}:{OXIMY_PROXY_PORT}"
+
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER, INTERNET_SETTINGS, 0, winreg.KEY_WRITE
+        ) as key:
+            if enable:
+                winreg.SetValueEx(key, "ProxyEnable", 0, winreg.REG_DWORD, 1)
+                winreg.SetValueEx(key, "ProxyServer", 0, winreg.REG_SZ, proxy_server)
+                print(f"[Oximy] Windows system proxy enabled: {proxy_server}")
+            else:
+                winreg.SetValueEx(key, "ProxyEnable", 0, winreg.REG_DWORD, 0)
+                print("[Oximy] Windows system proxy disabled")
+    except OSError as e:
+        print(f"[Oximy] Failed to set Windows proxy: {e}")
 
 
 def _set_macos_proxy(enable: bool) -> None:
     """
     Enable or disable macOS system proxy settings.
-
-    This is a development convenience - comment out OXIMY_AUTO_PROXY_ENABLED
-    for production deployments where proxy should be managed externally.
     """
-    if sys.platform != "darwin" or not OXIMY_AUTO_PROXY_ENABLED:
-        return
-
     try:
         if enable:
             # Enable HTTPS proxy
@@ -119,7 +158,7 @@ def _set_macos_proxy(enable: bool) -> None:
                 check=True,
                 capture_output=True,
             )
-            logger.info(f"System proxy enabled: {OXIMY_PROXY_HOST}:{OXIMY_PROXY_PORT}")
+            logger.info(f"macOS system proxy enabled: {OXIMY_PROXY_HOST}:{OXIMY_PROXY_PORT}")
         else:
             # Disable HTTPS proxy
             subprocess.run(
@@ -138,10 +177,10 @@ def _set_macos_proxy(enable: bool) -> None:
                 check=True,
                 capture_output=True,
             )
-            logger.info("System proxy disabled")
+            logger.info("macOS system proxy disabled")
     except subprocess.CalledProcessError as e:
         logger.warning(
-            f"Failed to {'enable' if enable else 'disable'} system proxy: {e}"
+            f"Failed to {'enable' if enable else 'disable'} macOS system proxy: {e}"
         )
     except FileNotFoundError:
         logger.warning("networksetup command not found - not on macOS?")
@@ -298,7 +337,7 @@ class OximyAddon:
         self._tls_passthrough.set_process_resolver(self._process_resolver)
 
         # Enable system proxy (development convenience)
-        _set_macos_proxy(enable=True)
+        _set_system_proxy(enable=True)
 
         logger.info(f"Output directory: {output_dir}")
         logger.info(
@@ -998,7 +1037,7 @@ class OximyAddon:
     def _cleanup(self) -> None:
         """Clean up resources."""
         # Disable system proxy (development convenience)
-        _set_macos_proxy(enable=False)
+        _set_system_proxy(enable=False)
 
         if self._writer:
             self._writer.close()
