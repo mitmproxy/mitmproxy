@@ -1,12 +1,12 @@
 # OISP Model Registry
 # Auto-generated from models.dev - DO NOT EDIT MANUALLY
 # Source: https://models.dev/api.json
-# Generated: 2026-01-12T18:11:17.988800+00:00
+# Generated: 2026-01-13T10:52:49.955903+00:00
 #
 # To regenerate: python scripts/sync-models.py
 
 version: '0.1'
-generated_at: '2026-01-12T18:11:17.988816+00:00'
+generated_at: '2026-01-13T10:52:49.955922+00:00'
 source: models.dev
 source_url: 'https://models.dev/api.json'
 
@@ -523,7 +523,7 @@ providers:
   aihubmix:
     name: 'AIHubMix'
     logo_url: 'https://models.dev/logos/aihubmix.svg'
-    model_count: 33
+    model_count: 34
     models:
       'Kimi-K2-0905':
         name: 'Kimi K2 0905'
@@ -584,7 +584,8 @@ providers:
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-07-31'
       'coding-glm-4.7-free':
-        name: 'Coding GLM-4.7 Free'
+        name: 'Coding GLM 4.7 Free'
+        family: 'glm-4.7'
         mode: chat
         max_input_tokens: 204800
         max_output_tokens: 131072
@@ -595,6 +596,16 @@ providers:
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-04'
         open_weights: true
+      'coding-minimax-m2.1-free':
+        name: 'Coding MiniMax M2.1 Free'
+        family: 'minimax'
+        mode: chat
+        max_input_tokens: 204800
+        max_output_tokens: 131072
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, reasoning, temperature]
+        open_weights: true
       'deepseek-v3.2':
         name: 'DeepSeek-V3.2'
         family: 'deepseek-v3'
@@ -603,6 +614,27 @@ providers:
         max_output_tokens: 64000
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.00045
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-07'
+        open_weights: true
+      'deepseek-v3.2-fast':
+        name: 'DeepSeek-V3.2-Fast'
+        family: 'deepseek-v3'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.0011
+        output_cost_per_1k: 0.00329
+        knowledge_cutoff: '2024-07'
+        open_weights: true
+      'deepseek-v3.2-speciale':
+        name: 'DeepSeek V3.2 Speciale'
+        family: 'deepseek-v3'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00058
+        output_cost_per_1k: 0.00168
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-07'
         open_weights: true
@@ -697,17 +729,6 @@ providers:
         knowledge_cutoff: '2024-04'
       'gpt-4o':
         name: 'GPT-4o'
-        family: 'gpt-4o'
-        mode: chat
-        max_input_tokens: 128000
-        max_output_tokens: 16384
-        input_cost_per_1k: 0.0025
-        output_cost_per_1k: 0.01
-        cache_read_cost_per_1k: 0.00125
-        capabilities: [function_calling, temperature, vision]
-        knowledge_cutoff: '2023-09'
-      'gpt-4o-2024-11-20':
-        name: 'GPT-4o (2024-11-20)'
         family: 'gpt-4o'
         mode: chat
         max_input_tokens: 128000
@@ -834,16 +855,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 0.00029
         output_cost_per_1k: 0.00115
-        capabilities: [function_calling, reasoning, temperature]
-        open_weights: true
-      'minimax-m2.1-free':
-        name: 'MiniMax M2.1 Free'
-        family: 'minimax'
-        mode: chat
-        max_input_tokens: 204800
-        max_output_tokens: 131072
-        input_cost_per_1k: 0.0
-        output_cost_per_1k: 0.0
         capabilities: [function_calling, reasoning, temperature]
         open_weights: true
       'o4-mini':
@@ -2416,8 +2427,8 @@ providers:
         max_output_tokens: 64000
         input_cost_per_1k: 0.005
         output_cost_per_1k: 0.025
-        cache_read_cost_per_1k: 0.0015
-        cache_write_cost_per_1k: 0.01875
+        cache_read_cost_per_1k: 0.0005
+        cache_write_cost_per_1k: 0.00625
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
       'anthropic.claude-sonnet-4-20250514-v1:0':
@@ -2537,8 +2548,8 @@ providers:
         max_output_tokens: 64000
         input_cost_per_1k: 0.005
         output_cost_per_1k: 0.025
-        cache_read_cost_per_1k: 0.0015
-        cache_write_cost_per_1k: 0.01875
+        cache_read_cost_per_1k: 0.0005
+        cache_write_cost_per_1k: 0.00625
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
       'google.gemma-3-12b-it':
@@ -2929,8 +2940,8 @@ providers:
         max_output_tokens: 64000
         input_cost_per_1k: 0.005
         output_cost_per_1k: 0.025
-        cache_read_cost_per_1k: 0.0015
-        cache_write_cost_per_1k: 0.01875
+        cache_read_cost_per_1k: 0.0005
+        cache_write_cost_per_1k: 0.00625
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
       'claude-sonnet-4-5':
@@ -3077,9 +3088,8 @@ providers:
         mode: chat
         max_input_tokens: 128000
         max_output_tokens: 128000
-        input_cost_per_1k: 0.00028
-        output_cost_per_1k: 0.00042
-        cache_read_cost_per_1k: 2.8e-05
+        input_cost_per_1k: 0.00058
+        output_cost_per_1k: 0.00168
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-07'
         open_weights: true
@@ -3089,8 +3099,8 @@ providers:
         mode: chat
         max_input_tokens: 128000
         max_output_tokens: 128000
-        input_cost_per_1k: 0.00028
-        output_cost_per_1k: 0.00042
+        input_cost_per_1k: 0.00058
+        output_cost_per_1k: 0.00168
         capabilities: [reasoning, temperature]
         knowledge_cutoff: '2024-07'
         open_weights: true
@@ -3891,8 +3901,8 @@ providers:
         max_output_tokens: 64000
         input_cost_per_1k: 0.005
         output_cost_per_1k: 0.025
-        cache_read_cost_per_1k: 0.0015
-        cache_write_cost_per_1k: 0.01875
+        cache_read_cost_per_1k: 0.0005
+        cache_write_cost_per_1k: 0.00625
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
       'claude-sonnet-4-5':
@@ -4039,9 +4049,8 @@ providers:
         mode: chat
         max_input_tokens: 128000
         max_output_tokens: 128000
-        input_cost_per_1k: 0.00028
-        output_cost_per_1k: 0.00042
-        cache_read_cost_per_1k: 2.8e-05
+        input_cost_per_1k: 0.00058
+        output_cost_per_1k: 0.00168
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-07'
         open_weights: true
@@ -4051,8 +4060,8 @@ providers:
         mode: chat
         max_input_tokens: 128000
         max_output_tokens: 128000
-        input_cost_per_1k: 0.00028
-        output_cost_per_1k: 0.00042
+        input_cost_per_1k: 0.00058
+        output_cost_per_1k: 0.00168
         capabilities: [reasoning, temperature]
         knowledge_cutoff: '2024-07'
         open_weights: true
@@ -4989,7 +4998,7 @@ providers:
     name: 'Chutes'
     api_endpoint: 'https://llm.chutes.ai/v1'
     logo_url: 'https://models.dev/logos/chutes.svg'
-    model_count: 55
+    model_count: 56
     models:
       'MiniMaxAI/MiniMax-M2.1-TEE':
         name: 'MiniMax M2.1 TEE'
@@ -4999,8 +5008,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'NousResearch/DeepHermes-3-Mistral-24B-Preview':
@@ -5011,8 +5018,6 @@ providers:
         max_output_tokens: 32768
         input_cost_per_1k: 2e-05
         output_cost_per_1k: 0.0001
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'NousResearch/Hermes-4-14B':
@@ -5023,8 +5028,6 @@ providers:
         max_output_tokens: 40960
         input_cost_per_1k: 1e-05
         output_cost_per_1k: 5e-05
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'NousResearch/Hermes-4-405B-FP8-TEE':
@@ -5045,20 +5048,16 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 0.00011
         output_cost_per_1k: 0.00038
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'NousResearch/Hermes-4.3-36B':
         name: 'Hermes 4.3 36B'
         family: 'nousresearch'
         mode: chat
-        max_input_tokens: 524288
-        max_output_tokens: 524288
+        max_input_tokens: 32768
+        max_output_tokens: 8192
         input_cost_per_1k: 0.0001
         output_cost_per_1k: 0.00039
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [temperature]
         open_weights: true
       'OpenGVLab/InternVL3-78B-TEE':
@@ -5079,8 +5078,6 @@ providers:
         max_output_tokens: 32768
         input_cost_per_1k: 0.00013
         output_cost_per_1k: 0.00052
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'Qwen/Qwen2.5-Coder-32B-Instruct':
@@ -5091,8 +5088,6 @@ providers:
         max_output_tokens: 32768
         input_cost_per_1k: 3e-05
         output_cost_per_1k: 0.00011
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, temperature]
         open_weights: true
       'Qwen/Qwen2.5-VL-32B-Instruct':
@@ -5103,21 +5098,17 @@ providers:
         max_output_tokens: 16384
         input_cost_per_1k: 5e-05
         output_cost_per_1k: 0.00022
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, temperature, vision]
         open_weights: true
       'Qwen/Qwen2.5-VL-72B-Instruct-TEE':
         name: 'Qwen2.5 VL 72B Instruct TEE'
         family: 'qwen'
         mode: chat
-        max_input_tokens: 40960
-        max_output_tokens: 40960
+        max_input_tokens: 32768
+        max_output_tokens: 32768
         input_cost_per_1k: 0.00015
         output_cost_per_1k: 0.0006
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
-        capabilities: [temperature, vision]
+        capabilities: [json_mode, temperature, vision]
         open_weights: true
       'Qwen/Qwen3-14B':
         name: 'Qwen3 14B'
@@ -5127,8 +5118,6 @@ providers:
         max_output_tokens: 40960
         input_cost_per_1k: 5e-05
         output_cost_per_1k: 0.00022
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'Qwen/Qwen3-235B-A22B':
@@ -5139,8 +5128,6 @@ providers:
         max_output_tokens: 40960
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'Qwen/Qwen3-235B-A22B-Instruct-2507-TEE':
@@ -5151,8 +5138,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 8e-05
         output_cost_per_1k: 0.00055
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'Qwen/Qwen3-235B-A22B-Thinking-2507':
@@ -5163,8 +5148,6 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 0.00011
         output_cost_per_1k: 0.0006
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'Qwen/Qwen3-30B-A3B':
@@ -5175,8 +5158,6 @@ providers:
         max_output_tokens: 40960
         input_cost_per_1k: 6e-05
         output_cost_per_1k: 0.00022
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'Qwen/Qwen3-30B-A3B-Instruct-2507':
@@ -5187,8 +5168,6 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 8e-05
         output_cost_per_1k: 0.00033
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'Qwen/Qwen3-32B':
@@ -5199,8 +5178,6 @@ providers:
         max_output_tokens: 40960
         input_cost_per_1k: 8e-05
         output_cost_per_1k: 0.00024
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE':
@@ -5211,8 +5188,6 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 0.00022
         output_cost_per_1k: 0.00095
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'Qwen/Qwen3-Next-80B-A3B-Instruct':
@@ -5223,8 +5198,6 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 0.0001
         output_cost_per_1k: 0.0008
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'Qwen/Qwen3-VL-235B-A22B-Instruct':
@@ -5235,32 +5208,26 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
-        capabilities: [function_calling, temperature, vision]
+        capabilities: [function_calling, json_mode, temperature, vision]
         open_weights: true
       'Qwen/Qwen3Guard-Gen-0.6B':
         name: 'Qwen3Guard Gen 0.6B'
         family: 'qwen'
         mode: chat
         max_input_tokens: 32768
-        max_output_tokens: 32768
+        max_output_tokens: 8192
         input_cost_per_1k: 1e-05
         output_cost_per_1k: 1e-05
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [temperature]
         open_weights: true
       'XiaomiMiMo/MiMo-V2-Flash':
         name: 'MiMo V2 Flash'
         family: 'xiaomimimo'
         mode: chat
-        max_input_tokens: 262144
-        max_output_tokens: 262144
+        max_input_tokens: 32768
+        max_output_tokens: 8192
         input_cost_per_1k: 0.00017
         output_cost_per_1k: 0.00065
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [temperature]
         open_weights: true
       'chutesai/Mistral-Small-3.1-24B-Instruct-2503':
@@ -5271,8 +5238,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 3e-05
         output_cost_per_1k: 0.00011
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature, vision]
         open_weights: true
       'chutesai/Mistral-Small-3.2-24B-Instruct-2506':
@@ -5283,8 +5248,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 6e-05
         output_cost_per_1k: 0.00018
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature, vision]
         open_weights: true
       'deepseek-ai/DeepSeek-R1-0528-TEE':
@@ -5295,8 +5258,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0004
         output_cost_per_1k: 0.00175
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-R1-Distill-Llama-70B':
@@ -5307,8 +5268,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 3e-05
         output_cost_per_1k: 0.00011
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-R1-TEE':
@@ -5319,8 +5278,6 @@ providers:
         max_output_tokens: 163840
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, reasoning, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-V3':
@@ -5331,8 +5288,6 @@ providers:
         max_output_tokens: 163840
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-V3-0324-TEE':
@@ -5343,8 +5298,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00019
         output_cost_per_1k: 0.00087
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-V3.1-TEE':
@@ -5355,8 +5308,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0002
         output_cost_per_1k: 0.0008
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-V3.1-Terminus-TEE':
@@ -5367,8 +5318,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00023
         output_cost_per_1k: 0.0009
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-V3.2-Speciale-TEE':
@@ -5379,8 +5328,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00027
         output_cost_per_1k: 0.00041
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, reasoning, temperature]
         open_weights: true
       'deepseek-ai/DeepSeek-V3.2-TEE':
@@ -5391,9 +5338,16 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00025
         output_cost_per_1k: 0.00038
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
+        open_weights: true
+      'miromind-ai/MiroThinker-v1.5-235B':
+        name: 'MiroThinker V1.5 235B'
+        mode: chat
+        max_input_tokens: 32768
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0012
+        capabilities: [temperature]
         open_weights: true
       'mistralai/Devstral-2-123B-Instruct-2512':
         name: 'Devstral 2 123B Instruct 2512'
@@ -5403,8 +5357,15 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 5e-05
         output_cost_per_1k: 0.00022
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
+        capabilities: [function_calling, json_mode, temperature]
+        open_weights: true
+      'mistralai/Devstral-2-123B-Instruct-2512-TEE':
+        name: 'Devstral 2 123B Instruct 2512 TEE'
+        mode: chat
+        max_input_tokens: 262144
+        max_output_tokens: 65536
+        input_cost_per_1k: 5e-05
+        output_cost_per_1k: 0.00022
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'moonshotai/Kimi-K2-Instruct-0905':
@@ -5415,8 +5376,6 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 0.00039
         output_cost_per_1k: 0.0019
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'moonshotai/Kimi-K2-Thinking-TEE':
@@ -5427,8 +5386,6 @@ providers:
         max_output_tokens: 65535
         input_cost_per_1k: 0.0004
         output_cost_per_1k: 0.00175
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16':
@@ -5439,8 +5396,6 @@ providers:
         max_output_tokens: 262144
         input_cost_per_1k: 6e-05
         output_cost_per_1k: 0.00024
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature]
         open_weights: true
       'openai/gpt-oss-120b-TEE':
@@ -5451,8 +5406,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 4e-05
         output_cost_per_1k: 0.00018
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'openai/gpt-oss-20b':
@@ -5463,8 +5416,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 2e-05
         output_cost_per_1k: 0.0001
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'rednote-hilab/dots.ocr':
@@ -5475,8 +5426,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 1e-05
         output_cost_per_1k: 1e-05
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, temperature, vision]
         open_weights: true
       'tngtech/DeepSeek-R1T-Chimera':
@@ -5487,8 +5436,6 @@ providers:
         max_output_tokens: 163840
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, reasoning, temperature]
         open_weights: true
       'tngtech/DeepSeek-TNG-R1T2-Chimera':
@@ -5497,18 +5444,6 @@ providers:
         mode: chat
         max_input_tokens: 163840
         max_output_tokens: 163840
-        input_cost_per_1k: 0.00025
-        output_cost_per_1k: 0.00085
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
-        capabilities: [function_calling, json_mode, reasoning, temperature]
-        open_weights: true
-      'tngtech/DeepSeek-TNG-R1T2-Chimera-TEE':
-        name: 'DeepSeek TNG R1T2 Chimera TEE'
-        family: 'tngtech'
-        mode: chat
-        max_input_tokens: 163840
-        max_output_tokens: 65536
         input_cost_per_1k: 0.00025
         output_cost_per_1k: 0.00085
         capabilities: [function_calling, json_mode, reasoning, temperature]
@@ -5521,8 +5456,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00025
         output_cost_per_1k: 0.00085
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'unsloth/Mistral-Nemo-Instruct-2407':
@@ -5533,8 +5466,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 2e-05
         output_cost_per_1k: 4e-05
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, temperature]
         open_weights: true
       'unsloth/Mistral-Small-24B-Instruct-2501':
@@ -5545,8 +5476,6 @@ providers:
         max_output_tokens: 32768
         input_cost_per_1k: 3e-05
         output_cost_per_1k: 0.00011
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature, vision]
         open_weights: true
       'unsloth/gemma-3-12b-it':
@@ -5557,9 +5486,7 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 3e-05
         output_cost_per_1k: 0.0001
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
-        capabilities: [temperature, vision]
+        capabilities: [json_mode, temperature, vision]
         open_weights: true
       'unsloth/gemma-3-27b-it':
         name: 'gemma 3 27b it'
@@ -5569,8 +5496,6 @@ providers:
         max_output_tokens: 96000
         input_cost_per_1k: 4e-05
         output_cost_per_1k: 0.00015
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, temperature, vision]
         open_weights: true
       'unsloth/gemma-3-4b-it':
@@ -5581,8 +5506,6 @@ providers:
         max_output_tokens: 96000
         input_cost_per_1k: 1e-05
         output_cost_per_1k: 3e-05
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [json_mode, temperature, vision]
         open_weights: true
       'zai-org/GLM-4.5-Air':
@@ -5593,8 +5516,6 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 5e-05
         output_cost_per_1k: 0.00022
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'zai-org/GLM-4.5-TEE':
@@ -5605,8 +5526,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00035
         output_cost_per_1k: 0.00155
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'zai-org/GLM-4.6-TEE':
@@ -5617,8 +5536,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.00035
         output_cost_per_1k: 0.0015
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'zai-org/GLM-4.6V':
@@ -5629,8 +5546,6 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0009
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature, vision]
         open_weights: true
       'zai-org/GLM-4.7-TEE':
@@ -5641,8 +5556,6 @@ providers:
         max_output_tokens: 65535
         input_cost_per_1k: 0.0004
         output_cost_per_1k: 0.0015
-        cache_read_cost_per_1k: 0.0
-        cache_write_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
   cloudflare_ai_gateway:
@@ -7762,6 +7675,172 @@ providers:
         output_cost_per_1k: 0.0018
         capabilities: [function_calling, temperature]
         open_weights: true
+  firmware:
+    name: 'Firmware'
+    api_endpoint: 'https://app.firmware.ai/api/v1'
+    logo_url: 'https://models.dev/logos/firmware.svg'
+    model_count: 16
+    models:
+      'anthropic/claude-haiku-4-5-20251001':
+        name: 'Claude Haiku 4.5'
+        family: 'claude-haiku'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-02-28'
+      'anthropic/claude-opus-4-5':
+        name: 'Claude Opus 4.5 (latest)'
+        family: 'claude-opus'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-03-31'
+      'anthropic/claude-sonnet-4-5-20250929':
+        name: 'Claude Sonnet 4.5'
+        family: 'claude-sonnet'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-07-31'
+      'deepseek/deepseek-chat':
+        name: 'DeepSeek Chat'
+        family: 'deepseek-chat'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, temperature, vision]
+        knowledge_cutoff: '2024-07'
+      'deepseek/deepseek-coder':
+        name: 'DeepSeek Coder'
+        family: 'deepseek-coder'
+        mode: chat
+        max_input_tokens: 16384
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, temperature]
+        open_weights: true
+      'deepseek/deepseek-reasoner':
+        name: 'DeepSeek Reasoner'
+        family: 'deepseek'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 65536
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-07'
+      'google/gemini-2.5-flash':
+        name: 'Gemini 2.5 Flash'
+        family: 'gemini-flash'
+        mode: chat
+        max_input_tokens: 1048576
+        max_output_tokens: 65536
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [audio_input, function_calling, pdf_input, reasoning, temperature, video_input, vision]
+        knowledge_cutoff: '2025-01'
+      'google/gemini-2.5-pro':
+        name: 'Gemini 2.5 Pro'
+        family: 'gemini-pro'
+        mode: chat
+        max_input_tokens: 1048576
+        max_output_tokens: 65536
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [audio_input, function_calling, pdf_input, reasoning, temperature, video_input, vision]
+        knowledge_cutoff: '2025-01'
+      'google/gemini-3-flash-preview':
+        name: 'Gemini 3 Flash Preview'
+        family: 'gemini-flash'
+        mode: chat
+        max_input_tokens: 1048576
+        max_output_tokens: 65536
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [audio_input, function_calling, json_mode, pdf_input, reasoning, temperature, video_input, vision]
+        knowledge_cutoff: '2025-01'
+      'google/gemini-3-pro-preview':
+        name: 'Gemini 3 Pro Preview'
+        family: 'gemini-pro'
+        mode: chat
+        max_input_tokens: 1000000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [audio_input, function_calling, json_mode, pdf_input, reasoning, temperature, video_input, vision]
+        knowledge_cutoff: '2025-01'
+      'openai/gpt-4o':
+        name: 'GPT-4o'
+        family: 'gpt-4o'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, json_mode, temperature, vision]
+        knowledge_cutoff: '2023-09'
+      'openai/gpt-5':
+        name: 'GPT-5'
+        family: 'gpt-5'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, json_mode, reasoning, vision]
+        knowledge_cutoff: '2024-09-30'
+      'openai/gpt-5.2':
+        name: 'GPT-5.2'
+        family: 'gpt-5'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, reasoning, vision]
+        knowledge_cutoff: '2025-08-31'
+      'xai/grok-4-fast-non-reasoning':
+        name: 'Grok 4 Fast (Non-Reasoning)'
+        family: 'grok'
+        mode: chat
+        max_input_tokens: 2000000
+        max_output_tokens: 30000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, temperature, vision]
+        knowledge_cutoff: '2025-07'
+      'xai/grok-4-fast-reasoning':
+        name: 'Grok 4 Fast (Reasoning)'
+        family: 'grok'
+        mode: chat
+        max_input_tokens: 2000000
+        max_output_tokens: 30000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-07'
+      'xai/grok-code-fast-1':
+        name: 'Grok Code Fast 1'
+        family: 'grok'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 10000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2023-10'
   friendli:
     name: 'Friendli'
     api_endpoint: 'https://api.friendli.ai/serverless/v1'
@@ -7776,6 +7855,16 @@ providers:
         max_output_tokens: 131072
         input_cost_per_1k: 0.0006
         output_cost_per_1k: 0.001
+        capabilities: [function_calling, json_mode, reasoning, temperature]
+        open_weights: true
+      'LGAI-EXAONE/K-EXAONE-236B-A23B':
+        name: 'K EXAONE 236B A23B'
+        family: 'exaone'
+        mode: chat
+        max_input_tokens: 262144
+        max_output_tokens: 262144
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
         capabilities: [function_calling, json_mode, reasoning, temperature]
         open_weights: true
       'Qwen/Qwen3-235B-A22B-Instruct-2507':
@@ -7811,14 +7900,6 @@ providers:
         max_input_tokens: 131072
         max_output_tokens: 8000
         capabilities: [function_calling, json_mode, reasoning, temperature]
-        open_weights: true
-      'deepseek-ai/DeepSeek-R1-0528':
-        name: 'DeepSeek R1 0528'
-        family: 'deepseek-r1'
-        mode: chat
-        max_input_tokens: 163840
-        max_output_tokens: 163840
-        capabilities: [json_mode, reasoning, temperature]
         open_weights: true
       'meta-llama-3.1-8b-instruct':
         name: 'Llama 3.1 8B Instruct'
@@ -8743,6 +8824,44 @@ providers:
         output_cost_per_1k: 0.0
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-10'
+  gitlab:
+    name: 'GitLab Duo'
+    logo_url: 'https://models.dev/logos/gitlab.svg'
+    model_count: 3
+    models:
+      'duo-chat-haiku-4-5':
+        name: 'Agentic Chat (Claude Haiku 4.5)'
+        family: 'claude-haiku'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 4096
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        cache_read_cost_per_1k: 0.0
+        cache_write_cost_per_1k: 0.0
+        capabilities: [function_calling, temperature]
+      'duo-chat-opus-4-5':
+        name: 'Agentic Chat (Claude Opus 4.5)'
+        family: 'claude-opus'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 4096
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        cache_read_cost_per_1k: 0.0
+        cache_write_cost_per_1k: 0.0
+        capabilities: [function_calling, temperature]
+      'duo-chat-sonnet-4-5':
+        name: 'Agentic Chat (Claude Sonnet 4.5)'
+        family: 'claude-sonnet'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 4096
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        cache_read_cost_per_1k: 0.0
+        cache_write_cost_per_1k: 0.0
+        capabilities: [function_calling, temperature]
   google:
     name: 'Google'
     api_endpoint: 'https://generativelanguage.googleapis.com/v1'
@@ -13851,7 +13970,7 @@ providers:
     name: 'OpenRouter'
     api_endpoint: 'https://openrouter.ai/api/v1'
     logo_url: 'https://models.dev/logos/openrouter.svg'
-    model_count: 137
+    model_count: 138
     models:
       'anthropic/claude-3.5-haiku':
         name: 'Claude Haiku 3.5'
@@ -15060,6 +15179,17 @@ providers:
         max_output_tokens: 66536
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2025-04'
+        open_weights: true
+      'qwen/qwen3-coder-30b-a3b-instruct':
+        name: 'Qwen3 Coder 30B A3B Instruct'
+        family: 'qwen3-coder'
+        mode: chat
+        max_input_tokens: 160000
+        max_output_tokens: 65536
+        input_cost_per_1k: 7e-05
+        output_cost_per_1k: 0.00027
         capabilities: [function_calling, temperature]
         knowledge_cutoff: '2025-04'
         open_weights: true
@@ -16556,6 +16686,66 @@ providers:
         output_cost_per_1k: 0.0015
         cache_read_cost_per_1k: 2e-05
         capabilities: [function_calling, reasoning, vision]
+  privatemode_ai:
+    name: 'Privatemode AI'
+    api_endpoint: 'http://localhost:8080/v1'
+    logo_url: 'https://models.dev/logos/privatemode-ai.svg'
+    model_count: 5
+    models:
+      'gemma-3-27b':
+        name: 'Gemma 3 27B'
+        family: 'gemma-3'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, json_mode, temperature, vision]
+        knowledge_cutoff: '2024-08'
+        open_weights: true
+      'gpt-oss-120b':
+        family: 'gpt-oss'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, json_mode, reasoning, temperature]
+        knowledge_cutoff: '2025-08'
+        open_weights: true
+      'qwen3-coder-30b-a3b':
+        name: 'Qwen3-Coder 30B-A3B'
+        family: 'qwen3-coder'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 32768
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [function_calling, json_mode, temperature]
+        knowledge_cutoff: '2025-04'
+        open_weights: true
+      'qwen3-embedding-4b':
+        name: 'Qwen3-Embedding 4B'
+        family: 'qwen3-embedding'
+        mode: embedding
+        max_input_tokens: 32000
+        max_output_tokens: 2560
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [temperature]
+        knowledge_cutoff: '2025-06'
+        open_weights: true
+      'whisper-large-v3':
+        name: 'Whisper large-v3'
+        family: 'whisper'
+        mode: audio_transcription
+        max_input_tokens: 0
+        max_output_tokens: 4096
+        input_cost_per_1k: 0.0
+        output_cost_per_1k: 0.0
+        capabilities: [audio_input, temperature, vision]
+        knowledge_cutoff: '2023-09'
+        open_weights: true
   requesty:
     name: 'Requesty'
     api_endpoint: 'https://router.requesty.ai/v1'
@@ -17101,7 +17291,7 @@ providers:
     name: 'SiliconFlow'
     api_endpoint: 'https://api.siliconflow.com/v1'
     logo_url: 'https://models.dev/logos/siliconflow.svg'
-    model_count: 72
+    model_count: 75
     models:
       'ByteDance-Seed/Seed-OSS-36B-Instruct':
         family: 'bytedance-seed-seed-oss'
@@ -17503,6 +17693,14 @@ providers:
         input_cost_per_1k: 0.00027
         output_cost_per_1k: 0.001
         capabilities: [function_calling, json_mode, reasoning, temperature]
+      'deepseek-ai/DeepSeek-V3.2':
+        family: 'deepseek-v3-2'
+        mode: chat
+        max_input_tokens: 164000
+        max_output_tokens: 164000
+        input_cost_per_1k: 0.00027
+        output_cost_per_1k: 0.00042
+        capabilities: [function_calling, json_mode, reasoning, temperature]
       'deepseek-ai/DeepSeek-V3.2-Exp':
         family: 'deepseek-v3'
         mode: chat
@@ -17679,6 +17877,22 @@ providers:
         input_cost_per_1k: 0.0005
         output_cost_per_1k: 0.0019
         capabilities: [function_calling, json_mode, temperature]
+      'zai-org/GLM-4.6V':
+        family: 'glm-4-6v'
+        mode: chat
+        max_input_tokens: 131000
+        max_output_tokens: 131000
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0009
+        capabilities: [function_calling, reasoning, temperature, vision]
+      'zai-org/GLM-4.7':
+        family: 'glm-4-7'
+        mode: chat
+        max_input_tokens: 205000
+        max_output_tokens: 205000
+        input_cost_per_1k: 0.0006
+        output_cost_per_1k: 0.0022
+        capabilities: [function_calling, reasoning, temperature]
   siliconflow_cn:
     name: 'SiliconFlow (China)'
     api_endpoint: 'https://api.siliconflow.cn/v1'
@@ -18741,9 +18955,9 @@ providers:
         open_weights: true
   upstage:
     name: 'Upstage'
-    api_endpoint: 'https://api.upstage.ai'
+    api_endpoint: 'https://api.upstage.ai/v1/solar'
     logo_url: 'https://models.dev/logos/upstage.svg'
-    model_count: 2
+    model_count: 3
     models:
       'solar-mini':
         family: 'solar-mini'
@@ -18758,6 +18972,15 @@ providers:
         family: 'solar-pro'
         mode: chat
         max_input_tokens: 65536
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.00025
+        output_cost_per_1k: 0.00025
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2025-03'
+      'solar-pro3':
+        family: 'solar-pro'
+        mode: chat
+        max_input_tokens: 131072
         max_output_tokens: 8192
         input_cost_per_1k: 0.00025
         output_cost_per_1k: 0.00025
@@ -18796,7 +19019,7 @@ providers:
     name: 'Venice AI'
     api_endpoint: 'https://api.venice.ai/api/v1'
     logo_url: 'https://models.dev/logos/venice.svg'
-    model_count: 24
+    model_count: 23
     models:
       'claude-opus-45':
         name: 'Claude Opus 4.5'
@@ -18807,6 +19030,7 @@ providers:
         input_cost_per_1k: 0.006
         output_cost_per_1k: 0.03
         cache_read_cost_per_1k: 0.0006
+        cache_write_cost_per_1k: 0.0075
         capabilities: [function_calling, json_mode, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03'
       'deepseek-v3.2':
@@ -19029,17 +19253,6 @@ providers:
         capabilities: [json_mode, temperature]
         knowledge_cutoff: '2023-10'
         open_weights: true
-      'zai-org-glm-4.6':
-        name: 'GLM 4.6'
-        family: 'glm-4.6'
-        mode: chat
-        max_input_tokens: 202752
-        max_output_tokens: 50688
-        input_cost_per_1k: 0.00085
-        output_cost_per_1k: 0.00275
-        capabilities: [function_calling, json_mode, temperature]
-        knowledge_cutoff: '2024-04'
-        open_weights: true
       'zai-org-glm-4.6v':
         name: 'GLM 4.6V'
         family: 'glm-4.6'
@@ -19064,8 +19277,78 @@ providers:
   vercel:
     name: 'Vercel AI Gateway'
     logo_url: 'https://models.dev/logos/vercel.svg'
-    model_count: 86
+    model_count: 180
     models:
+      'alibaba/qwen-3-14b':
+        name: 'Qwen3-14B'
+        family: 'qwen3-14b'
+        mode: chat
+        max_input_tokens: 40960
+        max_output_tokens: 16384
+        input_cost_per_1k: 6e-05
+        output_cost_per_1k: 0.00024
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2025-04'
+      'alibaba/qwen-3-235b':
+        name: 'Qwen3 235B A22B Instruct 2507'
+        family: 'qwen3-235b'
+        mode: chat
+        max_input_tokens: 40960
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.00013
+        output_cost_per_1k: 0.0006
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2025-04'
+      'alibaba/qwen-3-30b':
+        name: 'Qwen3-30B-A3B'
+        family: 'qwen3-30b'
+        mode: chat
+        max_input_tokens: 40960
+        max_output_tokens: 16384
+        input_cost_per_1k: 8e-05
+        output_cost_per_1k: 0.00029
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2025-04'
+      'alibaba/qwen-3-32b':
+        name: 'Qwen 3.32B'
+        family: 'qwen3-32b'
+        mode: chat
+        max_input_tokens: 40960
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.0001
+        output_cost_per_1k: 0.0003
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2025-04'
+      'alibaba/qwen3-235b-a22b-thinking':
+        name: 'Qwen3 235B A22B Thinking 2507'
+        family: 'qwen3-235b'
+        mode: chat
+        max_input_tokens: 262114
+        max_output_tokens: 262114
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0029
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-04'
+      'alibaba/qwen3-coder':
+        name: 'Qwen3 Coder 480B A35B Instruct'
+        family: 'qwen-coder'
+        mode: chat
+        max_input_tokens: 262144
+        max_output_tokens: 66536
+        input_cost_per_1k: 0.00038
+        output_cost_per_1k: 0.00153
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2025-04'
+      'alibaba/qwen3-coder-30b-a3b':
+        name: 'Qwen 3 Coder 30B A3B Instruct'
+        family: 'qwen-coder'
+        mode: chat
+        max_input_tokens: 160000
+        max_output_tokens: 32768
+        input_cost_per_1k: 7e-05
+        output_cost_per_1k: 0.00027
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2025-04'
       'alibaba/qwen3-coder-plus':
         name: 'Qwen3 Coder Plus'
         family: 'qwen3-coder'
@@ -19077,6 +19360,30 @@ providers:
         capabilities: [function_calling, temperature]
         knowledge_cutoff: '2025-04'
         open_weights: true
+      'alibaba/qwen3-embedding-0.6b':
+        name: 'Qwen3 Embedding 0.6B'
+        family: 'qwen-embedding'
+        mode: embedding
+        max_input_tokens: 32768
+        max_output_tokens: 32768
+        input_cost_per_1k: 1e-05
+        output_cost_per_1k: 0.0
+      'alibaba/qwen3-embedding-4b':
+        name: 'Qwen3 Embedding 4B'
+        family: 'qwen-embedding'
+        mode: embedding
+        max_input_tokens: 32768
+        max_output_tokens: 32768
+        input_cost_per_1k: 2e-05
+        output_cost_per_1k: 0.0
+      'alibaba/qwen3-embedding-8b':
+        name: 'Qwen3 Embedding 8B'
+        family: 'qwen-embedding'
+        mode: embedding
+        max_input_tokens: 32768
+        max_output_tokens: 32768
+        input_cost_per_1k: 5e-05
+        output_cost_per_1k: 0.0
       'alibaba/qwen3-max':
         name: 'Qwen3 Max'
         family: 'qwen3'
@@ -19087,14 +19394,25 @@ providers:
         output_cost_per_1k: 0.006
         capabilities: [function_calling, temperature]
         knowledge_cutoff: '2025-04'
+      'alibaba/qwen3-max-preview':
+        name: 'Qwen3 Max Preview'
+        family: 'qwen-max'
+        mode: chat
+        max_input_tokens: 262144
+        max_output_tokens: 32768
+        input_cost_per_1k: 0.0012
+        output_cost_per_1k: 0.006
+        cache_read_cost_per_1k: 0.00024
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2025-04'
       'alibaba/qwen3-next-80b-a3b-instruct':
         name: 'Qwen3 Next 80B A3B Instruct'
         family: 'qwen3'
         mode: chat
-        max_input_tokens: 131072
+        max_input_tokens: 262144
         max_output_tokens: 32768
-        input_cost_per_1k: 0.0005
-        output_cost_per_1k: 0.002
+        input_cost_per_1k: 9e-05
+        output_cost_per_1k: 0.0011
         capabilities: [function_calling, temperature]
         knowledge_cutoff: '2025-04'
         open_weights: true
@@ -19103,9 +19421,9 @@ providers:
         family: 'qwen3'
         mode: chat
         max_input_tokens: 131072
-        max_output_tokens: 32768
-        input_cost_per_1k: 0.0005
-        output_cost_per_1k: 0.006
+        max_output_tokens: 65536
+        input_cost_per_1k: 0.00015
+        output_cost_per_1k: 0.0015
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-09'
         open_weights: true
@@ -19131,6 +19449,16 @@ providers:
         capabilities: [function_calling, reasoning, temperature, vision]
         knowledge_cutoff: '2025-09'
         open_weights: true
+      'amazon/nova-2-lite':
+        name: 'Nova 2 Lite'
+        family: 'nova-2'
+        mode: chat
+        max_input_tokens: 1000000
+        max_output_tokens: 1000000
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0025
+        capabilities: [reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
       'amazon/nova-lite':
         name: 'Nova Lite'
         family: 'nova-lite'
@@ -19164,6 +19492,14 @@ providers:
         cache_read_cost_per_1k: 0.0002
         capabilities: [function_calling, temperature, video_input, vision]
         knowledge_cutoff: '2024-10'
+      'amazon/titan-embed-text-v2':
+        name: 'Titan Text Embeddings V2'
+        family: 'titan-embed'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 2e-05
+        output_cost_per_1k: 0.0
       'anthropic/claude-3-haiku':
         name: 'Claude Haiku 3'
         family: 'claude-haiku'
@@ -19212,6 +19548,16 @@ providers:
         cache_write_cost_per_1k: 0.00375
         capabilities: [function_calling, pdf_input, temperature, vision]
         knowledge_cutoff: '2024-04-30'
+      'anthropic/claude-3.5-sonnet-20240620':
+        name: 'Claude 3.5 Sonnet (2024-06-20)'
+        family: 'claude-sonnet'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.003
+        output_cost_per_1k: 0.015
+        capabilities: [function_calling, pdf_input, temperature, vision]
+        knowledge_cutoff: '2024-04'
       'anthropic/claude-3.7-sonnet':
         name: 'Claude Sonnet 3.7'
         family: 'claude-sonnet'
@@ -19224,7 +19570,19 @@ providers:
         cache_write_cost_per_1k: 0.00375
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2024-10-31'
-      'anthropic/claude-4-1-opus':
+      'anthropic/claude-haiku-4.5':
+        name: 'Claude Haiku 4.5'
+        family: 'claude-haiku'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.001
+        output_cost_per_1k: 0.005
+        cache_read_cost_per_1k: 0.0001
+        cache_write_cost_per_1k: 0.00125
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-02-28'
+      'anthropic/claude-opus-4':
         name: 'Claude Opus 4'
         family: 'claude-opus'
         mode: chat
@@ -19236,7 +19594,7 @@ providers:
         cache_write_cost_per_1k: 0.01875
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
-      'anthropic/claude-4-opus':
+      'anthropic/claude-opus-4.1':
         name: 'Claude Opus 4'
         family: 'claude-opus'
         mode: chat
@@ -19248,7 +19606,19 @@ providers:
         cache_write_cost_per_1k: 0.01875
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
-      'anthropic/claude-4-sonnet':
+      'anthropic/claude-opus-4.5':
+        name: 'Claude Opus 4.5'
+        family: 'claude-opus'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.005
+        output_cost_per_1k: 0.025
+        cache_read_cost_per_1k: 0.0005
+        cache_write_cost_per_1k: 0.01875
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-03-31'
+      'anthropic/claude-sonnet-4':
         name: 'Claude Sonnet 4'
         family: 'claude-sonnet'
         mode: chat
@@ -19260,7 +19630,7 @@ providers:
         cache_write_cost_per_1k: 0.00375
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-03-31'
-      'anthropic/claude-4.5-sonnet':
+      'anthropic/claude-sonnet-4.5':
         name: 'Claude Sonnet 4.5'
         family: 'claude-sonnet'
         mode: chat
@@ -19272,30 +19642,80 @@ providers:
         cache_write_cost_per_1k: 0.00375
         capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
         knowledge_cutoff: '2025-07-31'
-      'anthropic/claude-haiku-4.5':
-        name: 'Claude Haiku 4.5'
-        family: 'claude-haiku'
+      'arcee-ai/trinity-mini':
+        name: 'Trinity Mini'
+        family: 'trinity'
         mode: chat
-        max_input_tokens: 200000
-        max_output_tokens: 64000
-        input_cost_per_1k: 0.001
-        output_cost_per_1k: 0.00125
-        cache_read_cost_per_1k: 0.0001
-        cache_write_cost_per_1k: 0.00125
-        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
-        knowledge_cutoff: '2025-02-28'
-      'anthropic/claude-opus-4.5':
-        name: 'Claude Opus 4.5'
-        family: 'claude-opus'
+        max_input_tokens: 131072
+        max_output_tokens: 131072
+        input_cost_per_1k: 5e-05
+        output_cost_per_1k: 0.00015
+        capabilities: [temperature]
+        knowledge_cutoff: '2024-10'
+      'bfl/flux-kontext-max':
+        name: 'FLUX.1 Kontext Max'
+        family: 'flux-kontext'
+        mode: image
+        max_input_tokens: 512
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'bfl/flux-kontext-pro':
+        name: 'FLUX.1 Kontext Pro'
+        family: 'flux-kontext'
+        mode: image
+        max_input_tokens: 512
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'bfl/flux-pro-1.0-fill':
+        name: 'FLUX.1 Fill [pro]'
+        family: 'flux-pro'
+        mode: image
+        max_input_tokens: 512
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'bfl/flux-pro-1.1':
+        name: 'FLUX1.1 [pro]'
+        family: 'flux-pro'
+        mode: image
+        max_input_tokens: 512
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'bfl/flux-pro-1.1-ultra':
+        name: 'FLUX1.1 [pro] Ultra'
+        family: 'flux-pro'
+        mode: image
+        max_input_tokens: 512
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'bytedance/seed-1.6':
+        name: 'Seed 1.6'
+        family: 'seed'
         mode: chat
-        max_input_tokens: 200000
-        max_output_tokens: 64000
-        input_cost_per_1k: 0.005
-        output_cost_per_1k: 0.025
-        cache_read_cost_per_1k: 0.0015
-        cache_write_cost_per_1k: 0.01875
-        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
-        knowledge_cutoff: '2025-03-31'
+        max_input_tokens: 256000
+        max_output_tokens: 32000
+        input_cost_per_1k: 0.00025
+        output_cost_per_1k: 0.002
+        cache_read_cost_per_1k: 5e-05
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+      'cohere/command-a':
+        name: 'Command A'
+        family: 'command'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 8000
+        input_cost_per_1k: 0.0025
+        output_cost_per_1k: 0.01
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
+      'cohere/embed-v4.0':
+        name: 'Embed v4.0'
+        family: 'embed'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00012
+        output_cost_per_1k: 0.0
       'deepseek/deepseek-r1':
         name: 'DeepSeek-R1'
         family: 'deepseek-r1'
@@ -19306,49 +19726,69 @@ providers:
         output_cost_per_1k: 0.0054
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-07'
-      'deepseek/deepseek-r1-distill-llama-70b':
-        name: 'DeepSeek R1 Distill Llama 70B'
-        family: 'deepseek-r1-distill-llama'
+      'deepseek/deepseek-v3':
+        name: 'DeepSeek V3 0324'
+        family: 'deepseek-v3'
         mode: chat
-        max_input_tokens: 131072
-        max_output_tokens: 8192
-        input_cost_per_1k: 0.00075
-        output_cost_per_1k: 0.00099
+        max_input_tokens: 163840
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.00077
+        output_cost_per_1k: 0.00077
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-07'
+      'deepseek/deepseek-v3.1':
+        name: 'DeepSeek-V3.1'
+        family: 'deepseek-v3'
+        mode: chat
+        max_input_tokens: 163840
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.001
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-07'
-        open_weights: true
-        deprecated: true
       'deepseek/deepseek-v3.1-terminus':
         name: 'DeepSeek V3.1 Terminus'
         family: 'deepseek-v3'
         mode: chat
-        max_input_tokens: 128000
-        max_output_tokens: 8192
+        max_input_tokens: 131072
+        max_output_tokens: 65536
         input_cost_per_1k: 0.00027
         output_cost_per_1k: 0.001
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-07'
         open_weights: true
+      'deepseek/deepseek-v3.2':
+        name: 'DeepSeek V3.2'
+        family: 'deepseek-v3'
+        mode: chat
+        max_input_tokens: 163842
+        max_output_tokens: 8000
+        input_cost_per_1k: 0.00027
+        output_cost_per_1k: 0.0004
+        cache_read_cost_per_1k: 0.00022
+        capabilities: [temperature]
+        knowledge_cutoff: '2024-07'
       'deepseek/deepseek-v3.2-exp':
         name: 'DeepSeek V3.2 Exp'
         family: 'deepseek-v3'
         mode: chat
         max_input_tokens: 163840
-        max_output_tokens: 8192
-        input_cost_per_1k: 0.00028
-        output_cost_per_1k: 0.00042
-        capabilities: [function_calling, temperature]
-        knowledge_cutoff: '2025-09'
-      'deepseek/deepseek-v3.2-exp-thinking':
-        name: 'DeepSeek V3.2 Exp Thinking'
-        family: 'deepseek-v3'
-        mode: chat
-        max_input_tokens: 163840
-        max_output_tokens: 8192
-        input_cost_per_1k: 0.00028
-        output_cost_per_1k: 0.00042
+        max_output_tokens: 163840
+        input_cost_per_1k: 0.00027
+        output_cost_per_1k: 0.0004
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-09'
+      'deepseek/deepseek-v3.2-thinking':
+        name: 'DeepSeek V3.2 Thinking'
+        family: 'deepseek-v3'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.00028
+        output_cost_per_1k: 0.00042
+        cache_read_cost_per_1k: 3e-05
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-07'
       'google/gemini-2.0-flash':
         name: 'Gemini 2.0 Flash'
         family: 'gemini-flash'
@@ -19381,6 +19821,26 @@ providers:
         cache_read_cost_per_1k: 7.5e-05
         capabilities: [audio_input, function_calling, json_mode, pdf_input, reasoning, temperature, video_input, vision]
         knowledge_cutoff: '2025-01'
+      'google/gemini-2.5-flash-image':
+        name: 'Nano Banana (Gemini 2.5 Flash Image)'
+        family: 'gemini-flash-image'
+        mode: image
+        max_input_tokens: 32768
+        max_output_tokens: 32768
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0025
+        capabilities: [image_output, temperature]
+        knowledge_cutoff: '2025-01'
+      'google/gemini-2.5-flash-image-preview':
+        name: 'Nano Banana Preview (Gemini 2.5 Flash Image Preview)'
+        family: 'gemini-flash-image'
+        mode: image
+        max_input_tokens: 32768
+        max_output_tokens: 32768
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0025
+        capabilities: [image_output, temperature]
+        knowledge_cutoff: '2025-01'
       'google/gemini-2.5-flash-lite':
         name: 'Gemini 2.5 Flash Lite'
         family: 'gemini-flash-lite'
@@ -19389,7 +19849,7 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0001
         output_cost_per_1k: 0.0004
-        cache_read_cost_per_1k: 2.5e-05
+        cache_read_cost_per_1k: 1e-05
         capabilities: [audio_input, function_calling, pdf_input, reasoning, temperature, video_input, vision]
         knowledge_cutoff: '2025-01'
       'google/gemini-2.5-flash-lite-preview-09-2025':
@@ -19400,7 +19860,7 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0001
         output_cost_per_1k: 0.0004
-        cache_read_cost_per_1k: 2.5e-05
+        cache_read_cost_per_1k: 1e-05
         capabilities: [audio_input, function_calling, pdf_input, reasoning, temperature, video_input, vision]
         knowledge_cutoff: '2025-01'
       'google/gemini-2.5-flash-preview-09-2025':
@@ -19411,7 +19871,7 @@ providers:
         max_output_tokens: 65536
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0025
-        cache_read_cost_per_1k: 7.5e-05
+        cache_read_cost_per_1k: 3e-05
         cache_write_cost_per_1k: 0.000383
         capabilities: [audio_input, function_calling, pdf_input, reasoning, temperature, video_input, vision]
         knowledge_cutoff: '2025-01'
@@ -19426,6 +19886,27 @@ providers:
         cache_read_cost_per_1k: 0.00031
         capabilities: [audio_input, function_calling, json_mode, pdf_input, reasoning, temperature, video_input, vision]
         knowledge_cutoff: '2025-01'
+      'google/gemini-3-flash':
+        name: 'Gemini 3 Flash'
+        family: 'gemini-flash'
+        mode: chat
+        max_input_tokens: 1000000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0005
+        output_cost_per_1k: 0.003
+        cache_read_cost_per_1k: 5e-05
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2025-03'
+      'google/gemini-3-pro-image':
+        name: 'Nano Banana Pro (Gemini 3 Pro Image)'
+        family: 'gemini-pro'
+        mode: image
+        max_input_tokens: 65536
+        max_output_tokens: 32768
+        input_cost_per_1k: 0.002
+        output_cost_per_1k: 0.12
+        capabilities: [image_output, temperature]
+        knowledge_cutoff: '2025-03'
       'google/gemini-3-pro-preview':
         name: 'Gemini 3 Pro Preview'
         family: 'gemini-pro'
@@ -19435,8 +19916,149 @@ providers:
         input_cost_per_1k: 0.002
         output_cost_per_1k: 0.012
         cache_read_cost_per_1k: 0.0002
-        capabilities: [audio_input, function_calling, json_mode, pdf_input, reasoning, temperature, video_input, vision]
+        capabilities: [audio_input, function_calling, pdf_input, reasoning, temperature, video_input, vision]
         knowledge_cutoff: '2025-01'
+      'google/gemini-embedding-001':
+        name: 'Gemini Embedding 001'
+        family: 'gemini-embedding'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00015
+        output_cost_per_1k: 0.0
+      'google/imagen-4.0-fast-generate-001':
+        name: 'Imagen 4 Fast'
+        family: 'imagen-4'
+        mode: image
+        max_input_tokens: 480
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'google/imagen-4.0-generate-001':
+        name: 'Imagen 4'
+        family: 'imagen-4'
+        mode: image
+        max_input_tokens: 480
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'google/imagen-4.0-ultra-generate-001':
+        name: 'Imagen 4 Ultra'
+        family: 'imagen-4'
+        mode: image
+        max_input_tokens: 480
+        max_output_tokens: 0
+        capabilities: [image_output]
+      'google/text-embedding-005':
+        name: 'Text Embedding 005'
+        family: 'text-embedding'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 3e-05
+        output_cost_per_1k: 0.0
+      'google/text-multilingual-embedding-002':
+        name: 'Text Multilingual Embedding 002'
+        family: 'text-embedding'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 3e-05
+        output_cost_per_1k: 0.0
+      'inception/mercury-coder-small':
+        name: 'Mercury Coder Small Beta'
+        family: 'mercury'
+        mode: chat
+        max_input_tokens: 32000
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.00025
+        output_cost_per_1k: 0.001
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
+      'kwaipilot/kat-coder-pro-v1':
+        name: 'KAT-Coder-Pro V1'
+        family: 'kat-coder'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 32000
+        capabilities: [reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+      'meituan/longcat-flash-chat':
+        name: 'LongCat Flash Chat'
+        family: 'longcat'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
+      'meituan/longcat-flash-thinking':
+        name: 'LongCat Flash Thinking'
+        family: 'longcat'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.00015
+        output_cost_per_1k: 0.0015
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+      'meta/llama-3.1-70b':
+        name: 'Llama 3.1 70B Instruct'
+        family: 'llama-3.1'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.0004
+        output_cost_per_1k: 0.0004
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2023-12'
+      'meta/llama-3.1-8b':
+        name: 'Llama 3.1 8B Instruct'
+        family: 'llama-3.1'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 16384
+        input_cost_per_1k: 3e-05
+        output_cost_per_1k: 5e-05
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2023-12'
+      'meta/llama-3.2-11b':
+        name: 'Llama 3.2 11B Vision Instruct'
+        family: 'llama-3.2'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.00016
+        output_cost_per_1k: 0.00016
+        capabilities: [function_calling, temperature, vision]
+        knowledge_cutoff: '2023-12'
+      'meta/llama-3.2-1b':
+        name: 'Llama 3.2 1B Instruct'
+        family: 'llama-3.2'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.0001
+        output_cost_per_1k: 0.0001
+        capabilities: [temperature]
+        knowledge_cutoff: '2023-12'
+      'meta/llama-3.2-3b':
+        name: 'Llama 3.2 3B Instruct'
+        family: 'llama-3.2'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.00015
+        output_cost_per_1k: 0.00015
+        capabilities: [temperature]
+        knowledge_cutoff: '2023-12'
+      'meta/llama-3.2-90b':
+        name: 'Llama 3.2 90B Vision Instruct'
+        family: 'llama-3.2'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 8192
+        input_cost_per_1k: 0.00072
+        output_cost_per_1k: 0.00072
+        capabilities: [function_calling, temperature, vision]
+        knowledge_cutoff: '2023-12'
       'meta/llama-3.3-70b':
         name: 'Llama-3.3-70B-Instruct'
         family: 'llama-3.3'
@@ -19474,7 +20096,20 @@ providers:
         name: 'MiniMax M2'
         family: 'minimax'
         mode: chat
-        max_input_tokens: 205000
+        max_input_tokens: 262114
+        max_output_tokens: 262114
+        input_cost_per_1k: 0.00027
+        output_cost_per_1k: 0.00115
+        cache_read_cost_per_1k: 3e-05
+        cache_write_cost_per_1k: 0.00038
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+        open_weights: true
+      'minimax/minimax-m2.1':
+        name: 'MiniMax M2.1'
+        family: 'minimax-m2.1'
+        mode: chat
+        max_input_tokens: 204800
         max_output_tokens: 131072
         input_cost_per_1k: 0.0003
         output_cost_per_1k: 0.0012
@@ -19482,7 +20117,18 @@ providers:
         cache_write_cost_per_1k: 0.00038
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2024-10'
-        open_weights: true
+      'minimax/minimax-m2.1-lightning':
+        name: 'MiniMax M2.1 Lightning'
+        family: 'minimax-m2.1'
+        mode: chat
+        max_input_tokens: 204800
+        max_output_tokens: 131072
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0024
+        cache_read_cost_per_1k: 3e-05
+        cache_write_cost_per_1k: 0.00038
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
       'mistral/codestral':
         name: 'Codestral'
         family: 'codestral'
@@ -19494,6 +20140,40 @@ providers:
         capabilities: [function_calling, temperature]
         knowledge_cutoff: '2024-10'
         open_weights: true
+      'mistral/codestral-embed':
+        name: 'Codestral Embed'
+        family: 'codestral-embed'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00015
+        output_cost_per_1k: 0.0
+      'mistral/devstral-2':
+        name: 'Devstral 2'
+        family: 'devstral-medium'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 256000
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
+      'mistral/devstral-small':
+        name: 'Devstral Small 1.1'
+        family: 'devstral-small'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0001
+        output_cost_per_1k: 0.0003
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
+      'mistral/devstral-small-2':
+        name: 'Devstral Small 2'
+        family: 'devstral-small'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 256000
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
       'mistral/magistral-medium':
         name: 'Magistral Medium'
         family: 'magistral-medium'
@@ -19516,6 +20196,16 @@ providers:
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-06'
         open_weights: true
+      'mistral/ministral-14b':
+        name: 'Ministral 14B'
+        family: 'ministral-14b'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 256000
+        input_cost_per_1k: 0.0002
+        output_cost_per_1k: 0.0002
+        capabilities: [pdf_input, temperature, vision]
+        knowledge_cutoff: '2024-10'
       'mistral/ministral-3b':
         name: 'Ministral 3B'
         family: 'ministral-3b'
@@ -19538,17 +20228,44 @@ providers:
         capabilities: [function_calling, temperature]
         knowledge_cutoff: '2024-10'
         open_weights: true
-      'mistral/mistral-large':
-        name: 'Mistral Large'
+      'mistral/mistral-embed':
+        name: 'Mistral Embed'
+        family: 'mistral-embed'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.0001
+        output_cost_per_1k: 0.0
+      'mistral/mistral-large-3':
+        name: 'Mistral Large 3'
         family: 'mistral-large'
         mode: chat
-        max_input_tokens: 262144
-        max_output_tokens: 262144
+        max_input_tokens: 256000
+        max_output_tokens: 256000
         input_cost_per_1k: 0.0005
         output_cost_per_1k: 0.0015
+        capabilities: [temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'mistral/mistral-medium':
+        name: 'Mistral Medium 3.1'
+        family: 'mistral-medium'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 64000
+        input_cost_per_1k: 0.0004
+        output_cost_per_1k: 0.002
         capabilities: [function_calling, temperature, vision]
-        knowledge_cutoff: '2024-11'
-        open_weights: true
+        knowledge_cutoff: '2024-10'
+      'mistral/mistral-nemo':
+        name: 'Mistral Nemo'
+        family: 'mistral-nemo'
+        mode: chat
+        max_input_tokens: 60288
+        max_output_tokens: 16000
+        input_cost_per_1k: 4e-05
+        output_cost_per_1k: 0.00017
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-04'
       'mistral/mistral-small':
         name: 'Mistral Small'
         family: 'mistral-small'
@@ -19605,6 +20322,48 @@ providers:
         knowledge_cutoff: '2024-10'
         open_weights: true
         deprecated: true
+      'moonshotai/kimi-k2-0905':
+        name: 'Kimi K2 0905'
+        family: 'kimi-k2'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.0006
+        output_cost_per_1k: 0.0025
+        capabilities: [temperature]
+        knowledge_cutoff: '2024-10'
+      'moonshotai/kimi-k2-thinking':
+        name: 'Kimi K2 Thinking'
+        family: 'kimi-k2'
+        mode: chat
+        max_input_tokens: 216144
+        max_output_tokens: 216144
+        input_cost_per_1k: 0.00047
+        output_cost_per_1k: 0.002
+        cache_read_cost_per_1k: 0.00014
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-08'
+      'moonshotai/kimi-k2-thinking-turbo':
+        name: 'Kimi K2 Thinking Turbo'
+        family: 'kimi-k2'
+        mode: chat
+        max_input_tokens: 262114
+        max_output_tokens: 262114
+        input_cost_per_1k: 0.00115
+        output_cost_per_1k: 0.008
+        cache_read_cost_per_1k: 0.00015
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-08'
+      'moonshotai/kimi-k2-turbo':
+        name: 'Kimi K2 Turbo'
+        family: 'kimi-k2'
+        mode: chat
+        max_input_tokens: 256000
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.0024
+        output_cost_per_1k: 0.01
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-08'
       'morph/morph-v3-fast':
         name: 'Morph v3 Fast'
         family: 'morph-v3-fast'
@@ -19621,6 +20380,67 @@ providers:
         max_output_tokens: 32000
         input_cost_per_1k: 0.0009
         output_cost_per_1k: 0.0019
+      'nvidia/nemotron-3-nano-30b-a3b':
+        name: 'Nemotron 3 Nano 30B A3B'
+        family: 'nemotron'
+        mode: chat
+        max_input_tokens: 262144
+        max_output_tokens: 262144
+        input_cost_per_1k: 6e-05
+        output_cost_per_1k: 0.00024
+        capabilities: [reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+      'nvidia/nemotron-nano-12b-v2-vl':
+        name: 'Nvidia Nemotron Nano 12B V2 VL'
+        family: 'nemotron'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 131072
+        input_cost_per_1k: 0.0002
+        output_cost_per_1k: 0.0006
+        capabilities: [function_calling, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'nvidia/nemotron-nano-9b-v2':
+        name: 'Nvidia Nemotron Nano 9B V2'
+        family: 'nemotron'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 131072
+        input_cost_per_1k: 4e-05
+        output_cost_per_1k: 0.00016
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+      'openai/codex-mini':
+        name: 'Codex Mini'
+        family: 'codex'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 100000
+        input_cost_per_1k: 0.0015
+        output_cost_per_1k: 0.006
+        cache_read_cost_per_1k: 0.00038
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-3.5-turbo':
+        name: 'GPT-3.5 Turbo'
+        family: 'gpt-3.5-turbo'
+        mode: chat
+        max_input_tokens: 16385
+        max_output_tokens: 4096
+        input_cost_per_1k: 0.0005
+        output_cost_per_1k: 0.0015
+        capabilities: [temperature]
+        knowledge_cutoff: '2021-09'
+      'openai/gpt-3.5-turbo-instruct':
+        name: 'GPT-3.5 Turbo Instruct'
+        family: 'gpt-3.5-turbo'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 4096
+        input_cost_per_1k: 0.0015
+        output_cost_per_1k: 0.002
+        capabilities: [temperature]
+        knowledge_cutoff: '2021-09'
       'openai/gpt-4-turbo':
         name: 'GPT-4 Turbo'
         family: 'gpt-4-turbo'
@@ -19697,6 +20517,17 @@ providers:
         cache_read_cost_per_1k: 0.00013
         capabilities: [function_calling, json_mode, reasoning, vision]
         knowledge_cutoff: '2024-09-30'
+      'openai/gpt-5-chat':
+        name: 'GPT-5 Chat'
+        family: 'gpt-5'
+        mode: image
+        max_input_tokens: 128000
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.00125
+        output_cost_per_1k: 0.01
+        cache_read_cost_per_1k: 0.00013
+        capabilities: [function_calling, image_output, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
       'openai/gpt-5-codex':
         name: 'GPT-5-Codex'
         family: 'gpt-5-codex'
@@ -19730,15 +20561,113 @@ providers:
         cache_read_cost_per_1k: 1e-05
         capabilities: [function_calling, json_mode, reasoning, vision]
         knowledge_cutoff: '2024-05-30'
+      'openai/gpt-5-pro':
+        name: 'GPT-5 pro'
+        family: 'gpt-5'
+        mode: image
+        max_input_tokens: 400000
+        max_output_tokens: 272000
+        input_cost_per_1k: 0.015
+        output_cost_per_1k: 0.12
+        capabilities: [function_calling, image_output, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.1-codex':
+        name: 'GPT-5.1-Codex'
+        family: 'gpt-5.1'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00125
+        output_cost_per_1k: 0.01
+        cache_read_cost_per_1k: 0.00013
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.1-codex-max':
+        name: 'GPT 5.1 Codex Max'
+        family: 'gpt-5.1'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00125
+        output_cost_per_1k: 0.01
+        cache_read_cost_per_1k: 0.00013
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.1-codex-mini':
+        name: 'GPT-5.1 Codex mini'
+        family: 'gpt-5.1'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00025
+        output_cost_per_1k: 0.002
+        cache_read_cost_per_1k: 3e-05
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.1-instant':
+        name: 'GPT-5.1 Instant'
+        family: 'gpt-5.1'
+        mode: image
+        max_input_tokens: 128000
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.00125
+        output_cost_per_1k: 0.01
+        cache_read_cost_per_1k: 0.00013
+        capabilities: [function_calling, image_output, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.1-thinking':
+        name: 'GPT 5.1 Thinking'
+        family: 'gpt-5.1'
+        mode: image
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00125
+        output_cost_per_1k: 0.01
+        cache_read_cost_per_1k: 0.00013
+        capabilities: [function_calling, image_output, pdf_input, reasoning, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.2':
+        name: 'GPT-5.2'
+        family: 'gpt-5.2'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00175
+        output_cost_per_1k: 0.014
+        cache_read_cost_per_1k: 0.00018
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.2-chat':
+        name: 'GPT-5.2 Chat'
+        family: 'gpt-5.2'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 16384
+        input_cost_per_1k: 0.00175
+        output_cost_per_1k: 0.014
+        cache_read_cost_per_1k: 0.00018
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'openai/gpt-5.2-pro':
+        name: 'GPT 5.2 '
+        family: 'gpt-5.2'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.021
+        output_cost_per_1k: 0.168
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
       'openai/gpt-oss-120b':
         name: 'GPT OSS 120B'
         family: 'gpt-oss'
         mode: chat
         max_input_tokens: 131072
-        max_output_tokens: 32768
+        max_output_tokens: 131072
         input_cost_per_1k: 0.0001
         output_cost_per_1k: 0.0005
         capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
         open_weights: true
       'openai/gpt-oss-20b':
         name: 'GPT OSS 20B'
@@ -19749,7 +20678,19 @@ providers:
         input_cost_per_1k: 7e-05
         output_cost_per_1k: 0.0003
         capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
         open_weights: true
+      'openai/gpt-oss-safeguard-20b':
+        name: 'gpt-oss-safeguard-20b'
+        family: 'gpt-oss'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 65536
+        input_cost_per_1k: 8e-05
+        output_cost_per_1k: 0.0003
+        cache_read_cost_per_1k: 4e-05
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
       'openai/o1':
         name: 'o1'
         family: 'o1'
@@ -19772,6 +20713,17 @@ providers:
         cache_read_cost_per_1k: 0.0005
         capabilities: [function_calling, json_mode, reasoning, vision]
         knowledge_cutoff: '2024-05'
+      'openai/o3-deep-research':
+        name: 'o3-deep-research'
+        family: 'o3'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 100000
+        input_cost_per_1k: 0.01
+        output_cost_per_1k: 0.04
+        cache_read_cost_per_1k: 0.0025
+        capabilities: [function_calling, pdf_input, reasoning, vision]
+        knowledge_cutoff: '2024-10'
       'openai/o3-mini':
         name: 'o3-mini'
         family: 'o3-mini'
@@ -19783,6 +20735,16 @@ providers:
         cache_read_cost_per_1k: 0.00055
         capabilities: [function_calling, json_mode, reasoning]
         knowledge_cutoff: '2024-05'
+      'openai/o3-pro':
+        name: 'o3 Pro'
+        family: 'o3'
+        mode: chat
+        max_input_tokens: 200000
+        max_output_tokens: 100000
+        input_cost_per_1k: 0.02
+        output_cost_per_1k: 0.08
+        capabilities: [function_calling, pdf_input, reasoning, vision]
+        knowledge_cutoff: '2024-10'
       'openai/o4-mini':
         name: 'o4-mini'
         family: 'o4-mini'
@@ -19794,6 +20756,30 @@ providers:
         cache_read_cost_per_1k: 0.00028
         capabilities: [function_calling, json_mode, reasoning, vision]
         knowledge_cutoff: '2024-05'
+      'openai/text-embedding-3-large':
+        name: 'text-embedding-3-large'
+        family: 'text-embedding-3'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00013
+        output_cost_per_1k: 0.0
+      'openai/text-embedding-3-small':
+        name: 'text-embedding-3-small'
+        family: 'text-embedding-3'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 2e-05
+        output_cost_per_1k: 0.0
+      'openai/text-embedding-ada-002':
+        name: 'text-embedding-ada-002'
+        family: 'text-embedding-ada'
+        mode: embedding
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.0001
+        output_cost_per_1k: 0.0
       'perplexity/sonar':
         name: 'Sonar'
         family: 'sonar'
@@ -19802,7 +20788,7 @@ providers:
         max_output_tokens: 8000
         input_cost_per_1k: 0.001
         output_cost_per_1k: 0.001
-        capabilities: [temperature, vision]
+        capabilities: [function_calling, temperature, vision]
         knowledge_cutoff: '2025-02'
       'perplexity/sonar-pro':
         name: 'Sonar Pro'
@@ -19812,7 +20798,7 @@ providers:
         max_output_tokens: 8000
         input_cost_per_1k: 0.003
         output_cost_per_1k: 0.015
-        capabilities: [temperature, vision]
+        capabilities: [function_calling, temperature, vision]
         knowledge_cutoff: '2025-09'
       'perplexity/sonar-reasoning':
         name: 'Sonar Reasoning'
@@ -19834,6 +20820,16 @@ providers:
         output_cost_per_1k: 0.008
         capabilities: [reasoning, temperature]
         knowledge_cutoff: '2025-09'
+      'prime-intellect/intellect-3':
+        name: 'INTELLECT 3'
+        family: 'intellect'
+        mode: chat
+        max_input_tokens: 131072
+        max_output_tokens: 131072
+        input_cost_per_1k: 0.0002
+        output_cost_per_1k: 0.0011
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
       'vercel/v0-1.0-md':
         name: 'v0-1.0-md'
         family: 'v0'
@@ -19852,17 +20848,62 @@ providers:
         input_cost_per_1k: 0.003
         output_cost_per_1k: 0.015
         capabilities: [function_calling, reasoning, temperature, vision]
-      'xai/grok-2':
-        name: 'Grok 2'
-        family: 'grok-2'
+      'voyage/voyage-3-large':
+        name: 'voyage-3-large'
+        family: 'voyage-3'
         mode: chat
-        max_input_tokens: 131072
-        max_output_tokens: 8192
-        input_cost_per_1k: 0.002
-        output_cost_per_1k: 0.01
-        cache_read_cost_per_1k: 0.002
-        capabilities: [function_calling, temperature]
-        knowledge_cutoff: '2024-08'
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00018
+        output_cost_per_1k: 0.0
+      'voyage/voyage-3.5':
+        name: 'voyage-3.5'
+        family: 'voyage-3'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 6e-05
+        output_cost_per_1k: 0.0
+      'voyage/voyage-3.5-lite':
+        name: 'voyage-3.5-lite'
+        family: 'voyage-3'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 2e-05
+        output_cost_per_1k: 0.0
+      'voyage/voyage-code-2':
+        name: 'voyage-code-2'
+        family: 'voyage-code'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00012
+        output_cost_per_1k: 0.0
+      'voyage/voyage-code-3':
+        name: 'voyage-code-3'
+        family: 'voyage-code'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00018
+        output_cost_per_1k: 0.0
+      'voyage/voyage-finance-2':
+        name: 'voyage-finance-2'
+        family: 'voyage-finance'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00012
+        output_cost_per_1k: 0.0
+      'voyage/voyage-law-2':
+        name: 'voyage-law-2'
+        family: 'voyage-law'
+        mode: chat
+        max_input_tokens: 8192
+        max_output_tokens: 1536
+        input_cost_per_1k: 0.00012
+        output_cost_per_1k: 0.0
       'xai/grok-2-vision':
         name: 'Grok 2 Vision'
         family: 'grok-2'
@@ -19929,17 +20970,6 @@ providers:
         cache_read_cost_per_1k: 0.00075
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-07'
-      'xai/grok-4-fast':
-        name: 'Grok 4 Fast'
-        family: 'grok'
-        mode: chat
-        max_input_tokens: 2000000
-        max_output_tokens: 30000
-        input_cost_per_1k: 0.0002
-        output_cost_per_1k: 0.0005
-        cache_read_cost_per_1k: 5e-05
-        capabilities: [function_calling, reasoning, temperature, vision]
-        knowledge_cutoff: '2025-07'
       'xai/grok-4-fast-non-reasoning':
         name: 'Grok 4 Fast (Non-Reasoning)'
         family: 'grok'
@@ -19951,6 +20981,39 @@ providers:
         cache_read_cost_per_1k: 5e-05
         capabilities: [function_calling, temperature, vision]
         knowledge_cutoff: '2025-07'
+      'xai/grok-4-fast-reasoning':
+        name: 'Grok 4 Fast Reasoning'
+        family: 'grok'
+        mode: chat
+        max_input_tokens: 2000000
+        max_output_tokens: 256000
+        input_cost_per_1k: 0.0002
+        output_cost_per_1k: 0.0005
+        cache_read_cost_per_1k: 5e-05
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+      'xai/grok-4.1-fast-non-reasoning':
+        name: 'Grok 4.1 Fast Non-Reasoning'
+        family: 'grok'
+        mode: chat
+        max_input_tokens: 2000000
+        max_output_tokens: 30000
+        input_cost_per_1k: 0.0002
+        output_cost_per_1k: 0.0005
+        cache_read_cost_per_1k: 5e-05
+        capabilities: [function_calling, temperature]
+        knowledge_cutoff: '2024-10'
+      'xai/grok-4.1-fast-reasoning':
+        name: 'Grok 4.1 Fast Reasoning'
+        family: 'grok'
+        mode: chat
+        max_input_tokens: 2000000
+        max_output_tokens: 30000
+        input_cost_per_1k: 0.0002
+        output_cost_per_1k: 0.0005
+        cache_read_cost_per_1k: 5e-05
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
       'xai/grok-code-fast-1':
         name: 'Grok Code Fast 1'
         family: 'grok'
@@ -19962,12 +21025,22 @@ providers:
         cache_read_cost_per_1k: 2e-05
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2023-10'
+      'xiaomi/mimo-v2-flash':
+        name: 'MiMo V2 Flash'
+        family: 'mimo'
+        mode: chat
+        max_input_tokens: 262144
+        max_output_tokens: 32000
+        input_cost_per_1k: 0.0001
+        output_cost_per_1k: 0.00029
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
       'zai/glm-4.5':
         name: 'GLM 4.5'
         family: 'glm-4.5'
         mode: chat
-        max_input_tokens: 128000
-        max_output_tokens: 96000
+        max_input_tokens: 131072
+        max_output_tokens: 131072
         input_cost_per_1k: 0.0006
         output_cost_per_1k: 0.0022
         capabilities: [function_calling, reasoning, temperature]
@@ -19989,7 +21062,7 @@ providers:
         family: 'glm-4.5v'
         mode: chat
         max_input_tokens: 66000
-        max_output_tokens: 16000
+        max_output_tokens: 66000
         input_cost_per_1k: 0.0006
         output_cost_per_1k: 0.0018
         capabilities: [function_calling, reasoning, temperature, vision]
@@ -20001,11 +21074,58 @@ providers:
         mode: chat
         max_input_tokens: 200000
         max_output_tokens: 96000
-        input_cost_per_1k: 0.0006
-        output_cost_per_1k: 0.0022
+        input_cost_per_1k: 0.00045
+        output_cost_per_1k: 0.0018
         capabilities: [function_calling, reasoning, temperature]
         knowledge_cutoff: '2025-04'
         open_weights: true
+      'zai/glm-4.6v':
+        name: 'GLM-4.6V'
+        family: 'glm-4.6v'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 24000
+        input_cost_per_1k: 0.0003
+        output_cost_per_1k: 0.0009
+        cache_read_cost_per_1k: 5e-05
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'zai/glm-4.6v-flash':
+        name: 'GLM-4.6V-Flash'
+        family: 'glm-4.6v'
+        mode: chat
+        max_input_tokens: 128000
+        max_output_tokens: 24000
+        capabilities: [function_calling, pdf_input, reasoning, temperature, vision]
+        knowledge_cutoff: '2024-10'
+      'zai/glm-4.7':
+        name: 'GLM 4.7'
+        family: 'glm-4.7'
+        mode: chat
+        max_input_tokens: 202752
+        max_output_tokens: 120000
+        input_cost_per_1k: 0.00043
+        output_cost_per_1k: 0.00175
+        cache_read_cost_per_1k: 8e-05
+        capabilities: [function_calling, reasoning, temperature]
+        knowledge_cutoff: '2024-10'
+  vivgrid:
+    name: 'Vivgrid'
+    api_endpoint: 'https://api.vivgrid.com/v1'
+    logo_url: 'https://models.dev/logos/vivgrid.svg'
+    model_count: 1
+    models:
+      'gpt-5.1-codex':
+        name: 'GPT-5.1 Codex'
+        family: 'gpt-5-codex'
+        mode: chat
+        max_input_tokens: 400000
+        max_output_tokens: 128000
+        input_cost_per_1k: 0.00125
+        output_cost_per_1k: 0.01
+        cache_read_cost_per_1k: 0.000125
+        capabilities: [function_calling, json_mode, reasoning, vision]
+        knowledge_cutoff: '2024-09-30'
   vultr:
     name: 'Vultr'
     api_endpoint: 'https://api.vultrinference.com/v1'
