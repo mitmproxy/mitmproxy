@@ -98,10 +98,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Auto-show popover on first launch (enrollment or setup - not ready)
         // This ensures users see the UI immediately, not just the menu bar icon
+        print("[OximyApp] Initial phase: \(appState.phase.rawValue)")
         if appState.phase != .ready {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.showPopoverAndFocus()
+            print("[OximyApp] Phase is not ready, will show popover after delay")
+            // Use a slightly longer delay to ensure menu bar is fully set up
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self else {
+                    print("[OximyApp] Self was deallocated before showing popover")
+                    return
+                }
+                print("[OximyApp] Showing popover now, statusItem.button exists: \(self.statusItem.button != nil)")
+                self.showPopoverAndFocus()
             }
+        } else {
+            print("[OximyApp] Phase is ready, not auto-showing popover")
         }
 
         // Check for updates in background after startup (5 second delay)
@@ -119,19 +129,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Show popover and ensure it's focused (for first launch)
     private func showPopoverAndFocus() {
-        guard let button = statusItem.button else { return }
+        guard let button = statusItem.button else {
+            print("[OximyApp] showPopoverAndFocus: statusItem.button is nil!")
+            return
+        }
+
+        print("[OximyApp] showPopoverAndFocus: button bounds = \(button.bounds)")
 
         // Show the popover
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        print("[OximyApp] showPopoverAndFocus: popover.isShown = \(popover.isShown)")
 
         // Make the popover window key and bring to front
         if let popoverWindow = popover.contentViewController?.view.window {
             popoverWindow.makeKeyAndOrderFront(nil)
             popoverWindow.level = .floating  // Ensure it's above other windows
+            print("[OximyApp] showPopoverAndFocus: popover window set to floating level")
+        } else {
+            print("[OximyApp] showPopoverAndFocus: could not get popover window")
         }
 
         // Also activate the app to ensure keyboard focus works
         NSApp.activate(ignoringOtherApps: true)
+        print("[OximyApp] showPopoverAndFocus: app activated")
     }
 
     @objc private func handleQuitApp() {

@@ -37,8 +37,25 @@ APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
-# Copy binary
-cp ".build/$BUILD_CONFIG/OximyMac" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+# Copy binary - check multiple possible locations
+BINARY_PATH=""
+for path in \
+    ".build/arm64-apple-macosx/$BUILD_CONFIG/OximyMac" \
+    ".build/$BUILD_CONFIG/OximyMac"; do
+    if [ -f "$path" ]; then
+        BINARY_PATH="$path"
+        break
+    fi
+done
+if [ -z "$BINARY_PATH" ]; then
+    echo "ERROR: Binary not found. Run 'swift build -c $BUILD_CONFIG' first."
+    exit 1
+fi
+cp "$BINARY_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+
+# Fix rpath so the binary can find frameworks in Contents/Frameworks
+echo "    Fixing rpath for framework loading..."
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP_BUNDLE/Contents/MacOS/$APP_NAME" 2>/dev/null || true
 
 # Create Info.plist
 cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
@@ -90,12 +107,17 @@ EOF
 echo "[4/7] Copying frameworks..."
 mkdir -p "$APP_BUNDLE/Contents/Frameworks"
 
-# Copy Sparkle.framework - check build output first, then artifacts
-SPARKLE_FRAMEWORK="$PROJECT_DIR/.build/$BUILD_CONFIG/Sparkle.framework"
-if [ ! -d "$SPARKLE_FRAMEWORK" ]; then
-    # Fallback to xcframework artifacts
-    SPARKLE_FRAMEWORK="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
-fi
+# Copy Sparkle.framework - check multiple possible locations
+SPARKLE_FRAMEWORK=""
+for path in \
+    "$PROJECT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG/Sparkle.framework" \
+    "$PROJECT_DIR/.build/$BUILD_CONFIG/Sparkle.framework" \
+    "$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"; do
+    if [ -d "$path" ]; then
+        SPARKLE_FRAMEWORK="$path"
+        break
+    fi
+done
 if [ -d "$SPARKLE_FRAMEWORK" ]; then
     echo "    Copying Sparkle.framework from $SPARKLE_FRAMEWORK..."
     cp -R "$SPARKLE_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/"
@@ -105,12 +127,17 @@ else
     exit 1
 fi
 
-# Copy Sentry.framework - check build output first, then artifacts
-SENTRY_FRAMEWORK="$PROJECT_DIR/.build/$BUILD_CONFIG/Sentry.framework"
-if [ ! -d "$SENTRY_FRAMEWORK" ]; then
-    # Fallback to xcframework artifacts (dynamic version for macOS)
-    SENTRY_FRAMEWORK="$PROJECT_DIR/.build/artifacts/sentry-cocoa/Sentry-Dynamic/Sentry-Dynamic.xcframework/macos-arm64_x86_64/Sentry.framework"
-fi
+# Copy Sentry.framework - check multiple possible locations
+SENTRY_FRAMEWORK=""
+for path in \
+    "$PROJECT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG/Sentry.framework" \
+    "$PROJECT_DIR/.build/$BUILD_CONFIG/Sentry.framework" \
+    "$PROJECT_DIR/.build/artifacts/sentry-cocoa/Sentry-Dynamic/Sentry-Dynamic.xcframework/macos-arm64_x86_64/Sentry.framework"; do
+    if [ -d "$path" ]; then
+        SENTRY_FRAMEWORK="$path"
+        break
+    fi
+done
 if [ -d "$SENTRY_FRAMEWORK" ]; then
     echo "    Copying Sentry.framework from $SENTRY_FRAMEWORK..."
     cp -R "$SENTRY_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/Sentry.framework"
@@ -147,10 +174,12 @@ else
     exit 1
 fi
 
-# Create app icon from Oximy-rounded.png BEFORE signing (critical!)
+# Create app icon BEFORE signing (critical!)
+# IMPORTANT: Use SQUARE icon - macOS automatically applies rounded corners to app icons
+# Using pre-rounded icons causes double-rounding and bleed issues
 echo "[5/7] Creating app icon..."
-ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
-# Fall back to original if rounded version doesn't exist
+ICON_SOURCE="$PROJECT_DIR/Resources/Assets.xcassets/AppIcon.appiconset/1024.png"
+# Fall back to Oximy.png if 1024.png doesn't exist
 if [ ! -f "$ICON_SOURCE" ]; then
     ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
 fi
@@ -173,7 +202,7 @@ if [ -f "$ICON_SOURCE" ]; then
     # Convert to icns
     iconutil -c icns "$ICONSET_DIR" -o "$APP_BUNDLE/Contents/Resources/AppIcon.icns" 2>/dev/null || true
     rm -rf "$ICONSET_DIR"
-    echo "    Created AppIcon.icns from Oximy.png"
+    echo "    Created AppIcon.icns from $ICON_SOURCE"
 else
     echo "    WARNING: Oximy.png not found, skipping icon generation"
 fi
