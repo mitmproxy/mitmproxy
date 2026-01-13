@@ -6,10 +6,13 @@
       "vendor": "The Browser Company",
       "vendor_url": "https://arc.net",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows"],
       "signatures": {
         "macos": {
           "bundle_id": "company.thebrowser.Browser"
+        },
+        "windows": {
+          "exe": "Arc.exe"
         }
       },
       "icon": "arc.png"
@@ -19,10 +22,16 @@
       "vendor": "Google",
       "vendor_url": "https://google.com/chrome",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows", "linux"],
       "signatures": {
         "macos": {
           "bundle_id": "com.google.Chrome"
+        },
+        "windows": {
+          "exe": "chrome.exe"
+        },
+        "linux": {
+          "exe": "chrome"
         }
       },
       "icon": "google-chrome.png"
@@ -45,10 +54,16 @@
       "vendor": "Mozilla",
       "vendor_url": "https://mozilla.org/firefox",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows", "linux"],
       "signatures": {
         "macos": {
           "bundle_id": "org.mozilla.firefox"
+        },
+        "windows": {
+          "exe": "firefox.exe"
+        },
+        "linux": {
+          "exe": "firefox"
         }
       },
       "icon": "firefox.png"
@@ -58,10 +73,16 @@
       "vendor": "Microsoft",
       "vendor_url": "https://microsoft.com/edge",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows", "linux"],
       "signatures": {
         "macos": {
           "bundle_id": "com.microsoft.edgemac"
+        },
+        "windows": {
+          "exe": "msedge.exe"
+        },
+        "linux": {
+          "exe": "msedge"
         }
       },
       "icon": "edge.png"
@@ -71,10 +92,16 @@
       "vendor": "Brave Software",
       "vendor_url": "https://brave.com",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows", "linux"],
       "signatures": {
         "macos": {
           "bundle_id": "com.brave.Browser"
+        },
+        "windows": {
+          "exe": "brave.exe"
+        },
+        "linux": {
+          "exe": "brave"
         }
       },
       "icon": "brave.png"
@@ -84,10 +111,16 @@
       "vendor": "Opera Software",
       "vendor_url": "https://opera.com",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows", "linux"],
       "signatures": {
         "macos": {
           "bundle_id": "com.operasoftware.Opera"
+        },
+        "windows": {
+          "exe": "opera.exe"
+        },
+        "linux": {
+          "exe": "opera"
         }
       },
       "icon": "opera.png"
@@ -97,10 +130,16 @@
       "vendor": "Vivaldi Technologies",
       "vendor_url": "https://vivaldi.com",
       "category": "browser",
-      "platforms": ["macos"],
+      "platforms": ["macos", "windows", "linux"],
       "signatures": {
         "macos": {
           "bundle_id": "com.vivaldi.Vivaldi"
+        },
+        "windows": {
+          "exe": "vivaldi.exe"
+        },
+        "linux": {
+          "exe": "vivaldi"
         }
       },
       "icon": "vivaldi.png"
