@@ -50,14 +50,24 @@ try {
     Expand-Archive -Path $ZipPath -DestinationPath $OutputDir
     Write-Host "  Extracted to: $OutputDir" -ForegroundColor Green
 
-    # Step 3: Enable pip by modifying python*._pth file
-    Write-Host "Step 3/5: Enabling pip support..." -ForegroundColor Yellow
+    # Step 3: Enable pip and configure paths in python*._pth file
+    # IMPORTANT: The ._pth file overrides PYTHONPATH, so we must add paths here
+    Write-Host "Step 3/5: Enabling pip support and configuring paths..." -ForegroundColor Yellow
     $PthFile = Get-ChildItem $OutputDir -Filter "python*._pth" | Select-Object -First 1
     if ($PthFile) {
-        $PthContent = Get-Content $PthFile.FullName
-        $PthContent = $PthContent -replace "#import site", "import site"
-        Set-Content $PthFile.FullName $PthContent
+        # Build new ._pth content with all required paths
+        # Note: Paths are relative to python.exe location (python-embed/)
+        $NewPthContent = @(
+            "python312.zip",
+            ".",
+            "Lib\site-packages",
+            "",
+            "# Enable site module for pip to work",
+            "import site"
+        )
+        Set-Content $PthFile.FullName ($NewPthContent -join "`n")
         Write-Host "  Modified: $($PthFile.Name)" -ForegroundColor Green
+        Write-Host "  Added Lib\site-packages to Python path" -ForegroundColor Green
     } else {
         Write-Warning "Could not find ._pth file to enable pip"
     }

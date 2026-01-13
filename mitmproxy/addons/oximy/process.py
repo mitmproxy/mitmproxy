@@ -67,6 +67,7 @@ class ProcessResolver:
         self._bundle_id_cache: dict[str, str | None] = {}  # app_path -> bundle_id
         self._is_macos = platform.system() == "Darwin"
         self._is_linux = platform.system() == "Linux"
+        self._is_windows = platform.system() == "Windows"
         self._bundle_id_to_app_id: dict[str, str] = {}  # bundle_id -> app_id
 
     def set_bundle_id_index(self, index: dict[str, str]) -> None:
@@ -83,7 +84,7 @@ class ProcessResolver:
         Returns:
             ClientProcess with available information, or minimal info on failure
         """
-        if not (self._is_macos or self._is_linux):
+        if not (self._is_macos or self._is_linux or self._is_windows):
             return ClientProcess(
                 pid=None,
                 name="Unknown (unsupported platform)",
@@ -163,6 +164,9 @@ class ProcessResolver:
 
         We want the client side where the port is the source.
         """
+        if self._is_windows:
+            return await self._find_pid_for_port_windows(port)
+
         try:
             # Use regular lsof output (not -F) so we can parse the connection direction
             proc = await asyncio.create_subprocess_exec(
@@ -197,6 +201,50 @@ class ProcessResolver:
 
         return None
 
+    async def _find_pid_for_port_windows(self, port: int) -> int | None:
+        """
+        Find the PID that owns a local port on Windows using netstat.
+
+        Uses 'netstat -aon' which shows:
+        Proto  Local Address          Foreign Address        State           PID
+        TCP    127.0.0.1:54029        127.0.0.1:8088         ESTABLISHED     1234
+        """
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "netstat", "-aon",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                logger.debug(f"netstat timed out for port {port}")
+                return None
+
+            if proc.returncode == 0:
+                for line in stdout.decode().strip().split("\n"):
+                    # Skip header lines
+                    if not line.strip() or "Proto" in line:
+                        continue
+
+                    parts = line.split()
+                    if len(parts) >= 5 and parts[0] == "TCP":
+                        # Local Address is parts[1], e.g., "127.0.0.1:54029"
+                        local_addr = parts[1]
+                        # Check if our port is the local (source) port
+                        if local_addr.endswith(f":{port}"):
+                            try:
+                                return int(parts[4])  # PID is last field
+                            except ValueError:
+                                continue
+
+        except (ValueError, OSError) as e:
+            logger.debug(f"Failed to find PID for port {port} on Windows: {e}")
+
+        return None
+
     async def _get_process_info(self, pid: int) -> dict | None:
         """
         Get process information for a PID, using cache if available.
@@ -213,7 +261,10 @@ class ProcessResolver:
         return info
 
     async def _fetch_process_info(self, pid: int) -> dict | None:
-        """Fetch process info from the system using ps."""
+        """Fetch process info from the system using ps (Unix) or wmic (Windows)."""
+        if self._is_windows:
+            return await self._fetch_process_info_windows(pid)
+
         try:
             # Single ps call to get all needed info
             # Format: pid, ppid, user, full command path
@@ -244,13 +295,69 @@ class ProcessResolver:
 
         return None
 
+    async def _fetch_process_info_windows(self, pid: int) -> dict | None:
+        """Fetch process info on Windows using wmic."""
+        try:
+            # Use wmic to get process info
+            # wmic process where processid=1234 get name,executablepath,parentprocessid /format:csv
+            proc = await asyncio.create_subprocess_exec(
+                "wmic", "process", "where", f"processid={pid}",
+                "get", "name,executablepath,parentprocessid",
+                "/format:csv",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                logger.debug(f"wmic timed out for PID {pid}")
+                return None
+
+            if proc.returncode == 0 and stdout.strip():
+                # CSV format: Node,ExecutablePath,Name,ParentProcessId
+                lines = stdout.decode().strip().split("\n")
+                for line in lines:
+                    if not line.strip() or line.startswith("Node"):
+                        continue
+                    parts = line.strip().split(",")
+                    if len(parts) >= 4:
+                        # parts: [Node, ExecutablePath, Name, ParentProcessId]
+                        exe_path = parts[1] if parts[1] else None
+                        name = parts[2] if parts[2] else None
+                        try:
+                            ppid = int(parts[3]) if parts[3] else None
+                        except ValueError:
+                            ppid = None
+
+                        return {
+                            "pid": pid,
+                            "ppid": ppid,
+                            "user": None,  # wmic doesn't easily give user
+                            "path": exe_path or name,
+                        }
+
+        except (ValueError, OSError) as e:
+            logger.debug(f"Failed to get process info for PID {pid} on Windows: {e}")
+
+        return None
+
     def _extract_name(self, path: str | None) -> str | None:
         """Extract a readable process name from a path."""
         if not path:
             return None
 
-        # Get the last component of the path
-        name = path.rsplit("/", 1)[-1]
+        # Get the last component of the path (handle both Unix and Windows)
+        # Try backslash first (Windows), then forward slash (Unix)
+        if "\\" in path:
+            name = path.rsplit("\\", 1)[-1]
+        else:
+            name = path.rsplit("/", 1)[-1]
+
+        # Remove .exe extension on Windows for cleaner display
+        if name.lower().endswith(".exe"):
+            name = name[:-4]
 
         # Clean up macOS app bundle names
         # e.g., "Cursor Helper (Renderer)" stays as is

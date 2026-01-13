@@ -287,8 +287,9 @@ public class MitmService : IDisposable
             $"--set \"confdir={Constants.OximyDir}\"",
             $"--mode regular@{port}",
             "--listen-host 127.0.0.1",
-            "--ssl-insecure",
-            "-q"
+            "--ssl-insecure"
+            // Note: -q (quiet) flag removed to enable error visibility for debugging
+            // Add back once trace recording is confirmed working
         };
 
         return string.Join(" ", args);
