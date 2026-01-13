@@ -69,9 +69,17 @@ try {
     & $PythonExe $GetPipPath --no-warn-script-location 2>&1 | Out-Null
     Write-Host "  Pip installed successfully" -ForegroundColor Green
 
-    # Step 5: Install mitmproxy
-    Write-Host "Step 5/5: Installing mitmproxy..." -ForegroundColor Yellow
+    # Step 5: Install mitmproxy and dependencies
+    Write-Host "Step 5/6: Installing mitmproxy..." -ForegroundColor Yellow
     & $PythonExe -m pip install mitmproxy --no-warn-script-location 2>&1 | ForEach-Object {
+        if ($_ -match "Successfully installed") {
+            Write-Host "  $_" -ForegroundColor Green
+        }
+    }
+
+    # Step 6: Install jsonata-python for configurable parsers
+    Write-Host "Step 6/6: Installing jsonata-python..." -ForegroundColor Yellow
+    & $PythonExe -m pip install jsonata-python --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
         }

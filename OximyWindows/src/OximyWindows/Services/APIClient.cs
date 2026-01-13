@@ -28,7 +28,14 @@ public class APIClient
 
     private APIClient()
     {
-        _httpClient = new HttpClient
+        // Bypass system proxy for API calls - we don't want our own traffic
+        // going through mitmproxy (causes loops and connection issues)
+        var handler = new HttpClientHandler
+        {
+            UseProxy = false
+        };
+
+        _httpClient = new HttpClient(handler)
         {
             BaseAddress = new Uri(Constants.ApiBaseUrl),
             Timeout = TimeSpan.FromSeconds(Constants.ApiTimeoutSeconds)

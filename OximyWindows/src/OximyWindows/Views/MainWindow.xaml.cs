@@ -100,6 +100,21 @@ public partial class MainWindow : Window
         {
             Dispatcher.Invoke(UpdateTrayTooltip);
         }
+        else if (e.PropertyName == nameof(AppState.Phase))
+        {
+            Dispatcher.Invoke(() =>
+            {
+                // Refresh the popup to show the new phase's view
+                if (_popup != null)
+                {
+                    _popup.RefreshContent();
+                }
+                else
+                {
+                    ShowPopup();
+                }
+            });
+        }
     }
 
     private async void OnNetworkChanged(object? sender, EventArgs e)

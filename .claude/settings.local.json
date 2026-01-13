@@ -25,7 +25,11 @@
       "Bash(start OximyWindows.exe)",
       "Bash(ls:*)",
       "Bash(log show:*)",
-      "Bash(mdfind:*)"
+      "Bash(mdfind:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(wmic process:*)",
+      "Bash(\"D:/Hirak Desai/Developer/Oximy/mitmproxy/OximyWindows/publish/win-x64/Resources/python-embed/python.exe\" -c \"import jsonata; print\\(''jsonata installed''\\)\")"
     ]
   }
 }
