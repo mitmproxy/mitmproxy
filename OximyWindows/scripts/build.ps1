@@ -90,6 +90,30 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "  Build complete: $OutputDir" -ForegroundColor Green
 
+# Step 5b: Update python._pth to include addon directory
+# CRITICAL: The ._pth file overrides PYTHONPATH, so addon path must be added here
+Write-Host "Updating Python path configuration..." -ForegroundColor Yellow
+$PublishedPythonDir = Join-Path $OutputDir "Resources\python-embed"
+$PthFile = Get-ChildItem $PublishedPythonDir -Filter "python*._pth" -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($PthFile) {
+    # Build new ._pth content with addon directory
+    # Paths are relative to python.exe (which is in Resources/python-embed/)
+    # The addon is at Resources/oximy-addon/, so relative path is ..\oximy-addon
+    $NewPthContent = @(
+        "python312.zip",
+        ".",
+        "Lib\site-packages",
+        "..\oximy-addon",
+        "",
+        "# Enable site module for pip to work",
+        "import site"
+    )
+    Set-Content $PthFile.FullName ($NewPthContent -join "`n")
+    Write-Host "  Updated: $($PthFile.Name) with addon path" -ForegroundColor Green
+} else {
+    Write-Warning "Could not find ._pth file in published output"
+}
+
 # Step 6: Create installer if requested
 if ($CreateInstaller) {
     Write-Host ""

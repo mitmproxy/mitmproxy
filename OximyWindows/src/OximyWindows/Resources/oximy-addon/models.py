@@ -4,12 +4,14 @@ Core type definitions for the Oximy addon.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Literal, TYPE_CHECKING
-import uuid
-import time
 import random
+import time
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
+from datetime import timezone
+from typing import Literal
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from process import ClientProcess
@@ -19,12 +21,13 @@ if TYPE_CHECKING:
 class MatchResult:
     """Result of matching a flow against the OISP bundle."""
 
-    classification: Literal["full_trace", "identifiable", "drop"]
+    classification: Literal["full_extraction", "feature_extraction", "metadata_only", "drop"]
     source_type: Literal["api", "app", "website"] | None = None
     source_id: str | None = None  # "openai", "cursor", "chatgpt"
     provider_id: str | None = None  # "openai", "anthropic"
     api_format: str | None = None  # "openai", "anthropic", "google"
     endpoint: str | None = None  # "chat", "voice", etc.
+    feature_type: str | None = None  # "chat", "asset_creation", "code_gen", etc.
 
 
 @dataclass
@@ -34,19 +37,29 @@ class EventSource:
     type: Literal["api", "app", "website"]
     id: str
     endpoint: str | None = None
+    referer: str | None = None
+    origin: str | None = None
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "type": self.type,
             "id": self.id,
             "endpoint": self.endpoint,
         }
+        if self.referer:
+            result["referer"] = self.referer
+        if self.origin:
+            result["origin"] = self.origin
+        return result
 
 
 @dataclass
 class InteractionRequest:
     """Parsed request data."""
 
+    prompt: str | None = (
+        None  # Single prompt (for apps like Granola that send chat history)
+    )
     messages: list[dict] | None = None
     model: str | None = None
     temperature: float | None = None
@@ -56,6 +69,8 @@ class InteractionRequest:
 
     def to_dict(self) -> dict:
         result: dict = {}
+        if self.prompt is not None:
+            result["prompt"] = self.prompt
         if self.messages is not None:
             result["messages"] = self.messages
         if self.model is not None:
@@ -80,6 +95,7 @@ class InteractionResponse:
     finish_reason: str | None = None
     usage: dict | None = None
     raw: dict | None = None
+    content_analysis: dict | None = None  # Rich content analysis
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -91,6 +107,8 @@ class InteractionResponse:
             result["finish_reason"] = self.finish_reason
         if self.usage is not None:
             result["usage"] = self.usage
+        if self.content_analysis is not None:
+            result["content_analysis"] = self.content_analysis
         if self.raw is not None:
             result["_raw"] = self.raw
         return result
@@ -100,18 +118,23 @@ class InteractionResponse:
 class Interaction:
     """Full interaction data for full_trace events."""
 
+    type: str  # "chat", "completion", etc.
     model: str | None
     request: InteractionRequest
     response: InteractionResponse
 
     def to_dict(self) -> dict:
-        result: dict = {
+        data: dict = {
             "request": self.request.to_dict(),
             "response": self.response.to_dict(),
         }
         if self.model is not None:
-            result["model"] = self.model
-        return result
+            data["model"] = self.model
+
+        return {
+            "type": self.type,
+            "data": data,
+        }
 
 
 @dataclass
@@ -131,6 +154,16 @@ class EventTiming:
 
 
 @dataclass
+class Subscription:
+    """User's subscription/plan information for an AI service."""
+
+    plan: str | None = None
+
+    def to_dict(self) -> dict:
+        return {"plan": self.plan if self.plan is not None else ""}
+
+
+@dataclass
 class OximyEvent:
     """
     An OISP event representing an AI interaction.
@@ -141,25 +174,31 @@ class OximyEvent:
     event_id: str
     timestamp: str
     source: EventSource
-    trace_level: Literal["full", "identifiable"]
+    trace_level: Literal["full_extraction", "feature_extraction", "metadata_only"]
     timing: EventTiming
     interaction: Interaction | None = None
     metadata: dict | None = None
     client: ClientProcess | None = None
+    subscription: Subscription | None = None
 
     @classmethod
     def create(
         cls,
         source: EventSource,
-        trace_level: Literal["full", "identifiable"],
+        trace_level: Literal["full_extraction", "feature_extraction", "metadata_only"],
         timing: EventTiming,
         interaction: Interaction | None = None,
         metadata: dict | None = None,
         client: ClientProcess | None = None,
+        subscription: Subscription | None = None,
     ) -> OximyEvent:
         """Create a new event with auto-generated ID and timestamp."""
         event_id = _generate_uuid7()
-        timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        timestamp = (
+            datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z")
+        )
 
         return cls(
             event_id=event_id,
@@ -170,6 +209,7 @@ class OximyEvent:
             interaction=interaction,
             metadata=metadata,
             client=client,
+            subscription=subscription,
         )
 
     def to_dict(self) -> dict:
@@ -185,9 +225,13 @@ class OximyEvent:
         if self.client:
             result["client"] = self.client.to_dict()
 
-        if self.trace_level == "full" and self.interaction:
+        if self.interaction:
             result["interaction"] = self.interaction.to_dict()
-        elif self.trace_level == "identifiable" and self.metadata:
+
+        if self.subscription:
+            result["subscription"] = self.subscription.to_dict()
+
+        if self.metadata:
             result["metadata"] = self.metadata
 
         return result

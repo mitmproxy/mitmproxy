@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -12,7 +13,8 @@ namespace OximyWindows.Views;
 public partial class LoginView : UserControl
 {
     private readonly TextBox[] _digitBoxes;
-    private static readonly HttpClient _httpClient = new();
+    // Bypass system proxy for API calls - we don't want our traffic going through mitmproxy
+    private static readonly HttpClient _httpClient = new(new HttpClientHandler { UseProxy = false });
 
     public LoginView()
     {
@@ -122,16 +124,39 @@ public partial class LoginView : UserControl
 
         var json = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var url = $"{Constants.ApiBaseUrl}devices/register";
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"{Constants.ApiBaseUrl}/devices/register");
+        Debug.WriteLine($"[LoginView] === REGISTRATION REQUEST ===");
+        Debug.WriteLine($"[LoginView] URL: {url}");
+        Debug.WriteLine($"[LoginView] Code: {code}");
+        Debug.WriteLine($"[LoginView] Request: {json}");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Content = content;
         request.Headers.Add("X-Enrollment-Token", code);
 
         var response = await _httpClient.SendAsync(request);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        Debug.WriteLine($"[LoginView] === REGISTRATION RESPONSE ===");
+        Debug.WriteLine($"[LoginView] Status: {(int)response.StatusCode} {response.StatusCode}");
+        Debug.WriteLine($"[LoginView] Response: {responseBody}");
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = await response.Content.ReadAsStringAsync();
+            // Try to parse API error message
+            try
+            {
+                var errorOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var errorResult = JsonSerializer.Deserialize<DeviceRegistrationResponse>(responseBody, errorOptions);
+                if (errorResult?.Error?.Message != null)
+                {
+                    Debug.WriteLine($"[LoginView] API error: {errorResult.Error.Message}");
+                    throw new Exception(errorResult.Error.Message);
+                }
+            }
+            catch (JsonException) { }
+
             throw new Exception(response.StatusCode == System.Net.HttpStatusCode.Unauthorized
                 ? "Invalid code. Please try again."
                 : response.StatusCode == System.Net.HttpStatusCode.BadRequest
@@ -139,7 +164,6 @@ public partial class LoginView : UserControl
                     : $"Verification failed: {response.StatusCode}");
         }
 
-        var responseBody = await response.Content.ReadAsStringAsync();
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var result = JsonSerializer.Deserialize<DeviceRegistrationResponse>(responseBody, options);
 
@@ -148,7 +172,8 @@ public partial class LoginView : UserControl
             throw new Exception(result?.Error?.Message ?? "Registration failed");
         }
 
-        // Use workspaceName if available, fall back to workspaceId
+        Debug.WriteLine($"[LoginView] Registration successful! DeviceId: {result.Data.DeviceId}");
+
         var workspaceName = result.Data.WorkspaceName ?? result.Data.WorkspaceId;
         return (workspaceName, result.Data.DeviceToken);
     }

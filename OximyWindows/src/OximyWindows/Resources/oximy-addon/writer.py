@@ -11,7 +11,8 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
-from typing import IO, TYPE_CHECKING
+from typing import IO
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from models import OximyEvent
@@ -39,7 +40,7 @@ class EventWriter:
         self.output_dir = Path(output_dir).expanduser()
         self.filename_pattern = filename_pattern
         self._current_file: Path | None = None
-        self._fo: IO[bytes] | None = None
+        self._fo: IO[str] | None = None
         self._event_count: int = 0
 
     def write(self, event: OximyEvent) -> None:
@@ -55,14 +56,10 @@ class EventWriter:
             return
 
         try:
-            # Serialize and write
+            # Serialize and write (line-buffered mode flushes after each \n)
             line = json.dumps(event.to_dict(), separators=(",", ":"))
-            self._fo.write((line + "\n").encode("utf-8"))
-            self._fo.flush()
+            self._fo.write(line + "\n")
             self._event_count += 1
-
-            if self._event_count % 100 == 0:
-                logger.debug(f"Written {self._event_count} events to {self._current_file}")
 
         except (IOError, OSError) as e:
             logger.error(f"Failed to write event: {e}")
@@ -89,9 +86,11 @@ class EventWriter:
             logger.error(f"Failed to create output directory: {e}")
             return
 
-        # Open new file in append mode
+        # Open new file in append mode with line buffering (buffering=1)
+        # Line buffering ensures each event is flushed after the newline
+        # This is critical for a monitoring system - no data loss on crash
         try:
-            self._fo = open(expected_file, "ab")
+            self._fo = open(expected_file, "a", encoding="utf-8", buffering=1)
             self._current_file = expected_file
             logger.info(f"Opened trace file: {expected_file}")
         except IOError as e:
@@ -107,7 +106,6 @@ class EventWriter:
         """Close the current file handle."""
         if self._fo is not None:
             try:
-                self._fo.flush()
                 self._fo.close()
                 logger.info(f"Closed trace file (wrote {self._event_count} events)")
             except IOError as e:

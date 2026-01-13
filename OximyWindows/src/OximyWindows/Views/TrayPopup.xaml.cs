@@ -46,6 +46,16 @@ public partial class TrayPopup : Window
     }
 
     /// <summary>
+    /// Refresh the popup content based on current phase.
+    /// </summary>
+    public void RefreshContent()
+    {
+        UpdateContent();
+        Show();
+        Activate();
+    }
+
+    /// <summary>
     /// Show the popup near the system tray icon.
     /// </summary>
     public void ShowNearTray(TaskbarIcon trayIcon)
