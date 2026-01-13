@@ -3,7 +3,7 @@
 # This workflow builds and releases the Oximy desktop applications for macOS and Windows.
 # It creates signed, notarized builds with auto-update support via Sparkle (macOS) and Velopack (Windows).
 #
-# macOS: Builds ARM64 native binary. Intel Macs run via Rosetta 2 translation.
+# macOS: Builds Universal Binary (ARM64 + x86_64) for native support on both Apple Silicon and Intel Macs.
 #
 # Trigger: Manual dispatch with version number input
 #
@@ -38,7 +38,7 @@ env:
 
 jobs:
   # ===========================================
-  # Build macOS App with Sparkle (ARM64, runs on Intel via Rosetta 2)
+  # Build macOS App with Sparkle (Universal Binary: ARM64 + x86_64)
   # ===========================================
   build-macos:
     name: Build macOS
@@ -412,8 +412,8 @@ jobs:
 
             ### macOS Compatibility
 
-            - **Apple Silicon (M1/M2/M3)**: Native ARM64 binary
-            - **Intel Macs**: Runs via Rosetta 2 translation (automatically installed on first launch)
+            - **Apple Silicon (M1/M2/M3/M4)**: Native ARM64 binary
+            - **Intel Macs**: Native x86_64 binary (Universal Binary)
 
             ### Auto-Updates
 

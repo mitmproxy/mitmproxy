@@ -11,13 +11,15 @@ APP_NAME="Oximy"
 VERSION="${VERSION:-1.0.0}"
 BUILD_CONFIG="${BUILD_CONFIG:-release}"  # Can be 'release' or 'debug'
 
-# Architecture info (ARM64 native, Intel via Rosetta 2)
+# Build Universal Binary by default (supports both Apple Silicon and Intel Macs)
+BUILD_UNIVERSAL="${BUILD_UNIVERSAL:-true}"
 ARCH=$(uname -m)
 
 echo "=== Oximy Build ==="
 echo "Version: $VERSION"
 echo "Configuration: $BUILD_CONFIG"
-echo "Architecture: $ARCH (Intel Macs use Rosetta 2)"
+echo "Universal Binary: $BUILD_UNIVERSAL"
+echo "Host Architecture: $ARCH"
 echo "Project: $PROJECT_DIR"
 echo ""
 
@@ -29,7 +31,14 @@ mkdir -p "$BUILD_DIR"
 # Build
 echo "[2/7] Building in $BUILD_CONFIG mode..."
 cd "$PROJECT_DIR"
-swift build -c "$BUILD_CONFIG"
+
+if [ "$BUILD_UNIVERSAL" = "true" ]; then
+    echo "    Building Universal Binary (arm64 + x86_64)..."
+    swift build -c "$BUILD_CONFIG" --arch arm64 --arch x86_64
+else
+    echo "    Building for host architecture only ($ARCH)..."
+    swift build -c "$BUILD_CONFIG"
+fi
 
 # Create app bundle structure
 echo "[3/7] Creating app bundle..."
@@ -38,9 +47,13 @@ mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 # Copy binary - check multiple possible locations
+# Universal builds go to .build/apple/Products/Release/ or similar
 BINARY_PATH=""
 for path in \
+    ".build/apple/Products/Release/OximyMac" \
+    ".build/apple/Products/Debug/OximyMac" \
     ".build/arm64-apple-macosx/$BUILD_CONFIG/OximyMac" \
+    ".build/x86_64-apple-macosx/$BUILD_CONFIG/OximyMac" \
     ".build/$BUILD_CONFIG/OximyMac"; do
     if [ -f "$path" ]; then
         BINARY_PATH="$path"
@@ -48,9 +61,22 @@ for path in \
     fi
 done
 if [ -z "$BINARY_PATH" ]; then
-    echo "ERROR: Binary not found. Run 'swift build -c $BUILD_CONFIG' first."
+    echo "ERROR: Binary not found. Searched locations:"
+    echo "  - .build/apple/Products/Release/OximyMac"
+    echo "  - .build/apple/Products/Debug/OximyMac"
+    echo "  - .build/arm64-apple-macosx/$BUILD_CONFIG/OximyMac"
+    echo "  - .build/x86_64-apple-macosx/$BUILD_CONFIG/OximyMac"
+    echo "  - .build/$BUILD_CONFIG/OximyMac"
+    echo ""
+    echo "Available in .build:"
+    find .build -name "OximyMac" -type f 2>/dev/null | head -10
     exit 1
 fi
+
+# Verify architecture
+echo "    Binary: $BINARY_PATH"
+file "$BINARY_PATH"
+
 cp "$BINARY_PATH" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
 # Fix rpath so the binary can find frameworks in Contents/Frameworks
@@ -108,8 +134,11 @@ echo "[4/7] Copying frameworks..."
 mkdir -p "$APP_BUNDLE/Contents/Frameworks"
 
 # Copy Sparkle.framework - check multiple possible locations
+# Universal builds and xcframework both use macos-arm64_x86_64 which is already universal
 SPARKLE_FRAMEWORK=""
 for path in \
+    "$PROJECT_DIR/.build/apple/Products/Release/Sparkle.framework" \
+    "$PROJECT_DIR/.build/apple/Products/Debug/Sparkle.framework" \
     "$PROJECT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG/Sparkle.framework" \
     "$PROJECT_DIR/.build/$BUILD_CONFIG/Sparkle.framework" \
     "$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"; do
@@ -130,6 +159,8 @@ fi
 # Copy Sentry.framework - check multiple possible locations
 SENTRY_FRAMEWORK=""
 for path in \
+    "$PROJECT_DIR/.build/apple/Products/Release/Sentry.framework" \
+    "$PROJECT_DIR/.build/apple/Products/Debug/Sentry.framework" \
     "$PROJECT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG/Sentry.framework" \
     "$PROJECT_DIR/.build/$BUILD_CONFIG/Sentry.framework" \
     "$PROJECT_DIR/.build/artifacts/sentry-cocoa/Sentry-Dynamic/Sentry-Dynamic.xcframework/macos-arm64_x86_64/Sentry.framework"; do
