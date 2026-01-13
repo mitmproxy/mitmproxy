@@ -282,143 +282,30 @@ else
     echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
 fi
 
-# Create DMG using create-dmg (https://github.com/sindresorhus/create-dmg)
-echo "[7/7] Creating DMG with create-dmg..."
+# Skip DMG creation here - it will be done AFTER notarization in CI
+# This ensures the app bundle signature is not invalidated by DMG creation
+echo "[7/7] Skipping DMG creation (done after notarization in CI)..."
 DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_PATH="$BUILD_DIR/$DMG_NAME"
+echo "    App bundle ready for notarization: $APP_BUNDLE"
+echo "    DMG will be created after stapling notarization ticket"
 
-# Source nvm to get access to npm-installed create-dmg
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-# Check if create-dmg is available
-if command -v create-dmg &> /dev/null; then
-    echo "    Found create-dmg at: $(which create-dmg)"
-    cd "$BUILD_DIR"
-    # Remove existing DMG if present
-    rm -f "$DMG_PATH" 2>/dev/null || true
-    rm -f "$APP_NAME $VERSION.dmg" 2>/dev/null || true
-
-    # create-dmg automatically handles Applications symlink and styling
-    # Use --no-code-sign since the app is already signed, and DMG will be signed during notarization
-    if create-dmg "$APP_BUNDLE" "$BUILD_DIR" --overwrite --no-code-sign 2>&1; then
-        echo "    create-dmg succeeded"
-    else
-        echo "    create-dmg exited with non-zero status (may still have created DMG)"
-    fi
-
-    # create-dmg names files as "AppName VERSION.dmg", rename to our format
-    if [ -f "$BUILD_DIR/$APP_NAME $VERSION.dmg" ]; then
-        mv "$BUILD_DIR/$APP_NAME $VERSION.dmg" "$DMG_PATH"
-        echo "    DMG created: $DMG_PATH"
-    else
-        echo "    ERROR: Expected DMG not found at $BUILD_DIR/$APP_NAME $VERSION.dmg"
-        echo "    Falling back to hdiutil..."
-        hdiutil create -volname "$APP_NAME" \
-            -srcfolder "$APP_BUNDLE" \
-            -ov -format UDZO \
-            "$DMG_PATH"
-    fi
-else
-    echo "    WARNING: create-dmg not found, falling back to basic DMG creation"
-    # Fallback: simple DMG without styling
-    hdiutil create -volname "$APP_NAME" \
-        -srcfolder "$APP_BUNDLE" \
-        -ov -format UDZO \
-        "$DMG_PATH"
-fi
-
-# Step 8: Sign for Sparkle updates and generate appcast
-echo "[8/8] Sparkle update signing..."
-if [ -n "$SPARKLE_PRIVATE_KEY" ] && [ -f "$DMG_PATH" ]; then
-    # Try to find Sparkle's sign_update tool (check artifacts first, then checkouts)
-    SPARKLE_SIGN="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/bin/sign_update"
-    if [ ! -f "$SPARKLE_SIGN" ]; then
-        SPARKLE_SIGN="$PROJECT_DIR/.build/checkouts/Sparkle/sign_update"
-    fi
-
-    if [ -f "$SPARKLE_SIGN" ]; then
-        echo "    Signing DMG with Sparkle EdDSA key..."
-
-        # Generate EdDSA signature
-        SIGNATURE=$("$SPARKLE_SIGN" "$DMG_PATH" -s "$SPARKLE_PRIVATE_KEY" 2>/dev/null | grep "sparkle:edSignature" | cut -d'"' -f2 || echo "")
-
-        if [ -n "$SIGNATURE" ]; then
-            echo "    EdDSA Signature: ${SIGNATURE:0:20}..."
-
-            # Get file size and generate date
-            DMG_SIZE=$(stat -f%z "$DMG_PATH")
-            PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
-
-            # Generate appcast.xml
-            cat > "$BUILD_DIR/appcast.xml" << APPCAST_EOF
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>Oximy Updates</title>
-    <link>https://github.com/OximyHQ/mitmproxy/releases</link>
-    <description>Updates for Oximy macOS</description>
-    <language>en</language>
-    <item>
-      <title>Version $VERSION</title>
-      <pubDate>$PUB_DATE</pubDate>
-      <sparkle:version>$VERSION</sparkle:version>
-      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
-      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-      <enclosure
-        url="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$DMG_NAME"
-        length="$DMG_SIZE"
-        type="application/octet-stream"
-        sparkle:edSignature="$SIGNATURE"
-      />
-      <sparkle:releaseNotesLink>
-        https://github.com/OximyHQ/mitmproxy/releases/tag/oximy-v$VERSION
-      </sparkle:releaseNotesLink>
-    </item>
-  </channel>
-</rss>
-APPCAST_EOF
-            echo "    Generated appcast.xml"
-        else
-            echo "    WARNING: Failed to generate EdDSA signature"
-        fi
-    else
-        echo "    WARNING: Sparkle sign_update tool not found at $SPARKLE_SIGN"
-        echo "    Run 'swift build' first to fetch Sparkle package"
-    fi
-else
-    if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
-        echo "    STUB: Skipping Sparkle signing (no SPARKLE_PRIVATE_KEY set)"
-        echo "    To sign for updates:"
-        echo "    1. Generate keys: .build/checkouts/Sparkle/bin/generate_keys"
-        echo "    2. Set SPARKLE_PRIVATE_KEY environment variable"
-        echo "    3. Set SPARKLE_PUBLIC_KEY for Info.plist"
-    fi
-fi
+# Note: Sparkle signing happens in CI after DMG creation
+echo "    Sparkle signing will be done in CI after DMG creation"
 
 echo ""
 echo "=== Build Complete ==="
 echo ""
 echo "App Bundle: $APP_BUNDLE"
-echo "DMG:        $DMG_PATH"
-if [ -f "$BUILD_DIR/appcast.xml" ]; then
-    echo "Appcast:    $BUILD_DIR/appcast.xml"
-fi
 echo ""
 
 if [ -z "$DEVELOPER_ID" ]; then
     echo "NOTE: App is unsigned. For distribution:"
     echo "  1. Set DEVELOPER_ID environment variable"
     echo "  2. Run this script again"
-    echo "  3. Notarize with: xcrun notarytool submit $DMG_PATH"
-fi
-
-if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
-    echo ""
-    echo "NOTE: Update signing not configured. For auto-updates:"
-    echo "  1. Generate keys: swift build && .build/checkouts/Sparkle/bin/generate_keys"
-    echo "  2. Set SPARKLE_PRIVATE_KEY (keep secret!)"
-    echo "  3. Set SPARKLE_PUBLIC_KEY (add to Info.plist)"
+    echo "  3. Notarize the app bundle"
+    echo "  4. Staple the notarization ticket"
+    echo "  5. Create DMG from stapled app"
 fi
 
 echo ""

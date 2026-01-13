@@ -115,16 +115,20 @@ jobs:
           ./Scripts/build-release.sh
           echo "dmg-name=Oximy-${{ inputs.version }}.dmg" >> $GITHUB_OUTPUT
 
-      - name: Notarize app
+      - name: Notarize app bundle
         working-directory: OximyMac/build
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
-          DMG_NAME: "Oximy-${{ inputs.version }}.dmg"
         run: |
+          # Create a zip of the app for notarization
+          echo "Creating zip for notarization..."
+          ditto -c -k --keepParent "Oximy.app" "Oximy.zip"
+
           # Submit for notarization and capture submission ID
-          SUBMIT_OUTPUT=$(xcrun notarytool submit "$DMG_NAME" \
+          echo "Submitting app for notarization..."
+          SUBMIT_OUTPUT=$(xcrun notarytool submit "Oximy.zip" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$TEAM_ID" \
@@ -138,9 +142,9 @@ jobs:
           # Check if notarization succeeded
           if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
             echo "Notarization succeeded!"
-            # Staple the notarization ticket to the DMG
-            xcrun stapler staple "$DMG_NAME"
-            echo "Notarization complete and stapled"
+            # Staple the notarization ticket to the APP BUNDLE (not zip)
+            xcrun stapler staple "Oximy.app"
+            echo "Notarization ticket stapled to app bundle"
           else
             echo "Notarization failed. Fetching log..."
             if [ -n "$SUBMISSION_ID" ]; then
@@ -154,14 +158,126 @@ jobs:
             exit 1
           fi
 
-      - name: Verify signature
+          # Clean up zip
+          rm -f "Oximy.zip"
+
+      - name: Verify notarized app
         working-directory: OximyMac/build
         run: |
           echo "Verifying code signature..."
           codesign -dvv Oximy.app
           echo ""
-          echo "Verifying notarization..."
-          spctl -a -v Oximy.app || true
+          echo "Verifying notarization (spctl)..."
+          spctl -a -v Oximy.app
+          echo ""
+          echo "Verifying staple..."
+          xcrun stapler validate Oximy.app
+
+      - name: Create DMG from notarized app
+        working-directory: OximyMac/build
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          DMG_NAME="Oximy-$VERSION.dmg"
+
+          echo "Creating DMG from notarized app..."
+
+          # Check if create-dmg is available
+          if command -v create-dmg &> /dev/null; then
+            echo "Using create-dmg..."
+            # Remove existing DMG if present
+            rm -f "$DMG_NAME" 2>/dev/null || true
+            rm -f "Oximy $VERSION.dmg" 2>/dev/null || true
+
+            # create-dmg automatically handles Applications symlink and styling
+            if create-dmg "Oximy.app" "." --overwrite 2>&1; then
+              echo "create-dmg succeeded"
+            else
+              echo "create-dmg exited with non-zero status (may still have created DMG)"
+            fi
+
+            # create-dmg names files as "AppName VERSION.dmg", rename to our format
+            if [ -f "Oximy $VERSION.dmg" ]; then
+              mv "Oximy $VERSION.dmg" "$DMG_NAME"
+              echo "DMG created: $DMG_NAME"
+            else
+              echo "Expected DMG not found, falling back to hdiutil..."
+              hdiutil create -volname "Oximy" \
+                -srcfolder "Oximy.app" \
+                -ov -format UDZO \
+                "$DMG_NAME"
+            fi
+          else
+            echo "create-dmg not found, using hdiutil..."
+            hdiutil create -volname "Oximy" \
+              -srcfolder "Oximy.app" \
+              -ov -format UDZO \
+              "$DMG_NAME"
+          fi
+
+          echo "Final DMG: $DMG_NAME"
+          ls -la "$DMG_NAME"
+
+      - name: Sign DMG for Sparkle updates
+        working-directory: OximyMac/build
+        env:
+          VERSION: ${{ inputs.version }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          DMG_NAME="Oximy-$VERSION.dmg"
+
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "WARNING: SPARKLE_PRIVATE_KEY not set, skipping Sparkle signing"
+            exit 0
+          fi
+
+          # Find Sparkle's sign_update tool
+          SPARKLE_SIGN="../.build/artifacts/sparkle/Sparkle/bin/sign_update"
+          if [ ! -f "$SPARKLE_SIGN" ]; then
+            SPARKLE_SIGN="../.build/checkouts/Sparkle/sign_update"
+          fi
+
+          if [ ! -f "$SPARKLE_SIGN" ]; then
+            echo "WARNING: Sparkle sign_update tool not found"
+            exit 0
+          fi
+
+          echo "Signing DMG with Sparkle EdDSA key..."
+          SIGNATURE=$("$SPARKLE_SIGN" "$DMG_NAME" -s "$SPARKLE_PRIVATE_KEY" 2>/dev/null | grep "sparkle:edSignature" | cut -d'"' -f2 || echo "")
+
+          if [ -n "$SIGNATURE" ]; then
+            echo "EdDSA Signature: ${SIGNATURE:0:20}..."
+
+            # Get file size and generate date
+            DMG_SIZE=$(stat -f%z "$DMG_NAME")
+            PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+
+            # Generate appcast.xml
+            DOWNLOAD_URL="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$DMG_NAME"
+            RELEASE_NOTES_URL="https://github.com/OximyHQ/mitmproxy/releases/tag/oximy-v$VERSION"
+
+            printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' > appcast.xml
+            printf '%s\n' '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">' >> appcast.xml
+            printf '%s\n' '  <channel>' >> appcast.xml
+            printf '%s\n' '    <title>Oximy Updates</title>' >> appcast.xml
+            printf '%s\n' '    <link>https://github.com/OximyHQ/mitmproxy/releases</link>' >> appcast.xml
+            printf '%s\n' '    <description>Updates for Oximy macOS</description>' >> appcast.xml
+            printf '%s\n' '    <language>en</language>' >> appcast.xml
+            printf '%s\n' '    <item>' >> appcast.xml
+            printf '%s\n' "      <title>Version $VERSION</title>" >> appcast.xml
+            printf '%s\n' "      <pubDate>$PUB_DATE</pubDate>" >> appcast.xml
+            printf '%s\n' "      <sparkle:version>$VERSION</sparkle:version>" >> appcast.xml
+            printf '%s\n' "      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>" >> appcast.xml
+            printf '%s\n' '      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>' >> appcast.xml
+            printf '%s\n' "      <enclosure url=\"$DOWNLOAD_URL\" length=\"$DMG_SIZE\" type=\"application/octet-stream\" sparkle:edSignature=\"$SIGNATURE\" />" >> appcast.xml
+            printf '%s\n' "      <sparkle:releaseNotesLink>$RELEASE_NOTES_URL</sparkle:releaseNotesLink>" >> appcast.xml
+            printf '%s\n' '    </item>' >> appcast.xml
+            printf '%s\n' '  </channel>' >> appcast.xml
+            printf '%s\n' '</rss>' >> appcast.xml
+            echo "Generated appcast.xml"
+          else
+            echo "WARNING: Failed to generate EdDSA signature"
+          fi
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
