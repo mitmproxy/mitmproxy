@@ -62,6 +62,77 @@ public partial class SettingsWindow : Window
         Close();
     }
 
+    private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            CheckUpdateButton.IsEnabled = false;
+            CheckUpdateButton.Content = "Checking...";
+            UpdateStatusText.Text = "Checking for updates...";
+            UpdateProgressBar.Visibility = Visibility.Collapsed;
+
+            var updateAvailable = await Services.UpdateService.Instance.CheckForUpdatesAsync();
+
+            if (updateAvailable)
+            {
+                var latestVersion = Services.UpdateService.Instance.LatestVersion;
+                UpdateStatusText.Text = $"Update available: v{latestVersion}";
+                CheckUpdateButton.Content = "Download & Install";
+
+                // Change button behavior to download update
+                CheckUpdateButton.Click -= CheckUpdateButton_Click;
+                CheckUpdateButton.Click += DownloadUpdateButton_Click;
+            }
+            else
+            {
+                UpdateStatusText.Text = "You're up to date!";
+                CheckUpdateButton.Content = "Check for Updates";
+            }
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusText.Text = $"Error: {ex.Message}";
+            CheckUpdateButton.Content = "Check for Updates";
+        }
+        finally
+        {
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
+    private async void DownloadUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            CheckUpdateButton.IsEnabled = false;
+            CheckUpdateButton.Content = "Downloading...";
+            UpdateProgressBar.Visibility = Visibility.Visible;
+            UpdateProgressBar.Value = 0;
+
+            // Subscribe to progress updates
+            Services.UpdateService.Instance.PropertyChanged += (s, args) =>
+            {
+                if (args.PropertyName == nameof(Services.UpdateService.DownloadProgress))
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        UpdateProgressBar.Value = Services.UpdateService.Instance.DownloadProgress;
+                        UpdateStatusText.Text = $"Downloading... {Services.UpdateService.Instance.DownloadProgress}%";
+                    });
+                }
+            };
+
+            await Services.UpdateService.Instance.DownloadAndApplyUpdateAsync();
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusText.Text = $"Download failed: {ex.Message}";
+            CheckUpdateButton.Content = "Retry Download";
+            UpdateProgressBar.Visibility = Visibility.Collapsed;
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
     private void HelpButton_Click(object sender, RoutedEventArgs e)
     {
         OpenUrl(Constants.HelpUrl);
