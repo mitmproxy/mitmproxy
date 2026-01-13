@@ -10,9 +10,24 @@ struct OximyApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // Empty scene - we manage windows manually via AppDelegate
+        // Settings scene with empty content - this prevents SwiftUI from creating
+        // any default windows. The actual UI is managed via AppDelegate.
+        // Note: Settings windows are only shown when user clicks Preferences menu,
+        // which we don't expose in our menu bar app.
         Settings {
-            EmptyView()
+            Text("Settings are managed in the popover")
+                .frame(width: 200, height: 50)
+        }
+    }
+
+    init() {
+        // Close any windows that might be open on launch
+        DispatchQueue.main.async {
+            for window in NSApplication.shared.windows {
+                if window.title.contains("Settings") || window.title.isEmpty {
+                    window.close()
+                }
+            }
         }
     }
 }
