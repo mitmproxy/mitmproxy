@@ -79,7 +79,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-12T18:11:18.282255+00:00",
+  "generated_at": "2026-01-13T00:41:48.204985+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -40882,11 +40882,15 @@
         "icon": "arc.png",
         "name": "Arc",
         "platforms": [
-          "macos"
+          "macos",
+          "windows"
         ],
         "signatures": {
           "macos": {
             "bundle_id": "company.thebrowser.Browser"
+          },
+          "windows": {
+            "exe": "Arc.exe"
           }
         },
         "vendor": "The Browser Company",
@@ -40897,11 +40901,19 @@
         "icon": "brave.png",
         "name": "Brave",
         "platforms": [
-          "macos"
+          "macos",
+          "windows",
+          "linux"
         ],
         "signatures": {
+          "linux": {
+            "exe": "brave"
+          },
           "macos": {
             "bundle_id": "com.brave.Browser"
+          },
+          "windows": {
+            "exe": "brave.exe"
           }
         },
         "vendor": "Brave Software",
@@ -40912,11 +40924,19 @@
         "icon": "google-chrome.png",
         "name": "Google Chrome",
         "platforms": [
-          "macos"
+          "macos",
+          "windows",
+          "linux"
         ],
         "signatures": {
+          "linux": {
+            "exe": "chrome"
+          },
           "macos": {
             "bundle_id": "com.google.Chrome"
+          },
+          "windows": {
+            "exe": "chrome.exe"
           }
         },
         "vendor": "Google",
@@ -40927,11 +40947,19 @@
         "icon": "edge.png",
         "name": "Microsoft Edge",
         "platforms": [
-          "macos"
+          "macos",
+          "windows",
+          "linux"
         ],
         "signatures": {
+          "linux": {
+            "exe": "msedge"
+          },
           "macos": {
             "bundle_id": "com.microsoft.edgemac"
+          },
+          "windows": {
+            "exe": "msedge.exe"
           }
         },
         "vendor": "Microsoft",
@@ -40942,11 +40970,19 @@
         "icon": "firefox.png",
         "name": "Firefox",
         "platforms": [
-          "macos"
+          "macos",
+          "windows",
+          "linux"
         ],
         "signatures": {
+          "linux": {
+            "exe": "firefox"
+          },
           "macos": {
             "bundle_id": "org.mozilla.firefox"
+          },
+          "windows": {
+            "exe": "firefox.exe"
           }
         },
         "vendor": "Mozilla",
@@ -41046,11 +41082,19 @@
         "icon": "opera.png",
         "name": "Opera",
         "platforms": [
-          "macos"
+          "macos",
+          "windows",
+          "linux"
         ],
         "signatures": {
+          "linux": {
+            "exe": "opera"
+          },
           "macos": {
             "bundle_id": "com.operasoftware.Opera"
+          },
+          "windows": {
+            "exe": "opera.exe"
           }
         },
         "vendor": "Opera Software",
@@ -41076,11 +41120,19 @@
         "icon": "vivaldi.png",
         "name": "Vivaldi",
         "platforms": [
-          "macos"
+          "macos",
+          "windows",
+          "linux"
         ],
         "signatures": {
+          "linux": {
+            "exe": "vivaldi"
+          },
           "macos": {
             "bundle_id": "com.vivaldi.Vivaldi"
+          },
+          "windows": {
+            "exe": "vivaldi.exe"
           }
         },
         "vendor": "Vivaldi Technologies",
