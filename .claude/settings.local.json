@@ -36,7 +36,8 @@
       "Bash(pkill:*)",
       "Bash(# Check for any recent crashes ls -lt ~/Library/Logs/DiagnosticReports/)",
       "Bash(# Kill extra instances and check for crashes pkill -x \"\"Oximy\"\" sleep 1 ls -lt ~/Library/Logs/DiagnosticReports/)",
-      "Bash(# Force kill all Oximy processes sudo pkill -9 -f \"\"Oximy\"\" || pkill -9 -f \"\"Oximy\"\" || true sleep 2 # Verify no processes ps aux)"
+      "Bash(# Force kill all Oximy processes sudo pkill -9 -f \"\"Oximy\"\" || pkill -9 -f \"\"Oximy\"\" || true sleep 2 # Verify no processes ps aux)",
+      "Bash(python3:*)"
     ]
   }
 }
