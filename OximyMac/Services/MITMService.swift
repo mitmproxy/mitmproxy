@@ -1,5 +1,33 @@
 import Foundation
 
+// MARK: - Safe Bundle Module Access
+
+/// Safe accessor for SPM's Bundle.module that doesn't crash in release builds.
+/// The auto-generated Bundle.module calls fatalError if the bundle doesn't exist,
+/// which happens when the binary is copied to a different app bundle (build-release.sh).
+private var safeModuleBundle: Bundle? {
+    // Only attempt to access Bundle.module if we're running from .build directory (SPM development)
+    let executablePath = Bundle.main.executablePath ?? ""
+    guard executablePath.contains(".build/") else {
+        return nil
+    }
+
+    // Try to find the SPM resource bundle manually without triggering fatalError
+    let mainBundlePath = Bundle.main.bundleURL.appendingPathComponent("OximyMac_OximyMac.bundle").path
+    if let bundle = Bundle(path: mainBundlePath) {
+        return bundle
+    }
+
+    // Try the build directory path
+    let sourceDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().path
+    let buildBundlePath = sourceDir + "/.build/arm64-apple-macosx/debug/OximyMac_OximyMac.bundle"
+    if let bundle = Bundle(path: buildBundlePath) {
+        return bundle
+    }
+
+    return nil
+}
+
 /// Service to manage the mitmproxy process
 @MainActor
 class MITMService: ObservableObject {
@@ -320,10 +348,13 @@ class MITMService: ObservableObject {
     // MARK: - Resource Location
 
     /// Locate a bundled resource using 4-priority search:
-    /// 1. Bundle.module (SPM builds)
-    /// 2. Bundle.main.resourcePath (Xcode release)
+    /// 1. Bundle.main.resourcePath (release app bundle - MUST check first!)
+    /// 2. Bundle.module (SPM development builds only)
     /// 3. Source-relative via #filePath (development)
     /// 4. Executable-relative (standalone binary fallback)
+    ///
+    /// IMPORTANT: Bundle.module must NOT be checked first because it causes a fatal error
+    /// when the binary is copied to a new app bundle structure (as done by build-release.sh).
     private func locateResource(
         bundleResource: String,
         subpath: String,
@@ -331,20 +362,23 @@ class MITMService: ObservableObject {
     ) -> String? {
         let fm = FileManager.default
 
-        // Priority 1: Bundle.module (SPM builds with copied resources)
-        if let bundleURL = Bundle.module.url(forResource: bundleResource, withExtension: nil) {
-            let path = bundleURL.appendingPathComponent(subpath).path
-            if fm.fileExists(atPath: path) {
-                NSLog("[MITMService]  Found via Bundle.module: \(path)")
-                return path
-            }
-        }
-
-        // Priority 2: App bundle Resources (Xcode release builds)
+        // Priority 1: App bundle Resources (release builds via build-release.sh)
+        // This MUST be checked first because Bundle.module will crash in release builds
         if let bundlePath = Bundle.main.resourcePath {
             let path = (bundlePath as NSString).appendingPathComponent("\(bundleResource)/\(subpath)")
             if fm.fileExists(atPath: path) {
                 NSLog("[MITMService]  Found via app bundle: \(path)")
+                return path
+            }
+        }
+
+        // Priority 2: SPM development builds - use safe bundle accessor
+        // IMPORTANT: Do NOT use Bundle.module directly - it calls fatalError if bundle doesn't exist
+        if let moduleBundle = safeModuleBundle,
+           let bundleURL = moduleBundle.url(forResource: bundleResource, withExtension: nil) {
+            let path = bundleURL.appendingPathComponent(subpath).path
+            if fm.fileExists(atPath: path) {
+                NSLog("[MITMService]  Found via Bundle.module: \(path)")
                 return path
             }
         }
@@ -358,8 +392,8 @@ class MITMService: ObservableObject {
         }
 
         // Priority 4: Fallback to executable directory
-        if let executablePath = Bundle.main.executablePath {
-            let execDir = (executablePath as NSString).deletingLastPathComponent
+        if let mainExecPath = Bundle.main.executablePath {
+            let execDir = (mainExecPath as NSString).deletingLastPathComponent
             let fallbackPath = (execDir as NSString).appendingPathComponent("Resources/\(bundleResource)/\(subpath)")
             if fm.fileExists(atPath: fallbackPath) {
                 NSLog("[MITMService]  Found via executable-relative: \(fallbackPath)")
@@ -372,6 +406,9 @@ class MITMService: ObservableObject {
     }
 
     /// Locate a bundled resource directory and return its base path
+    ///
+    /// IMPORTANT: Bundle.module must NOT be checked first because it causes a fatal error
+    /// when the binary is copied to a new app bundle structure (as done by build-release.sh).
     private func locateResourceDirectory(
         bundleResource: String,
         verifySubpath: String,
@@ -379,22 +416,25 @@ class MITMService: ObservableObject {
     ) -> String? {
         let fm = FileManager.default
 
-        // Priority 1: Bundle.module (SPM builds with copied resources)
-        if let bundleURL = Bundle.module.url(forResource: bundleResource, withExtension: nil) {
-            let verifyPath = bundleURL.appendingPathComponent(verifySubpath).path
-            if fm.fileExists(atPath: verifyPath) {
-                NSLog("[MITMService]  Found directory via Bundle.module: \(bundleURL.path)")
-                return bundleURL.path
-            }
-        }
-
-        // Priority 2: App bundle Resources (Xcode release builds)
+        // Priority 1: App bundle Resources (release builds via build-release.sh)
+        // This MUST be checked first because Bundle.module will crash in release builds
         if let bundlePath = Bundle.main.resourcePath {
             let basePath = (bundlePath as NSString).appendingPathComponent(bundleResource)
             let verifyPath = (basePath as NSString).appendingPathComponent(verifySubpath)
             if fm.fileExists(atPath: verifyPath) {
                 NSLog("[MITMService]  Found directory via app bundle: \(basePath)")
                 return basePath
+            }
+        }
+
+        // Priority 2: SPM development builds - use safe bundle accessor
+        // IMPORTANT: Do NOT use Bundle.module directly - it calls fatalError if bundle doesn't exist
+        if let moduleBundle = safeModuleBundle,
+           let bundleURL = moduleBundle.url(forResource: bundleResource, withExtension: nil) {
+            let verifyPath = bundleURL.appendingPathComponent(verifySubpath).path
+            if fm.fileExists(atPath: verifyPath) {
+                NSLog("[MITMService]  Found directory via Bundle.module: \(bundleURL.path)")
+                return bundleURL.path
             }
         }
 

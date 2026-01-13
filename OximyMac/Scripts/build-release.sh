@@ -174,10 +174,12 @@ else
     exit 1
 fi
 
-# Create app icon from Oximy-rounded.png BEFORE signing (critical!)
+# Create app icon BEFORE signing (critical!)
+# IMPORTANT: Use SQUARE icon - macOS automatically applies rounded corners to app icons
+# Using pre-rounded icons causes double-rounding and bleed issues
 echo "[5/7] Creating app icon..."
-ICON_SOURCE="$PROJECT_DIR/Resources/Oximy-rounded.png"
-# Fall back to original if rounded version doesn't exist
+ICON_SOURCE="$PROJECT_DIR/Resources/Assets.xcassets/AppIcon.appiconset/1024.png"
+# Fall back to Oximy.png if 1024.png doesn't exist
 if [ ! -f "$ICON_SOURCE" ]; then
     ICON_SOURCE="$PROJECT_DIR/Resources/Oximy.png"
 fi
@@ -200,7 +202,7 @@ if [ -f "$ICON_SOURCE" ]; then
     # Convert to icns
     iconutil -c icns "$ICONSET_DIR" -o "$APP_BUNDLE/Contents/Resources/AppIcon.icns" 2>/dev/null || true
     rm -rf "$ICONSET_DIR"
-    echo "    Created AppIcon.icns from Oximy.png"
+    echo "    Created AppIcon.icns from $ICON_SOURCE"
 else
     echo "    WARNING: Oximy.png not found, skipping icon generation"
 fi

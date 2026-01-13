@@ -1,6 +1,34 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Safe Bundle Module Access
+
+/// Safe accessor for SPM's Bundle.module that doesn't crash in release builds.
+/// The auto-generated Bundle.module calls fatalError if the bundle doesn't exist,
+/// which happens when the binary is copied to a different app bundle (build-release.sh).
+private var safeModuleBundle: Bundle? {
+    // Only attempt to access Bundle.module if we're running from .build directory (SPM development)
+    let executablePath = Bundle.main.executablePath ?? ""
+    guard executablePath.contains(".build/") else {
+        return nil
+    }
+
+    // Try to find the SPM resource bundle manually without triggering fatalError
+    let mainBundlePath = Bundle.main.bundleURL.appendingPathComponent("OximyMac_OximyMac.bundle").path
+    if let bundle = Bundle(path: mainBundlePath) {
+        return bundle
+    }
+
+    // Try the build directory path
+    let sourceDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().path
+    let buildBundlePath = sourceDir + "/.build/arm64-apple-macosx/debug/OximyMac_OximyMac.bundle"
+    if let bundle = Bundle(path: buildBundlePath) {
+        return bundle
+    }
+
+    return nil
+}
+
 /// Load Oximy logo from PNG file
 struct OximyLogo: View {
     var size: CGFloat = 90
@@ -20,22 +48,30 @@ struct OximyLogo: View {
     }
 }
 
-/// Resolve path to a resource file using the same priority as MITMService
-/// 1. Bundle.module (SPM builds)
-/// 2. Bundle.main.resourcePath (Xcode release builds)
-/// 3. Source-relative via #filePath (development)
+/// Resolve path to a resource file
+/// Priority order:
+/// 1. Bundle.main.resourcePath (release app bundle - must check first!)
+/// 2. Bundle.module (SPM development builds only)
+/// 3. Source-relative via #filePath (development fallback)
+///
+/// IMPORTANT: Bundle.module must NOT be checked first because it causes a fatal error
+/// when the binary is copied to a new app bundle structure (as done by build-release.sh).
+/// The SPM-generated Bundle.module path points to .build/ which doesn't exist in release.
 private func resolveResourcePath(_ filename: String, extension ext: String, filePath: String = #filePath) -> String? {
-    // Priority 1: Bundle.module (SPM builds)
-    if let url = Bundle.module.url(forResource: filename, withExtension: ext) {
-        return url.path
-    }
-
-    // Priority 2: App bundle Resources (Xcode release builds)
+    // Priority 1: App bundle Resources (release builds via build-release.sh)
+    // This MUST be checked first because Bundle.module will crash in release builds
     if let bundlePath = Bundle.main.resourcePath {
         let resourcePath = (bundlePath as NSString).appendingPathComponent("\(filename).\(ext)")
         if FileManager.default.fileExists(atPath: resourcePath) {
             return resourcePath
         }
+    }
+
+    // Priority 2: SPM development builds - use safe bundle accessor
+    // IMPORTANT: Do NOT use Bundle.module directly - it calls fatalError if bundle doesn't exist
+    if let moduleBundle = safeModuleBundle,
+       let url = moduleBundle.url(forResource: filename, withExtension: ext) {
+        return url.path
     }
 
     // Priority 3: Development - relative to source file
