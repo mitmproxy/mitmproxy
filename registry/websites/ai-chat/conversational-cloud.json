@@ -1,0 +1,22 @@
+{
+  "name": "Conversational Cloud",
+  "vendor": "LivePerson Inc.",
+  "vendor_url": "https://www.liveperson.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "z1.le.liveperson.net"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

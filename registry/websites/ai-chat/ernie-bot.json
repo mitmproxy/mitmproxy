@@ -1,0 +1,29 @@
+{
+  "name": "Ernie Bot",
+  "vendor": "Baidu Inc.",
+  "vendor_url": "https://www.baidu.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "yiyan.baidu.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "enterprise_api",
+        "name": "Enterprise API",
+        "type": "usage"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Lenny",
+  "vendor": "Independent Open Source Project",
+  "vendor_url": "https://lennylp.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

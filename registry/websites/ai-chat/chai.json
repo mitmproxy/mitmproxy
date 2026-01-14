@@ -1,0 +1,29 @@
+{
+  "name": "Chai",
+  "vendor": "Chai Research Corp",
+  "vendor_url": "https://www.chai-research.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "chai.ml"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual"
+      }
+    ]
+  }
+}

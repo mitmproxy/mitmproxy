@@ -1,0 +1,22 @@
+{
+  "name": "Yellow.ai",
+  "vendor": "Yellow.ai Inc.",
+  "vendor_url": "https://yellow.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "cloud.yellow.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "ServiceNow",
+  "vendor": "ServiceNow Inc.",
+  "vendor_url": "https://www.servicenow.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "standard",
+        "name": "Standard",
+        "type": "enterprise"
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "type": "enterprise"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

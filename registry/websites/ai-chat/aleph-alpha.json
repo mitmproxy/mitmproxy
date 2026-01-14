@@ -1,0 +1,20 @@
+{
+  "name": "Aleph Alpha",
+  "vendor": "Aleph Alpha GmbH",
+  "vendor_url": "https://aleph-alpha.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

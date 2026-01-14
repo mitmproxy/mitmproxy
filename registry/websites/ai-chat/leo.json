@@ -1,0 +1,27 @@
+{
+  "name": "Leo",
+  "vendor": "Brave Software Inc.",
+  "vendor_url": "https://brave.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual"
+      }
+    ]
+  }
+}

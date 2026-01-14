@@ -1,0 +1,32 @@
+{
+  "name": "Rasa",
+  "vendor": "Rasa Technologies GmbH",
+  "vendor_url": "https://rasa.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "rasa_pro",
+        "name": "Rasa Pro",
+        "type": "enterprise"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

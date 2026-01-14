@@ -1,0 +1,22 @@
+{
+  "name": "Baichuan AI",
+  "vendor": "Beijing Baichuan Intelligent Technology Co., Ltd.",
+  "vendor_url": "https://www.baichuan-ai.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.baichuan-ai.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

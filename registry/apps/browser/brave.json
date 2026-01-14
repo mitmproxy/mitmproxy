@@ -1,0 +1,23 @@
+{
+  "name": "Brave",
+  "vendor": "Brave Software",
+  "vendor_url": "https://brave.com",
+  "category": "browser",
+  "platforms": [
+    "macos",
+    "windows",
+    "linux"
+  ],
+  "signatures": {
+    "macos": {
+      "bundle_id": "com.brave.Browser"
+    },
+    "windows": {
+      "exe": "brave.exe"
+    },
+    "linux": {
+      "exe": "brave"
+    }
+  },
+  "icon": "brave.png"
+}

@@ -1,0 +1,45 @@
+{
+  "name": "Bland AI",
+  "vendor": "Bland AI Inc.",
+  "vendor_url": "https://www.bland.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.bland.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "start",
+        "name": "Start",
+        "type": "individual"
+      },
+      {
+        "id": "build",
+        "name": "Build",
+        "type": "individual"
+      },
+      {
+        "id": "scale",
+        "name": "Scale",
+        "type": "individual"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

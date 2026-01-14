@@ -25,19 +25,12 @@ from ._utils import ContentviewMessage
 from ._utils import get_data
 from ._utils import make_metadata
 from ._view_css import css
-from ._view_dns import dns
-from ._view_graphql import graphql
-from ._view_http3 import http3
-from ._view_image import image
 from ._view_javascript import javascript
 from ._view_json import json_view
-from ._view_mqtt import mqtt
 from ._view_multipart import multipart
 from ._view_query import query
 from ._view_raw import raw
-from ._view_socketio import socket_io
 from ._view_urlencoded import urlencoded
-from ._view_wbxml import wbxml
 from ._view_xml_html import xml_html
 from .base import View
 import mitmproxy_rs.contentviews
@@ -131,19 +124,12 @@ def reencode_message(
 
 _views: list[Contentview] = [
     css,
-    dns,
-    graphql,
-    http3,
-    image,
     javascript,
     json_view,
-    mqtt,
     multipart,
     query,
     raw,
-    socket_io,
     urlencoded,
-    wbxml,
     xml_html,
 ]
 for view in _views:

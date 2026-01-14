@@ -1,0 +1,32 @@
+{
+  "name": "Manus.ai",
+  "vendor": "Butterfly Effect (Manus AI)",
+  "vendor_url": "https://manus.im/",
+  "category": "ai-chat",
+  "api_domains": [
+    "manus.im"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "basic",
+        "name": "Basic",
+        "type": "individual"
+      },
+      {
+        "id": "plus",
+        "name": "Plus",
+        "type": "individual"
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      }
+    ]
+  }
+}

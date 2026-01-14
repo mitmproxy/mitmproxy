@@ -178,25 +178,31 @@ class TrafficMatcher:
         3. Endpoint URL patterns (like website features)
         """
         if not client_process:
+            logger.debug(f"_match_app: no client_process")
             return None
 
         # Find app by process signature
         app_id = self._find_app_by_process(client_process)
+        logger.debug(f"_match_app: client={client_process.name}, path={client_process.path}, found app_id={app_id}")
         if not app_id:
             return None
 
         app = self.bundle.apps.get(app_id)
         if not app:
+            logger.debug(f"_match_app: app_id {app_id} not in bundle")
             return None
 
         # Check if app has features with parser configs
         features = app.get("features", {})
         if not features:
+            logger.debug(f"_match_app: app {app_id} has no features")
             return None
 
         # Check domain restriction if present
         allowed_domains = self._app_domain_index.get(app_id)
+        logger.debug(f"_match_app: app {app_id} allowed_domains={allowed_domains}, checking host={host}")
         if allowed_domains and not self._domain_matches_pattern(host, allowed_domains):
+            logger.debug(f"_match_app: host {host} not in allowed domains")
             return None
 
         # Check feature patterns
@@ -205,10 +211,17 @@ class TrafficMatcher:
             for pattern in patterns:
                 # Check method if specified
                 pattern_method = pattern.get("method")
+                logger.debug(
+                    f"App {app_id} checking pattern: method={pattern_method} vs request={method}, "
+                    f"url_pattern={pattern.get('url')}, path={path}"
+                )
                 if pattern_method and pattern_method.upper() != method.upper():
+                    logger.debug(f"  -> method mismatch, skipping")
                     continue
 
-                if self._matches_endpoint_pattern(path, pattern):
+                matches = self._matches_endpoint_pattern(path, pattern)
+                logger.debug(f"  -> endpoint pattern match: {matches}")
+                if matches:
                     # Determine classification based on parser presence
                     has_parser = "parser" in feature_def
                     classification = "full_extraction" if has_parser else "feature_extraction"
@@ -278,6 +291,38 @@ class TrafficMatcher:
             elif host == domain:
                 return True
         return False
+
+    def _matches_query_params(self, query_string: str, required_params: list[str]) -> bool:
+        """
+        Check if query string contains all required parameters.
+
+        Args:
+            query_string: The query string portion of URL (without leading ?)
+            required_params: List of required params, e.g., ["tree=True", "format=json"]
+
+        Returns:
+            True if all required params are present in query string
+        """
+        if not required_params:
+            return True
+
+        # Parse query string into key=value pairs
+        # Handle both "key=value" and just "key" formats
+        query_pairs = set()
+        if query_string:
+            for part in query_string.split("&"):
+                # Store the full key=value pair for exact matching
+                query_pairs.add(part)
+                # Also store lowercase version for case-insensitive matching
+                query_pairs.add(part.lower())
+
+        # Check each required param
+        for required in required_params:
+            # Check exact match or case-insensitive match
+            if required not in query_pairs and required.lower() not in query_pairs:
+                return False
+
+        return True
 
     def _extract_host_from_url(self, url: str | None) -> str | None:
         """
@@ -390,13 +435,29 @@ class TrafficMatcher:
     def _matches_endpoint_pattern(self, path: str, pattern: dict) -> bool:
         """Check if path matches an endpoint pattern definition."""
         url_pattern = pattern.get("url", "")
-        method = pattern.get("method")  # Not used for path matching, but available
+        required_query_params = pattern.get("query_params", [])
 
         if not url_pattern:
             return False
 
-        # Strip query string from path for matching
-        path_without_query = path.split("?")[0]
+        # Split path and query string
+        if "?" in path:
+            path_without_query, query_string = path.split("?", 1)
+        else:
+            path_without_query = path
+            query_string = ""
+
+        logger.debug(
+            f"    _matches_endpoint_pattern: path_without_query={path_without_query}, "
+            f"query_string={query_string}, required_params={required_query_params}"
+        )
+
+        # Check required query params if specified
+        if required_query_params:
+            params_match = self._matches_query_params(query_string, required_query_params)
+            logger.debug(f"    query params match: {params_match}")
+            if not params_match:
+                return False
 
         # Convert glob-style pattern to regex
         # Pattern like "**/backend-api/conversation" should match:

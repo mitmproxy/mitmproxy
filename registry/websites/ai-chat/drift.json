@@ -1,0 +1,32 @@
+{
+  "name": "Drift",
+  "vendor": "Salesloft",
+  "vendor_url": "https://www.drift.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.drift.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "enterprise"
+      },
+      {
+        "id": "advanced",
+        "name": "Advanced",
+        "type": "enterprise"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

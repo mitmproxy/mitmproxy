@@ -1,0 +1,33 @@
+{
+  "name": "Jasper Chat",
+  "vendor": "Jasper AI Inc.",
+  "vendor_url": "https://www.jasper.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.jasper.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "creator",
+        "name": "Creator",
+        "type": "individual"
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

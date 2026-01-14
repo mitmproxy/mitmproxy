@@ -1,0 +1,29 @@
+{
+  "name": "Character AI",
+  "vendor": "Character.AI Inc.",
+  "vendor_url": "https://character.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "character.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "cai_plus",
+        "name": "c.ai+",
+        "type": "individual"
+      }
+    ]
+  }
+}

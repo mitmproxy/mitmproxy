@@ -1,0 +1,29 @@
+{
+  "name": "SimSimi",
+  "vendor": "SimSimi Inc.",
+  "vendor_url": "https://simsimi.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "simsimi.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "in_app"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "in_app_purchases",
+        "name": "In-App Purchases",
+        "type": "individual"
+      }
+    ]
+  }
+}

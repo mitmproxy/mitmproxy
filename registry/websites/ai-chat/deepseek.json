@@ -1,0 +1,71 @@
+{
+  "name": "DeepSeek",
+  "vendor": "DeepSeek",
+  "vendor_url": "https://deepseek.com",
+  "category": "ai-chat",
+  "api_domains": [
+    "chat.deepseek.com"
+  ],
+  "features": {
+    "chat": {
+      "type": "chat",
+      "name": "Chat Conversation",
+      "patterns": [
+        {
+          "url": "**/api/v0/chat/completion",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "prompt": "prompt",
+          "chat_session_id": "chat_session_id"
+        },
+        "response": {
+          "stream": {
+            "format": "sse",
+            "format_options": {
+              "prefixes": [
+                "data: "
+              ]
+            },
+            "rules": [
+              {
+                "when": "o = 'BATCH'",
+                "extract": {
+                  "content": "$join(v[p = 'fragments'].v.content)"
+                }
+              },
+              {
+                "when": "$exists(v) and $type(v) = 'string'",
+                "extract": {
+                  "content": "v"
+                }
+              }
+            ],
+            "accumulate": {
+              "content": {
+                "from": "content",
+                "op": "concat"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

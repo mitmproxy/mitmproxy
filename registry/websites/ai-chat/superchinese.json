@@ -1,0 +1,39 @@
+{
+  "name": "SuperChinese",
+  "vendor": "Shanghai Yuxuan Information Technology Co., Ltd.",
+  "vendor_url": "https://www.superchinese.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.superchinese.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "plus",
+        "name": "Plus",
+        "type": "individual"
+      },
+      {
+        "id": "vip_pro",
+        "name": "VIP Pro",
+        "type": "individual"
+      },
+      {
+        "id": "ai_chao",
+        "name": "AI Chao",
+        "type": "individual"
+      }
+    ]
+  }
+}

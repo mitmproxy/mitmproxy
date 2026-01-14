@@ -1,0 +1,29 @@
+{
+  "name": "Amazon Lex",
+  "vendor": "Amazon Web Services (AWS)",
+  "vendor_url": "https://aws.amazon.com/lex/",
+  "category": "ai-chat",
+  "api_domains": [
+    "console.aws.amazon.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free Tier",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pay_as_you_go",
+        "name": "Pay As You Go",
+        "type": "usage"
+      }
+    ]
+  }
+}

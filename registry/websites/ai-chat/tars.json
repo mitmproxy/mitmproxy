@@ -1,0 +1,33 @@
+{
+  "name": "Tars",
+  "vendor": "Tars Technologies Inc.",
+  "vendor_url": "https://hellotars.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "admin.hellotars.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "team"
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "Fin",
+  "vendor": "Intercom Inc.",
+  "vendor_url": "https://www.intercom.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.intercom.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "essential",
+        "name": "Essential",
+        "type": "team"
+      },
+      {
+        "id": "advanced",
+        "name": "Advanced",
+        "type": "team"
+      },
+      {
+        "id": "expert",
+        "name": "Expert",
+        "type": "team"
+      }
+    ]
+  }
+}

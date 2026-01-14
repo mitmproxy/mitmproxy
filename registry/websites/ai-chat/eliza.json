@@ -1,0 +1,23 @@
+{
+  "name": "ELIZA",
+  "vendor": "MIT",
+  "vendor_url": "N/A",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.masswerk.at"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

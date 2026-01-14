@@ -1,0 +1,23 @@
+{
+  "name": "Jabberwacky",
+  "vendor": "Rollo Carpenter",
+  "vendor_url": "https://www.jabberwacky.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.jabberwacky.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

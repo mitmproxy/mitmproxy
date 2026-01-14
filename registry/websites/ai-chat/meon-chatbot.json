@@ -1,0 +1,30 @@
+{
+  "name": "Meon Chatbot",
+  "vendor": "Meon Technologies",
+  "vendor_url": "https://meon.co.in/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "basic",
+        "name": "Basic",
+        "type": "individual"
+      },
+      {
+        "id": "standard",
+        "name": "Standard",
+        "type": "individual"
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual"
+      }
+    ]
+  }
+}

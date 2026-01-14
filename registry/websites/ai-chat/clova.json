@@ -1,0 +1,40 @@
+{
+  "name": "Clova",
+  "vendor": "Naver Corporation",
+  "vendor_url": "https://www.navercorp.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "clova.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "basic",
+        "name": "Basic",
+        "type": "individual"
+      },
+      {
+        "id": "exclusive",
+        "name": "Exclusive",
+        "type": "enterprise"
+      },
+      {
+        "id": "neurocloud",
+        "name": "NeuroCloud",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

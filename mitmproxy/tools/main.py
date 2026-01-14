@@ -138,13 +138,6 @@ def run(
     return asyncio.run(main())
 
 
-def mitmproxy(args=None) -> int | None:  # pragma: no cover
-    from mitmproxy.tools import console
-
-    run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
-    return None
-
-
 def mitmdump(args=None) -> int | None:  # pragma: no cover
     from mitmproxy.tools import dump
 
@@ -159,11 +152,4 @@ def mitmdump(args=None) -> int | None:  # pragma: no cover
         return {}
 
     run(dump.DumpMaster, cmdline.mitmdump, args, extra)
-    return None
-
-
-def mitmweb(args=None) -> int | None:  # pragma: no cover
-    from mitmproxy.tools import web
-
-    run(web.master.WebMaster, cmdline.mitmweb, args)
     return None

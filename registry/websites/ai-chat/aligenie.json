@@ -1,0 +1,20 @@
+{
+  "name": "AliGenie",
+  "vendor": "Alibaba Group",
+  "vendor_url": "https://www.alibaba.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "hardware"
+    ],
+    "tiers": [
+      {
+        "id": "hardware",
+        "name": "Hardware",
+        "type": "hardware"
+      }
+    ]
+  }
+}

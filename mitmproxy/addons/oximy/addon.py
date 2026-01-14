@@ -22,6 +22,7 @@ from mitmproxy.addons.oximy.matcher import TrafficMatcher
 from mitmproxy.addons.oximy.models import EventSource
 from mitmproxy.addons.oximy.models import EventTiming
 from mitmproxy.addons.oximy.models import Interaction
+from mitmproxy.addons.oximy.models import InteractionRequest
 from mitmproxy.addons.oximy.models import MatchResult
 from mitmproxy.addons.oximy.models import OximyEvent
 from mitmproxy.addons.oximy.models import Subscription
@@ -251,6 +252,18 @@ class OximyAddon:
             default=False,
             help="Enable verbose/debug logging for troubleshooting",
         )
+        loader.add_option(
+            name="oximy_target_id",
+            typespec=str,
+            default="",
+            help="Only capture traffic for this specific app/website ID (e.g., 'granola', 'chatgpt')",
+        )
+        loader.add_option(
+            name="oximy_test_mode",
+            typespec=bool,
+            default=False,
+            help="Test mode: write pretty JSON to test_trace.json (overwrites each run)",
+        )
 
     def configure(self, updated: set[str]) -> None:
         """Handle configuration changes."""
@@ -263,7 +276,7 @@ class OximyAddon:
                 logging.getLogger("mitmproxy.addons.oximy").setLevel(logging.INFO)
 
         # Check if we need to (re)initialize
-        relevant_options = {"oximy_enabled", "oximy_bundle_url", "oximy_output_dir"}
+        relevant_options = {"oximy_enabled", "oximy_bundle_url", "oximy_output_dir", "oximy_test_mode", "oximy_target_id"}
         if not relevant_options.intersection(updated):
             return
 
@@ -322,7 +335,8 @@ class OximyAddon:
 
         # Initialize writer
         output_dir = Path(ctx.options.oximy_output_dir).expanduser()
-        self._writer = EventWriter(output_dir)
+        test_mode = ctx.options.oximy_test_mode
+        self._writer = EventWriter(output_dir, test_mode=test_mode)
 
         # Initialize process resolver for client attribution
         self._process_resolver = ProcessResolver()
@@ -345,6 +359,14 @@ class OximyAddon:
         logger.info(
             f"JSONata parsing: {'ENABLED' if JSONATA_AVAILABLE else 'DISABLED (install jsonata-python for advanced parsing)'}"
         )
+
+        # Log test mode and target filter settings
+        target_id = ctx.options.oximy_target_id
+        if test_mode:
+            logger.info(f"TEST MODE: Writing to test_trace.json (pretty JSON, overwrites)")
+        if target_id:
+            logger.info(f"TARGET FILTER: Only capturing traffic for '{target_id}'")
+
         logger.info(f"========== OXIMY ADDON READY ==========")
         logger.info(f"Listening for AI traffic...")
 
@@ -468,6 +490,12 @@ class OximyAddon:
 
         match_result: MatchResult | None = flow.metadata.get(OXIMY_METADATA_KEY)
         if not match_result or match_result.classification == "drop":
+            return
+
+        # Apply target filter if set
+        target_id = ctx.options.oximy_target_id
+        if target_id and match_result.source_id != target_id:
+            logger.debug(f"Skipping {match_result.source_id} (target filter: {target_id})")
             return
 
         try:
@@ -739,7 +767,8 @@ class OximyAddon:
                     )
 
                 # Parse response - either from streaming buffer or direct response body
-                response_stream_config = parser_config.get("response", {}).get("stream")
+                response_config = parser_config.get("response", {})
+                response_stream_config = response_config.get("stream")
                 logger.info(
                     f"_build_event: app response_stream_config={response_stream_config is not None}"
                 )
@@ -780,12 +809,56 @@ class OximyAddon:
                     logger.info(
                         f"Response parsing for app {match_result.source_id}: content_len={len(result.get('content') or '')}, model={result.get('model')}"
                     )
+                elif response_config and flow.response and flow.response.content:
+                    # Non-streaming response with direct JSONata expressions
+                    # e.g., {"response": "chat_messages[-1].text", "prompt": "chat_messages[-2].text"}
+                    from mitmproxy.addons.oximy.models import InteractionResponse
+                    import jsonata
+                    import json
+
+                    try:
+                        body = json.loads(flow.response.content)
+                        result = {}
+                        for field, expr in response_config.items():
+                            if isinstance(expr, str):
+                                try:
+                                    compiled = jsonata.Jsonata(expr)
+                                    value = compiled.evaluate(body)
+                                    result[field] = value
+                                    logger.debug(f"JSONata {field}={expr} -> {str(value)[:100]}")
+                                except Exception as e:
+                                    logger.debug(f"JSONata {field}={expr} failed: {e}")
+
+                        logger.info(
+                            f"Direct response parsing for app {match_result.source_id}: fields={list(result.keys())}"
+                        )
+
+                        # If prompt was extracted from response body, populate request_data
+                        if result.get("prompt") and request_data is None:
+                            request_data = InteractionRequest(
+                                prompt=result.get("prompt"),
+                                messages=None,
+                                model=result.get("model"),
+                                raw=None,
+                            )
+
+                        response_data = InteractionResponse(
+                            content=result.get("response") or result.get("content"),
+                            model=result.get("model"),
+                            finish_reason=None,
+                            usage=None,
+                            raw={k: v for k, v in result.items() if k not in ("prompt", "response", "content", "model")},
+                        )
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Failed to parse response JSON: {e}")
+                    except Exception as e:
+                        logger.warning(f"Failed to parse response with JSONata: {e}")
 
         # For apps without parser config (feature_extraction)
         # We know the feature type but can't parse the content yet
-        if match_result.source_type == "app" and (
-            request_data is None or response_data is None
-        ):
+        # Note: request_data can be None if request config is empty (e.g., GET requests)
+        # We only need response_data to be valid for full_extraction
+        if match_result.source_type == "app" and response_data is None:
             if match_result.classification == "feature_extraction":
                 logger.info(
                     f"Feature extraction for app {match_result.source_id}/{match_result.endpoint} "
@@ -831,18 +904,24 @@ class OximyAddon:
                     include_raw=include_raw,
                 )
 
-        if not request_data or not response_data:
-            # Can't build full interaction - drop silently
+        # For apps, we may only have response_data (e.g., GET requests with no body)
+        # For APIs, we need both request and response
+        if match_result.source_type == "api" and (not request_data or not response_data):
+            # Can't build full interaction for API - drop silently
+            return None
+
+        if match_result.source_type == "app" and not response_data:
+            # Apps need at least response data
             return None
 
         # Check if interaction has meaningful content (not empty request/response)
-        has_request_content = (
+        has_request_content = request_data and (
             request_data.prompt
             or request_data.messages
             or request_data.model
             or request_data.raw
         )
-        has_response_content = (
+        has_response_content = response_data and (
             response_data.content or response_data.model or response_data.raw
         )
         if not has_request_content and not has_response_content:
@@ -869,11 +948,20 @@ class OximyAddon:
             except Exception as e:
                 logger.debug(f"Content analysis failed: {e}")
 
+        # Create empty request data if none exists (e.g., GET requests)
+        if request_data is None:
+            request_data = InteractionRequest(
+                prompt=None,
+                messages=None,
+                model=None,
+                raw=None,
+            )
+
         interaction = Interaction(
             type=match_result.endpoint or "chat",
             model=model,
             request=request_data,
-            response=response_data,
+            response=response_data,  # type: ignore - we verified it's not None above
         )
 
         return OximyEvent.create(

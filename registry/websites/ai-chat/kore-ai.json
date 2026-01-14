@@ -1,0 +1,27 @@
+{
+  "name": "Kore.ai",
+  "vendor": "Kore.ai Inc.",
+  "vendor_url": "https://kore.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "bots.kore.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "standard",
+        "name": "Standard",
+        "type": "enterprise"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

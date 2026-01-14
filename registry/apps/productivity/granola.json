@@ -1,0 +1,89 @@
+{
+  "name": "Granola",
+  "vendor": "Granola",
+  "vendor_url": "https://granola.ai",
+  "category": "productivity",
+  "platforms": [
+    "macos"
+  ],
+  "signatures": {
+    "macos": {
+      "bundle_id": "com.granola.app",
+      "team_id": "QZ7DHHLN25"
+    }
+  },
+  "ai": "native",
+  "icon": "granola.png",
+  "api_domains": [
+    "stream.api.granola.ai",
+    "api.granola.ai",
+    "*.granola.ai"
+  ],
+  "features": {
+    "chat": {
+      "type": "chat",
+      "name": "AI Chat with Documents",
+      "description": "Chat with your meeting notes and documents using AI",
+      "patterns": [
+        {
+          "url": "**/v1/chat-with-documents",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "prompt": "chat_history[-1].text",
+          "model": "prompt_config.model",
+          "context": "document_ids"
+        },
+        "response": {
+          "stream": {
+            "format": "ndjson",
+            "format_options": {
+              "delimiter": "-----CHUNK_BOUNDARY-----"
+            },
+            "rules": [
+              {
+                "when": "$exists(outputs) and $exists(outputs[type = 'text_with_citations'].plain_text)",
+                "extract": {
+                  "content": "outputs[type = 'text_with_citations'].plain_text"
+                }
+              },
+              {
+                "when": "$exists(outputs) and $exists(outputs[type = 'reasoning'].text)",
+                "extract": {
+                  "reasoning": "outputs[type = 'reasoning'].text"
+                }
+              }
+            ],
+            "accumulate": {
+              "content": {
+                "from": "content",
+                "op": "last"
+              },
+              "reasoning": {
+                "from": "reasoning",
+                "op": "last"
+              }
+            },
+            "finalize": {
+              "content": "accumulated.content"
+            }
+          }
+        }
+      }
+    }
+  },
+  "detection": {
+    "subscription": [
+      {
+        "type": "api_response",
+        "url": "**/v1/get-workspaces",
+        "extract": {
+          "plan_type": "$.workspaces[0].plan_type",
+          "role": "$.workspaces[0].role"
+        }
+      }
+    ]
+  }
+}

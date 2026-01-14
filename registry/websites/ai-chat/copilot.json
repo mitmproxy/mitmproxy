@@ -1,0 +1,39 @@
+{
+  "name": "Copilot",
+  "vendor": "Microsoft Corporation",
+  "vendor_url": "https://www.microsoft.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "copilot.microsoft.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "m365_copilot",
+        "name": "Microsoft 365 Copilot",
+        "type": "team"
+      },
+      {
+        "id": "security_copilot",
+        "name": "Security Copilot",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

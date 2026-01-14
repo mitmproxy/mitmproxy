@@ -1,0 +1,20 @@
+{
+  "name": "Uniphore",
+  "vendor": "Uniphore Software Systems",
+  "vendor_url": "https://www.uniphore.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

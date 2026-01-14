@@ -1,0 +1,129 @@
+{
+  "name": "ChatGPT",
+  "vendor": "OpenAI",
+  "vendor_url": "https://openai.com",
+  "category": "ai-chat",
+  "api_domains": [
+    "chatgpt.com",
+    "chat.openai.com"
+  ],
+  "features": {
+    "chat": {
+      "type": "chat",
+      "name": "Chat Conversation",
+      "patterns": [
+        {
+          "url": "**/backend-api/conversation",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "model": "model",
+          "messages": "messages.({'role': author.role, 'content': $join(content.parts)})"
+        },
+        "response": {
+          "stream": {
+            "format": "sse",
+            "format_options": {
+              "prefixes": [
+                "data: ",
+                "delta ",
+                "message "
+              ],
+              "skip_values": [
+                "[DONE]",
+                "delta_encoding v1",
+                "delta_encoding v2",
+                "v1",
+                "v2"
+              ]
+            },
+            "rules": [
+              {
+                "when": "type = 'server_ste_metadata'",
+                "extract": {
+                  "model": "metadata.model_slug"
+                }
+              },
+              {
+                "when": "$exists(v) and $not($exists(o)) and $not($exists(p)) and $type(v) = 'string'",
+                "extract": {
+                  "content": "v"
+                }
+              },
+              {
+                "when": "o = 'append' and $exists(v) and $type(v) = 'string'",
+                "extract": {
+                  "content": "v"
+                }
+              },
+              {
+                "when": "$exists(choices[0].delta.content)",
+                "extract": {
+                  "content": "choices[0].delta.content"
+                }
+              }
+            ],
+            "accumulate": {
+              "content": {
+                "from": "content",
+                "op": "concat"
+              },
+              "model": {
+                "from": "model",
+                "op": "first"
+              }
+            },
+            "finalize": {
+              "content": "accumulated.content",
+              "model": "accumulated.model"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "plus",
+        "name": "Plus",
+        "type": "individual",
+        "monthly_usd": 20
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual",
+        "monthly_usd": 200
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "type": "team",
+        "monthly_usd": 25
+      }
+    ]
+  },
+  "detection": {
+    "subscription": [
+      {
+        "type": "api_response",
+        "url": "**/backend-api/accounts/check/**",
+        "extract": {
+          "plan": "$.accounts.*.account.plan_type"
+        }
+      }
+    ]
+  }
+}

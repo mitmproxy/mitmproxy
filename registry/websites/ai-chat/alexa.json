@@ -1,0 +1,29 @@
+{
+  "name": "Alexa",
+  "vendor": "Amazon",
+  "vendor_url": "https://www.amazon.com/alexa",
+  "category": "ai-chat",
+  "api_domains": [
+    "alexa.amazon.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "alexa_plus",
+        "name": "Alexa+",
+        "type": "individual"
+      }
+    ]
+  }
+}

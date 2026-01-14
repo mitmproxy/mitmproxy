@@ -1,0 +1,40 @@
+{
+  "name": "Le Chat",
+  "vendor": "Mistral AI",
+  "vendor_url": "https://mistral.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "chat.mistral.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

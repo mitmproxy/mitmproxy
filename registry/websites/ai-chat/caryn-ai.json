@@ -1,0 +1,22 @@
+{
+  "name": "CarynAI",
+  "vendor": "BanterAI",
+  "vendor_url": "https://caryn.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "caryn.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "paid",
+        "name": "Paid",
+        "type": "individual"
+      }
+    ]
+  }
+}

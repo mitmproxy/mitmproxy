@@ -1,0 +1,21 @@
+{
+  "name": "Siri",
+  "vendor": "Apple Inc.",
+  "vendor_url": "https://www.apple.com/siri/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

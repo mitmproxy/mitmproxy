@@ -1,0 +1,30 @@
+{
+  "name": "Ada",
+  "vendor": "Ada Support Inc.",
+  "vendor_url": "https://www.ada.cx/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "enterprise"
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "type": "enterprise"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

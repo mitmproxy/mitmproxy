@@ -1,0 +1,20 @@
+{
+  "name": "SoundHound AI",
+  "vendor": "SoundHound AI Inc.",
+  "vendor_url": "https://www.soundhound.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

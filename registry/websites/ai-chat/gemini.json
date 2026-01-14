@@ -1,0 +1,104 @@
+{
+  "name": "Gemini",
+  "vendor": "Google",
+  "vendor_url": "https://google.com",
+  "category": "ai-chat",
+  "api_domains": [
+    "gemini.google.com"
+  ],
+  "features": {
+    "chat": {
+      "type": "chat",
+      "name": "Chat Conversation",
+      "patterns": [
+        {
+          "url": "**/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "encoding": "form",
+          "form_field": "f.req",
+          "preprocess": [
+            {
+              "op": "json_parse"
+            },
+            {
+              "op": "index",
+              "value": 1
+            },
+            {
+              "op": "json_parse"
+            }
+          ],
+          "prompt": "$[0][0]",
+          "conversation_id": "$[2][0]"
+        },
+        "response": {
+          "stream": {
+            "format": "length_prefixed",
+            "format_options": {
+              "header_strip": ")]}'\\n"
+            },
+            "rules": [
+              {
+                "when": "$[0][0] = 'wrb.fr'",
+                "preprocess": [
+                  {
+                    "op": "index",
+                    "value": 0
+                  },
+                  {
+                    "op": "index",
+                    "value": 2
+                  },
+                  {
+                    "op": "json_parse"
+                  }
+                ],
+                "extract": {
+                  "content": "$[4][0][1][0]",
+                  "conversation_id": "$[1][0]"
+                }
+              }
+            ],
+            "accumulate": {
+              "content": {
+                "from": "content",
+                "op": "last"
+              },
+              "conversation_id": {
+                "from": "conversation_id",
+                "op": "last"
+              }
+            },
+            "finalize": {
+              "content": "accumulated.content",
+              "model": "'gemini'"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "advanced",
+        "name": "Advanced",
+        "type": "individual",
+        "monthly_usd": 20
+      }
+    ]
+  }
+}

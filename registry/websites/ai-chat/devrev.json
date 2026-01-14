@@ -1,0 +1,43 @@
+{
+  "name": "DevRev",
+  "vendor": "DevRev Inc.",
+  "vendor_url": "https://devrev.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.devrev.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "starter_build",
+        "name": "Starter Build",
+        "type": "individual"
+      },
+      {
+        "id": "pro_build",
+        "name": "Pro Build",
+        "type": "individual"
+      },
+      {
+        "id": "starter_support",
+        "name": "Starter Support",
+        "type": "individual"
+      },
+      {
+        "id": "pro_support",
+        "name": "Pro Support",
+        "type": "individual"
+      },
+      {
+        "id": "ultimate",
+        "name": "Ultimate",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

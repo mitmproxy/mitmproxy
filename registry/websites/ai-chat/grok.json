@@ -1,0 +1,116 @@
+{
+  "name": "Grok",
+  "vendor": "xAI",
+  "vendor_url": "https://x.ai",
+  "category": "ai-chat",
+  "api_domains": [
+    "grok.com",
+    "grok.x.ai"
+  ],
+  "features": {
+    "chat": {
+      "type": "chat",
+      "name": "Chat Conversation",
+      "patterns": [
+        {
+          "url": "**/rest/app-chat/conversations/new",
+          "method": "POST"
+        },
+        {
+          "url": "**/rest/app-chat/conversations/**/responses",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "prompt": "message",
+          "model": "modelName"
+        },
+        "response": {
+          "stream": {
+            "format": "ndjson",
+            "format_options": {
+              "delimiter": "}{"
+            },
+            "rules": [
+              {
+                "when": "$exists(result.modelResponse)",
+                "extract": {
+                  "final_content": "result.modelResponse.message",
+                  "model": "result.modelResponse.model",
+                  "response_id": "result.modelResponse.responseId"
+                }
+              },
+              {
+                "when": "$exists(result.token)",
+                "extract": {
+                  "token": "result.token"
+                }
+              },
+              {
+                "when": "$exists(result.conversation.conversationId)",
+                "extract": {
+                  "conversation_id": "result.conversation.conversationId"
+                }
+              }
+            ],
+            "accumulate": {
+              "tokens": {
+                "from": "token",
+                "op": "concat"
+              },
+              "model": {
+                "from": "model",
+                "op": "first"
+              },
+              "final_content": {
+                "from": "final_content",
+                "op": "last"
+              },
+              "conversation_id": {
+                "from": "conversation_id",
+                "op": "first"
+              }
+            },
+            "finalize": {
+              "content": "accumulated.final_content ? accumulated.final_content : accumulated.tokens",
+              "model": "accumulated.model"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual",
+        "monthly_usd": 8
+      },
+      {
+        "id": "premium_plus",
+        "name": "Premium+",
+        "type": "individual",
+        "monthly_usd": 22
+      },
+      {
+        "id": "superuser",
+        "name": "SuperUser",
+        "type": "individual",
+        "monthly_usd": 30
+      }
+    ]
+  }
+}

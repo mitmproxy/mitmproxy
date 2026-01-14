@@ -1,0 +1,40 @@
+{
+  "name": "YouChat",
+  "vendor": "You.com Inc.",
+  "vendor_url": "https://you.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "you.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

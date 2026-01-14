@@ -1,0 +1,40 @@
+{
+  "name": "Zapier Chatbots",
+  "vendor": "Zapier Inc.",
+  "vendor_url": "https://zapier.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "zapier.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "advanced",
+        "name": "Advanced",
+        "type": "team"
+      },
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

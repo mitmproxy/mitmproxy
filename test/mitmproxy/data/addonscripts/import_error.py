@@ -1,3 +1,0 @@
-import nonexistent
-
-nonexistent.foo()

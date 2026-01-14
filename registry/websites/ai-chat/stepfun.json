@@ -1,0 +1,29 @@
+{
+  "name": "StepFun",
+  "vendor": "Stepfun Technology",
+  "vendor_url": "https://www.stepfun.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "stepchat.cn"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

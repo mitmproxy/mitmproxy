@@ -1,0 +1,34 @@
+{
+  "name": "ZenoChat",
+  "vendor": "TextCortex AI",
+  "vendor_url": "https://textcortex.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.textcortex.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "lite",
+        "name": "Lite",
+        "type": "individual"
+      },
+      {
+        "id": "unlimited",
+        "name": "Unlimited",
+        "type": "individual"
+      }
+    ]
+  }
+}

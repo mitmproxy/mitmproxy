@@ -1,0 +1,44 @@
+{
+  "name": "Tidio Lyro",
+  "vendor": "Tidio LLC",
+  "vendor_url": "https://www.tidio.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.tidio.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "individual"
+      },
+      {
+        "id": "growth",
+        "name": "Growth",
+        "type": "individual"
+      },
+      {
+        "id": "plus",
+        "name": "Plus",
+        "type": "team"
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "team"
+      }
+    ]
+  }
+}

@@ -82,7 +82,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-14T02:45:18.335496+00:00",
+  "generated_at": "2026-01-14T17:31:49.564192+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -43128,6 +43128,116 @@
         },
         "vendor": "Google",
         "vendor_url": "https://google.com/chrome"
+      },
+      "claude": {
+        "_har_analyzed": "2026-01-13",
+        "_notes": "SSE streaming with event types: message_start, content_block_start, content_block_delta, content_block_stop, message_delta, message_limit, message_stop. Response body is base64 encoded in HAR.",
+        "_status": "complete",
+        "api_domains": [
+          "claude.ai",
+          "api.anthropic.com",
+          "a-api.anthropic.com"
+        ],
+        "category": "ai-chat",
+        "detection": {
+          "subscription": [
+            {
+              "extract": {
+                "billing_interval": "$.billing_interval",
+                "next_charge_date": "$.next_charge_date",
+                "status": "$.status"
+              },
+              "type": "api_response",
+              "url": "**/api/organizations/*/subscription_details"
+            },
+            {
+              "extract": {
+                "org_id": "$.uuid",
+                "org_name": "$.name"
+              },
+              "type": "api_response",
+              "url": "**/api/organizations/*"
+            }
+          ]
+        },
+        "features": {
+          "chat": {
+            "description": "Chat with Claude AI assistant",
+            "name": "Chat Conversation",
+            "parser": {
+              "request": {
+                "locale": "locale",
+                "prompt": "prompt",
+                "timezone": "timezone"
+              },
+              "response": {
+                "conversation_id": "uuid",
+                "conversation_name": "name",
+                "response": "chat_messages[-1].content[0].text",
+                "timestamp": "chat_messages[-1].created_at"
+              }
+            },
+            "patterns": {
+              "request": {
+                "method": "POST",
+                "url": "**/api/organizations/*/chat_conversations/*/completion"
+              },
+              "response": {
+                "method": "GET",
+                "query_params": [
+                  "tree=True"
+                ],
+                "url": "**/api/organizations/*/chat_conversations/*"
+              }
+            },
+            "type": "chat"
+          }
+        },
+        "icon": "claude.png",
+        "name": "Claude",
+        "platforms": [
+          "macos",
+          "windows"
+        ],
+        "pricing": {
+          "model": [
+            "subscription"
+          ],
+          "tiers": [
+            {
+              "id": "free",
+              "monthly_usd": 0,
+              "name": "Free",
+              "type": "free"
+            },
+            {
+              "id": "pro",
+              "monthly_usd": 20,
+              "name": "Pro",
+              "type": "individual"
+            },
+            {
+              "id": "team",
+              "monthly_usd": 25,
+              "name": "Team",
+              "type": "team"
+            },
+            {
+              "id": "enterprise",
+              "monthly_usd": null,
+              "name": "Enterprise",
+              "type": "enterprise"
+            }
+          ]
+        },
+        "signatures": {
+          "macos": {
+            "bundle_id": "com.anthropic.claudefordesktop",
+            "team_id": "Q6L2SF6YDW"
+          }
+        },
+        "vendor": "Anthropic",
+        "vendor_url": "https://anthropic.com"
       },
       "edge": {
         "category": "browser",

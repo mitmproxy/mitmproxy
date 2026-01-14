@@ -1,0 +1,32 @@
+{
+  "name": "Genesys",
+  "vendor": "Genesys Cloud Services Inc.",
+  "vendor_url": "https://www.genesys.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "apps.mypurecloud.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "cloud_cx_1",
+        "name": "Cloud CX 1",
+        "type": "enterprise"
+      },
+      {
+        "id": "cloud_cx_2",
+        "name": "Cloud CX 2",
+        "type": "enterprise"
+      },
+      {
+        "id": "cloud_cx_3",
+        "name": "Cloud CX 3",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

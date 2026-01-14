@@ -1,0 +1,29 @@
+{
+  "name": "Qwen",
+  "vendor": "Alibaba Cloud",
+  "vendor_url": "https://www.alibabacloud.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "qwen.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pay_as_you_go",
+        "name": "Pay As You Go",
+        "type": "usage"
+      }
+    ]
+  }
+}
