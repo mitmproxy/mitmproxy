@@ -176,10 +176,16 @@ else
     echo "    WARNING: Sentry.framework not found, Sentry may be statically linked"
 fi
 
-# Copy other resources
+# Copy other resources (excluding items that are copied explicitly below)
 echo "    Copying resources..."
 if [ -d "$PROJECT_DIR/Resources" ]; then
-    cp -R "$PROJECT_DIR/Resources/"* "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
+    # Copy resources except python-embed and oximy-addon which are handled separately
+    for item in "$PROJECT_DIR/Resources/"*; do
+        basename_item=$(basename "$item")
+        if [ "$basename_item" != "python-embed" ] && [ "$basename_item" != "oximy-addon" ]; then
+            cp -R "$item" "$APP_BUNDLE/Contents/Resources/" 2>/dev/null || true
+        fi
+    done
 fi
 
 # Copy logos
@@ -195,13 +201,16 @@ if [ -d "$PROJECT_DIR/Resources/python-embed" ]; then
     cp -R "$PROJECT_DIR/Resources/python-embed" "$APP_BUNDLE/Contents/Resources/"
 fi
 
-# Copy addon from mitmproxy source (single source of truth)
-ADDON_SRC="$PROJECT_DIR/../mitmproxy/addons/oximy"
+# Copy addon from synced location (with converted imports for standalone use)
+# The source of truth is mitmproxy/addons/oximy/, but sync-addon.sh converts
+# absolute imports to relative imports for standalone bundled Python use
+ADDON_SRC="$PROJECT_DIR/Resources/oximy-addon"
 if [ -d "$ADDON_SRC" ]; then
     cp -R "$ADDON_SRC" "$APP_BUNDLE/Contents/Resources/oximy-addon"
-    echo "    Copied addon from: $ADDON_SRC"
+    echo "    Copied addon from: $ADDON_SRC (synced with relative imports)"
 else
-    echo "ERROR: Addon not found at $ADDON_SRC"
+    echo "ERROR: Synced addon not found at $ADDON_SRC"
+    echo "       Run 'make sync' first to sync and convert addon imports"
     exit 1
 fi
 

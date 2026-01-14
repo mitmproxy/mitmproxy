@@ -532,8 +532,13 @@ class OximyAddon:
         )
         origin = flow.request.headers.get("origin")
 
+        # Map internal "api" type to "direct_api" for backend compatibility
+        source_type = match_result.source_type
+        if source_type == "api":
+            source_type = "direct_api"
+
         source = EventSource(
-            type=match_result.source_type or "api",
+            type=source_type or "direct_api",
             id=match_result.source_id or "unknown",
             endpoint=match_result.endpoint,
             referer=referer,
@@ -1002,7 +1007,10 @@ class OximyAddon:
         return EventTiming(duration_ms=duration_ms, ttfb_ms=ttfb_ms)
 
     def _build_bundle_id_index(self) -> dict[str, str]:
-        """Build a reverse index from bundle_id -> app_id from the registry.
+        """Build a reverse index from bundle_id/exe -> app_id from the registry.
+
+        On macOS: maps bundle_id -> app_id
+        On Windows: maps exe name -> app_id (both original case and lowercase)
 
         Apps include both native apps and browsers (category: browser).
         """
@@ -1012,9 +1020,18 @@ class OximyAddon:
 
         for app_id, app in self._bundle.apps.items():
             signatures = app.get("signatures", {})
+
+            # macOS bundle_id
             macos_sig = signatures.get("macos", {})
             if bundle_id := macos_sig.get("bundle_id"):
                 index[bundle_id] = app_id
+
+            # Windows exe name
+            windows_sig = signatures.get("windows", {})
+            if exe := windows_sig.get("exe"):
+                # Store both original case and lowercase for matching
+                index[exe] = app_id
+                index[exe.lower()] = app_id
 
         return index
 
