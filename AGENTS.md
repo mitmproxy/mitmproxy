@@ -1,3 +1,0 @@
-- This project uses uv. Always use `uv run pytest` and don't run pytest directly.
-- To run all tests: `uv run tox`.
-- When adding new source files, additionally run: `uv run tox -e individual_coverage -- FILENAME`.
