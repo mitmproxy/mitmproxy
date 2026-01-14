@@ -1,0 +1,32 @@
+# Pre-commit configuration for Oximy
+#
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Skip hooks (emergency): git commit --no-verify
+
+repos:
+  # Local hook: Check for dev mode settings that shouldn't be committed
+  - repo: local
+    hooks:
+      - id: check-dev-mode-safety
+        name: Check DEV mode safety
+        description: Prevents committing hardcoded dev settings
+        entry: python scripts/check_dev_mode.py
+        language: python
+        files: \.(py|swift|cs)$
+        pass_filenames: true
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^\.github/
+      - id: check-json
+        exclude: (package-lock\.json|\.vscode/)

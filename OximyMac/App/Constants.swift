@@ -60,6 +60,32 @@ enum Constants {
     // MARK: - API
     static let defaultAPIEndpoint = "https://api.oximy.com/api/v1"
 
+    /// Dev config file path (~/.oximy/dev.json)
+    static var devConfigPath: URL {
+        oximyDir.appendingPathComponent("dev.json")
+    }
+
+    /// Returns API endpoint from dev config if available, otherwise default
+    /// Dev config JSON format: {"API_URL": "http://localhost:4000/api/v1", "DEV_MODE": true}
+    static var apiEndpoint: String {
+        // Check for OXIMY_DEV environment variable first
+        if let devEnv = ProcessInfo.processInfo.environment["OXIMY_DEV"],
+           ["1", "true", "yes"].contains(devEnv.lowercased()) {
+            // Check for custom API URL in environment
+            if let apiUrl = ProcessInfo.processInfo.environment["OXIMY_API_URL"] {
+                return apiUrl
+            }
+        }
+
+        // Check for local dev config file
+        if let data = try? Data(contentsOf: devConfigPath),
+           let config = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let apiUrl = config["API_URL"] as? String {
+            return apiUrl
+        }
+
+        return defaultAPIEndpoint
+    }
 
     // MARK: - URLs
     static let signUpURL = URL(string: "https://app.oximy.com")!

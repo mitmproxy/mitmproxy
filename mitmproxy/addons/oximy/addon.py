@@ -17,6 +17,7 @@ from mitmproxy import ctx
 from mitmproxy import http
 from mitmproxy.addons.oximy.bundle import BundleLoader
 from mitmproxy.addons.oximy.bundle import DEFAULT_BUNDLE_URL
+from mitmproxy.addons.oximy.config import config
 from mitmproxy.addons.oximy.matcher import TrafficMatcher
 from mitmproxy.addons.oximy.models import EventSource
 from mitmproxy.addons.oximy.models import EventTiming
@@ -73,13 +74,14 @@ OXIMY_METADATA_KEY = "oximy_match"
 OXIMY_CLIENT_KEY = "oximy_client"
 
 # -------------------------------------------------------------------------
-# System Proxy Configuration (Development Only)
-# Set OXIMY_AUTO_PROXY=1 to enable automatic proxy setup/teardown
-# Comment out or set to 0 for production deployments
+# System Proxy Configuration
+# Controlled by config module (env var OXIMY_AUTO_PROXY or ~/.oximy/dev.json)
+# Production default: False (proxy managed externally)
+# Development default: True (auto-configure for convenience)
 # -------------------------------------------------------------------------
-OXIMY_AUTO_PROXY_ENABLED = True
-OXIMY_PROXY_HOST = "127.0.0.1"
-OXIMY_PROXY_PORT = "8088"
+OXIMY_AUTO_PROXY_ENABLED = config.AUTO_PROXY_ENABLED
+OXIMY_PROXY_HOST = config.PROXY_HOST
+OXIMY_PROXY_PORT = config.PROXY_PORT
 OXIMY_NETWORK_SERVICE = "Wi-Fi"  # macOS: Change if using different network interface
 
 

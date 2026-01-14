@@ -46,3 +46,12 @@ OximyMac/Resources/python-embed/
 OximyMac/App/Secrets.swift
 .claude/settings.local.json
 .github/workflows/oximy-release.yml
+
+# Dev mode local config (never commit)
+.oximy/dev.json
+**/dev.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
