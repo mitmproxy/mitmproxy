@@ -95,6 +95,10 @@ jobs:
           npm install -g create-dmg
           echo "create-dmg installed at: $(which create-dmg)"
 
+      - name: Sync addon files
+        working-directory: OximyMac
+        run: make sync
+
       - name: Build bundled Python
         working-directory: OximyMac
         run: |

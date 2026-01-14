@@ -57,10 +57,12 @@ try {
     if ($PthFile) {
         # Build new ._pth content with all required paths
         # Note: Paths are relative to python.exe location (python-embed/)
+        # IMPORTANT: The ..\oximy-addon path is required for mitmproxy to load the addon
         $NewPthContent = @(
             "python312.zip",
             ".",
             "Lib\site-packages",
+            "..\oximy-addon",
             "",
             "# Enable site module for pip to work",
             "import site"

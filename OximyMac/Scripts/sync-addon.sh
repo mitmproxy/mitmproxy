@@ -28,6 +28,7 @@ mkdir -p "$DEST_DIR"
 FILES=(
     "addon.py"
     "bundle.py"
+    "config.py"
     "matcher.py"
     "models.py"
     "parser.py"
