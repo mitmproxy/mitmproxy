@@ -23,13 +23,17 @@ echo "Host Architecture: $ARCH"
 echo "Project: $PROJECT_DIR"
 echo ""
 
+# Sync addon files (converts imports for standalone use)
+echo "[1/8] Syncing addon files..."
+"$SCRIPT_DIR/sync-addon.sh"
+
 # Clean previous build
-echo "[1/7] Cleaning previous build..."
+echo "[2/8] Cleaning previous build..."
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 # Build
-echo "[2/7] Building in $BUILD_CONFIG mode..."
+echo "[3/8] Building in $BUILD_CONFIG mode..."
 cd "$PROJECT_DIR"
 
 if [ "$BUILD_UNIVERSAL" = "true" ]; then
@@ -41,7 +45,7 @@ else
 fi
 
 # Create app bundle structure
-echo "[3/7] Creating app bundle..."
+echo "[4/8] Creating app bundle..."
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
@@ -130,7 +134,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 EOF
 
 # Copy frameworks (Sparkle, Sentry)
-echo "[4/7] Copying frameworks..."
+echo "[5/8] Copying frameworks..."
 mkdir -p "$APP_BUNDLE/Contents/Frameworks"
 
 # Copy Sparkle.framework - check multiple possible locations
@@ -217,7 +221,7 @@ fi
 # Create app icon BEFORE signing (critical!)
 # IMPORTANT: Use SQUARE icon - macOS automatically applies rounded corners to app icons
 # Using pre-rounded icons causes double-rounding and bleed issues
-echo "[5/7] Creating app icon..."
+echo "[6/8] Creating app icon..."
 ICON_SOURCE="$PROJECT_DIR/Resources/Assets.xcassets/AppIcon.appiconset/1024.png"
 # Fall back to Oximy.png if 1024.png doesn't exist
 if [ ! -f "$ICON_SOURCE" ]; then
@@ -248,7 +252,7 @@ else
 fi
 
 # Code signing (requires Developer ID)
-echo "[6/7] Code signing..."
+echo "[7/8] Code signing..."
 if [ -n "$DEVELOPER_ID" ]; then
     echo "    Signing with: $DEVELOPER_ID"
     ENTITLEMENTS_FILE="$PROJECT_DIR/OximyMac.entitlements"
@@ -353,7 +357,7 @@ fi
 
 # Skip DMG creation here - it will be done AFTER notarization in CI
 # This ensures the app bundle signature is not invalidated by DMG creation
-echo "[7/7] Skipping DMG creation (done after notarization in CI)..."
+echo "[8/8] Skipping DMG creation (done after notarization in CI)..."
 DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_PATH="$BUILD_DIR/$DMG_NAME"
 echo "    App bundle ready for notarization: $APP_BUNDLE"

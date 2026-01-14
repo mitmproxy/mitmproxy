@@ -356,6 +356,9 @@ struct SettingsTab: View {
                         appState.isProxyEnabled = false
                     }
                     try await certService.removeCA()
+                    // Also delete the certificate files so a fresh cert is generated on re-enable
+                    // This prevents issues where macOS remembers the old cert was removed/distrusted
+                    try certService.deleteCAFiles()
                     appState.isCertificateInstalled = false
                 } else {
                     try await certService.generateCA()

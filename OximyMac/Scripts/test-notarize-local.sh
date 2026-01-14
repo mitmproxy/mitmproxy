@@ -105,14 +105,21 @@ else
     exit 1
 fi
 
-# Step 4: Verify DMG exists
+# Step 4: Create DMG
 echo ""
-echo "[4/6] Checking DMG..."
+echo "[4/6] Creating DMG..."
+if [ -f "$DMG_PATH" ]; then
+    rm -f "$DMG_PATH"
+fi
+hdiutil create -volname "$APP_NAME" \
+    -srcfolder "$APP_BUNDLE" \
+    -ov -format UDZO \
+    "$DMG_PATH"
 if [ ! -f "$DMG_PATH" ]; then
-    echo -e "${RED}ERROR: DMG not found at $DMG_PATH${NC}"
+    echo -e "${RED}ERROR: Failed to create DMG at $DMG_PATH${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ DMG exists: $DMG_PATH${NC}"
+echo -e "${GREEN}✓ DMG created: $DMG_PATH${NC}"
 echo "  Size: $(du -h "$DMG_PATH" | cut -f1)"
 
 # Step 5: Submit for notarization
