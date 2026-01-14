@@ -73,9 +73,9 @@ download_python_arch() {
     mkdir -p "$target_dir"
     cp -R "python-$arch_name/"* "$target_dir/"
 
-    echo "Installing mitmproxy for $arch_name..."
+    echo "Installing mitmproxy and dependencies for $arch_name..."
     "$target_dir/bin/pip3" install --upgrade pip
-    "$target_dir/bin/pip3" install mitmproxy
+    "$target_dir/bin/pip3" install mitmproxy jsonata-python
 
     echo "✓ Python $arch_name ready"
     return 0
@@ -148,8 +148,8 @@ export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONNOUSERSITE=1
 
-# Run mitmdump with all arguments passed through
-exec "$PYTHON_HOME/bin/python3" -I -m mitmproxy.tools.main mitmdump "$@"
+# Run the pip-installed mitmdump script (works better than -m)
+exec "$PYTHON_HOME/bin/python3" "$PYTHON_HOME/bin/mitmdump" "$@"
 MITMDUMP_EOF
 
     cat > "$EMBED_DIR/bin/python3" << 'PYTHON_EOF'
@@ -191,8 +191,8 @@ export PYTHONHOME="$PYTHON_HOME"
 export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
 export PATH="$SCRIPT_DIR:$PATH"
 
-# Run mitmdump with all arguments passed through
-exec "$SCRIPT_DIR/python3" -m mitmproxy.tools.main mitmdump "$@"
+# Run the pip-installed mitmdump script (works better than -m)
+exec "$SCRIPT_DIR/python3" "$SCRIPT_DIR/mitmdump" "$@"
 WRAPPER_EOF
 
     chmod +x "$EMBED_DIR/bin/run-mitmdump"
@@ -216,9 +216,8 @@ export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONNOUSERSITE=1
 
-# Run mitmdump with all arguments passed through
-# Use -I flag to isolate from user site-packages and PYTHONPATH pollution
-exec "$SCRIPT_DIR/python3" -I -m mitmproxy.tools.main mitmdump "$@"
+# Run the pip-installed mitmdump script (works better than -m)
+exec "$SCRIPT_DIR/python3" "$SCRIPT_DIR/mitmdump" "$@"
 MITMDUMP_EOF
         chmod +x "$EMBED_DIR/bin/mitmdump"
     fi

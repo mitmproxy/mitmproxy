@@ -18,8 +18,58 @@ class CertificateService: ObservableObject {
 
     /// Check current CA status
     func checkStatus() {
-        isCAGenerated = FileManager.default.fileExists(atPath: Constants.caCertPath.path)
+        let fm = FileManager.default
+        let keyExists = fm.fileExists(atPath: Constants.caKeyPath.path)
+        let certExists = fm.fileExists(atPath: Constants.caCertPath.path)
+
+        if keyExists && certExists {
+            // Validate and attempt repair if needed
+            isCAGenerated = validateAndRepairCA()
+        } else {
+            isCAGenerated = false
+        }
+
         isCAInstalled = isCAInKeychain()
+    }
+
+    /// Validate and repair the CA certificate if needed
+    /// mitmproxy expects mitmproxy-ca.pem to contain BOTH key and cert concatenated
+    /// Returns true if certificate is valid or was successfully repaired
+    private func validateAndRepairCA() -> Bool {
+        let keyPath = Constants.caKeyPath  // mitmproxy-ca.pem (should have key+cert)
+        let certPath = Constants.caCertPath // mitmproxy-ca-cert.pem (cert only)
+
+        // Check if combined file exists and has correct format
+        guard let content = try? String(contentsOf: keyPath, encoding: .utf8) else {
+            return false
+        }
+
+        let hasKey = content.contains("-----BEGIN PRIVATE KEY-----") ||
+                     content.contains("-----BEGIN RSA PRIVATE KEY-----")
+        let hasCert = content.contains("-----BEGIN CERTIFICATE-----")
+
+        if hasKey && hasCert {
+            return true  // Already valid
+        }
+
+        // Try to repair: if we have key in one file and cert in another
+        if hasKey && !hasCert {
+            if let certContent = try? String(contentsOf: certPath, encoding: .utf8),
+               certContent.contains("-----BEGIN CERTIFICATE-----") {
+                // Repair by concatenating
+                let combined = content + certContent
+                do {
+                    try combined.write(to: keyPath, atomically: true, encoding: .utf8)
+                    NSLog("[CertificateService] Repaired mitmproxy-ca.pem by adding certificate")
+                    return true
+                } catch {
+                    NSLog("[CertificateService] Failed to repair certificate: \(error)")
+                }
+            }
+        }
+
+        NSLog("[CertificateService] Certificate file is invalid - needs regeneration")
+        return false
     }
 
     /// Check if Oximy CA is in the Keychain
@@ -53,13 +103,14 @@ class CertificateService: ObservableObject {
            fm.fileExists(atPath: Constants.caKeyPath.path) {
             // Verify the combined file has both key and cert
             if let content = try? String(contentsOf: Constants.caKeyPath, encoding: .utf8),
-               content.contains("-----BEGIN PRIVATE KEY-----") &&
+               (content.contains("-----BEGIN PRIVATE KEY-----") ||
+                content.contains("-----BEGIN RSA PRIVATE KEY-----")) &&
                content.contains("-----BEGIN CERTIFICATE-----") {
                 isCAGenerated = true
                 return
             }
             // If not valid, regenerate
-            print("[CertificateService] Regenerating CA - combined file missing or invalid")
+            NSLog("[CertificateService] Regenerating CA - combined file invalid or incomplete")
         }
 
         // Temporary paths for separate key and cert generation

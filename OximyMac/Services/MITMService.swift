@@ -108,6 +108,53 @@ class MITMService: ObservableObject {
         return bindResult == 0
     }
 
+    /// Check if something is listening on a port (opposite of isPortAvailable)
+    private func isPortListening(_ port: Int) -> Bool {
+        let socketFD = socket(AF_INET, SOCK_STREAM, 0)
+        guard socketFD >= 0 else { return false }
+        defer { close(socketFD) }
+
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = in_port_t(port).bigEndian
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+        let connectResult = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                connect(socketFD, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+
+        return connectResult == 0
+    }
+
+    /// Wait for mitmproxy to start listening on the specified port
+    /// Returns true if port becomes available within timeout, false otherwise
+    private func waitForPortListening(_ port: Int, timeout: TimeInterval = 10.0) async -> Bool {
+        let startTime = Date()
+        let checkInterval: UInt64 = 100_000_000 // 100ms in nanoseconds
+
+        NSLog("[MITMService] Waiting for port %d to start listening (timeout: %.1fs)...", port, timeout)
+
+        while Date().timeIntervalSince(startTime) < timeout {
+            if isPortListening(port) {
+                NSLog("[MITMService] Port %d is now listening after %.2fs", port, Date().timeIntervalSince(startTime))
+                return true
+            }
+
+            // Check if process has already exited
+            if let proc = process, !proc.isRunning {
+                NSLog("[MITMService] Process exited while waiting for port")
+                return false
+            }
+
+            try? await Task.sleep(nanoseconds: checkInterval)
+        }
+
+        NSLog("[MITMService] Timeout waiting for port %d to start listening", port)
+        return false
+    }
+
     // MARK: - Process Management
 
     /// Start mitmproxy with the Oximy addon
@@ -164,6 +211,14 @@ class MITMService: ObservableObject {
             ]
             self.process = process
             try runProcess(process, port: port, addonPath: addonPath)
+
+            // CRITICAL: Wait for mitmproxy to actually start listening
+            let isListening = await waitForPortListening(port)
+            if !isListening {
+                NSLog("[MITMService] ERROR: mitmproxy failed to start listening on port %d", port)
+                stop()  // Clean up the zombie process
+                throw MITMError.portNotListening(port)
+            }
             return
         }
 
@@ -200,6 +255,15 @@ class MITMService: ObservableObject {
             NSLog("[MITMService]  Calling runProcess()...")
             try runProcess(process, port: port, addonPath: addonPath)
             NSLog("[MITMService]  runProcess() completed successfully")
+
+            // CRITICAL: Wait for mitmproxy to actually start listening
+            let isListening = await waitForPortListening(port)
+            if !isListening {
+                NSLog("[MITMService] ERROR: mitmproxy failed to start listening on port %d", port)
+                stop()  // Clean up the zombie process
+                throw MITMError.portNotListening(port)
+            }
+            NSLog("[MITMService] mitmproxy is now listening on port %d", port)
         } catch {
             NSLog("[MITMService]  ERROR: runProcess() failed: \(error)")
             let mitmError = MITMError.processStartFailed(error.localizedDescription)
@@ -621,6 +685,11 @@ class MITMService: ObservableObject {
                 let status = proc.terminationStatus
                 let isNormalExit = status == 0 || status == 15  // 0 = success, 15 = SIGTERM
 
+                // CRITICAL: Always disable proxy when mitmproxy stops to prevent internet blackhole
+                // This handles both normal exits and crashes
+                NSLog("[MITMService] Process terminated, disabling proxy to prevent internet loss")
+                ProxyService.shared.disableProxySync()
+
                 if !isNormalExit {
                     self.lastError = "mitmproxy crashed (exit code \(status))"
                     NSLog("[MITMService] Process crashed with exit code %d", status)
@@ -665,6 +734,7 @@ enum MITMError: LocalizedError {
     case addonNotFound(String)
     case mitmdumpNotFound
     case processStartFailed(String)
+    case portNotListening(Int)
 
     var errorDescription: String? {
         switch self {
@@ -676,6 +746,8 @@ enum MITMError: LocalizedError {
             return "mitmdump not found. Please install mitmproxy."
         case .processStartFailed(let reason):
             return "Failed to start mitmproxy: \(reason)"
+        case .portNotListening(let port):
+            return "mitmproxy failed to start listening on port \(port)"
         }
     }
 }
