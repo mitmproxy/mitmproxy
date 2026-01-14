@@ -1,20 +1,33 @@
 # Security Policy
 
+## Our Approach
+
+Oximy Sensor's source code is open for transparency, audit, and verification. This allows organizations to inspect exactly what runs on their devices—no black boxes.
+
 ## Supported Versions
 
 | Version             | Supported          |
 | ------------------- | ------------------ |
-| main branch         | :white_check_mark: |
-| most recent release | :white_check_mark: |
-| older releases      | :x:                |
+| Latest release      | :white_check_mark: |
+| Previous release    | :white_check_mark: |
+| Older releases      | :x:                |
 
 ## Reporting a Vulnerability
 
-We ask that you do not report security issues to our normal GitHub issue tracker.
+**Please do not report security vulnerabilities through public GitHub issues.**
 
-If you believe you've identified a security issue with mitmproxy,
-please report it to [@mhils](https://github.com/mhils), [@Kriechi](https://github.com/Kriechi), and/or [@cortesi](https://github.com/cortesi) 
-via the email addresses listed on their GitHub profiles.
+To report a security vulnerability, please email **security@oximy.com**.
 
-Once you've submitted an issue via email, 
-you should receive an acknowledgment within 48 hours, and depending on the action to be taken, you may receive further follow-up emails.
+Include:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Any suggested fixes (optional)
+
+## Response Timeline
+
+- **Acknowledgment**: Within 48 hours
+- **Initial assessment**: Within 5 business days
+- **Resolution timeline**: Communicated after assessment
+
+We appreciate responsible disclosure and will credit researchers (if desired) once the issue is resolved.

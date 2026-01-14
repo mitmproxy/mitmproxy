@@ -44,6 +44,17 @@ In the demo, we'll show you:
 - AI governance & policy enforcement
 - Usage analytics & cost tracking
 
+## Audit the code
+
+This repository is fully open source so you can verify exactly what runs on your devices. Key areas to review:
+
+| Directory | Purpose |
+|-----------|---------|
+| [`OximyMac/`](OximyMac/) | macOS sensor application |
+| [`OximyWin/`](OximyWin/) | Windows sensor application |
+| [`mitmproxy/addons/`](mitmproxy/addons/) | Network interception addons |
+| [`registry/`](registry/) | AI apps, websites, and model definitions |
+
 ## Resources
 
 - [Documentation](https://docs.oximy.com)
@@ -57,5 +68,16 @@ The fastest way to understand if Oximy is right for your organization is a quick
 **[Schedule a demo →](https://oximy.link/demo)**
 
 ---
+
+## Acknowledgments
+
+Oximy Sensor is built on the shoulders of giants:
+
+- **[mitmproxy](https://mitmproxy.org)** — The powerful open-source TLS interception library that powers our network monitoring capabilities
+- **[models.dev](https://models.dev)** ([GitHub](https://github.com/anomalyco/models.dev)) — Open database of AI models and providers that powers our detection coverage
+
+---
+
+**[We're hiring →](https://oximy.link/careers)**
 
 Made with ❤️ in SF for 🌍   
