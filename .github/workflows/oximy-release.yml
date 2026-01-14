@@ -309,6 +309,23 @@ jobs:
       - name: Install Velopack CLI
         run: dotnet tool install -g vpk
 
+      - name: Validate version format
+        run: |
+          $version = "${{ inputs.version }}"
+          # SemVer2 regex: MAJOR.MINOR.PATCH with optional prerelease
+          # No leading zeros allowed in numeric parts
+          $semverPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$'
+
+          if ($version -notmatch $semverPattern) {
+              Write-Error "Invalid version format: '$version'"
+              Write-Error "Version must be SemVer2 compliant (MAJOR.MINOR.PATCH with no leading zeros)"
+              Write-Error "Valid examples: 1.0.0, 0.0.1, 1.2.3-beta.1, 2.0.0-rc.1"
+              Write-Error "Invalid: 0.0.01 (leading zero), 01.0.0 (leading zero), 1.0 (missing patch)"
+              exit 1
+          }
+
+          Write-Host "Version '$version' is valid SemVer2 format"
+
       - name: Update version in project files
         working-directory: OximyWindows
         run: |
