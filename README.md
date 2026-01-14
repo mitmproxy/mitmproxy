@@ -51,7 +51,7 @@ This repository is fully open source so you can verify exactly what runs on your
 | Directory | Purpose |
 |-----------|---------|
 | [`OximyMac/`](OximyMac/) | macOS sensor application |
-| [`OximyWin/`](OximyWin/) | Windows sensor application |
+| [`OximyWindows/`](OximyWindows/) | Windows sensor application |
 | [`mitmproxy/addons/`](mitmproxy/addons/) | Network interception addons |
 | [`registry/`](registry/) | AI apps, websites, and model definitions |
 
