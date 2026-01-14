@@ -36,6 +36,19 @@
       },
       "icon": "google-chrome.png"
     },
+    "comet": {
+      "name": "Comet",
+      "vendor": "Perplexity",
+      "vendor_url": "https://perplexity.ai",
+      "category": "browser",
+      "platforms": ["macos"],
+      "signatures": {
+        "macos": {
+          "bundle_id": "ai.perplexity.comet"
+        }
+      },
+      "icon": "comet.png"
+    },
     "safari": {
       "name": "Safari",
       "vendor": "Apple",
