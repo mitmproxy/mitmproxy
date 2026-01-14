@@ -274,7 +274,7 @@
       "vendor": "xAI",
       "vendor_url": "https://x.ai",
       "category": "ai-chat",
-      "api_domains": ["grok.com"],
+      "api_domains": ["grok.com", "grok.x.ai"],
       "features": {
         "chat": {
           "type": "chat",
@@ -338,6 +338,1712 @@
           { "id": "premium", "name": "Premium", "type": "individual", "monthly_usd": 8 },
           { "id": "premium_plus", "name": "Premium+", "type": "individual", "monthly_usd": 22 },
           { "id": "superuser", "name": "SuperUser", "type": "individual", "monthly_usd": 30 }
+        ]
+      }
+    },
+    "ada": {
+      "name": "Ada",
+      "vendor": "Ada Support Inc.",
+      "vendor_url": "https://www.ada.cx/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "starter", "name": "Starter", "type": "enterprise" },
+          { "id": "professional", "name": "Professional", "type": "enterprise" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "aisera": {
+      "name": "Aisera",
+      "vendor": "Aisera Inc.",
+      "vendor_url": "https://aisera.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "alexa": {
+      "name": "Alexa",
+      "vendor": "Amazon",
+      "vendor_url": "https://www.amazon.com/alexa",
+      "category": "ai-chat",
+      "api_domains": ["alexa.amazon.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "alexa_plus", "name": "Alexa+", "type": "individual" }
+        ]
+      }
+    },
+    "amazon-lex": {
+      "name": "Amazon Lex",
+      "vendor": "Amazon Web Services (AWS)",
+      "vendor_url": "https://aws.amazon.com/lex/",
+      "category": "ai-chat",
+      "api_domains": ["console.aws.amazon.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free Tier", "type": "free", "monthly_usd": 0 },
+          { "id": "pay_as_you_go", "name": "Pay As You Go", "type": "usage" }
+        ]
+      }
+    },
+    "amelia": {
+      "name": "Amelia",
+      "vendor": "SoundHound AI",
+      "vendor_url": "https://www.soundhound.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "avaamo": {
+      "name": "Avaamo.ai",
+      "vendor": "Avaamo Inc.",
+      "vendor_url": "https://avaamo.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "bland-ai": {
+      "name": "Bland AI",
+      "vendor": "Bland AI Inc.",
+      "vendor_url": "https://www.bland.ai/",
+      "category": "ai-chat",
+      "api_domains": ["app.bland.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "start", "name": "Start", "type": "individual" },
+          { "id": "build", "name": "Build", "type": "individual" },
+          { "id": "scale", "name": "Scale", "type": "individual" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "boost-ai": {
+      "name": "Boost.ai",
+      "vendor": "Boost.ai AS",
+      "vendor_url": "https://boost.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "chai": {
+      "name": "Chai",
+      "vendor": "Chai Research Corp",
+      "vendor_url": "https://www.chai-research.com/",
+      "category": "ai-chat",
+      "api_domains": ["chai.ml"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "character-ai": {
+      "name": "Character AI",
+      "vendor": "Character.AI Inc.",
+      "vendor_url": "https://character.ai/",
+      "category": "ai-chat",
+      "api_domains": ["character.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "cai_plus", "name": "c.ai+", "type": "individual" }
+        ]
+      }
+    },
+    "chatbot": {
+      "name": "ChatBot",
+      "vendor": "Chatbot.com Inc.",
+      "vendor_url": "https://www.chatbot.com/",
+      "category": "ai-chat",
+      "api_domains": ["app.chatbot.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "team", "name": "Team", "type": "team" },
+          { "id": "business", "name": "Business", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "chatfuel": {
+      "name": "Chatfuel",
+      "vendor": "Chatfuel Inc.",
+      "vendor_url": "https://chatfuel.com/",
+      "category": "ai-chat",
+      "api_domains": ["dashboard.chatfuel.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free_trial", "name": "Free Trial", "type": "free", "monthly_usd": 0 },
+          { "id": "business", "name": "Business", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "chatsonic": {
+      "name": "Chatsonic",
+      "vendor": "Writesonic Inc.",
+      "vendor_url": "https://writesonic.com/",
+      "category": "ai-chat",
+      "api_domains": ["app.writesonic.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "individual", "name": "Individual", "type": "individual" },
+          { "id": "individual_plus", "name": "Individual Plus", "type": "individual" },
+          { "id": "business", "name": "Business", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "chatspot": {
+      "name": "ChatSpot",
+      "vendor": "HubSpot Inc.",
+      "vendor_url": "https://www.hubspot.com/",
+      "category": "ai-chat",
+      "api_domains": ["app.hubspot.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "professional", "name": "Professional", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "claude": {
+      "name": "Claude",
+      "vendor": "Anthropic",
+      "vendor_url": "https://www.anthropic.com/",
+      "category": "ai-chat",
+      "api_domains": ["claude.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual", "monthly_usd": 20 },
+          { "id": "max", "name": "Max", "type": "individual" },
+          { "id": "team", "name": "Team", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "cleverbot": {
+      "name": "Cleverbot",
+      "vendor": "Existor Ltd",
+      "vendor_url": "https://www.cleverbot.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.cleverbot.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "conversational-cloud": {
+      "name": "Conversational Cloud",
+      "vendor": "LivePerson Inc.",
+      "vendor_url": "https://www.liveperson.com/",
+      "category": "ai-chat",
+      "api_domains": ["z1.le.liveperson.net"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "copilot": {
+      "name": "Copilot",
+      "vendor": "Microsoft Corporation",
+      "vendor_url": "https://www.microsoft.com/",
+      "category": "ai-chat",
+      "api_domains": ["copilot.microsoft.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "m365_copilot", "name": "Microsoft 365 Copilot", "type": "team" },
+          { "id": "security_copilot", "name": "Security Copilot", "type": "enterprise" }
+        ]
+      }
+    },
+    "decagon": {
+      "name": "Decagon",
+      "vendor": "Decagon Inc.",
+      "vendor_url": "https://decagon.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["usage"],
+        "tiers": [
+          { "id": "per_conversation", "name": "Per Conversation", "type": "usage" },
+          { "id": "per_resolution", "name": "Per Resolution", "type": "usage" }
+        ]
+      }
+    },
+    "devrev": {
+      "name": "DevRev",
+      "vendor": "DevRev Inc.",
+      "vendor_url": "https://devrev.ai/",
+      "category": "ai-chat",
+      "api_domains": ["app.devrev.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "starter_build", "name": "Starter Build", "type": "individual" },
+          { "id": "pro_build", "name": "Pro Build", "type": "individual" },
+          { "id": "starter_support", "name": "Starter Support", "type": "individual" },
+          { "id": "pro_support", "name": "Pro Support", "type": "individual" },
+          { "id": "ultimate", "name": "Ultimate", "type": "enterprise" }
+        ]
+      }
+    },
+    "drift": {
+      "name": "Drift",
+      "vendor": "Salesloft",
+      "vendor_url": "https://www.drift.com/",
+      "category": "ai-chat",
+      "api_domains": ["app.drift.com"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "premium", "name": "Premium", "type": "enterprise" },
+          { "id": "advanced", "name": "Advanced", "type": "enterprise" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "fin": {
+      "name": "Fin",
+      "vendor": "Intercom Inc.",
+      "vendor_url": "https://www.intercom.com/",
+      "category": "ai-chat",
+      "api_domains": ["app.intercom.com"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "essential", "name": "Essential", "type": "team" },
+          { "id": "advanced", "name": "Advanced", "type": "team" },
+          { "id": "expert", "name": "Expert", "type": "team" }
+        ]
+      }
+    },
+    "genesys": {
+      "name": "Genesys",
+      "vendor": "Genesys Cloud Services Inc.",
+      "vendor_url": "https://www.genesys.com/",
+      "category": "ai-chat",
+      "api_domains": ["apps.mypurecloud.com"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "cloud_cx_1", "name": "Cloud CX 1", "type": "enterprise" },
+          { "id": "cloud_cx_2", "name": "Cloud CX 2", "type": "enterprise" },
+          { "id": "cloud_cx_3", "name": "Cloud CX 3", "type": "enterprise" }
+        ]
+      }
+    },
+    "google-assistant": {
+      "name": "Google Assistant",
+      "vendor": "Google LLC",
+      "vendor_url": "https://assistant.google.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "dialogflow": {
+      "name": "Google Dialogflow",
+      "vendor": "Google Cloud",
+      "vendor_url": "https://cloud.google.com/dialogflow",
+      "category": "ai-chat",
+      "api_domains": ["dialogflow.cloud.google.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "essentials", "name": "Essentials", "type": "free", "monthly_usd": 0 },
+          { "id": "pay_as_you_go", "name": "Pay As You Go", "type": "usage" }
+        ]
+      }
+    },
+    "huggingchat": {
+      "name": "HuggingChat",
+      "vendor": "Hugging Face Inc.",
+      "vendor_url": "https://huggingface.co/",
+      "category": "ai-chat",
+      "api_domains": ["huggingface.co"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "enterprise_hub", "name": "Enterprise Hub", "type": "enterprise" }
+        ]
+      }
+    },
+    "kore-ai": {
+      "name": "Kore.ai",
+      "vendor": "Kore.ai Inc.",
+      "vendor_url": "https://kore.ai/",
+      "category": "ai-chat",
+      "api_domains": ["bots.kore.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "standard", "name": "Standard", "type": "enterprise" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "meta-ai": {
+      "name": "Meta AI",
+      "vendor": "Meta Platforms Inc.",
+      "vendor_url": "https://about.meta.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.meta.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "haptik": {
+      "name": "Haptik.ai",
+      "vendor": "Reliance Jio Haptik",
+      "vendor_url": "https://www.haptik.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "smb", "name": "SMB", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "leena-ai": {
+      "name": "Leena.ai",
+      "vendor": "Leena AI Inc.",
+      "vendor_url": "https://leena.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "meon-chatbot": {
+      "name": "Meon Chatbot",
+      "vendor": "Meon Technologies",
+      "vendor_url": "https://meon.co.in/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "basic", "name": "Basic", "type": "individual" },
+          { "id": "standard", "name": "Standard", "type": "individual" },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "caryn-ai": {
+      "name": "CarynAI",
+      "vendor": "BanterAI",
+      "vendor_url": "https://caryn.ai/",
+      "category": "ai-chat",
+      "api_domains": ["caryn.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "paid", "name": "Paid", "type": "individual" }
+        ]
+      }
+    },
+    "cognigy": {
+      "name": "Cognigy",
+      "vendor": "Cognigy GmbH",
+      "vendor_url": "https://www.cognigy.com/",
+      "category": "ai-chat",
+      "api_domains": ["trial.cognigy.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "starter", "name": "Starter", "type": "enterprise" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "google-gemini": {
+      "name": "Google Gemini",
+      "vendor": "Google LLC",
+      "vendor_url": "https://www.google.com/",
+      "category": "ai-chat",
+      "api_domains": ["gemini.google.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "gemini_advanced", "name": "Gemini Advanced", "type": "individual" },
+          { "id": "business", "name": "Business", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "ibm-watsonx": {
+      "name": "IBM Watsonx Assistant",
+      "vendor": "IBM Corporation",
+      "vendor_url": "https://www.ibm.com/products/watsonx-assistant",
+      "category": "ai-chat",
+      "api_domains": ["cloud.ibm.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "lite", "name": "Lite", "type": "free", "monthly_usd": 0 },
+          { "id": "plus", "name": "Plus", "type": "individual" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "inbenta": {
+      "name": "Inbenta",
+      "vendor": "Inbenta Inc.",
+      "vendor_url": "https://www.inbenta.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["usage"],
+        "tiers": [
+          { "id": "consumption", "name": "Consumption Based", "type": "usage" }
+        ]
+      }
+    },
+    "jasper-chat": {
+      "name": "Jasper Chat",
+      "vendor": "Jasper AI Inc.",
+      "vendor_url": "https://www.jasper.ai/",
+      "category": "ai-chat",
+      "api_domains": ["app.jasper.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "creator", "name": "Creator", "type": "individual" },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "business", "name": "Business", "type": "enterprise" }
+        ]
+      }
+    },
+    "khanmigo": {
+      "name": "Khanmigo",
+      "vendor": "Khan Academy",
+      "vendor_url": "https://www.khanacademy.org/",
+      "category": "ai-chat",
+      "api_domains": ["www.khanmigo.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "learner", "name": "Learner", "type": "individual" },
+          { "id": "district", "name": "District", "type": "enterprise" }
+        ]
+      }
+    },
+    "kommunicate": {
+      "name": "Kommunicate",
+      "vendor": "Kommunicate Inc.",
+      "vendor_url": "https://www.kommunicate.io/",
+      "category": "ai-chat",
+      "api_domains": ["dashboard.kommunicate.io"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "lite", "name": "Lite", "type": "individual" },
+          { "id": "advanced", "name": "Advanced", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "lenny": {
+      "name": "Lenny",
+      "vendor": "Independent Open Source Project",
+      "vendor_url": "https://lennylp.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "liveperson": {
+      "name": "LivePerson",
+      "vendor": "LivePerson Inc.",
+      "vendor_url": "https://www.liveperson.com/",
+      "category": "ai-chat",
+      "api_domains": ["z1.le.liveperson.net"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "manus-ai": {
+      "name": "Manus.ai",
+      "vendor": "Butterfly Effect (Manus AI)",
+      "vendor_url": "https://manus.im/",
+      "category": "ai-chat",
+      "api_domains": ["manus.im"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "basic", "name": "Basic", "type": "individual" },
+          { "id": "plus", "name": "Plus", "type": "individual" },
+          { "id": "pro", "name": "Pro", "type": "individual" }
+        ]
+      }
+    },
+    "merlin-ai": {
+      "name": "Merlin AI",
+      "vendor": "Merlin AI (Foyer Tech)",
+      "vendor_url": "https://www.getmerlin.in/",
+      "category": "ai-chat",
+      "api_domains": ["app.getmerlin.in"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "teams", "name": "Teams", "type": "team" }
+        ]
+      }
+    },
+    "mitsuku": {
+      "name": "Mitsuku",
+      "vendor": "Pandorabots Inc.",
+      "vendor_url": "https://www.pandorabots.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.kuki.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "moveworks": {
+      "name": "Moveworks",
+      "vendor": "Moveworks Inc.",
+      "vendor_url": "https://www.moveworks.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "mycroft": {
+      "name": "Mycroft",
+      "vendor": "Mycroft AI Inc.",
+      "vendor_url": "https://mycroft.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "onereach-ai": {
+      "name": "OneReach.ai",
+      "vendor": "OneReach.ai Inc.",
+      "vendor_url": "https://onereach.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "professional", "name": "Professional", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "oracle": {
+      "name": "Oracle",
+      "vendor": "Oracle Corporation",
+      "vendor_url": "https://www.oracle.com/",
+      "category": "ai-chat",
+      "api_domains": ["cloud.oracle.com"],
+      "features": {},
+      "pricing": {
+        "model": ["usage", "subscription"],
+        "tiers": [
+          { "id": "universal_credits", "name": "Universal Credits", "type": "usage" },
+          { "id": "subscription", "name": "Subscription", "type": "individual" }
+        ]
+      }
+    },
+    "personal-ai": {
+      "name": "Personal AI",
+      "vendor": "Personal AI Inc.",
+      "vendor_url": "https://www.personal.ai/",
+      "category": "ai-chat",
+      "api_domains": ["app.personal.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "professional", "name": "Professional", "type": "individual" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "pi": {
+      "name": "Pi",
+      "vendor": "Inflection AI",
+      "vendor_url": "https://inflection.ai/",
+      "category": "ai-chat",
+      "api_domains": ["pi.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "poe": {
+      "name": "Poe",
+      "vendor": "Quora Inc.",
+      "vendor_url": "https://www.quora.com/",
+      "category": "ai-chat",
+      "api_domains": ["poe.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "monthly", "name": "Monthly", "type": "individual" },
+          { "id": "yearly", "name": "Yearly", "type": "individual" }
+        ]
+      }
+    },
+    "amazon-q": {
+      "name": "Q",
+      "vendor": "Amazon Web Services (AWS)",
+      "vendor_url": "https://aws.amazon.com/q/",
+      "category": "ai-chat",
+      "api_domains": ["console.aws.amazon.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" }
+        ]
+      }
+    },
+    "rasa": {
+      "name": "Rasa",
+      "vendor": "Rasa Technologies GmbH",
+      "vendor_url": "https://rasa.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "rasa_pro", "name": "Rasa Pro", "type": "enterprise" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "replika": {
+      "name": "Replika",
+      "vendor": "Luka Inc.",
+      "vendor_url": "https://replika.com/",
+      "category": "ai-chat",
+      "api_domains": ["my.replika.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "lifetime", "name": "Lifetime", "type": "individual" }
+        ]
+      }
+    },
+    "servicenow": {
+      "name": "ServiceNow",
+      "vendor": "ServiceNow Inc.",
+      "vendor_url": "https://www.servicenow.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "standard", "name": "Standard", "type": "enterprise" },
+          { "id": "professional", "name": "Professional", "type": "enterprise" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "sierra-ai": {
+      "name": "Sierra AI",
+      "vendor": "Sierra AI Inc.",
+      "vendor_url": "https://sierra.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "silvia": {
+      "name": "SILVIA",
+      "vendor": "Cognitive Code Corporation",
+      "vendor_url": "https://cognitivecode.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "siri": {
+      "name": "Siri",
+      "vendor": "Apple Inc.",
+      "vendor_url": "https://www.apple.com/siri/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "socratic": {
+      "name": "Socratic",
+      "vendor": "Google LLC",
+      "vendor_url": "https://socratic.org/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "socrat-ai": {
+      "name": "Socrat.ai",
+      "vendor": "Pedagogy Ventures",
+      "vendor_url": "https://socrat.ai/",
+      "category": "ai-chat",
+      "api_domains": ["socrat.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "in_class", "name": "In Class", "type": "individual" },
+          { "id": "extended", "name": "Extended", "type": "individual" },
+          { "id": "school_wide", "name": "School Wide", "type": "enterprise" }
+        ]
+      }
+    },
+    "soundhound-ai": {
+      "name": "SoundHound AI",
+      "vendor": "SoundHound AI Inc.",
+      "vendor_url": "https://www.soundhound.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "tars": {
+      "name": "Tars",
+      "vendor": "Tars Technologies Inc.",
+      "vendor_url": "https://hellotars.com/",
+      "category": "ai-chat",
+      "api_domains": ["admin.hellotars.com"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "business", "name": "Business", "type": "team" },
+          { "id": "premium", "name": "Premium", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "tidio-lyro": {
+      "name": "Tidio Lyro",
+      "vendor": "Tidio LLC",
+      "vendor_url": "https://www.tidio.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.tidio.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "growth", "name": "Growth", "type": "individual" },
+          { "id": "plus", "name": "Plus", "type": "team" },
+          { "id": "premium", "name": "Premium", "type": "team" }
+        ]
+      }
+    },
+    "ultra-hal": {
+      "name": "Ultra Hal",
+      "vendor": "Zabaware Inc.",
+      "vendor_url": "https://zabaware.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "paid", "name": "Paid", "type": "individual" }
+        ]
+      }
+    },
+    "youchat": {
+      "name": "YouChat",
+      "vendor": "You.com Inc.",
+      "vendor_url": "https://you.com/",
+      "category": "ai-chat",
+      "api_domains": ["you.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "team", "name": "Team", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "zapier-agents": {
+      "name": "Zapier Agents",
+      "vendor": "Zapier Inc.",
+      "vendor_url": "https://zapier.com/",
+      "category": "ai-chat",
+      "api_domains": ["zapier.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "professional", "name": "Professional", "type": "individual" },
+          { "id": "team", "name": "Team", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "zapier-chatbots": {
+      "name": "Zapier Chatbots",
+      "vendor": "Zapier Inc.",
+      "vendor_url": "https://zapier.com/",
+      "category": "ai-chat",
+      "api_domains": ["zapier.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "advanced", "name": "Advanced", "type": "team" },
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "zendesk": {
+      "name": "Zendesk",
+      "vendor": "Zendesk Inc.",
+      "vendor_url": "https://www.zendesk.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.zendesk.com"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "suite_team", "name": "Suite Team", "type": "team" },
+          { "id": "suite_professional", "name": "Suite Professional", "type": "team" },
+          { "id": "suite_enterprise", "name": "Suite Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "zenochat": {
+      "name": "ZenoChat",
+      "vendor": "TextCortex AI",
+      "vendor_url": "https://textcortex.com/",
+      "category": "ai-chat",
+      "api_domains": ["app.textcortex.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "lite", "name": "Lite", "type": "individual" },
+          { "id": "unlimited", "name": "Unlimited", "type": "individual" }
+        ]
+      }
+    },
+    "aligenie": {
+      "name": "AliGenie",
+      "vendor": "Alibaba Group",
+      "vendor_url": "https://www.alibaba.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["hardware"],
+        "tiers": [
+          { "id": "hardware", "name": "Hardware", "type": "hardware" }
+        ]
+      }
+    },
+    "baichuan-ai": {
+      "name": "Baichuan AI",
+      "vendor": "Beijing Baichuan Intelligent Technology Co., Ltd.",
+      "vendor_url": "https://www.baichuan-ai.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.baichuan-ai.com"],
+      "features": {},
+      "pricing": {
+        "model": ["usage"],
+        "tiers": [
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "celia": {
+      "name": "Celia",
+      "vendor": "Huawei Technologies Co., Ltd.",
+      "vendor_url": "https://www.huawei.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "doubao": {
+      "name": "Doubao",
+      "vendor": "ByteDance Ltd.",
+      "vendor_url": "https://www.bytedance.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.doubao.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "ernie-bot": {
+      "name": "Ernie Bot",
+      "vendor": "Baidu Inc.",
+      "vendor_url": "https://www.baidu.com/",
+      "category": "ai-chat",
+      "api_domains": ["yiyan.baidu.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "enterprise_api", "name": "Enterprise API", "type": "usage" }
+        ]
+      }
+    },
+    "glm-4-plus": {
+      "name": "GLM-4 Plus",
+      "vendor": "Zhipu AI",
+      "vendor_url": "https://www.zhipuai.cn/",
+      "category": "ai-chat",
+      "api_domains": ["chatglm.cn"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "kimi": {
+      "name": "Kimi",
+      "vendor": "Moonshot AI",
+      "vendor_url": "https://www.moonshot.ai/",
+      "category": "ai-chat",
+      "api_domains": ["kimi.moonshot.cn"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "priority", "name": "Priority", "type": "individual" },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "laiye": {
+      "name": "Laiye",
+      "vendor": "Laiye Technology",
+      "vendor_url": "https://www.laiye.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "qwen": {
+      "name": "Qwen",
+      "vendor": "Alibaba Cloud",
+      "vendor_url": "https://www.alibabacloud.com/",
+      "category": "ai-chat",
+      "api_domains": ["qwen.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pay_as_you_go", "name": "Pay As You Go", "type": "usage" }
+        ]
+      }
+    },
+    "sesame-ai": {
+      "name": "Sesame AI",
+      "vendor": "Sesame AI Inc.",
+      "vendor_url": "https://www.sesame.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["hardware", "usage"],
+        "tiers": [
+          { "id": "hardware", "name": "Hardware", "type": "hardware" },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "stepfun": {
+      "name": "StepFun",
+      "vendor": "Stepfun Technology",
+      "vendor_url": "https://www.stepfun.com/",
+      "category": "ai-chat",
+      "api_domains": ["stepchat.cn"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "superchinese": {
+      "name": "SuperChinese",
+      "vendor": "Shanghai Yuxuan Information Technology Co., Ltd.",
+      "vendor_url": "https://www.superchinese.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.superchinese.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "plus", "name": "Plus", "type": "individual" },
+          { "id": "vip_pro", "name": "VIP Pro", "type": "individual" },
+          { "id": "ai_chao", "name": "AI Chao", "type": "individual" }
+        ]
+      }
+    },
+    "talkie": {
+      "name": "Talkie",
+      "vendor": "Talkie AI Inc.",
+      "vendor_url": "https://talkie-ai.com/",
+      "category": "ai-chat",
+      "api_domains": ["talkie-ai.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "yuanbao": {
+      "name": "Yuanbao",
+      "vendor": "Tencent Holdings Ltd.",
+      "vendor_url": "https://www.tencent.com/",
+      "category": "ai-chat",
+      "api_domains": ["yuanbao.tencent.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "active-ai": {
+      "name": "Active.ai",
+      "vendor": "Active Intelligence Pte Ltd",
+      "vendor_url": "https://active.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "bharatgpt": {
+      "name": "BharatGPT",
+      "vendor": "CoRover.ai",
+      "vendor_url": "https://corover.ai/",
+      "category": "ai-chat",
+      "api_domains": ["bharatgpt.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "braina": {
+      "name": "Braina",
+      "vendor": "Brainasoft",
+      "vendor_url": "https://www.brainasoft.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "lite", "name": "Lite", "type": "individual" },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "pro_plus", "name": "Pro Plus", "type": "individual" },
+          { "id": "pro_ultra", "name": "Pro Ultra", "type": "individual" }
+        ]
+      }
+    },
+    "corover-ai": {
+      "name": "CoRover.ai",
+      "vendor": "CoRover Inc.",
+      "vendor_url": "https://corover.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "rezolve-ai": {
+      "name": "Rezolve.ai",
+      "vendor": "Rezolve AI Inc.",
+      "vendor_url": "https://www.rezolve.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "senseforth-ai": {
+      "name": "Senseforth.ai",
+      "vendor": "Senseforth AI Research Private Limited",
+      "vendor_url": "https://www.senseforth.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "uniphore": {
+      "name": "Uniphore",
+      "vendor": "Uniphore Software Systems",
+      "vendor_url": "https://www.uniphore.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "verloop-io": {
+      "name": "Verloop.io",
+      "vendor": "Verloop.io",
+      "vendor_url": "https://verloop.io/",
+      "category": "ai-chat",
+      "api_domains": ["app.verloop.io"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription", "enterprise"],
+        "tiers": [
+          { "id": "starter", "name": "Starter", "type": "individual" },
+          { "id": "business", "name": "Business", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "yellow-ai": {
+      "name": "Yellow.ai",
+      "vendor": "Yellow.ai Inc.",
+      "vendor_url": "https://yellow.ai/",
+      "category": "ai-chat",
+      "api_domains": ["cloud.yellow.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "zoho-salesiq": {
+      "name": "Zoho SalesIQ",
+      "vendor": "Zoho Corporation",
+      "vendor_url": "https://www.zoho.com/",
+      "category": "ai-chat",
+      "api_domains": ["salesiq.zoho.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "basic", "name": "Basic", "type": "individual" },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "enterprise", "name": "Enterprise", "type": "team" }
+        ]
+      }
+    },
+    "alice-yandex": {
+      "name": "Alice",
+      "vendor": "Yandex LLC",
+      "vendor_url": "https://yandex.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "gigachat": {
+      "name": "GigaChat",
+      "vendor": "Sberbank (Sber)",
+      "vendor_url": "https://www.sber.ru/",
+      "category": "ai-chat",
+      "api_domains": ["giga.chat"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "lite", "name": "Lite", "type": "individual" },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "max", "name": "Max", "type": "individual" }
+        ]
+      }
+    },
+    "aleph-alpha": {
+      "name": "Aleph Alpha",
+      "vendor": "Aleph Alpha GmbH",
+      "vendor_url": "https://aleph-alpha.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "alphachat": {
+      "name": "alphachat",
+      "vendor": "Alphachat AI",
+      "vendor_url": "https://alphachat.ai/",
+      "category": "ai-chat",
+      "api_domains": ["app.alphachat.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["subscription"],
+        "tiers": [
+          { "id": "standard", "name": "Standard", "type": "team" }
+        ]
+      }
+    },
+    "cbot": {
+      "name": "Cbot",
+      "vendor": "CBOT Pte Ltd",
+      "vendor_url": "https://www.cbot.ai/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "druid-ai": {
+      "name": "DRUID AI",
+      "vendor": "DRUID SA",
+      "vendor_url": "https://www.druidai.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "le-chat": {
+      "name": "Le Chat",
+      "vendor": "Mistral AI",
+      "vendor_url": "https://mistral.ai/",
+      "category": "ai-chat",
+      "api_domains": ["chat.mistral.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "pro", "name": "Pro", "type": "individual" },
+          { "id": "team", "name": "Team", "type": "team" },
+          { "id": "enterprise", "name": "Enterprise", "type": "enterprise" }
+        ]
+      }
+    },
+    "omilia": {
+      "name": "Omilia",
+      "vendor": "Omilia Ltd.",
+      "vendor_url": "https://omilia.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "parloa": {
+      "name": "Parloa",
+      "vendor": "Parloa GmbH",
+      "vendor_url": "https://www.parloa.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["enterprise"],
+        "tiers": [
+          { "id": "custom", "name": "Custom", "type": "enterprise" }
+        ]
+      }
+    },
+    "alice-pandorabots": {
+      "name": "A.L.I.C.E.",
+      "vendor": "Pandorabots Inc.",
+      "vendor_url": "https://www.pandorabots.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.pandorabots.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "bixby": {
+      "name": "Bixby",
+      "vendor": "Samsung Electronics",
+      "vendor_url": "https://www.samsung.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "clova": {
+      "name": "Clova",
+      "vendor": "Naver Corporation",
+      "vendor_url": "https://www.navercorp.com/",
+      "category": "ai-chat",
+      "api_domains": ["clova.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription", "enterprise"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "basic", "name": "Basic", "type": "individual" },
+          { "id": "exclusive", "name": "Exclusive", "type": "enterprise" },
+          { "id": "neurocloud", "name": "NeuroCloud", "type": "enterprise" }
+        ]
+      }
+    },
+    "eliza": {
+      "name": "ELIZA",
+      "vendor": "MIT",
+      "vendor_url": "N/A",
+      "category": "ai-chat",
+      "api_domains": ["www.masswerk.at"],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "jabberwacky": {
+      "name": "Jabberwacky",
+      "vendor": "Rollo Carpenter",
+      "vendor_url": "https://www.jabberwacky.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.jabberwacky.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "kuki": {
+      "name": "Kuki",
+      "vendor": "Pandorabots Inc.",
+      "vendor_url": "https://www.pandorabots.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.kuki.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "leo": {
+      "name": "Leo",
+      "vendor": "Brave Software Inc.",
+      "vendor_url": "https://brave.com/",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free", "subscription"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "premium", "name": "Premium", "type": "individual" }
+        ]
+      }
+    },
+    "llama2-ai": {
+      "name": "Llama2.ai",
+      "vendor": "Meta AI (Open Source)",
+      "vendor_url": "https://ai.meta.com/",
+      "category": "ai-chat",
+      "api_domains": ["www.llama2.ai"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "usage"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "api_access", "name": "API Access", "type": "usage" }
+        ]
+      }
+    },
+    "megahal": {
+      "name": "MegaHAL",
+      "vendor": "Open Source",
+      "vendor_url": "N/A",
+      "category": "ai-chat",
+      "api_domains": [],
+      "features": {},
+      "pricing": {
+        "model": ["free"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 }
+        ]
+      }
+    },
+    "simsimi": {
+      "name": "SimSimi",
+      "vendor": "SimSimi Inc.",
+      "vendor_url": "https://simsimi.com/",
+      "category": "ai-chat",
+      "api_domains": ["simsimi.com"],
+      "features": {},
+      "pricing": {
+        "model": ["free", "in_app"],
+        "tiers": [
+          { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+          { "id": "in_app_purchases", "name": "In-App Purchases", "type": "individual" }
         ]
       }
     }

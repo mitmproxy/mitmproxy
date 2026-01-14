@@ -11,6 +11,7 @@ import fnmatch
 import logging
 import re
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 from models import MatchResult
 from process import ClientProcess
@@ -99,6 +100,12 @@ class TrafficMatcher:
         path = flow.request.path
         method = flow.request.method
 
+        # Extract referer/origin headers for website matching
+        referer = flow.request.headers.get("referer") or flow.request.headers.get(
+            "referrer"
+        )
+        origin = flow.request.headers.get("origin")
+
         # 1. App matching (highest priority - requires process info)
         result = self._match_app(host, path, method, client_process)
         if result:
@@ -114,8 +121,8 @@ class TrafficMatcher:
         if result:
             return result
 
-        # 4. Website matching
-        result = self._match_website(host, path)
+        # 4. Website matching (uses referer/origin to identify website)
+        result = self._match_website(host, path, referer, origin)
         if result:
             return result
 
@@ -131,7 +138,7 @@ class TrafficMatcher:
         api_format = self.bundle.get_provider_api_format(provider_id)
 
         return MatchResult(
-            classification="full_trace",
+            classification="full_extraction",
             source_type="api",
             source_id=provider_id,
             provider_id=provider_id,
@@ -146,7 +153,7 @@ class TrafficMatcher:
                 api_format = self.bundle.get_provider_api_format(pattern.provider_id)
 
                 return MatchResult(
-                    classification="full_trace",
+                    classification="full_extraction",
                     source_type="api",
                     source_id=pattern.provider_id,
                     provider_id=pattern.provider_id,
@@ -202,19 +209,31 @@ class TrafficMatcher:
                     continue
 
                 if self._matches_endpoint_pattern(path, pattern):
+                    # Determine classification based on parser presence
+                    has_parser = "parser" in feature_def
+                    classification = "full_extraction" if has_parser else "feature_extraction"
+                    feature_type = feature_def.get("type")
+
                     logger.debug(
-                        f"App match: {app_id}/{feature_name} for {client_process.name}"
+                        f"App match: {app_id}/{feature_name} for {client_process.name} "
+                        f"(classification={classification})"
                     )
                     return MatchResult(
-                        classification="full_trace",
+                        classification=classification,
                         source_type="app",
                         source_id=app_id,
                         provider_id=None,
                         api_format=f"{app_id}_app",
                         endpoint=feature_name,
+                        feature_type=feature_type,
                     )
 
-        return None
+        # App matched but no specific feature endpoint - metadata_only
+        return MatchResult(
+            classification="metadata_only",
+            source_type="app",
+            source_id=app_id,
+        )
 
     def _find_app_by_process(self, client_process: ClientProcess) -> str | None:
         """
@@ -260,39 +279,113 @@ class TrafficMatcher:
                 return True
         return False
 
-    def _match_website(self, host: str, path: str) -> MatchResult | None:
-        """Check if host/path matches a known website definition."""
-        website_id = self._website_domain_index.get(host)
+    def _extract_host_from_url(self, url: str | None) -> str | None:
+        """
+        Extract hostname from a URL.
+
+        Examples:
+            "https://chat.openai.com/c/123" -> "chat.openai.com"
+            "https://gemini.google.com" -> "gemini.google.com"
+            None -> None
+        """
+        if not url:
+            return None
+        try:
+            parsed = urlparse(url)
+            # netloc contains the host (and port if present)
+            # For "https://chat.openai.com:443/path", netloc = "chat.openai.com:443"
+            host = parsed.netloc
+            if host:
+                # Strip port if present
+                if ":" in host:
+                    host = host.split(":")[0]
+                return host
+            return None
+        except Exception:
+            return None
+
+    def _match_website(
+        self, host: str, path: str, referer: str | None, origin: str | None
+    ) -> MatchResult | None:
+        """
+        Check if traffic is from a known AI website.
+
+        L1: Check if referer/origin host matches a website's api_domains
+            - If NO match -> return None (not from a known AI website)
+            - If YES -> website_id found, continue
+
+        L2: Check if destination host + path matches any feature patterns
+            - If NO match -> return metadata_only (we know the website, not the feature)
+            - If YES -> feature found, continue
+
+        L3: Check if feature has a parser
+            - If NO -> return feature_extraction
+            - If YES -> return full_extraction
+        """
+        # L1: Extract host from referer/origin and check against website domains
+        referer_host = self._extract_host_from_url(referer)
+        origin_host = self._extract_host_from_url(origin)
+
+        # Try referer first, then origin
+        website_id = None
+        if referer_host:
+            website_id = self._website_domain_index.get(referer_host)
+        if not website_id and origin_host:
+            website_id = self._website_domain_index.get(origin_host)
+
         if not website_id:
+            # Not from a known AI website
             return None
 
         website = self.bundle.websites.get(website_id)
         if not website:
             return None
 
-        # Check feature endpoints
+        logger.debug(
+            f"Website L1 match: {website_id} (referer={referer_host}, origin={origin_host})"
+        )
+
+        # L2: Check if destination host + path matches any feature patterns
         features = website.get("features", {})
         for feature_name, feature_def in features.items():
             patterns = feature_def.get("patterns", [])
             for pattern in patterns:
                 if self._matches_endpoint_pattern(path, pattern):
-                    # Website has parser? -> full_trace, else identifiable
-                    # For now, treat all website matches as full_trace
-                    # (we'll parse what we can)
+                    # L3: Determine classification based on parser presence
+                    # full_extraction: feature matched AND has parser config
+                    # feature_extraction: feature matched BUT no parser (we know the feature type)
+                    has_parser = "parser" in feature_def
+                    classification = "full_extraction" if has_parser else "feature_extraction"
+
                     # Use website-specific api_format for parsing
                     api_format = website.get("api_format", f"{website_id}_web")
+                    feature_type = feature_def.get("type")  # e.g., "chat", "asset_creation"
+
+                    logger.debug(
+                        f"Website L2+L3 match: {website_id}/{feature_name} "
+                        f"(classification={classification}, feature_type={feature_type})"
+                    )
+
                     return MatchResult(
-                        classification="full_trace",
+                        classification=classification,
                         source_type="website",
                         source_id=website_id,
                         provider_id=None,  # Websites may use multiple providers
                         api_format=api_format,
                         endpoint=feature_name,
+                        feature_type=feature_type,
                     )
 
-        # Website matched but no specific endpoint - drop it
-        # We only care about actual AI conversation endpoints, not gizmos/settings/etc.
-        return MatchResult(classification="drop")
+        # L1 passed but L2 failed: Website matched but no specific feature endpoint
+        # We know it's traffic from an AI website but don't know which specific feature
+        logger.debug(
+            f"Website metadata_only: {website_id} (no feature pattern matched for path={path})"
+        )
+        return MatchResult(
+            classification="metadata_only",
+            source_type="website",
+            source_id=website_id,
+        )
 
     def _matches_endpoint_pattern(self, path: str, pattern: dict) -> bool:
         """Check if path matches an endpoint pattern definition."""

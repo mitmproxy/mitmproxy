@@ -495,13 +495,7 @@ class NDJSONFormatHandler(FormatHandler):
             return []
 
         self._buffer += text
-        logger.info(
-            f"NDJSON process: received {len(text)} chars, buffer now {len(self._buffer)} chars"
-        )
-        objects = self._extract_objects()
-        if objects:
-            logger.info(f"NDJSON extracted {len(objects)} objects")
-        return objects
+        return self._extract_objects()
 
     def _extract_objects(self) -> list[dict]:
         objects = []
@@ -510,38 +504,28 @@ class NDJSONFormatHandler(FormatHandler):
         # These delimiters separate complete JSON objects, no reconstruction needed
         if self._is_custom_delimiter and self.delimiter in self._buffer:
             parts = self._buffer.split(self.delimiter)
-            logger.info(
-                f"NDJSON split by custom delimiter '{self.delimiter[:20]}...' into {len(parts)} parts"
-            )
 
             # Process all complete parts (all but last which may be incomplete)
-            for i, part in enumerate(parts[:-1]):
+            for part in parts[:-1]:
                 json_str = part.strip()
                 if not json_str:
                     continue
                 try:
                     obj = json.loads(json_str)
                     objects.append(obj)
-                    logger.debug(f"NDJSON parsed part {i}: keys={list(obj.keys())[:5]}")
-                except json.JSONDecodeError as e:
-                    logger.warning(
-                        f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}"
-                    )
+                except json.JSONDecodeError:
+                    pass
 
             # Keep last part in buffer (may be incomplete)
             self._buffer = parts[-1]
 
             if objects:
-                logger.info(
-                    f"NDJSON extracted {len(objects)} objects from custom delimiter split"
-                )
                 return objects
 
         # Handle }{ delimiter - concatenated JSON objects like Grok
         # {"result":{...}}{"result":{...}}
         if not self._is_custom_delimiter and self.delimiter in self._buffer:
             parts = self._buffer.split(self.delimiter)
-            logger.info(f"NDJSON split by '{self.delimiter}' into {len(parts)} parts")
 
             # Process all complete parts
             for i, part in enumerate(parts[:-1]):
@@ -555,11 +539,8 @@ class NDJSONFormatHandler(FormatHandler):
                 try:
                     obj = json.loads(json_str)
                     objects.append(obj)
-                    logger.debug(f"NDJSON parsed part {i}: keys={list(obj.keys())[:5]}")
-                except json.JSONDecodeError as e:
-                    logger.warning(
-                        f"Failed to parse NDJSON part {i}: {e}, json_str={json_str[:100]}"
-                    )
+                except json.JSONDecodeError:
+                    pass
 
             # Keep last part in buffer (may be incomplete)
             last = parts[-1]
@@ -568,9 +549,6 @@ class NDJSONFormatHandler(FormatHandler):
             self._buffer = last
 
             if objects:
-                logger.info(
-                    f"NDJSON extracted {len(objects)} objects from delimiter split"
-                )
                 return objects
 
         # Fallback: Try newline-delimited (standard NDJSON with one object per line)
@@ -586,27 +564,17 @@ class NDJSONFormatHandler(FormatHandler):
                 try:
                     obj = json.loads(line)
                     objects.append(obj)
-                    logger.debug(f"NDJSON parsed line: keys={list(obj.keys())[:5]}")
                 except json.JSONDecodeError:
                     # Not valid JSON line, skip
                     pass
 
             if objects:
                 self._buffer = lines[-1]  # Keep last line in buffer
-                logger.info(
-                    f"NDJSON extracted {len(objects)} objects from newline split"
-                )
                 return objects
 
-        logger.debug(
-            f"NDJSON buffer now {len(self._buffer)} chars, no complete objects yet"
-        )
         return objects
 
     def finalize(self) -> list[dict]:
-        logger.info(
-            f"NDJSON finalize: buffer={len(self._buffer)} chars, first 200={self._buffer[:200]}"
-        )
         if not self._buffer.strip():
             return []
 
@@ -619,11 +587,8 @@ class NDJSONFormatHandler(FormatHandler):
                 try:
                     obj = json.loads(json_str)
                     results.append(obj)
-                    logger.debug(f"NDJSON finalize parsed: keys={list(obj.keys())[:5]}")
-                except json.JSONDecodeError as e:
-                    logger.debug(
-                        f"NDJSON finalize failed: {e}, json_str={json_str[:100]}"
-                    )
+                except json.JSONDecodeError:
+                    pass
             self._buffer = ""
             return results
 
@@ -639,11 +604,8 @@ class NDJSONFormatHandler(FormatHandler):
             try:
                 obj = json.loads(json_str)
                 results.append(obj)
-                logger.debug(f"NDJSON finalize parsed: keys={list(obj.keys())[:5]}")
-            except json.JSONDecodeError as e:
-                logger.debug(
-                    f"NDJSON finalize line failed: {e}, json_str={json_str[:100]}"
-                )
+            except json.JSONDecodeError:
+                pass
 
         self._buffer = ""
         return results
@@ -658,18 +620,10 @@ class LengthPrefixedFormatHandler(FormatHandler):
         self.header_strip = header_strip.encode().decode("unicode_escape")
         self._buffer = b""
         self._header_stripped = False
-        logger.info(
-            f"LengthPrefixedFormatHandler init: header_strip={repr(self.header_strip)}"
-        )
 
     def process(self, data: bytes) -> list[dict]:
         self._buffer += data
-        logger.info(
-            f"LengthPrefixed process: received {len(data)} bytes, buffer now {len(self._buffer)} bytes"
-        )
-        chunks = self._extract_chunks()
-        logger.info(f"LengthPrefixed extracted {len(chunks)} chunks")
-        return chunks
+        return self._extract_chunks()
 
     def _extract_chunks(self) -> list[dict]:
         objects = []
@@ -678,17 +632,9 @@ class LengthPrefixedFormatHandler(FormatHandler):
         if not self._header_stripped:
             try:
                 text = self._buffer.decode("utf-8")
-                logger.info(
-                    f"LengthPrefixed checking header: starts_with={repr(text[:20])}, header_strip={repr(self.header_strip)}"
-                )
                 if text.startswith(self.header_strip):
                     text = text[len(self.header_strip) :]
                     self._buffer = text.encode("utf-8")
-                    logger.info(
-                        f"LengthPrefixed header stripped, buffer now starts with: {repr(text[:50])}"
-                    )
-                else:
-                    logger.info(f"LengthPrefixed header NOT found at start")
                 self._header_stripped = True
             except UnicodeDecodeError:
                 pass
@@ -733,9 +679,6 @@ class LengthPrefixedFormatHandler(FormatHandler):
 
             # Extract chunk
             chunk = text[pos : pos + chunk_length]
-            logger.info(
-                f"LengthPrefixed: length={chunk_length}, chunk_start={repr(chunk[:50])}, chunk_end={repr(chunk[-50:])}"
-            )
             pos += chunk_length
 
             try:
@@ -743,13 +686,8 @@ class LengthPrefixedFormatHandler(FormatHandler):
                 chunk_stripped = chunk.rstrip()
                 obj = json.loads(chunk_stripped)
                 objects.append(obj)
-                logger.info(
-                    f"LengthPrefixed parsed chunk: type={type(obj).__name__}, preview={str(obj)[:200]}"
-                )
-            except json.JSONDecodeError as e:
-                logger.info(
-                    f"Failed to parse length-prefixed chunk: {e}, len={len(chunk)}, stripped_len={len(chunk_stripped)}"
-                )
+            except json.JSONDecodeError:
+                pass
 
         self._buffer = text[pos:].encode("utf-8") if pos < len(text) else b""
         return objects
@@ -779,36 +717,17 @@ class Preprocessor:
         result = data
         for step in steps:
             op = step.get("op")
-            logger.info(
-                f"Preprocess op={op}, input type={type(result).__name__}, preview={str(result)[:200]}"
-            )
             if op == "json_parse":
                 if isinstance(result, str):
                     try:
                         result = json.loads(result)
-                        logger.info(
-                            f"json_parse success: type={type(result).__name__}, preview={str(result)[:200]}"
-                        )
-                    except json.JSONDecodeError as e:
-                        logger.info(
-                            f"json_parse failed: {e}, input={str(result)[:100]}"
-                        )
+                    except json.JSONDecodeError:
                         return None
-                else:
-                    logger.info(
-                        f"json_parse skipped: input is not string, is {type(result).__name__}"
-                    )
             elif op == "index":
                 value = step.get("value", 0)
                 if isinstance(result, (list, tuple)) and value < len(result):
                     result = result[value]
-                    logger.info(
-                        f"index {value} success: type={type(result).__name__}, preview={str(result)[:200]}"
-                    )
                 else:
-                    logger.info(
-                        f"index {value} failed: result is {type(result).__name__}, len={len(result) if hasattr(result, '__len__') else 'N/A'}"
-                    )
                     return None
             elif op == "form_decode":
                 field = step.get("field")
@@ -1084,66 +1003,37 @@ class ConfigurableStreamBuffer:
         Returns:
             Original chunk (pass-through)
         """
-        logger.info(f"process_chunk called with {len(chunk)} bytes")
-
         if not chunk:
-            logger.info("process_chunk: empty chunk, returning")
             return chunk
 
         # Parse into JSON objects
-        logger.info(
-            f"process_chunk: calling format_handler.process (handler type={type(self.format_handler).__name__})"
-        )
         json_objects = self.format_handler.process(chunk)
-        logger.info(
-            f"process_chunk: format_handler returned {len(json_objects)} JSON objects"
-        )
 
         # Apply rules to each object
-        for i, obj in enumerate(json_objects):
-            logger.info(
-                f"process_chunk: applying rules to object {i}/{len(json_objects)}"
-            )
+        for obj in json_objects:
             self._apply_rules(obj)
 
-        logger.info(
-            f"process_chunk: done, accumulated so far: {list(self.accumulated.keys())}"
-        )
         return chunk
 
     def _apply_rules(self, obj: dict) -> None:
         """Apply extraction rules to a JSON object."""
-        logger.info(
-            f"_apply_rules called with obj type={type(obj).__name__}, preview={str(obj)[:300]}"
-        )
-
         if not self.evaluator:
-            logger.info("_apply_rules: No evaluator available, returning")
             return
 
         rules = self.config.get("rules", [])
-        logger.info(f"_apply_rules: Found {len(rules)} rules to check")
 
-        for i, rule in enumerate(rules):
+        for rule in rules:
             # Check condition
             when = rule.get("when", "true")
-            logger.info(f"_apply_rules: Checking rule {i}, when='{when}'")
             try:
                 matched = self.evaluator.evaluate_bool(when, obj)
-                logger.info(f"_apply_rules: Rule {i} matched={matched}")
                 if not matched:
                     continue
-            except Exception as e:
-                logger.info(
-                    f"_apply_rules: Rule {i} condition exception: when='{when}', error={e}"
-                )
+            except Exception:
                 continue
-
-            logger.info(f"Rule matched: when='{when}'")
 
             # Apply preprocessing if any
             preprocess_steps = rule.get("preprocess", [])
-            logger.info(f"_apply_rules: preprocess_steps={preprocess_steps}")
             processed = (
                 self.preprocessor.process(obj, preprocess_steps)
                 if preprocess_steps
@@ -1151,14 +1041,7 @@ class ConfigurableStreamBuffer:
             )
 
             if processed is None:
-                logger.info(
-                    f"_apply_rules: preprocessing returned None, skipping this rule"
-                )
                 continue
-
-            logger.info(
-                f"_apply_rules: after preprocessing, type={type(processed).__name__}, preview={str(processed)[:300]}"
-            )
 
             # Extract values
             for field, expr in rule.get("extract", {}).items():
@@ -1166,18 +1049,10 @@ class ConfigurableStreamBuffer:
                 if expr == "$_perplexity_blocks":
                     value = self._extract_perplexity_content(processed)
                 else:
-                    logger.info(
-                        f"Evaluating JSONata expr='{expr}' on data type={type(processed).__name__}, preview={str(processed)[:200]}"
-                    )
                     value = self.evaluator.evaluate(expr, processed)
 
                 if value is not None and value != "":
-                    logger.info(f"Extracted {field}={str(value)[:100]}...")
                     self._accumulate(field, value)
-                else:
-                    logger.info(
-                        f"Extraction returned None/empty for {field} with expr={expr}"
-                    )
 
     def _extract_perplexity_content(self, obj: dict) -> str | None:
         """
@@ -1242,29 +1117,14 @@ class ConfigurableStreamBuffer:
         Returns:
             Dict with content, model, etc.
         """
-        logger.info(
-            f"finalize called, accumulated so far: {list(self.accumulated.keys())}"
-        )
-        logger.info(
-            f"finalize: accumulated values preview: { {k: str(v)[:100] for k, v in self.accumulated.items()} }"
-        )
-
         # Process any remaining buffered data
         remaining = self.format_handler.finalize()
-        logger.info(
-            f"finalize: format_handler.finalize() returned {len(remaining)} remaining objects"
-        )
         for obj in remaining:
             self._apply_rules(obj)
-
-        logger.info(
-            f"finalize: after processing remaining, accumulated: {list(self.accumulated.keys())}"
-        )
 
         # Apply finalize expressions
         result = {}
         finalize_config = self.config.get("finalize", {})
-        logger.info(f"finalize: finalize_config={finalize_config}")
 
         if self.evaluator and finalize_config:
             context = {"accumulated": self.accumulated}
@@ -1280,10 +1140,6 @@ class ConfigurableStreamBuffer:
             result["content"] = self.accumulated.get("content")
         if "model" not in result:
             result["model"] = self.accumulated.get("model")
-
-        logger.info(
-            f"ConfigurableStreamBuffer finalized: content_len={len(result.get('content') or '')} model={result.get('model')}"
-        )
 
         return result
 

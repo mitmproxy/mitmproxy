@@ -13,6 +13,25 @@ class ProxyService: ObservableObject {
         checkStatus()
     }
 
+    // MARK: - Startup Cleanup
+
+    /// Clean up orphaned proxy settings on app launch
+    /// This handles the case where the app crashed with proxy enabled
+    func cleanupOrphanedProxy() {
+        // Check if proxy is enabled pointing to localhost
+        if let (enabled, _) = getProxySettings(for: "Wi-Fi"), enabled {
+            // If proxy is enabled on startup but we just launched, it must be orphaned
+            // (from a previous crash or force-quit)
+            NSLog("[ProxyService] Found orphaned proxy settings on startup - cleaning up")
+            disableProxySync()
+
+            SentryService.shared.addStateBreadcrumb(
+                category: "proxy",
+                message: "Cleaned up orphaned proxy settings on startup"
+            )
+        }
+    }
+
     // MARK: - Status Check
 
     /// Check if proxy is currently enabled

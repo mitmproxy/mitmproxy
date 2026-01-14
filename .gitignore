@@ -44,3 +44,5 @@ OximyMac/Resources/python-embed/
 
 # Secrets
 OximyMac/App/Secrets.swift
+.claude/settings.local.json
+.github/workflows/oximy-release.yml

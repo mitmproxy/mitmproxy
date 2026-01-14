@@ -1,12 +1,12 @@
 {
   "version": "0.1",
-  "generated_at": "2026-01-12T18:11:17.996556+00:00",
+  "generated_at": "2026-01-13T10:52:49.963202+00:00",
   "source": "models.dev",
   "source_url": "https://models.dev/api.json",
   "logos_url": "https://models.dev/logos",
   "stats": {
-    "total_models": 2023,
-    "providers": 75,
+    "total_models": 2148,
+    "providers": 79,
     "api_formats": 5
   },
   "providers": {
@@ -84,7 +84,7 @@
         "AIHUBMIX_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/aihubmix.svg",
-      "model_count": 33,
+      "model_count": 34,
       "models": [
         "Kimi-K2-0905",
         "claude-haiku-4-5",
@@ -92,7 +92,10 @@
         "claude-opus-4-5",
         "claude-sonnet-4-5",
         "coding-glm-4.7-free",
+        "coding-minimax-m2.1-free",
         "deepseek-v3.2",
+        "deepseek-v3.2-fast",
+        "deepseek-v3.2-speciale",
         "deepseek-v3.2-think",
         "gemini-2.5-flash",
         "gemini-2.5-pro",
@@ -102,7 +105,6 @@
         "gpt-4.1-mini",
         "gpt-4.1-nano",
         "gpt-4o",
-        "gpt-4o-2024-11-20",
         "gpt-5",
         "gpt-5-codex",
         "gpt-5-mini",
@@ -114,7 +116,6 @@
         "gpt-5.1-codex-mini",
         "gpt-5.2",
         "minimax-m2.1",
-        "minimax-m2.1-free",
         "o4-mini",
         "qwen3-235b-a22b-instruct-2507",
         "qwen3-235b-a22b-thinking-2507",
@@ -633,7 +634,7 @@
         "CHUTES_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/chutes.svg",
-      "model_count": 55,
+      "model_count": 56,
       "models": [
         "MiniMaxAI/MiniMax-M2.1-TEE",
         "NousResearch/DeepHermes-3-Mistral-24B-Preview",
@@ -669,7 +670,9 @@
         "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
         "deepseek-ai/DeepSeek-V3.2-Speciale-TEE",
         "deepseek-ai/DeepSeek-V3.2-TEE",
+        "miromind-ai/MiroThinker-v1.5-235B",
         "mistralai/Devstral-2-123B-Instruct-2512",
+        "mistralai/Devstral-2-123B-Instruct-2512-TEE",
         "moonshotai/Kimi-K2-Instruct-0905",
         "moonshotai/Kimi-K2-Thinking-TEE",
         "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
@@ -678,7 +681,6 @@
         "rednote-hilab/dots.ocr",
         "tngtech/DeepSeek-R1T-Chimera",
         "tngtech/DeepSeek-TNG-R1T2-Chimera",
-        "tngtech/DeepSeek-TNG-R1T2-Chimera-TEE",
         "tngtech/TNG-R1T-Chimera-TEE",
         "unsloth/Mistral-Nemo-Instruct-2407",
         "unsloth/Mistral-Small-24B-Instruct-2501",
@@ -1000,6 +1002,35 @@
         "accounts/fireworks/models/qwen3-coder-480b-a35b-instruct"
       ]
     },
+    "firmware": {
+      "name": "Firmware",
+      "api_endpoint": "https://app.firmware.ai/api/v1",
+      "api_format": "openai",
+      "documentation": "https://firmware.ai",
+      "env_vars": [
+        "FIRMWARE_API_KEY"
+      ],
+      "logo_url": "https://models.dev/logos/firmware.svg",
+      "model_count": 16,
+      "models": [
+        "anthropic/claude-haiku-4-5-20251001",
+        "anthropic/claude-opus-4-5",
+        "anthropic/claude-sonnet-4-5-20250929",
+        "deepseek/deepseek-chat",
+        "deepseek/deepseek-coder",
+        "deepseek/deepseek-reasoner",
+        "google/gemini-2.5-flash",
+        "google/gemini-2.5-pro",
+        "google/gemini-3-flash-preview",
+        "google/gemini-3-pro-preview",
+        "openai/gpt-4o",
+        "openai/gpt-5",
+        "openai/gpt-5.2",
+        "xai/grok-4-fast-non-reasoning",
+        "xai/grok-4-fast-reasoning",
+        "xai/grok-code-fast-1"
+      ]
+    },
     "friendli": {
       "name": "Friendli",
       "api_endpoint": "https://api.friendli.ai/serverless/v1",
@@ -1012,11 +1043,11 @@
       "model_count": 11,
       "models": [
         "LGAI-EXAONE/EXAONE-4.0.1-32B",
+        "LGAI-EXAONE/K-EXAONE-236B-A23B",
         "Qwen/Qwen3-235B-A22B-Instruct-2507",
         "Qwen/Qwen3-235B-A22B-Thinking-2507",
         "Qwen/Qwen3-30B-A3B",
         "Qwen/Qwen3-32B",
-        "deepseek-ai/DeepSeek-R1-0528",
         "meta-llama-3.1-8b-instruct",
         "meta-llama-3.3-70b-instruct",
         "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
@@ -1131,6 +1162,22 @@
         "openai/o4-mini",
         "xai/grok-3",
         "xai/grok-3-mini"
+      ]
+    },
+    "gitlab": {
+      "name": "GitLab Duo",
+      "api_endpoint": null,
+      "api_format": "openai",
+      "documentation": "https://docs.gitlab.com/user/duo_agent_platform/",
+      "env_vars": [
+        "GITLAB_TOKEN"
+      ],
+      "logo_url": "https://models.dev/logos/gitlab.svg",
+      "model_count": 3,
+      "models": [
+        "duo-chat-haiku-4-5",
+        "duo-chat-opus-4-5",
+        "duo-chat-sonnet-4-5"
       ]
     },
     "google": {
@@ -1964,7 +2011,7 @@
         "OPENROUTER_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/openrouter.svg",
-      "model_count": 137,
+      "model_count": 138,
       "models": [
         "anthropic/claude-3.5-haiku",
         "anthropic/claude-3.7-sonnet",
@@ -2077,6 +2124,7 @@
         "qwen/qwen3-32b:free",
         "qwen/qwen3-8b:free",
         "qwen/qwen3-coder",
+        "qwen/qwen3-coder-30b-a3b-instruct",
         "qwen/qwen3-coder-flash",
         "qwen/qwen3-coder:exacto",
         "qwen/qwen3-coder:free",
@@ -2277,6 +2325,25 @@
         "xai/grok-code-fast-1"
       ]
     },
+    "privatemode_ai": {
+      "name": "Privatemode AI",
+      "api_endpoint": "http://localhost:8080/v1",
+      "api_format": "openai",
+      "documentation": "https://docs.privatemode.ai/api/overview",
+      "env_vars": [
+        "PRIVATEMODE_API_KEY",
+        "PRIVATEMODE_ENDPOINT"
+      ],
+      "logo_url": "https://models.dev/logos/privatemode-ai.svg",
+      "model_count": 5,
+      "models": [
+        "gemma-3-27b",
+        "gpt-oss-120b",
+        "qwen3-coder-30b-a3b",
+        "qwen3-embedding-4b",
+        "whisper-large-v3"
+      ]
+    },
     "requesty": {
       "name": "Requesty",
       "api_endpoint": "https://router.requesty.ai/v1",
@@ -2373,7 +2440,7 @@
         "SILICONFLOW_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/siliconflow.svg",
-      "model_count": 72,
+      "model_count": 75,
       "models": [
         "ByteDance-Seed/Seed-OSS-36B-Instruct",
         "MiniMaxAI/MiniMax-M1-80k",
@@ -2425,6 +2492,7 @@
         "deepseek-ai/DeepSeek-V3",
         "deepseek-ai/DeepSeek-V3.1",
         "deepseek-ai/DeepSeek-V3.1-Terminus",
+        "deepseek-ai/DeepSeek-V3.2",
         "deepseek-ai/DeepSeek-V3.2-Exp",
         "deepseek-ai/deepseek-vl2",
         "inclusionAI/Ling-flash-2.0",
@@ -2446,7 +2514,9 @@
         "zai-org/GLM-4.5",
         "zai-org/GLM-4.5-Air",
         "zai-org/GLM-4.5V",
-        "zai-org/GLM-4.6"
+        "zai-org/GLM-4.6",
+        "zai-org/GLM-4.6V",
+        "zai-org/GLM-4.7"
       ]
     },
     "siliconflow_cn": {
@@ -2619,17 +2689,18 @@
     },
     "upstage": {
       "name": "Upstage",
-      "api_endpoint": "https://api.upstage.ai",
+      "api_endpoint": "https://api.upstage.ai/v1/solar",
       "api_format": "openai",
       "documentation": "https://developers.upstage.ai/docs/apis/chat",
       "env_vars": [
         "UPSTAGE_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/upstage.svg",
-      "model_count": 2,
+      "model_count": 3,
       "models": [
         "solar-mini",
-        "solar-pro2"
+        "solar-pro2",
+        "solar-pro3"
       ]
     },
     "v0": {
@@ -2657,7 +2728,7 @@
         "VENICE_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/venice.svg",
-      "model_count": 24,
+      "model_count": 23,
       "models": [
         "claude-opus-45",
         "deepseek-v3.2",
@@ -2680,7 +2751,6 @@
         "qwen3-coder-480b-a35b-instruct",
         "qwen3-next-80b",
         "venice-uncensored",
-        "zai-org-glm-4.6",
         "zai-org-glm-4.6v",
         "zai-org-glm-4.7"
       ]
@@ -2694,58 +2764,123 @@
         "AI_GATEWAY_API_KEY"
       ],
       "logo_url": "https://models.dev/logos/vercel.svg",
-      "model_count": 86,
+      "model_count": 180,
       "models": [
+        "alibaba/qwen-3-14b",
+        "alibaba/qwen-3-235b",
+        "alibaba/qwen-3-30b",
+        "alibaba/qwen-3-32b",
+        "alibaba/qwen3-235b-a22b-thinking",
+        "alibaba/qwen3-coder",
+        "alibaba/qwen3-coder-30b-a3b",
         "alibaba/qwen3-coder-plus",
+        "alibaba/qwen3-embedding-0.6b",
+        "alibaba/qwen3-embedding-4b",
+        "alibaba/qwen3-embedding-8b",
         "alibaba/qwen3-max",
+        "alibaba/qwen3-max-preview",
         "alibaba/qwen3-next-80b-a3b-instruct",
         "alibaba/qwen3-next-80b-a3b-thinking",
         "alibaba/qwen3-vl-instruct",
         "alibaba/qwen3-vl-thinking",
+        "amazon/nova-2-lite",
         "amazon/nova-lite",
         "amazon/nova-micro",
         "amazon/nova-pro",
+        "amazon/titan-embed-text-v2",
         "anthropic/claude-3-haiku",
         "anthropic/claude-3-opus",
         "anthropic/claude-3.5-haiku",
         "anthropic/claude-3.5-sonnet",
+        "anthropic/claude-3.5-sonnet-20240620",
         "anthropic/claude-3.7-sonnet",
-        "anthropic/claude-4-1-opus",
-        "anthropic/claude-4-opus",
-        "anthropic/claude-4-sonnet",
-        "anthropic/claude-4.5-sonnet",
         "anthropic/claude-haiku-4.5",
+        "anthropic/claude-opus-4",
+        "anthropic/claude-opus-4.1",
         "anthropic/claude-opus-4.5",
+        "anthropic/claude-sonnet-4",
+        "anthropic/claude-sonnet-4.5",
+        "arcee-ai/trinity-mini",
+        "bfl/flux-kontext-max",
+        "bfl/flux-kontext-pro",
+        "bfl/flux-pro-1.0-fill",
+        "bfl/flux-pro-1.1",
+        "bfl/flux-pro-1.1-ultra",
+        "bytedance/seed-1.6",
+        "cohere/command-a",
+        "cohere/embed-v4.0",
         "deepseek/deepseek-r1",
-        "deepseek/deepseek-r1-distill-llama-70b",
+        "deepseek/deepseek-v3",
+        "deepseek/deepseek-v3.1",
         "deepseek/deepseek-v3.1-terminus",
+        "deepseek/deepseek-v3.2",
         "deepseek/deepseek-v3.2-exp",
-        "deepseek/deepseek-v3.2-exp-thinking",
+        "deepseek/deepseek-v3.2-thinking",
         "google/gemini-2.0-flash",
         "google/gemini-2.0-flash-lite",
         "google/gemini-2.5-flash",
+        "google/gemini-2.5-flash-image",
+        "google/gemini-2.5-flash-image-preview",
         "google/gemini-2.5-flash-lite",
         "google/gemini-2.5-flash-lite-preview-09-2025",
         "google/gemini-2.5-flash-preview-09-2025",
         "google/gemini-2.5-pro",
+        "google/gemini-3-flash",
+        "google/gemini-3-pro-image",
         "google/gemini-3-pro-preview",
+        "google/gemini-embedding-001",
+        "google/imagen-4.0-fast-generate-001",
+        "google/imagen-4.0-generate-001",
+        "google/imagen-4.0-ultra-generate-001",
+        "google/text-embedding-005",
+        "google/text-multilingual-embedding-002",
+        "inception/mercury-coder-small",
+        "kwaipilot/kat-coder-pro-v1",
+        "meituan/longcat-flash-chat",
+        "meituan/longcat-flash-thinking",
+        "meta/llama-3.1-70b",
+        "meta/llama-3.1-8b",
+        "meta/llama-3.2-11b",
+        "meta/llama-3.2-1b",
+        "meta/llama-3.2-3b",
+        "meta/llama-3.2-90b",
         "meta/llama-3.3-70b",
         "meta/llama-4-maverick",
         "meta/llama-4-scout",
         "minimax/minimax-m2",
+        "minimax/minimax-m2.1",
+        "minimax/minimax-m2.1-lightning",
         "mistral/codestral",
+        "mistral/codestral-embed",
+        "mistral/devstral-2",
+        "mistral/devstral-small",
+        "mistral/devstral-small-2",
         "mistral/magistral-medium",
         "mistral/magistral-small",
+        "mistral/ministral-14b",
         "mistral/ministral-3b",
         "mistral/ministral-8b",
-        "mistral/mistral-large",
+        "mistral/mistral-embed",
+        "mistral/mistral-large-3",
+        "mistral/mistral-medium",
+        "mistral/mistral-nemo",
         "mistral/mistral-small",
         "mistral/mixtral-8x22b-instruct",
         "mistral/pixtral-12b",
         "mistral/pixtral-large",
         "moonshotai/kimi-k2",
+        "moonshotai/kimi-k2-0905",
+        "moonshotai/kimi-k2-thinking",
+        "moonshotai/kimi-k2-thinking-turbo",
+        "moonshotai/kimi-k2-turbo",
         "morph/morph-v3-fast",
         "morph/morph-v3-large",
+        "nvidia/nemotron-3-nano-30b-a3b",
+        "nvidia/nemotron-nano-12b-v2-vl",
+        "nvidia/nemotron-nano-9b-v2",
+        "openai/codex-mini",
+        "openai/gpt-3.5-turbo",
+        "openai/gpt-3.5-turbo-instruct",
         "openai/gpt-4-turbo",
         "openai/gpt-4.1",
         "openai/gpt-4.1-mini",
@@ -2753,35 +2888,78 @@
         "openai/gpt-4o",
         "openai/gpt-4o-mini",
         "openai/gpt-5",
+        "openai/gpt-5-chat",
         "openai/gpt-5-codex",
         "openai/gpt-5-mini",
         "openai/gpt-5-nano",
+        "openai/gpt-5-pro",
+        "openai/gpt-5.1-codex",
+        "openai/gpt-5.1-codex-max",
+        "openai/gpt-5.1-codex-mini",
+        "openai/gpt-5.1-instant",
+        "openai/gpt-5.1-thinking",
+        "openai/gpt-5.2",
+        "openai/gpt-5.2-chat",
+        "openai/gpt-5.2-pro",
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
+        "openai/gpt-oss-safeguard-20b",
         "openai/o1",
         "openai/o3",
+        "openai/o3-deep-research",
         "openai/o3-mini",
+        "openai/o3-pro",
         "openai/o4-mini",
+        "openai/text-embedding-3-large",
+        "openai/text-embedding-3-small",
+        "openai/text-embedding-ada-002",
         "perplexity/sonar",
         "perplexity/sonar-pro",
         "perplexity/sonar-reasoning",
         "perplexity/sonar-reasoning-pro",
+        "prime-intellect/intellect-3",
         "vercel/v0-1.0-md",
         "vercel/v0-1.5-md",
-        "xai/grok-2",
+        "voyage/voyage-3-large",
+        "voyage/voyage-3.5",
+        "voyage/voyage-3.5-lite",
+        "voyage/voyage-code-2",
+        "voyage/voyage-code-3",
+        "voyage/voyage-finance-2",
+        "voyage/voyage-law-2",
         "xai/grok-2-vision",
         "xai/grok-3",
         "xai/grok-3-fast",
         "xai/grok-3-mini",
         "xai/grok-3-mini-fast",
         "xai/grok-4",
-        "xai/grok-4-fast",
         "xai/grok-4-fast-non-reasoning",
+        "xai/grok-4-fast-reasoning",
+        "xai/grok-4.1-fast-non-reasoning",
+        "xai/grok-4.1-fast-reasoning",
         "xai/grok-code-fast-1",
+        "xiaomi/mimo-v2-flash",
         "zai/glm-4.5",
         "zai/glm-4.5-air",
         "zai/glm-4.5v",
-        "zai/glm-4.6"
+        "zai/glm-4.6",
+        "zai/glm-4.6v",
+        "zai/glm-4.6v-flash",
+        "zai/glm-4.7"
+      ]
+    },
+    "vivgrid": {
+      "name": "Vivgrid",
+      "api_endpoint": "https://api.vivgrid.com/v1",
+      "api_format": "openai",
+      "documentation": "https://docs.vivgrid.com/models",
+      "env_vars": [
+        "VIVGRID_API_KEY"
+      ],
+      "logo_url": "https://models.dev/logos/vivgrid.svg",
+      "model_count": 1,
+      "models": [
+        "gpt-5.1-codex"
       ]
     },
     "vultr": {
@@ -3022,6 +3200,101 @@
     }
   },
   "models": {
+    "privatemode_ai/whisper-large-v3": {
+      "id": "whisper-large-v3",
+      "provider": "privatemode_ai",
+      "name": "Whisper large-v3",
+      "family": "whisper",
+      "mode": "audio_transcription",
+      "max_input_tokens": 0,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "audio_input",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2023-09",
+      "release_date": "2023-09-01",
+      "open_weights": true
+    },
+    "privatemode_ai/qwen3-embedding-4b": {
+      "id": "qwen3-embedding-4b",
+      "provider": "privatemode_ai",
+      "name": "Qwen3-Embedding 4B",
+      "family": "qwen3-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 32000,
+      "max_output_tokens": 2560,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-06",
+      "release_date": "2025-06-06",
+      "open_weights": true
+    },
+    "privatemode_ai/gpt-oss-120b": {
+      "id": "gpt-oss-120b",
+      "provider": "privatemode_ai",
+      "name": "gpt-oss-120b",
+      "family": "gpt-oss",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-08",
+      "release_date": "2025-08-04",
+      "open_weights": true
+    },
+    "privatemode_ai/gemma-3-27b": {
+      "id": "gemma-3-27b",
+      "provider": "privatemode_ai",
+      "name": "Gemma 3 27B",
+      "family": "gemma-3",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-08",
+      "release_date": "2025-03-12",
+      "open_weights": true
+    },
+    "privatemode_ai/qwen3-coder-30b-a3b": {
+      "id": "qwen3-coder-30b-a3b",
+      "provider": "privatemode_ai",
+      "name": "Qwen3-Coder 30B-A3B",
+      "family": "qwen3-coder",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04",
+      "open_weights": true
+    },
     "moonshotai_cn/kimi-k2-thinking-turbo": {
       "id": "kimi-k2-thinking-turbo",
       "provider": "moonshotai_cn",
@@ -3118,6 +3391,321 @@
       "knowledge_cutoff": "2024-10",
       "release_date": "2025-09-05",
       "open_weights": true
+    },
+    "firmware/xai/grok-4-fast-non-reasoning": {
+      "id": "xai/grok-4-fast-non-reasoning",
+      "provider": "firmware",
+      "name": "Grok 4 Fast (Non-Reasoning)",
+      "family": "grok",
+      "mode": "chat",
+      "max_input_tokens": 2000000,
+      "max_output_tokens": 30000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-07",
+      "release_date": "2025-09-19"
+    },
+    "firmware/xai/grok-4-fast-reasoning": {
+      "id": "xai/grok-4-fast-reasoning",
+      "provider": "firmware",
+      "name": "Grok 4 Fast (Reasoning)",
+      "family": "grok",
+      "mode": "chat",
+      "max_input_tokens": 2000000,
+      "max_output_tokens": 30000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-07",
+      "release_date": "2025-09-19"
+    },
+    "firmware/xai/grok-code-fast-1": {
+      "id": "xai/grok-code-fast-1",
+      "provider": "firmware",
+      "name": "Grok Code Fast 1",
+      "family": "grok",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 10000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2023-10",
+      "release_date": "2025-08-28"
+    },
+    "firmware/deepseek/deepseek-coder": {
+      "id": "deepseek/deepseek-coder",
+      "provider": "firmware",
+      "name": "DeepSeek Coder",
+      "family": "deepseek-coder",
+      "mode": "chat",
+      "max_input_tokens": 16384,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "release_date": "2024-01-25",
+      "open_weights": true
+    },
+    "firmware/deepseek/deepseek-chat": {
+      "id": "deepseek/deepseek-chat",
+      "provider": "firmware",
+      "name": "DeepSeek Chat",
+      "family": "deepseek-chat",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2024-12-26"
+    },
+    "firmware/deepseek/deepseek-reasoner": {
+      "id": "deepseek/deepseek-reasoner",
+      "provider": "firmware",
+      "name": "DeepSeek Reasoner",
+      "family": "deepseek",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2025-01-20"
+    },
+    "firmware/google/gemini-3-flash-preview": {
+      "id": "google/gemini-3-flash-preview",
+      "provider": "firmware",
+      "name": "Gemini 3 Flash Preview",
+      "family": "gemini-flash",
+      "mode": "chat",
+      "max_input_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "audio_input",
+        "function_calling",
+        "json_mode",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "video_input",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-01",
+      "release_date": "2025-12-17"
+    },
+    "firmware/google/gemini-3-pro-preview": {
+      "id": "google/gemini-3-pro-preview",
+      "provider": "firmware",
+      "name": "Gemini 3 Pro Preview",
+      "family": "gemini-pro",
+      "mode": "chat",
+      "max_input_tokens": 1000000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "audio_input",
+        "function_calling",
+        "json_mode",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "video_input",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-01",
+      "release_date": "2025-11-18"
+    },
+    "firmware/google/gemini-2.5-flash": {
+      "id": "google/gemini-2.5-flash",
+      "provider": "firmware",
+      "name": "Gemini 2.5 Flash",
+      "family": "gemini-flash",
+      "mode": "chat",
+      "max_input_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "audio_input",
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "video_input",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-01",
+      "release_date": "2025-07-17"
+    },
+    "firmware/google/gemini-2.5-pro": {
+      "id": "google/gemini-2.5-pro",
+      "provider": "firmware",
+      "name": "Gemini 2.5 Pro",
+      "family": "gemini-pro",
+      "mode": "chat",
+      "max_input_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "audio_input",
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "video_input",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-01",
+      "release_date": "2025-03-20"
+    },
+    "firmware/openai/gpt-4o": {
+      "id": "openai/gpt-4o",
+      "provider": "firmware",
+      "name": "GPT-4o",
+      "family": "gpt-4o",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2023-09",
+      "release_date": "2024-05-13"
+    },
+    "firmware/openai/gpt-5": {
+      "id": "openai/gpt-5",
+      "provider": "firmware",
+      "name": "GPT-5",
+      "family": "gpt-5",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-09-30",
+      "release_date": "2025-08-07"
+    },
+    "firmware/openai/gpt-5.2": {
+      "id": "openai/gpt-5.2",
+      "provider": "firmware",
+      "name": "GPT-5.2",
+      "family": "gpt-5",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-08-31",
+      "release_date": "2025-12-11"
+    },
+    "firmware/anthropic/claude-opus-4-5": {
+      "id": "anthropic/claude-opus-4-5",
+      "provider": "firmware",
+      "name": "Claude Opus 4.5 (latest)",
+      "family": "claude-opus",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-03-31",
+      "release_date": "2025-11-24"
+    },
+    "firmware/anthropic/claude-sonnet-4-5-20250929": {
+      "id": "anthropic/claude-sonnet-4-5-20250929",
+      "provider": "firmware",
+      "name": "Claude Sonnet 4.5",
+      "family": "claude-sonnet",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-07-31",
+      "release_date": "2025-09-29"
+    },
+    "firmware/anthropic/claude-haiku-4-5-20251001": {
+      "id": "anthropic/claude-haiku-4-5-20251001",
+      "provider": "firmware",
+      "name": "Claude Haiku 4.5",
+      "family": "claude-haiku",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-02-28",
+      "release_date": "2025-10-15"
     },
     "lucidquery/lucidquery-nexus-coder": {
       "id": "lucidquery-nexus-coder",
@@ -6202,6 +6790,24 @@
       "knowledge_cutoff": "2024-09",
       "release_date": "2024-06-12"
     },
+    "upstage/solar-pro3": {
+      "id": "solar-pro3",
+      "provider": "upstage",
+      "name": "solar-pro3",
+      "family": "solar-pro",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.00025,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-03",
+      "release_date": "2026-01"
+    },
     "upstage/solar-pro2": {
       "id": "solar-pro2",
       "provider": "upstage",
@@ -8525,6 +9131,77 @@
       "knowledge_cutoff": "2025-02-28",
       "release_date": "2025-10-15"
     },
+    "vercel/moonshotai/kimi-k2-thinking-turbo": {
+      "id": "moonshotai/kimi-k2-thinking-turbo",
+      "provider": "vercel",
+      "name": "Kimi K2 Thinking Turbo",
+      "family": "kimi-k2",
+      "mode": "chat",
+      "max_input_tokens": 262114,
+      "max_output_tokens": 262114,
+      "input_cost_per_1k": 0.00115,
+      "output_cost_per_1k": 0.008,
+      "cache_read_cost_per_1k": 0.00015,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-08",
+      "release_date": "2025-11-06"
+    },
+    "vercel/moonshotai/kimi-k2-turbo": {
+      "id": "moonshotai/kimi-k2-turbo",
+      "provider": "vercel",
+      "name": "Kimi K2 Turbo",
+      "family": "kimi-k2",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.0024,
+      "output_cost_per_1k": 0.01,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-08",
+      "release_date": "2025-09-05"
+    },
+    "vercel/moonshotai/kimi-k2-0905": {
+      "id": "moonshotai/kimi-k2-0905",
+      "provider": "vercel",
+      "name": "Kimi K2 0905",
+      "family": "kimi-k2",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.0006,
+      "output_cost_per_1k": 0.0025,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-09-05"
+    },
+    "vercel/moonshotai/kimi-k2-thinking": {
+      "id": "moonshotai/kimi-k2-thinking",
+      "provider": "vercel",
+      "name": "Kimi K2 Thinking",
+      "family": "kimi-k2",
+      "mode": "chat",
+      "max_input_tokens": 216144,
+      "max_output_tokens": 216144,
+      "input_cost_per_1k": 0.00047,
+      "output_cost_per_1k": 0.002,
+      "cache_read_cost_per_1k": 0.00014,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-08",
+      "release_date": "2025-11-06"
+    },
     "vercel/moonshotai/kimi-k2": {
       "id": "moonshotai/kimi-k2",
       "provider": "vercel",
@@ -8544,16 +9221,51 @@
       "open_weights": true,
       "deprecated": true
     },
+    "vercel/xiaomi/mimo-v2-flash": {
+      "id": "xiaomi/mimo-v2-flash",
+      "provider": "vercel",
+      "name": "MiMo V2 Flash",
+      "family": "mimo",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 32000,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.00029,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-12-17"
+    },
+    "vercel/alibaba/qwen3-coder": {
+      "id": "alibaba/qwen3-coder",
+      "provider": "vercel",
+      "name": "Qwen3 Coder 480B A35B Instruct",
+      "family": "qwen-coder",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 66536,
+      "input_cost_per_1k": 0.00038,
+      "output_cost_per_1k": 0.00153,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
+    },
     "vercel/alibaba/qwen3-next-80b-a3b-instruct": {
       "id": "alibaba/qwen3-next-80b-a3b-instruct",
       "provider": "vercel",
       "name": "Qwen3 Next 80B A3B Instruct",
       "family": "qwen3",
       "mode": "chat",
-      "max_input_tokens": 131072,
+      "max_input_tokens": 262144,
       "max_output_tokens": 32768,
-      "input_cost_per_1k": 0.0005,
-      "output_cost_per_1k": 0.002,
+      "input_cost_per_1k": 9e-05,
+      "output_cost_per_1k": 0.0011,
       "capabilities": [
         "function_calling",
         "temperature"
@@ -8561,6 +9273,24 @@
       "knowledge_cutoff": "2025-04",
       "release_date": "2025-09-12",
       "open_weights": true
+    },
+    "vercel/alibaba/qwen-3-32b": {
+      "id": "alibaba/qwen-3-32b",
+      "provider": "vercel",
+      "name": "Qwen 3.32B",
+      "family": "qwen3-32b",
+      "mode": "chat",
+      "max_input_tokens": 40960,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.0003,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
     },
     "vercel/alibaba/qwen3-vl-instruct": {
       "id": "alibaba/qwen3-vl-instruct",
@@ -8580,6 +9310,103 @@
       "knowledge_cutoff": "2025-04",
       "release_date": "2025-09-24",
       "open_weights": true
+    },
+    "vercel/alibaba/qwen-3-235b": {
+      "id": "alibaba/qwen-3-235b",
+      "provider": "vercel",
+      "name": "Qwen3 235B A22B Instruct 2507",
+      "family": "qwen3-235b",
+      "mode": "chat",
+      "max_input_tokens": 40960,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.00013,
+      "output_cost_per_1k": 0.0006,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
+    },
+    "vercel/alibaba/qwen-3-14b": {
+      "id": "alibaba/qwen-3-14b",
+      "provider": "vercel",
+      "name": "Qwen3-14B",
+      "family": "qwen3-14b",
+      "mode": "chat",
+      "max_input_tokens": 40960,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 6e-05,
+      "output_cost_per_1k": 0.00024,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
+    },
+    "vercel/alibaba/qwen3-embedding-4b": {
+      "id": "alibaba/qwen3-embedding-4b",
+      "provider": "vercel",
+      "name": "Qwen3 Embedding 4B",
+      "family": "qwen-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 2e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-06-05"
+    },
+    "vercel/alibaba/qwen3-235b-a22b-thinking": {
+      "id": "alibaba/qwen3-235b-a22b-thinking",
+      "provider": "vercel",
+      "name": "Qwen3 235B A22B Thinking 2507",
+      "family": "qwen3-235b",
+      "mode": "chat",
+      "max_input_tokens": 262114,
+      "max_output_tokens": 262114,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0029,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
+    },
+    "vercel/alibaba/qwen-3-30b": {
+      "id": "alibaba/qwen-3-30b",
+      "provider": "vercel",
+      "name": "Qwen3-30B-A3B",
+      "family": "qwen3-30b",
+      "mode": "chat",
+      "max_input_tokens": 40960,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 8e-05,
+      "output_cost_per_1k": 0.00029,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
+    },
+    "vercel/alibaba/qwen3-embedding-0.6b": {
+      "id": "alibaba/qwen3-embedding-0.6b",
+      "provider": "vercel",
+      "name": "Qwen3 Embedding 0.6B",
+      "family": "qwen-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 1e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-11-14"
     },
     "vercel/alibaba/qwen3-vl-thinking": {
       "id": "alibaba/qwen3-vl-thinking",
@@ -8618,6 +9445,36 @@
       "knowledge_cutoff": "2025-04",
       "release_date": "2025-09-23"
     },
+    "vercel/alibaba/qwen3-embedding-8b": {
+      "id": "alibaba/qwen3-embedding-8b",
+      "provider": "vercel",
+      "name": "Qwen3 Embedding 8B",
+      "family": "qwen-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 5e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-06-05"
+    },
+    "vercel/alibaba/qwen3-max-preview": {
+      "id": "alibaba/qwen3-max-preview",
+      "provider": "vercel",
+      "name": "Qwen3 Max Preview",
+      "family": "qwen-max",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 0.0012,
+      "output_cost_per_1k": 0.006,
+      "cache_read_cost_per_1k": 0.00024,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-09-23"
+    },
     "vercel/alibaba/qwen3-coder-plus": {
       "id": "alibaba/qwen3-coder-plus",
       "provider": "vercel",
@@ -8643,9 +9500,9 @@
       "family": "qwen3",
       "mode": "chat",
       "max_input_tokens": 131072,
-      "max_output_tokens": 32768,
-      "input_cost_per_1k": 0.0005,
-      "output_cost_per_1k": 0.006,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 0.00015,
+      "output_cost_per_1k": 0.0015,
       "capabilities": [
         "function_calling",
         "reasoning",
@@ -8654,6 +9511,113 @@
       "knowledge_cutoff": "2025-09",
       "release_date": "2025-09-12",
       "open_weights": true
+    },
+    "vercel/alibaba/qwen3-coder-30b-a3b": {
+      "id": "alibaba/qwen3-coder-30b-a3b",
+      "provider": "vercel",
+      "name": "Qwen 3 Coder 30B A3B Instruct",
+      "family": "qwen-coder",
+      "mode": "chat",
+      "max_input_tokens": 160000,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 7e-05,
+      "output_cost_per_1k": 0.00027,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-04"
+    },
+    "vercel/meituan/longcat-flash-thinking": {
+      "id": "meituan/longcat-flash-thinking",
+      "provider": "vercel",
+      "name": "LongCat Flash Thinking",
+      "family": "longcat",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.00015,
+      "output_cost_per_1k": 0.0015,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-09-23"
+    },
+    "vercel/meituan/longcat-flash-chat": {
+      "id": "meituan/longcat-flash-chat",
+      "provider": "vercel",
+      "name": "LongCat Flash Chat",
+      "family": "longcat",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-30"
+    },
+    "vercel/xai/grok-4-fast-reasoning": {
+      "id": "xai/grok-4-fast-reasoning",
+      "provider": "vercel",
+      "name": "Grok 4 Fast Reasoning",
+      "family": "grok",
+      "mode": "chat",
+      "max_input_tokens": 2000000,
+      "max_output_tokens": 256000,
+      "input_cost_per_1k": 0.0002,
+      "output_cost_per_1k": 0.0005,
+      "cache_read_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-07-09"
+    },
+    "vercel/xai/grok-4.1-fast-reasoning": {
+      "id": "xai/grok-4.1-fast-reasoning",
+      "provider": "vercel",
+      "name": "Grok 4.1 Fast Reasoning",
+      "family": "grok",
+      "mode": "chat",
+      "max_input_tokens": 2000000,
+      "max_output_tokens": 30000,
+      "input_cost_per_1k": 0.0002,
+      "output_cost_per_1k": 0.0005,
+      "cache_read_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-07-09"
+    },
+    "vercel/xai/grok-4.1-fast-non-reasoning": {
+      "id": "xai/grok-4.1-fast-non-reasoning",
+      "provider": "vercel",
+      "name": "Grok 4.1 Fast Non-Reasoning",
+      "family": "grok",
+      "mode": "chat",
+      "max_input_tokens": 2000000,
+      "max_output_tokens": 30000,
+      "input_cost_per_1k": 0.0002,
+      "output_cost_per_1k": 0.0005,
+      "cache_read_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-07-09"
     },
     "vercel/xai/grok-3-mini-fast": {
       "id": "xai/grok-3-mini-fast",
@@ -8695,26 +9659,6 @@
       "knowledge_cutoff": "2024-11",
       "release_date": "2025-02-17"
     },
-    "vercel/xai/grok-4-fast": {
-      "id": "xai/grok-4-fast",
-      "provider": "vercel",
-      "name": "Grok 4 Fast",
-      "family": "grok",
-      "mode": "chat",
-      "max_input_tokens": 2000000,
-      "max_output_tokens": 30000,
-      "input_cost_per_1k": 0.0002,
-      "output_cost_per_1k": 0.0005,
-      "cache_read_cost_per_1k": 5e-05,
-      "capabilities": [
-        "function_calling",
-        "reasoning",
-        "temperature",
-        "vision"
-      ],
-      "knowledge_cutoff": "2025-07",
-      "release_date": "2025-09-19"
-    },
     "vercel/xai/grok-3": {
       "id": "xai/grok-3",
       "provider": "vercel",
@@ -8732,24 +9676,6 @@
       ],
       "knowledge_cutoff": "2024-11",
       "release_date": "2025-02-17"
-    },
-    "vercel/xai/grok-2": {
-      "id": "xai/grok-2",
-      "provider": "vercel",
-      "name": "Grok 2",
-      "family": "grok-2",
-      "mode": "chat",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 8192,
-      "input_cost_per_1k": 0.002,
-      "output_cost_per_1k": 0.01,
-      "cache_read_cost_per_1k": 0.002,
-      "capabilities": [
-        "function_calling",
-        "temperature"
-      ],
-      "knowledge_cutoff": "2024-08",
-      "release_date": "2024-08-20"
     },
     "vercel/xai/grok-code-fast-1": {
       "id": "xai/grok-code-fast-1",
@@ -8846,6 +9772,245 @@
       "knowledge_cutoff": "2025-07",
       "release_date": "2025-09-19"
     },
+    "vercel/nvidia/nemotron-nano-9b-v2": {
+      "id": "nvidia/nemotron-nano-9b-v2",
+      "provider": "vercel",
+      "name": "Nvidia Nemotron Nano 9B V2",
+      "family": "nemotron",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 131072,
+      "input_cost_per_1k": 4e-05,
+      "output_cost_per_1k": 0.00016,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-18"
+    },
+    "vercel/nvidia/nemotron-nano-12b-v2-vl": {
+      "id": "nvidia/nemotron-nano-12b-v2-vl",
+      "provider": "vercel",
+      "name": "Nvidia Nemotron Nano 12B V2 VL",
+      "family": "nemotron",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 131072,
+      "input_cost_per_1k": 0.0002,
+      "output_cost_per_1k": 0.0006,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2024-12"
+    },
+    "vercel/nvidia/nemotron-3-nano-30b-a3b": {
+      "id": "nvidia/nemotron-3-nano-30b-a3b",
+      "provider": "vercel",
+      "name": "Nemotron 3 Nano 30B A3B",
+      "family": "nemotron",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 262144,
+      "input_cost_per_1k": 6e-05,
+      "output_cost_per_1k": 0.00024,
+      "capabilities": [
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2024-12"
+    },
+    "vercel/cohere/embed-v4.0": {
+      "id": "cohere/embed-v4.0",
+      "provider": "vercel",
+      "name": "Embed v4.0",
+      "family": "embed",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00012,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-04-15"
+    },
+    "vercel/cohere/command-a": {
+      "id": "cohere/command-a",
+      "provider": "vercel",
+      "name": "Command A",
+      "family": "command",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 8000,
+      "input_cost_per_1k": 0.0025,
+      "output_cost_per_1k": 0.01,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-03-13"
+    },
+    "vercel/kwaipilot/kat-coder-pro-v1": {
+      "id": "kwaipilot/kat-coder-pro-v1",
+      "provider": "vercel",
+      "name": "KAT-Coder-Pro V1",
+      "family": "kat-coder",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 32000,
+      "capabilities": [
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-10-24"
+    },
+    "vercel/mistral/mistral-medium": {
+      "id": "mistral/mistral-medium",
+      "provider": "vercel",
+      "name": "Mistral Medium 3.1",
+      "family": "mistral-medium",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0004,
+      "output_cost_per_1k": 0.002,
+      "capabilities": [
+        "function_calling",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-05-07"
+    },
+    "vercel/mistral/codestral-embed": {
+      "id": "mistral/codestral-embed",
+      "provider": "vercel",
+      "name": "Codestral Embed",
+      "family": "codestral-embed",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00015,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-05-28"
+    },
+    "vercel/mistral/devstral-2": {
+      "id": "mistral/devstral-2",
+      "provider": "vercel",
+      "name": "Devstral 2",
+      "family": "devstral-medium",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 256000,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-12-09"
+    },
+    "vercel/mistral/devstral-small": {
+      "id": "mistral/devstral-small",
+      "provider": "vercel",
+      "name": "Devstral Small 1.1",
+      "family": "devstral-small",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.0003,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-05-07"
+    },
+    "vercel/mistral/mistral-large-3": {
+      "id": "mistral/mistral-large-3",
+      "provider": "vercel",
+      "name": "Mistral Large 3",
+      "family": "mistral-large",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 256000,
+      "input_cost_per_1k": 0.0005,
+      "output_cost_per_1k": 0.0015,
+      "capabilities": [
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-12-02"
+    },
+    "vercel/mistral/mistral-embed": {
+      "id": "mistral/mistral-embed",
+      "provider": "vercel",
+      "name": "Mistral Embed",
+      "family": "mistral-embed",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2023-12-11"
+    },
+    "vercel/mistral/mistral-nemo": {
+      "id": "mistral/mistral-nemo",
+      "provider": "vercel",
+      "name": "Mistral Nemo",
+      "family": "mistral-nemo",
+      "mode": "chat",
+      "max_input_tokens": 60288,
+      "max_output_tokens": 16000,
+      "input_cost_per_1k": 4e-05,
+      "output_cost_per_1k": 0.00017,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-04",
+      "release_date": "2024-07-01"
+    },
+    "vercel/mistral/ministral-14b": {
+      "id": "mistral/ministral-14b",
+      "provider": "vercel",
+      "name": "Ministral 14B",
+      "family": "ministral-14b",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 256000,
+      "input_cost_per_1k": 0.0002,
+      "output_cost_per_1k": 0.0002,
+      "capabilities": [
+        "pdf_input",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-12-01"
+    },
+    "vercel/mistral/devstral-small-2": {
+      "id": "mistral/devstral-small-2",
+      "provider": "vercel",
+      "name": "Devstral Small 2",
+      "family": "devstral-small",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 256000,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-05-07"
+    },
     "vercel/mistral/codestral": {
       "id": "mistral/codestral",
       "provider": "vercel",
@@ -8881,25 +10046,6 @@
       ],
       "knowledge_cutoff": "2025-06",
       "release_date": "2025-03-17",
-      "open_weights": true
-    },
-    "vercel/mistral/mistral-large": {
-      "id": "mistral/mistral-large",
-      "provider": "vercel",
-      "name": "Mistral Large",
-      "family": "mistral-large",
-      "mode": "chat",
-      "max_input_tokens": 262144,
-      "max_output_tokens": 262144,
-      "input_cost_per_1k": 0.0005,
-      "output_cost_per_1k": 0.0015,
-      "capabilities": [
-        "function_calling",
-        "temperature",
-        "vision"
-      ],
-      "knowledge_cutoff": "2024-11",
-      "release_date": "2024-11-01",
       "open_weights": true
     },
     "vercel/mistral/pixtral-large": {
@@ -9068,23 +10214,41 @@
       ],
       "release_date": "2025-06-09"
     },
-    "vercel/deepseek/deepseek-v3.2-exp-thinking": {
-      "id": "deepseek/deepseek-v3.2-exp-thinking",
+    "vercel/deepseek/deepseek-v3": {
+      "id": "deepseek/deepseek-v3",
       "provider": "vercel",
-      "name": "DeepSeek V3.2 Exp Thinking",
+      "name": "DeepSeek V3 0324",
       "family": "deepseek-v3",
       "mode": "chat",
       "max_input_tokens": 163840,
-      "max_output_tokens": 8192,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.00077,
+      "output_cost_per_1k": 0.00077,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2024-12-26"
+    },
+    "vercel/deepseek/deepseek-v3.2-thinking": {
+      "id": "deepseek/deepseek-v3.2-thinking",
+      "provider": "vercel",
+      "name": "DeepSeek V3.2 Thinking",
+      "family": "deepseek-v3",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 64000,
       "input_cost_per_1k": 0.00028,
       "output_cost_per_1k": 0.00042,
+      "cache_read_cost_per_1k": 3e-05,
       "capabilities": [
         "function_calling",
         "reasoning",
         "temperature"
       ],
-      "knowledge_cutoff": "2025-09",
-      "release_date": "2025-09-29"
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2025-12-01"
     },
     "vercel/deepseek/deepseek-v3.1-terminus": {
       "id": "deepseek/deepseek-v3.1-terminus",
@@ -9092,8 +10256,8 @@
       "name": "DeepSeek V3.1 Terminus",
       "family": "deepseek-v3",
       "mode": "chat",
-      "max_input_tokens": 128000,
-      "max_output_tokens": 8192,
+      "max_input_tokens": 131072,
+      "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00027,
       "output_cost_per_1k": 0.001,
       "capabilities": [
@@ -9105,6 +10269,24 @@
       "release_date": "2025-09-22",
       "open_weights": true
     },
+    "vercel/deepseek/deepseek-v3.1": {
+      "id": "deepseek/deepseek-v3.1",
+      "provider": "vercel",
+      "name": "DeepSeek-V3.1",
+      "family": "deepseek-v3",
+      "mode": "chat",
+      "max_input_tokens": 163840,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.001,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2025-08-21"
+    },
     "vercel/deepseek/deepseek-v3.2-exp": {
       "id": "deepseek/deepseek-v3.2-exp",
       "provider": "vercel",
@@ -9112,35 +10294,33 @@
       "family": "deepseek-v3",
       "mode": "chat",
       "max_input_tokens": 163840,
-      "max_output_tokens": 8192,
-      "input_cost_per_1k": 0.00028,
-      "output_cost_per_1k": 0.00042,
-      "capabilities": [
-        "function_calling",
-        "temperature"
-      ],
-      "knowledge_cutoff": "2025-09",
-      "release_date": "2025-09-29"
-    },
-    "vercel/deepseek/deepseek-r1-distill-llama-70b": {
-      "id": "deepseek/deepseek-r1-distill-llama-70b",
-      "provider": "vercel",
-      "name": "DeepSeek R1 Distill Llama 70B",
-      "family": "deepseek-r1-distill-llama",
-      "mode": "chat",
-      "max_input_tokens": 131072,
-      "max_output_tokens": 8192,
-      "input_cost_per_1k": 0.00075,
-      "output_cost_per_1k": 0.00099,
+      "max_output_tokens": 163840,
+      "input_cost_per_1k": 0.00027,
+      "output_cost_per_1k": 0.0004,
       "capabilities": [
         "function_calling",
         "reasoning",
         "temperature"
       ],
+      "knowledge_cutoff": "2025-09",
+      "release_date": "2025-09-29"
+    },
+    "vercel/deepseek/deepseek-v3.2": {
+      "id": "deepseek/deepseek-v3.2",
+      "provider": "vercel",
+      "name": "DeepSeek V3.2",
+      "family": "deepseek-v3",
+      "mode": "chat",
+      "max_input_tokens": 163842,
+      "max_output_tokens": 8000,
+      "input_cost_per_1k": 0.00027,
+      "output_cost_per_1k": 0.0004,
+      "cache_read_cost_per_1k": 0.00022,
+      "capabilities": [
+        "temperature"
+      ],
       "knowledge_cutoff": "2024-07",
-      "release_date": "2025-01-20",
-      "open_weights": true,
-      "deprecated": true
+      "release_date": "2025-12-01"
     },
     "vercel/deepseek/deepseek-r1": {
       "id": "deepseek/deepseek-r1",
@@ -9160,13 +10340,135 @@
       "knowledge_cutoff": "2024-07",
       "release_date": "2025-01-20"
     },
+    "vercel/bfl/flux-kontext-pro": {
+      "id": "bfl/flux-kontext-pro",
+      "provider": "vercel",
+      "name": "FLUX.1 Kontext Pro",
+      "family": "flux-kontext",
+      "mode": "image",
+      "max_input_tokens": 512,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2025-06"
+    },
+    "vercel/bfl/flux-kontext-max": {
+      "id": "bfl/flux-kontext-max",
+      "provider": "vercel",
+      "name": "FLUX.1 Kontext Max",
+      "family": "flux-kontext",
+      "mode": "image",
+      "max_input_tokens": 512,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2025-06"
+    },
+    "vercel/bfl/flux-pro-1.1": {
+      "id": "bfl/flux-pro-1.1",
+      "provider": "vercel",
+      "name": "FLUX1.1 [pro]",
+      "family": "flux-pro",
+      "mode": "image",
+      "max_input_tokens": 512,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2024-10"
+    },
+    "vercel/bfl/flux-pro-1.1-ultra": {
+      "id": "bfl/flux-pro-1.1-ultra",
+      "provider": "vercel",
+      "name": "FLUX1.1 [pro] Ultra",
+      "family": "flux-pro",
+      "mode": "image",
+      "max_input_tokens": 512,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2024-11"
+    },
+    "vercel/bfl/flux-pro-1.0-fill": {
+      "id": "bfl/flux-pro-1.0-fill",
+      "provider": "vercel",
+      "name": "FLUX.1 Fill [pro]",
+      "family": "flux-pro",
+      "mode": "image",
+      "max_input_tokens": 512,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2024-10"
+    },
+    "vercel/arcee-ai/trinity-mini": {
+      "id": "arcee-ai/trinity-mini",
+      "provider": "vercel",
+      "name": "Trinity Mini",
+      "family": "trinity",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 131072,
+      "input_cost_per_1k": 5e-05,
+      "output_cost_per_1k": 0.00015,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-12"
+    },
     "vercel/minimax/minimax-m2": {
       "id": "minimax/minimax-m2",
       "provider": "vercel",
       "name": "MiniMax M2",
       "family": "minimax",
       "mode": "chat",
-      "max_input_tokens": 205000,
+      "max_input_tokens": 262114,
+      "max_output_tokens": 262114,
+      "input_cost_per_1k": 0.00027,
+      "output_cost_per_1k": 0.00115,
+      "cache_read_cost_per_1k": 3e-05,
+      "cache_write_cost_per_1k": 0.00038,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-10-27",
+      "open_weights": true
+    },
+    "vercel/minimax/minimax-m2.1-lightning": {
+      "id": "minimax/minimax-m2.1-lightning",
+      "provider": "vercel",
+      "name": "MiniMax M2.1 Lightning",
+      "family": "minimax-m2.1",
+      "mode": "chat",
+      "max_input_tokens": 204800,
+      "max_output_tokens": 131072,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0024,
+      "cache_read_cost_per_1k": 3e-05,
+      "cache_write_cost_per_1k": 0.00038,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-10-27"
+    },
+    "vercel/minimax/minimax-m2.1": {
+      "id": "minimax/minimax-m2.1",
+      "provider": "vercel",
+      "name": "MiniMax M2.1",
+      "family": "minimax-m2.1",
+      "mode": "chat",
+      "max_input_tokens": 204800,
       "max_output_tokens": 131072,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
@@ -9178,8 +10480,178 @@
         "temperature"
       ],
       "knowledge_cutoff": "2024-10",
-      "release_date": "2025-10-27",
-      "open_weights": true
+      "release_date": "2025-10-27"
+    },
+    "vercel/bytedance/seed-1.6": {
+      "id": "bytedance/seed-1.6",
+      "provider": "vercel",
+      "name": "Seed 1.6",
+      "family": "seed",
+      "mode": "chat",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 32000,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.002,
+      "cache_read_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-09"
+    },
+    "vercel/voyage/voyage-code-2": {
+      "id": "voyage/voyage-code-2",
+      "provider": "vercel",
+      "name": "voyage-code-2",
+      "family": "voyage-code",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00012,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-01"
+    },
+    "vercel/voyage/voyage-3.5-lite": {
+      "id": "voyage/voyage-3.5-lite",
+      "provider": "vercel",
+      "name": "voyage-3.5-lite",
+      "family": "voyage-3",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 2e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-05-20"
+    },
+    "vercel/voyage/voyage-3.5": {
+      "id": "voyage/voyage-3.5",
+      "provider": "vercel",
+      "name": "voyage-3.5",
+      "family": "voyage-3",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 6e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-05-20"
+    },
+    "vercel/voyage/voyage-finance-2": {
+      "id": "voyage/voyage-finance-2",
+      "provider": "vercel",
+      "name": "voyage-finance-2",
+      "family": "voyage-finance",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00012,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-03"
+    },
+    "vercel/voyage/voyage-law-2": {
+      "id": "voyage/voyage-law-2",
+      "provider": "vercel",
+      "name": "voyage-law-2",
+      "family": "voyage-law",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00012,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-03"
+    },
+    "vercel/voyage/voyage-code-3": {
+      "id": "voyage/voyage-code-3",
+      "provider": "vercel",
+      "name": "voyage-code-3",
+      "family": "voyage-code",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00018,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-09"
+    },
+    "vercel/voyage/voyage-3-large": {
+      "id": "voyage/voyage-3-large",
+      "provider": "vercel",
+      "name": "voyage-3-large",
+      "family": "voyage-3",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00018,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-09"
+    },
+    "vercel/google/gemini-embedding-001": {
+      "id": "google/gemini-embedding-001",
+      "provider": "vercel",
+      "name": "Gemini Embedding 001",
+      "family": "gemini-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00015,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2025-05-20"
+    },
+    "vercel/google/imagen-4.0-ultra-generate-001": {
+      "id": "google/imagen-4.0-ultra-generate-001",
+      "provider": "vercel",
+      "name": "Imagen 4 Ultra",
+      "family": "imagen-4",
+      "mode": "image",
+      "max_input_tokens": 480,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2025-05-24"
+    },
+    "vercel/google/gemini-2.5-flash-image": {
+      "id": "google/gemini-2.5-flash-image",
+      "provider": "vercel",
+      "name": "Nano Banana (Gemini 2.5 Flash Image)",
+      "family": "gemini-flash-image",
+      "mode": "image",
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0025,
+      "capabilities": [
+        "image_output",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-01",
+      "release_date": "2025-03-20"
+    },
+    "vercel/google/imagen-4.0-fast-generate-001": {
+      "id": "google/imagen-4.0-fast-generate-001",
+      "provider": "vercel",
+      "name": "Imagen 4 Fast",
+      "family": "imagen-4",
+      "mode": "image",
+      "max_input_tokens": 480,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2025-06"
+    },
+    "vercel/google/imagen-4.0-generate-001": {
+      "id": "google/imagen-4.0-generate-001",
+      "provider": "vercel",
+      "name": "Imagen 4",
+      "family": "imagen-4",
+      "mode": "image",
+      "max_input_tokens": 480,
+      "max_output_tokens": 0,
+      "capabilities": [
+        "image_output"
+      ],
+      "release_date": "2025-05-22"
     },
     "vercel/google/gemini-3-pro-preview": {
       "id": "google/gemini-3-pro-preview",
@@ -9195,7 +10667,6 @@
       "capabilities": [
         "audio_input",
         "function_calling",
-        "json_mode",
         "pdf_input",
         "reasoning",
         "temperature",
@@ -9215,7 +10686,7 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.0004,
-      "cache_read_cost_per_1k": 2.5e-05,
+      "cache_read_cost_per_1k": 1e-05,
       "capabilities": [
         "audio_input",
         "function_calling",
@@ -9228,6 +10699,64 @@
       "knowledge_cutoff": "2025-01",
       "release_date": "2025-06-17"
     },
+    "vercel/google/text-multilingual-embedding-002": {
+      "id": "google/text-multilingual-embedding-002",
+      "provider": "vercel",
+      "name": "Text Multilingual Embedding 002",
+      "family": "text-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 3e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-03"
+    },
+    "vercel/google/gemini-3-pro-image": {
+      "id": "google/gemini-3-pro-image",
+      "provider": "vercel",
+      "name": "Nano Banana Pro (Gemini 3 Pro Image)",
+      "family": "gemini-pro",
+      "mode": "image",
+      "max_input_tokens": 65536,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 0.002,
+      "output_cost_per_1k": 0.12,
+      "capabilities": [
+        "image_output",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-03",
+      "release_date": "2025-09"
+    },
+    "vercel/google/text-embedding-005": {
+      "id": "google/text-embedding-005",
+      "provider": "vercel",
+      "name": "Text Embedding 005",
+      "family": "text-embedding",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 3e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-08"
+    },
+    "vercel/google/gemini-2.5-flash-image-preview": {
+      "id": "google/gemini-2.5-flash-image-preview",
+      "provider": "vercel",
+      "name": "Nano Banana Preview (Gemini 2.5 Flash Image Preview)",
+      "family": "gemini-flash-image",
+      "mode": "image",
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0025,
+      "capabilities": [
+        "image_output",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-01",
+      "release_date": "2025-03-20"
+    },
     "vercel/google/gemini-2.5-flash-preview-09-2025": {
       "id": "google/gemini-2.5-flash-preview-09-2025",
       "provider": "vercel",
@@ -9238,7 +10767,7 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0025,
-      "cache_read_cost_per_1k": 7.5e-05,
+      "cache_read_cost_per_1k": 3e-05,
       "cache_write_cost_per_1k": 0.000383,
       "capabilities": [
         "audio_input",
@@ -9252,6 +10781,27 @@
       "knowledge_cutoff": "2025-01",
       "release_date": "2025-09-25"
     },
+    "vercel/google/gemini-3-flash": {
+      "id": "google/gemini-3-flash",
+      "provider": "vercel",
+      "name": "Gemini 3 Flash",
+      "family": "gemini-flash",
+      "mode": "chat",
+      "max_input_tokens": 1000000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.0005,
+      "output_cost_per_1k": 0.003,
+      "cache_read_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-03",
+      "release_date": "2025-12-17"
+    },
     "vercel/google/gemini-2.5-flash-lite-preview-09-2025": {
       "id": "google/gemini-2.5-flash-lite-preview-09-2025",
       "provider": "vercel",
@@ -9262,7 +10812,7 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.0004,
-      "cache_read_cost_per_1k": 2.5e-05,
+      "cache_read_cost_per_1k": 1e-05,
       "capabilities": [
         "audio_input",
         "function_calling",
@@ -9368,6 +10918,357 @@
       "knowledge_cutoff": "2025-01",
       "release_date": "2025-03-20"
     },
+    "vercel/prime-intellect/intellect-3": {
+      "id": "prime-intellect/intellect-3",
+      "provider": "vercel",
+      "name": "INTELLECT 3",
+      "family": "intellect",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 131072,
+      "input_cost_per_1k": 0.0002,
+      "output_cost_per_1k": 0.0011,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-11-26"
+    },
+    "vercel/inception/mercury-coder-small": {
+      "id": "inception/mercury-coder-small",
+      "provider": "vercel",
+      "name": "Mercury Coder Small Beta",
+      "family": "mercury",
+      "mode": "chat",
+      "max_input_tokens": 32000,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.001,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-02-26"
+    },
+    "vercel/openai/text-embedding-3-small": {
+      "id": "openai/text-embedding-3-small",
+      "provider": "vercel",
+      "name": "text-embedding-3-small",
+      "family": "text-embedding-3",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 2e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-01-25"
+    },
+    "vercel/openai/gpt-5.2-chat": {
+      "id": "openai/gpt-5.2-chat",
+      "provider": "vercel",
+      "name": "GPT-5.2 Chat",
+      "family": "gpt-5.2",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.00175,
+      "output_cost_per_1k": 0.014,
+      "cache_read_cost_per_1k": 0.00018,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/gpt-oss-safeguard-20b": {
+      "id": "openai/gpt-oss-safeguard-20b",
+      "provider": "vercel",
+      "name": "gpt-oss-safeguard-20b",
+      "family": "gpt-oss",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 8e-05,
+      "output_cost_per_1k": 0.0003,
+      "cache_read_cost_per_1k": 4e-05,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2024-12-01"
+    },
+    "vercel/openai/gpt-5.1-codex": {
+      "id": "openai/gpt-5.1-codex",
+      "provider": "vercel",
+      "name": "GPT-5.1-Codex",
+      "family": "gpt-5.1",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.01,
+      "cache_read_cost_per_1k": 0.00013,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/gpt-5-chat": {
+      "id": "openai/gpt-5-chat",
+      "provider": "vercel",
+      "name": "GPT-5 Chat",
+      "family": "gpt-5",
+      "mode": "image",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.01,
+      "cache_read_cost_per_1k": 0.00013,
+      "capabilities": [
+        "function_calling",
+        "image_output",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/o3-deep-research": {
+      "id": "openai/o3-deep-research",
+      "provider": "vercel",
+      "name": "o3-deep-research",
+      "family": "o3",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 100000,
+      "input_cost_per_1k": 0.01,
+      "output_cost_per_1k": 0.04,
+      "cache_read_cost_per_1k": 0.0025,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2024-06-26"
+    },
+    "vercel/openai/gpt-3.5-turbo": {
+      "id": "openai/gpt-3.5-turbo",
+      "provider": "vercel",
+      "name": "GPT-3.5 Turbo",
+      "family": "gpt-3.5-turbo",
+      "mode": "chat",
+      "max_input_tokens": 16385,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0005,
+      "output_cost_per_1k": 0.0015,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2021-09",
+      "release_date": "2023-03-01"
+    },
+    "vercel/openai/gpt-5.2-pro": {
+      "id": "openai/gpt-5.2-pro",
+      "provider": "vercel",
+      "name": "GPT 5.2 ",
+      "family": "gpt-5.2",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.021,
+      "output_cost_per_1k": 0.168,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/text-embedding-3-large": {
+      "id": "openai/text-embedding-3-large",
+      "provider": "vercel",
+      "name": "text-embedding-3-large",
+      "family": "text-embedding-3",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.00013,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-01-25"
+    },
+    "vercel/openai/gpt-5.1-codex-mini": {
+      "id": "openai/gpt-5.1-codex-mini",
+      "provider": "vercel",
+      "name": "GPT-5.1 Codex mini",
+      "family": "gpt-5.1",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00025,
+      "output_cost_per_1k": 0.002,
+      "cache_read_cost_per_1k": 3e-05,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-05-16"
+    },
+    "vercel/openai/gpt-5.1-instant": {
+      "id": "openai/gpt-5.1-instant",
+      "provider": "vercel",
+      "name": "GPT-5.1 Instant",
+      "family": "gpt-5.1",
+      "mode": "image",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.01,
+      "cache_read_cost_per_1k": 0.00013,
+      "capabilities": [
+        "function_calling",
+        "image_output",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/gpt-5.1-thinking": {
+      "id": "openai/gpt-5.1-thinking",
+      "provider": "vercel",
+      "name": "GPT 5.1 Thinking",
+      "family": "gpt-5.1",
+      "mode": "image",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.01,
+      "cache_read_cost_per_1k": 0.00013,
+      "capabilities": [
+        "function_calling",
+        "image_output",
+        "pdf_input",
+        "reasoning",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/text-embedding-ada-002": {
+      "id": "openai/text-embedding-ada-002",
+      "provider": "vercel",
+      "name": "text-embedding-ada-002",
+      "family": "text-embedding-ada",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2022-12-15"
+    },
+    "vercel/openai/o3-pro": {
+      "id": "openai/o3-pro",
+      "provider": "vercel",
+      "name": "o3 Pro",
+      "family": "o3",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 100000,
+      "input_cost_per_1k": 0.02,
+      "output_cost_per_1k": 0.08,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-04-16"
+    },
+    "vercel/openai/gpt-5.1-codex-max": {
+      "id": "openai/gpt-5.1-codex-max",
+      "provider": "vercel",
+      "name": "GPT 5.1 Codex Max",
+      "family": "gpt-5.1",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.01,
+      "cache_read_cost_per_1k": 0.00013,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/gpt-3.5-turbo-instruct": {
+      "id": "openai/gpt-3.5-turbo-instruct",
+      "provider": "vercel",
+      "name": "GPT-3.5 Turbo Instruct",
+      "family": "gpt-3.5-turbo",
+      "mode": "chat",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0015,
+      "output_cost_per_1k": 0.002,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2021-09",
+      "release_date": "2023-03-01"
+    },
+    "vercel/openai/codex-mini": {
+      "id": "openai/codex-mini",
+      "provider": "vercel",
+      "name": "Codex Mini",
+      "family": "codex",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 100000,
+      "input_cost_per_1k": 0.0015,
+      "output_cost_per_1k": 0.006,
+      "cache_read_cost_per_1k": 0.00038,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-05-16"
+    },
     "vercel/openai/gpt-oss-20b": {
       "id": "openai/gpt-oss-20b",
       "provider": "vercel",
@@ -9383,6 +11284,7 @@
         "reasoning",
         "temperature"
       ],
+      "knowledge_cutoff": "2024-10",
       "release_date": "2025-08-05",
       "open_weights": true
     },
@@ -9393,7 +11295,7 @@
       "family": "gpt-oss",
       "mode": "chat",
       "max_input_tokens": 131072,
-      "max_output_tokens": 32768,
+      "max_output_tokens": 131072,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.0005,
       "capabilities": [
@@ -9401,8 +11303,51 @@
         "reasoning",
         "temperature"
       ],
+      "knowledge_cutoff": "2024-10",
       "release_date": "2025-08-05",
       "open_weights": true
+    },
+    "vercel/openai/gpt-5-pro": {
+      "id": "openai/gpt-5-pro",
+      "provider": "vercel",
+      "name": "GPT-5 pro",
+      "family": "gpt-5",
+      "mode": "image",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 272000,
+      "input_cost_per_1k": 0.015,
+      "output_cost_per_1k": 0.12,
+      "capabilities": [
+        "function_calling",
+        "image_output",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
+    },
+    "vercel/openai/gpt-5.2": {
+      "id": "openai/gpt-5.2",
+      "provider": "vercel",
+      "name": "GPT-5.2",
+      "family": "gpt-5.2",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00175,
+      "output_cost_per_1k": 0.014,
+      "cache_read_cost_per_1k": 0.00018,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-08-07"
     },
     "vercel/openai/gpt-5": {
       "id": "openai/gpt-5",
@@ -9709,6 +11654,7 @@
       "input_cost_per_1k": 0.001,
       "output_cost_per_1k": 0.001,
       "capabilities": [
+        "function_calling",
         "temperature",
         "vision"
       ],
@@ -9726,6 +11672,7 @@
       "input_cost_per_1k": 0.003,
       "output_cost_per_1k": 0.015,
       "capabilities": [
+        "function_calling",
         "temperature",
         "vision"
       ],
@@ -9749,14 +11696,51 @@
       "knowledge_cutoff": "2025-09",
       "release_date": "2025-02-19"
     },
+    "vercel/zai/glm-4.7": {
+      "id": "zai/glm-4.7",
+      "provider": "vercel",
+      "name": "GLM 4.7",
+      "family": "glm-4.7",
+      "mode": "chat",
+      "max_input_tokens": 202752,
+      "max_output_tokens": 120000,
+      "input_cost_per_1k": 0.00043,
+      "output_cost_per_1k": 0.00175,
+      "cache_read_cost_per_1k": 8e-05,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-12-22"
+    },
+    "vercel/zai/glm-4.6v-flash": {
+      "id": "zai/glm-4.6v-flash",
+      "provider": "vercel",
+      "name": "GLM-4.6V-Flash",
+      "family": "glm-4.6v",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 24000,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-09-30"
+    },
     "vercel/zai/glm-4.5": {
       "id": "zai/glm-4.5",
       "provider": "vercel",
       "name": "GLM 4.5",
       "family": "glm-4.5",
       "mode": "chat",
-      "max_input_tokens": 128000,
-      "max_output_tokens": 96000,
+      "max_input_tokens": 131072,
+      "max_output_tokens": 131072,
       "input_cost_per_1k": 0.0006,
       "output_cost_per_1k": 0.0022,
       "capabilities": [
@@ -9794,7 +11778,7 @@
       "family": "glm-4.5v",
       "mode": "chat",
       "max_input_tokens": 66000,
-      "max_output_tokens": 16000,
+      "max_output_tokens": 66000,
       "input_cost_per_1k": 0.0006,
       "output_cost_per_1k": 0.0018,
       "capabilities": [
@@ -9815,8 +11799,8 @@
       "mode": "chat",
       "max_input_tokens": 200000,
       "max_output_tokens": 96000,
-      "input_cost_per_1k": 0.0006,
-      "output_cost_per_1k": 0.0022,
+      "input_cost_per_1k": 0.00045,
+      "output_cost_per_1k": 0.0018,
       "capabilities": [
         "function_calling",
         "reasoning",
@@ -9825,6 +11809,57 @@
       "knowledge_cutoff": "2025-04",
       "release_date": "2025-09-30",
       "open_weights": true
+    },
+    "vercel/zai/glm-4.6v": {
+      "id": "zai/glm-4.6v",
+      "provider": "vercel",
+      "name": "GLM-4.6V",
+      "family": "glm-4.6v",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 24000,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0009,
+      "cache_read_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2025-09-30"
+    },
+    "vercel/amazon/nova-2-lite": {
+      "id": "amazon/nova-2-lite",
+      "provider": "vercel",
+      "name": "Nova 2 Lite",
+      "family": "nova-2",
+      "mode": "chat",
+      "max_input_tokens": 1000000,
+      "max_output_tokens": 1000000,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0025,
+      "capabilities": [
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-10",
+      "release_date": "2024-12-01"
+    },
+    "vercel/amazon/titan-embed-text-v2": {
+      "id": "amazon/titan-embed-text-v2",
+      "provider": "vercel",
+      "name": "Titan Text Embeddings V2",
+      "family": "titan-embed",
+      "mode": "embedding",
+      "max_input_tokens": 8192,
+      "max_output_tokens": 1536,
+      "input_cost_per_1k": 2e-05,
+      "output_cost_per_1k": 0.0,
+      "release_date": "2024-04"
     },
     "vercel/amazon/nova-micro": {
       "id": "amazon/nova-micro",
@@ -9908,6 +11943,108 @@
       "output_cost_per_1k": 0.0019,
       "release_date": "2024-08-15"
     },
+    "vercel/meta/llama-3.1-8b": {
+      "id": "meta/llama-3.1-8b",
+      "provider": "vercel",
+      "name": "Llama 3.1 8B Instruct",
+      "family": "llama-3.1",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 3e-05,
+      "output_cost_per_1k": 5e-05,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2023-12",
+      "release_date": "2024-07-23"
+    },
+    "vercel/meta/llama-3.2-90b": {
+      "id": "meta/llama-3.2-90b",
+      "provider": "vercel",
+      "name": "Llama 3.2 90B Vision Instruct",
+      "family": "llama-3.2",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.00072,
+      "output_cost_per_1k": 0.00072,
+      "capabilities": [
+        "function_calling",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2023-12",
+      "release_date": "2024-09-25"
+    },
+    "vercel/meta/llama-3.2-1b": {
+      "id": "meta/llama-3.2-1b",
+      "provider": "vercel",
+      "name": "Llama 3.2 1B Instruct",
+      "family": "llama-3.2",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.0001,
+      "output_cost_per_1k": 0.0001,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2023-12",
+      "release_date": "2024-09-18"
+    },
+    "vercel/meta/llama-3.2-11b": {
+      "id": "meta/llama-3.2-11b",
+      "provider": "vercel",
+      "name": "Llama 3.2 11B Vision Instruct",
+      "family": "llama-3.2",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.00016,
+      "output_cost_per_1k": 0.00016,
+      "capabilities": [
+        "function_calling",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2023-12",
+      "release_date": "2024-09-25"
+    },
+    "vercel/meta/llama-3.2-3b": {
+      "id": "meta/llama-3.2-3b",
+      "provider": "vercel",
+      "name": "Llama 3.2 3B Instruct",
+      "family": "llama-3.2",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.00015,
+      "output_cost_per_1k": 0.00015,
+      "capabilities": [
+        "temperature"
+      ],
+      "knowledge_cutoff": "2023-12",
+      "release_date": "2024-09-18"
+    },
+    "vercel/meta/llama-3.1-70b": {
+      "id": "meta/llama-3.1-70b",
+      "provider": "vercel",
+      "name": "Llama 3.1 70B Instruct",
+      "family": "llama-3.1",
+      "mode": "chat",
+      "max_input_tokens": 131072,
+      "max_output_tokens": 16384,
+      "input_cost_per_1k": 0.0004,
+      "output_cost_per_1k": 0.0004,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2023-12",
+      "release_date": "2024-07-23"
+    },
     "vercel/meta/llama-4-scout": {
       "id": "meta/llama-4-scout",
       "provider": "vercel",
@@ -9974,7 +12111,7 @@
       "max_input_tokens": 200000,
       "max_output_tokens": 64000,
       "input_cost_per_1k": 0.001,
-      "output_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.005,
       "cache_read_cost_per_1k": 0.0001,
       "cache_write_cost_per_1k": 0.00125,
       "capabilities": [
@@ -9987,6 +12124,25 @@
       "knowledge_cutoff": "2025-02-28",
       "release_date": "2025-10-15"
     },
+    "vercel/anthropic/claude-3.5-sonnet-20240620": {
+      "id": "anthropic/claude-3.5-sonnet-20240620",
+      "provider": "vercel",
+      "name": "Claude 3.5 Sonnet (2024-06-20)",
+      "family": "claude-sonnet",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.003,
+      "output_cost_per_1k": 0.015,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-04",
+      "release_date": "2024-06-20"
+    },
     "vercel/anthropic/claude-opus-4.5": {
       "id": "anthropic/claude-opus-4.5",
       "provider": "vercel",
@@ -9997,7 +12153,7 @@
       "max_output_tokens": 64000,
       "input_cost_per_1k": 0.005,
       "output_cost_per_1k": 0.025,
-      "cache_read_cost_per_1k": 0.0015,
+      "cache_read_cost_per_1k": 0.0005,
       "cache_write_cost_per_1k": 0.01875,
       "capabilities": [
         "function_calling",
@@ -10008,6 +12164,50 @@
       ],
       "knowledge_cutoff": "2025-03-31",
       "release_date": "2025-11-24"
+    },
+    "vercel/anthropic/claude-sonnet-4.5": {
+      "id": "anthropic/claude-sonnet-4.5",
+      "provider": "vercel",
+      "name": "Claude Sonnet 4.5",
+      "family": "claude-sonnet",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.003,
+      "output_cost_per_1k": 0.015,
+      "cache_read_cost_per_1k": 0.0003,
+      "cache_write_cost_per_1k": 0.00375,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-07-31",
+      "release_date": "2025-09-29"
+    },
+    "vercel/anthropic/claude-sonnet-4": {
+      "id": "anthropic/claude-sonnet-4",
+      "provider": "vercel",
+      "name": "Claude Sonnet 4",
+      "family": "claude-sonnet",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 64000,
+      "input_cost_per_1k": 0.003,
+      "output_cost_per_1k": 0.015,
+      "cache_read_cost_per_1k": 0.0003,
+      "cache_write_cost_per_1k": 0.00375,
+      "capabilities": [
+        "function_calling",
+        "pdf_input",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "knowledge_cutoff": "2025-03-31",
+      "release_date": "2025-05-22"
     },
     "vercel/anthropic/claude-3.5-haiku": {
       "id": "anthropic/claude-3.5-haiku",
@@ -10052,18 +12252,18 @@
       "knowledge_cutoff": "2024-10-31",
       "release_date": "2025-02-19"
     },
-    "vercel/anthropic/claude-4.5-sonnet": {
-      "id": "anthropic/claude-4.5-sonnet",
+    "vercel/anthropic/claude-opus-4.1": {
+      "id": "anthropic/claude-opus-4.1",
       "provider": "vercel",
-      "name": "Claude Sonnet 4.5",
-      "family": "claude-sonnet",
+      "name": "Claude Opus 4",
+      "family": "claude-opus",
       "mode": "chat",
       "max_input_tokens": 200000,
-      "max_output_tokens": 64000,
-      "input_cost_per_1k": 0.003,
-      "output_cost_per_1k": 0.015,
-      "cache_read_cost_per_1k": 0.0003,
-      "cache_write_cost_per_1k": 0.00375,
+      "max_output_tokens": 32000,
+      "input_cost_per_1k": 0.015,
+      "output_cost_per_1k": 0.075,
+      "cache_read_cost_per_1k": 0.0015,
+      "cache_write_cost_per_1k": 0.01875,
       "capabilities": [
         "function_calling",
         "pdf_input",
@@ -10071,8 +12271,8 @@
         "temperature",
         "vision"
       ],
-      "knowledge_cutoff": "2025-07-31",
-      "release_date": "2025-09-29"
+      "knowledge_cutoff": "2025-03-31",
+      "release_date": "2025-05-22"
     },
     "vercel/anthropic/claude-3.5-sonnet": {
       "id": "anthropic/claude-3.5-sonnet",
@@ -10094,50 +12294,6 @@
       ],
       "knowledge_cutoff": "2024-04-30",
       "release_date": "2024-10-22"
-    },
-    "vercel/anthropic/claude-4-1-opus": {
-      "id": "anthropic/claude-4-1-opus",
-      "provider": "vercel",
-      "name": "Claude Opus 4",
-      "family": "claude-opus",
-      "mode": "chat",
-      "max_input_tokens": 200000,
-      "max_output_tokens": 32000,
-      "input_cost_per_1k": 0.015,
-      "output_cost_per_1k": 0.075,
-      "cache_read_cost_per_1k": 0.0015,
-      "cache_write_cost_per_1k": 0.01875,
-      "capabilities": [
-        "function_calling",
-        "pdf_input",
-        "reasoning",
-        "temperature",
-        "vision"
-      ],
-      "knowledge_cutoff": "2025-03-31",
-      "release_date": "2025-05-22"
-    },
-    "vercel/anthropic/claude-4-sonnet": {
-      "id": "anthropic/claude-4-sonnet",
-      "provider": "vercel",
-      "name": "Claude Sonnet 4",
-      "family": "claude-sonnet",
-      "mode": "chat",
-      "max_input_tokens": 200000,
-      "max_output_tokens": 64000,
-      "input_cost_per_1k": 0.003,
-      "output_cost_per_1k": 0.015,
-      "cache_read_cost_per_1k": 0.0003,
-      "cache_write_cost_per_1k": 0.00375,
-      "capabilities": [
-        "function_calling",
-        "pdf_input",
-        "reasoning",
-        "temperature",
-        "vision"
-      ],
-      "knowledge_cutoff": "2025-03-31",
-      "release_date": "2025-05-22"
     },
     "vercel/anthropic/claude-3-opus": {
       "id": "anthropic/claude-3-opus",
@@ -10181,8 +12337,8 @@
       "knowledge_cutoff": "2023-08-31",
       "release_date": "2024-03-13"
     },
-    "vercel/anthropic/claude-4-opus": {
-      "id": "anthropic/claude-4-opus",
+    "vercel/anthropic/claude-opus-4": {
+      "id": "anthropic/claude-opus-4",
       "provider": "vercel",
       "name": "Claude Opus 4",
       "family": "claude-opus",
@@ -11886,6 +14042,7 @@
       "input_cost_per_1k": 0.006,
       "output_cost_per_1k": 0.03,
       "cache_read_cost_per_1k": 0.0006,
+      "cache_write_cost_per_1k": 0.0075,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -12225,25 +14382,6 @@
       ],
       "knowledge_cutoff": "2025-07",
       "release_date": "2025-04-29",
-      "open_weights": true
-    },
-    "venice/zai-org-glm-4.6": {
-      "id": "zai-org-glm-4.6",
-      "provider": "venice",
-      "name": "GLM 4.6",
-      "family": "glm-4.6",
-      "mode": "chat",
-      "max_input_tokens": 202752,
-      "max_output_tokens": 50688,
-      "input_cost_per_1k": 0.00085,
-      "output_cost_per_1k": 0.00275,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "temperature"
-      ],
-      "knowledge_cutoff": "2024-04",
-      "release_date": "2025-10-18",
       "open_weights": true
     },
     "venice/qwen3-coder-480b-a35b-instruct": {
@@ -13553,18 +15691,36 @@
       ],
       "release_date": "2025-05-28"
     },
+    "vivgrid/gpt-5.1-codex": {
+      "id": "gpt-5.1-codex",
+      "provider": "vivgrid",
+      "name": "GPT-5.1 Codex",
+      "family": "gpt-5-codex",
+      "mode": "chat",
+      "max_input_tokens": 400000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00125,
+      "output_cost_per_1k": 0.01,
+      "cache_read_cost_per_1k": 0.000125,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "vision"
+      ],
+      "knowledge_cutoff": "2024-09-30",
+      "release_date": "2025-11-13"
+    },
     "chutes/NousResearch/Hermes-4.3-36B": {
       "id": "NousResearch/Hermes-4.3-36B",
       "provider": "chutes",
       "name": "Hermes 4.3 36B",
       "family": "nousresearch",
       "mode": "chat",
-      "max_input_tokens": 524288,
-      "max_output_tokens": 524288,
+      "max_input_tokens": 32768,
+      "max_output_tokens": 8192,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.00039,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "temperature"
       ],
@@ -13581,9 +15737,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 0.00011,
       "output_cost_per_1k": 0.00038,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00057,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13603,9 +15756,6 @@
       "max_output_tokens": 40960,
       "input_cost_per_1k": 1e-05,
       "output_cost_per_1k": 5e-05,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 7.5e-05,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13625,7 +15775,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "reasoning_cost_per_1k": 0.0018,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13645,8 +15794,6 @@
       "max_output_tokens": 32768,
       "input_cost_per_1k": 2e-05,
       "output_cost_per_1k": 0.0001,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13665,8 +15812,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 1e-05,
       "output_cost_per_1k": 1e-05,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature",
@@ -13685,8 +15830,6 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 0.00039,
       "output_cost_per_1k": 0.0019,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13705,9 +15848,6 @@
       "max_output_tokens": 65535,
       "input_cost_per_1k": 0.0004,
       "output_cost_per_1k": 0.00175,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.002625,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13727,9 +15867,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13749,8 +15886,6 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 6e-05,
       "output_cost_per_1k": 0.00024,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13769,35 +15904,12 @@
       "max_output_tokens": 163840,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
       "capabilities": [
         "json_mode",
         "reasoning",
         "temperature"
       ],
       "release_date": "2025-12-29",
-      "open_weights": true
-    },
-    "chutes/tngtech/DeepSeek-TNG-R1T2-Chimera-TEE": {
-      "id": "tngtech/DeepSeek-TNG-R1T2-Chimera-TEE",
-      "provider": "chutes",
-      "name": "DeepSeek TNG R1T2 Chimera TEE",
-      "family": "tngtech",
-      "mode": "chat",
-      "max_input_tokens": 163840,
-      "max_output_tokens": 65536,
-      "input_cost_per_1k": 0.00025,
-      "output_cost_per_1k": 0.00085,
-      "reasoning_cost_per_1k": 0.001275,
-      "capabilities": [
-        "function_calling",
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "release_date": "2025-01-06",
       "open_weights": true
     },
     "chutes/tngtech/DeepSeek-TNG-R1T2-Chimera": {
@@ -13810,9 +15922,6 @@
       "max_output_tokens": 163840,
       "input_cost_per_1k": 0.00025,
       "output_cost_per_1k": 0.00085,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.001275,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13832,9 +15941,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00025,
       "output_cost_per_1k": 0.00085,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.001275,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13850,12 +15956,10 @@
       "name": "MiMo V2 Flash",
       "family": "xiaomimimo",
       "mode": "chat",
-      "max_input_tokens": 262144,
-      "max_output_tokens": 262144,
+      "max_input_tokens": 32768,
+      "max_output_tokens": 8192,
       "input_cost_per_1k": 0.00017,
       "output_cost_per_1k": 0.00065,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "temperature"
       ],
@@ -13890,9 +15994,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 4e-05,
       "output_cost_per_1k": 0.00018,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00027,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13912,9 +16013,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 2e-05,
       "output_cost_per_1k": 0.0001,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00015,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13934,8 +16032,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 3e-05,
       "output_cost_per_1k": 0.00011,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13955,8 +16051,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 6e-05,
       "output_cost_per_1k": 0.00018,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -13976,14 +16070,30 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 5e-05,
       "output_cost_per_1k": 0.00022,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
         "temperature"
       ],
       "release_date": "2025-12-29",
+      "open_weights": true
+    },
+    "chutes/mistralai/Devstral-2-123B-Instruct-2512-TEE": {
+      "id": "mistralai/Devstral-2-123B-Instruct-2512-TEE",
+      "provider": "chutes",
+      "name": "Devstral 2 123B Instruct 2512 TEE",
+      "family": null,
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 5e-05,
+      "output_cost_per_1k": 0.00022,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "temperature"
+      ],
+      "release_date": "2026-01-10",
       "open_weights": true
     },
     "chutes/unsloth/Mistral-Nemo-Instruct-2407": {
@@ -13996,8 +16106,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 2e-05,
       "output_cost_per_1k": 4e-05,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature"
@@ -14015,8 +16123,6 @@
       "max_output_tokens": 96000,
       "input_cost_per_1k": 1e-05,
       "output_cost_per_1k": 3e-05,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature",
@@ -14035,8 +16141,6 @@
       "max_output_tokens": 32768,
       "input_cost_per_1k": 3e-05,
       "output_cost_per_1k": 0.00011,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14056,9 +16160,8 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 3e-05,
       "output_cost_per_1k": 0.0001,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
+        "json_mode",
         "temperature",
         "vision"
       ],
@@ -14075,8 +16178,6 @@
       "max_output_tokens": 96000,
       "input_cost_per_1k": 4e-05,
       "output_cost_per_1k": 0.00015,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14096,9 +16197,6 @@
       "max_output_tokens": 40960,
       "input_cost_per_1k": 6e-05,
       "output_cost_per_1k": 0.00022,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00033,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14118,9 +16216,6 @@
       "max_output_tokens": 40960,
       "input_cost_per_1k": 5e-05,
       "output_cost_per_1k": 0.00022,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00033,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14140,8 +16235,6 @@
       "max_output_tokens": 16384,
       "input_cost_per_1k": 5e-05,
       "output_cost_per_1k": 0.00022,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature",
@@ -14157,11 +16250,9 @@
       "family": "qwen",
       "mode": "chat",
       "max_input_tokens": 32768,
-      "max_output_tokens": 32768,
+      "max_output_tokens": 8192,
       "input_cost_per_1k": 1e-05,
       "output_cost_per_1k": 1e-05,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "temperature"
       ],
@@ -14178,8 +16269,6 @@
       "max_output_tokens": 32768,
       "input_cost_per_1k": 3e-05,
       "output_cost_per_1k": 0.00011,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature"
@@ -14197,8 +16286,6 @@
       "max_output_tokens": 32768,
       "input_cost_per_1k": 0.00013,
       "output_cost_per_1k": 0.00052,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14213,13 +16300,12 @@
       "name": "Qwen2.5 VL 72B Instruct TEE",
       "family": "qwen",
       "mode": "chat",
-      "max_input_tokens": 40960,
-      "max_output_tokens": 40960,
+      "max_input_tokens": 32768,
+      "max_output_tokens": 32768,
       "input_cost_per_1k": 0.00015,
       "output_cost_per_1k": 0.0006,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
+        "json_mode",
         "temperature",
         "vision"
       ],
@@ -14236,9 +16322,6 @@
       "max_output_tokens": 40960,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14258,8 +16341,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 8e-05,
       "output_cost_per_1k": 0.00055,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14278,9 +16359,6 @@
       "max_output_tokens": 40960,
       "input_cost_per_1k": 8e-05,
       "output_cost_per_1k": 0.00024,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00036,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14300,10 +16378,9 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
+        "json_mode",
         "temperature",
         "vision"
       ],
@@ -14320,8 +16397,6 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 8e-05,
       "output_cost_per_1k": 0.00033,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14340,8 +16415,6 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 0.00022,
       "output_cost_per_1k": 0.00095,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14360,9 +16433,6 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 0.00011,
       "output_cost_per_1k": 0.0006,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0009,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14382,14 +16452,28 @@
       "max_output_tokens": 262144,
       "input_cost_per_1k": 0.0001,
       "output_cost_per_1k": 0.0008,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
         "temperature"
       ],
       "release_date": "2025-12-29",
+      "open_weights": true
+    },
+    "chutes/miromind-ai/MiroThinker-v1.5-235B": {
+      "id": "miromind-ai/MiroThinker-v1.5-235B",
+      "provider": "chutes",
+      "name": "MiroThinker V1.5 235B",
+      "family": null,
+      "mode": "chat",
+      "max_input_tokens": 32768,
+      "max_output_tokens": 8192,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0012,
+      "capabilities": [
+        "temperature"
+      ],
+      "release_date": "2026-01-10",
       "open_weights": true
     },
     "chutes/zai-org/GLM-4.6-TEE": {
@@ -14402,9 +16486,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00035,
       "output_cost_per_1k": 0.0015,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00225,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14424,9 +16505,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00035,
       "output_cost_per_1k": 0.00155,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.002325,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14446,9 +16524,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0009,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00135,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14469,9 +16544,6 @@
       "max_output_tokens": 65535,
       "input_cost_per_1k": 0.0004,
       "output_cost_per_1k": 0.0015,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00225,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14491,9 +16563,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 5e-05,
       "output_cost_per_1k": 0.00022,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00033,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14513,8 +16582,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00019,
       "output_cost_per_1k": 0.00087,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14533,9 +16600,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00027,
       "output_cost_per_1k": 0.00041,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.000615,
       "capabilities": [
         "json_mode",
         "reasoning",
@@ -14554,9 +16618,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00023,
       "output_cost_per_1k": 0.0009,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00135,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14576,8 +16637,6 @@
       "max_output_tokens": 163840,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
       "capabilities": [
         "json_mode",
         "temperature"
@@ -14595,9 +16654,6 @@
       "max_output_tokens": 163840,
       "input_cost_per_1k": 0.0003,
       "output_cost_per_1k": 0.0012,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0018,
       "capabilities": [
         "json_mode",
         "reasoning",
@@ -14616,9 +16672,6 @@
       "max_output_tokens": 131072,
       "input_cost_per_1k": 3e-05,
       "output_cost_per_1k": 0.00011,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.000165,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14638,9 +16691,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0004,
       "output_cost_per_1k": 0.00175,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.002625,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14660,9 +16710,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.00025,
       "output_cost_per_1k": 0.00038,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.00057,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -14682,9 +16729,6 @@
       "max_output_tokens": 65536,
       "input_cost_per_1k": 0.0002,
       "output_cost_per_1k": 0.0008,
-      "cache_read_cost_per_1k": 0.0,
-      "cache_write_cost_per_1k": 0.0,
-      "reasoning_cost_per_1k": 0.0012,
       "capabilities": [
         "function_calling",
         "json_mode",
@@ -16634,8 +18678,8 @@
       "mode": "chat",
       "max_input_tokens": 128000,
       "max_output_tokens": 128000,
-      "input_cost_per_1k": 0.00028,
-      "output_cost_per_1k": 0.00042,
+      "input_cost_per_1k": 0.00058,
+      "output_cost_per_1k": 0.00168,
       "capabilities": [
         "reasoning",
         "temperature"
@@ -16672,8 +18716,8 @@
       "max_output_tokens": 64000,
       "input_cost_per_1k": 0.005,
       "output_cost_per_1k": 0.025,
-      "cache_read_cost_per_1k": 0.0015,
-      "cache_write_cost_per_1k": 0.01875,
+      "cache_read_cost_per_1k": 0.0005,
+      "cache_write_cost_per_1k": 0.00625,
       "capabilities": [
         "function_calling",
         "pdf_input",
@@ -17775,9 +19819,8 @@
       "mode": "chat",
       "max_input_tokens": 128000,
       "max_output_tokens": 128000,
-      "input_cost_per_1k": 0.00028,
-      "output_cost_per_1k": 0.00042,
-      "cache_read_cost_per_1k": 2.8e-05,
+      "input_cost_per_1k": 0.00058,
+      "output_cost_per_1k": 0.00168,
       "capabilities": [
         "function_calling",
         "reasoning",
@@ -19042,6 +21085,24 @@
       ],
       "release_date": "2025-09-25"
     },
+    "siliconflow/zai-org/GLM-4.6V": {
+      "id": "zai-org/GLM-4.6V",
+      "provider": "siliconflow",
+      "name": "zai-org/GLM-4.6V",
+      "family": "glm-4-6v",
+      "mode": "chat",
+      "max_input_tokens": 131000,
+      "max_output_tokens": 131000,
+      "input_cost_per_1k": 0.0003,
+      "output_cost_per_1k": 0.0009,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature",
+        "vision"
+      ],
+      "release_date": "2025-12-07"
+    },
     "siliconflow/zai-org/GLM-4.5": {
       "id": "zai-org/GLM-4.5",
       "provider": "siliconflow",
@@ -19058,6 +21119,23 @@
         "temperature"
       ],
       "release_date": "2025-07-28"
+    },
+    "siliconflow/zai-org/GLM-4.7": {
+      "id": "zai-org/GLM-4.7",
+      "provider": "siliconflow",
+      "name": "zai-org/GLM-4.7",
+      "family": "glm-4-7",
+      "mode": "chat",
+      "max_input_tokens": 205000,
+      "max_output_tokens": 205000,
+      "input_cost_per_1k": 0.0006,
+      "output_cost_per_1k": 0.0022,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "release_date": "2025-12-22"
     },
     "siliconflow/zai-org/GLM-4.6": {
       "id": "zai-org/GLM-4.6",
@@ -19236,6 +21314,24 @@
         "temperature"
       ],
       "release_date": "2025-01-20"
+    },
+    "siliconflow/deepseek-ai/DeepSeek-V3.2": {
+      "id": "deepseek-ai/DeepSeek-V3.2",
+      "provider": "siliconflow",
+      "name": "deepseek-ai/DeepSeek-V3.2",
+      "family": "deepseek-v3-2",
+      "mode": "chat",
+      "max_input_tokens": 164000,
+      "max_output_tokens": 164000,
+      "input_cost_per_1k": 0.00027,
+      "output_cost_per_1k": 0.00042,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "temperature"
+      ],
+      "release_date": "2025-12-03"
     },
     "siliconflow/deepseek-ai/DeepSeek-V3": {
       "id": "deepseek-ai/DeepSeek-V3",
@@ -28490,6 +30586,24 @@
       "release_date": "2025-07-29",
       "open_weights": true
     },
+    "openrouter/qwen/qwen3-coder-30b-a3b-instruct": {
+      "id": "qwen/qwen3-coder-30b-a3b-instruct",
+      "provider": "openrouter",
+      "name": "Qwen3 Coder 30B A3B Instruct",
+      "family": "qwen3-coder",
+      "mode": "chat",
+      "max_input_tokens": 160000,
+      "max_output_tokens": 65536,
+      "input_cost_per_1k": 7e-05,
+      "output_cost_per_1k": 0.00027,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2025-04",
+      "release_date": "2025-07-31",
+      "open_weights": true
+    },
     "openrouter/qwen/qwen3-235b-a22b-thinking-2507": {
       "id": "qwen/qwen3-235b-a22b-thinking-2507",
       "provider": "openrouter",
@@ -33100,6 +35214,25 @@
       "release_date": "2024-08-01",
       "open_weights": true
     },
+    "friendli/LGAI-EXAONE/K-EXAONE-236B-A23B": {
+      "id": "LGAI-EXAONE/K-EXAONE-236B-A23B",
+      "provider": "friendli",
+      "name": "K EXAONE 236B A23B",
+      "family": "exaone",
+      "mode": "chat",
+      "max_input_tokens": 262144,
+      "max_output_tokens": 262144,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "json_mode",
+        "reasoning",
+        "temperature"
+      ],
+      "release_date": "2025-12-31",
+      "open_weights": true
+    },
     "friendli/LGAI-EXAONE/EXAONE-4.0.1-32B": {
       "id": "LGAI-EXAONE/EXAONE-4.0.1-32B",
       "provider": "friendli",
@@ -33235,22 +35368,6 @@
         "temperature"
       ],
       "release_date": "2025-10-31",
-      "open_weights": true
-    },
-    "friendli/deepseek-ai/DeepSeek-R1-0528": {
-      "id": "deepseek-ai/DeepSeek-R1-0528",
-      "provider": "friendli",
-      "name": "DeepSeek R1 0528",
-      "family": "deepseek-r1",
-      "mode": "chat",
-      "max_input_tokens": 163840,
-      "max_output_tokens": 163840,
-      "capabilities": [
-        "json_mode",
-        "reasoning",
-        "temperature"
-      ],
-      "release_date": "2025-07-11",
       "open_weights": true
     },
     "sap_ai_core/anthropic--claude-3.5-sonnet": {
@@ -34089,6 +36206,24 @@
       "knowledge_cutoff": "2025-03-31",
       "release_date": "2025-08-05"
     },
+    "aihubmix/coding-minimax-m2.1-free": {
+      "id": "coding-minimax-m2.1-free",
+      "provider": "aihubmix",
+      "name": "Coding MiniMax M2.1 Free",
+      "family": "minimax",
+      "mode": "chat",
+      "max_input_tokens": 204800,
+      "max_output_tokens": 131072,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "release_date": "2025-12-23",
+      "open_weights": true
+    },
     "aihubmix/gpt-5.1-codex": {
       "id": "gpt-5.1-codex",
       "provider": "aihubmix",
@@ -34130,6 +36265,25 @@
       ],
       "knowledge_cutoff": "2025-07-31",
       "release_date": "2025-09-29"
+    },
+    "aihubmix/deepseek-v3.2-speciale": {
+      "id": "deepseek-v3.2-speciale",
+      "provider": "aihubmix",
+      "name": "DeepSeek V3.2 Speciale",
+      "family": "deepseek-v3",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.00058,
+      "output_cost_per_1k": 0.00168,
+      "capabilities": [
+        "function_calling",
+        "reasoning",
+        "temperature"
+      ],
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2025-12-01",
+      "open_weights": true
     },
     "aihubmix/claude-opus-4-5": {
       "id": "claude-opus-4-5",
@@ -34236,11 +36390,25 @@
       "knowledge_cutoff": "2025-07-31",
       "release_date": "2025-09-29"
     },
+    "aihubmix/deepseek-v3.2-fast": {
+      "id": "deepseek-v3.2-fast",
+      "provider": "aihubmix",
+      "name": "DeepSeek-V3.2-Fast",
+      "family": "deepseek-v3",
+      "mode": "chat",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 128000,
+      "input_cost_per_1k": 0.0011,
+      "output_cost_per_1k": 0.00329,
+      "knowledge_cutoff": "2024-07",
+      "release_date": "2025-12-01",
+      "open_weights": true
+    },
     "aihubmix/coding-glm-4.7-free": {
       "id": "coding-glm-4.7-free",
       "provider": "aihubmix",
-      "name": "Coding GLM-4.7 Free",
-      "family": null,
+      "name": "Coding GLM 4.7 Free",
+      "family": "glm-4.7",
       "mode": "chat",
       "max_input_tokens": 204800,
       "max_output_tokens": 131072,
@@ -34451,25 +36619,6 @@
       "knowledge_cutoff": "2025-04",
       "release_date": "2025-09-15"
     },
-    "aihubmix/gpt-4o-2024-11-20": {
-      "id": "gpt-4o-2024-11-20",
-      "provider": "aihubmix",
-      "name": "GPT-4o (2024-11-20)",
-      "family": "gpt-4o",
-      "mode": "chat",
-      "max_input_tokens": 128000,
-      "max_output_tokens": 16384,
-      "input_cost_per_1k": 0.0025,
-      "output_cost_per_1k": 0.01,
-      "cache_read_cost_per_1k": 0.00125,
-      "capabilities": [
-        "function_calling",
-        "temperature",
-        "vision"
-      ],
-      "knowledge_cutoff": "2023-09",
-      "release_date": "2024-11-20"
-    },
     "aihubmix/gpt-5.1-codex-max": {
       "id": "gpt-5.1-codex-max",
       "provider": "aihubmix",
@@ -34489,24 +36638,6 @@
       ],
       "knowledge_cutoff": "2024-09-30",
       "release_date": "2025-11-13"
-    },
-    "aihubmix/minimax-m2.1-free": {
-      "id": "minimax-m2.1-free",
-      "provider": "aihubmix",
-      "name": "MiniMax M2.1 Free",
-      "family": "minimax",
-      "mode": "chat",
-      "max_input_tokens": 204800,
-      "max_output_tokens": 131072,
-      "input_cost_per_1k": 0.0,
-      "output_cost_per_1k": 0.0,
-      "capabilities": [
-        "function_calling",
-        "reasoning",
-        "temperature"
-      ],
-      "release_date": "2025-12-23",
-      "open_weights": true
     },
     "aihubmix/qwen3-coder-480b-a35b-instruct": {
       "id": "qwen3-coder-480b-a35b-instruct",
@@ -34656,6 +36787,60 @@
       ],
       "knowledge_cutoff": "2025-08-31",
       "release_date": "2025-12-11"
+    },
+    "gitlab/duo-chat-opus-4-5": {
+      "id": "duo-chat-opus-4-5",
+      "provider": "gitlab",
+      "name": "Agentic Chat (Claude Opus 4.5)",
+      "family": "claude-opus",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "cache_read_cost_per_1k": 0.0,
+      "cache_write_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "release_date": "2026-01-08"
+    },
+    "gitlab/duo-chat-sonnet-4-5": {
+      "id": "duo-chat-sonnet-4-5",
+      "provider": "gitlab",
+      "name": "Agentic Chat (Claude Sonnet 4.5)",
+      "family": "claude-sonnet",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "cache_read_cost_per_1k": 0.0,
+      "cache_write_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "release_date": "2026-01-08"
+    },
+    "gitlab/duo-chat-haiku-4-5": {
+      "id": "duo-chat-haiku-4-5",
+      "provider": "gitlab",
+      "name": "Agentic Chat (Claude Haiku 4.5)",
+      "family": "claude-haiku",
+      "mode": "chat",
+      "max_input_tokens": 200000,
+      "max_output_tokens": 4096,
+      "input_cost_per_1k": 0.0,
+      "output_cost_per_1k": 0.0,
+      "cache_read_cost_per_1k": 0.0,
+      "cache_write_cost_per_1k": 0.0,
+      "capabilities": [
+        "function_calling",
+        "temperature"
+      ],
+      "release_date": "2026-01-08"
     },
     "fireworks/accounts/fireworks/models/deepseek-r1-0528": {
       "id": "accounts/fireworks/models/deepseek-r1-0528",
@@ -35524,9 +37709,8 @@
       "mode": "chat",
       "max_input_tokens": 128000,
       "max_output_tokens": 128000,
-      "input_cost_per_1k": 0.00028,
-      "output_cost_per_1k": 0.00042,
-      "cache_read_cost_per_1k": 2.8e-05,
+      "input_cost_per_1k": 0.00058,
+      "output_cost_per_1k": 0.00168,
       "capabilities": [
         "function_calling",
         "reasoning",
@@ -36609,8 +38793,8 @@
       "max_output_tokens": 64000,
       "input_cost_per_1k": 0.005,
       "output_cost_per_1k": 0.025,
-      "cache_read_cost_per_1k": 0.0015,
-      "cache_write_cost_per_1k": 0.01875,
+      "cache_read_cost_per_1k": 0.0005,
+      "cache_write_cost_per_1k": 0.00625,
       "capabilities": [
         "function_calling",
         "pdf_input",
@@ -36647,8 +38831,8 @@
       "mode": "chat",
       "max_input_tokens": 128000,
       "max_output_tokens": 128000,
-      "input_cost_per_1k": 0.00028,
-      "output_cost_per_1k": 0.00042,
+      "input_cost_per_1k": 0.00058,
+      "output_cost_per_1k": 0.00168,
       "capabilities": [
         "reasoning",
         "temperature"
@@ -37727,8 +39911,8 @@
       "max_output_tokens": 64000,
       "input_cost_per_1k": 0.005,
       "output_cost_per_1k": 0.025,
-      "cache_read_cost_per_1k": 0.0015,
-      "cache_write_cost_per_1k": 0.01875,
+      "cache_read_cost_per_1k": 0.0005,
+      "cache_write_cost_per_1k": 0.00625,
       "capabilities": [
         "function_calling",
         "pdf_input",
@@ -38207,8 +40391,8 @@
       "max_output_tokens": 64000,
       "input_cost_per_1k": 0.005,
       "output_cost_per_1k": 0.025,
-      "cache_read_cost_per_1k": 0.0015,
-      "cache_write_cost_per_1k": 0.01875,
+      "cache_read_cost_per_1k": 0.0005,
+      "cache_write_cost_per_1k": 0.00625,
       "capabilities": [
         "function_calling",
         "pdf_input",
@@ -40804,7 +42988,9 @@
     }
   },
   "domain_lookup": {
+    "localhost:8080": "privatemode_ai",
     "api.moonshot.cn": "moonshotai_cn",
+    "app.firmware.ai": "firmware",
     "lucidquery.com": "lucidquery",
     "api.moonshot.ai": "moonshotai",
     "api.z.ai": "zai",
@@ -40826,6 +43012,7 @@
     "dashscope.aliyuncs.com": "alibaba_cn",
     "api.venice.ai": "venice",
     "api.siliconflow.cn": "siliconflow_cn",
+    "api.vivgrid.com": "vivgrid",
     "llm.chutes.ai": "chutes",
     "api.kimi.com": "kimi_for_coding",
     "api.cortecs.ai": "cortecs",

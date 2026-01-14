@@ -332,6 +332,8 @@ extension MITMError {
             return "MITM_DUMP_NOT_FOUND"
         case .processStartFailed:
             return "MITM_START_FAILED"
+        case .portNotListening:
+            return "MITM_PORT_NOT_LISTENING"
         }
     }
 }

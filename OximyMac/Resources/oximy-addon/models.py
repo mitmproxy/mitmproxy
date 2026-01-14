@@ -21,12 +21,13 @@ if TYPE_CHECKING:
 class MatchResult:
     """Result of matching a flow against the OISP bundle."""
 
-    classification: Literal["full_trace", "identifiable", "drop"]
+    classification: Literal["full_extraction", "feature_extraction", "metadata_only", "drop"]
     source_type: Literal["api", "app", "website"] | None = None
     source_id: str | None = None  # "openai", "cursor", "chatgpt"
     provider_id: str | None = None  # "openai", "anthropic"
     api_format: str | None = None  # "openai", "anthropic", "google"
     endpoint: str | None = None  # "chat", "voice", etc.
+    feature_type: str | None = None  # "chat", "asset_creation", "code_gen", etc.
 
 
 @dataclass
@@ -173,7 +174,7 @@ class OximyEvent:
     event_id: str
     timestamp: str
     source: EventSource
-    trace_level: Literal["full", "identifiable"]
+    trace_level: Literal["full_extraction", "feature_extraction", "metadata_only"]
     timing: EventTiming
     interaction: Interaction | None = None
     metadata: dict | None = None
@@ -184,7 +185,7 @@ class OximyEvent:
     def create(
         cls,
         source: EventSource,
-        trace_level: Literal["full", "identifiable"],
+        trace_level: Literal["full_extraction", "feature_extraction", "metadata_only"],
         timing: EventTiming,
         interaction: Interaction | None = None,
         metadata: dict | None = None,
