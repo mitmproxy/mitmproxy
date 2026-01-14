@@ -71,7 +71,11 @@ class ProcessResolver:
         self._bundle_id_to_app_id: dict[str, str] = {}  # bundle_id -> app_id
 
     def set_bundle_id_index(self, index: dict[str, str]) -> None:
-        """Set the bundle_id -> app_id mapping from the registry."""
+        """Set the bundle_id/exe -> app_id mapping from the registry.
+
+        On macOS, this maps bundle_id -> app_id.
+        On Windows, this maps exe name -> app_id.
+        """
         self._bundle_id_to_app_id = index
 
     async def get_process_for_port(self, port: int) -> ClientProcess:
@@ -136,11 +140,29 @@ class ProcessResolver:
         # The actual process name is still available in the full info
         name = self._extract_name(proc_info.get("path"))
 
-        # Step 5: Extract bundle_id from path (macOS apps)
+        # Step 5: Extract bundle_id from path (macOS apps) or exe name (Windows)
         bundle_id = await self._extract_bundle_id(proc_info.get("path"))
 
-        # Step 6: Look up app_id from bundle_id
-        app_id = self._bundle_id_to_app_id.get(bundle_id) if bundle_id else None
+        # Step 6: Look up app_id from bundle_id (macOS) or exe name (Windows)
+        app_id = None
+        exe_name = None
+        if bundle_id:
+            # macOS: use bundle_id
+            app_id = self._bundle_id_to_app_id.get(bundle_id)
+        elif self._is_windows:
+            # Windows: extract exe name and use it for lookup
+            exe_name = self._extract_exe_name(proc_info.get("path"))
+            if exe_name:
+                # Try exact match first, then lowercase
+                app_id = self._bundle_id_to_app_id.get(exe_name)
+                if not app_id:
+                    app_id = self._bundle_id_to_app_id.get(exe_name.lower())
+            # Also try parent exe name for helper processes
+            if not app_id and parent_name:
+                parent_exe = f"{parent_name}.exe"
+                app_id = self._bundle_id_to_app_id.get(parent_exe)
+                if not app_id:
+                    app_id = self._bundle_id_to_app_id.get(parent_exe.lower())
 
         return ClientProcess(
             pid=pid,
@@ -150,7 +172,7 @@ class ProcessResolver:
             parent_name=parent_name,
             user=proc_info.get("user"),
             port=port,
-            bundle_id=bundle_id,
+            bundle_id=bundle_id if bundle_id else exe_name,  # Use exe_name as identifier on Windows
             id=app_id,
         )
 
@@ -331,15 +353,69 @@ class ProcessResolver:
                         except ValueError:
                             ppid = None
 
+                        # Get user for this process
+                        user = await self._get_process_user_windows(pid)
+
                         return {
                             "pid": pid,
                             "ppid": ppid,
-                            "user": None,  # wmic doesn't easily give user
+                            "user": user,
                             "path": exe_path or name,
                         }
 
         except (ValueError, OSError) as e:
             logger.debug(f"Failed to get process info for PID {pid} on Windows: {e}")
+
+        return None
+
+    async def _get_process_user_windows(self, pid: int) -> str | None:
+        """Get the username that owns a process on Windows."""
+        try:
+            # Use tasklist with verbose mode to get user info
+            # tasklist /FI "PID eq 1234" /FO CSV /V
+            proc = await asyncio.create_subprocess_exec(
+                "tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/V",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                return None
+
+            if proc.returncode == 0 and stdout.strip():
+                lines = stdout.decode().strip().split("\n")
+                if len(lines) >= 2:
+                    # Parse CSV: "Image Name","PID","Session Name","Session#","Mem Usage","Status","User Name","CPU Time","Window Title"
+                    # User Name is the 7th field (index 6)
+                    data_line = lines[1]
+                    # Simple CSV parsing (fields are quoted)
+                    parts = []
+                    current = ""
+                    in_quotes = False
+                    for char in data_line:
+                        if char == '"':
+                            in_quotes = not in_quotes
+                        elif char == ',' and not in_quotes:
+                            parts.append(current.strip('"'))
+                            current = ""
+                        else:
+                            current += char
+                    parts.append(current.strip('"'))
+
+                    if len(parts) >= 7:
+                        user = parts[6]
+                        # User might be "DOMAIN\username" or "N/A"
+                        if user and user != "N/A":
+                            # Strip domain prefix if present
+                            if "\\" in user:
+                                user = user.split("\\")[-1]
+                            return user
+
+        except (ValueError, OSError) as e:
+            logger.debug(f"Failed to get user for PID {pid} on Windows: {e}")
 
         return None
 
@@ -364,6 +440,27 @@ class ProcessResolver:
         # e.g., "/Applications/Cursor.app/Contents/MacOS/Cursor" -> "Cursor"
 
         return name if name else None
+
+    def _extract_exe_name(self, path: str | None) -> str | None:
+        """Extract the executable filename from a Windows path.
+
+        Returns the full exe name including .exe extension for registry matching.
+        e.g., "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" -> "chrome.exe"
+        """
+        if not path:
+            return None
+
+        # Get the last component of the path
+        if "\\" in path:
+            exe = path.rsplit("\\", 1)[-1]
+        else:
+            exe = path.rsplit("/", 1)[-1]
+
+        # Only return if it looks like an exe
+        if exe and exe.lower().endswith(".exe"):
+            return exe
+
+        return None
 
     async def _extract_bundle_id(self, path: str | None) -> str | None:
         """Extract macOS bundle identifier from an app path."""

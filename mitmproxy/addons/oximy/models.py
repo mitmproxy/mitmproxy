@@ -22,7 +22,7 @@ class MatchResult:
     """Result of matching a flow against the OISP bundle."""
 
     classification: Literal["full_extraction", "feature_extraction", "metadata_only", "drop"]
-    source_type: Literal["api", "app", "website"] | None = None
+    source_type: Literal["api", "direct_api", "app", "website"] | None = None
     source_id: str | None = None  # "openai", "cursor", "chatgpt"
     provider_id: str | None = None  # "openai", "anthropic"
     api_format: str | None = None  # "openai", "anthropic", "google"
@@ -34,7 +34,7 @@ class MatchResult:
 class EventSource:
     """Source information for an event."""
 
-    type: Literal["api", "app", "website"]
+    type: Literal["direct_api", "app", "website"]
     id: str
     endpoint: str | None = None
     referer: str | None = None
@@ -44,7 +44,7 @@ class EventSource:
         result = {
             "type": self.type,
             "id": self.id,
-            "endpoint": self.endpoint,
+            "endpoint": self.endpoint or "",  # API requires string, not null
         }
         if self.referer:
             result["referer"] = self.referer
