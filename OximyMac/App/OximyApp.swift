@@ -49,6 +49,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // This ensures we capture any crashes during initialization
         SentryService.shared.initialize()
 
+        // CRITICAL: Clean up any orphaned proxy settings from a previous crash
+        // This MUST run before any UI loads to restore internet connectivity
+        ProxyService.shared.cleanupOrphanedProxy()
+
         // Add breadcrumb for app launch
         SentryService.shared.addStateBreadcrumb(
             category: "app.lifecycle",
