@@ -1,0 +1,29 @@
+{
+  "name": "Meta AI",
+  "vendor": "Meta Platforms Inc.",
+  "vendor_url": "https://about.meta.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.meta.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual"
+      }
+    ]
+  }
+}

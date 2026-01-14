@@ -1,0 +1,40 @@
+{
+  "name": "Socrat.ai",
+  "vendor": "Pedagogy Ventures",
+  "vendor_url": "https://socrat.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "socrat.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "in_class",
+        "name": "In Class",
+        "type": "individual"
+      },
+      {
+        "id": "extended",
+        "name": "Extended",
+        "type": "individual"
+      },
+      {
+        "id": "school_wide",
+        "name": "School Wide",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

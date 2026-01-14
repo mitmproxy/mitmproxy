@@ -1,0 +1,19 @@
+{
+  "name": "Arc",
+  "vendor": "The Browser Company",
+  "vendor_url": "https://arc.net",
+  "category": "browser",
+  "platforms": [
+    "macos",
+    "windows"
+  ],
+  "signatures": {
+    "macos": {
+      "bundle_id": "company.thebrowser.Browser"
+    },
+    "windows": {
+      "exe": "Arc.exe"
+    }
+  },
+  "icon": "arc.png"
+}

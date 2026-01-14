@@ -1,0 +1,39 @@
+{
+  "name": "Zoho SalesIQ",
+  "vendor": "Zoho Corporation",
+  "vendor_url": "https://www.zoho.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "salesiq.zoho.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "basic",
+        "name": "Basic",
+        "type": "individual"
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "team"
+      }
+    ]
+  }
+}

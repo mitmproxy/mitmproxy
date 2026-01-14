@@ -1,0 +1,33 @@
+{
+  "name": "Personal AI",
+  "vendor": "Personal AI Inc.",
+  "vendor_url": "https://www.personal.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.personal.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "individual"
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "type": "individual"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

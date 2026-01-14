@@ -1,0 +1,39 @@
+{
+  "name": "GigaChat",
+  "vendor": "Sberbank (Sber)",
+  "vendor_url": "https://www.sber.ru/",
+  "category": "ai-chat",
+  "api_domains": [
+    "giga.chat"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "lite",
+        "name": "Lite",
+        "type": "individual"
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "max",
+        "name": "Max",
+        "type": "individual"
+      }
+    ]
+  }
+}

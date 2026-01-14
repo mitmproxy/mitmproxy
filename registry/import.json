@@ -1,0 +1,122 @@
+{
+    "id": "claude",
+    "name": "Claude",
+    "vendor": "Anthropic",
+    "vendor_url": "https://anthropic.com",
+    "category": "ai-chat",
+    "platforms": ["macos", "windows"],
+    "signatures": {
+      "macos": {
+        "bundle_id": "com.anthropic.claudefordesktop",
+        "team_id": "Q6L2SF6YDW"
+      }
+    },
+    "icon": "claude.png",
+    "api_domains": ["claude.ai", "api.anthropic.com", "a-api.anthropic.com"],
+    "features": {
+      "chat": {
+        "type": "chat",
+        "name": "Chat Conversation",
+        "description": "Chat with Claude AI assistant",
+        "patterns": [
+          {
+            "url": "**/api/organizations/*/chat_conversations/*/completion",
+            "method": "POST"
+          }
+        ],
+        "parser": {
+          "request": {
+            "prompt": "prompt",
+            "parent_uuid": "parent_message_uuid",
+            "timezone": "timezone",
+            "locale": "locale"
+          },
+          "response": {
+            "stream": {
+              "format": "sse",
+              "format_options": {
+                "prefixes": ["data: "],
+                "skip_values": []
+              },
+              "rules": [
+                {
+                  "when": "type = 'message_start'",
+                  "extract": {
+                    "message_id": "message.id",
+                    "model": "message.model",
+                    "trace_id": "message.trace_id",
+                    "request_id": "message.request_id"
+                  }
+                },
+                {
+                  "when": "type = 'content_block_delta' and delta.type = 'text_delta'",
+                  "extract": {
+                    "content": "delta.text"
+                  }
+                },
+                {
+                  "when": "type = 'message_delta'",
+                  "extract": {
+                    "stop_reason": "delta.stop_reason"
+                  }
+                },
+                {
+                  "when": "type = 'message_limit'",
+                  "extract": {
+                    "limit_status": "message_limit.type",
+                    "utilization_5h": "message_limit.windows.5h.utilization",
+                    "utilization_7d": "message_limit.windows.7d.utilization"
+                  }
+                }
+              ],
+              "accumulate": {
+                "content": { "from": "content", "op": "concat" },
+                "model": { "from": "model", "op": "first" },
+                "message_id": { "from": "message_id", "op": "first" },
+                "stop_reason": { "from": "stop_reason", "op": "last" }
+              },
+              "finalize": {
+                "content": "accumulated.content",
+                "model": "accumulated.model",
+                "message_id": "accumulated.message_id",
+                "stop_reason": "accumulated.stop_reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "detection": {
+      "subscription": [
+        {
+          "type": "api_response",
+          "url": "**/api/organizations/*/subscription_details",
+          "extract": {
+            "status": "$.status",
+            "billing_interval": "$.billing_interval",
+            "next_charge_date": "$.next_charge_date"
+          }
+        },
+        {
+          "type": "api_response",
+          "url": "**/api/organizations/*",
+          "extract": {
+            "org_name": "$.name",
+            "org_id": "$.uuid"
+          }
+        }
+      ]
+    },
+    "pricing": {
+      "model": ["subscription"],
+      "tiers": [
+        { "id": "free", "name": "Free", "type": "free", "monthly_usd": 0 },
+        { "id": "pro", "name": "Pro", "type": "individual", "monthly_usd": 20 },
+        { "id": "team", "name": "Team", "type": "team", "monthly_usd": 25 },
+        { "id": "enterprise", "name": "Enterprise", "type": "enterprise", "monthly_usd": null }
+      ]
+    },
+    "_status": "complete",
+    "_har_analyzed": "2026-01-13",
+    "_notes": "SSE streaming with event types: message_start, content_block_start, content_block_delta, content_block_stop, message_delta, message_limit, message_stop. Response body is base64 encoded in HAR."
+  }

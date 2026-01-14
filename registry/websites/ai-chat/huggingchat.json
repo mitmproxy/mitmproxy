@@ -1,0 +1,35 @@
+{
+  "name": "HuggingChat",
+  "vendor": "Hugging Face Inc.",
+  "vendor_url": "https://huggingface.co/",
+  "category": "ai-chat",
+  "api_domains": [
+    "huggingface.co"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "enterprise_hub",
+        "name": "Enterprise Hub",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

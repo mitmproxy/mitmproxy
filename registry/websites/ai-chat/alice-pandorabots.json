@@ -1,0 +1,23 @@
+{
+  "name": "A.L.I.C.E.",
+  "vendor": "Pandorabots Inc.",
+  "vendor_url": "https://www.pandorabots.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.pandorabots.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

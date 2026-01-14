@@ -1,0 +1,21 @@
+{
+  "name": "Alice",
+  "vendor": "Yandex LLC",
+  "vendor_url": "https://yandex.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

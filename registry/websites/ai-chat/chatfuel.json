@@ -1,0 +1,35 @@
+{
+  "name": "Chatfuel",
+  "vendor": "Chatfuel Inc.",
+  "vendor_url": "https://chatfuel.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "dashboard.chatfuel.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free_trial",
+        "name": "Free Trial",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

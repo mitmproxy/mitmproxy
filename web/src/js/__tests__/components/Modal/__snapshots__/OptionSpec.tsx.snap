@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`ChoiceOption Component should render correctly 1`] = `<DocumentFragment />`;
-
-exports[`NumberOption Component should render correctly 1`] = `<DocumentFragment />`;
-
-exports[`StringOption Component should render correctly 1`] = `<DocumentFragment />`;

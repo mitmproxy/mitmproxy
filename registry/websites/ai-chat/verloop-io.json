@@ -1,0 +1,33 @@
+{
+  "name": "Verloop.io",
+  "vendor": "Verloop.io",
+  "vendor_url": "https://verloop.io/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.verloop.io"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "individual"
+      },
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

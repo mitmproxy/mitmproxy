@@ -1,1 +1,0 @@
-{{ . | replaceRE "(<h[1-9] id=\"(.+?)\".*?>.+?)(</h[1-9]>)" "${1}<a class=\"anchor\" aria-hidden=\"true\" tabindex=\"-1\" href=\"#${2}\"></a>${3}" | safeHTML }}

@@ -37,20 +37,59 @@ def load_json(path: Path) -> dict:
         return json.load(f)
 
 
+def load_registry_from_folder(folder_path: Path) -> tuple[str, dict]:
+    """
+    Load registry items from a folder structure.
+
+    Structure:
+        folder_path/
+            _meta.json          # Optional, contains version
+            <category>/
+                <id>.json       # Individual item files
+
+    Returns:
+        (version, items_dict)
+    """
+    version = "1.0.0"
+    items = {}
+
+    if not folder_path.exists():
+        return version, items
+
+    # Load version from _meta.json if exists
+    meta_path = folder_path / "_meta.json"
+    if meta_path.exists():
+        meta = load_json(meta_path)
+        version = meta.get("version", version)
+
+    # Load all JSON files from category subdirectories
+    for category_dir in folder_path.iterdir():
+        if not category_dir.is_dir() or category_dir.name.startswith("_"):
+            continue
+
+        for item_file in category_dir.glob("*.json"):
+            item_id = item_file.stem  # filename without .json
+            try:
+                item_data = load_json(item_file)
+                items[item_id] = item_data
+            except Exception as e:
+                print(f"Warning: Failed to load {item_file}: {e}", file=sys.stderr)
+
+    return version, items
+
+
 def load_registry() -> dict:
-    """Load app and website registries."""
+    """Load app and website registries from folder structure."""
     result = {"version": "1.0.0", "apps": {}, "websites": {}}
 
-    apps_path = REGISTRY_DIR / "apps.json"
-    if apps_path.exists():
-        apps_data = load_json(apps_path)
-        result["version"] = apps_data.get("version", "1.0.0")
-        result["apps"] = apps_data.get("apps", {})
+    # Load apps from apps/ folder
+    apps_version, apps = load_registry_from_folder(REGISTRY_DIR / "apps")
+    result["version"] = apps_version
+    result["apps"] = apps
 
-    websites_path = REGISTRY_DIR / "websites.json"
-    if websites_path.exists():
-        websites_data = load_json(websites_path)
-        result["websites"] = websites_data.get("websites", {})
+    # Load websites from websites/ folder
+    _, websites = load_registry_from_folder(REGISTRY_DIR / "websites")
+    result["websites"] = websites
 
     return result
 

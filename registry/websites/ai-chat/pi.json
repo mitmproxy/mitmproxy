@@ -1,0 +1,23 @@
+{
+  "name": "Pi",
+  "vendor": "Inflection AI",
+  "vendor_url": "https://inflection.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "pi.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

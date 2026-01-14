@@ -1,0 +1,27 @@
+{
+  "name": "Cognigy",
+  "vendor": "Cognigy GmbH",
+  "vendor_url": "https://www.cognigy.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "trial.cognigy.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "enterprise"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

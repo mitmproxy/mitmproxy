@@ -1,0 +1,29 @@
+{
+  "name": "BharatGPT",
+  "vendor": "CoRover.ai",
+  "vendor_url": "https://corover.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "bharatgpt.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

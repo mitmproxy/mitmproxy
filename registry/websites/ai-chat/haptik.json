@@ -1,0 +1,26 @@
+{
+  "name": "Haptik.ai",
+  "vendor": "Reliance Jio Haptik",
+  "vendor_url": "https://www.haptik.ai/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "smb",
+        "name": "SMB",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "ChatBot",
+  "vendor": "Chatbot.com Inc.",
+  "vendor_url": "https://www.chatbot.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.chatbot.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "individual"
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "type": "team"
+      },
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

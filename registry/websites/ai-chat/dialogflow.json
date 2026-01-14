@@ -1,0 +1,29 @@
+{
+  "name": "Google Dialogflow",
+  "vendor": "Google Cloud",
+  "vendor_url": "https://cloud.google.com/dialogflow",
+  "category": "ai-chat",
+  "api_domains": [
+    "dialogflow.cloud.google.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "essentials",
+        "name": "Essentials",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pay_as_you_go",
+        "name": "Pay As You Go",
+        "type": "usage"
+      }
+    ]
+  }
+}

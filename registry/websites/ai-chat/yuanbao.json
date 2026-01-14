@@ -1,0 +1,29 @@
+{
+  "name": "Yuanbao",
+  "vendor": "Tencent Holdings Ltd.",
+  "vendor_url": "https://www.tencent.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "yuanbao.tencent.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

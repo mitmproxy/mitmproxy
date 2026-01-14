@@ -1,0 +1,34 @@
+{
+  "name": "Merlin AI",
+  "vendor": "Merlin AI (Foyer Tech)",
+  "vendor_url": "https://www.getmerlin.in/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.getmerlin.in"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "teams",
+        "name": "Teams",
+        "type": "team"
+      }
+    ]
+  }
+}

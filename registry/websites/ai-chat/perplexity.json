@@ -1,0 +1,93 @@
+{
+  "name": "Perplexity AI",
+  "vendor": "Perplexity AI",
+  "vendor_url": "https://perplexity.ai",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.perplexity.ai",
+    "perplexity.ai"
+  ],
+  "features": {
+    "chat": {
+      "type": "chat",
+      "name": "Chat Search",
+      "patterns": [
+        {
+          "url": "**/rest/sse/perplexity_ask",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "prompt": "query_str",
+          "model": "params.model_preference",
+          "search_focus": "params.search_focus"
+        },
+        "response": {
+          "stream": {
+            "format": "sse",
+            "format_options": {
+              "prefixes": [
+                "data: "
+              ]
+            },
+            "rules": [
+              {
+                "when": "$exists(display_model)",
+                "extract": {
+                  "model": "display_model"
+                }
+              },
+              {
+                "when": "$exists(text_completed) and text_completed = true",
+                "extract": {
+                  "text_completed": "true"
+                }
+              },
+              {
+                "when": "$exists(blocks[0])",
+                "extract": {
+                  "content": "$_perplexity_blocks"
+                }
+              }
+            ],
+            "accumulate": {
+              "content": {
+                "from": "content",
+                "op": "concat"
+              },
+              "model": {
+                "from": "model",
+                "op": "first"
+              }
+            },
+            "finalize": {
+              "content": "accumulated.content",
+              "model": "accumulated.model"
+            }
+          }
+        }
+      }
+    }
+  },
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual",
+        "monthly_usd": 20
+      }
+    ]
+  }
+}

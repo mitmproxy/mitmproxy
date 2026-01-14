@@ -1,0 +1,35 @@
+{
+  "name": "Kimi",
+  "vendor": "Moonshot AI",
+  "vendor_url": "https://www.moonshot.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "kimi.moonshot.cn"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "priority",
+        "name": "Priority",
+        "type": "individual"
+      },
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

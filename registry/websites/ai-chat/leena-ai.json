@@ -1,0 +1,20 @@
+{
+  "name": "Leena.ai",
+  "vendor": "Leena AI Inc.",
+  "vendor_url": "https://leena.ai/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

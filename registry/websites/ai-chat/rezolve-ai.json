@@ -1,0 +1,20 @@
+{
+  "name": "Rezolve.ai",
+  "vendor": "Rezolve AI Inc.",
+  "vendor_url": "https://www.rezolve.ai/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Laiye",
+  "vendor": "Laiye Technology",
+  "vendor_url": "https://www.laiye.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "custom",
+        "name": "Custom",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

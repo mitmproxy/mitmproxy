@@ -1,0 +1,25 @@
+{
+  "name": "Decagon",
+  "vendor": "Decagon Inc.",
+  "vendor_url": "https://decagon.ai/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "per_conversation",
+        "name": "Per Conversation",
+        "type": "usage"
+      },
+      {
+        "id": "per_resolution",
+        "name": "Per Resolution",
+        "type": "usage"
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "Zapier Agents",
+  "vendor": "Zapier Inc.",
+  "vendor_url": "https://zapier.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "zapier.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "individual"
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "type": "individual"
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

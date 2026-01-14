@@ -1,0 +1,31 @@
+{
+  "name": "OneReach.ai",
+  "vendor": "OneReach.ai Inc.",
+  "vendor_url": "https://onereach.ai/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "starter",
+        "name": "Starter",
+        "type": "individual"
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

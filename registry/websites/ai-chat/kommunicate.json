@@ -1,0 +1,33 @@
+{
+  "name": "Kommunicate",
+  "vendor": "Kommunicate Inc.",
+  "vendor_url": "https://www.kommunicate.io/",
+  "category": "ai-chat",
+  "api_domains": [
+    "dashboard.kommunicate.io"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "lite",
+        "name": "Lite",
+        "type": "individual"
+      },
+      {
+        "id": "advanced",
+        "name": "Advanced",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

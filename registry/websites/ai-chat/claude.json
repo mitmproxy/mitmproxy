@@ -1,0 +1,46 @@
+{
+  "name": "Claude",
+  "vendor": "Anthropic",
+  "vendor_url": "https://www.anthropic.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "claude.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual",
+        "monthly_usd": 20
+      },
+      {
+        "id": "max",
+        "name": "Max",
+        "type": "individual"
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

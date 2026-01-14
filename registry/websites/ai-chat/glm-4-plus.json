@@ -1,0 +1,29 @@
+{
+  "name": "GLM-4 Plus",
+  "vendor": "Zhipu AI",
+  "vendor_url": "https://www.zhipuai.cn/",
+  "category": "ai-chat",
+  "api_domains": [
+    "chatglm.cn"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

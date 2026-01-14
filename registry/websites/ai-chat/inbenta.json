@@ -1,0 +1,20 @@
+{
+  "name": "Inbenta",
+  "vendor": "Inbenta Inc.",
+  "vendor_url": "https://www.inbenta.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "consumption",
+        "name": "Consumption Based",
+        "type": "usage"
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "Chatsonic",
+  "vendor": "Writesonic Inc.",
+  "vendor_url": "https://writesonic.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.writesonic.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "individual",
+        "name": "Individual",
+        "type": "individual"
+      },
+      {
+        "id": "individual_plus",
+        "name": "Individual Plus",
+        "type": "individual"
+      },
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

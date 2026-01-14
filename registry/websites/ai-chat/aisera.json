@@ -1,0 +1,20 @@
+{
+  "name": "Aisera",
+  "vendor": "Aisera Inc.",
+  "vendor_url": "https://aisera.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

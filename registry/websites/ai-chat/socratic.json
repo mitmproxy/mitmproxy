@@ -1,0 +1,21 @@
+{
+  "name": "Socratic",
+  "vendor": "Google LLC",
+  "vendor_url": "https://socratic.org/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

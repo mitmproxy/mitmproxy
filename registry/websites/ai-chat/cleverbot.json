@@ -1,0 +1,29 @@
+{
+  "name": "Cleverbot",
+  "vendor": "Existor Ltd",
+  "vendor_url": "https://www.cleverbot.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.cleverbot.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual"
+      }
+    ]
+  }
+}

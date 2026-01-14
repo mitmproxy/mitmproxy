@@ -1,0 +1,33 @@
+{
+  "name": "Zendesk",
+  "vendor": "Zendesk Inc.",
+  "vendor_url": "https://www.zendesk.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.zendesk.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "suite_team",
+        "name": "Suite Team",
+        "type": "team"
+      },
+      {
+        "id": "suite_professional",
+        "name": "Suite Professional",
+        "type": "team"
+      },
+      {
+        "id": "suite_enterprise",
+        "name": "Suite Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

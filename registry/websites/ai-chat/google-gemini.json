@@ -1,0 +1,40 @@
+{
+  "name": "Google Gemini",
+  "vendor": "Google LLC",
+  "vendor_url": "https://www.google.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "gemini.google.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "gemini_advanced",
+        "name": "Gemini Advanced",
+        "type": "individual"
+      },
+      {
+        "id": "business",
+        "name": "Business",
+        "type": "team"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

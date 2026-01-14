@@ -1,0 +1,15 @@
+{
+  "name": "Safari",
+  "vendor": "Apple",
+  "vendor_url": "https://apple.com/safari",
+  "category": "browser",
+  "platforms": [
+    "macos"
+  ],
+  "signatures": {
+    "macos": {
+      "bundle_id": "com.apple.Safari"
+    }
+  },
+  "icon": "safari.png"
+}

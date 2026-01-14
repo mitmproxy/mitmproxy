@@ -1,0 +1,21 @@
+{
+  "name": "MegaHAL",
+  "vendor": "Open Source",
+  "vendor_url": "N/A",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

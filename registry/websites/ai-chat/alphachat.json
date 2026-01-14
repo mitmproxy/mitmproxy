@@ -1,0 +1,22 @@
+{
+  "name": "alphachat",
+  "vendor": "Alphachat AI",
+  "vendor_url": "https://alphachat.ai/",
+  "category": "ai-chat",
+  "api_domains": [
+    "app.alphachat.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "standard",
+        "name": "Standard",
+        "type": "team"
+      }
+    ]
+  }
+}

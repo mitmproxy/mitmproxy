@@ -1,0 +1,21 @@
+{
+  "name": "Celia",
+  "vendor": "Huawei Technologies Co., Ltd.",
+  "vendor_url": "https://www.huawei.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      }
+    ]
+  }
+}

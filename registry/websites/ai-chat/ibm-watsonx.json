@@ -1,0 +1,35 @@
+{
+  "name": "IBM Watsonx Assistant",
+  "vendor": "IBM Corporation",
+  "vendor_url": "https://www.ibm.com/products/watsonx-assistant",
+  "category": "ai-chat",
+  "api_domains": [
+    "cloud.ibm.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "lite",
+        "name": "Lite",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "plus",
+        "name": "Plus",
+        "type": "individual"
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

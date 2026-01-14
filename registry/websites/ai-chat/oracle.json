@@ -1,0 +1,28 @@
+{
+  "name": "Oracle",
+  "vendor": "Oracle Corporation",
+  "vendor_url": "https://www.oracle.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "cloud.oracle.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "usage",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "universal_credits",
+        "name": "Universal Credits",
+        "type": "usage"
+      },
+      {
+        "id": "subscription",
+        "name": "Subscription",
+        "type": "individual"
+      }
+    ]
+  }
+}

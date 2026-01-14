@@ -1,0 +1,26 @@
+{
+  "name": "Sesame AI",
+  "vendor": "Sesame AI Inc.",
+  "vendor_url": "https://www.sesame.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "hardware",
+      "usage"
+    ],
+    "tiers": [
+      {
+        "id": "hardware",
+        "name": "Hardware",
+        "type": "hardware"
+      },
+      {
+        "id": "api_access",
+        "name": "API Access",
+        "type": "usage"
+      }
+    ]
+  }
+}

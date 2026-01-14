@@ -1,0 +1,35 @@
+{
+  "name": "Khanmigo",
+  "vendor": "Khan Academy",
+  "vendor_url": "https://www.khanacademy.org/",
+  "category": "ai-chat",
+  "api_domains": [
+    "www.khanmigo.ai"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription",
+      "enterprise"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "learner",
+        "name": "Learner",
+        "type": "individual"
+      },
+      {
+        "id": "district",
+        "name": "District",
+        "type": "enterprise"
+      }
+    ]
+  }
+}

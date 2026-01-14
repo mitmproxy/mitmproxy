@@ -1,0 +1,29 @@
+{
+  "name": "Q",
+  "vendor": "Amazon Web Services (AWS)",
+  "vendor_url": "https://aws.amazon.com/q/",
+  "category": "ai-chat",
+  "api_domains": [
+    "console.aws.amazon.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      }
+    ]
+  }
+}

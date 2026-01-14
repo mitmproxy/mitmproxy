@@ -1,9 +1,0 @@
-{% filter minify_css %}
-    {% block style %}
-        <style>/*! theme.css */{% include "theme.css" %}</style>
-        <style>/*! content.css */{% include "content.css" %}</style>
-        <style>/*! custom.css */{% include "custom.css" %}</style>
-    {% endblock %}
-{% endfilter %}
-{% block content %}{% endblock %}
-<div class="pdoc" style="margin-top: 4rem">{% block attribution %}{% endblock %}</div>

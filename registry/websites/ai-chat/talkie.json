@@ -1,0 +1,29 @@
+{
+  "name": "Talkie",
+  "vendor": "Talkie AI Inc.",
+  "vendor_url": "https://talkie-ai.com/",
+  "category": "ai-chat",
+  "api_domains": [
+    "talkie-ai.com"
+  ],
+  "features": {},
+  "pricing": {
+    "model": [
+      "free",
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "type": "free",
+        "monthly_usd": 0
+      },
+      {
+        "id": "premium",
+        "name": "Premium",
+        "type": "individual"
+      }
+    ]
+  }
+}

@@ -1,9 +1,0 @@
-{{ if and .IsPage (ne .Type "api") (not (getenv "DOCS_ARCHIVE")) }}
-<a
-   class="github-button"
-   target="_blank"
-   href="https://github.com/mitmproxy/mitmproxy/blob/main/docs/src/content/{{ .File.Path }}"
->
-    Edit on GitHub
-</a>
-{{ end }}

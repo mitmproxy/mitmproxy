@@ -1,0 +1,35 @@
+{
+  "name": "Braina",
+  "vendor": "Brainasoft",
+  "vendor_url": "https://www.brainasoft.com/",
+  "category": "ai-chat",
+  "api_domains": [],
+  "features": {},
+  "pricing": {
+    "model": [
+      "subscription"
+    ],
+    "tiers": [
+      {
+        "id": "lite",
+        "name": "Lite",
+        "type": "individual"
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "type": "individual"
+      },
+      {
+        "id": "pro_plus",
+        "name": "Pro Plus",
+        "type": "individual"
+      },
+      {
+        "id": "pro_ultra",
+        "name": "Pro Ultra",
+        "type": "individual"
+      }
+    ]
+  }
+}
