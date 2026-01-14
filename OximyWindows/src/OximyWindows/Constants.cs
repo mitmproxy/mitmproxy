@@ -54,9 +54,61 @@ public static class Constants
     public const string FeedbackUrl = "https://github.com/oximyhq/sensor/issues";
 
     // API URLs (must end with trailing slash for proper URI resolution)
-    public const string ApiBaseUrl = "https://api.oximy.com/api/v1/";  // Production API
-    // public const string ApiBaseUrl = "http://localhost:4000/api/v1/";  // For local development
+    public const string DefaultApiBaseUrl = "https://api.oximy.com/api/v1/";  // Production API
     public const string OispBundleUrl = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json";
+
+    /// <summary>
+    /// Dev config file path (~/.oximy/dev.json)
+    /// </summary>
+    public static string DevConfigPath => Path.Combine(OximyDir, "dev.json");
+
+    /// <summary>
+    /// Returns API base URL from dev config if available, otherwise default.
+    /// Dev config JSON format: {"API_URL": "http://localhost:4000/api/v1/", "DEV_MODE": true}
+    /// </summary>
+    public static string ApiBaseUrl
+    {
+        get
+        {
+            // Check for OXIMY_DEV environment variable first
+            var devEnv = Environment.GetEnvironmentVariable("OXIMY_DEV")?.ToLower();
+            if (devEnv == "1" || devEnv == "true" || devEnv == "yes")
+            {
+                // Check for custom API URL in environment
+                var apiUrl = Environment.GetEnvironmentVariable("OXIMY_API_URL");
+                if (!string.IsNullOrEmpty(apiUrl))
+                {
+                    // Ensure trailing slash
+                    return apiUrl.EndsWith("/") ? apiUrl : apiUrl + "/";
+                }
+            }
+
+            // Check for local dev config file
+            try
+            {
+                if (File.Exists(DevConfigPath))
+                {
+                    var json = File.ReadAllText(DevConfigPath);
+                    var config = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                    if (config != null && config.TryGetValue("API_URL", out var apiUrlObj))
+                    {
+                        var apiUrl = apiUrlObj?.ToString();
+                        if (!string.IsNullOrEmpty(apiUrl))
+                        {
+                            // Ensure trailing slash
+                            return apiUrl.EndsWith("/") ? apiUrl : apiUrl + "/";
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore config read errors, fall back to default
+            }
+
+            return DefaultApiBaseUrl;
+        }
+    }
 
     // API Endpoints (no leading slash - relative to BaseAddress)
     public const string DeviceRegisterEndpoint = "devices/register";

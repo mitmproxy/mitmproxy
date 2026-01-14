@@ -20,9 +20,12 @@ from urllib.request import build_opener
 from urllib.request import HTTPSHandler
 from urllib.request import ProxyHandler
 
+from config import config
+
 logger = logging.getLogger(__name__)
 
-DEFAULT_BUNDLE_URL = "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json"
+# Use config for bundle URL, fall back to hardcoded default if config is None
+DEFAULT_BUNDLE_URL = config.BUNDLE_URL or "https://oisp.dev/spec/v0.1/oisp-spec-bundle.json"
 DEFAULT_CACHE_DIR = Path.home() / ".oximy"
 CACHE_FILENAME = "bundle_cache.json"
 
@@ -364,7 +367,10 @@ class BundleLoader:
             raise RuntimeError("No bundle available (fetch failed, no cache)") from e
 
     def _load_from_local(self) -> OISPBundle | None:
-        """Load bundle from local registry (development mode)."""
+        """Load bundle from local registry (development mode only)."""
+        # Only use local bundle in DEV mode
+        if not config.USE_LOCAL_BUNDLE:
+            return None
         if not self.local_bundle_path.exists():
             return None
 
