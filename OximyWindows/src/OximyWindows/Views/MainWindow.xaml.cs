@@ -196,7 +196,18 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        // Clean up
+        // Unsubscribe from all events to prevent memory leaks
+        AppState.Instance.PropertyChanged -= OnAppStateChanged;
+        App.NetworkMonitorService.NetworkChanged -= OnNetworkChanged;
+        App.MitmService.MaxRestartsExceeded -= OnMitmMaxRestartsExceeded;
+
+        // Dispose ViewModel
+        _viewModel.Dispose();
+
+        // Close popup if open
+        _popup?.Close();
+
+        // Clean up tray icon
         TrayIcon.Dispose();
         App.NetworkMonitorService.StopMonitoring();
 

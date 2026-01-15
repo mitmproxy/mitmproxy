@@ -23,6 +23,9 @@ public class APIClient
     private int _authRetryCount;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    // Cache hardware ID to avoid expensive WMI queries (100-500ms each)
+    private static string? _cachedHardwareId;
+
     public event EventHandler? AuthenticationFailed;
     public event EventHandler<string>? WorkspaceNameUpdated;
 
@@ -295,10 +298,14 @@ public class APIClient
     }
 
     /// <summary>
-    /// Get hardware ID using WMI.
+    /// Get hardware ID using WMI. Result is cached to avoid expensive repeated queries.
     /// </summary>
     private static string GetHardwareId()
     {
+        // Return cached value if available
+        if (_cachedHardwareId != null)
+            return _cachedHardwareId;
+
         try
         {
             using var searcher = new ManagementObjectSearcher("SELECT UUID FROM Win32_ComputerSystemProduct");
@@ -307,6 +314,7 @@ public class APIClient
                 var uuid = obj["UUID"]?.ToString();
                 if (!string.IsNullOrEmpty(uuid) && uuid != "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")
                 {
+                    _cachedHardwareId = uuid;
                     return uuid;
                 }
             }
@@ -317,9 +325,10 @@ public class APIClient
         }
 
         // Fallback to machine name hash
-        return Convert.ToBase64String(
+        _cachedHardwareId = Convert.ToBase64String(
             System.Security.Cryptography.SHA256.HashData(
                 Encoding.UTF8.GetBytes(Environment.MachineName)));
+        return _cachedHardwareId;
     }
 
     /// <summary>

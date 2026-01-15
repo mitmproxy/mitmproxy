@@ -66,6 +66,7 @@ public class MitmService : IDisposable
         startInfo.Environment["PYTHONPATH"] = $"{sitePackages};{Constants.AddonDir}";
         startInfo.Environment["PYTHONNOUSERSITE"] = "1";
         startInfo.Environment["PYTHONDONTWRITEBYTECODE"] = "1";
+        startInfo.Environment["PYTHONUTF8"] = "1";
 
         _mitmProcess = new Process { StartInfo = startInfo };
         _mitmProcess.EnableRaisingEvents = true;

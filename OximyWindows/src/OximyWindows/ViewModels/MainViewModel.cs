@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
@@ -8,15 +9,22 @@ using OximyWindows.Views;
 
 namespace OximyWindows.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     [ObservableProperty]
     private bool _isPopupVisible;
 
+    private bool _disposed;
+
     public MainViewModel()
     {
-        // Subscribe to state changes
-        AppState.Instance.PropertyChanged += (s, e) => OnPropertyChanged(e.PropertyName);
+        // Subscribe to state changes with a named handler for proper cleanup
+        AppState.Instance.PropertyChanged += OnAppStateChanged;
+    }
+
+    private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(e.PropertyName);
     }
 
     [RelayCommand]
@@ -40,8 +48,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
-        var settingsWindow = new SettingsWindow();
-        settingsWindow.Show();
+        SettingsWindow.ShowInstance();
     }
 
     [RelayCommand]
@@ -65,5 +72,14 @@ public partial class MainViewModel : ObservableObject
     private void Quit()
     {
         App.Quit();
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            AppState.Instance.PropertyChanged -= OnAppStateChanged;
+            _disposed = true;
+        }
     }
 }

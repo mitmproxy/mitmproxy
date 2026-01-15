@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Interop;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -8,6 +9,9 @@ namespace OximyWindows.Views;
 
 public partial class TrayPopup : Window
 {
+    // Track current phase to detect major transitions
+    private Phase _lastPhase = Phase.Enrollment;
+
     public TrayPopup()
     {
         InitializeComponent();
@@ -16,6 +20,7 @@ public partial class TrayPopup : Window
         AppState.Instance.PropertyChanged += OnAppStateChanged;
 
         // Set initial content
+        _lastPhase = AppState.Instance.Phase;
         UpdateContent();
     }
 
@@ -23,26 +28,25 @@ public partial class TrayPopup : Window
     {
         if (e.PropertyName == nameof(AppState.Phase))
         {
-            Dispatcher.Invoke(UpdateContent);
+            // Use BeginInvoke to avoid deadlock (non-blocking)
+            Dispatcher.BeginInvoke(UpdateContent);
         }
     }
 
     private void UpdateContent()
     {
-        ContentHost.Content = AppState.Instance.Phase switch
+        var newPhase = AppState.Instance.Phase;
+
+        // Create fresh view for the phase (don't cache to avoid stale state issues on logout)
+        ContentHost.Content = newPhase switch
         {
-            // New three-phase flow
-            Phase.Enrollment => new EnrollmentView(),
-            Phase.Setup => new SetupView(),
+            Phase.Enrollment or Phase.Onboarding or Phase.Login => new EnrollmentView(),
+            Phase.Setup or Phase.Permissions => new SetupView(),
             Phase.Connected or Phase.Ready => new StatusView(),
-
-            // Legacy phases for backwards compatibility
-            Phase.Onboarding => new EnrollmentView(),
-            Phase.Permissions => new SetupView(),
-            Phase.Login => new EnrollmentView(),
-
             _ => new StatusView()
         };
+
+        _lastPhase = newPhase;
     }
 
     /// <summary>

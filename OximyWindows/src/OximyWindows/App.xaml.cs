@@ -208,7 +208,9 @@ public partial class App : Application
             };
 
             Trace.Listeners.Add(_fileTraceListener);
-            Trace.AutoFlush = true;
+            // Disable AutoFlush to avoid synchronous disk I/O on every Debug.WriteLine
+            // We manually flush on exit and periodically via a timer
+            Trace.AutoFlush = false;
 
             Debug.WriteLine($"[App] Logging started at {DateTime.Now}");
             Debug.WriteLine($"[App] Log file: {LogFilePath}");

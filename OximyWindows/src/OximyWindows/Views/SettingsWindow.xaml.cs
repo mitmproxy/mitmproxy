@@ -8,6 +8,28 @@ namespace OximyWindows.Views;
 
 public partial class SettingsWindow : Window
 {
+    // Singleton pattern to prevent multiple windows
+    private static SettingsWindow? _instance;
+
+    /// <summary>
+    /// Shows the settings window, creating it if necessary or bringing existing to front.
+    /// </summary>
+    public static void ShowInstance()
+    {
+        if (_instance == null)
+        {
+            _instance = new SettingsWindow();
+            _instance.Closed += (s, e) => _instance = null;
+        }
+
+        if (_instance.WindowState == WindowState.Minimized)
+            _instance.WindowState = WindowState.Normal;
+
+        _instance.Show();
+        _instance.Activate();
+        _instance.Focus();
+    }
+
     public SettingsWindow()
     {
         InitializeComponent();
@@ -22,9 +44,11 @@ public partial class SettingsWindow : Window
         UpdateCertificateUI();
     }
 
-    private void UpdateCertificateUI()
+    private async void UpdateCertificateUI()
     {
-        App.CertificateService.CheckStatus();
+        // Run on background thread to avoid blocking UI
+        // X509Store operations can take 100-500ms+
+        await Task.Run(() => App.CertificateService.CheckStatus());
 
         var successBrush = TryFindResource("SuccessBrush") as SolidColorBrush ?? Brushes.Green;
         var warningBrush = TryFindResource("WarningBrush") as SolidColorBrush ?? Brushes.Orange;
@@ -100,6 +124,9 @@ public partial class SettingsWindow : Window
         }
     }
 
+    // Store reference to handler so we can unsubscribe
+    private System.ComponentModel.PropertyChangedEventHandler? _downloadProgressHandler;
+
     private async void DownloadUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -109,8 +136,14 @@ public partial class SettingsWindow : Window
             UpdateProgressBar.Visibility = Visibility.Visible;
             UpdateProgressBar.Value = 0;
 
-            // Subscribe to progress updates
-            Services.UpdateService.Instance.PropertyChanged += (s, args) =>
+            // Unsubscribe previous handler if any
+            if (_downloadProgressHandler != null)
+            {
+                Services.UpdateService.Instance.PropertyChanged -= _downloadProgressHandler;
+            }
+
+            // Create and subscribe to progress updates
+            _downloadProgressHandler = (s, args) =>
             {
                 if (args.PropertyName == nameof(Services.UpdateService.DownloadProgress))
                 {
@@ -121,6 +154,7 @@ public partial class SettingsWindow : Window
                     });
                 }
             };
+            Services.UpdateService.Instance.PropertyChanged += _downloadProgressHandler;
 
             await Services.UpdateService.Instance.DownloadAndApplyUpdateAsync();
         }
@@ -130,6 +164,15 @@ public partial class SettingsWindow : Window
             CheckUpdateButton.Content = "Retry Download";
             UpdateProgressBar.Visibility = Visibility.Collapsed;
             CheckUpdateButton.IsEnabled = true;
+        }
+        finally
+        {
+            // Unsubscribe when done
+            if (_downloadProgressHandler != null)
+            {
+                Services.UpdateService.Instance.PropertyChanged -= _downloadProgressHandler;
+                _downloadProgressHandler = null;
+            }
         }
     }
 
@@ -181,7 +224,7 @@ public partial class SettingsWindow : Window
         OpenUrl(Constants.PrivacyUrl);
     }
 
-    private void LogoutButton_Click(object sender, RoutedEventArgs e)
+    private async void LogoutButton_Click(object sender, RoutedEventArgs e)
     {
         var result = MessageBox.Show(
             "Are you sure you want to log out?",
@@ -191,14 +234,29 @@ public partial class SettingsWindow : Window
 
         if (result == MessageBoxResult.Yes)
         {
-            // Stop services
-            App.ProxyService.DisableProxy();
-            App.MitmService.Stop();
+            // Disable window to prevent double-clicks while logging out
+            IsEnabled = false;
 
-            // Log out
+            // Run blocking operations on background thread to avoid UI freeze
+            await Task.Run(() =>
+            {
+                App.ProxyService.DisableProxy();
+                App.MitmService.Stop();
+                App.HeartbeatService.Stop();
+                App.SyncService.Stop();
+            });
+
+            // Log out (sets Phase = Enrollment) - must be on UI thread
             AppState.Instance.Logout();
 
+            // Close this window
             Close();
+
+            // Show the tray popup with enrollment view so user can log back in
+            if (Application.Current.MainWindow is MainWindow mainWindow)
+            {
+                mainWindow.ShowPopup();
+            }
         }
     }
 
@@ -388,5 +446,20 @@ public partial class SettingsWindow : Window
         {
             // Ignore errors opening folder
         }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        // Clean up event handlers
+        Loaded -= OnLoaded;
+
+        // Unsubscribe download progress handler if attached
+        if (_downloadProgressHandler != null)
+        {
+            Services.UpdateService.Instance.PropertyChanged -= _downloadProgressHandler;
+            _downloadProgressHandler = null;
+        }
+
+        base.OnClosed(e);
     }
 }

@@ -91,8 +91,8 @@ public class SyncService : INotifyPropertyChanged, IDisposable
                 TimeSpan.FromSeconds(2), // Initial delay
                 TimeSpan.FromMilliseconds(_flushIntervalMs));
 
-            // Initial count
-            UpdatePendingCount();
+            // Initial count - run on background thread to avoid blocking
+            _ = Task.Run(() => UpdatePendingCountAsync());
         }
     }
 
@@ -217,7 +217,7 @@ public class SyncService : INotifyPropertyChanged, IDisposable
 
             _syncState = new SyncState();
             SaveSyncState();
-            UpdatePendingCount();
+            _ = Task.Run(() => UpdatePendingCountAsync());
 
             Debug.WriteLine("[SyncService] Local data cleared");
         }
@@ -262,7 +262,7 @@ public class SyncService : INotifyPropertyChanged, IDisposable
             return;
 
         Status = SyncStatus.Syncing;
-        UpdatePendingCount();
+        _ = Task.Run(() => UpdatePendingCountAsync());
 
         try
         {
@@ -307,7 +307,8 @@ public class SyncService : INotifyPropertyChanged, IDisposable
         }
         finally
         {
-            UpdatePendingCount();
+            // Run on background thread to avoid blocking UI
+            _ = Task.Run(() => UpdatePendingCountAsync());
         }
     }
 
@@ -379,7 +380,10 @@ public class SyncService : INotifyPropertyChanged, IDisposable
             .ToList();
     }
 
-    private void UpdatePendingCount()
+    /// <summary>
+    /// Update pending count asynchronously on background thread.
+    /// </summary>
+    private async Task UpdatePendingCountAsync()
     {
         try
         {
@@ -391,7 +395,7 @@ public class SyncService : INotifyPropertyChanged, IDisposable
                 var fileName = Path.GetFileName(file);
                 var state = _syncState.Files.GetValueOrDefault(fileName);
                 var syncedLines = state?.LastSyncedLine ?? 0;
-                var totalLines = CountLines(file);
+                var totalLines = await CountLinesAsync(file);
 
                 count += Math.Max(0, totalLines - syncedLines);
             }
@@ -404,16 +408,26 @@ public class SyncService : INotifyPropertyChanged, IDisposable
         }
     }
 
-    private static int CountLines(string filePath)
+    /// <summary>
+    /// Count lines in a file asynchronously without blocking UI thread.
+    /// </summary>
+    private static async Task<int> CountLinesAsync(string filePath)
     {
         try
         {
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var stream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite,
+                bufferSize: 65536,
+                useAsync: true);
+
             var count = 0;
             var buffer = new byte[65536];
             int bytesRead;
 
-            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
             {
                 for (int i = 0; i < bytesRead; i++)
                 {

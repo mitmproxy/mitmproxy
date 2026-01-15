@@ -11,6 +11,11 @@ public partial class StatusView : UserControl
     private readonly DispatcherTimer _refreshTimer;
     private bool _isToggling;
 
+    // Debouncing: coalesce rapid property changes into a single UI update
+    private bool _updatePending;
+    private DateTime _lastUpdateTime = DateTime.MinValue;
+    private static readonly TimeSpan MinUpdateInterval = TimeSpan.FromMilliseconds(100);
+
     public StatusView()
     {
         InitializeComponent();
@@ -40,14 +45,14 @@ public partial class StatusView : UserControl
         App.MitmService.Stopped -= OnMitmStopped;
     }
 
-    private void OnMitmStarted(object? sender, EventArgs e) => Dispatcher.Invoke(UpdateUI);
-    private void OnMitmStopped(object? sender, EventArgs e) => Dispatcher.Invoke(UpdateUI);
+    private void OnMitmStarted(object? sender, EventArgs e) => ScheduleUIUpdate();
+    private void OnMitmStopped(object? sender, EventArgs e) => ScheduleUIUpdate();
     private void OnRefreshTimerTick(object? sender, EventArgs e) => AppState.Instance.RefreshEventsCount();
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         SubscribeToEvents();
-        UpdateUI();
+        UpdateUI(); // Immediate update on load
         _refreshTimer.Start();
     }
 
@@ -59,11 +64,42 @@ public partial class StatusView : UserControl
 
     private void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        Dispatcher.Invoke(UpdateUI);
+        ScheduleUIUpdate();
     }
 
-    private void UpdateUI()
+    /// <summary>
+    /// Schedule a debounced UI update. Multiple rapid calls are coalesced.
+    /// </summary>
+    private void ScheduleUIUpdate()
     {
+        if (_updatePending)
+            return;
+
+        var now = DateTime.UtcNow;
+        var timeSinceLastUpdate = now - _lastUpdateTime;
+
+        if (timeSinceLastUpdate >= MinUpdateInterval)
+        {
+            // Enough time has passed, update immediately
+            Dispatcher.BeginInvoke(UpdateUI, DispatcherPriority.Background);
+        }
+        else
+        {
+            // Too soon, schedule for later
+            _updatePending = true;
+            var delay = MinUpdateInterval - timeSinceLastUpdate;
+            Dispatcher.BeginInvoke(async () =>
+            {
+                await Task.Delay(delay);
+                _updatePending = false;
+                UpdateUI();
+            }, DispatcherPriority.Background);
+        }
+    }
+
+    private async void UpdateUI()
+    {
+        _lastUpdateTime = DateTime.UtcNow;
         var state = AppState.Instance;
 
         // Update device info
@@ -84,8 +120,9 @@ public partial class StatusView : UserControl
             ErrorPanel.Visibility = Visibility.Collapsed;
         }
 
-        // Update certificate warning
-        App.CertificateService.CheckStatus();
+        // Certificate status - run on background thread to avoid blocking UI
+        // X509Store operations can take 100-500ms+
+        await Task.Run(() => App.CertificateService.CheckStatus());
         CertWarningText.Visibility = App.CertificateService.IsCAInstalled ? Visibility.Collapsed : Visibility.Visible;
 
         // Update capture button
@@ -163,8 +200,7 @@ public partial class StatusView : UserControl
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        var settingsWindow = new SettingsWindow();
-        settingsWindow.Show();
+        SettingsWindow.ShowInstance();
     }
 
     private async void RetryButton_Click(object sender, RoutedEventArgs e)
@@ -201,15 +237,18 @@ public partial class StatusView : UserControl
         {
             if (App.MitmService.IsRunning)
             {
-                // Stop monitoring
-                App.ProxyService.DisableProxy();
-                App.MitmService.Stop();
+                // Stop monitoring - run blocking ops on background thread
+                await Task.Run(() =>
+                {
+                    App.ProxyService.DisableProxy();
+                    App.MitmService.Stop();
+                });
                 AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
             }
             else
             {
-                // Verify certificate is installed first
-                App.CertificateService.CheckStatus();
+                // Verify certificate is installed first - run on background thread
+                await Task.Run(() => App.CertificateService.CheckStatus());
                 if (!App.CertificateService.IsCAInstalled)
                 {
                     MessageBox.Show(
@@ -226,7 +265,7 @@ public partial class StatusView : UserControl
 
                 if (App.MitmService.CurrentPort.HasValue)
                 {
-                    App.ProxyService.EnableProxy(App.MitmService.CurrentPort.Value);
+                    await Task.Run(() => App.ProxyService.EnableProxy(App.MitmService.CurrentPort.Value));
                 }
             }
         }

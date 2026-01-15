@@ -28,13 +28,45 @@ public class CertificateService : INotifyPropertyChanged
         private set => SetProperty(ref _isCAInstalled, value);
     }
 
+    // Cache for certificate store lookup - expires after 30 seconds
+    private DateTime _lastCertStoreCheck = DateTime.MinValue;
+    private bool _cachedCertStoreResult;
+    private static readonly TimeSpan CertStoreCacheExpiry = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// Check current certificate status.
+    /// Uses cached result for cert store lookup to avoid expensive X509Store queries.
     /// </summary>
     public void CheckStatus()
     {
         IsCAGenerated = File.Exists(Constants.CACertPath) && File.Exists(Constants.CAKeyPath);
-        IsCAInstalled = IsCAInCertStore();
+        IsCAInstalled = IsCAInCertStoreCached();
+    }
+
+    /// <summary>
+    /// Force a fresh check of certificate status, bypassing cache.
+    /// Call this after installing/uninstalling certificates.
+    /// </summary>
+    public void RefreshStatus()
+    {
+        _lastCertStoreCheck = DateTime.MinValue; // Invalidate cache
+        CheckStatus();
+    }
+
+    /// <summary>
+    /// Check if CA is in cert store, using cached result if available.
+    /// </summary>
+    private bool IsCAInCertStoreCached()
+    {
+        var now = DateTime.UtcNow;
+        if (now - _lastCertStoreCheck < CertStoreCacheExpiry)
+        {
+            return _cachedCertStoreResult;
+        }
+
+        _cachedCertStoreResult = IsCAInCertStore();
+        _lastCertStoreCheck = now;
+        return _cachedCertStoreResult;
     }
 
     /// <summary>
@@ -177,6 +209,7 @@ public class CertificateService : INotifyPropertyChanged
             store.Add(cert);
             store.Close();
 
+            _lastCertStoreCheck = DateTime.MinValue; // Invalidate cache
             IsCAInstalled = true;
             Debug.WriteLine("CA installed to LocalMachine store");
             return;
@@ -208,6 +241,7 @@ public class CertificateService : INotifyPropertyChanged
             store.Add(cert);
             store.Close();
 
+            _lastCertStoreCheck = DateTime.MinValue; // Invalidate cache
             IsCAInstalled = true;
             Debug.WriteLine("CA installed to CurrentUser store");
         }
@@ -272,6 +306,7 @@ public class CertificateService : INotifyPropertyChanged
             }
         }
 
+        _lastCertStoreCheck = DateTime.MinValue; // Invalidate cache
         IsCAInstalled = false;
     }
 
