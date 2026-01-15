@@ -1,19 +1,22 @@
 # Oximy Release Workflow
 #
 # This workflow builds and releases the Oximy desktop applications for macOS and Windows.
-# It creates signed, notarized builds with auto-update support via Sparkle (macOS) and Velopack (Windows).
-#
-# macOS: Builds Universal Binary (ARM64 + x86_64) for native support on both Apple Silicon and Intel Macs.
+# It uses the unified build-prod.sh script - the same script used for local builds.
 #
 # Trigger: Manual dispatch with version number input
 #
 # Required Secrets:
-#   - APPLE_CERTIFICATE: Base64-encoded Developer ID certificate (.p12)
-#   - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
-#   - APPLE_ID: Apple ID email for notarization
-#   - APPLE_APP_PASSWORD: App-specific password for notarization
-#   - SPARKLE_PRIVATE_KEY: EdDSA private key for Sparkle update signing
-#   - SPARKLE_PUBLIC_KEY: EdDSA public key for Info.plist
+#   macOS:
+#     - APPLE_CERTIFICATE: Base64-encoded Developer ID certificate (.p12)
+#     - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
+#     - APPLE_ID: Apple ID email for notarization
+#     - APPLE_APP_PASSWORD: App-specific password for notarization
+#     - SPARKLE_PRIVATE_KEY: EdDSA private key for Sparkle update signing
+#     - SPARKLE_PUBLIC_KEY: EdDSA public key for Info.plist
+#     - SENTRY_DSN: (Optional) Sentry DSN for crash reporting
+#
+#   Windows:
+#     - (No secrets required for unsigned builds)
 
 name: Oximy Release
 
@@ -38,7 +41,7 @@ env:
 
 jobs:
   # ===========================================
-  # Build macOS App with Sparkle (Universal Binary: ARM64 + x86_64)
+  # Build macOS App (Universal Binary: ARM64 + x86_64)
   # ===========================================
   build-macos:
     name: Build macOS
@@ -61,227 +64,29 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-      - name: Create Secrets.swift
-        working-directory: OximyMac
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: |
-          # Create Secrets.swift with Sentry DSN from GitHub secret
-          if [ -n "$SENTRY_DSN" ]; then
-            cat > App/Secrets.swift << EOF
-          import Foundation
-
-          enum Secrets {
-              static let sentryDSN: String? = "$SENTRY_DSN"
-          }
-          EOF
-            echo "Created Secrets.swift with Sentry DSN"
-          else
-            cp App/Secrets.example.swift App/Secrets.swift
-            echo "Created Secrets.swift from example (no SENTRY_DSN secret)"
-          fi
-
-      - name: Fetch Sparkle dependency
-        working-directory: OximyMac
-        run: swift build --target OximyMac 2>/dev/null || true
-
-      - name: Setup Node.js
+      - name: Setup Node.js (for create-dmg)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install create-dmg
-        run: |
-          npm install -g create-dmg
-          echo "create-dmg installed at: $(which create-dmg)"
-
-      - name: Sync addon files
-        working-directory: OximyMac
-        run: make sync
-
-      - name: Build bundled Python
-        working-directory: OximyMac
-        run: |
-          echo "Building Python embed for architecture: $(uname -m)"
-          chmod +x Scripts/build-python-embed.sh
-          ./Scripts/build-python-embed.sh
+        run: npm install -g create-dmg
 
       - name: Build macOS app
         id: build
-        working-directory: OximyMac
         env:
           VERSION: ${{ inputs.version }}
           DEVELOPER_ID: "Developer ID Application: Oximy, Inc. (K6H6LCASRA)"
-          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
-        run: |
-          chmod +x Scripts/build-release.sh
-          ./Scripts/build-release.sh
-          echo "dmg-name=Oximy-${{ inputs.version }}.dmg" >> $GITHUB_OUTPUT
-
-      - name: Notarize app bundle
-        working-directory: OximyMac/build
-        env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
-        run: |
-          # Create a zip of the app for notarization
-          echo "Creating zip for notarization..."
-          ditto -c -k --keepParent "Oximy.app" "Oximy.zip"
-
-          # Submit for notarization and capture submission ID
-          echo "Submitting app for notarization..."
-          SUBMIT_OUTPUT=$(xcrun notarytool submit "Oximy.zip" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_PASSWORD" \
-            --team-id "$TEAM_ID" \
-            --wait 2>&1) || true
-
-          echo "$SUBMIT_OUTPUT"
-
-          # Extract submission ID
-          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep -o 'id: [a-f0-9-]*' | head -1 | cut -d' ' -f2)
-
-          # Check if notarization succeeded
-          if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
-            echo "Notarization succeeded!"
-            # Staple the notarization ticket to the APP BUNDLE (not zip)
-            xcrun stapler staple "Oximy.app"
-            echo "Notarization ticket stapled to app bundle"
-          else
-            echo "Notarization failed. Fetching log..."
-            if [ -n "$SUBMISSION_ID" ]; then
-              xcrun notarytool log "$SUBMISSION_ID" \
-                --apple-id "$APPLE_ID" \
-                --password "$APPLE_APP_PASSWORD" \
-                --team-id "$TEAM_ID" \
-                notarization-log.json || true
-              cat notarization-log.json
-            fi
-            exit 1
-          fi
-
-          # Clean up zip
-          rm -f "Oximy.zip"
-
-      - name: Verify notarized app
-        working-directory: OximyMac/build
-        run: |
-          echo "Verifying code signature..."
-          codesign -dvv Oximy.app
-          echo ""
-          echo "Verifying notarization (spctl)..."
-          spctl -a -v Oximy.app
-          echo ""
-          echo "Verifying staple..."
-          xcrun stapler validate Oximy.app
-
-      - name: Create DMG from notarized app
-        working-directory: OximyMac/build
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          DMG_NAME="Oximy-$VERSION.dmg"
-
-          echo "Creating DMG from notarized app..."
-
-          # Check if create-dmg is available
-          if command -v create-dmg &> /dev/null; then
-            echo "Using create-dmg..."
-            # Remove existing DMG if present
-            rm -f "$DMG_NAME" 2>/dev/null || true
-            rm -f "Oximy $VERSION.dmg" 2>/dev/null || true
-
-            # create-dmg automatically handles Applications symlink and styling
-            if create-dmg "Oximy.app" "." --overwrite 2>&1; then
-              echo "create-dmg succeeded"
-            else
-              echo "create-dmg exited with non-zero status (may still have created DMG)"
-            fi
-
-            # create-dmg names files as "AppName VERSION.dmg", rename to our format
-            if [ -f "Oximy $VERSION.dmg" ]; then
-              mv "Oximy $VERSION.dmg" "$DMG_NAME"
-              echo "DMG created: $DMG_NAME"
-            else
-              echo "Expected DMG not found, falling back to hdiutil..."
-              hdiutil create -volname "Oximy" \
-                -srcfolder "Oximy.app" \
-                -ov -format UDZO \
-                "$DMG_NAME"
-            fi
-          else
-            echo "create-dmg not found, using hdiutil..."
-            hdiutil create -volname "Oximy" \
-              -srcfolder "Oximy.app" \
-              -ov -format UDZO \
-              "$DMG_NAME"
-          fi
-
-          echo "Final DMG: $DMG_NAME"
-          ls -la "$DMG_NAME"
-
-      - name: Sign DMG for Sparkle updates
-        working-directory: OximyMac/build
-        env:
-          VERSION: ${{ inputs.version }}
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
-          DMG_NAME="Oximy-$VERSION.dmg"
-
-          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
-            echo "WARNING: SPARKLE_PRIVATE_KEY not set, skipping Sparkle signing"
-            exit 0
-          fi
-
-          # Find Sparkle's sign_update tool
-          SPARKLE_SIGN="../.build/artifacts/sparkle/Sparkle/bin/sign_update"
-          if [ ! -f "$SPARKLE_SIGN" ]; then
-            SPARKLE_SIGN="../.build/checkouts/Sparkle/sign_update"
-          fi
-
-          if [ ! -f "$SPARKLE_SIGN" ]; then
-            echo "WARNING: Sparkle sign_update tool not found"
-            exit 0
-          fi
-
-          echo "Signing DMG with Sparkle EdDSA key..."
-          SIGNATURE=$("$SPARKLE_SIGN" "$DMG_NAME" -s "$SPARKLE_PRIVATE_KEY" 2>/dev/null | grep "sparkle:edSignature" | cut -d'"' -f2 || echo "")
-
-          if [ -n "$SIGNATURE" ]; then
-            echo "EdDSA Signature: ${SIGNATURE:0:20}..."
-
-            # Get file size and generate date
-            DMG_SIZE=$(stat -f%z "$DMG_NAME")
-            PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
-
-            # Generate appcast.xml
-            DOWNLOAD_URL="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$DMG_NAME"
-            RELEASE_NOTES_URL="https://github.com/OximyHQ/mitmproxy/releases/tag/oximy-v$VERSION"
-
-            printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' > appcast.xml
-            printf '%s\n' '<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">' >> appcast.xml
-            printf '%s\n' '  <channel>' >> appcast.xml
-            printf '%s\n' '    <title>Oximy Updates</title>' >> appcast.xml
-            printf '%s\n' '    <link>https://github.com/OximyHQ/mitmproxy/releases</link>' >> appcast.xml
-            printf '%s\n' '    <description>Updates for Oximy macOS</description>' >> appcast.xml
-            printf '%s\n' '    <language>en</language>' >> appcast.xml
-            printf '%s\n' '    <item>' >> appcast.xml
-            printf '%s\n' "      <title>Version $VERSION</title>" >> appcast.xml
-            printf '%s\n' "      <pubDate>$PUB_DATE</pubDate>" >> appcast.xml
-            printf '%s\n' "      <sparkle:version>$VERSION</sparkle:version>" >> appcast.xml
-            printf '%s\n' "      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>" >> appcast.xml
-            printf '%s\n' '      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>' >> appcast.xml
-            printf '%s\n' "      <enclosure url=\"$DOWNLOAD_URL\" length=\"$DMG_SIZE\" type=\"application/octet-stream\" sparkle:edSignature=\"$SIGNATURE\" />" >> appcast.xml
-            printf '%s\n' "      <sparkle:releaseNotesLink>$RELEASE_NOTES_URL</sparkle:releaseNotesLink>" >> appcast.xml
-            printf '%s\n' '    </item>' >> appcast.xml
-            printf '%s\n' '  </channel>' >> appcast.xml
-            printf '%s\n' '</rss>' >> appcast.xml
-            echo "Generated appcast.xml"
-          else
-            echo "WARNING: Failed to generate EdDSA signature"
-          fi
+          chmod +x build-prod.sh
+          ./build-prod.sh mac --version "$VERSION"
+          echo "dmg-name=Oximy-$VERSION.dmg" >> $GITHUB_OUTPUT
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -316,54 +121,34 @@ jobs:
       - name: Validate version format
         run: |
           $version = "${{ inputs.version }}"
-          # SemVer2 regex: MAJOR.MINOR.PATCH with optional prerelease
-          # No leading zeros allowed in numeric parts
           $semverPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$'
-
           if ($version -notmatch $semverPattern) {
-              Write-Error "Invalid version format: '$version'"
-              Write-Error "Version must be SemVer2 compliant (MAJOR.MINOR.PATCH with no leading zeros)"
-              Write-Error "Valid examples: 1.0.0, 0.0.1, 1.2.3-beta.1, 2.0.0-rc.1"
-              Write-Error "Invalid: 0.0.01 (leading zero), 01.0.0 (leading zero), 1.0 (missing patch)"
+              Write-Error "Invalid version format: '$version'. Must be SemVer2 (e.g., 1.0.0, 1.2.3-beta.1)"
               exit 1
           }
-
-          Write-Host "Version '$version' is valid SemVer2 format"
-
-      - name: Update version in project files
-        working-directory: OximyWindows
-        run: |
-          # Update version in csproj
-          $csproj = "src\OximyWindows\OximyWindows.csproj"
-          (Get-Content $csproj) -replace '<Version>.*</Version>', "<Version>${{ inputs.version }}</Version>" | Set-Content $csproj
-
-          # Update version in Constants.cs
-          $constants = "src\OximyWindows\Constants.cs"
-          (Get-Content $constants) -replace 'Version = ".*"', 'Version = "${{ inputs.version }}"' | Set-Content $constants
-
-          Write-Host "Updated version to ${{ inputs.version }}"
+          Write-Host "Version '$version' is valid"
 
       - name: Build Windows app
         id: build
-        working-directory: OximyWindows
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          # Build with Velopack packaging
-          ./scripts/build.ps1 -Release -Clean -CreateVelopack -Version "${{ inputs.version }}"
+          # Use the unified build script via bash (Git Bash on Windows)
+          bash -c "./build-prod.sh windows --version $env:VERSION"
           echo "setup-name=OximySetup-${{ inputs.version }}.exe" >> $env:GITHUB_OUTPUT
 
-      - name: Create Inno Setup installer
+      - name: Create Inno Setup installer (optional)
         working-directory: OximyWindows
         run: |
-          # Update version in ISS file
           $iss = "installer\OximySetup.iss"
-          (Get-Content $iss) -replace '#define MyAppVersion ".*"', '#define MyAppVersion "${{ inputs.version }}"' | Set-Content $iss
-
-          # Check if Inno Setup is available
-          $innoPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          if (Test-Path $innoPath) {
-            & $innoPath $iss
-          } else {
-            Write-Warning "Inno Setup not found, skipping installer creation"
+          if (Test-Path $iss) {
+            (Get-Content $iss) -replace '#define MyAppVersion ".*"', '#define MyAppVersion "${{ inputs.version }}"' | Set-Content $iss
+            $innoPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+            if (Test-Path $innoPath) {
+              & $innoPath $iss
+            } else {
+              Write-Warning "Inno Setup not found, skipping installer creation"
+            }
           }
 
       - name: Upload Windows artifacts
@@ -406,8 +191,8 @@ jobs:
           echo ""
           echo "=== Windows ==="
           ls -la release-assets/windows/ || echo "No Windows files"
-          ls -la release-assets/windows/releases/ || echo "No Velopack releases"
-          ls -la release-assets/windows/Output/ || echo "No Inno Setup output"
+          ls -la release-assets/windows/releases/ 2>/dev/null || echo "No Velopack releases"
+          ls -la release-assets/windows/Output/ 2>/dev/null || echo "No Inno Setup output"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
