@@ -303,12 +303,25 @@ if [ -n "$DEVELOPER_ID" ]; then
     done
 
     # Sign bundled Python if present
+    # IMPORTANT: All binaries must be signed for notarization, including .so files.
+    # Python extensions need special entitlements to work when signed with hardened runtime.
     if [ -d "$APP_BUNDLE/Contents/Resources/python-embed" ]; then
-        echo "    Signing bundled Python..."
-        find "$APP_BUNDLE/Contents/Resources/python-embed" -type f \( -name "*.so" -o -name "*.dylib" -o -perm +111 \) 2>/dev/null | while read binary; do
+        echo "    Signing bundled Python binaries..."
+        # Sign all Mach-O binaries (.so, .dylib, executables) with entitlements
+        find "$APP_BUNDLE/Contents/Resources/python-embed" -type f \( -name "*.so" -o -name "*.dylib" \) 2>/dev/null | while read binary; do
             codesign --force --options runtime --timestamp \
+                --entitlements "$ENTITLEMENTS_FILE" \
                 --sign "$DEVELOPER_ID" \
                 "$binary" 2>/dev/null || true
+        done
+        # Sign executables
+        find "$APP_BUNDLE/Contents/Resources/python-embed" -type f -perm +111 ! -name "*.so" ! -name "*.dylib" 2>/dev/null | while read binary; do
+            if file "$binary" | grep -q "Mach-O"; then
+                codesign --force --options runtime --timestamp \
+                    --entitlements "$ENTITLEMENTS_FILE" \
+                    --sign "$DEVELOPER_ID" \
+                    "$binary" 2>/dev/null || true
+            fi
         done
     fi
 

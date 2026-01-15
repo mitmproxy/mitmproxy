@@ -20,5 +20,10 @@
     <!-- Without this, codesigned Python extensions crash due to library validation -->
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
+
+    <!-- Required for Python extensions that use ctypes/cffi or execute generated code -->
+    <!-- Without this, signed Python apps crash when loading native extensions -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
 </dict>
 </plist>
