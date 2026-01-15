@@ -14,6 +14,7 @@
 - Fix a bug where mitmweb would show a blank page on Windows.
   ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
 - Fix `modify_body` crash when replacement strings contain backslash sequences.
+  ([#8046](https://github.com/mitmproxy/mitmproxy/pull/8046), @HueCodes)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
