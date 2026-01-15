@@ -43,8 +43,9 @@ let package = Package(
                 // PNG files for logos
                 .process("Resources/frame.png"),
                 .process("Resources/Oximy.png"),
-                // Bundled Python + mitmproxy (preserve directory structure)
-                .copy("Resources/python-embed"),
+                // NOTE: python-embed is NOT included here because SPM's COPY_PHASE_STRIP
+                // corrupts Python native extensions (.so files) in release builds.
+                // The build-release.sh script copies python-embed manually instead.
                 // Oximy addon with standalone imports (for bundled Python)
                 .copy("Resources/oximy-addon")
             ]

@@ -15,5 +15,10 @@
     <!-- File access for ~/.oximy -->
     <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
+
+    <!-- Required for bundled Python native extensions (.so files) to load with hardened runtime -->
+    <!-- Without this, codesigned Python extensions crash due to library validation -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
 </dict>
 </plist>
