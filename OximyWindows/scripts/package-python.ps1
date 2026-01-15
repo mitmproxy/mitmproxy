@@ -81,9 +81,16 @@ try {
     & $PythonExe $GetPipPath --no-warn-script-location 2>&1 | Out-Null
     Write-Host "  Pip installed successfully" -ForegroundColor Green
 
-    # Step 5: Install mitmproxy and dependencies
-    Write-Host "Step 5/6: Installing mitmproxy..." -ForegroundColor Yellow
-    & $PythonExe -m pip install mitmproxy --no-warn-script-location 2>&1 | ForEach-Object {
+    # Step 5: Install mitmproxy from LOCAL source (not PyPI)
+    # IMPORTANT: We use the local mitmproxy source to include Oximy customizations:
+    # - CONF_BASENAME = "oximy" for certificate naming (oximy-ca*.pem)
+    # - Fixed keepserving.py for Oximy fork compatibility
+    # - ScriptLoader addon for -s flag support
+    Write-Host "Step 5/6: Installing mitmproxy from local source..." -ForegroundColor Yellow
+    # Path: scripts/ -> OximyWindows/ -> repo root (mitmproxy)
+    $MitmproxySource = Resolve-Path (Join-Path $PSScriptRoot "..\..") # Root of mitmproxy repo
+    Write-Host "  Source: $MitmproxySource" -ForegroundColor Cyan
+    & $PythonExe -m pip install $MitmproxySource --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
         }
