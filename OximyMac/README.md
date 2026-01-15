@@ -109,7 +109,7 @@ tail -f ~/.oximy/logs/*.log
 ### Certificate issues
 ```bash
 # Regenerate CA
-rm -rf ~/.oximy/mitmproxy-ca*.pem
+rm -rf ~/.oximy/oximy-ca*.pem
 # Restart app - it will regenerate
 ```
 
@@ -125,5 +125,5 @@ grep "from mitmproxy.addons" OximyMac/Resources/oximy-addon/*.py
 | Path | Contents |
 |------|----------|
 | `~/.oximy/traces/` | Captured AI traffic (JSONL) |
-| `~/.oximy/mitmproxy-ca.pem` | CA key + cert (combined) |
-| `~/.oximy/mitmproxy-ca-cert.pem` | CA cert only |
+| `~/.oximy/oximy-ca.pem` | CA key + cert (combined) |
+| `~/.oximy/oximy-ca-cert.pem` | CA cert only |

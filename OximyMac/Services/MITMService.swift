@@ -157,6 +157,35 @@ class MITMService: ObservableObject {
 
     // MARK: - Process Management
 
+    /// Kill all existing mitmproxy/mitmdump processes to ensure clean state
+    /// This handles zombie processes from previous runs, crashed instances, or stale processes
+    private func killAllMitmProcesses() {
+        NSLog("[MITMService] Cleaning up any existing mitmproxy processes...")
+
+        // Kill any mitmdump processes
+        let killMitmdump = Process()
+        killMitmdump.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+        killMitmdump.arguments = ["-9", "-f", "mitmdump"]
+        killMitmdump.standardOutput = FileHandle.nullDevice
+        killMitmdump.standardError = FileHandle.nullDevice
+        try? killMitmdump.run()
+        killMitmdump.waitUntilExit()
+
+        // Kill any mitmproxy processes
+        let killMitmproxy = Process()
+        killMitmproxy.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+        killMitmproxy.arguments = ["-9", "-f", "mitmproxy"]
+        killMitmproxy.standardOutput = FileHandle.nullDevice
+        killMitmproxy.standardError = FileHandle.nullDevice
+        try? killMitmproxy.run()
+        killMitmproxy.waitUntilExit()
+
+        // Give processes time to fully terminate
+        Thread.sleep(forTimeInterval: 0.2)
+
+        NSLog("[MITMService] Cleanup complete")
+    }
+
     /// Start mitmproxy with the Oximy addon
     func start() async throws {
         NSLog("[MITMService]  start() called, isRunning=\(isRunning)")
@@ -164,6 +193,10 @@ class MITMService: ObservableObject {
             NSLog("[MITMService]  Already running, returning early")
             return
         }
+
+        // CRITICAL: Kill any existing mitmproxy processes first
+        // This ensures no zombie processes from previous runs interfere
+        killAllMitmProcesses()
 
         // Find available port
         let port = findAvailablePort()
@@ -278,14 +311,25 @@ class MITMService: ObservableObject {
 
     /// Stop the mitmproxy process
     func stop() {
-        guard let process = process, process.isRunning else { return }
+        // First, terminate our tracked process if running
+        if let process = process, process.isRunning {
+            process.terminate()
+            // Give it a moment to terminate gracefully
+            Thread.sleep(forTimeInterval: 0.1)
+            // Force kill if still running
+            if process.isRunning {
+                process.interrupt()  // Send SIGINT
+            }
+        }
 
-        process.terminate()
+        // Then kill ALL mitmproxy processes to catch any orphans/zombies
+        killAllMitmProcesses()
+
         self.process = nil
         self.isRunning = false
         self.currentPort = nil
 
-        NSLog("[MITMService]  Stopped")
+        NSLog("[MITMService]  Stopped (including any zombie processes)")
 
         SentryService.shared.addStateBreadcrumb(
             category: "mitm",

@@ -5,6 +5,9 @@
 #
 # Note: Builds for BOTH architectures (ARM64 + x86_64) to support Universal Binary.
 # At runtime, the app detects architecture and uses the appropriate Python.
+#
+# IMPORTANT: This script installs mitmproxy from the LOCAL source (not PyPI)
+# to include Oximy customizations (CONF_BASENAME = "oximy", etc.)
 
 set -e
 
@@ -14,8 +17,13 @@ RESOURCES_DIR="$OXIMY_MAC_DIR/Resources"
 EMBED_DIR="$RESOURCES_DIR/python-embed"
 BUILD_DIR="$OXIMY_MAC_DIR/.build-python"
 
-# Python version to bundle
-PYTHON_VERSION="3.11.9"
+# Path to local mitmproxy source (parent of OximyMac)
+MITMPROXY_SOURCE="$(dirname "$OXIMY_MAC_DIR")"
+
+# Python version to bundle (mitmproxy requires >= 3.12)
+# Using python-build-standalone releases from https://github.com/indygreg/python-build-standalone/releases
+PYTHON_VERSION="3.12.8"
+PYTHON_RELEASE_DATE="20241219"
 
 # Build for both architectures to support Universal Binary
 BUILD_UNIVERSAL="${BUILD_UNIVERSAL:-true}"
@@ -23,6 +31,7 @@ BUILD_UNIVERSAL="${BUILD_UNIVERSAL:-true}"
 echo "=== Building Standalone Python Embed for OximyMac ==="
 echo "Universal Build: $BUILD_UNIVERSAL"
 echo "Python Version: $PYTHON_VERSION"
+echo "Mitmproxy Source: $MITMPROXY_SOURCE"
 echo "Output: $EMBED_DIR"
 echo ""
 
@@ -41,7 +50,7 @@ mkdir -p "$EMBED_DIR"
 
 # Download python-build-standalone (relocatable Python builds by Astral/Gregory Szorc)
 # These are truly standalone - no system dependencies!
-PYTHON_RELEASE_URL="https://github.com/indygreg/python-build-standalone/releases/download/20240415"
+PYTHON_RELEASE_URL="https://github.com/indygreg/python-build-standalone/releases/download/${PYTHON_RELEASE_DATE}"
 
 # Function to download and setup Python for a specific architecture
 download_python_arch() {
@@ -49,7 +58,7 @@ download_python_arch() {
     local python_tag="$2" # "aarch64-apple-darwin" or "x86_64-apple-darwin"
     local target_dir="$3" # Directory to install to
 
-    local archive="cpython-${PYTHON_VERSION}+20240415-${python_tag}-install_only.tar.gz"
+    local archive="cpython-${PYTHON_VERSION}+${PYTHON_RELEASE_DATE}-${python_tag}-install_only.tar.gz"
     local url="${PYTHON_RELEASE_URL}/${archive}"
 
     echo ""
@@ -57,7 +66,7 @@ download_python_arch() {
     echo "URL: $url"
 
     cd "$BUILD_DIR"
-    rm -rf "python-$arch_name" "python-$arch_name.tar.gz"
+    rm -rf "python-$arch_name" "python-$arch_name.tar.gz" "python"
 
     if ! curl -L -o "python-$arch_name.tar.gz" "$url"; then
         echo "ERROR: Failed to download Python for $arch_name"
@@ -66,18 +75,25 @@ download_python_arch() {
 
     echo "Extracting Python for $arch_name..."
     mkdir -p "python-$arch_name"
-    tar -xzf "python-$arch_name.tar.gz" -C "python-$arch_name" --strip-components=1 2>/dev/null || \
-    tar -xzf "python-$arch_name.tar.gz" && mv python "python-$arch_name/python" && mv "python-$arch_name/python/"* "python-$arch_name/" && rmdir "python-$arch_name/python"
+    # Extract to current directory first, then move contents
+    tar -xzf "python-$arch_name.tar.gz"
+    # The archive extracts to a "python" directory
+    if [ -d "python" ]; then
+        mv python/* "python-$arch_name/"
+        rmdir python
+    fi
 
     # Move to target directory
     mkdir -p "$target_dir"
     cp -R "python-$arch_name/"* "$target_dir/"
 
-    echo "Installing mitmproxy and dependencies for $arch_name..."
+    echo "Installing mitmproxy from LOCAL source for $arch_name..."
     "$target_dir/bin/pip3" install --upgrade pip
-    "$target_dir/bin/pip3" install mitmproxy jsonata-python
+    # Install mitmproxy from local source to include Oximy customizations
+    # (CONF_BASENAME = "oximy" for certificate naming)
+    "$target_dir/bin/pip3" install "$MITMPROXY_SOURCE" jsonata-python
 
-    echo "✓ Python $arch_name ready"
+    echo "✓ Python $arch_name ready (with local mitmproxy)"
     return 0
 }
 
@@ -144,7 +160,7 @@ fi
 
 # Set up isolated environment for the standalone Python
 export PYTHONHOME="$PYTHON_HOME"
-export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
+export PYTHONPATH="$PYTHON_HOME/lib/python3.12/site-packages"
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONNOUSERSITE=1
 
@@ -168,7 +184,7 @@ else
 fi
 
 export PYTHONHOME="$PYTHON_HOME"
-export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
+export PYTHONPATH="$PYTHON_HOME/lib/python3.12/site-packages"
 
 exec "$PYTHON_HOME/bin/python3" "$@"
 PYTHON_EOF
@@ -188,7 +204,7 @@ PYTHON_HOME="$(dirname "$SCRIPT_DIR")"
 
 # Set up environment for the standalone Python
 export PYTHONHOME="$PYTHON_HOME"
-export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
+export PYTHONPATH="$PYTHON_HOME/lib/python3.12/site-packages"
 export PATH="$SCRIPT_DIR:$PATH"
 
 # Run the pip-installed mitmdump script (works better than -m)
@@ -211,7 +227,7 @@ PYTHON_HOME="$(dirname "$SCRIPT_DIR")"
 # Set up isolated environment for the standalone Python
 export PYTHONHOME="$PYTHON_HOME"
 # Use ONLY the bundled site-packages, ignore everything else
-export PYTHONPATH="$PYTHON_HOME/lib/python3.11/site-packages"
+export PYTHONPATH="$PYTHON_HOME/lib/python3.12/site-packages"
 # Prevent Python from adding current directory to sys.path
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONNOUSERSITE=1
@@ -267,6 +283,19 @@ chmod +x "$EMBED_DIR/bin/"* 2>/dev/null || true
 echo ""
 echo "Verifying installation..."
 if "$EMBED_DIR/bin/mitmdump" --version; then
+    echo ""
+
+    # Verify CONF_BASENAME is set to "oximy"
+    echo "Verifying Oximy customizations..."
+    CONF_BASENAME=$("$EMBED_DIR/bin/python3" -c "from mitmproxy.options import CONF_BASENAME; print(CONF_BASENAME)" 2>/dev/null)
+    if [ "$CONF_BASENAME" = "oximy" ]; then
+        echo "✓ CONF_BASENAME = oximy (certificate files will be oximy-ca*.pem)"
+    else
+        echo "ERROR: CONF_BASENAME = '$CONF_BASENAME' (expected 'oximy')"
+        echo "The local mitmproxy source may not have been installed correctly."
+        exit 1
+    fi
+
     echo ""
     echo "=== Build Complete ==="
     echo ""

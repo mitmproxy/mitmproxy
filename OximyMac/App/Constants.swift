@@ -23,13 +23,13 @@ enum Constants {
         oximyDir.appendingPathComponent("bundle_cache.json")
     }
 
-    // MARK: - Certificates (named for mitmproxy compatibility)
+    // MARK: - Certificates
     static var caKeyPath: URL {
-        oximyDir.appendingPathComponent("mitmproxy-ca.pem")
+        oximyDir.appendingPathComponent("oximy-ca.pem")
     }
 
     static var caCertPath: URL {
-        oximyDir.appendingPathComponent("mitmproxy-ca-cert.pem")
+        oximyDir.appendingPathComponent("oximy-ca-cert.pem")
     }
 
     // MARK: - CA Branding

@@ -4,6 +4,7 @@ from mitmproxy.addons import proxyauth
 from mitmproxy.addons import proxyserver
 from mitmproxy.addons import save
 from mitmproxy.addons import savehar
+from mitmproxy.addons import script
 from mitmproxy.addons import tlsconfig
 
 
@@ -12,6 +13,7 @@ def default_addons():
         core.Core(),
         proxyauth.ProxyAuth(),
         proxyserver.Proxyserver(),
+        script.ScriptLoader(),
         next_layer.NextLayer(),
         save.Save(),
         savehar.SaveHar(),

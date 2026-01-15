@@ -41,11 +41,12 @@ class KeepServing:
                 self.shutdown()
 
     def running(self):
-        opts = [
-            ctx.options.client_replay,
-            ctx.options.server_replay,
-            ctx.options.rfile,
-        ]
+        # Check for replay/rfile options if they exist (Oximy fork removes some addons)
+        opts = []
+        for opt_name in ['client_replay', 'server_replay', 'rfile']:
+            if hasattr(ctx.options, opt_name):
+                opts.append(getattr(ctx.options, opt_name))
+
         if any(opts) and not ctx.options.keepserving:
             asyncio_utils.create_task(
                 self.watch(),

@@ -33,11 +33,11 @@ class CertificateService: ObservableObject {
     }
 
     /// Validate and repair the CA certificate if needed
-    /// mitmproxy expects mitmproxy-ca.pem to contain BOTH key and cert concatenated
+    /// mitmproxy expects oximy-ca.pem to contain BOTH key and cert concatenated
     /// Returns true if certificate is valid or was successfully repaired
     private func validateAndRepairCA() -> Bool {
-        let keyPath = Constants.caKeyPath  // mitmproxy-ca.pem (should have key+cert)
-        let certPath = Constants.caCertPath // mitmproxy-ca-cert.pem (cert only)
+        let keyPath = Constants.caKeyPath  // oximy-ca.pem (should have key+cert)
+        let certPath = Constants.caCertPath // oximy-ca-cert.pem (cert only)
 
         // Check if combined file exists and has correct format
         guard let content = try? String(contentsOf: keyPath, encoding: .utf8) else {
@@ -60,7 +60,7 @@ class CertificateService: ObservableObject {
                 let combined = content + certContent
                 do {
                     try combined.write(to: keyPath, atomically: true, encoding: .utf8)
-                    NSLog("[CertificateService] Repaired mitmproxy-ca.pem by adding certificate")
+                    NSLog("[CertificateService] Repaired oximy-ca.pem by adding certificate")
                     return true
                 } catch {
                     NSLog("[CertificateService] Failed to repair certificate: \(error)")
@@ -90,7 +90,7 @@ class CertificateService: ObservableObject {
     // MARK: - CA Generation
 
     /// Generate Oximy-branded CA certificate using OpenSSL
-    /// mitmproxy expects mitmproxy-ca.pem to contain BOTH key and cert concatenated
+    /// mitmproxy expects oximy-ca.pem to contain BOTH key and cert concatenated
     func generateCA() async throws {
         // Ensure directory exists
         let fm = FileManager.default
@@ -147,7 +147,7 @@ class CertificateService: ObservableObject {
             let keyData = try String(contentsOf: tempKeyPath, encoding: .utf8)
             let certData = try String(contentsOf: tempCertPath, encoding: .utf8)
 
-            // mitmproxy expects mitmproxy-ca.pem to have: key + cert concatenated
+            // mitmproxy expects oximy-ca.pem to have: key + cert concatenated
             // Format: private key first, then certificate
             let combinedPEM = keyData + certData
             try combinedPEM.write(to: Constants.caKeyPath, atomically: true, encoding: .utf8)
@@ -191,7 +191,7 @@ class CertificateService: ObservableObject {
 
     /// Create PKCS12 file for Keychain import
     private func createPKCS12(keyPath: URL, certPath: URL) async throws {
-        let p12Path = Constants.oximyDir.appendingPathComponent("mitmproxy-ca.p12")
+        let p12Path = Constants.oximyDir.appendingPathComponent("oximy-ca.p12")
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/openssl")
@@ -351,13 +351,13 @@ class CertificateService: ObservableObject {
             try fm.removeItem(at: Constants.caKeyPath)
         }
 
-        let p12Path = Constants.oximyDir.appendingPathComponent("mitmproxy-ca.p12")
+        let p12Path = Constants.oximyDir.appendingPathComponent("oximy-ca.p12")
         if fm.fileExists(atPath: p12Path.path) {
             try fm.removeItem(at: p12Path)
         }
 
         // Also remove DH params file that mitmproxy creates
-        let dhParamPath = Constants.oximyDir.appendingPathComponent("mitmproxy-dhparam.pem")
+        let dhParamPath = Constants.oximyDir.appendingPathComponent("oximy-dhparam.pem")
         if fm.fileExists(atPath: dhParamPath.path) {
             try fm.removeItem(at: dhParamPath)
         }
