@@ -23,7 +23,6 @@
     ".*\\.whatsapp\\.com$",
     ".*\\.segment\\.io$",
     ".*\\.launchdarkly\\.com$",
-    "^cdn\\-settings\\.segment\\.com$",
-    "^ab\\.chatgpt\\.com$"
+    "^cdn\\-settings\\.segment\\.com$"
   ]
 }

@@ -612,6 +612,10 @@ class OximyAddon:
             if flow.response.timestamp_start:
                 ttfb_ms = int((flow.response.timestamp_start - flow.request.timestamp_start) * 1000)
 
+        # Filter out cookie headers for privacy
+        request_headers = {k: v for k, v in flow.request.headers.items() if k.lower() != "cookie"}
+        response_headers = {k: v for k, v in flow.response.headers.items() if k.lower() != "set-cookie"} if flow.response else {}
+
         return {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
@@ -620,12 +624,12 @@ class OximyAddon:
                 "method": flow.request.method,
                 "host": flow.request.pretty_host,
                 "path": flow.request.path,
-                "headers": dict(flow.request.headers),
+                "headers": request_headers,
                 "body": request_body,
             },
             "response": {
                 "status_code": flow.response.status_code if flow.response else None,
-                "headers": dict(flow.response.headers) if flow.response else {},
+                "headers": response_headers,
                 "body": response_body if response_body else None,
             },
             "timing": {"duration_ms": duration_ms, "ttfb_ms": ttfb_ms},
