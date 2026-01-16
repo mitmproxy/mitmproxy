@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import signal
+import subprocess
 import sys
 import time
 from datetime import date, datetime, timezone
@@ -23,6 +24,12 @@ from pathlib import Path
 from typing import IO
 
 from mitmproxy import ctx, http, tls
+
+# Import ProcessResolver - handle both package and script modes
+try:
+    from .process import ClientProcess, ProcessResolver
+except ImportError:
+    from process import ClientProcess, ProcessResolver
 
 logging.basicConfig(
     level=logging.INFO,
@@ -245,23 +252,56 @@ def _ensure_cert_trusted() -> bool:
 # CONFIG LOADING
 # =============================================================================
 
-def load_json_list(path: Path, key: str) -> list[str]:
-    """Load a list from a JSON file."""
-    if not path.exists():
-        logger.warning(f"Config file not found: {path}")
-        return []
+SENSOR_CONFIG_URL = "https://api.oximy.com/api/v1/sensor-config"
+SENSOR_CONFIG_CACHE = Path("~/.oximy/sensor-config.json").expanduser()
+
+
+def fetch_sensor_config() -> dict:
+    """Fetch sensor config from API and cache locally."""
+    import urllib.request
+    import urllib.error
+
+    config = {
+        "whitelist": {"domains": []},
+        "blacklist": {"words": []},
+        "passthrough": {"patterns": []},
+    }
+
     try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        items = data.get(key, [])
-        logger.info(f"Loaded {len(items)} {key} from {path.name}")
-        return items
-    except (json.JSONDecodeError, IOError) as e:
-        logger.error(f"Failed to load {path}: {e}")
-        return []
+        logger.info(f"Fetching sensor config from {SENSOR_CONFIG_URL}")
+        req = urllib.request.Request(
+            SENSOR_CONFIG_URL,
+            headers={"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        # Cache the config locally
+        SENSOR_CONFIG_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with open(SENSOR_CONFIG_CACHE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        logger.info(f"Sensor config cached to {SENSOR_CONFIG_CACHE}")
+
+        return data
+
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError) as e:
+        logger.warning(f"Failed to fetch sensor config: {e}")
+
+        # Fall back to cached config if available
+        if SENSOR_CONFIG_CACHE.exists():
+            try:
+                with open(SENSOR_CONFIG_CACHE, encoding="utf-8") as f:
+                    cached = json.load(f)
+                logger.info(f"Using cached sensor config from {SENSOR_CONFIG_CACHE}")
+                return cached
+            except (json.JSONDecodeError, IOError) as cache_err:
+                logger.warning(f"Failed to load cached config: {cache_err}")
+
+        logger.warning("Using empty default config")
+        return config
 
 
-def load_config(config_path: Path | None = None) -> dict:
+def load_output_config(config_path: Path | None = None) -> dict:
     """Load output configuration."""
     default = {"output": {"directory": "~/.oximy/traces", "filename_pattern": "traces_{date}.jsonl"}}
     if config_path and config_path.exists():
@@ -273,6 +313,62 @@ def load_config(config_path: Path | None = None) -> dict:
         except (json.JSONDecodeError, IOError):
             pass
     return default
+
+
+# =============================================================================
+# DEVICE & WORKSPACE IDs
+# =============================================================================
+
+_device_id_cache: str | None = None
+
+
+def get_device_id() -> str | None:
+    """Get hardware UUID for this device. Cached after first call."""
+    global _device_id_cache
+    if _device_id_cache is not None:
+        return _device_id_cache
+
+    try:
+        if sys.platform == "darwin":
+            # macOS: Use IOPlatformUUID
+            result = subprocess.run(
+                ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.split("\n"):
+                    if "IOPlatformUUID" in line:
+                        # Line format: "IOPlatformUUID" = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+                        parts = line.split('"')
+                        if len(parts) >= 4:
+                            _device_id_cache = parts[3]
+                            return _device_id_cache
+        elif sys.platform == "win32":
+            # Windows: Use wmic csproduct get UUID
+            result = subprocess.run(
+                ["wmic", "csproduct", "get", "UUID"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                if len(lines) >= 2:
+                    uuid = lines[1].strip()
+                    if uuid and uuid != "UUID":
+                        _device_id_cache = uuid
+                        return _device_id_cache
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        logger.debug(f"Failed to get device ID: {e}")
+
+    return None
+
+
+def get_workspace_id() -> str | None:
+    """Get workspace ID from OXIMY_WORKSPACE_ID environment variable."""
+    return os.environ.get("OXIMY_WORKSPACE_ID")
 
 
 # =============================================================================
@@ -324,42 +420,65 @@ def contains_blacklist_word(text: str, words: list[str]) -> str | None:
 # TLS PASSTHROUGH
 # =============================================================================
 
+LEARNED_PASSTHROUGH_CACHE = Path("~/.oximy/learned-passthrough.json").expanduser()
+
+
 class TLSPassthrough:
     """Manages TLS passthrough for certificate-pinned hosts."""
 
-    def __init__(self, passthrough_path: Path):
-        self._path = passthrough_path
+    def __init__(self, patterns: list[str]):
+        """Initialize with patterns from API config."""
         self._patterns: list[re.Pattern] = []
-        self._reload()
+        self._learned_patterns: list[str] = []
 
-    def _reload(self) -> None:
-        """Load patterns from passthrough.json."""
-        patterns = load_json_list(self._path, "patterns")
-        self._patterns = [re.compile(p, re.IGNORECASE) for p in patterns]
+        # Load patterns from API config
+        for p in patterns:
+            try:
+                self._patterns.append(re.compile(p, re.IGNORECASE))
+            except re.error as e:
+                logger.warning(f"Invalid passthrough pattern '{p}': {e}")
+
+        # Load learned patterns from local cache
+        self._load_learned()
+
+    def _load_learned(self) -> None:
+        """Load learned passthrough patterns from local cache."""
+        if LEARNED_PASSTHROUGH_CACHE.exists():
+            try:
+                with open(LEARNED_PASSTHROUGH_CACHE, encoding="utf-8") as f:
+                    data = json.load(f)
+                self._learned_patterns = data.get("patterns", [])
+                for p in self._learned_patterns:
+                    try:
+                        self._patterns.append(re.compile(p, re.IGNORECASE))
+                    except re.error:
+                        pass
+                if self._learned_patterns:
+                    logger.info(f"Loaded {len(self._learned_patterns)} learned passthrough patterns")
+            except (json.JSONDecodeError, IOError):
+                pass
 
     def should_passthrough(self, host: str) -> bool:
         """Check if host should bypass TLS interception."""
         return any(p.match(host) for p in self._patterns)
 
     def add_host(self, host: str) -> None:
-        """Add a host to passthrough.json."""
+        """Add a learned host to local passthrough cache."""
         try:
-            if self._path.exists():
-                with open(self._path, encoding="utf-8") as f:
-                    data = json.load(f)
-            else:
-                data = {"patterns": []}
-
-            # Add as exact match pattern
             pattern = f"^{re.escape(host)}$"
-            if pattern not in data["patterns"]:
-                data["patterns"].append(pattern)
-                with open(self._path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2)
-                self._reload()
-                logger.info(f"Added to passthrough: {host}")
-        except (json.JSONDecodeError, IOError) as e:
-            logger.warning(f"Failed to update passthrough.json: {e}")
+            if pattern in self._learned_patterns:
+                return
+
+            self._learned_patterns.append(pattern)
+            self._patterns.append(re.compile(pattern, re.IGNORECASE))
+
+            # Save to local cache
+            LEARNED_PASSTHROUGH_CACHE.parent.mkdir(parents=True, exist_ok=True)
+            with open(LEARNED_PASSTHROUGH_CACHE, "w", encoding="utf-8") as f:
+                json.dump({"patterns": self._learned_patterns}, f, indent=2)
+            logger.info(f"Added to learned passthrough: {host}")
+        except (IOError, re.error) as e:
+            logger.warning(f"Failed to save learned passthrough: {e}")
 
     def record_tls_failure(self, host: str, error: str, whitelist: list[str]) -> None:
         """Record TLS failure - add to passthrough if certificate pinning detected."""
@@ -428,6 +547,134 @@ class TraceWriter:
             logger.info(f"Closed trace file ({self._count} events)")
             self._fo = None
 
+    def get_current_file(self) -> Path | None:
+        """Get the current trace file path."""
+        return self._current_file
+
+    def get_count(self) -> int:
+        """Get the number of traces written in this session."""
+        return self._count
+
+
+# =============================================================================
+# TRACE UPLOADER
+# =============================================================================
+
+INGEST_API_URL = "https://api.oximy.com/api/v1/ingest/network-traces"
+UPLOAD_STATE_FILE = Path("~/.oximy/upload-state.json").expanduser()
+BATCH_SIZE = 500  # Traces per upload batch
+UPLOAD_INTERVAL_SECONDS = 2  # Upload every N seconds
+UPLOAD_THRESHOLD_COUNT = 100  # Or every N traces
+
+
+class TraceUploader:
+    """Uploads traces to the ingestion API with gzip compression."""
+
+    def __init__(self):
+        self._upload_state: dict[str, int] = {}  # file_path -> last_uploaded_line
+        self._load_state()
+
+    def _load_state(self) -> None:
+        """Load upload state from disk."""
+        if UPLOAD_STATE_FILE.exists():
+            try:
+                with open(UPLOAD_STATE_FILE, encoding="utf-8") as f:
+                    self._upload_state = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
+
+    def _save_state(self) -> None:
+        """Save upload state to disk."""
+        try:
+            UPLOAD_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with open(UPLOAD_STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(self._upload_state, f)
+        except IOError as e:
+            logger.warning(f"Failed to save upload state: {e}")
+
+    def upload_traces(self, trace_file: Path) -> int:
+        """Upload pending traces from a file. Returns number of traces uploaded."""
+        import gzip
+        import urllib.request
+        import urllib.error
+
+        if not trace_file.exists():
+            return 0
+
+        file_key = str(trace_file)
+        last_uploaded = self._upload_state.get(file_key, 0)
+
+        # Read all lines from the file
+        try:
+            with open(trace_file, encoding="utf-8") as f:
+                lines = f.readlines()
+        except IOError as e:
+            logger.warning(f"Failed to read trace file: {e}")
+            return 0
+
+        # Get pending lines (not yet uploaded)
+        pending_lines = lines[last_uploaded:]
+        if not pending_lines:
+            return 0
+
+        total_uploaded = 0
+
+        # Upload in batches
+        for i in range(0, len(pending_lines), BATCH_SIZE):
+            batch = pending_lines[i:i + BATCH_SIZE]
+            batch_data = "".join(batch).encode("utf-8")
+
+            # Gzip compress the batch
+            compressed = gzip.compress(batch_data)
+
+            try:
+                req = urllib.request.Request(
+                    INGEST_API_URL,
+                    data=compressed,
+                    headers={
+                        "Content-Type": "application/jsonl",
+                        "Content-Encoding": "gzip",
+                        "User-Agent": "Oximy-Sensor/1.0",
+                    },
+                    method="POST",
+                )
+
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    response_data = json.loads(resp.read().decode("utf-8"))
+
+                if response_data.get("success"):
+                    uploaded_count = len(batch)
+                    total_uploaded += uploaded_count
+                    last_uploaded += uploaded_count
+                    self._upload_state[file_key] = last_uploaded
+                    self._save_state()
+                    logger.info(f"Uploaded {uploaded_count} traces (batch {i // BATCH_SIZE + 1})")
+                else:
+                    logger.warning(f"Upload failed: {response_data.get('error', 'Unknown error')}")
+                    break
+
+            except urllib.error.HTTPError as e:
+                error_body = e.read().decode("utf-8", errors="replace")
+                logger.warning(f"Upload HTTP error {e.code}: {error_body[:200]}")
+                break
+            except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+                logger.warning(f"Upload failed: {e}")
+                break
+
+        return total_uploaded
+
+    def upload_all_pending(self, traces_dir: Path) -> int:
+        """Upload all pending traces from all files in the directory."""
+        if not traces_dir.exists():
+            return 0
+
+        total = 0
+        for trace_file in sorted(traces_dir.glob("traces_*.jsonl")):
+            uploaded = self.upload_traces(trace_file)
+            total += uploaded
+
+        return total
+
 
 def generate_event_id() -> str:
     """Generate UUID v7 (time-sortable)."""
@@ -452,6 +699,13 @@ class OximyAddon:
         self._blacklist: list[str] = []
         self._tls: TLSPassthrough | None = None
         self._writer: TraceWriter | None = None
+        self._uploader: TraceUploader | None = None
+        self._resolver: ProcessResolver | None = None
+        self._device_id: str | None = None
+        self._workspace_id: str | None = None
+        self._output_dir: Path | None = None
+        self._last_upload_time: float = 0
+        self._traces_since_upload: int = 0
 
     def load(self, loader) -> None:
         """Register addon options."""
@@ -485,17 +739,34 @@ class OximyAddon:
                 logger.error("=" * 60)
                 # Continue anyway - user might install manually or cert will be generated
 
-        addon_dir = Path(__file__).parent
-        self._whitelist = load_json_list(addon_dir / "whitelist.json", "domains")
-        self._blacklist = load_json_list(addon_dir / "blacklist.json", "words")
-        self._tls = TLSPassthrough(addon_dir / "passthrough.json")
+        # Fetch sensor config from API (cached locally)
+        sensor_config = fetch_sensor_config()
+        self._whitelist = sensor_config.get("whitelist", {}).get("domains", [])
+        self._blacklist = sensor_config.get("blacklist", {}).get("words", [])
+        passthrough_patterns = sensor_config.get("passthrough", {}).get("patterns", [])
+        self._tls = TLSPassthrough(passthrough_patterns)
 
-        config = load_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
-        output_dir = Path(ctx.options.oximy_output_dir).expanduser()
-        self._writer = TraceWriter(output_dir, config["output"].get("filename_pattern", "traces_{date}.jsonl"))
+        output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
+        self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
+        self._writer = TraceWriter(self._output_dir, output_config["output"].get("filename_pattern", "traces_{date}.jsonl"))
+
+        # Initialize trace uploader for API uploads
+        self._uploader = TraceUploader()
+        self._last_upload_time = time.time()
+        self._traces_since_upload = 0
+
+        # Initialize process resolver for client attribution
+        self._resolver = ProcessResolver()
+
+        # Get device and workspace IDs
+        self._device_id = get_device_id()
+        self._workspace_id = get_workspace_id()
+        logger.info(f"Device ID: {self._device_id}")
+        if self._workspace_id:
+            logger.info(f"Workspace ID: {self._workspace_id}")
 
         _set_system_proxy(enable=True)
-        logger.info(f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist =====")
+        logger.info(f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, {len(passthrough_patterns)} passthrough =====")
 
     def _check_blacklist(self, *texts: str) -> str | None:
         """Check if any text contains a blacklisted word."""
@@ -532,7 +803,7 @@ class OximyAddon:
     # HTTP Hooks
     # =========================================================================
 
-    def request(self, flow: http.HTTPFlow) -> None:
+    async def request(self, flow: http.HTTPFlow) -> None:
         """Check whitelist and blacklist on request."""
         if not self._enabled:
             return
@@ -564,6 +835,16 @@ class OximyAddon:
         flow.metadata["oximy_capture"] = True
         flow.metadata["oximy_start"] = time.time()
 
+        # Get client process info
+        if self._resolver and flow.client_conn and flow.client_conn.peername:
+            try:
+                client_port = flow.client_conn.peername[1]
+                client_process = await self._resolver.get_process_for_port(client_port)
+                flow.metadata["oximy_client"] = client_process
+                logger.debug(f"Client: {client_process.name} (PID {client_process.pid})")
+            except Exception as e:
+                logger.debug(f"Failed to get client process: {e}")
+
     def response(self, flow: http.HTTPFlow) -> None:
         """Check blacklist on response and write trace."""
         if not self._enabled or not self._writer:
@@ -594,7 +875,11 @@ class OximyAddon:
         # Build and write event
         event = self._build_event(flow, response_body)
         self._writer.write(event)
+        self._traces_since_upload += 1
         logger.info(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]")
+
+        # Check if we should upload
+        self._maybe_upload()
 
     def _build_event(self, flow: http.HTTPFlow, response_body: str) -> dict:
         """Build trace event."""
@@ -616,30 +901,55 @@ class OximyAddon:
         request_headers = {k: v for k, v in flow.request.headers.items() if k.lower() != "cookie"}
         response_headers = {k: v for k, v in flow.response.headers.items() if k.lower() != "set-cookie"} if flow.response else {}
 
-        return {
+        # Build client info from stored process data
+        client_info: dict | None = None
+        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
+        if client_process:
+            client_info = {
+                "pid": client_process.pid,
+                "bundle_id": client_process.bundle_id,
+            }
+            if client_process.name:
+                client_info["name"] = client_process.name
+
+        event: dict = {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             "type": "http",
-            "request": {
-                "method": flow.request.method,
-                "host": flow.request.pretty_host,
-                "path": flow.request.path,
-                "headers": request_headers,
-                "body": request_body,
-            },
-            "response": {
-                "status_code": flow.response.status_code if flow.response else None,
-                "headers": response_headers,
-                "body": response_body if response_body else None,
-            },
-            "timing": {"duration_ms": duration_ms, "ttfb_ms": ttfb_ms},
         }
+
+        # Add device and workspace IDs at root level
+        if self._device_id:
+            event["device_id"] = self._device_id
+        if self._workspace_id:
+            event["workspace_id"] = self._workspace_id
+
+        # Add client info
+        if client_info:
+            event["client"] = client_info
+
+        # Add request/response/timing
+        event["request"] = {
+            "method": flow.request.method,
+            "host": flow.request.pretty_host,
+            "path": flow.request.path,
+            "headers": request_headers,
+            "body": request_body,
+        }
+        event["response"] = {
+            "status_code": flow.response.status_code if flow.response else None,
+            "headers": response_headers,
+            "body": response_body if response_body else None,
+        }
+        event["timing"] = {"duration_ms": duration_ms, "ttfb_ms": ttfb_ms}
+
+        return event
 
     # =========================================================================
     # WebSocket Hooks
     # =========================================================================
 
-    def websocket_message(self, flow: http.HTTPFlow) -> None:
+    async def websocket_message(self, flow: http.HTTPFlow) -> None:
         """Accumulate WebSocket messages."""
         if not self._enabled:
             return
@@ -652,6 +962,15 @@ class OximyAddon:
         if "oximy_ws_messages" not in flow.metadata:
             flow.metadata["oximy_ws_messages"] = []
             flow.metadata["oximy_ws_start"] = time.time()
+
+            # Get client process info on first message
+            if self._resolver and flow.client_conn and flow.client_conn.peername:
+                try:
+                    client_port = flow.client_conn.peername[1]
+                    client_process = await self._resolver.get_process_for_port(client_port)
+                    flow.metadata["oximy_client"] = client_process
+                except Exception as e:
+                    logger.debug(f"Failed to get client process for WS: {e}")
 
         if flow.websocket and flow.websocket.messages:
             msg = flow.websocket.messages[-1]
@@ -681,17 +1000,75 @@ class OximyAddon:
             return
 
         start = flow.metadata.get("oximy_ws_start", time.time())
-        event = {
+
+        # Build client info from stored process data
+        client_info: dict | None = None
+        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
+        if client_process:
+            client_info = {
+                "pid": client_process.pid,
+                "bundle_id": client_process.bundle_id,
+            }
+            if client_process.name:
+                client_info["name"] = client_process.name
+
+        event: dict = {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             "type": "websocket",
-            "host": flow.request.pretty_host,
-            "path": flow.request.path,
-            "messages": messages,
-            "timing": {"duration_ms": int((time.time() - start) * 1000), "message_count": len(messages)},
         }
+
+        # Add device and workspace IDs at root level
+        if self._device_id:
+            event["device_id"] = self._device_id
+        if self._workspace_id:
+            event["workspace_id"] = self._workspace_id
+
+        # Add client info
+        if client_info:
+            event["client"] = client_info
+
+        # Add WebSocket-specific fields
+        event["host"] = flow.request.pretty_host
+        event["path"] = flow.request.path
+        event["messages"] = messages
+        event["timing"] = {"duration_ms": int((time.time() - start) * 1000), "message_count": len(messages)}
+
         self._writer.write(event)
+        self._traces_since_upload += 1
         logger.info(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(messages)} messages)")
+
+        # Check if we should upload
+        self._maybe_upload()
+
+    # =========================================================================
+    # Upload Trigger
+    # =========================================================================
+
+    def _maybe_upload(self) -> None:
+        """Upload traces if threshold reached (100 traces or 2 seconds elapsed)."""
+        if not self._uploader or not self._output_dir:
+            return
+
+        now = time.time()
+        time_elapsed = now - self._last_upload_time >= UPLOAD_INTERVAL_SECONDS
+        count_reached = self._traces_since_upload >= UPLOAD_THRESHOLD_COUNT
+
+        # Upload if either condition is met and we have traces
+        if (time_elapsed or count_reached) and self._traces_since_upload > 0:
+            try:
+                # Flush writer before uploading
+                if self._writer and self._writer._fo:
+                    self._writer._fo.flush()
+
+                uploaded = self._uploader.upload_all_pending(self._output_dir)
+                if uploaded > 0:
+                    logger.info(f"Uploaded {uploaded} traces to API")
+
+                self._last_upload_time = now
+                self._traces_since_upload = 0
+            except Exception as e:
+                logger.warning(f"Failed to upload traces: {e}")
 
     # =========================================================================
     # Lifecycle
@@ -708,9 +1085,21 @@ class OximyAddon:
             return
         _cleanup_done = True
         _set_system_proxy(enable=False)
+
+        # Close writer first to flush pending writes
         if self._writer:
             self._writer.close()
             self._writer = None
+
+        # Upload pending traces to API
+        if self._uploader and self._output_dir:
+            try:
+                uploaded = self._uploader.upload_all_pending(self._output_dir)
+                if uploaded > 0:
+                    logger.info(f"Uploaded {uploaded} traces to API on shutdown")
+            except Exception as e:
+                logger.warning(f"Failed to upload traces on shutdown: {e}")
+
         self._enabled = False
         logger.info("Oximy addon disabled")
 
