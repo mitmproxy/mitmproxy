@@ -1,6 +1,26 @@
 import AppKit
 import Foundation
 
+/// Reads the Python addon's upload state (simple format: {filepath: lastLine})
+struct AddonUploadState {
+    var files: [String: Int]  // filepath -> last uploaded line
+
+    static var fileURL: URL {
+        Constants.oximyDir.appendingPathComponent("upload-state.json")
+    }
+
+    static func load() -> AddonUploadState {
+        guard let data = try? Data(contentsOf: fileURL),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Int]
+        else { return AddonUploadState(files: [:]) }
+        return AddonUploadState(files: dict)
+    }
+
+    func lastSyncedLine(for filepath: String) -> Int {
+        files[filepath] ?? 0
+    }
+}
+
 @MainActor
 final class SyncService: ObservableObject {
     static let shared = SyncService()
@@ -41,14 +61,15 @@ final class SyncService: ObservableObject {
     @Published var consecutiveFailures = 0
 
     private var timer: Timer?
-    private var syncState: SyncState
+
+    /// Force sync trigger file - writing this tells the addon to sync immediately
+    private static let forceSyncTrigger = Constants.oximyDir.appendingPathComponent("force-sync")
 
     private var config: DeviceConfig {
         DeviceConfig.load()
     }
 
     private init() {
-        syncState = SyncState.load()
         updatePendingCount()
     }
 
@@ -57,19 +78,19 @@ final class SyncService: ObservableObject {
 
         SentryService.shared.addStateBreadcrumb(
             category: "sync",
-            message: "Sync service started",
+            message: "Sync status monitor started",
             data: ["interval": config.eventFlushIntervalSeconds]
         )
 
-        // Schedule recurring sync
-        timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(config.eventFlushIntervalSeconds), repeats: true) { [weak self] _ in
+        // Poll for pending count updates (addon handles actual uploads)
+        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
-                await self?.syncAllEvents()
+                self?.updatePendingCount()
             }
         }
 
-        // Trigger initial sync
-        Task { await syncAllEvents() }
+        // Initial count update
+        updatePendingCount()
     }
 
     func stop() {
@@ -78,129 +99,35 @@ final class SyncService: ObservableObject {
 
         SentryService.shared.addStateBreadcrumb(
             category: "sync",
-            message: "Sync service stopped"
+            message: "Sync status monitor stopped"
         )
     }
 
+    /// Trigger the addon to sync immediately by writing a trigger file
     func syncNow() async {
-        await syncAllEvents()
-    }
-
-    /// Sync ALL pending events in this cycle to prevent backlog
-    private func syncAllEvents() async {
-        guard APIClient.shared.isAuthenticated, !isSyncing else { return }
-
         isSyncing = true
         syncStatus = .syncing
 
-        defer {
-            isSyncing = false
-            updatePendingCount()
-        }
-
+        // Write trigger file for addon
         do {
-            // Reload sync state in case it was modified
-            syncState = SyncState.load()
+            try "sync".write(to: Self.forceSyncTrigger, atomically: true, encoding: .utf8)
+            NSLog("[SyncService] Wrote force-sync trigger")
 
-            // Get all trace files sorted by date
-            let traceFiles = try getTraceFiles()
+            // Wait briefly for addon to process
+            try await Task.sleep(nanoseconds: 500_000_000)  // 0.5s
 
-            var totalSynced = 0
+            // Update pending count after sync
+            updatePendingCount()
 
-            for file in traceFiles {
-                let synced = try await syncFile(file)
-                totalSynced += synced
-            }
-
-            // Success - reset failure count
-            consecutiveFailures = 0
             lastSyncTime = Date()
-            syncError = nil
             syncStatus = pendingEventCount > 0 ? .idle : .synced
-
-            if totalSynced > 0 {
-                SentryService.shared.addStateBreadcrumb(
-                    category: "sync",
-                    message: "Events synced",
-                    data: ["count": totalSynced]
-                )
-            }
-
-        } catch APIError.unauthorized {
-            // Auth failure handled by APIClient
-            syncError = "Authentication failed"
-            syncStatus = .error("Auth failed")
-            consecutiveFailures += 1
-        } catch APIError.networkUnavailable {
-            consecutiveFailures += 1
-            let retrySeconds = min(60, config.eventFlushIntervalSeconds * consecutiveFailures)
-            syncError = "Network unavailable - storing locally"
-            syncStatus = .offline(retryIn: retrySeconds)
-
-            SentryService.shared.addErrorBreadcrumb(
-                service: "sync",
-                error: "Network unavailable - events stored locally, will retry"
-            )
         } catch {
-            consecutiveFailures += 1
-            let retrySeconds = min(60, config.eventFlushIntervalSeconds * consecutiveFailures)
-
-            // Check if it's a network-related error
-            let nsError = error as NSError
-            if nsError.domain == NSURLErrorDomain {
-                syncError = "Connection failed - storing locally"
-                syncStatus = .offline(retryIn: retrySeconds)
-            } else {
-                syncError = error.localizedDescription
-                syncStatus = .error("Sync failed")
-            }
-
-            SentryService.shared.addErrorBreadcrumb(
-                service: "sync",
-                error: error.localizedDescription
-            )
-        }
-    }
-
-    /// Sync a single file, sending ALL unsynced events in batches
-    /// Returns number of events synced
-    private func syncFile(_ fileURL: URL) async throws -> Int {
-        let filename = fileURL.lastPathComponent
-        let lastSyncedLine = syncState.lastSyncedLine(for: filename)
-
-        // Read all unsynced lines
-        let lines = try readLines(from: fileURL, startingAt: lastSyncedLine)
-
-        guard !lines.isEmpty else { return 0 }
-
-        var totalSynced = 0
-        var currentLine = lastSyncedLine
-
-        // Chunk into batches and send ALL of them sequentially
-        let batches = lines.chunked(into: config.eventBatchSize)
-
-        for batch in batches {
-            let events = batch.compactMap { parseEvent($0) }
-
-            guard !events.isEmpty else {
-                currentLine += batch.count
-                continue
-            }
-
-            // Send this batch
-            let response = try await APIClient.shared.submitEvents(events)
-
-            // Update sync state after each successful batch
-            currentLine += batch.count
-            let lastEventId = extractEventId(from: batch.last ?? "") ?? ""
-
-            syncState.updateFile(filename, lastSyncedLine: currentLine, lastSyncedEventId: lastEventId)
-            try syncState.save()
-
-            totalSynced += response.accepted
+            NSLog("[SyncService] Failed to write force-sync trigger: \(error)")
+            syncError = "Failed to trigger sync"
+            syncStatus = .error("Trigger failed")
         }
 
-        return totalSynced
+        isSyncing = false
     }
 
     // MARK: - File Reading
@@ -223,129 +150,47 @@ final class SyncService: ObservableObject {
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
-    private func readLines(from url: URL, startingAt line: Int) throws -> [String] {
-        let content = try String(contentsOf: url, encoding: .utf8)
-        let allLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
-        return Array(allLines.dropFirst(line))
-    }
-
-    private func parseEvent(_ line: String) -> JSONValue? {
-        guard let data = line.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return nil }
-
-        return JSONValue(from: json)
-    }
-
-    private func extractEventId(from line: String) -> String? {
-        guard let data = line.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let eventId = json["event_id"] as? String
-        else { return nil }
-        return eventId
-    }
-
-    // MARK: - Pending Count
+    // MARK: - Pending Count (reads addon's upload state)
 
     private func updatePendingCount() {
-        Task {
-            var count = 0
-            if let files = try? getTraceFiles() {
-                for file in files {
-                    let filename = file.lastPathComponent
-                    let syncedLine = syncState.lastSyncedLine(for: filename)
-                    if let content = try? String(contentsOf: file, encoding: .utf8) {
-                        let totalLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }.count
-                        count += max(0, totalLines - syncedLine)
-                    }
+        var count = 0
+        let addonState = AddonUploadState.load()
+
+        if let files = try? getTraceFiles() {
+            for file in files {
+                // Addon uses full path as key
+                let syncedLine = addonState.lastSyncedLine(for: file.path)
+                if let content = try? String(contentsOf: file, encoding: .utf8) {
+                    let totalLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }.count
+                    count += max(0, totalLines - syncedLine)
                 }
             }
-            pendingEventCount = count
+        }
+
+        let previousCount = pendingEventCount
+        pendingEventCount = count
+
+        // Update sync status based on count
+        if count == 0 && previousCount > 0 {
+            lastSyncTime = Date()
+            syncStatus = .synced
+        } else if count > 0 && syncStatus == .synced {
+            syncStatus = .idle
         }
     }
 
     // MARK: - Sync on Terminate (best effort, synchronous)
 
-    /// Synchronous flush for app termination - blocks until complete or timeout
-    /// Uses a background thread to avoid MainActor deadlock
+    /// Synchronous flush for app termination - triggers addon to sync
     nonisolated func flushSync() {
-        let deviceToken = UserDefaults.standard.string(forKey: Constants.Defaults.deviceToken)
-        guard let token = deviceToken else { return }
-
-        // Load sync state and config synchronously
-        let syncState = SyncState.load()
-        let config = DeviceConfig.load()
-        let apiEndpoint = config.apiEndpoint
-
-        // Get pending events synchronously
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: Constants.tracesDir.path),
-              let files = try? fm.contentsOfDirectory(at: Constants.tracesDir, includingPropertiesForKeys: nil)
-                .filter({ $0.pathExtension == "jsonl" && $0.lastPathComponent.hasPrefix("traces_") })
-        else { return }
-
-        var allEvents: [JSONValue] = []
-        var mutableSyncState = syncState
-
-        for file in files {
-            let filename = file.lastPathComponent
-            let lastSyncedLine = syncState.lastSyncedLine(for: filename)
-
-            guard let content = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            let lines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
-            let unsyncedLines = Array(lines.dropFirst(lastSyncedLine))
-
-            for line in unsyncedLines {
-                if let data = line.data(using: .utf8),
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    allEvents.append(JSONValue(from: json))
-                }
-            }
-
-            // Update sync state to mark all as synced (optimistically)
-            if !unsyncedLines.isEmpty {
-                mutableSyncState.updateFile(filename, lastSyncedLine: lines.count, lastSyncedEventId: "")
-            }
-        }
-
-        guard !allEvents.isEmpty else { return }
-
-        // Send synchronously with timeout
-        let semaphore = DispatchSemaphore(value: 0)
-        var success = false
-
-        // Batch events (max 100 per request as per API)
-        let batches = allEvents.chunked(into: config.eventBatchSize)
-
-        for batch in batches {
-            guard let url = URL(string: apiEndpoint)?.appendingPathComponent("devices/events"),
-                  let body = try? JSONEncoder().encode(EventBatchRequest(events: batch))
-            else { continue }
-
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            request.httpBody = body
-            request.timeoutInterval = 5 // Short timeout for termination
-
-            let task = URLSession.shared.dataTask(with: request) { _, response, _ in
-                if let httpResponse = response as? HTTPURLResponse,
-                   httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
-                    success = true
-                }
-                semaphore.signal()
-            }
-            task.resume()
-
-            // Wait up to 5 seconds per batch
-            _ = semaphore.wait(timeout: .now() + 5)
-        }
-
-        // Save sync state if successful
-        if success {
-            try? mutableSyncState.save()
-            NSLog("[SyncService] flushSync: synced \(allEvents.count) events on termination")
+        // Write trigger file for addon to flush pending traces
+        do {
+            try "sync".write(to: Self.forceSyncTrigger, atomically: true, encoding: .utf8)
+            NSLog("[SyncService] flushSync: wrote force-sync trigger for addon")
+            // Give addon a moment to process
+            Thread.sleep(forTimeInterval: 0.5)
+        } catch {
+            NSLog("[SyncService] flushSync: failed to write trigger: \(error)")
         }
     }
 
@@ -392,9 +237,8 @@ final class SyncService: ObservableObject {
             }
         }
 
-        // Reset sync state
-        syncState = .empty
-        try syncState.save()
+        // Clear addon's upload state file
+        try? fm.removeItem(at: AddonUploadState.fileURL)
 
         // Update UI
         pendingEventCount = 0
