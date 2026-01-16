@@ -1,0 +1,30 @@
+{
+  "patterns": [
+    ".*\\.apple\\.com$",
+    ".*\\.icloud\\.com$",
+    ".*\\.icloud-content\\.com$",
+    ".*\\.itunes\\.com$",
+    ".*\\.mzstatic\\.com$",
+    ".*\\.apple-cloudkit\\.com$",
+    ".*\\.googleapis\\.com$",
+    ".*\\.googlevideo\\.com$",
+    "accounts\\.google\\.com$",
+    ".*\\.gstatic\\.com$",
+    ".*\\.microsoft\\.com$",
+    ".*\\.microsoftonline\\.com$",
+    ".*\\.office\\.com$",
+    ".*\\.office365\\.com$",
+    ".*\\.live\\.com$",
+    ".*\\.sentry\\.io$",
+    ".*\\.cursor\\.sh$",
+    ".*\\.slack\\.com$",
+    ".*\\.slackb\\.com$",
+    ".*\\.whatsapp\\.net$",
+    ".*\\.whatsapp\\.com$",
+    ".*\\.segment\\.io$",
+    ".*\\.launchdarkly\\.com$",
+    "^cdn\\-settings\\.segment\\.com$",
+    "^app\\-site\\-association\\.cdn\\-apple\\.com$",
+    "^android\\.clients\\.google\\.com$"
+  ]
+}

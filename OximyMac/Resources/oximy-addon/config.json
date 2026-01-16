@@ -1,0 +1,6 @@
+{
+  "output": {
+    "directory": "~/.oximy/traces",
+    "filename_pattern": "traces_{date}.jsonl"
+  }
+}

@@ -1,8 +1,9 @@
 """
-Oximy OISP Addon for mitmproxy
+Oximy Addon for mitmproxy
 
-Captures AI API traffic based on OISP bundle whitelists,
-normalizes events, and writes to JSONL files.
+Lightweight AI traffic capture with whitelist/blacklist filtering.
+Supports HTTP/REST, SSE, WebSocket, HTTP/2, HTTP/3, gRPC.
+Saves raw request/response bodies to JSONL files.
 """
 
 from addon import OximyAddon
