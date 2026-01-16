@@ -18,6 +18,7 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -247,6 +248,7 @@ def _ensure_cert_trusted() -> bool:
 
 SENSOR_CONFIG_URL = "https://api.oximy.com/api/v1/sensor-config"
 SENSOR_CONFIG_CACHE = Path("~/.oximy/sensor-config.json").expanduser()
+CONFIG_REFRESH_INTERVAL_SECONDS = 1800  # 30 minutes
 
 
 def fetch_sensor_config() -> dict:
@@ -363,11 +365,6 @@ def get_device_id() -> str | None:
         logger.debug(f"Failed to get device ID: {e}")
 
     return None
-
-
-def get_workspace_id() -> str | None:
-    """Get workspace ID from OXIMY_WORKSPACE_ID environment variable."""
-    return os.environ.get("OXIMY_WORKSPACE_ID")
 
 
 # =============================================================================
@@ -494,6 +491,23 @@ class TLSPassthrough:
         if any(ind in error.lower() for ind in pinning_indicators):
             self.add_host(host)
 
+    def update_passthrough(self, patterns: list[str]) -> None:
+        """Update passthrough patterns from refreshed config."""
+        new_patterns: list[re.Pattern] = []
+        for p in patterns:
+            try:
+                new_patterns.append(re.compile(p, re.IGNORECASE))
+            except re.error as e:
+                logger.warning(f"Invalid passthrough pattern '{p}': {e}")
+        # Re-add learned patterns
+        for p in self._learned_patterns:
+            try:
+                new_patterns.append(re.compile(p, re.IGNORECASE))
+            except re.error:
+                pass
+        self._patterns = new_patterns
+        logger.debug(f"Updated passthrough patterns: {len(patterns)} from config + {len(self._learned_patterns)} learned")
+
 
 # =============================================================================
 # TRACE WRITER
@@ -553,6 +567,7 @@ class TraceWriter:
 
 INGEST_API_URL = "https://api.oximy.com/api/v1/ingest/network-traces"
 UPLOAD_STATE_FILE = Path("~/.oximy/upload-state.json").expanduser()
+FORCE_SYNC_TRIGGER = Path("~/.oximy/force-sync").expanduser()  # Trigger file for immediate sync
 BATCH_SIZE = 500  # Traces per upload batch
 UPLOAD_INTERVAL_SECONDS = 2  # Upload every N seconds
 UPLOAD_THRESHOLD_COUNT = 100  # Or every N traces
@@ -693,10 +708,23 @@ class OximyAddon:
         self._uploader: TraceUploader | None = None
         self._resolver: ProcessResolver | None = None
         self._device_id: str | None = None
-        self._workspace_id: str | None = None
         self._output_dir: Path | None = None
         self._last_upload_time: float = 0
         self._traces_since_upload: int = 0
+        self._config_refresh_thread: threading.Thread | None = None
+        self._config_refresh_stop: threading.Event = threading.Event()
+        self._config_lock: threading.Lock = threading.Lock()  # Protects config updates
+        self._force_sync_thread: threading.Thread | None = None
+        self._force_sync_stop: threading.Event = threading.Event()
+
+    def _get_config_snapshot(self) -> tuple[list[str], list[str]]:
+        """Get a consistent snapshot of whitelist and blacklist.
+
+        Returns copies to ensure the caller has immutable references
+        that won't change during processing.
+        """
+        with self._config_lock:
+            return list(self._whitelist), list(self._blacklist)
 
     def load(self, loader) -> None:
         """Register addon options."""
@@ -704,6 +732,106 @@ class OximyAddon:
         loader.add_option("oximy_config", str, "", "Path to config.json")
         loader.add_option("oximy_output_dir", str, "~/.oximy/traces", "Output directory")
         loader.add_option("oximy_verbose", bool, False, "Verbose logging")
+        loader.add_option("oximy_upload_enabled", bool, True, "Enable trace uploads (disable if host app handles sync)")
+
+    def _refresh_config(self, max_retries: int = 3) -> bool:
+        """Fetch and apply updated config from API with retries.
+
+        Returns True if config was successfully refreshed, False otherwise.
+        """
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                raw_config = fetch_sensor_config()
+                config = _parse_sensor_config(raw_config)
+
+                # Atomic update with lock to ensure consistent state
+                with self._config_lock:
+                    self._whitelist = config.get("whitelist", [])
+                    self._blacklist = config.get("blacklist", [])
+
+                    # Update TLS passthrough patterns
+                    if self._tls:
+                        self._tls.update_passthrough(config.get("passthrough", []))
+
+                logger.info(f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist")
+                return True
+
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    # Exponential backoff: 5s, 10s, 20s
+                    backoff = 5 * (2 ** attempt)
+                    logger.warning(f"Config refresh attempt {attempt + 1}/{max_retries} failed: {e}. Retrying in {backoff}s...")
+                    # Use interruptible sleep
+                    if self._config_refresh_stop.wait(timeout=backoff):
+                        return False  # Stop requested during backoff
+
+        logger.warning(f"Config refresh failed after {max_retries} attempts: {last_error}")
+        return False
+
+    def _start_config_refresh_task(self) -> None:
+        """Start background thread to periodically refresh config."""
+        self._config_refresh_stop.clear()
+
+        def refresh_loop():
+            while not self._config_refresh_stop.is_set():
+                # Wait with interruptible sleep
+                if self._config_refresh_stop.wait(timeout=CONFIG_REFRESH_INTERVAL_SECONDS):
+                    break  # Stop event was set
+                if not self._enabled:
+                    break
+                self._refresh_config()
+
+        self._config_refresh_thread = threading.Thread(
+            target=refresh_loop,
+            daemon=True,
+            name="oximy-config-refresh"
+        )
+        self._config_refresh_thread.start()
+        logger.info(f"Config refresh task started (interval: {CONFIG_REFRESH_INTERVAL_SECONDS}s)")
+
+    def _start_force_sync_monitor(self) -> None:
+        """Start background thread to monitor for force-sync trigger file."""
+        self._force_sync_stop.clear()
+
+        def monitor_loop():
+            while not self._force_sync_stop.is_set():
+                # Check every 0.5 seconds for force-sync trigger
+                if self._force_sync_stop.wait(timeout=0.5):
+                    break
+                if not self._enabled:
+                    break
+
+                # Check for trigger file
+                if FORCE_SYNC_TRIGGER.exists():
+                    logger.info("Force sync trigger detected")
+                    try:
+                        FORCE_SYNC_TRIGGER.unlink()  # Delete trigger file
+                    except OSError:
+                        pass
+
+                    # Perform immediate upload
+                    if self._uploader and self._output_dir:
+                        try:
+                            if self._writer and self._writer._fo:
+                                self._writer._fo.flush()
+                            uploaded = self._uploader.upload_all_pending(self._output_dir)
+                            if uploaded > 0:
+                                logger.info(f"Force sync: uploaded {uploaded} traces")
+                            else:
+                                logger.info("Force sync: no pending traces to upload")
+                        except Exception as e:
+                            logger.warning(f"Force sync failed: {e}")
+
+        self._force_sync_thread = threading.Thread(
+            target=monitor_loop,
+            daemon=True,
+            name="oximy-force-sync-monitor"
+        )
+        self._force_sync_thread.start()
+        logger.debug("Force sync monitor started")
 
     def configure(self, updated: set[str]) -> None:
         """Handle configuration changes."""
@@ -737,32 +865,48 @@ class OximyAddon:
         passthrough_patterns = sensor_config.get("passthrough", [])
         self._tls = TLSPassthrough(passthrough_patterns)
 
+        # Start periodic config refresh (only if not already running)
+        if self._config_refresh_thread is None or not self._config_refresh_thread.is_alive():
+            self._start_config_refresh_task()
+
+        # Start background trigger file monitor
+        self._start_force_sync_monitor()
+
         output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
         self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
         self._writer = TraceWriter(self._output_dir, output_config["output"].get("filename_pattern", "traces_{date}.jsonl"))
 
-        # Initialize trace uploader for API uploads
-        self._uploader = TraceUploader()
-        self._last_upload_time = time.time()
-        self._traces_since_upload = 0
+        # Initialize trace uploader for API uploads (only if enabled)
+        # When running under a host app (e.g., OximyMac), the host handles sync
+        if ctx.options.oximy_upload_enabled:
+            self._uploader = TraceUploader()
+            self._last_upload_time = time.time()
+            self._traces_since_upload = 0
+            logger.info("Trace upload enabled (addon handles sync)")
+        else:
+            self._uploader = None
+            logger.info("Trace upload disabled (host app handles sync)")
 
         # Initialize process resolver for client attribution
         self._resolver = ProcessResolver()
 
-        # Get device and workspace IDs
+        # Get device ID
         self._device_id = get_device_id()
-        self._workspace_id = get_workspace_id()
         logger.info(f"Device ID: {self._device_id}")
-        if self._workspace_id:
-            logger.info(f"Workspace ID: {self._workspace_id}")
 
         _set_system_proxy(enable=True)
         logger.info(f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, {len(passthrough_patterns)} passthrough =====")
 
-    def _check_blacklist(self, *texts: str) -> str | None:
-        """Check if any text contains a blacklisted word."""
+    def _check_blacklist(self, *texts: str, blacklist: list[str] | None = None) -> str | None:
+        """Check if any text contains a blacklisted word.
+
+        Args:
+            texts: Strings to check for blacklisted words
+            blacklist: Optional list to use (defaults to self._blacklist)
+        """
+        bl = blacklist if blacklist is not None else self._blacklist
         for text in texts:
-            if word := contains_blacklist_word(text, self._blacklist):
+            if word := contains_blacklist_word(text, bl):
                 return word
         return None
 
@@ -896,11 +1040,8 @@ class OximyAddon:
             "type": "http",
         }
 
-        # Add device and workspace IDs at root level
         if self._device_id:
             event["device_id"] = self._device_id
-        if self._workspace_id:
-            event["workspace_id"] = self._workspace_id
 
         # Add client info
         if client_info:
@@ -998,11 +1139,8 @@ class OximyAddon:
             "type": "websocket",
         }
 
-        # Add device and workspace IDs at root level
         if self._device_id:
             event["device_id"] = self._device_id
-        if self._workspace_id:
-            event["workspace_id"] = self._workspace_id
 
         # Add client info
         if client_info:
@@ -1026,7 +1164,7 @@ class OximyAddon:
     # =========================================================================
 
     def _maybe_upload(self) -> None:
-        """Upload traces if threshold reached (100 traces or 2 seconds elapsed)."""
+        """Upload traces if threshold reached (100 traces or 2 seconds elapsed) or force-sync triggered."""
         if not self._uploader or not self._output_dir:
             return
 
@@ -1034,8 +1172,17 @@ class OximyAddon:
         time_elapsed = now - self._last_upload_time >= UPLOAD_INTERVAL_SECONDS
         count_reached = self._traces_since_upload >= UPLOAD_THRESHOLD_COUNT
 
-        # Upload if either condition is met and we have traces
-        if (time_elapsed or count_reached) and self._traces_since_upload > 0:
+        # Check for force-sync trigger from host app
+        force_sync = FORCE_SYNC_TRIGGER.exists()
+        if force_sync:
+            logger.info("Force sync triggered by host app")
+            try:
+                FORCE_SYNC_TRIGGER.unlink()  # Delete trigger file
+            except OSError:
+                pass
+
+        # Upload if either condition is met and we have traces (or force sync)
+        if (time_elapsed or count_reached or force_sync) and self._traces_since_upload > 0:
             try:
                 # Flush writer before uploading
                 if self._writer and self._writer._fo:
@@ -1049,6 +1196,16 @@ class OximyAddon:
                 self._traces_since_upload = 0
             except Exception as e:
                 logger.warning(f"Failed to upload traces: {e}")
+        elif force_sync:
+            # Force sync but no pending traces - still try to upload any existing files
+            try:
+                if self._writer and self._writer._fo:
+                    self._writer._fo.flush()
+                uploaded = self._uploader.upload_all_pending(self._output_dir)
+                if uploaded > 0:
+                    logger.info(f"Force sync: uploaded {uploaded} traces to API")
+            except Exception as e:
+                logger.warning(f"Force sync failed: {e}")
 
     # =========================================================================
     # Lifecycle
@@ -1064,6 +1221,17 @@ class OximyAddon:
         if _cleanup_done:
             return
         _cleanup_done = True
+
+        # Stop config refresh thread
+        self._config_refresh_stop.set()
+        if self._config_refresh_thread and self._config_refresh_thread.is_alive():
+            self._config_refresh_thread.join(timeout=2)
+
+        # Stop force sync monitor thread
+        self._force_sync_stop.set()
+        if self._force_sync_thread and self._force_sync_thread.is_alive():
+            self._force_sync_thread.join(timeout=1)
+
         _set_system_proxy(enable=False)
 
         # Close writer first to flush pending writes
