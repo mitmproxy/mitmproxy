@@ -24,7 +24,6 @@
     ".*\\.segment\\.io$",
     ".*\\.launchdarkly\\.com$",
     "^cdn\\-settings\\.segment\\.com$",
-    "^app\\-site\\-association\\.cdn\\-apple\\.com$",
-    "^android\\.clients\\.google\\.com$"
+    "^ab\\.chatgpt\\.com$"
   ]
 }

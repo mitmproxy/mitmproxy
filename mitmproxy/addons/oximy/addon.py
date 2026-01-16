@@ -89,6 +89,115 @@ def _set_macos_proxy(enable: bool) -> None:
 
 
 # =============================================================================
+# CERTIFICATE MANAGEMENT
+# =============================================================================
+
+CERT_DIR = Path("~/.mitmproxy").expanduser()
+CERT_NAME = "oximy"  # Must match CONF_BASENAME in mitmproxy/options.py
+
+
+def _get_cert_path() -> Path:
+    """Get path to mitmproxy CA certificate."""
+    return CERT_DIR / f"{CERT_NAME}-ca-cert.pem"
+
+
+def _cert_exists() -> bool:
+    """Check if mitmproxy CA certificate file exists."""
+    return _get_cert_path().exists()
+
+
+def _is_cert_trusted() -> bool:
+    """Check if mitmproxy CA is trusted in macOS Keychain."""
+    if sys.platform != "darwin":
+        return True  # Skip check on non-macOS
+
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["security", "verify-cert", "-c", str(_get_cert_path())],
+            capture_output=True,
+            timeout=10
+        )
+        return result.returncode == 0
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+
+def _install_cert() -> bool:
+    """Install mitmproxy CA to macOS Keychain. Returns True on success."""
+    if sys.platform != "darwin":
+        return True
+
+    import subprocess
+    cert_path = _get_cert_path()
+    if not cert_path.exists():
+        logger.error(f"Certificate not found: {cert_path}")
+        return False
+
+    try:
+        # Try System keychain first (requires admin password prompt)
+        # -p ssl is CRITICAL - without it, cert is added but not trusted for SSL
+        result = subprocess.run(
+            [
+                "security", "add-trusted-cert",
+                "-d",  # Admin cert store
+                "-r", "trustRoot",  # Trust as root CA
+                "-p", "ssl",  # Trust for SSL (REQUIRED!)
+                "-k", "/Library/Keychains/System.keychain",
+                str(cert_path)
+            ],
+            capture_output=True,
+            timeout=60  # User needs time to enter password
+        )
+
+        if result.returncode == 0:
+            logger.info("Certificate installed to System Keychain")
+            return True
+
+        # Fallback: try user's login keychain
+        login_keychain = Path.home() / "Library/Keychains/login.keychain-db"
+        result = subprocess.run(
+            [
+                "security", "add-trusted-cert",
+                "-r", "trustRoot",
+                "-p", "ssl",  # Trust for SSL (REQUIRED!)
+                "-k", str(login_keychain),
+                str(cert_path)
+            ],
+            capture_output=True,
+            timeout=60
+        )
+
+        if result.returncode == 0:
+            logger.info("Certificate installed to login Keychain")
+            return True
+
+        logger.error(f"Failed to install certificate: {result.stderr.decode()}")
+        return False
+
+    except subprocess.TimeoutExpired:
+        logger.error("Certificate installation timed out")
+        return False
+    except Exception as e:
+        logger.error(f"Certificate installation failed: {e}")
+        return False
+
+
+def _ensure_cert_trusted() -> bool:
+    """Ensure mitmproxy CA cert exists and is trusted. Returns True if ready."""
+    if not _cert_exists():
+        logger.warning("mitmproxy CA certificate not found. It will be generated on first request.")
+        return False
+
+    if _is_cert_trusted():
+        logger.debug("Certificate already trusted")
+        return True
+
+    logger.info("Certificate not trusted - attempting installation...")
+    return _install_cert()
+
+
+# =============================================================================
 # CONFIG LOADING
 # =============================================================================
 
@@ -309,6 +418,7 @@ class OximyAddon:
 
     def configure(self, updated: set[str]) -> None:
         """Handle configuration changes."""
+        _ = updated  # Unused but required by mitmproxy API
         if not ctx.options.oximy_enabled:
             if self._enabled:
                 self._cleanup()
@@ -317,6 +427,16 @@ class OximyAddon:
 
         self._enabled = True
         logger.setLevel(logging.DEBUG if ctx.options.oximy_verbose else logging.INFO)
+
+        # Check certificate before anything else (macOS only)
+        if sys.platform == "darwin":
+            if not _ensure_cert_trusted():
+                logger.error("=" * 60)
+                logger.error("CERTIFICATE NOT TRUSTED - HTTPS interception will fail!")
+                logger.error("To install manually, run:")
+                logger.error(f"  sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain {_get_cert_path()}")
+                logger.error("=" * 60)
+                # Continue anyway - user might install manually or cert will be generated
 
         addon_dir = Path(__file__).parent
         self._whitelist = load_json_list(addon_dir / "whitelist.json", "domains")

@@ -1,21 +1,54 @@
 # Oximy - AI Traffic Capture Addon for mitmproxy
 
-Captures AI API traffic based on the [OISP bundle](https://oisp.dev) whitelist, normalizes events, and writes to rotating JSONL files.
+Captures AI API traffic based on whitelist filtering, and writes to rotating JSONL files.
+
+## Prerequisites: Certificate Setup (REQUIRED)
+
+**IMPORTANT**: Before using Oximy, you MUST install and trust the CA certificate. Without this, HTTPS interception will fail.
+
+### macOS
+
+```bash
+# 1. First, run mitmproxy once to generate the certificate
+uv run mitmdump --mode regular@8080
+# Press Ctrl+C after it starts
+
+# 2. Install and trust the certificate (requires admin password)
+sudo security add-trusted-cert -d -r trustRoot -p ssl \
+  -k /Library/Keychains/System.keychain \
+  ~/.mitmproxy/oximy-ca-cert.pem
+
+# 3. Verify it worked
+security verify-cert -c ~/.mitmproxy/oximy-ca-cert.pem
+# Should output: "...certificate verification successful."
+```
+
+### Troubleshooting Certificate Issues
+
+If you see `SSL certificate problem: unable to get local issuer certificate`:
+
+1. **Check which CA is being used** - mitmproxy uses `oximy-ca-cert.pem`, NOT `mitmproxy-ca-cert.pem`
+2. **Verify the cert is trusted with SSL policy**:
+   ```bash
+   security dump-trust-settings -d | grep -A5 oximy
+   ```
+3. **Re-install with `-p ssl` flag** (sets SSL trust policy):
+   ```bash
+   sudo security add-trusted-cert -d -r trustRoot -p ssl \
+     -k /Library/Keychains/System.keychain \
+     ~/.mitmproxy/oximy-ca-cert.pem
+   ```
 
 ## Quick Start
 
 ```bash
-# Start the proxy on port 8088 (avoiding common port 8080)
+# Start the proxy on port 8080
 uv run mitmdump -s mitmproxy/addons/oximy/addon.py \
   --set oximy_enabled=true \
-  --mode regular@8088
+  --mode regular@8080
 
-# In another terminal, test with curl
-curl -x http://localhost:8088 -k \
-  -X POST https://api.openai.com/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -d '{"model":"gpt-4","messages":[{"role":"user","content":"Hello"}]}'
+# In another terminal, test with curl (use system curl on macOS)
+/usr/bin/curl -x http://localhost:8080 https://api.openai.com/v1/models
 
 # Check captured events
 cat ~/.oximy/traces/traces_$(date +%Y-%m-%d).jsonl | jq .
@@ -27,120 +60,98 @@ cat ~/.oximy/traces/traces_$(date +%Y-%m-%d).jsonl | jq .
 |--------|---------|-------------|
 | `oximy_enabled` | `false` | Enable/disable capture |
 | `oximy_output_dir` | `~/.oximy/traces` | Directory for JSONL files |
-| `oximy_bundle_url` | `https://oisp.dev/spec/v0.1/oisp-spec-bundle.json` | OISP bundle URL |
-| `oximy_bundle_refresh_hours` | `24` | Cache refresh interval |
-| `oximy_include_raw` | `true` | Include raw request/response bodies |
+| `oximy_config` | `""` | Path to custom config.json |
+| `oximy_verbose` | `false` | Enable debug logging |
+
+## Viewing Logs
+
+Logs are printed to stderr in real-time. You'll see:
+
+```
+[INFO] >>> POST api.openai.com/v1/chat/completions
+[INFO] <<< CAPTURED: POST api.openai.com/v1/chat/completions [200]
+```
+
+For verbose logging:
+```bash
+uv run mitmdump -s mitmproxy/addons/oximy/addon.py \
+  --set oximy_enabled=true \
+  --set oximy_verbose=true \
+  --mode regular@8080
+```
 
 ## Supported Providers
 
-Traffic is captured for any domain in the OISP bundle, including:
+Traffic is captured for domains in `whitelist.json`, including:
 
-- **OpenAI**: `api.openai.com`
-- **Anthropic**: `api.anthropic.com`
-- **Google AI**: `generativelanguage.googleapis.com`
-- **Perplexity**: `api.perplexity.ai` (used by Comet app)
+- **OpenAI**: `api.openai.com`, `chat.openai.com`, `chatgpt.com`
+- **Anthropic**: `api.anthropic.com`, `claude.ai`
+- **Google AI**: `generativelanguage.googleapis.com`, `gemini.google.com`
+- **Perplexity**: `api.perplexity.ai`, `www.perplexity.ai`
 - **Azure OpenAI**: `*.openai.azure.com`
 - **AWS Bedrock**: `bedrock-runtime.*.amazonaws.com`
-- **And 60+ more providers**
+- **And more** (see `whitelist.json`)
 
-## Supported Apps
+## How It Works
 
-The OISP bundle includes app signatures for process attribution:
-
-| App | Vendor | Bundle ID |
-|-----|--------|-----------|
-| Comet | Perplexity AI | `ai.perplexity.comet` |
-| Granola | Granola | `com.granola.app` |
-| Cursor | Cursor | (varies) |
-| And more... | | |
-
-## Using with Apps (Comet, Granola, etc.)
-
-For desktop apps, use `--mode local` to capture traffic from specific processes:
-
-```bash
-# Capture all traffic from your machine (requires sudo on macOS)
-sudo uv run mitmdump -s mitmproxy/addons/oximy/addon.py \
-  --set oximy_enabled=true \
-  --mode local
-
-# Or set system proxy manually and run on port 8088
-uv run mitmdump -s mitmproxy/addons/oximy/addon.py \
-  --set oximy_enabled=true \
-  --mode regular@8088
-```
-
-Then configure your system proxy to `localhost:8088`.
+1. **Startup**: Checks certificate trust, loads whitelist/blacklist, enables system proxy
+2. **TLS Passthrough**: Certificate-pinned apps (Raycast, etc.) are auto-detected and bypassed
+3. **Whitelist Filter**: Only captures traffic to known AI domains
+4. **Blacklist Filter**: Drops requests/responses containing sensitive words
+5. **Capture**: Writes HTTP and WebSocket traffic to JSONL files
+6. **Cleanup**: Disables system proxy on shutdown
 
 ## Output Format
 
-Events are written to daily JSONL files (`traces_YYYY-MM-DD.jsonl`):
+Events are written to daily JSONL files (`~/.oximy/traces/traces_YYYY-MM-DD.jsonl`):
 
 ```json
 {
   "event_id": "019ba454-e7b4-7600-9e5e-376227eb454e",
   "timestamp": "2026-01-09T19:56:26.420Z",
-  "source": {
-    "type": "api",
-    "id": "openai",
-    "endpoint": null
+  "type": "http",
+  "request": {
+    "method": "POST",
+    "host": "api.openai.com",
+    "path": "/v1/chat/completions",
+    "headers": {...},
+    "body": "{...}"
   },
-  "trace_level": "full",
+  "response": {
+    "status_code": 200,
+    "headers": {...},
+    "body": "{...}"
+  },
   "timing": {
     "duration_ms": 1234,
     "ttfb_ms": 456
-  },
-  "interaction": {
-    "model": "gpt-4",
-    "provider": "openai",
-    "request": {
-      "messages": [{"role": "user", "content": "Hello"}],
-      "model": "gpt-4"
-    },
-    "response": {
-      "content": "Hi there!",
-      "model": "gpt-4",
-      "usage": {"input_tokens": 5, "output_tokens": 3}
-    }
   }
 }
 ```
 
-## Traffic Classification
-
-| Classification | Description | What's Logged |
-|----------------|-------------|---------------|
-| `full_trace` | Known AI API with parser | Full request/response |
-| `identifiable` | Known domain, no parser | Metadata only |
-| `drop` | Unknown domain | Nothing (silently dropped) |
-
-## Programmatic Usage
-
-```python
-from mitmproxy.addons.oximy import OximyAddon
-
-# Add to your mitmproxy script
-addons = [OximyAddon()]
-```
-
-## Example Scripts
-
-See `example.py` for a demo that:
-1. Starts mitmproxy programmatically
-2. Makes test requests to OpenAI
-3. Shows captured events
-
-```bash
-# Run the example (requires OPENAI_API_KEY)
-uv run python mitmproxy/addons/oximy/example.py
-```
-
 ## Files
 
-- `addon.py` - Main addon entry point
-- `bundle.py` - OISP bundle loading with caching
-- `matcher.py` - Traffic classification logic
-- `parser.py` - Request/response parsing (JSONPath extraction)
-- `writer.py` - JSONL file writer with daily rotation
-- `sse.py` - SSE streaming response handler
-- `types.py` - Data structures
+- `addon.py` - Main addon with all logic
+- `whitelist.json` - Domains to capture
+- `blacklist.json` - Words to filter out
+- `passthrough.json` - Certificate-pinned hosts (auto-populated)
+- `config.json` - Output configuration
+
+## Common Issues
+
+### "Client does not trust the proxy's certificate"
+The certificate isn't installed or trusted. See [Certificate Setup](#prerequisites-certificate-setup-required).
+
+### Apps like Raycast/Apple services fail
+These apps use certificate pinning. The addon auto-detects this and adds them to `passthrough.json` so they bypass interception.
+
+### curl works with `-k` but not without
+The certificate is installed but not trusted for SSL. Re-run with `-p ssl`:
+```bash
+sudo security add-trusted-cert -d -r trustRoot -p ssl \
+  -k /Library/Keychains/System.keychain \
+  ~/.mitmproxy/oximy-ca-cert.pem
+```
+
+### Homebrew/Anaconda curl fails but system curl works
+Non-system curl uses OpenSSL which doesn't read macOS Keychain. Use `/usr/bin/curl` or add the cert to OpenSSL's trust store.
