@@ -57,7 +57,6 @@ def _set_system_proxy(enable: bool) -> None:
 
 def _set_windows_proxy(enable: bool) -> None:
     """Enable or disable Windows system proxy via registry."""
-    import subprocess
     proxy_server = f"{PROXY_HOST}:{PROXY_PORT}"
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 
@@ -78,8 +77,6 @@ def _set_windows_proxy(enable: bool) -> None:
 
 def _set_macos_proxy(enable: bool) -> None:
     """Enable or disable macOS system proxy."""
-    import subprocess
-
     try:
         if enable:
             subprocess.run(["networksetup", "-setsecurewebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
@@ -160,9 +157,7 @@ def _cert_exists() -> bool:
 def _is_cert_trusted() -> bool:
     """Check if mitmproxy CA is trusted in macOS Keychain."""
     if sys.platform != "darwin":
-        return True  # Skip check on non-macOS
-
-    import subprocess
+        return True
     try:
         result = subprocess.run(
             ["security", "verify-cert", "-c", str(_get_cert_path())],
@@ -178,8 +173,6 @@ def _install_cert() -> bool:
     """Install mitmproxy CA to macOS Keychain. Returns True on success."""
     if sys.platform != "darwin":
         return True
-
-    import subprocess
     cert_path = _get_cert_path()
     if not cert_path.exists():
         logger.error(f"Certificate not found: {cert_path}")
@@ -261,10 +254,10 @@ def fetch_sensor_config() -> dict:
     import urllib.request
     import urllib.error
 
-    config = {
-        "whitelist": {"domains": []},
-        "blacklist": {"words": []},
-        "passthrough": {"patterns": []},
+    default_config = {
+        "whitelist": [],
+        "blacklist": [],
+        "passthrough": [],
     }
 
     try:
@@ -274,31 +267,40 @@ def fetch_sensor_config() -> dict:
             headers={"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"},
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+            raw = json.loads(resp.read().decode("utf-8"))
 
-        # Cache the config locally
+        # Cache the raw response locally
         SENSOR_CONFIG_CACHE.parent.mkdir(parents=True, exist_ok=True)
         with open(SENSOR_CONFIG_CACHE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+            json.dump(raw, f, indent=2)
         logger.info(f"Sensor config cached to {SENSOR_CONFIG_CACHE}")
 
-        return data
+        return _parse_sensor_config(raw)
 
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError) as e:
         logger.warning(f"Failed to fetch sensor config: {e}")
 
-        # Fall back to cached config if available
         if SENSOR_CONFIG_CACHE.exists():
             try:
                 with open(SENSOR_CONFIG_CACHE, encoding="utf-8") as f:
                     cached = json.load(f)
                 logger.info(f"Using cached sensor config from {SENSOR_CONFIG_CACHE}")
-                return cached
+                return _parse_sensor_config(cached)
             except (json.JSONDecodeError, IOError) as cache_err:
                 logger.warning(f"Failed to load cached config: {cache_err}")
 
         logger.warning("Using empty default config")
-        return config
+        return default_config
+
+
+def _parse_sensor_config(raw: dict) -> dict:
+    """Parse API response into normalized config format."""
+    data = raw.get("data", raw)
+    return {
+        "whitelist": data.get("whitelistedDomains", []),
+        "blacklist": data.get("blacklistedWords", []),
+        "passthrough": data.get("passthroughDomains", []),
+    }
 
 
 def load_output_config(config_path: Path | None = None) -> dict:
@@ -330,7 +332,6 @@ def get_device_id() -> str | None:
 
     try:
         if sys.platform == "darwin":
-            # macOS: Use IOPlatformUUID
             result = subprocess.run(
                 ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
                 capture_output=True,
@@ -340,13 +341,11 @@ def get_device_id() -> str | None:
             if result.returncode == 0:
                 for line in result.stdout.split("\n"):
                     if "IOPlatformUUID" in line:
-                        # Line format: "IOPlatformUUID" = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
                         parts = line.split('"')
                         if len(parts) >= 4:
                             _device_id_cache = parts[3]
                             return _device_id_cache
         elif sys.platform == "win32":
-            # Windows: Use wmic csproduct get UUID
             result = subprocess.run(
                 ["wmic", "csproduct", "get", "UUID"],
                 capture_output=True,
@@ -547,14 +546,6 @@ class TraceWriter:
             logger.info(f"Closed trace file ({self._count} events)")
             self._fo = None
 
-    def get_current_file(self) -> Path | None:
-        """Get the current trace file path."""
-        return self._current_file
-
-    def get_count(self) -> int:
-        """Get the number of traces written in this session."""
-        return self._count
-
 
 # =============================================================================
 # TRACE UPLOADER
@@ -741,9 +732,9 @@ class OximyAddon:
 
         # Fetch sensor config from API (cached locally)
         sensor_config = fetch_sensor_config()
-        self._whitelist = sensor_config.get("whitelist", {}).get("domains", [])
-        self._blacklist = sensor_config.get("blacklist", {}).get("words", [])
-        passthrough_patterns = sensor_config.get("passthrough", {}).get("patterns", [])
+        self._whitelist = sensor_config.get("whitelist", [])
+        self._blacklist = sensor_config.get("blacklist", [])
+        passthrough_patterns = sensor_config.get("passthrough", [])
         self._tls = TLSPassthrough(passthrough_patterns)
 
         output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
@@ -819,15 +810,8 @@ class OximyAddon:
             flow.metadata["oximy_skip"] = True
             return
 
-        # Blacklist check on URL and request body
-        request_body = ""
-        if flow.request.content:
-            try:
-                request_body = flow.request.content.decode("utf-8", errors="replace")
-            except Exception:
-                pass
-
-        if word := self._check_blacklist(url, request_body):
+        # Blacklist check on URL only
+        if word := self._check_blacklist(url):
             logger.info(f"[BLACKLISTED] {url[:80]} (matched: {word})")
             flow.metadata["oximy_skip"] = True
             return
@@ -846,7 +830,7 @@ class OximyAddon:
                 logger.debug(f"Failed to get client process: {e}")
 
     def response(self, flow: http.HTTPFlow) -> None:
-        """Check blacklist on response and write trace."""
+        """Write trace for captured response."""
         if not self._enabled or not self._writer:
             return
 
@@ -860,7 +844,6 @@ class OximyAddon:
         path = flow.request.path
         url = f"{host}{path}"
 
-        # Blacklist check on response body
         response_body = ""
         if flow.response.content:
             try:
@@ -868,11 +851,6 @@ class OximyAddon:
             except Exception:
                 pass
 
-        if word := self._check_blacklist(response_body):
-            logger.info(f"[BLACKLISTED] {url[:80]} (response matched: {word})")
-            return
-
-        # Build and write event
         event = self._build_event(flow, response_body)
         self._writer.write(event)
         self._traces_since_upload += 1
@@ -955,15 +933,23 @@ class OximyAddon:
             return
 
         host = flow.request.pretty_host
+        path = flow.request.path
+        url = f"{host}{path}"
+
         if not matches_domain(host, self._whitelist):
             flow.metadata["oximy_skip"] = True
             return
 
         if "oximy_ws_messages" not in flow.metadata:
+            # Blacklist check on URL only (first message)
+            if word := self._check_blacklist(url):
+                logger.info(f"[BLACKLISTED] WS {url[:80]} (matched: {word})")
+                flow.metadata["oximy_skip"] = True
+                return
+
             flow.metadata["oximy_ws_messages"] = []
             flow.metadata["oximy_ws_start"] = time.time()
 
-            # Get client process info on first message
             if self._resolver and flow.client_conn and flow.client_conn.peername:
                 try:
                     client_port = flow.client_conn.peername[1]
@@ -975,12 +961,6 @@ class OximyAddon:
         if flow.websocket and flow.websocket.messages:
             msg = flow.websocket.messages[-1]
             content = msg.content.decode("utf-8", errors="replace") if isinstance(msg.content, bytes) else str(msg.content)
-
-            # Blacklist check on message content
-            if word := self._check_blacklist(content):
-                logger.info(f"[BLACKLISTED] WS {host} (message matched: {word})")
-                return
-
             flow.metadata["oximy_ws_messages"].append({
                 "direction": "client" if msg.from_client else "server",
                 "timestamp": datetime.fromtimestamp(msg.timestamp, tz=timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
