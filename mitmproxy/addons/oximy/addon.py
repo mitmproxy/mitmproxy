@@ -9,11 +9,13 @@ Pipeline: Passthrough → Whitelist → Blacklist → Capture to JSONL
 
 from __future__ import annotations
 
+import atexit
 import fnmatch
 import json
 import logging
 import os
 import re
+import signal
 import sys
 import time
 from datetime import date, datetime, timezone
@@ -86,6 +88,48 @@ def _set_macos_proxy(enable: bool) -> None:
             logger.info("macOS proxy disabled")
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         logger.warning(f"Failed to set macOS proxy: {e}")
+
+
+# =============================================================================
+# CLEANUP SAFETY NET
+# =============================================================================
+
+_cleanup_done = False
+
+
+def _emergency_cleanup() -> None:
+    """Emergency cleanup - disable proxy even if mitmproxy crashes."""
+    global _cleanup_done
+    if _cleanup_done:
+        return
+    _cleanup_done = True
+    logger.info("Emergency cleanup: disabling system proxy...")
+    _set_system_proxy(enable=False)
+
+
+def _signal_handler(signum: int, frame) -> None:
+    """Handle termination signals gracefully."""
+    _ = frame  # Unused
+    sig_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
+    logger.info(f"Received signal {sig_name}, cleaning up...")
+    _emergency_cleanup()
+    # Re-raise the signal to let mitmproxy handle shutdown
+    signal.signal(signum, signal.SIG_DFL)
+    os.kill(os.getpid(), signum)
+
+
+def _register_cleanup_handlers() -> None:
+    """Register signal handlers and atexit for cleanup safety."""
+    # atexit runs on normal exit or unhandled exception
+    atexit.register(_emergency_cleanup)
+
+    # Signal handlers for Ctrl+C (SIGINT) and termination (SIGTERM)
+    if sys.platform != "win32":
+        signal.signal(signal.SIGINT, _signal_handler)
+        signal.signal(signal.SIGTERM, _signal_handler)
+    else:
+        # Windows only supports SIGINT
+        signal.signal(signal.SIGINT, _signal_handler)
 
 
 # =============================================================================
@@ -428,6 +472,9 @@ class OximyAddon:
         self._enabled = True
         logger.setLevel(logging.DEBUG if ctx.options.oximy_verbose else logging.INFO)
 
+        # Register cleanup handlers for graceful shutdown
+        _register_cleanup_handlers()
+
         # Check certificate before anything else (macOS only)
         if sys.platform == "darwin":
             if not _ensure_cert_trusted():
@@ -652,6 +699,10 @@ class OximyAddon:
 
     def _cleanup(self) -> None:
         """Clean up resources."""
+        global _cleanup_done
+        if _cleanup_done:
+            return
+        _cleanup_done = True
         _set_system_proxy(enable=False)
         if self._writer:
             self._writer.close()
