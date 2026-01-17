@@ -30,7 +30,6 @@ let package = Package(
                 "project.yml",
                 "create-xcode-project.sh",
                 "App/Secrets.example.swift",
-                "api-docs.md",
                 "README.md"
             ],
             sources: [

@@ -358,18 +358,20 @@ struct ProgressDot: View {
         ZStack {
             Circle()
                 .fill(backgroundColor)
-                .frame(width: 24, height: 24)
+                .frame(width: 22, height: 22)
 
             if isComplete {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.white)
             } else {
                 Text("\(step)")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(isCurrent ? .white : .secondary)
             }
         }
+        .frame(width: 22, height: 22)
+        .clipped()
     }
 
     private var backgroundColor: Color {

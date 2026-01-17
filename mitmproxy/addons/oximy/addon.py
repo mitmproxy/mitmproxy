@@ -1164,7 +1164,7 @@ class OximyAddon:
     # =========================================================================
 
     def _maybe_upload(self) -> None:
-        """Upload traces if threshold reached (100 traces or 2 seconds elapsed) or force-sync triggered."""
+        """Upload traces if threshold reached (100 traces or 2 seconds elapsed)."""
         if not self._uploader or not self._output_dir:
             return
 
@@ -1172,19 +1172,8 @@ class OximyAddon:
         time_elapsed = now - self._last_upload_time >= UPLOAD_INTERVAL_SECONDS
         count_reached = self._traces_since_upload >= UPLOAD_THRESHOLD_COUNT
 
-        # Check for force-sync trigger from host app
-        force_sync = FORCE_SYNC_TRIGGER.exists()
-        if force_sync:
-            logger.info("Force sync triggered by host app")
+        if (time_elapsed or count_reached) and self._traces_since_upload > 0:
             try:
-                FORCE_SYNC_TRIGGER.unlink()  # Delete trigger file
-            except OSError:
-                pass
-
-        # Upload if either condition is met and we have traces (or force sync)
-        if (time_elapsed or count_reached or force_sync) and self._traces_since_upload > 0:
-            try:
-                # Flush writer before uploading
                 if self._writer and self._writer._fo:
                     self._writer._fo.flush()
 
@@ -1196,16 +1185,6 @@ class OximyAddon:
                 self._traces_since_upload = 0
             except Exception as e:
                 logger.warning(f"Failed to upload traces: {e}")
-        elif force_sync:
-            # Force sync but no pending traces - still try to upload any existing files
-            try:
-                if self._writer and self._writer._fo:
-                    self._writer._fo.flush()
-                uploaded = self._uploader.upload_all_pending(self._output_dir)
-                if uploaded > 0:
-                    logger.info(f"Force sync: uploaded {uploaded} traces to API")
-            except Exception as e:
-                logger.warning(f"Force sync failed: {e}")
 
     # =========================================================================
     # Lifecycle

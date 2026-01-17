@@ -29,45 +29,18 @@ final class SyncService: ObservableObject {
         case idle
         case syncing
         case synced
-        case offline(retryIn: Int)  // seconds until retry
         case error(String)
-
-        var displayText: String {
-            switch self {
-            case .idle:
-                return "Ready"
-            case .syncing:
-                return "Syncing..."
-            case .synced:
-                return "Synced"
-            case .offline(let seconds):
-                return "Offline - retry in \(seconds)s"
-            case .error(let message):
-                return message
-            }
-        }
-
-        var isOffline: Bool {
-            if case .offline = self { return true }
-            return false
-        }
     }
 
     @Published var isSyncing = false
     @Published var lastSyncTime: Date?
     @Published var pendingEventCount = 0
-    @Published var syncError: String?
     @Published var syncStatus: SyncStatus = .idle
-    @Published var consecutiveFailures = 0
 
     private var timer: Timer?
 
     /// Force sync trigger file - writing this tells the addon to sync immediately
     private static let forceSyncTrigger = Constants.oximyDir.appendingPathComponent("force-sync")
-
-    private var config: DeviceConfig {
-        DeviceConfig.load()
-    }
 
     private init() {
         updatePendingCount()
@@ -76,12 +49,6 @@ final class SyncService: ObservableObject {
     func start() {
         guard timer == nil else { return }
 
-        SentryService.shared.addStateBreadcrumb(
-            category: "sync",
-            message: "Sync status monitor started",
-            data: ["interval": config.eventFlushIntervalSeconds]
-        )
-
         // Poll for pending count updates (addon handles actual uploads)
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -89,18 +56,12 @@ final class SyncService: ObservableObject {
             }
         }
 
-        // Initial count update
         updatePendingCount()
     }
 
     func stop() {
         timer?.invalidate()
         timer = nil
-
-        SentryService.shared.addStateBreadcrumb(
-            category: "sync",
-            message: "Sync status monitor stopped"
-        )
     }
 
     /// Trigger the addon to sync immediately by writing a trigger file
@@ -108,23 +69,14 @@ final class SyncService: ObservableObject {
         isSyncing = true
         syncStatus = .syncing
 
-        // Write trigger file for addon
         do {
             try "sync".write(to: Self.forceSyncTrigger, atomically: true, encoding: .utf8)
-            NSLog("[SyncService] Wrote force-sync trigger")
-
-            // Wait briefly for addon to process
-            try await Task.sleep(nanoseconds: 500_000_000)  // 0.5s
-
-            // Update pending count after sync
+            try await Task.sleep(nanoseconds: 500_000_000)  // Wait for addon
             updatePendingCount()
-
             lastSyncTime = Date()
             syncStatus = pendingEventCount > 0 ? .idle : .synced
         } catch {
-            NSLog("[SyncService] Failed to write force-sync trigger: \(error)")
-            syncError = "Failed to trigger sync"
-            syncStatus = .error("Trigger failed")
+            syncStatus = .error("Sync failed")
         }
 
         isSyncing = false
@@ -179,19 +131,10 @@ final class SyncService: ObservableObject {
         }
     }
 
-    // MARK: - Sync on Terminate (best effort, synchronous)
-
-    /// Synchronous flush for app termination - triggers addon to sync
+    /// Trigger addon to sync on app termination
     nonisolated func flushSync() {
-        // Write trigger file for addon to flush pending traces
-        do {
-            try "sync".write(to: Self.forceSyncTrigger, atomically: true, encoding: .utf8)
-            NSLog("[SyncService] flushSync: wrote force-sync trigger for addon")
-            // Give addon a moment to process
-            Thread.sleep(forTimeInterval: 0.5)
-        } catch {
-            NSLog("[SyncService] flushSync: failed to write trigger: \(error)")
-        }
+        try? "sync".write(to: Self.forceSyncTrigger, atomically: true, encoding: .utf8)
+        Thread.sleep(forTimeInterval: 0.5)
     }
 
     // MARK: - Storage Management
@@ -229,7 +172,6 @@ final class SyncService: ObservableObject {
     func clearLocalData() throws {
         let fm = FileManager.default
 
-        // Delete all trace files
         if fm.fileExists(atPath: Constants.tracesDir.path) {
             let files = try fm.contentsOfDirectory(at: Constants.tracesDir, includingPropertiesForKeys: nil)
             for file in files where file.pathExtension == "jsonl" {
@@ -237,18 +179,9 @@ final class SyncService: ObservableObject {
             }
         }
 
-        // Clear addon's upload state file
         try? fm.removeItem(at: AddonUploadState.fileURL)
-
-        // Update UI
         pendingEventCount = 0
         syncStatus = .idle
-        syncError = nil
-
-        SentryService.shared.addStateBreadcrumb(
-            category: "sync",
-            message: "Local data cleared by user"
-        )
     }
 
     /// Open traces folder in Finder
@@ -261,16 +194,5 @@ final class SyncService: ObservableObject {
         }
 
         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Constants.tracesDir.path)
-    }
-}
-
-// MARK: - Array Chunking Extension
-
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        guard size > 0 else { return [self] }
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
-        }
     }
 }
