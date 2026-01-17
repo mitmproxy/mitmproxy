@@ -23,14 +23,23 @@ import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import IO
+from urllib.parse import urlparse
 
 from mitmproxy import ctx, http, tls
-
+print("*" * 100)
+print("Oximy addon loaded")
+print("*" * 100)
 # Import ProcessResolver - handle both package and script modes
 try:
     from .process import ClientProcess, ProcessResolver
 except ImportError:
     from process import ClientProcess, ProcessResolver
+
+# Import normalize - handle both package and script modes
+try:
+    from .normalize import normalize_body
+except ImportError:
+    from normalize import normalize_body
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,6 +89,9 @@ def _set_macos_proxy(enable: bool) -> None:
     """Enable or disable macOS system proxy."""
     try:
         if enable:
+            logger.debug("*" * 100)
+            logger.debug("Enabling macOS proxy")
+            logger.debug("*" * 100)
             subprocess.run(["networksetup", "-setsecurewebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
                            check=True, capture_output=True)
             subprocess.run(["networksetup", "-setwebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
@@ -246,15 +258,20 @@ def _ensure_cert_trusted() -> bool:
 # CONFIG LOADING
 # =============================================================================
 
-SENSOR_CONFIG_URL = "https://api.oximy.com/api/v1/sensor-config"
-SENSOR_CONFIG_CACHE = Path("~/.oximy/sensor-config.json").expanduser()
-CONFIG_REFRESH_INTERVAL_SECONDS = 1800  # 30 minutes
+DEFAULT_SENSOR_CONFIG_URL = "https://api.oximy.com/api/v1/sensor-config"
+DEFAULT_SENSOR_CONFIG_CACHE = "~/.oximy/sensor-config.json"
+DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = 1800  # 30 minutes (fallback)
 
 
-def fetch_sensor_config() -> dict:
+def fetch_sensor_config(
+    url: str = DEFAULT_SENSOR_CONFIG_URL,
+    cache_path: str = DEFAULT_SENSOR_CONFIG_CACHE,
+) -> dict:
     """Fetch sensor config from API and cache locally."""
     import urllib.request
     import urllib.error
+
+    cache_file = Path(cache_path).expanduser()
 
     default_config = {
         "whitelist": [],
@@ -263,30 +280,30 @@ def fetch_sensor_config() -> dict:
     }
 
     try:
-        logger.info(f"Fetching sensor config from {SENSOR_CONFIG_URL}")
+        logger.info(f"Fetching sensor config from {url}")
         req = urllib.request.Request(
-            SENSOR_CONFIG_URL,
+            url,
             headers={"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"},
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             raw = json.loads(resp.read().decode("utf-8"))
 
         # Cache the raw response locally
-        SENSOR_CONFIG_CACHE.parent.mkdir(parents=True, exist_ok=True)
-        with open(SENSOR_CONFIG_CACHE, "w", encoding="utf-8") as f:
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(cache_file, "w", encoding="utf-8") as f:
             json.dump(raw, f, indent=2)
-        logger.info(f"Sensor config cached to {SENSOR_CONFIG_CACHE}")
+        logger.info(f"Sensor config cached to {cache_file}")
 
         return _parse_sensor_config(raw)
 
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError) as e:
         logger.warning(f"Failed to fetch sensor config: {e}")
 
-        if SENSOR_CONFIG_CACHE.exists():
+        if cache_file.exists():
             try:
-                with open(SENSOR_CONFIG_CACHE, encoding="utf-8") as f:
+                with open(cache_file, encoding="utf-8") as f:
                     cached = json.load(f)
-                logger.info(f"Using cached sensor config from {SENSOR_CONFIG_CACHE}")
+                logger.info(f"Using cached sensor config from {cache_file}")
                 return _parse_sensor_config(cached)
             except (json.JSONDecodeError, IOError) as cache_err:
                 logger.warning(f"Failed to load cached config: {cache_err}")
@@ -305,17 +322,47 @@ def _parse_sensor_config(raw: dict) -> dict:
     }
 
 
+DEFAULT_CONFIG_PATH = Path("~/.oximy/config.json").expanduser()
+
+
 def load_output_config(config_path: Path | None = None) -> dict:
-    """Load output configuration."""
-    default = {"output": {"directory": "~/.oximy/traces", "filename_pattern": "traces_{date}.jsonl"}}
-    if config_path and config_path.exists():
-        try:
-            with open(config_path, encoding="utf-8") as f:
-                user_config = json.load(f)
-            if "output" in user_config:
-                default["output"].update(user_config["output"])
-        except (json.JSONDecodeError, IOError):
-            pass
+    """Load output configuration.
+
+    Checks the following paths in order:
+    1. Explicitly provided config_path
+    2. Default path: ~/.oximy/config.json
+    """
+    default = {
+        "output": {"directory": "~/.oximy/traces", "filename_pattern": "traces_{date}.jsonl"},
+        "sensor_config_url": DEFAULT_SENSOR_CONFIG_URL,
+        "sensor_config_cache": DEFAULT_SENSOR_CONFIG_CACHE,
+        "config_refresh_interval_seconds": DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS,
+    }
+
+    # Determine which config file to load
+    paths_to_check = []
+    if config_path:
+        paths_to_check.append(config_path)
+    paths_to_check.append(DEFAULT_CONFIG_PATH)
+
+    for path in paths_to_check:
+        if path.exists():
+            try:
+                with open(path, encoding="utf-8") as f:
+                    user_config = json.load(f)
+                if "output" in user_config:
+                    default["output"].update(user_config["output"])
+                if "sensor_config_url" in user_config:
+                    default["sensor_config_url"] = user_config["sensor_config_url"]
+                if "sensor_config_cache" in user_config:
+                    default["sensor_config_cache"] = user_config["sensor_config_cache"]
+                if "config_refresh_interval_seconds" in user_config:
+                    default["config_refresh_interval_seconds"] = user_config["config_refresh_interval_seconds"]
+                logger.debug(f"Loaded config from {path}")
+                break
+            except (json.JSONDecodeError, IOError) as e:
+                logger.debug(f"Failed to load config from {path}: {e}")
+
     return default
 
 
@@ -396,6 +443,77 @@ def matches_domain(host: str, patterns: list[str]) -> str | None:
         if "*" in pattern and not pattern.startswith("*"):
             regex = pattern_lower.replace(".", r"\.").replace("*", ".*")
             if re.match(f"^{regex}$", host_lower):
+                return pattern
+
+    return None
+
+
+def _matches_url_pattern(url: str, pattern: str) -> bool:
+    """Match full URL against pattern with glob support.
+
+    ** matches any characters including /
+    * matches any characters except /
+    """
+    url_lower = url.lower()
+    pattern_lower = pattern.lower()
+
+    # Convert glob pattern to regex
+    regex = ""
+    i = 0
+    while i < len(pattern_lower):
+        if i < len(pattern_lower) - 1 and pattern_lower[i:i+2] == "**":
+            regex += ".*"
+            i += 2
+        elif pattern_lower[i] == "*":
+            regex += "[^/]*"
+            i += 1
+        elif pattern_lower[i] in ".?+^${}[]|()":
+            regex += "\\" + pattern_lower[i]
+            i += 1
+        else:
+            regex += pattern_lower[i]
+            i += 1
+
+    return bool(re.match(f"^{regex}", url_lower))
+
+
+def matches_whitelist(host: str, path: str, patterns: list[str]) -> str | None:
+    """Check if host+path matches any whitelist pattern.
+
+    Patterns can be:
+    - Domain only: 'api.openai.com' or '*.openai.com' - matches any path
+    - Domain + path: 'gemini.google.com/**/StreamGenerate*' - matches specific paths
+
+    For patterns with paths:
+    - ** matches any path segments (including /)
+    - * matches any characters except /
+    """
+    full_url = f"{host}{path}"  # path already starts with /
+
+    for pattern in patterns:
+        # Check if pattern contains a path component
+        # Look for / that's not part of *.domain pattern
+        pattern_lower = pattern.lower()
+
+        # Find first / that indicates a path
+        first_slash = pattern.find('/')
+
+        # Patterns starting with *. are domain wildcards, check if there's a path after domain
+        if pattern.startswith("*."):
+            # *.example.com or *.example.com/path
+            rest_after_star = pattern[2:]
+            slash_in_rest = rest_after_star.find('/')
+            has_path = slash_in_rest != -1
+        else:
+            has_path = first_slash != -1
+
+        if not has_path:
+            # Domain-only pattern - use existing domain matching
+            if matches_domain(host, [pattern]):
+                return pattern
+        else:
+            # URL pattern with path - match full URL
+            if _matches_url_pattern(full_url, pattern):
                 return pattern
 
     return None
@@ -488,8 +606,10 @@ class TLSPassthrough:
             "client disconnected during the handshake",
         ]
 
+        # stop adding to learned hosts
         if any(ind in error.lower() for ind in pinning_indicators):
             self.add_host(host)
+            # pass
 
     def update_passthrough(self, patterns: list[str]) -> None:
         """Update passthrough patterns from refreshed config."""
@@ -705,12 +825,16 @@ class OximyAddon:
         self._blacklist: list[str] = []
         self._tls: TLSPassthrough | None = None
         self._writer: TraceWriter | None = None
+        self._debug_writer: TraceWriter | None = None  # Unfiltered logs
         self._uploader: TraceUploader | None = None
         self._resolver: ProcessResolver | None = None
         self._device_id: str | None = None
         self._output_dir: Path | None = None
         self._last_upload_time: float = 0
         self._traces_since_upload: int = 0
+        self._sensor_config_url: str = DEFAULT_SENSOR_CONFIG_URL
+        self._sensor_config_cache: str = DEFAULT_SENSOR_CONFIG_CACHE
+        self._config_refresh_interval: int = DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS
         self._config_refresh_thread: threading.Thread | None = None
         self._config_refresh_stop: threading.Event = threading.Event()
         self._config_lock: threading.Lock = threading.Lock()  # Protects config updates
@@ -733,6 +857,8 @@ class OximyAddon:
         loader.add_option("oximy_output_dir", str, "~/.oximy/traces", "Output directory")
         loader.add_option("oximy_verbose", bool, False, "Verbose logging")
         loader.add_option("oximy_upload_enabled", bool, True, "Enable trace uploads (disable if host app handles sync)")
+        loader.add_option("oximy_debug_traces", bool, False, "Log all requests to all_traces file (unfiltered)")
+        
 
     def _refresh_config(self, max_retries: int = 3) -> bool:
         """Fetch and apply updated config from API with retries.
@@ -743,7 +869,7 @@ class OximyAddon:
 
         for attempt in range(max_retries):
             try:
-                raw_config = fetch_sensor_config()
+                raw_config = fetch_sensor_config(self._sensor_config_url, self._sensor_config_cache)
                 config = _parse_sensor_config(raw_config)
 
                 # Atomic update with lock to ensure consistent state
@@ -774,11 +900,12 @@ class OximyAddon:
     def _start_config_refresh_task(self) -> None:
         """Start background thread to periodically refresh config."""
         self._config_refresh_stop.clear()
+        interval = self._config_refresh_interval
 
         def refresh_loop():
             while not self._config_refresh_stop.is_set():
                 # Wait with interruptible sleep
-                if self._config_refresh_stop.wait(timeout=CONFIG_REFRESH_INTERVAL_SECONDS):
+                if self._config_refresh_stop.wait(timeout=interval):
                     break  # Stop event was set
                 if not self._enabled:
                     break
@@ -790,7 +917,7 @@ class OximyAddon:
             name="oximy-config-refresh"
         )
         self._config_refresh_thread.start()
-        logger.info(f"Config refresh task started (interval: {CONFIG_REFRESH_INTERVAL_SECONDS}s)")
+        logger.info(f"Config refresh task started (interval: {interval}s)")
 
     def _start_force_sync_monitor(self) -> None:
         """Start background thread to monitor for force-sync trigger file."""
@@ -857,9 +984,32 @@ class OximyAddon:
                 logger.error(f"  sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain {_get_cert_path()}")
                 logger.error("=" * 60)
                 # Continue anyway - user might install manually or cert will be generated
+            else:
+                logger.info("***** OXIMY CERTIFICATE TRUSTED ****")
+
+        # Load local config (output settings, refresh interval, etc.)
+        output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
+        self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
+        self._writer = TraceWriter(self._output_dir, output_config["output"].get("filename_pattern", "traces_{date}.jsonl"))
+
+        # Debug traces (unfiltered) - only if enabled
+        if ctx.options.oximy_debug_traces:
+            self._debug_writer = TraceWriter(self._output_dir, "all_traces_{date}.jsonl")
+            logger.info("Debug traces enabled: logging all requests to all_traces_{date}.jsonl")
+        else:
+            self._debug_writer = None
+        self._sensor_config_url = output_config.get("sensor_config_url", DEFAULT_SENSOR_CONFIG_URL)
+        self._sensor_config_cache = output_config.get("sensor_config_cache", DEFAULT_SENSOR_CONFIG_CACHE)
+        self._config_refresh_interval = output_config.get("config_refresh_interval_seconds", DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS)
+        # Ensure output directory exists
+        self._output_dir.mkdir(parents=True, exist_ok=True)
 
         # Fetch sensor config from API (cached locally)
-        sensor_config = fetch_sensor_config()
+        sensor_config = fetch_sensor_config(self._sensor_config_url, self._sensor_config_cache)
+        print("*" * 60)
+        print("O X I M Y   S E N S O R   I S   R E A D Y")  
+        print(json.dumps(sensor_config, indent=2))
+        print("*" * 60)
         self._whitelist = sensor_config.get("whitelist", [])
         self._blacklist = sensor_config.get("blacklist", [])
         passthrough_patterns = sensor_config.get("passthrough", [])
@@ -871,10 +1021,6 @@ class OximyAddon:
 
         # Start background trigger file monitor
         self._start_force_sync_monitor()
-
-        output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
-        self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
-        self._writer = TraceWriter(self._output_dir, output_config["output"].get("filename_pattern", "traces_{date}.jsonl"))
 
         # Initialize trace uploader for API uploads (only if enabled)
         # When running under a host app (e.g., OximyMac), the host handles sync
@@ -922,7 +1068,7 @@ class OximyAddon:
         host = data.client_hello.sni or (data.context.server.address[0] if data.context.server.address else None)
         if host and self._tls.should_passthrough(host):
             data.ignore_connection = True
-            logger.debug(f"PASSTHROUGH: {host}")
+            # logger.debug(f"PASSTHROUGH: {host}")
 
     def tls_failed_client(self, data: tls.TlsData) -> None:
         """Learn certificate-pinned hosts from TLS failures."""
@@ -949,8 +1095,8 @@ class OximyAddon:
 
         logger.info(f">>> {flow.request.method} {url[:100]}")
 
-        # Whitelist check
-        if not matches_domain(host, self._whitelist):
+        # Whitelist check (supports domain-only and domain+path patterns)
+        if not matches_whitelist(host, path, self._whitelist):
             flow.metadata["oximy_skip"] = True
             return
 
@@ -975,42 +1121,39 @@ class OximyAddon:
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Write trace for captured response."""
-        if not self._enabled or not self._writer:
+        if not self._enabled:
             return
 
-        if flow.metadata.get("oximy_skip") or flow.websocket:
-            return
-
-        if not flow.response:
+        if flow.websocket or not flow.response:
             return
 
         host = flow.request.pretty_host
         path = flow.request.path
         url = f"{host}{path}"
 
-        response_body = ""
-        if flow.response.content:
-            try:
-                response_body = flow.response.content.decode("utf-8", errors="replace")
-            except Exception:
-                pass
-
+        content_type = flow.response.headers.get("content-type", "")
+        response_body = normalize_body(flow.response.content, content_type)
         event = self._build_event(flow, response_body)
-        self._writer.write(event)
-        self._traces_since_upload += 1
-        logger.info(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]")
 
-        # Check if we should upload
-        self._maybe_upload()
+        # Always write to debug log (unfiltered)
+        if self._debug_writer:
+            self._debug_writer.write(event)
+
+        # Only write to main traces if not skipped by whitelist/blacklist
+        if flow.metadata.get("oximy_skip"):
+            return
+
+        if self._writer:
+            self._writer.write(event)
+            self._traces_since_upload += 1
+            logger.info(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]")
+
+            # Check if we should upload
+            self._maybe_upload()
 
     def _build_event(self, flow: http.HTTPFlow, response_body: str) -> dict:
         """Build trace event."""
-        request_body = None
-        if flow.request.content:
-            try:
-                request_body = flow.request.content.decode("utf-8")
-            except UnicodeDecodeError:
-                request_body = flow.request.content.hex()
+        request_body = normalize_body(flow.request.content) if flow.request.content else None
 
         duration_ms = ttfb_ms = None
         if flow.request.timestamp_start and flow.response:
@@ -1034,6 +1177,17 @@ class OximyAddon:
             if client_process.name:
                 client_info["name"] = client_process.name
 
+        # Extract referrer domain from headers
+        referrer_domain: str | None = None
+        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
+        if referer_header:
+            try:
+                parsed = urlparse(referer_header)
+                if parsed.netloc:
+                    referrer_domain = parsed.netloc
+            except Exception:
+                pass
+
         event: dict = {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
@@ -1045,6 +1199,8 @@ class OximyAddon:
 
         # Add client info
         if client_info:
+            if referrer_domain:
+                client_info["referrer_domain"] = referrer_domain
             event["client"] = client_info
 
         # Add request/response/timing
@@ -1077,7 +1233,8 @@ class OximyAddon:
         path = flow.request.path
         url = f"{host}{path}"
 
-        if not matches_domain(host, self._whitelist):
+        # Whitelist check (supports domain-only and domain+path patterns)
+        if not matches_whitelist(host, path, self._whitelist):
             flow.metadata["oximy_skip"] = True
             return
 
@@ -1101,7 +1258,7 @@ class OximyAddon:
 
         if flow.websocket and flow.websocket.messages:
             msg = flow.websocket.messages[-1]
-            content = msg.content.decode("utf-8", errors="replace") if isinstance(msg.content, bytes) else str(msg.content)
+            content = normalize_body(msg.content) if isinstance(msg.content, bytes) else str(msg.content)
             flow.metadata["oximy_ws_messages"].append({
                 "direction": "client" if msg.from_client else "server",
                 "timestamp": datetime.fromtimestamp(msg.timestamp, tz=timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
@@ -1110,10 +1267,7 @@ class OximyAddon:
 
     def websocket_end(self, flow: http.HTTPFlow) -> None:
         """Write WebSocket trace on connection close."""
-        if not self._enabled or not self._writer:
-            return
-
-        if flow.metadata.get("oximy_skip"):
+        if not self._enabled:
             return
 
         messages = flow.metadata.get("oximy_ws_messages")
@@ -1133,6 +1287,17 @@ class OximyAddon:
             if client_process.name:
                 client_info["name"] = client_process.name
 
+        # Extract referrer domain from headers
+        referrer_domain: str | None = None
+        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
+        if referer_header:
+            try:
+                parsed = urlparse(referer_header)
+                if parsed.netloc:
+                    referrer_domain = parsed.netloc
+            except Exception:
+                pass
+
         event: dict = {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
@@ -1144,6 +1309,8 @@ class OximyAddon:
 
         # Add client info
         if client_info:
+            if referrer_domain:
+                client_info["referrer_domain"] = referrer_domain
             event["client"] = client_info
 
         # Add WebSocket-specific fields
@@ -1152,12 +1319,21 @@ class OximyAddon:
         event["messages"] = messages
         event["timing"] = {"duration_ms": int((time.time() - start) * 1000), "message_count": len(messages)}
 
-        self._writer.write(event)
-        self._traces_since_upload += 1
-        logger.info(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(messages)} messages)")
+        # Always write to debug log (unfiltered)
+        if self._debug_writer:
+            self._debug_writer.write(event)
 
-        # Check if we should upload
-        self._maybe_upload()
+        # Only write to main traces if not skipped by whitelist/blacklist
+        if flow.metadata.get("oximy_skip"):
+            return
+
+        if self._writer:
+            self._writer.write(event)
+            self._traces_since_upload += 1
+            logger.info(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(messages)} messages)")
+
+            # Check if we should upload
+            self._maybe_upload()
 
     # =========================================================================
     # Upload Trigger
@@ -1213,10 +1389,13 @@ class OximyAddon:
 
         _set_system_proxy(enable=False)
 
-        # Close writer first to flush pending writes
+        # Close writers to flush pending writes
         if self._writer:
             self._writer.close()
             self._writer = None
+        if self._debug_writer:
+            self._debug_writer.close()
+            self._debug_writer = None
 
         # Upload pending traces to API
         if self._uploader and self._output_dir:
