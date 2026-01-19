@@ -89,9 +89,6 @@ def _set_macos_proxy(enable: bool) -> None:
     """Enable or disable macOS system proxy."""
     try:
         if enable:
-            logger.debug("*" * 100)
-            logger.debug("Enabling macOS proxy")
-            logger.debug("*" * 100)
             subprocess.run(["networksetup", "-setsecurewebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
                            check=True, capture_output=True)
             subprocess.run(["networksetup", "-setwebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
@@ -315,10 +312,19 @@ def fetch_sensor_config(
 def _parse_sensor_config(raw: dict) -> dict:
     """Parse API response into normalized config format."""
     data = raw.get("data", raw)
+
+    # Parse allowed_app_origins (hosts = browsers, non_hosts = AI-native apps)
+    app_origins = data.get("allowed_app_origins", {})
+
     return {
         "whitelist": data.get("whitelistedDomains", []),
         "blacklist": data.get("blacklistedWords", []),
         "passthrough": data.get("passthroughDomains", []),
+        "allowed_app_origins": {
+            "hosts": app_origins.get("hosts", []),
+            "non_hosts": app_origins.get("non_hosts", []),
+        },
+        "allowed_host_origins": data.get("allowed_host_origins", []),
     }
 
 
@@ -531,6 +537,77 @@ def contains_blacklist_word(text: str, words: list[str]) -> str | None:
 
 
 # =============================================================================
+# HIERARCHICAL FILTERING: APP & HOST ORIGINS
+# =============================================================================
+
+
+def matches_app_origin(
+    bundle_id: str | None,
+    hosts: list[str],
+    non_hosts: list[str],
+) -> str | None:
+    """Determine app type from bundle_id.
+
+    Args:
+        bundle_id: The app's bundle identifier (e.g., 'com.google.Chrome')
+        hosts: List of browser bundle IDs (apps that can run AI websites)
+        non_hosts: List of AI-native app bundle IDs
+
+    Returns:
+        "host" if bundle_id matches a browser
+        "non_host" if bundle_id matches an AI-native app
+        None if bundle_id doesn't match (request should be skipped)
+    """
+    if not bundle_id:
+        return None
+
+    bundle_lower = bundle_id.lower()
+
+    # Check non_hosts first (AI-native apps - more specific)
+    for pattern in non_hosts:
+        if bundle_lower == pattern.lower():
+            return "non_host"
+
+    # Check hosts (browsers)
+    for pattern in hosts:
+        if bundle_lower == pattern.lower():
+            return "host"
+
+    return None
+
+
+def matches_host_origin(origin: str | None, allowed_origins: list[str]) -> bool:
+    """Check if request origin matches allowed host origins.
+
+    Supports exact match and subdomain matching.
+
+    Args:
+        origin: The origin domain (e.g., 'chatgpt.com', 'chat.openai.com')
+        allowed_origins: List of allowed origin domains
+
+    Returns:
+        True if origin matches an allowed origin, False otherwise
+    """
+    if not origin:
+        return False
+
+    origin_lower = origin.lower()
+
+    for allowed in allowed_origins:
+        allowed_lower = allowed.lower()
+
+        # Exact match
+        if origin_lower == allowed_lower:
+            return True
+
+        # Subdomain match (origin ends with .allowed)
+        if origin_lower.endswith(f".{allowed_lower}"):
+            return True
+
+    return False
+
+
+# =============================================================================
 # TLS PASSTHROUGH
 # =============================================================================
 
@@ -738,6 +815,14 @@ class TraceUploader:
             logger.warning(f"Failed to read trace file: {e}")
             return 0
 
+        # Handle file truncation/recreation: if file has fewer lines than recorded,
+        # reset state and upload from the beginning
+        if len(lines) < last_uploaded:
+            logger.info(f"Trace file was truncated/recreated (had {last_uploaded}, now {len(lines)}), resetting upload state")
+            last_uploaded = 0
+            self._upload_state[file_key] = 0
+            self._save_state()
+
         # Get pending lines (not yet uploaded)
         pending_lines = lines[last_uploaded:]
         if not pending_lines:
@@ -823,6 +908,10 @@ class OximyAddon:
         self._enabled = False
         self._whitelist: list[str] = []
         self._blacklist: list[str] = []
+        # Hierarchical filtering: app origins and host origins
+        self._allowed_app_hosts: list[str] = []  # Browser bundle IDs
+        self._allowed_app_non_hosts: list[str] = []  # AI-native app bundle IDs
+        self._allowed_host_origins: list[str] = []  # Website origins (for browsers)
         self._tls: TLSPassthrough | None = None
         self._writer: TraceWriter | None = None
         self._debug_writer: TraceWriter | None = None  # Unfiltered logs
@@ -841,14 +930,20 @@ class OximyAddon:
         self._force_sync_thread: threading.Thread | None = None
         self._force_sync_stop: threading.Event = threading.Event()
 
-    def _get_config_snapshot(self) -> tuple[list[str], list[str]]:
-        """Get a consistent snapshot of whitelist and blacklist.
+    def _get_config_snapshot(self) -> dict:
+        """Get a consistent snapshot of all filtering config.
 
         Returns copies to ensure the caller has immutable references
         that won't change during processing.
         """
         with self._config_lock:
-            return list(self._whitelist), list(self._blacklist)
+            return {
+                "whitelist": list(self._whitelist),
+                "blacklist": list(self._blacklist),
+                "allowed_app_hosts": list(self._allowed_app_hosts),
+                "allowed_app_non_hosts": list(self._allowed_app_non_hosts),
+                "allowed_host_origins": list(self._allowed_host_origins),
+            }
 
     def load(self, loader) -> None:
         """Register addon options."""
@@ -877,11 +972,20 @@ class OximyAddon:
                     self._whitelist = config.get("whitelist", [])
                     self._blacklist = config.get("blacklist", [])
 
+                    # Update hierarchical filtering config
+                    app_origins = config.get("allowed_app_origins", {})
+                    self._allowed_app_hosts = app_origins.get("hosts", [])
+                    self._allowed_app_non_hosts = app_origins.get("non_hosts", [])
+                    self._allowed_host_origins = config.get("allowed_host_origins", [])
+
                     # Update TLS passthrough patterns
                     if self._tls:
                         self._tls.update_passthrough(config.get("passthrough", []))
 
-                logger.info(f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist")
+                logger.info(
+                    f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
+                    f"{len(self._allowed_app_hosts)} app_hosts, {len(self._allowed_host_origins)} host_origins"
+                )
                 return True
 
             except Exception as e:
@@ -1006,14 +1110,16 @@ class OximyAddon:
 
         # Fetch sensor config from API (cached locally)
         sensor_config = fetch_sensor_config(self._sensor_config_url, self._sensor_config_cache)
-        print("*" * 60)
-        print("O X I M Y   S E N S O R   I S   R E A D Y")  
-        print(json.dumps(sensor_config, indent=2))
-        print("*" * 60)
         self._whitelist = sensor_config.get("whitelist", [])
         self._blacklist = sensor_config.get("blacklist", [])
         passthrough_patterns = sensor_config.get("passthrough", [])
         self._tls = TLSPassthrough(passthrough_patterns)
+
+        # Hierarchical filtering config
+        app_origins = sensor_config.get("allowed_app_origins", {})
+        self._allowed_app_hosts = app_origins.get("hosts", [])
+        self._allowed_app_non_hosts = app_origins.get("non_hosts", [])
+        self._allowed_host_origins = sensor_config.get("allowed_host_origins", [])
 
         # Start periodic config refresh (only if not already running)
         if self._config_refresh_thread is None or not self._config_refresh_thread.is_alive():
@@ -1041,7 +1147,11 @@ class OximyAddon:
         logger.info(f"Device ID: {self._device_id}")
 
         _set_system_proxy(enable=True)
-        logger.info(f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, {len(passthrough_patterns)} passthrough =====")
+        logger.info(
+            f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
+            f"{len(passthrough_patterns)} passthrough, {len(self._allowed_app_hosts)} app_hosts, "
+            f"{len(self._allowed_host_origins)} host_origins ====="
+        )
 
     def _check_blacklist(self, *texts: str, blacklist: list[str] | None = None) -> str | None:
         """Check if any text contains a blacklisted word.
@@ -1054,6 +1164,35 @@ class OximyAddon:
         for text in texts:
             if word := contains_blacklist_word(text, bl):
                 return word
+        return None
+
+    def _extract_request_origin(self, flow: http.HTTPFlow) -> str | None:
+        """Extract origin domain from request headers (Origin or Referer).
+
+        Returns the domain portion of the Origin or Referer header.
+        Used for host origin filtering to determine which website
+        initiated the request.
+        """
+        # Try Origin header first (more reliable for cross-origin checks)
+        origin_header = flow.request.headers.get("origin") or flow.request.headers.get("Origin")
+        if origin_header:
+            try:
+                parsed = urlparse(origin_header)
+                if parsed.netloc:
+                    return parsed.netloc
+            except Exception:
+                pass
+
+        # Fall back to Referer header
+        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
+        if referer_header:
+            try:
+                parsed = urlparse(referer_header)
+                if parsed.netloc:
+                    return parsed.netloc
+            except Exception:
+                pass
+
         return None
 
     # =========================================================================
@@ -1085,7 +1224,13 @@ class OximyAddon:
     # =========================================================================
 
     async def request(self, flow: http.HTTPFlow) -> None:
-        """Check whitelist and blacklist on request."""
+        """Check hierarchical filters on request.
+
+        Filter hierarchy:
+        1. App Origin Check (bundle_id based)
+        2. Host Origin Check (for browser apps only)
+        3. Standard Whitelist/Blacklist Filters
+        """
         if not self._enabled:
             return
 
@@ -1095,29 +1240,78 @@ class OximyAddon:
 
         logger.info(f">>> {flow.request.method} {url[:100]}")
 
-        # Whitelist check (supports domain-only and domain+path patterns)
-        if not matches_whitelist(host, path, self._whitelist):
-            flow.metadata["oximy_skip"] = True
-            return
+        # Get config snapshot for thread-safe filtering
+        config = self._get_config_snapshot()
 
-        # Blacklist check on URL only
-        if word := self._check_blacklist(url):
-            logger.info(f"[BLACKLISTED] {url[:80]} (matched: {word})")
-            flow.metadata["oximy_skip"] = True
-            return
-
-        flow.metadata["oximy_capture"] = True
-        flow.metadata["oximy_start"] = time.time()
-
-        # Get client process info
+        # =====================================================================
+        # STEP 1: Resolve client process FIRST (needed for app origin check)
+        # =====================================================================
+        client_process: ClientProcess | None = None
         if self._resolver and flow.client_conn and flow.client_conn.peername:
             try:
                 client_port = flow.client_conn.peername[1]
                 client_process = await self._resolver.get_process_for_port(client_port)
                 flow.metadata["oximy_client"] = client_process
-                logger.debug(f"Client: {client_process.name} (PID {client_process.pid})")
+                logger.debug(f"Client: {client_process.name} (PID {client_process.pid}, bundle: {client_process.bundle_id})")
             except Exception as e:
                 logger.debug(f"Failed to get client process: {e}")
+
+        # =====================================================================
+        # STEP 2: App Origin Check (Layer 1)
+        # =====================================================================
+        bundle_id = client_process.bundle_id if client_process else None
+        app_type = matches_app_origin(
+            bundle_id,
+            config["allowed_app_hosts"],
+            config["allowed_app_non_hosts"],
+        )
+
+        if app_type is None:
+            # App not in allowed list - skip capture
+            logger.debug(f"[APP_SKIP] bundle_id={bundle_id} not in allowed apps")
+            flow.metadata["oximy_skip"] = True
+            flow.metadata["oximy_skip_reason"] = "app_not_allowed"
+            return
+
+        flow.metadata["oximy_app_type"] = app_type
+
+        # =====================================================================
+        # STEP 3: Host Origin Check (Layer 2) - only for "host" (browser) apps
+        # =====================================================================
+        if app_type == "host":
+            request_origin = self._extract_request_origin(flow)
+
+            if not matches_host_origin(request_origin, config["allowed_host_origins"]):
+                logger.debug(f"[HOST_SKIP] origin={request_origin} not in allowed origins")
+                flow.metadata["oximy_skip"] = True
+                flow.metadata["oximy_skip_reason"] = "host_origin_not_allowed"
+                return
+
+            flow.metadata["oximy_host_origin"] = request_origin
+
+        # =====================================================================
+        # STEP 4: Standard Filters (Layer 3)
+        # =====================================================================
+
+        # Whitelist check (supports domain-only and domain+path patterns)
+        if not matches_whitelist(host, path, config["whitelist"]):
+            flow.metadata["oximy_skip"] = True
+            flow.metadata["oximy_skip_reason"] = "not_whitelisted"
+            return
+
+        # Blacklist check on URL only
+        if word := self._check_blacklist(url, blacklist=config["blacklist"]):
+            logger.info(f"[BLACKLISTED] {url[:80]} (matched: {word})")
+            flow.metadata["oximy_skip"] = True
+            flow.metadata["oximy_skip_reason"] = "blacklisted"
+            return
+
+        # =====================================================================
+        # Mark for capture
+        # =====================================================================
+        flow.metadata["oximy_capture"] = True
+        flow.metadata["oximy_start"] = time.time()
+        logger.debug(f"[CAPTURE] {url[:80]} (app_type={app_type})")
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Write trace for captured response."""
@@ -1177,14 +1371,14 @@ class OximyAddon:
             if client_process.name:
                 client_info["name"] = client_process.name
 
-        # Extract referrer domain from headers
-        referrer_domain: str | None = None
+        # Extract referrer origin from headers
+        referrer_origin: str | None = None
         referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
         if referer_header:
             try:
                 parsed = urlparse(referer_header)
                 if parsed.netloc:
-                    referrer_domain = parsed.netloc
+                    referrer_origin = parsed.netloc
             except Exception:
                 pass
 
@@ -1199,8 +1393,15 @@ class OximyAddon:
 
         # Add client info
         if client_info:
-            if referrer_domain:
-                client_info["referrer_domain"] = referrer_domain
+            if referrer_origin:
+                client_info["referrer_origin"] = referrer_origin
+
+            # Add hierarchical filter metadata
+            if flow.metadata.get("oximy_app_type"):
+                client_info["app_type"] = flow.metadata["oximy_app_type"]
+            if flow.metadata.get("oximy_host_origin"):
+                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
+
             event["client"] = client_info
 
         # Add request/response/timing
@@ -1225,29 +1426,27 @@ class OximyAddon:
     # =========================================================================
 
     async def websocket_message(self, flow: http.HTTPFlow) -> None:
-        """Accumulate WebSocket messages."""
+        """Accumulate WebSocket messages with hierarchical filtering."""
         if not self._enabled:
+            return
+
+        # Skip if already marked (from previous message in same connection)
+        if flow.metadata.get("oximy_skip"):
             return
 
         host = flow.request.pretty_host
         path = flow.request.path
         url = f"{host}{path}"
 
-        # Whitelist check (supports domain-only and domain+path patterns)
-        if not matches_whitelist(host, path, self._whitelist):
-            flow.metadata["oximy_skip"] = True
-            return
-
+        # First message - apply all hierarchical filters
         if "oximy_ws_messages" not in flow.metadata:
-            # Blacklist check on URL only (first message)
-            if word := self._check_blacklist(url):
-                logger.info(f"[BLACKLISTED] WS {url[:80]} (matched: {word})")
-                flow.metadata["oximy_skip"] = True
-                return
+            # Get config snapshot for thread-safe filtering
+            config = self._get_config_snapshot()
 
-            flow.metadata["oximy_ws_messages"] = []
-            flow.metadata["oximy_ws_start"] = time.time()
-
+            # =================================================================
+            # STEP 1: Resolve client process
+            # =================================================================
+            client_process: ClientProcess | None = None
             if self._resolver and flow.client_conn and flow.client_conn.peername:
                 try:
                     client_port = flow.client_conn.peername[1]
@@ -1256,6 +1455,56 @@ class OximyAddon:
                 except Exception as e:
                     logger.debug(f"Failed to get client process for WS: {e}")
 
+            # =================================================================
+            # STEP 2: App Origin Check (Layer 1)
+            # =================================================================
+            bundle_id = client_process.bundle_id if client_process else None
+            app_type = matches_app_origin(
+                bundle_id,
+                config["allowed_app_hosts"],
+                config["allowed_app_non_hosts"],
+            )
+
+            if app_type is None:
+                logger.debug(f"[WS_APP_SKIP] bundle_id={bundle_id} not in allowed apps")
+                flow.metadata["oximy_skip"] = True
+                return
+
+            flow.metadata["oximy_app_type"] = app_type
+
+            # =================================================================
+            # STEP 3: Host Origin Check (Layer 2) - only for browsers
+            # =================================================================
+            if app_type == "host":
+                request_origin = self._extract_request_origin(flow)
+
+                if not matches_host_origin(request_origin, config["allowed_host_origins"]):
+                    logger.debug(f"[WS_HOST_SKIP] origin={request_origin} not in allowed origins")
+                    flow.metadata["oximy_skip"] = True
+                    return
+
+                flow.metadata["oximy_host_origin"] = request_origin
+
+            # =================================================================
+            # STEP 4: Standard Filters (Layer 3)
+            # =================================================================
+
+            # Whitelist check
+            if not matches_whitelist(host, path, config["whitelist"]):
+                flow.metadata["oximy_skip"] = True
+                return
+
+            # Blacklist check on URL
+            if word := self._check_blacklist(url, blacklist=config["blacklist"]):
+                logger.info(f"[BLACKLISTED] WS {url[:80]} (matched: {word})")
+                flow.metadata["oximy_skip"] = True
+                return
+
+            # Initialize WebSocket tracking
+            flow.metadata["oximy_ws_messages"] = []
+            flow.metadata["oximy_ws_start"] = time.time()
+
+        # Accumulate message
         if flow.websocket and flow.websocket.messages:
             msg = flow.websocket.messages[-1]
             content = normalize_body(msg.content) if isinstance(msg.content, bytes) else str(msg.content)
@@ -1287,14 +1536,14 @@ class OximyAddon:
             if client_process.name:
                 client_info["name"] = client_process.name
 
-        # Extract referrer domain from headers
-        referrer_domain: str | None = None
+        # Extract referrer origin from headers
+        referrer_origin: str | None = None
         referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
         if referer_header:
             try:
                 parsed = urlparse(referer_header)
                 if parsed.netloc:
-                    referrer_domain = parsed.netloc
+                    referrer_origin = parsed.netloc
             except Exception:
                 pass
 
@@ -1309,8 +1558,15 @@ class OximyAddon:
 
         # Add client info
         if client_info:
-            if referrer_domain:
-                client_info["referrer_domain"] = referrer_domain
+            if referrer_origin:
+                client_info["referrer_origin"] = referrer_origin
+
+            # Add hierarchical filter metadata
+            if flow.metadata.get("oximy_app_type"):
+                client_info["app_type"] = flow.metadata["oximy_app_type"]
+            if flow.metadata.get("oximy_host_origin"):
+                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
+
             event["client"] = client_info
 
         # Add WebSocket-specific fields
