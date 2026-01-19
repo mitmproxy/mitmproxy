@@ -1318,7 +1318,13 @@ class OximyAddon:
         if not self._enabled:
             return
 
-        if flow.websocket or not flow.response:
+        if not flow.response:
+            return
+
+        # Handle WebSocket upgrade (101 Switching Protocols) separately
+        if flow.response.status_code == 101:
+            logger.info(f"[101_DETECTED] {flow.request.pretty_host}{flow.request.path} - flow.websocket={flow.websocket is not None}")
+            self._handle_websocket_upgrade(flow)
             return
 
         host = flow.request.pretty_host
@@ -1341,6 +1347,158 @@ class OximyAddon:
             self._writer.write(event)
             self._traces_since_upload += 1
             logger.info(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]")
+
+            # Check if we should upload
+            self._maybe_upload()
+
+    def _handle_websocket_upgrade(self, flow: http.HTTPFlow) -> None:
+        """Handle WebSocket upgrade (101 Switching Protocols) response."""
+        # Skip if marked to skip by filters
+        if flow.metadata.get("oximy_skip"):
+            return
+
+        host = flow.request.pretty_host
+        path = flow.request.path
+        url = f"{host}{path}"
+
+        # Build upgrade event (101 response)
+        event = {
+            "event_id": generate_event_id(),
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            "type": "websocket_upgrade",
+        }
+
+        if self._device_id:
+            event["device_id"] = self._device_id
+
+        # Add client info
+        client_info: dict | None = None
+        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
+        if client_process:
+            client_info = {
+                "pid": client_process.pid,
+                "bundle_id": client_process.bundle_id,
+            }
+            if client_process.name:
+                client_info["name"] = client_process.name
+
+            # Add hierarchical filter metadata
+            if flow.metadata.get("oximy_app_type"):
+                client_info["app_type"] = flow.metadata["oximy_app_type"]
+            if flow.metadata.get("oximy_host_origin"):
+                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
+
+            event["client"] = client_info
+
+        # Extract referrer origin from headers
+        referrer_origin: str | None = None
+        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
+        if referer_header:
+            try:
+                parsed = urlparse(referer_header)
+                if parsed.netloc:
+                    referrer_origin = parsed.netloc
+            except Exception:
+                pass
+
+        if referrer_origin and client_info:
+            client_info["referrer_origin"] = referrer_origin
+
+        # Filter out cookie headers for privacy
+        request_headers = {k: v for k, v in flow.request.headers.items() if k.lower() != "cookie"}
+        response_headers = {k: v for k, v in flow.response.headers.items() if k.lower() != "set-cookie"} if flow.response else {}
+
+        # Add request/response info
+        event["request"] = {
+            "method": flow.request.method,
+            "host": flow.request.pretty_host,
+            "path": flow.request.path,
+            "headers": request_headers,
+        }
+        event["response"] = {
+            "status_code": flow.response.status_code if flow.response else 101,
+            "headers": response_headers,
+        }
+
+        # Always write to debug log (unfiltered)
+        if self._debug_writer:
+            self._debug_writer.write(event)
+
+        if self._writer:
+            self._writer.write(event)
+            self._traces_since_upload += 1
+            logger.info(f"<<< CAPTURED WS_UPGRADE: {flow.request.method} {url[:80]} [101]")
+
+            # Check if we should upload
+            self._maybe_upload()
+
+    def _write_websocket_message_trace(self, flow: http.HTTPFlow, message_data: dict, message_number: int) -> None:
+        """Write a single WebSocket message to trace file in real-time."""
+        host = flow.request.pretty_host
+        path = flow.request.path
+
+        # Build message event
+        event = {
+            "event_id": generate_event_id(),
+            "timestamp": message_data["timestamp"],
+            "type": "websocket_message",
+        }
+
+        if self._device_id:
+            event["device_id"] = self._device_id
+
+        # Add client info from flow metadata
+        client_info: dict | None = None
+        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
+        if client_process:
+            client_info = {
+                "pid": client_process.pid,
+                "bundle_id": client_process.bundle_id,
+            }
+            if client_process.name:
+                client_info["name"] = client_process.name
+
+            # Add hierarchical filter metadata
+            if flow.metadata.get("oximy_app_type"):
+                client_info["app_type"] = flow.metadata["oximy_app_type"]
+            if flow.metadata.get("oximy_host_origin"):
+                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
+
+            # Extract referrer origin from headers
+            referrer_origin: str | None = None
+            referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
+            if referer_header:
+                try:
+                    parsed = urlparse(referer_header)
+                    if parsed.netloc:
+                        referrer_origin = parsed.netloc
+                except Exception:
+                    pass
+
+            if referrer_origin:
+                client_info["referrer_origin"] = referrer_origin
+
+            event["client"] = client_info
+
+        # Add WebSocket connection info
+        event["websocket"] = {
+            "host": host,
+            "path": path,
+            "message_number": message_number,
+            "direction": message_data["direction"],
+            "content": message_data["content"],
+            "is_text": message_data.get("is_text", False),
+        }
+
+        # Write to debug log (unfiltered)
+        if self._debug_writer:
+            self._debug_writer.write(event)
+
+        # Write to main traces
+        if self._writer:
+            self._writer.write(event)
+            self._traces_since_upload += 1
+            logger.info(f"<<< CAPTURED WS_MESSAGE: {host}{path} [{message_data['direction']}] #{message_number}")
 
             # Check if we should upload
             self._maybe_upload()
@@ -1425,102 +1583,104 @@ class OximyAddon:
     # WebSocket Hooks
     # =========================================================================
 
-    async def websocket_message(self, flow: http.HTTPFlow) -> None:
-        """Accumulate WebSocket messages with hierarchical filtering."""
+    def websocket_start(self, flow: http.HTTPFlow) -> None:
+        """Called when WebSocket connection is established."""
         if not self._enabled:
             return
 
-        # Skip if already marked (from previous message in same connection)
-        if flow.metadata.get("oximy_skip"):
+        host = flow.request.pretty_host
+        path = flow.request.path
+        logger.info(f"[WS_START] {host}{path} - WebSocket connection established, flow.websocket={flow.websocket is not None}")
+
+        # Initialize message tracking in metadata
+        flow.metadata["oximy_ws_messages"] = []
+        flow.metadata["oximy_ws_start"] = time.time()
+        flow.metadata["oximy_ws_message_count"] = 0
+
+    def websocket_message(self, flow: http.HTTPFlow) -> None:
+        """Capture WebSocket messages in real-time."""
+        if not self._enabled:
             return
 
         host = flow.request.pretty_host
         path = flow.request.path
         url = f"{host}{path}"
 
-        # First message - apply all hierarchical filters
-        if "oximy_ws_messages" not in flow.metadata:
-            # Get config snapshot for thread-safe filtering
-            config = self._get_config_snapshot()
+        # Skip if marked by filters (should have been set in request hook)
+        if flow.metadata.get("oximy_skip"):
+            return
 
-            # =================================================================
-            # STEP 1: Resolve client process
-            # =================================================================
-            client_process: ClientProcess | None = None
-            if self._resolver and flow.client_conn and flow.client_conn.peername:
-                try:
-                    client_port = flow.client_conn.peername[1]
-                    client_process = await self._resolver.get_process_for_port(client_port)
-                    flow.metadata["oximy_client"] = client_process
-                except Exception as e:
-                    logger.debug(f"Failed to get client process for WS: {e}")
+        # Ensure we have WebSocket messages to process
+        if not flow.websocket or not flow.websocket.messages:
+            logger.warning(f"[WS_MESSAGE] {url} - called but no websocket messages found")
+            return
 
-            # =================================================================
-            # STEP 2: App Origin Check (Layer 1)
-            # =================================================================
-            bundle_id = client_process.bundle_id if client_process else None
-            app_type = matches_app_origin(
-                bundle_id,
-                config["allowed_app_hosts"],
-                config["allowed_app_non_hosts"],
-            )
+        # Get the last message (the new one that triggered this hook)
+        msg = flow.websocket.messages[-1]
 
-            if app_type is None:
-                logger.debug(f"[WS_APP_SKIP] bundle_id={bundle_id} not in allowed apps")
-                flow.metadata["oximy_skip"] = True
-                return
+        # Check message direction and content
+        direction = "client" if msg.from_client else "server"
+        is_text = hasattr(msg, 'is_text') and msg.is_text
+        content = normalize_body(msg.content) if isinstance(msg.content, bytes) else str(msg.content)
 
-            flow.metadata["oximy_app_type"] = app_type
+        logger.info(f"[WS_MESSAGE] {url} - {direction} message (text={is_text}, size={len(content)} chars)")
 
-            # =================================================================
-            # STEP 3: Host Origin Check (Layer 2) - only for browsers
-            # =================================================================
-            if app_type == "host":
-                request_origin = self._extract_request_origin(flow)
+        # Accumulate message with deduplication tracking
+        current_count = len(flow.websocket.messages)
+        last_processed = flow.metadata.get("oximy_ws_message_count", 0)
 
-                if not matches_host_origin(request_origin, config["allowed_host_origins"]):
-                    logger.debug(f"[WS_HOST_SKIP] origin={request_origin} not in allowed origins")
-                    flow.metadata["oximy_skip"] = True
-                    return
-
-                flow.metadata["oximy_host_origin"] = request_origin
-
-            # =================================================================
-            # STEP 4: Standard Filters (Layer 3)
-            # =================================================================
-
-            # Whitelist check
-            if not matches_whitelist(host, path, config["whitelist"]):
-                flow.metadata["oximy_skip"] = True
-                return
-
-            # Blacklist check on URL
-            if word := self._check_blacklist(url, blacklist=config["blacklist"]):
-                logger.info(f"[BLACKLISTED] WS {url[:80]} (matched: {word})")
-                flow.metadata["oximy_skip"] = True
-                return
-
-            # Initialize WebSocket tracking
-            flow.metadata["oximy_ws_messages"] = []
-            flow.metadata["oximy_ws_start"] = time.time()
-
-        # Accumulate message
-        if flow.websocket and flow.websocket.messages:
-            msg = flow.websocket.messages[-1]
-            content = normalize_body(msg.content) if isinstance(msg.content, bytes) else str(msg.content)
-            flow.metadata["oximy_ws_messages"].append({
-                "direction": "client" if msg.from_client else "server",
+        # Only process messages we haven't processed yet
+        if current_count > last_processed:
+            message_data = {
+                "direction": direction,
                 "timestamp": datetime.fromtimestamp(msg.timestamp, tz=timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
                 "content": content,
-            })
+                "is_text": is_text,
+            }
+
+            # Accumulate for websocket_end hook
+            if "oximy_ws_messages" not in flow.metadata:
+                flow.metadata["oximy_ws_messages"] = []
+            flow.metadata["oximy_ws_messages"].append(message_data)
+            flow.metadata["oximy_ws_message_count"] = current_count
+
+            # Write real-time trace event for this message
+            self._write_websocket_message_trace(flow, message_data, current_count)
+
+            logger.info(f"[WS_MESSAGE_CAPTURED] {url} - message #{current_count} from {direction}: {content[:100]}")
 
     def websocket_end(self, flow: http.HTTPFlow) -> None:
         """Write WebSocket trace on connection close."""
         if not self._enabled:
             return
 
-        messages = flow.metadata.get("oximy_ws_messages")
-        if not messages:
+        host = flow.request.pretty_host
+        path = flow.request.path
+        url = f"{host}{path}"
+
+        # Try to get messages from flow.websocket.messages directly (mitmproxy stores them)
+        ws_messages = []
+        if flow.websocket and flow.websocket.messages:
+            logger.info(f"[WS_END] {url} - found {len(flow.websocket.messages)} messages in flow.websocket")
+            for msg in flow.websocket.messages:
+                try:
+                    content = normalize_body(msg.content) if isinstance(msg.content, bytes) else str(msg.content)
+                    ws_messages.append({
+                        "direction": "client" if msg.from_client else "server",
+                        "timestamp": datetime.fromtimestamp(msg.timestamp, tz=timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+                        "content": content,
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to process websocket message: {e}")
+
+        # Fallback to metadata if available
+        if not ws_messages:
+            ws_messages = flow.metadata.get("oximy_ws_messages", [])
+
+        logger.info(f"[WS_END] {host}{path} - connection closed, accumulated {len(ws_messages)} messages")
+
+        if not ws_messages:
+            logger.info(f"[WS_END_SKIP] {host}{path} - no messages to write")
             return
 
         start = flow.metadata.get("oximy_ws_start", time.time())
@@ -1572,8 +1732,8 @@ class OximyAddon:
         # Add WebSocket-specific fields
         event["host"] = flow.request.pretty_host
         event["path"] = flow.request.path
-        event["messages"] = messages
-        event["timing"] = {"duration_ms": int((time.time() - start) * 1000), "message_count": len(messages)}
+        event["messages"] = ws_messages
+        event["timing"] = {"duration_ms": int((time.time() - start) * 1000), "message_count": len(ws_messages)}
 
         # Always write to debug log (unfiltered)
         if self._debug_writer:
@@ -1586,7 +1746,7 @@ class OximyAddon:
         if self._writer:
             self._writer.write(event)
             self._traces_since_upload += 1
-            logger.info(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(messages)} messages)")
+            logger.info(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(ws_messages)} messages)")
 
             # Check if we should upload
             self._maybe_upload()
@@ -1666,4 +1826,6 @@ class OximyAddon:
         logger.info("Oximy addon disabled")
 
 
-addons = [OximyAddon()]
+addons = [
+    OximyAddon(),
+]
