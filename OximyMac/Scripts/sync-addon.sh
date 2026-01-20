@@ -29,15 +29,7 @@ FILES=(
     "addon.py"
     "normalize.py"
     "config.json"
-    "bundle.py"
-    "config.py"
-    "matcher.py"
-    "models.py"
-    "parser.py"
-    "passthrough.py"
     "process.py"
-    "writer.py"
-    "sse.py"
     "__init__.py"
 )
 

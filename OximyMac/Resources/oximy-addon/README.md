@@ -42,7 +42,10 @@ If you see `SSL certificate problem: unable to get local issuer certificate`:
 ## Quick Start
 
 ```bash
-# Start the proxy on port 8080
+# Start the proxy with verbose logging
+mitmdump -s mitmproxy/addons/oximy/addon.py --set oximy_enabled=true --set oximy_verbose=true --set oximy_debug_traces=false
+
+# Or with uv and explicit port
 uv run mitmdump -s mitmproxy/addons/oximy/addon.py \
   --set oximy_enabled=true \
   --mode regular@8080
