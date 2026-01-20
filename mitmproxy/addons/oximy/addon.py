@@ -1441,10 +1441,6 @@ class OximyAddon:
 
     def _handle_websocket_upgrade(self, flow: http.HTTPFlow) -> None:
         """Handle WebSocket upgrade (101 Switching Protocols) response."""
-        # Skip if marked to skip by filters
-        if flow.metadata.get("oximy_skip"):
-            return
-
         host = flow.request.pretty_host
         path = flow.request.path
         url = f"{host}{path}"
@@ -1511,6 +1507,11 @@ class OximyAddon:
         # Always write to debug log (unfiltered)
         if self._debug_writer:
             self._debug_writer.write(event)
+
+        # Skip writing to main traces if marked by filters
+        if flow.metadata.get("oximy_skip"):
+            logger.info(f"[WS_UPGRADE_SKIP] {url} - skipped due to: {flow.metadata.get('oximy_skip_reason', 'unknown')}")
+            return
 
         if self._writer:
             self._writer.write(event)
