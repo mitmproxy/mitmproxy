@@ -49,6 +49,12 @@ The addon fetches its filtering configuration from the API, **not** from local f
 - **API endpoint:** `https://api.oximy.com/api/v1/sensor-config`
 - **Local cache:** `~/.oximy/sensor-config.json` (fallback only when API is unreachable)
 
+**Claude Note:** Always fetch config directly from the API to see the current state:
+```bash
+curl -s https://api.oximy.com/api/v1/sensor-config | jq
+```
+Or use WebFetch to check the live config. Never rely on the local cache file.
+
 The config includes:
 - `whitelistedDomains` - Domains/URLs to capture (supports path patterns)
 - `blacklistedWords` - Words to filter out from URLs (e.g., `analytics`, `cspreport`)
@@ -69,3 +75,7 @@ Path pattern wildcards:
 - `*` - matches any characters except `/` (single path segment)
 
 **To add/remove domains or blacklist words:** Update the API configuration, not the local cache. Local edits will be overwritten on the next config refresh (every 30 minutes or on restart).
+
+**Claude Note:** Do NOT edit `~/.oximy/sensor-config.json` directly - it gets overwritten by the API. Instead, tell the user what needs to be added to the API backend:
+- For new domains to capture: add to `whitelistedDomains` and `allowed_host_origins`
+- Example: "To capture replit.com, add `replit.com/**/graphql` to whitelistedDomains and `replit.com` to allowed_host_origins in the API"

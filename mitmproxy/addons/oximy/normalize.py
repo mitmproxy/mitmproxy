@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 import urllib.parse
 
 from mitmproxy.net.encoding import decode_gzip, decode_deflate, decode_zstd
+
+logger = logging.getLogger(__name__)
 
 # Magic bytes for format detection
 GZIP_MAGIC = b'\x1f\x8b'
@@ -37,6 +40,118 @@ MAX_DECODE_LAYERS = 3
 MIN_BASE64_LENGTH = 20  # Reduce false positives
 
 
+# =============================================================================
+# gRPC/Protobuf Support
+# =============================================================================
+
+def _is_grpc_content(content_type: str | None) -> bool:
+    """Detect gRPC/protobuf traffic by content-type."""
+    if not content_type:
+        return False
+    ct_lower = content_type.lower()
+    return "application/grpc" in ct_lower or "application/x-protobuf" in ct_lower
+
+
+def _decode_grpc_frames(content: bytes) -> list[bytes]:
+    """Parse gRPC framing to extract protobuf messages.
+
+    gRPC frame format: [1 byte compression flag] [4 bytes length (big-endian)] [N bytes message]
+    Returns list of raw protobuf message bytes.
+    """
+    messages = []
+    offset = 0
+
+    while offset + 5 <= len(content):
+        # compression_flag = content[offset]  # 0 = no compression, 1 = gzip
+        message_length = int.from_bytes(content[offset+1:offset+5], 'big')
+        offset += 5
+
+        if offset + message_length > len(content):
+            # Incomplete frame, stop parsing
+            break
+
+        messages.append(content[offset:offset+message_length])
+        offset += message_length
+
+    return messages
+
+
+def _convert_bytes_to_str(obj):
+    """Recursively convert bytes values to strings for JSON serialization."""
+    if isinstance(obj, bytes):
+        # Try UTF-8 decode, fall back to base64
+        try:
+            return obj.decode('utf-8')
+        except UnicodeDecodeError:
+            return base64.b64encode(obj).decode('ascii')
+    elif isinstance(obj, dict):
+        return {k: _convert_bytes_to_str(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_convert_bytes_to_str(item) for item in obj]
+    return obj
+
+
+def _decode_protobuf_schemaless(data: bytes) -> dict | None:
+    """Decode protobuf without schema using BlackboxProtobuf.
+
+    Returns decoded dict or None if decoding fails.
+    """
+    try:
+        import blackboxprotobuf
+        decoded, _ = blackboxprotobuf.decode_message(data)
+        # Convert any bytes values to strings for JSON serialization
+        return _convert_bytes_to_str(decoded)
+    except ImportError:
+        logger.debug("blackboxprotobuf not installed, falling back to base64")
+        return None
+    except Exception as e:
+        logger.debug(f"protobuf decode failed: {e}")
+        return None
+
+
+def normalize_grpc(content: bytes, content_type: str | None = None) -> str:
+    """Normalize gRPC/protobuf content to JSON string.
+
+    Attempts to:
+    1. Parse gRPC framing (if present)
+    2. Decode protobuf messages using BlackboxProtobuf
+    3. Fall back to base64-encoded binary if decoding fails
+    """
+    if not content:
+        return ""
+
+    try:
+        # Try to parse as gRPC-framed messages
+        messages = _decode_grpc_frames(content)
+
+        # If no valid frames found, treat entire content as single protobuf message
+        if not messages:
+            messages = [content]
+
+        decoded_messages = []
+        for msg in messages:
+            # Attempt schema-less protobuf decoding
+            decoded = _decode_protobuf_schemaless(msg)
+            if decoded is not None:
+                decoded_messages.append(decoded)
+            else:
+                # Fallback: base64 encode the binary data
+                decoded_messages.append({"_raw_base64": base64.b64encode(msg).decode('ascii')})
+
+        # Return single message directly, or array if multiple
+        if len(decoded_messages) == 1:
+            return json.dumps(decoded_messages[0], ensure_ascii=False, separators=(',', ':'))
+        return json.dumps(decoded_messages, ensure_ascii=False, separators=(',', ':'))
+
+    except Exception as e:
+        # Ultimate fallback: base64 encode entire content
+        logger.debug(f"gRPC normalization failed: {e}")
+        return json.dumps({
+            "_error": str(e),
+            "_raw_base64": base64.b64encode(content).decode('ascii')
+        }, separators=(',', ':'))
+
+
 def normalize_body(content: bytes | None, content_type: str | None = None) -> str:
     """
     Normalize body content by decoding various encodings.
@@ -48,6 +163,10 @@ def normalize_body(content: bytes | None, content_type: str | None = None) -> st
     """
     if not content:
         return ""
+
+    # Handle gRPC/protobuf content first (based on content-type)
+    if _is_grpc_content(content_type):
+        return normalize_grpc(content, content_type)
 
     # Handle anti-JSON-hijacking prefixed responses
     # These start with prefixes like )]}'\n, for(;;);, etc.
@@ -71,15 +190,21 @@ def normalize_body(content: bytes | None, content_type: str | None = None) -> st
 
 
 def _to_string(content: bytes) -> str:
-    """Convert bytes to string with fallbacks."""
+    """Convert bytes to string with fallbacks.
+
+    For binary content that can't be decoded as UTF-8, returns a JSON object
+    with base64-encoded data instead of using replacement characters.
+    """
     try:
         return content.decode('utf-8')
     except UnicodeDecodeError:
-        # Check if mostly text (>50% printable ASCII) or mostly binary
+        # Check if mostly text (>50% printable ASCII)
         printable = sum(1 for b in content if 32 <= b < 127 or b in (9, 10, 13))
-        if len(content) > 0 and printable / len(content) > 0.5:
+        if len(content) > 0 and printable / len(content) > 0.8:
+            # High text ratio - likely text with some binary, use replacement
             return content.decode('utf-8', errors='replace')
-        return content.hex()
+        # Binary content - return as base64 JSON for clean storage
+        return json.dumps({"_binary_base64": base64.b64encode(content).decode('ascii')}, separators=(',', ':'))
 
 
 def _is_sse_stream(content_type: str) -> bool:
@@ -221,14 +346,21 @@ def _is_msgpack(content: bytes) -> bool:
 
 
 def _decode_msgpack(content: bytes) -> str | None:
-    """Decode MessagePack to JSON string."""
+    """Decode MessagePack to JSON string.
+
+    Handles bytes values by converting them to UTF-8 strings or base64.
+    """
     try:
         import msgpack
-        obj = msgpack.unpackb(content, raw=False)
+        obj = msgpack.unpackb(content, raw=False, strict_map_key=False)
+        # Convert any remaining bytes to strings for JSON serialization
+        obj = _convert_bytes_to_str(obj)
         return json.dumps(obj, ensure_ascii=False, separators=(',', ':'))
     except ImportError:
+        logger.warning("msgpack not installed - binary WebSocket messages won't be decoded")
         return None
-    except Exception:
+    except Exception as e:
+        logger.debug(f"msgpack decode failed: {e}")
         return None
 
 

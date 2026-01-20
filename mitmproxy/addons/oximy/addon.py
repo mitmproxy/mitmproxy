@@ -457,22 +457,65 @@ def matches_domain(host: str, patterns: list[str]) -> str | None:
 def _matches_url_pattern(url: str, pattern: str) -> bool:
     """Match full URL against pattern with glob support.
 
-    ** matches any characters including /
-    * matches any characters except /
+    Supports:
+    - ** matches any characters including /
+    - * matches any characters except /
+    - *.domain.com/** matches subdomains with any path
     """
     url_lower = url.lower()
     pattern_lower = pattern.lower()
 
-    # Convert glob pattern to regex
+    # Handle *.domain.com patterns - special handling for subdomain wildcards with paths
+    if pattern_lower.startswith("*."):
+        # Extract domain part (e.g., "replit.com" from "*.replit.com/**")
+        rest = pattern_lower[2:]  # Remove "*."
+        slash_idx = rest.find('/')
+        if slash_idx != -1:
+            domain = rest[:slash_idx]
+            path_pattern = rest[slash_idx:]
+        else:
+            domain = rest
+            path_pattern = ""
+
+        # Parse URL to get host and path
+        url_slash_idx = url_lower.find('/')
+        if url_slash_idx != -1:
+            url_host = url_lower[:url_slash_idx]
+            url_path = url_lower[url_slash_idx:]
+        else:
+            url_host = url_lower
+            url_path = ""
+
+        # Check if URL host ends with .domain or equals domain
+        if not (url_host.endswith(f".{domain}") or url_host == domain):
+            return False
+
+        # If no path pattern or wildcard all paths, match any path
+        if not path_pattern or path_pattern == "/**":
+            return True
+
+        # Match the remaining path pattern against URL path
+        pattern_lower = path_pattern
+        url_lower = url_path
+
+    # Convert glob pattern to regex, handling special cases
+    # /**/ should match zero or more path segments (e.g., "/" or "/foo/bar/")
     regex = ""
     i = 0
     while i < len(pattern_lower):
-        if i < len(pattern_lower) - 1 and pattern_lower[i:i+2] == "**":
+        # Handle /**/ - matches "/" or "/anything/"
+        if pattern_lower[i:i+4] == "/**/":
+            regex += "(?:/|/.*/)"
+            i += 4
+        # Handle ** at end or followed by non-slash - matches any characters including /
+        elif i < len(pattern_lower) - 1 and pattern_lower[i:i+2] == "**":
             regex += ".*"
             i += 2
+        # Handle * - matches any characters except /
         elif pattern_lower[i] == "*":
             regex += "[^/]*"
             i += 1
+        # Escape regex metacharacters
         elif pattern_lower[i] in ".?+^${}[]|()":
             regex += "\\" + pattern_lower[i]
             i += 1
@@ -533,6 +576,37 @@ def contains_blacklist_word(text: str, words: list[str]) -> str | None:
     for word in words:
         if word.lower() in text_lower:
             return word
+    return None
+
+
+def extract_graphql_operation(body: bytes | None) -> str | None:
+    """Extract GraphQL operation name from request body.
+
+    Handles both single operations and batched operations.
+    Returns the operation name or None if not a GraphQL request.
+    """
+    if not body:
+        return None
+
+    try:
+        text = body.decode('utf-8')
+        data = json.loads(text)
+
+        # Handle batched operations (array of queries)
+        if isinstance(data, list):
+            # Return first operation name from batch
+            for item in data:
+                if isinstance(item, dict) and 'operationName' in item:
+                    return item['operationName']
+            return None
+
+        # Single operation
+        if isinstance(data, dict):
+            return data.get('operationName')
+
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        pass
+
     return None
 
 
@@ -1299,12 +1373,24 @@ class OximyAddon:
             flow.metadata["oximy_skip_reason"] = "not_whitelisted"
             return
 
-        # Blacklist check on URL only
+        # Blacklist check on URL
         if word := self._check_blacklist(url, blacklist=config["blacklist"]):
             logger.info(f"[BLACKLISTED] {url[:80]} (matched: {word})")
             flow.metadata["oximy_skip"] = True
             flow.metadata["oximy_skip_reason"] = "blacklisted"
             return
+
+        # GraphQL operation name blacklist check
+        # For /graphql endpoints, also check the operationName in request body
+        if path.endswith('/graphql') or '/graphql' in path:
+            operation_name = extract_graphql_operation(flow.request.content)
+            if operation_name:
+                flow.metadata["oximy_graphql_op"] = operation_name
+                if word := self._check_blacklist(operation_name, blacklist=config["blacklist"]):
+                    logger.info(f"[BLACKLISTED_GRAPHQL] {operation_name} (matched: {word})")
+                    flow.metadata["oximy_skip"] = True
+                    flow.metadata["oximy_skip_reason"] = "blacklisted_graphql"
+                    return
 
         # =====================================================================
         # Mark for capture
@@ -1346,7 +1432,9 @@ class OximyAddon:
         if self._writer:
             self._writer.write(event)
             self._traces_since_upload += 1
-            logger.info(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]")
+            graphql_op = flow.metadata.get("oximy_graphql_op", "")
+            op_suffix = f" op={graphql_op}" if graphql_op else ""
+            logger.info(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]{op_suffix}")
 
             # Check if we should upload
             self._maybe_upload()
@@ -1432,22 +1520,57 @@ class OximyAddon:
             # Check if we should upload
             self._maybe_upload()
 
-    def _write_websocket_message_trace(self, flow: http.HTTPFlow, message_data: dict, message_number: int) -> None:
-        """Write a single WebSocket message to trace file in real-time."""
+    def _is_ws_turn_complete(self, content: str) -> bool:
+        """Detect if a WebSocket message signals end of a conversation turn.
+
+        Checks for common completion patterns across streaming APIs:
+        - event/type fields with done/end/complete/message_stop values
+        - finished/done/complete boolean fields set to true
+        - OpenAI-style "[DONE]" marker
+        """
+        try:
+            data = json.loads(content)
+            if not isinstance(data, dict):
+                return False
+
+            # Check event/type fields for completion values
+            completion_values = {"done", "end", "complete", "message_stop", "finished"}
+            for field in ("event", "type"):
+                if str(data.get(field, "")).lower() in completion_values:
+                    return True
+
+            # Check boolean completion flags
+            for field in ("finished", "done", "complete", "is_finished"):
+                if data.get(field) is True:
+                    return True
+
+            # Check for OpenAI-style "[DONE]" marker
+            if data.get("data") == "[DONE]":
+                return True
+
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return False
+
+    def _write_ws_turn_aggregate(self, flow: http.HTTPFlow) -> None:
+        """Write aggregate event for completed conversation turn."""
+        ws_messages = flow.metadata.get("oximy_ws_messages", [])
+        if not ws_messages:
+            return
+
         host = flow.request.pretty_host
         path = flow.request.path
 
-        # Build message event
-        event = {
+        event: dict = {
             "event_id": generate_event_id(),
-            "timestamp": message_data["timestamp"],
-            "type": "websocket_message",
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            "type": "websocket_turn",
         }
 
         if self._device_id:
             event["device_id"] = self._device_id
 
-        # Add client info from flow metadata
+        # Build client info from stored process data
         client_info: dict | None = None
         client_process: ClientProcess | None = flow.metadata.get("oximy_client")
         if client_process:
@@ -1480,15 +1603,11 @@ class OximyAddon:
 
             event["client"] = client_info
 
-        # Add WebSocket connection info
-        event["websocket"] = {
-            "host": host,
-            "path": path,
-            "message_number": message_number,
-            "direction": message_data["direction"],
-            "content": message_data["content"],
-            "is_text": message_data.get("is_text", False),
-        }
+        # Add WebSocket-specific fields
+        event["host"] = host
+        event["path"] = path
+        event["messages"] = ws_messages
+        event["timing"] = {"message_count": len(ws_messages)}
 
         # Write to debug log (unfiltered)
         if self._debug_writer:
@@ -1498,10 +1617,12 @@ class OximyAddon:
         if self._writer:
             self._writer.write(event)
             self._traces_since_upload += 1
-            logger.info(f"<<< CAPTURED WS_MESSAGE: {host}{path} [{message_data['direction']}] #{message_number}")
-
-            # Check if we should upload
+            logger.info(f"<<< CAPTURED WS_TURN: {host} ({len(ws_messages)} messages)")
             self._maybe_upload()
+
+        # Clear buffer for next turn
+        flow.metadata["oximy_ws_messages"] = []
+        flow.metadata["oximy_ws_message_count"] = 0
 
     def _build_event(self, flow: http.HTTPFlow, response_body: str) -> dict:
         """Build trace event."""
@@ -1563,13 +1684,17 @@ class OximyAddon:
             event["client"] = client_info
 
         # Add request/response/timing
-        event["request"] = {
+        request_data = {
             "method": flow.request.method,
             "host": flow.request.pretty_host,
             "path": flow.request.path,
             "headers": request_headers,
             "body": request_body,
         }
+        # Include GraphQL operation name if present
+        if graphql_op := flow.metadata.get("oximy_graphql_op"):
+            request_data["graphql_operation"] = graphql_op
+        event["request"] = request_data
         event["response"] = {
             "status_code": flow.response.status_code if flow.response else None,
             "headers": response_headers,
@@ -1638,16 +1763,18 @@ class OximyAddon:
                 "is_text": is_text,
             }
 
-            # Accumulate for websocket_end hook
+            # Accumulate for aggregate events
             if "oximy_ws_messages" not in flow.metadata:
                 flow.metadata["oximy_ws_messages"] = []
             flow.metadata["oximy_ws_messages"].append(message_data)
             flow.metadata["oximy_ws_message_count"] = current_count
 
-            # Write real-time trace event for this message
-            self._write_websocket_message_trace(flow, message_data, current_count)
-
             logger.info(f"[WS_MESSAGE_CAPTURED] {url} - message #{current_count} from {direction}: {content[:100]}")
+
+            # Check for completion signals in server messages and write aggregate
+            if not msg.from_client and self._is_ws_turn_complete(content):
+                logger.info(f"[WS_TURN_COMPLETE] {url} - detected completion signal, writing aggregate")
+                self._write_ws_turn_aggregate(flow)
 
     def websocket_end(self, flow: http.HTTPFlow) -> None:
         """Write WebSocket trace on connection close."""
