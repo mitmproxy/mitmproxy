@@ -27,7 +27,7 @@ mkdir -p "$DEST_DIR"
 # List of Python files to sync
 FILES=(
     "addon.py"
-    "normalise.py"
+    "normalize.py"
     "bundle.py"
     "config.py"
     "matcher.py"
