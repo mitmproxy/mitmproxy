@@ -331,7 +331,6 @@ def _normalize_sse(content: bytes) -> str:
     extracted: list[str] = []
 
     for line in lines:
-        print(line)
         line = line.strip()
         if not line or line.startswith(':'):
             continue

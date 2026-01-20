@@ -27,14 +27,26 @@ class ProcessResolver:
     """Resolves network connections to originating processes."""
 
     def __init__(self):
-        self._cache: dict[int, dict] = {}
+        self._cache: dict[int, dict] = {}  # PID -> process info
         self._bundle_id_cache: dict[str, str | None] = {}
+        self._port_cache: dict[int, tuple[ClientProcess, float]] = {}  # port -> (ClientProcess, timestamp)
+        self._port_cache_ttl = 10.0  # Cache port->process mapping for 10 seconds
         self._is_macos = platform.system() == "Darwin"
         self._is_linux = platform.system() == "Linux"
         self._is_windows = platform.system() == "Windows"
 
     async def get_process_for_port(self, port: int) -> ClientProcess:
         """Get process information for a connection on the given local port."""
+        import time
+
+        # Check port cache first (avoids expensive lsof/netstat calls)
+        if port in self._port_cache:
+            cached_process, timestamp = self._port_cache[port]
+            if time.time() - timestamp < self._port_cache_ttl:
+                return cached_process
+            # Cache expired, remove it
+            del self._port_cache[port]
+
         if not (self._is_macos or self._is_linux or self._is_windows):
             return ClientProcess(
                 pid=None,
@@ -89,7 +101,7 @@ class ProcessResolver:
         if not bundle_id and self._is_windows:
             bundle_id = self._extract_exe_name(proc_info.get("path"))
 
-        return ClientProcess(
+        result = ClientProcess(
             pid=pid,
             name=name,
             path=proc_info.get("path"),
@@ -99,6 +111,18 @@ class ProcessResolver:
             port=port,
             bundle_id=bundle_id,
         )
+
+        # Cache the result to avoid expensive subprocess calls for same port
+        self._port_cache[port] = (result, time.time())
+
+        # Limit cache size to prevent memory growth
+        if len(self._port_cache) > 1000:
+            # Remove oldest entries
+            sorted_entries = sorted(self._port_cache.items(), key=lambda x: x[1][1])
+            for old_port, _ in sorted_entries[:500]:
+                del self._port_cache[old_port]
+
+        return result
 
     async def _find_pid_for_port(self, port: int) -> int | None:
         """Find the PID that owns a local port as the SOURCE (client side)."""
@@ -378,6 +402,7 @@ class ProcessResolver:
         return None
 
     def clear_cache(self) -> None:
-        """Clear the process info cache."""
+        """Clear all caches."""
         self._cache.clear()
         self._bundle_id_cache.clear()
+        self._port_cache.clear()
