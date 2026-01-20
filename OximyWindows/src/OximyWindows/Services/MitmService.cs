@@ -286,6 +286,7 @@ public class MitmService : IDisposable
             "--set oximy_enabled=true",
             $"--set \"oximy_output_dir={Constants.TracesDir}\"",
             $"--set \"confdir={Constants.OximyDir}\"",
+            "--set oximy_manage_proxy=false",  // C# app handles proxy configuration
             $"--mode regular@{port}",
             "--listen-host 127.0.0.1",
             "--ssl-insecure"
