@@ -1523,30 +1523,116 @@ class OximyAddon:
     def _is_ws_turn_complete(self, content: str) -> bool:
         """Detect if a WebSocket message signals end of a conversation turn.
 
-        Checks for common completion patterns across streaming APIs:
+        Checks for common completion patterns across streaming/RPC protocols:
         - event/type fields with done/end/complete/message_stop values
         - finished/done/complete boolean fields set to true
         - OpenAI-style "[DONE]" marker
+        - RPC-style response completion (ok/status fields with final payload)
+        - Control flags indicating stream end (common in multiplexed protocols)
+        - Nested payload completion patterns
         """
         try:
             data = json.loads(content)
             if not isinstance(data, dict):
                 return False
 
-            # Check event/type fields for completion values
-            completion_values = {"done", "end", "complete", "message_stop", "finished"}
+            # Skip heartbeat/ping/ack-only messages - these aren't turn completions
+            msg_type = str(data.get("type", "")).lower()
+            if msg_type in ("ping", "pong", "heartbeat", "ack"):
+                return False
+
+            # Check if streamId is "heartbeat" - skip these
+            if str(data.get("streamId", "")).lower() == "heartbeat":
+                return False
+
+            # =================================================================
+            # Pattern 1: Explicit completion type/event values
+            # =================================================================
+            completion_values = {"done", "end", "complete", "message_stop", "finished", "stop", "final"}
             for field in ("event", "type"):
                 if str(data.get(field, "")).lower() in completion_values:
                     return True
 
-            # Check boolean completion flags
-            for field in ("finished", "done", "complete", "is_finished"):
+            # =================================================================
+            # Pattern 2: Boolean completion flags
+            # =================================================================
+            for field in ("finished", "done", "complete", "is_finished", "is_final", "is_done"):
                 if data.get(field) is True:
                     return True
 
-            # Check for OpenAI-style "[DONE]" marker
+            # =================================================================
+            # Pattern 3: OpenAI-style "[DONE]" marker
+            # =================================================================
             if data.get("data") == "[DONE]":
                 return True
+
+            # =================================================================
+            # Pattern 4: RPC-style response completion
+            # Many RPC-over-WebSocket protocols send {ok: true, payload: {...}}
+            # or {status: "ok", result: {...}} for completed responses
+            # =================================================================
+            payload = data.get("payload")
+            if isinstance(payload, dict):
+                # Check for nested ok/status indicating RPC response completion
+                if payload.get("ok") is True and "payload" in payload:
+                    # This is a successful RPC response with final payload
+                    # But we need to distinguish from intermediate streaming chunks
+                    inner_payload = payload.get("payload")
+                    if isinstance(inner_payload, dict):
+                        # Check if the inner payload has completion indicators
+                        inner_type = str(inner_payload.get("type", "")).lower()
+                        if inner_type in completion_values:
+                            return True
+                        # Check for state/status fields indicating completion
+                        if inner_payload.get("done") is True or inner_payload.get("finished") is True:
+                            return True
+
+                # Check nested type field for completion values
+                payload_type = str(payload.get("type", "")).lower()
+                if payload_type in completion_values:
+                    return True
+
+                # Check for status field in payload
+                payload_status = str(payload.get("status", "")).lower()
+                if payload_status in ("done", "complete", "finished", "success", "ok"):
+                    return True
+
+            # =================================================================
+            # Pattern 5: Control flags indicating stream end
+            # Common in multiplexed/RPC protocols (gRPC-web, custom RPC, etc.)
+            # Typically: bit 0 = FIN, bit 1 = stream close, etc.
+            # =================================================================
+            control_flags = data.get("controlFlags")
+            if isinstance(control_flags, int) and control_flags > 0:
+                # Many protocols use specific flag values for stream termination
+                # Common patterns:
+                # - Odd flags (bit 0 set) often indicate control/fin messages
+                # - Flag value 1, 2, 3 often indicate close/end
+                # - Higher bits may indicate error vs normal close
+
+                # Check for common "stream end" flag patterns
+                # Be careful not to match ACK-only messages (often flag=1 with streamId="heartbeat")
+                stream_id = data.get("streamId", "")
+
+                # Flag patterns that typically indicate stream completion:
+                # - controlFlags with FIN bit and a non-heartbeat stream
+                # - controlFlags indicating "close stream" (varies by protocol)
+                if stream_id and stream_id != "heartbeat":
+                    # Check for FIN/close patterns in control flags
+                    # Bit 1 (value 2) or bit 2 (value 4) often indicates stream end
+                    # Combined with other bits for close (e.g., 2, 3, 6, 7)
+                    stream_end_flags = {2, 3, 6, 7, 10, 11, 14, 15}  # Common close flag patterns
+                    if control_flags in stream_end_flags:
+                        return True
+
+            # =================================================================
+            # Pattern 6: Status/result field presence (generic RPC)
+            # =================================================================
+            status = data.get("status")
+            if isinstance(status, dict):
+                # Status object often indicates completion
+                if status.get("ok") is True or status.get("code") == "OK":
+                    return True
 
         except (json.JSONDecodeError, TypeError):
             pass
