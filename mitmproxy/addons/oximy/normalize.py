@@ -77,7 +77,25 @@ def _decode_grpc_frames(content: bytes) -> list[bytes]:
 
 
 def _convert_bytes_to_str(obj):
-    """Recursively convert bytes values to strings for JSON serialization."""
+    """Recursively convert bytes values to strings for JSON serialization.
+
+    Also handles msgpack Timestamp objects by converting to ISO format.
+    """
+    # Handle msgpack Timestamp objects
+    try:
+        import msgpack
+        if isinstance(obj, msgpack.Timestamp):
+            # Convert to ISO format string
+            return obj.to_datetime().isoformat() + "Z"
+    except ImportError:
+        pass
+    except Exception:
+        # If conversion fails, try to get epoch time
+        try:
+            return obj.to_unix()
+        except Exception:
+            return str(obj)
+
     if isinstance(obj, bytes):
         # Try UTF-8 decode, fall back to base64
         try:
@@ -355,12 +373,16 @@ def _decode_msgpack(content: bytes) -> str | None:
         obj = msgpack.unpackb(content, raw=False, strict_map_key=False)
         # Convert any remaining bytes to strings for JSON serialization
         obj = _convert_bytes_to_str(obj)
-        return json.dumps(obj, ensure_ascii=False, separators=(',', ':'))
+        result = json.dumps(obj, ensure_ascii=False, separators=(',', ':'))
+        logger.debug(f"[MSGPACK] Successfully decoded {len(content)} bytes to {len(result)} chars")
+        return result
     except ImportError:
         logger.warning("msgpack not installed - binary WebSocket messages won't be decoded")
         return None
     except Exception as e:
-        logger.debug(f"msgpack decode failed: {e}")
+        # More verbose logging to diagnose decode failures
+        first_bytes = content[:16].hex() if len(content) >= 16 else content.hex()
+        logger.info(f"[MSGPACK] Decode failed ({len(content)} bytes, first bytes: {first_bytes}): {type(e).__name__}: {e}")
         return None
 
 

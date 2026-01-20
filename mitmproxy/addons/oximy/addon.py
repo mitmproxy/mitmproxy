@@ -1620,9 +1620,9 @@ class OximyAddon:
                 # - controlFlags indicating "close stream" (varies by protocol)
                 if stream_id and stream_id != "heartbeat":
                     # Check for FIN/close patterns in control flags
-                    # Bit 1 (value 2) or bit 2 (value 4) often indicates stream end
-                    # Combined with other bits for close (e.g., 2, 3, 6, 7)
-                    stream_end_flags = {2, 3, 6, 7, 10, 11, 14, 15}  # Common close flag patterns
+                    # Bit 1 (value 2) and bit 2 (value 4) indicate stream end
+                    # Include all combinations: 2-7 (with bit 1 or 2), 10-15 (with bit 3)
+                    stream_end_flags = {2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15}
                     if control_flags in stream_end_flags:
                         return True
 
