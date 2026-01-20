@@ -107,6 +107,7 @@ def _set_macos_proxy(enable: bool) -> None:
 # =============================================================================
 
 _cleanup_done = False
+_addon_manages_proxy = False  # Tracks if addon enabled system proxy (for cleanup)
 
 
 def _emergency_cleanup() -> None:
@@ -115,8 +116,10 @@ def _emergency_cleanup() -> None:
     if _cleanup_done:
         return
     _cleanup_done = True
-    logger.info("Emergency cleanup: disabling system proxy...")
-    _set_system_proxy(enable=False)
+    # Only disable proxy if we enabled it (host app may handle proxy management)
+    if _addon_manages_proxy:
+        logger.info("Emergency cleanup: disabling system proxy...")
+        _set_system_proxy(enable=False)
 
 
 def _signal_handler(signum: int, frame) -> None:
@@ -1087,7 +1090,7 @@ class OximyAddon:
         loader.add_option("oximy_verbose", bool, False, "Verbose logging")
         loader.add_option("oximy_upload_enabled", bool, True, "Enable trace uploads (disable if host app handles sync)")
         loader.add_option("oximy_debug_traces", bool, False, "Log all requests to all_traces file (unfiltered)")
-        
+        loader.add_option("oximy_manage_proxy", bool, True, "Manage system proxy (disable when host app handles this)")
 
     def _refresh_config(self, max_retries: int = 3) -> bool:
         """Fetch and apply updated config from API with retries.
@@ -1284,7 +1287,11 @@ class OximyAddon:
         self._device_id = get_device_id()
         logger.info(f"Device ID: {self._device_id}")
 
-        _set_system_proxy(enable=True)
+        # Only manage system proxy if option is enabled (disabled when host app handles it)
+        global _addon_manages_proxy
+        if ctx.options.oximy_manage_proxy:
+            _set_system_proxy(enable=True)
+            _addon_manages_proxy = True
         logger.info(
             f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
             f"{len(passthrough_patterns)} passthrough, {len(self._allowed_app_hosts)} app_hosts, "
@@ -2103,7 +2110,9 @@ class OximyAddon:
         if self._force_sync_thread and self._force_sync_thread.is_alive():
             self._force_sync_thread.join(timeout=1)
 
-        _set_system_proxy(enable=False)
+        # Only disable system proxy if we enabled it
+        if _addon_manages_proxy:
+            _set_system_proxy(enable=False)
 
         # Close writers to flush pending writes
         if self._writer:

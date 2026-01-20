@@ -237,6 +237,7 @@ class MITMService: ObservableObject {
                 "--set", "oximy_enabled=true",
                 "--set", "oximy_output_dir=\(Constants.tracesDir.path)",
                 "--set", "confdir=\(Constants.oximyDir.path)",
+                "--set", "oximy_manage_proxy=false",  // Swift app handles proxy configuration
                 "--mode", "regular@\(port)",
                 "--listen-host", "127.0.0.1",
                 "--ssl-insecure",
@@ -278,6 +279,7 @@ class MITMService: ObservableObject {
             "--set", "oximy_enabled=true",
             "--set", "oximy_output_dir=\(Constants.tracesDir.path)",
             "--set", "confdir=\(Constants.oximyDir.path)",
+            "--set", "oximy_manage_proxy=false",  // Swift app handles proxy configuration
             "--mode", "regular@\(port)",
             "--listen-host", "127.0.0.1",
             "--ssl-insecure"
