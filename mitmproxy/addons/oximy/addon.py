@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import atexit
 import fnmatch
+import gzip
 import json
 import logging
 import os
@@ -23,9 +24,16 @@ import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import IO
+import urllib.error
+import urllib.request
 from urllib.parse import urlparse
 
 from mitmproxy import ctx, http, tls
+
+# Create urllib opener that bypasses system proxy settings.
+# This is critical: when Mac app enables system proxy pointing to mitmproxy,
+# the addon's own API calls would loop through itself without this bypass.
+_no_proxy_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 # Import ProcessResolver - handle both package and script modes
 try:
@@ -47,25 +55,71 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PROXY_HOST = "127.0.0.1"
-PROXY_PORT = "8080"
-NETWORK_SERVICE = "Wi-Fi"
+PROXY_PORT_FILE = Path("~/.oximy/proxy-port").expanduser()
+
+# Track previous sensor_enabled state to detect changes
+_previous_sensor_enabled: bool | None = None
+
+
+DEFAULT_PROXY_PORT = "1030"
+
+
+def _get_proxy_port() -> str:
+    """Get proxy port from file, or create file with default port 1030."""
+    try:
+        if PROXY_PORT_FILE.exists():
+            port = PROXY_PORT_FILE.read_text().strip()
+            if port.isdigit():
+                return port
+        else:
+            # File doesn't exist - create it with default port
+            PROXY_PORT_FILE.parent.mkdir(parents=True, exist_ok=True)
+            PROXY_PORT_FILE.write_text(DEFAULT_PROXY_PORT)
+            logger.info(f"Created proxy port file with default port {DEFAULT_PROXY_PORT}")
+            return DEFAULT_PROXY_PORT
+    except (IOError, OSError) as e:
+        logger.debug(f"Could not read/write proxy port file: {e}")
+    return DEFAULT_PROXY_PORT
+
+
+def _get_network_services() -> list[str]:
+    """Get list of active network services (Wi-Fi, Ethernet, etc.)."""
+    if sys.platform != "darwin":
+        return []
+    try:
+        result = subprocess.run(
+            ["networksetup", "-listallnetworkservices"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode != 0:
+            return ["Wi-Fi"]  # Fallback
+        services = []
+        for line in result.stdout.strip().split("\n")[1:]:  # Skip header
+            line = line.strip()
+            if line and not line.startswith("*"):  # Skip disabled services
+                services.append(line)
+        return services if services else ["Wi-Fi"]
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        logger.debug(f"Could not list network services: {e}")
+        return ["Wi-Fi"]  # Fallback
 
 
 # =============================================================================
 # SYSTEM PROXY
 # =============================================================================
 
-def _set_system_proxy(enable: bool) -> None:
+def _set_system_proxy(enable: bool, port: str | None = None) -> None:
     """Enable or disable system proxy settings (cross-platform)."""
     if sys.platform == "darwin":
-        _set_macos_proxy(enable)
+        _set_macos_proxy(enable, port)
     elif sys.platform == "win32":
-        _set_windows_proxy(enable)
+        _set_windows_proxy(enable, port)
 
 
-def _set_windows_proxy(enable: bool) -> None:
+def _set_windows_proxy(enable: bool, port: str | None = None) -> None:
     """Enable or disable Windows system proxy via registry."""
-    proxy_server = f"{PROXY_HOST}:{PROXY_PORT}"
+    proxy_port = port or _get_proxy_port()
+    proxy_server = f"{PROXY_HOST}:{proxy_port}"
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 
     try:
@@ -83,23 +137,53 @@ def _set_windows_proxy(enable: bool) -> None:
         logger.warning(f"Failed to set Windows proxy: {e}")
 
 
-def _set_macos_proxy(enable: bool) -> None:
-    """Enable or disable macOS system proxy."""
-    try:
-        if enable:
-            subprocess.run(["networksetup", "-setsecurewebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
-                           check=True, capture_output=True)
-            subprocess.run(["networksetup", "-setwebproxy", NETWORK_SERVICE, PROXY_HOST, PROXY_PORT],
-                           check=True, capture_output=True)
-            logger.info(f"macOS proxy enabled: {PROXY_HOST}:{PROXY_PORT}")
-        else:
-            subprocess.run(["networksetup", "-setsecurewebproxystate", NETWORK_SERVICE, "off"],
-                           check=True, capture_output=True)
-            subprocess.run(["networksetup", "-setwebproxystate", NETWORK_SERVICE, "off"],
-                           check=True, capture_output=True)
-            logger.info("macOS proxy disabled")
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        logger.warning(f"Failed to set macOS proxy: {e}")
+def _set_macos_proxy(enable: bool, port: str | None = None) -> None:
+    """Enable or disable macOS system proxy for all network services."""
+    proxy_port = port or _get_proxy_port()
+    services = _get_network_services()
+
+    for service in services:
+        try:
+            if enable:
+                subprocess.run(["networksetup", "-setsecurewebproxy", service, PROXY_HOST, proxy_port],
+                               check=True, capture_output=True)
+                subprocess.run(["networksetup", "-setwebproxy", service, PROXY_HOST, proxy_port],
+                               check=True, capture_output=True)
+            else:
+                subprocess.run(["networksetup", "-setsecurewebproxystate", service, "off"],
+                               check=True, capture_output=True)
+                subprocess.run(["networksetup", "-setwebproxystate", service, "off"],
+                               check=True, capture_output=True)
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logger.debug(f"Could not set proxy for {service}: {e}")
+
+    if enable:
+        logger.info(f"macOS proxy enabled: {PROXY_HOST}:{proxy_port} on {services}")
+    else:
+        logger.info(f"macOS proxy disabled on {services}")
+
+
+def _clear_local_cache() -> None:
+    """Delete all trace files and reset upload state."""
+    traces_dir = Path("~/.oximy/traces").expanduser()
+    upload_state = Path("~/.oximy/upload-state.json").expanduser()
+
+    deleted_count = 0
+    if traces_dir.exists():
+        for f in traces_dir.glob("*.jsonl"):
+            try:
+                f.unlink()
+                deleted_count += 1
+            except (IOError, OSError) as e:
+                logger.debug(f"Could not delete {f}: {e}")
+
+    if upload_state.exists():
+        try:
+            upload_state.unlink()
+        except (IOError, OSError) as e:
+            logger.debug(f"Could not delete upload state: {e}")
+
+    logger.info(f"Local cache cleared: {deleted_count} trace files deleted")
 
 
 # =============================================================================
@@ -264,8 +348,15 @@ DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = 1800  # 30 minutes (fallback)
 def fetch_sensor_config(
     url: str = DEFAULT_SENSOR_CONFIG_URL,
     cache_path: str = DEFAULT_SENSOR_CONFIG_CACHE,
+    addon_instance=None,
 ) -> dict:
-    """Fetch sensor config from API and cache locally."""
+    """Fetch sensor config from API and cache locally.
+
+    Args:
+        url: Sensor config API URL
+        cache_path: Local cache file path
+        addon_instance: Optional Oximy addon instance for command execution
+    """
     import urllib.request
     import urllib.error
 
@@ -277,13 +368,24 @@ def fetch_sensor_config(
         "passthrough": [],
     }
 
+    # Read device token from file (written by Swift app)
+    token_file = Path("~/.oximy/device-token").expanduser()
+    token = None
+    if token_file.exists():
+        try:
+            token = token_file.read_text().strip()
+            if token:
+                logger.debug("Device token loaded for authenticated request")
+        except (IOError, OSError) as e:
+            logger.debug(f"Could not read device token: {e}")
+
     try:
         logger.info(f"Fetching sensor config from {url}")
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"},
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        headers = {"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        req = urllib.request.Request(url, headers=headers)
+        with _no_proxy_opener.open(req, timeout=10) as resp:
             raw = json.loads(resp.read().decode("utf-8"))
 
         # Cache the raw response locally
@@ -292,7 +394,7 @@ def fetch_sensor_config(
             json.dump(raw, f, indent=2)
         logger.info(f"Sensor config cached to {cache_file}")
 
-        return _parse_sensor_config(raw)
+        return _parse_sensor_config(raw, addon_instance)
 
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError) as e:
         logger.warning(f"Failed to fetch sensor config: {e}")
@@ -302,7 +404,7 @@ def fetch_sensor_config(
                 with open(cache_file, encoding="utf-8") as f:
                     cached = json.load(f)
                 logger.info(f"Using cached sensor config from {cache_file}")
-                return _parse_sensor_config(cached)
+                return _parse_sensor_config(cached, addon_instance)
             except (json.JSONDecodeError, IOError) as cache_err:
                 logger.warning(f"Failed to load cached config: {cache_err}")
 
@@ -310,12 +412,69 @@ def fetch_sensor_config(
         return default_config
 
 
-def _parse_sensor_config(raw: dict) -> dict:
-    """Parse API response into normalized config format."""
+def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
+    """Parse API response into normalized config format.
+
+    Also executes remote commands directly:
+    - sensor_enabled: Enable/disable system proxy
+    - force_sync: Upload pending traces immediately
+    - clear_cache: Delete local trace files
+    - force_logout: Written to state file for Swift to handle (clears credentials)
+    """
+    global _previous_sensor_enabled
     data = raw.get("data", raw)
 
     # Parse allowed_app_origins (hosts = browsers, non_hosts = AI-native apps)
     app_origins = data.get("allowed_app_origins", {})
+
+    # Extract commands from API response
+    commands = data.get("commands", {})
+
+    # --- EXECUTE COMMANDS DIRECTLY ---
+
+    # Handle sensor_enabled (proxy management)
+    sensor_enabled = commands.get("sensor_enabled", True)
+    if _previous_sensor_enabled is not None and sensor_enabled != _previous_sensor_enabled:
+        logger.info(f"sensor_enabled changed: {_previous_sensor_enabled} -> {sensor_enabled}")
+        if sensor_enabled:
+            _set_system_proxy(enable=True)
+        else:
+            _set_system_proxy(enable=False)
+    _previous_sensor_enabled = sensor_enabled
+
+    # Handle force_sync (upload pending traces)
+    if commands.get("force_sync"):
+        logger.info("Executing force_sync command")
+        if addon_instance is not None:
+            try:
+                addon_instance.upload_all_traces()
+            except Exception as e:
+                logger.warning(f"force_sync failed: {e}")
+        else:
+            logger.debug("force_sync skipped: no addon instance available")
+
+    # Handle clear_cache (delete local trace files)
+    if commands.get("clear_cache"):
+        logger.info("Executing clear_cache command")
+        _clear_local_cache()
+
+    # --- WRITE STATE FILE FOR SWIFT UI DISPLAY ---
+    # Swift only reads this for display purposes and handles force_logout
+    state_file = Path("~/.oximy/remote-state.json").expanduser()
+    try:
+        state_data = {
+            "sensor_enabled": sensor_enabled,
+            "force_logout": commands.get("force_logout", False),
+            "tenantId": data.get("tenantId"),
+            "itSupport": data.get("itSupport"),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(state_file, "w", encoding="utf-8") as f:
+            json.dump(state_data, f, indent=2)
+        logger.debug(f"Remote state written to {state_file}")
+    except (IOError, OSError) as e:
+        logger.warning(f"Failed to write remote state file: {e}")
 
     return {
         "whitelist": data.get("whitelistedDomains", []),
@@ -818,10 +977,9 @@ class TLSPassthrough:
             "client disconnected during the handshake",
         ]
 
-        # stop adding to learned hosts
+        # Add cert-pinned hosts to passthrough so future connections bypass TLS interception
         if any(ind in error.lower() for ind in pinning_indicators):
             self.add_host(host)
-            # pass
 
     def update_passthrough(self, patterns: list[str]) -> None:
         """Update passthrough patterns from refreshed config."""
@@ -893,15 +1051,226 @@ class TraceWriter:
 
 
 # =============================================================================
-# TRACE UPLOADER
+# MEMORY BUFFER FOR CLOUD-FIRST INGESTION
+# =============================================================================
+
+def _get_dynamic_buffer_size() -> int:
+    """Calculate buffer size as 1% of system RAM, capped 20-200 MB."""
+    MIN_BYTES = 20 * 1024 * 1024   # 20 MB floor
+    MAX_BYTES = 200 * 1024 * 1024  # 200 MB ceiling
+
+    # Check for override via environment variable
+    override = os.environ.get("OXIMY_BUFFER_MAX_MB")
+    if override:
+        try:
+            return int(override) * 1024 * 1024
+        except ValueError:
+            pass
+
+    # Get total system memory (cross-platform)
+    try:
+        # Linux/macOS
+        total_ram = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    except (AttributeError, ValueError):
+        try:
+            # Windows fallback
+            import psutil
+            total_ram = psutil.virtual_memory().total
+        except ImportError:
+            total_ram = 8 * 1024 * 1024 * 1024  # Assume 8 GB if detection fails
+
+    # 1% of total RAM, capped
+    target = total_ram // 100
+    return max(MIN_BYTES, min(target, MAX_BYTES))
+
+
+BUFFER_MAX_BYTES = _get_dynamic_buffer_size()
+BUFFER_MAX_COUNT = 100  # Hard cap on trace count (safety valve)
+
+
+class MemoryTraceBuffer:
+    """Thread-safe in-memory buffer with byte-based limit for cloud-first ingestion."""
+
+    def __init__(self, max_bytes: int = BUFFER_MAX_BYTES, max_count: int = BUFFER_MAX_COUNT):
+        self._buffer: list[tuple[dict, int]] = []  # (event, serialized_size)
+        self._lock = threading.Lock()
+        self._max_bytes = max_bytes
+        self._max_count = max_count
+        self._current_bytes = 0
+        logger.info(f"Memory buffer initialized: max {max_bytes // (1024 * 1024)} MB, {max_count} traces")
+
+    def append(self, event: dict) -> bool:
+        """Add event to buffer. Returns False if buffer is full."""
+        # Calculate serialized size (what we'd send over network)
+        serialized = json.dumps(event, separators=(",", ":")).encode("utf-8")
+        size = len(serialized)
+
+        with self._lock:
+            # Check both limits
+            if self._current_bytes + size > self._max_bytes:
+                return False
+            if len(self._buffer) >= self._max_count:
+                return False
+
+            self._buffer.append((event, size))
+            self._current_bytes += size
+            return True
+
+    def take_batch(self, max_bytes: int = 5 * 1024 * 1024) -> list[dict]:
+        """Remove and return events up to max_bytes (default 5MB per batch)."""
+        with self._lock:
+            batch = []
+            batch_bytes = 0
+            while self._buffer and batch_bytes < max_bytes:
+                event, size = self._buffer[0]
+                if batch_bytes + size > max_bytes and batch:
+                    break  # Would exceed limit and we have something
+                self._buffer.pop(0)
+                self._current_bytes -= size
+                batch.append(event)
+                batch_bytes += size
+            return batch
+
+    def prepend_batch(self, events: list[dict]) -> None:
+        """Add events back to front of buffer (for retry after failed upload)."""
+        with self._lock:
+            for event in reversed(events):
+                serialized = json.dumps(event, separators=(",", ":")).encode("utf-8")
+                size = len(serialized)
+                self._buffer.insert(0, (event, size))
+                self._current_bytes += size
+
+    def peek_all(self) -> list[dict]:
+        """Return copy of all events without removing."""
+        with self._lock:
+            return [event for event, _ in self._buffer]
+
+    def size(self) -> int:
+        with self._lock:
+            return len(self._buffer)
+
+    def bytes_used(self) -> int:
+        with self._lock:
+            return self._current_bytes
+
+    @property
+    def max_bytes(self) -> int:
+        """Return the maximum buffer capacity in bytes."""
+        return self._max_bytes
+
+    def clear(self):
+        with self._lock:
+            self._buffer.clear()
+            self._current_bytes = 0
+
+
+# =============================================================================
+# DIRECT TRACE UPLOADER (Memory to API)
 # =============================================================================
 
 INGEST_API_URL = "https://api.oximy.com/api/v1/ingest/network-traces"
+DEVICE_TOKEN_FILE = Path("~/.oximy/device-token").expanduser()
+
+
+def _get_device_token() -> str | None:
+    """Read device token from file (written by Swift/host app)."""
+    try:
+        if DEVICE_TOKEN_FILE.exists():
+            token = DEVICE_TOKEN_FILE.read_text().strip()
+            if token:
+                return token
+    except (IOError, OSError):
+        pass
+    return None
+
+
+class DirectTraceUploader:
+    """Uploads traces directly from memory buffer to API with retry logic."""
+
+    BATCH_MAX_BYTES = 5 * 1024 * 1024  # 5 MB per upload batch
+    MAX_RETRIES = 3
+    RETRY_DELAYS = [0.5, 1.0, 2.0]  # Seconds between retries
+
+    def __init__(self, buffer: MemoryTraceBuffer, api_url: str = INGEST_API_URL):
+        self._buffer = buffer
+        self._api_url = api_url
+
+    def upload_batch(self) -> bool:
+        """Upload one batch from buffer. Returns True if successful or empty."""
+        batch = self._buffer.take_batch(self.BATCH_MAX_BYTES)
+        if not batch:
+            return True  # Nothing to upload
+
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                payload = "\n".join(
+                    json.dumps(e, separators=(",", ":")) for e in batch
+                )
+                compressed = gzip.compress(payload.encode("utf-8"))
+
+                headers = {
+                    "Content-Type": "application/jsonl",
+                    "Content-Encoding": "gzip",
+                    "User-Agent": "Oximy-Sensor/1.0",
+                }
+                # Add device token for authentication
+                token = _get_device_token()
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
+
+                req = urllib.request.Request(
+                    self._api_url,
+                    data=compressed,
+                    headers=headers,
+                    method="POST",
+                )
+
+                with _no_proxy_opener.open(req, timeout=30) as resp:
+                    response_data = json.loads(resp.read().decode("utf-8"))
+                    if response_data.get("success"):
+                        logger.info(f"Uploaded {len(batch)} traces ({len(compressed)} bytes compressed)")
+                        return True
+                    else:
+                        logger.warning(f"Upload rejected: {response_data.get('error', 'Unknown error')}")
+
+            except urllib.error.HTTPError as e:
+                error_body = e.read().decode("utf-8", errors="replace")
+                if e.code == 401:
+                    logger.warning(f"Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
+                else:
+                    logger.debug(f"Upload attempt {attempt + 1} HTTP error {e.code}: {error_body[:200]}")
+            except (urllib.error.URLError, OSError) as e:
+                logger.debug(f"Upload attempt {attempt + 1} failed: {e}")
+
+            if attempt < self.MAX_RETRIES - 1:
+                time.sleep(self.RETRY_DELAYS[attempt])
+
+        # All retries failed - put batch back at front of buffer
+        logger.warning(f"Upload failed after {self.MAX_RETRIES} attempts, returning {len(batch)} traces to buffer")
+        self._buffer.prepend_batch(batch)
+        return False
+
+    def upload_all(self) -> int:
+        """Upload all buffered traces. Returns count of traces uploaded."""
+        total_uploaded = 0
+        while self._buffer.size() > 0:
+            size_before = self._buffer.size()
+            if not self.upload_batch():
+                return total_uploaded  # Return partial count on failure
+            total_uploaded += size_before - self._buffer.size()
+        return total_uploaded
+
+
+# =============================================================================
+# TRACE UPLOADER (Disk-based fallback)
+# =============================================================================
+
 UPLOAD_STATE_FILE = Path("~/.oximy/upload-state.json").expanduser()
 FORCE_SYNC_TRIGGER = Path("~/.oximy/force-sync").expanduser()  # Trigger file for immediate sync
-BATCH_SIZE = 500  # Traces per upload batch
-UPLOAD_INTERVAL_SECONDS = 2  # Upload every N seconds
-UPLOAD_THRESHOLD_COUNT = 100  # Or every N traces
+BATCH_SIZE = 500  # Traces per upload batch (for disk-based uploads)
+# Upload interval/threshold are now configurable via config.json (upload.interval_seconds, upload.threshold_count)
+DEFAULT_UPLOAD_INTERVAL_SECONDS = 3.0  # Default: upload every N seconds
+DEFAULT_UPLOAD_THRESHOLD_COUNT = 100  # Default: or every N traces
 
 
 class TraceUploader:
@@ -929,14 +1298,20 @@ class TraceUploader:
         except IOError as e:
             logger.warning(f"Failed to save upload state: {e}")
 
-    def upload_traces(self, trace_file: Path) -> int:
-        """Upload pending traces from a file. Returns number of traces uploaded."""
+    def upload_traces(self, trace_file: Path) -> tuple[int, bool]:
+        """Upload pending traces from a file.
+
+        Returns:
+            tuple[int, bool]: (traces_uploaded, is_fully_uploaded)
+                - traces_uploaded: number of traces successfully uploaded
+                - is_fully_uploaded: True if all lines in file have been uploaded
+        """
         import gzip
         import urllib.request
         import urllib.error
 
         if not trace_file.exists():
-            return 0
+            return 0, False
 
         file_key = str(trace_file)
         last_uploaded = self._upload_state.get(file_key, 0)
@@ -947,12 +1322,14 @@ class TraceUploader:
                 lines = f.readlines()
         except IOError as e:
             logger.warning(f"Failed to read trace file: {e}")
-            return 0
+            return 0, False
+
+        total_lines = len(lines)
 
         # Handle file truncation/recreation: if file has fewer lines than recorded,
         # reset state and upload from the beginning
-        if len(lines) < last_uploaded:
-            logger.info(f"Trace file was truncated/recreated (had {last_uploaded}, now {len(lines)}), resetting upload state")
+        if total_lines < last_uploaded:
+            logger.info(f"Trace file was truncated/recreated (had {last_uploaded}, now {total_lines}), resetting upload state")
             last_uploaded = 0
             self._upload_state[file_key] = 0
             self._save_state()
@@ -960,7 +1337,9 @@ class TraceUploader:
         # Get pending lines (not yet uploaded)
         pending_lines = lines[last_uploaded:]
         if not pending_lines:
-            return 0
+            # No pending lines - file is fully uploaded
+            is_fully_uploaded = total_lines > 0 and last_uploaded >= total_lines
+            return 0, is_fully_uploaded
 
         total_uploaded = 0
 
@@ -973,18 +1352,24 @@ class TraceUploader:
             compressed = gzip.compress(batch_data)
 
             try:
+                headers = {
+                    "Content-Type": "application/jsonl",
+                    "Content-Encoding": "gzip",
+                    "User-Agent": "Oximy-Sensor/1.0",
+                }
+                # Add device token for authentication
+                token = _get_device_token()
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
+
                 req = urllib.request.Request(
                     INGEST_API_URL,
                     data=compressed,
-                    headers={
-                        "Content-Type": "application/jsonl",
-                        "Content-Encoding": "gzip",
-                        "User-Agent": "Oximy-Sensor/1.0",
-                    },
+                    headers=headers,
                     method="POST",
                 )
 
-                with urllib.request.urlopen(req, timeout=30) as resp:
+                with _no_proxy_opener.open(req, timeout=30) as resp:
                     response_data = json.loads(resp.read().decode("utf-8"))
 
                 if response_data.get("success"):
@@ -1000,23 +1385,54 @@ class TraceUploader:
 
             except urllib.error.HTTPError as e:
                 error_body = e.read().decode("utf-8", errors="replace")
-                logger.warning(f"Upload HTTP error {e.code}: {error_body[:200]}")
+                if e.code == 401:
+                    logger.warning(f"Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
+                else:
+                    logger.warning(f"Upload HTTP error {e.code}: {error_body[:200]}")
                 break
             except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
                 logger.warning(f"Upload failed: {e}")
                 break
 
-        return total_uploaded
+        # Check if fully uploaded after this batch
+        is_fully_uploaded = total_lines > 0 and last_uploaded >= total_lines
+        return total_uploaded, is_fully_uploaded
 
-    def upload_all_pending(self, traces_dir: Path) -> int:
-        """Upload all pending traces from all files in the directory."""
+    def upload_all_pending(self, traces_dir: Path, active_file: Path | None = None) -> int:
+        """Upload all pending traces from all files in the directory.
+
+        Args:
+            traces_dir: Directory containing trace files
+            active_file: Currently active trace file being written to (don't delete)
+
+        Returns:
+            Total number of traces uploaded
+        """
         if not traces_dir.exists():
             return 0
 
+        # Normalize active_file path for reliable comparison
+        active_file_resolved = active_file.resolve() if active_file else None
+
         total = 0
         for trace_file in sorted(traces_dir.glob("traces_*.jsonl")):
-            uploaded = self.upload_traces(trace_file)
+            uploaded, is_fully_uploaded = self.upload_traces(trace_file)
             total += uploaded
+
+            # Delete fully-uploaded files (but not the active file being written to)
+            # Use resolved paths for reliable comparison across different path representations
+            is_active = active_file_resolved and trace_file.resolve() == active_file_resolved
+            if is_fully_uploaded and not is_active:
+                try:
+                    trace_file.unlink()
+                    logger.info(f"Cleaned up fully-uploaded trace file: {trace_file.name}")
+                    # Remove from upload state since file no longer exists
+                    file_key = str(trace_file)
+                    if file_key in self._upload_state:
+                        del self._upload_state[file_key]
+                        self._save_state()
+                except OSError as e:
+                    logger.warning(f"Failed to delete trace file {trace_file}: {e}")
 
         return total
 
@@ -1047,9 +1463,13 @@ class OximyAddon:
         self._allowed_app_non_hosts: list[str] = []  # AI-native app bundle IDs
         self._allowed_host_origins: list[str] = []  # Website origins (for browsers)
         self._tls: TLSPassthrough | None = None
+        # Cloud-first ingestion: memory buffer with disk fallback
+        self._buffer: MemoryTraceBuffer | None = None
+        self._direct_uploader: DirectTraceUploader | None = None
+        # Disk-based fallback (lazy-initialized only when needed)
         self._writer: TraceWriter | None = None
         self._debug_writer: TraceWriter | None = None  # Unfiltered logs
-        self._uploader: TraceUploader | None = None
+        self._uploader: TraceUploader | None = None  # For uploading fallback JSONL files
         self._resolver: ProcessResolver | None = None
         self._device_id: str | None = None
         self._output_dir: Path | None = None
@@ -1063,6 +1483,11 @@ class OximyAddon:
         self._config_lock: threading.Lock = threading.Lock()  # Protects config updates
         self._force_sync_thread: threading.Thread | None = None
         self._force_sync_stop: threading.Event = threading.Event()
+        self._debug_ingestion: bool = False  # Debug mode: write to disk AND memory buffer
+        # Configurable upload settings (read from config.json)
+        self._upload_interval_seconds: float = DEFAULT_UPLOAD_INTERVAL_SECONDS
+        self._upload_threshold_count: int = DEFAULT_UPLOAD_THRESHOLD_COUNT
+        self._port_configured: bool = False  # Guard against configure() recursion when setting listen_port
 
     def _get_config_snapshot(self) -> dict:
         """Get a consistent snapshot of all filtering config.
@@ -1082,6 +1507,41 @@ class OximyAddon:
             "allowed_host_origins": self._allowed_host_origins,
         }
 
+    def _ensure_writer(self) -> TraceWriter | None:
+        """Lazily initialize disk-based trace writer for emergency fallback."""
+        if self._writer is None and self._output_dir:
+            self._writer = TraceWriter(self._output_dir, self._filename_pattern)
+            logger.info("Emergency disk writer initialized (API upload failed)")
+        return self._writer
+
+    def _write_to_buffer(self, event: dict) -> bool:
+        """Write event to memory buffer. Falls back to disk if buffer full.
+
+        In debug ingestion mode, also writes to disk for inspection.
+        Returns True if written successfully (to buffer or disk), False otherwise.
+        """
+        if self._buffer is None:
+            return False
+
+        # Debug mode: also write to disk for inspection
+        if self._debug_ingestion:
+            writer = self._ensure_writer()
+            if writer:
+                writer.write(event)
+
+        # Add to memory buffer for cloud upload
+        if self._buffer.append(event):
+            self._traces_since_upload += 1
+            return True
+
+        # Buffer full - emergency fallback to disk (only if not already written in debug mode)
+        if not self._debug_ingestion:
+            logger.warning(f"Memory buffer full ({self._buffer.bytes_used()} bytes), writing to disk")
+            writer = self._ensure_writer()
+            if writer:
+                writer.write(event)
+        return True
+
     def load(self, loader) -> None:
         """Register addon options."""
         loader.add_option("oximy_enabled", bool, False, "Enable AI traffic capture")
@@ -1090,6 +1550,7 @@ class OximyAddon:
         loader.add_option("oximy_verbose", bool, False, "Verbose logging")
         loader.add_option("oximy_upload_enabled", bool, True, "Enable trace uploads (disable if host app handles sync)")
         loader.add_option("oximy_debug_traces", bool, False, "Log all requests to all_traces file (unfiltered)")
+        loader.add_option("oximy_debug_ingestion", bool, False, "Write traces to disk AND send via memory buffer (for debugging)")
         loader.add_option("oximy_manage_proxy", bool, True, "Manage system proxy (disable when host app handles this)")
 
     def _refresh_config(self, max_retries: int = 3) -> bool:
@@ -1101,8 +1562,12 @@ class OximyAddon:
 
         for attempt in range(max_retries):
             try:
-                raw_config = fetch_sensor_config(self._sensor_config_url, self._sensor_config_cache)
-                config = _parse_sensor_config(raw_config)
+                # fetch_sensor_config returns already-parsed config and executes commands
+                config = fetch_sensor_config(
+                    self._sensor_config_url,
+                    self._sensor_config_cache,
+                    addon_instance=self
+                )
 
                 # Atomic update with lock to ensure consistent state
                 # Use tuples for immutability - safe to share across requests without copying
@@ -1182,18 +1647,30 @@ class OximyAddon:
                     except OSError:
                         pass
 
-                    # Perform immediate upload
+                    # Cloud-first: upload from memory buffer first
+                    buffer_uploaded = 0
+                    if self._direct_uploader and self._buffer and self._buffer.size() > 0:
+                        try:
+                            buffer_uploaded = self._direct_uploader.upload_all()
+                            if buffer_uploaded > 0:
+                                logger.info(f"Force sync: uploaded {buffer_uploaded} traces from memory buffer")
+                        except Exception as e:
+                            logger.warning(f"Force sync from buffer failed: {e}")
+
+                    # Then upload any disk fallback files
                     if self._uploader and self._output_dir:
                         try:
                             if self._writer and self._writer._fo:
                                 self._writer._fo.flush()
-                            uploaded = self._uploader.upload_all_pending(self._output_dir)
+                            # Pass active file to avoid deleting file currently being written
+                            active_file = self._writer._current_file if self._writer else None
+                            uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
                             if uploaded > 0:
-                                logger.info(f"Force sync: uploaded {uploaded} traces")
-                            else:
+                                logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
+                            elif buffer_uploaded == 0:
                                 logger.info("Force sync: no pending traces to upload")
                         except Exception as e:
-                            logger.warning(f"Force sync failed: {e}")
+                            logger.warning(f"Force sync from disk failed: {e}")
 
         self._force_sync_thread = threading.Thread(
             target=monitor_loop,
@@ -1233,7 +1710,36 @@ class OximyAddon:
         # Load local config (output settings, refresh interval, etc.)
         output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
         self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
-        self._writer = TraceWriter(self._output_dir, output_config["output"].get("filename_pattern", "traces_{date}.jsonl"))
+        self._filename_pattern = output_config["output"].get("filename_pattern", "traces_{date}.jsonl")
+
+        # Cloud-first ingestion: initialize memory buffer and direct uploader
+        self._buffer = MemoryTraceBuffer()
+        upload_config = output_config.get("upload", {})
+        ingest_url = upload_config.get("ingest_api_url", INGEST_API_URL)
+        self._direct_uploader = DirectTraceUploader(self._buffer, ingest_url)
+        # Configurable upload interval and threshold (for scalability: 3s now, 30s later)
+        # Validate with sane bounds: interval 0.5-300s, threshold 1-10000 traces
+        try:
+            interval = float(upload_config.get("interval_seconds", DEFAULT_UPLOAD_INTERVAL_SECONDS))
+            self._upload_interval_seconds = max(0.5, min(interval, 300.0))
+            if interval != self._upload_interval_seconds:
+                logger.warning(f"Upload interval {interval}s clamped to {self._upload_interval_seconds}s (valid range: 0.5-300s)")
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid upload interval in config, using default {DEFAULT_UPLOAD_INTERVAL_SECONDS}s")
+            self._upload_interval_seconds = DEFAULT_UPLOAD_INTERVAL_SECONDS
+
+        try:
+            threshold = int(upload_config.get("threshold_count", DEFAULT_UPLOAD_THRESHOLD_COUNT))
+            self._upload_threshold_count = max(1, min(threshold, 10000))
+            if threshold != self._upload_threshold_count:
+                logger.warning(f"Upload threshold {threshold} clamped to {self._upload_threshold_count} (valid range: 1-10000)")
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid upload threshold in config, using default {DEFAULT_UPLOAD_THRESHOLD_COUNT}")
+            self._upload_threshold_count = DEFAULT_UPLOAD_THRESHOLD_COUNT
+
+        logger.info(f"Ingestion API: {ingest_url} (upload every {self._upload_interval_seconds}s or {self._upload_threshold_count} traces)")
+        # Disk-based writer is lazy-initialized only when needed (emergency fallback)
+        self._writer = None
 
         # Debug traces (unfiltered) - only if enabled
         if ctx.options.oximy_debug_traces:
@@ -1241,6 +1747,12 @@ class OximyAddon:
             logger.info("Debug traces enabled: logging all requests to all_traces_{date}.jsonl")
         else:
             self._debug_writer = None
+
+        # Debug ingestion mode: write to disk AND send via memory buffer
+        self._debug_ingestion = ctx.options.oximy_debug_ingestion
+        if self._debug_ingestion:
+            logger.info("Debug ingestion mode: writing traces to disk AND memory buffer")
+
         self._sensor_config_url = output_config.get("sensor_config_url", DEFAULT_SENSOR_CONFIG_URL)
         self._sensor_config_cache = output_config.get("sensor_config_cache", DEFAULT_SENSOR_CONFIG_CACHE)
         self._config_refresh_interval = output_config.get("config_refresh_interval_seconds", DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS)
@@ -1249,7 +1761,12 @@ class OximyAddon:
 
         # Fetch sensor config from API (cached locally)
         # Use tuples for immutability - safe to share across requests without copying
-        sensor_config = fetch_sensor_config(self._sensor_config_url, self._sensor_config_cache)
+        # Pass self for command execution (sensor_enabled, force_sync, clear_cache)
+        sensor_config = fetch_sensor_config(
+            self._sensor_config_url,
+            self._sensor_config_cache,
+            addon_instance=self
+        )
         self._whitelist = tuple(sensor_config.get("whitelist", []))
         # Pre-lowercase blacklist words for faster matching
         self._blacklist = tuple(w.lower() for w in sensor_config.get("blacklist", []))
@@ -1269,13 +1786,24 @@ class OximyAddon:
         # Start background trigger file monitor
         self._start_force_sync_monitor()
 
-        # Initialize trace uploader for API uploads (only if enabled)
+        # Initialize trace uploader for disk-based fallback files (only if enabled)
         # When running under a host app (e.g., OximyMac), the host handles sync
         if ctx.options.oximy_upload_enabled:
             self._uploader = TraceUploader()
             self._last_upload_time = time.time()
             self._traces_since_upload = 0
-            logger.info("Trace upload enabled (addon handles sync)")
+            logger.info("Cloud-first trace upload enabled")
+
+            # Check for existing JSONL files from previous emergency disk writes
+            # and upload them to clear the backlog (delete files after successful upload)
+            if self._output_dir and self._output_dir.exists():
+                try:
+                    # At startup, no active writer yet, so all files can be deleted if fully uploaded
+                    uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=None)
+                    if uploaded > 0:
+                        logger.info(f"Uploaded {uploaded} traces from previous emergency disk writes")
+                except Exception as e:
+                    logger.warning(f"Failed to upload existing disk traces on startup: {e}")
         else:
             self._uploader = None
             logger.info("Trace upload disabled (host app handles sync)")
@@ -1289,8 +1817,11 @@ class OximyAddon:
 
         # Only manage system proxy if option is enabled (disabled when host app handles it)
         global _addon_manages_proxy
-        if ctx.options.oximy_manage_proxy:
-            _set_system_proxy(enable=True)
+        if ctx.options.oximy_manage_proxy and not self._port_configured:
+            self._port_configured = True
+            # Use the actual mitmproxy listen port for system proxy (don't trust the port file)
+            actual_port = str(ctx.options.listen_port)
+            _set_system_proxy(enable=True, port=actual_port)
             _addon_manages_proxy = True
         logger.info(
             f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
@@ -1522,14 +2053,13 @@ class OximyAddon:
         if self._debug_writer:
             self._debug_writer.write(event)
 
-        if self._writer:
-            self._writer.write(event)
-            self._traces_since_upload += 1
+        # Write to memory buffer (cloud-first ingestion)
+        if self._write_to_buffer(event):
             graphql_op = flow.metadata.get("oximy_graphql_op", "")
             op_suffix = f" op={graphql_op}" if graphql_op else ""
             logger.debug(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]{op_suffix}")
 
-            # Check if we should upload
+            # Check if we should upload to API
             self._maybe_upload()
 
     def _handle_websocket_upgrade(self, flow: http.HTTPFlow) -> None:
@@ -1606,12 +2136,11 @@ class OximyAddon:
             logger.debug(f"[WS_UPGRADE_SKIP] {url} - skipped due to: {flow.metadata.get('oximy_skip_reason', 'unknown')}")
             return
 
-        if self._writer:
-            self._writer.write(event)
-            self._traces_since_upload += 1
+        # Write to memory buffer (cloud-first ingestion)
+        if self._write_to_buffer(event):
             logger.debug(f"<<< CAPTURED WS_UPGRADE: {flow.request.method} {url[:80]} [101]")
 
-            # Check if we should upload
+            # Check if we should upload to API
             self._maybe_upload()
 
     def _is_ws_turn_complete(self, content: str) -> bool:
@@ -1793,10 +2322,8 @@ class OximyAddon:
         if self._debug_writer:
             self._debug_writer.write(event)
 
-        # Write to main traces
-        if self._writer:
-            self._writer.write(event)
-            self._traces_since_upload += 1
+        # Write to memory buffer (cloud-first ingestion)
+        if self._write_to_buffer(event):
             logger.debug(f"<<< CAPTURED WS_TURN: {host} ({len(ws_messages)} messages)")
             self._maybe_upload()
 
@@ -2050,12 +2577,11 @@ class OximyAddon:
         if flow.metadata.get("oximy_skip"):
             return
 
-        if self._writer:
-            self._writer.write(event)
-            self._traces_since_upload += 1
+        # Write to memory buffer (cloud-first ingestion)
+        if self._write_to_buffer(event):
             logger.debug(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(ws_messages)} messages)")
 
-            # Check if we should upload
+            # Check if we should upload to API
             self._maybe_upload()
 
     # =========================================================================
@@ -2063,27 +2589,81 @@ class OximyAddon:
     # =========================================================================
 
     def _maybe_upload(self) -> None:
-        """Upload traces if threshold reached (100 traces or 2 seconds elapsed)."""
-        if not self._uploader or not self._output_dir:
+        """Upload traces from memory buffer if threshold reached.
+
+        Cloud-first: uploads directly from memory buffer to API.
+        Falls back to disk only if buffer is full and API is unreachable.
+
+        Designed for scalability: with longer intervals (e.g., 30s), uploads
+        ALL available batches when the interval fires, not just one.
+        """
+        if not self._direct_uploader or not self._buffer:
             return
 
         now = time.time()
-        time_elapsed = now - self._last_upload_time >= UPLOAD_INTERVAL_SECONDS
-        count_reached = self._traces_since_upload >= UPLOAD_THRESHOLD_COUNT
+        time_elapsed = now - self._last_upload_time >= self._upload_interval_seconds
+        count_reached = self._traces_since_upload >= self._upload_threshold_count
 
-        if (time_elapsed or count_reached) and self._traces_since_upload > 0:
+        if (time_elapsed or count_reached) and self._buffer.size() > 0:
             try:
-                if self._writer and self._writer._fo:
-                    self._writer._fo.flush()
+                # Upload ALL available batches (important for longer intervals like 30s)
+                upload_failed = False
+                batches_uploaded = 0
+                traces_before = self._buffer.size()
+                while self._buffer.size() > 0:
+                    success = self._direct_uploader.upload_batch()
+                    if success:
+                        batches_uploaded += 1
+                    else:
+                        upload_failed = True
+                        break
 
-                uploaded = self._uploader.upload_all_pending(self._output_dir)
-                if uploaded > 0:
-                    logger.info(f"Uploaded {uploaded} traces to API")
+                if batches_uploaded > 0:
+                    self._last_upload_time = now
+                    self._traces_since_upload = 0
+                    # Log multi-batch uploads (useful for monitoring at longer intervals)
+                    if batches_uploaded > 1:
+                        logger.debug(f"Multi-batch upload: {batches_uploaded} batches, {traces_before} traces")
 
-                self._last_upload_time = now
-                self._traces_since_upload = 0
+                if upload_failed:
+                    # Upload failed - check if we need emergency disk fallback
+                    # Only write to disk if buffer is getting dangerously full (>80% capacity)
+                    buffer_capacity = self._buffer.max_bytes
+                    if self._buffer.bytes_used() > (buffer_capacity * 0.8):
+                        logger.warning(f"Buffer >80% full ({self._buffer.bytes_used()}/{buffer_capacity} bytes) and upload failing, emergency disk write")
+                        writer = self._ensure_writer()
+                        if writer:
+                            # Write oldest traces to disk to free buffer space
+                            for event in self._buffer.take_batch(5 * 1024 * 1024):  # 5MB batch
+                                writer.write(event)
+
             except Exception as e:
                 logger.warning(f"Failed to upload traces: {e}")
+
+    def upload_all_traces(self) -> None:
+        """Upload all pending traces (memory buffer and disk fallback).
+
+        Called by remote command execution (force_sync).
+        """
+        try:
+            # Upload from memory buffer first
+            if self._direct_uploader and self._buffer and self._buffer.size() > 0:
+                uploaded_count = self._direct_uploader.upload_all()
+                if uploaded_count > 0:
+                    logger.info(f"Force sync: uploaded {uploaded_count} traces from memory buffer")
+
+            # Upload from disk fallback files
+            if self._uploader and self._output_dir:
+                # Flush writer first if active
+                if self._writer and self._writer._fo:
+                    self._writer._fo.flush()
+                # Pass active file to avoid deleting file currently being written
+                active_file = self._writer._current_file if self._writer else None
+                uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
+                if uploaded > 0:
+                    logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
+        except Exception as e:
+            logger.warning(f"upload_all_traces failed: {e}")
 
     # =========================================================================
     # Lifecycle
@@ -2114,6 +2694,32 @@ class OximyAddon:
         if _addon_manages_proxy:
             _set_system_proxy(enable=False)
 
+        # Cloud-first: try to upload remaining traces from memory buffer
+        if self._buffer and self._buffer.size() > 0:
+            logger.info(f"Shutdown: {self._buffer.size()} traces in buffer, attempting final upload")
+            if self._direct_uploader:
+                try:
+                    success = self._direct_uploader.upload_all()
+                    if success:
+                        logger.info("Successfully uploaded all buffered traces on shutdown")
+                    else:
+                        # Upload failed - emergency write to disk
+                        logger.warning("Final upload failed, writing remaining traces to disk")
+                        writer = self._ensure_writer()
+                        if writer:
+                            for event in self._buffer.peek_all():
+                                writer.write(event)
+                            self._buffer.clear()
+                            logger.info(f"Emergency disk write complete")
+                except Exception as e:
+                    logger.warning(f"Failed to upload buffered traces on shutdown: {e}")
+                    # Emergency fallback to disk
+                    writer = self._ensure_writer()
+                    if writer:
+                        for event in self._buffer.peek_all():
+                            writer.write(event)
+                        self._buffer.clear()
+
         # Close writers to flush pending writes
         if self._writer:
             self._writer.close()
@@ -2122,14 +2728,15 @@ class OximyAddon:
             self._debug_writer.close()
             self._debug_writer = None
 
-        # Upload pending traces to API
+        # Upload any leftover JSONL files from emergency disk writes
+        # (and delete them after successful upload - writer is closed so no active file)
         if self._uploader and self._output_dir:
             try:
-                uploaded = self._uploader.upload_all_pending(self._output_dir)
+                uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=None)
                 if uploaded > 0:
-                    logger.info(f"Uploaded {uploaded} traces to API on shutdown")
+                    logger.info(f"Uploaded {uploaded} traces from disk fallback files on shutdown")
             except Exception as e:
-                logger.warning(f"Failed to upload traces on shutdown: {e}")
+                logger.warning(f"Failed to upload disk fallback traces on shutdown: {e}")
 
         self._enabled = False
         logger.info("Oximy addon disabled")
