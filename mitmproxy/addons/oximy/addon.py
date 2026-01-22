@@ -55,31 +55,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 PROXY_HOST = "127.0.0.1"
-PROXY_PORT_FILE = Path("~/.oximy/proxy-port").expanduser()
 
 # Track previous sensor_enabled state to detect changes
 _previous_sensor_enabled: bool | None = None
 
-
-DEFAULT_PROXY_PORT = "1030"
-
-
-def _get_proxy_port() -> str:
-    """Get proxy port from file, or create file with default port 1030."""
-    try:
-        if PROXY_PORT_FILE.exists():
-            port = PROXY_PORT_FILE.read_text().strip()
-            if port.isdigit():
-                return port
-        else:
-            # File doesn't exist - create it with default port
-            PROXY_PORT_FILE.parent.mkdir(parents=True, exist_ok=True)
-            PROXY_PORT_FILE.write_text(DEFAULT_PROXY_PORT)
-            logger.info(f"Created proxy port file with default port {DEFAULT_PROXY_PORT}")
-            return DEFAULT_PROXY_PORT
-    except (IOError, OSError) as e:
-        logger.debug(f"Could not read/write proxy port file: {e}")
-    return DEFAULT_PROXY_PORT
+# Store the actual proxy port once configured (needed for enable/disable toggle)
+_proxy_port: str | None = None
 
 
 def _get_network_services() -> list[str]:
@@ -108,22 +89,25 @@ def _get_network_services() -> list[str]:
 # SYSTEM PROXY
 # =============================================================================
 
-def _set_system_proxy(enable: bool, port: str | None = None) -> None:
+def _set_system_proxy(enable: bool) -> None:
     """Enable or disable system proxy settings (cross-platform)."""
     if sys.platform == "darwin":
-        _set_macos_proxy(enable, port)
+        _set_macos_proxy(enable)
     elif sys.platform == "win32":
-        _set_windows_proxy(enable, port)
+        _set_windows_proxy(enable)
 
 
-def _set_windows_proxy(enable: bool, port: str | None = None) -> None:
+def _set_windows_proxy(enable: bool) -> None:
     """Enable or disable Windows system proxy via registry."""
-    proxy_port = port or _get_proxy_port()
-    proxy_server = f"{PROXY_HOST}:{proxy_port}"
+    global _proxy_port
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 
     try:
         if enable:
+            if not _proxy_port:
+                logger.warning("Cannot enable Windows proxy: port not configured")
+                return
+            proxy_server = f"{PROXY_HOST}:{_proxy_port}"
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"],
                            check=True, capture_output=True)
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyServer", "/t", "REG_SZ", "/d", proxy_server, "/f"],
@@ -137,17 +121,21 @@ def _set_windows_proxy(enable: bool, port: str | None = None) -> None:
         logger.warning(f"Failed to set Windows proxy: {e}")
 
 
-def _set_macos_proxy(enable: bool, port: str | None = None) -> None:
+def _set_macos_proxy(enable: bool) -> None:
     """Enable or disable macOS system proxy for all network services."""
-    proxy_port = port or _get_proxy_port()
+    global _proxy_port
     services = _get_network_services()
+
+    if enable and not _proxy_port:
+        logger.warning("Cannot enable macOS proxy: port not configured")
+        return
 
     for service in services:
         try:
             if enable:
-                subprocess.run(["networksetup", "-setsecurewebproxy", service, PROXY_HOST, proxy_port],
+                subprocess.run(["networksetup", "-setsecurewebproxy", service, PROXY_HOST, _proxy_port],
                                check=True, capture_output=True)
-                subprocess.run(["networksetup", "-setwebproxy", service, PROXY_HOST, proxy_port],
+                subprocess.run(["networksetup", "-setwebproxy", service, PROXY_HOST, _proxy_port],
                                check=True, capture_output=True)
             else:
                 subprocess.run(["networksetup", "-setsecurewebproxystate", service, "off"],
@@ -158,7 +146,7 @@ def _set_macos_proxy(enable: bool, port: str | None = None) -> None:
             logger.debug(f"Could not set proxy for {service}: {e}")
 
     if enable:
-        logger.info(f"macOS proxy enabled: {PROXY_HOST}:{proxy_port} on {services}")
+        logger.info(f"macOS proxy enabled: {PROXY_HOST}:{_proxy_port} on {services}")
     else:
         logger.info(f"macOS proxy disabled on {services}")
 
@@ -1815,19 +1803,31 @@ class OximyAddon:
         self._device_id = get_device_id()
         logger.info(f"Device ID: {self._device_id}")
 
-        # Only manage system proxy if option is enabled (disabled when host app handles it)
-        global _addon_manages_proxy
-        if ctx.options.oximy_manage_proxy and not self._port_configured:
-            self._port_configured = True
-            # Use the actual mitmproxy listen port for system proxy (don't trust the port file)
-            actual_port = str(ctx.options.listen_port)
-            _set_system_proxy(enable=True, port=actual_port)
-            _addon_manages_proxy = True
         logger.info(
             f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
             f"{len(passthrough_patterns)} passthrough, {len(self._allowed_app_hosts)} app_hosts, "
             f"{len(self._allowed_host_origins)} host_origins ====="
         )
+
+    def running(self) -> None:
+        """Called after mitmproxy is fully started and listening."""
+        if not self._enabled or not ctx.options.oximy_manage_proxy:
+            return
+        if self._port_configured:
+            return
+
+        global _addon_manages_proxy, _proxy_port
+        self._port_configured = True
+
+        # Get actual bound port from proxyserver (available now that server is running)
+        proxyserver = ctx.master.addons.get("proxyserver")
+        if proxyserver and proxyserver.listen_addrs():
+            _proxy_port = str(proxyserver.listen_addrs()[0][1])
+            logger.info(f"Configuring system proxy with port {_proxy_port}")
+            _set_system_proxy(enable=True)
+            _addon_manages_proxy = True
+        else:
+            logger.warning("Could not get proxy port - system proxy not configured")
 
     def _check_blacklist(self, *texts: str, blacklist: list[str] | None = None) -> str | None:
         """Check if any text contains a blacklisted word.
