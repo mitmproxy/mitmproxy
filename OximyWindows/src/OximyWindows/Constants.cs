@@ -131,6 +131,13 @@ public static class Constants
     public const string SettingsDeviceToken = "DeviceToken";
     public const string SettingsDeviceName = "DeviceName";
 
+    // Auth constants for browser-based enrollment
+    public const string AuthStateKey = "authState";
+    public const string AuthUrl = "https://app.oximy.com/auth/enroll";
+
+    // Remote state file path (written by Python addon)
+    public static string RemoteStatePath => Path.Combine(OximyDir, "remote-state.json");
+
     /// <summary>
     /// Ensure all required directories exist.
     /// </summary>

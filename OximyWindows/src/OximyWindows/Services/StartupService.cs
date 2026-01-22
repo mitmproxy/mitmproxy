@@ -21,6 +21,41 @@ public class StartupService : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Auto-enable launch at startup on first run.
+    /// Users can still disable this from Settings.
+    /// </summary>
+    public void CheckAndAutoEnableOnFirstLaunch()
+    {
+        if (Properties.Settings.Default.InitialAutoEnableDone)
+        {
+            Debug.WriteLine("[StartupService] Initial auto-enable already done, skipping");
+            return;
+        }
+
+        // Mark that we've done the initial setup
+        Properties.Settings.Default.InitialAutoEnableDone = true;
+        Properties.Settings.Default.Save();
+
+        // Only enable if not already enabled
+        if (!IsEnabled)
+        {
+            try
+            {
+                Enable();
+                Debug.WriteLine("[StartupService] Auto-enabled launch at login on first run");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[StartupService] Failed to auto-enable launch at login: {ex.Message}");
+            }
+        }
+        else
+        {
+            Debug.WriteLine("[StartupService] Launch at login already enabled");
+        }
+    }
+
+    /// <summary>
     /// Check current startup status.
     /// </summary>
     public void CheckStatus()

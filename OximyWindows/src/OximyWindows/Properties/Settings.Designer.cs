@@ -142,4 +142,34 @@ internal sealed partial class Settings : global::System.Configuration.Applicatio
             this["SetupComplete"] = value;
         }
     }
+
+    [global::System.Configuration.UserScopedSettingAttribute()]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Configuration.DefaultSettingValueAttribute("")]
+    public string AuthState
+    {
+        get
+        {
+            return ((string)(this["AuthState"]));
+        }
+        set
+        {
+            this["AuthState"] = value;
+        }
+    }
+
+    [global::System.Configuration.UserScopedSettingAttribute()]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Configuration.DefaultSettingValueAttribute("False")]
+    public bool InitialAutoEnableDone
+    {
+        get
+        {
+            return ((bool)(this["InitialAutoEnableDone"]));
+        }
+        set
+        {
+            this["InitialAutoEnableDone"] = value;
+        }
+    }
 }

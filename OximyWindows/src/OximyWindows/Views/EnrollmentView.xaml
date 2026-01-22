@@ -4,45 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignWidth="320" d:DesignHeight="400"
+             d:DesignWidth="320" d:DesignHeight="420"
              Background="#1A1A2E">
 
     <UserControl.Resources>
-        <!-- Digit TextBox Style -->
-        <Style x:Key="DigitTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="50"/>
-            <Setter Property="FontSize" Value="24"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="MaxLength" Value="1"/>
-            <Setter Property="Background" Value="#2D2D44"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3D3D5C"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="CaretBrush" Value="#6C63FF"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          VerticalAlignment="Center"
-                                          HorizontalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#6C63FF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!-- Primary Button Style -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#6C63FF"/>
@@ -97,6 +62,14 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Step Number Style -->
+        <Style x:Key="StepNumberStyle" TargetType="Border">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Background" Value="#6C63FF"/>
+            <Setter Property="CornerRadius" Value="11"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="24">
@@ -105,14 +78,14 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Progress Indicator -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
             <Ellipse Width="10" Height="10" Fill="#6C63FF"/>
             <Rectangle Width="40" Height="2" Fill="#3D3D5C" Margin="8,0"/>
             <Ellipse Width="10" Height="10" Fill="#3D3D5C"/>
@@ -127,57 +100,59 @@
                    HorizontalAlignment="Center"
                    Margin="0,0,0,8"/>
 
-        <!-- Subtitle -->
-        <TextBlock Grid.Row="2"
-                   Text="Enter the 6-digit code from your workspace"
-                   FontSize="13"
-                   Foreground="#9999AA"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap"
-                   TextAlignment="Center"
-                   Margin="0,0,0,32"/>
+        <!-- Instructions Panel -->
+        <Border Grid.Row="2" Background="#6C63FF" Opacity="0.15" CornerRadius="10" Margin="0,12,0,0">
+            <Border Background="Transparent" Padding="12">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="20"
+                               Foreground="#6C63FF" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Sign in with your browser" FontSize="13" FontWeight="Medium" Foreground="White"/>
+                        <TextBlock Text="You'll be redirected to authenticate" FontSize="11" Foreground="#9999AA"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
 
-        <!-- 6-Digit Code Entry -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
-            <TextBox x:Name="Digit1" Style="{StaticResource DigitTextBoxStyle}"
-                     PreviewTextInput="OnDigitPreviewTextInput"
-                     PreviewKeyDown="OnDigitKeyDown"
-                     TextChanged="OnDigitTextChanged"
-                     GotFocus="OnDigitGotFocus"
-                     Margin="0,0,8,0"/>
-            <TextBox x:Name="Digit2" Style="{StaticResource DigitTextBoxStyle}"
-                     PreviewTextInput="OnDigitPreviewTextInput"
-                     PreviewKeyDown="OnDigitKeyDown"
-                     TextChanged="OnDigitTextChanged"
-                     GotFocus="OnDigitGotFocus"
-                     Margin="0,0,8,0"/>
-            <TextBox x:Name="Digit3" Style="{StaticResource DigitTextBoxStyle}"
-                     PreviewTextInput="OnDigitPreviewTextInput"
-                     PreviewKeyDown="OnDigitKeyDown"
-                     TextChanged="OnDigitTextChanged"
-                     GotFocus="OnDigitGotFocus"
-                     Margin="0,0,16,0"/>
-            <TextBox x:Name="Digit4" Style="{StaticResource DigitTextBoxStyle}"
-                     PreviewTextInput="OnDigitPreviewTextInput"
-                     PreviewKeyDown="OnDigitKeyDown"
-                     TextChanged="OnDigitTextChanged"
-                     GotFocus="OnDigitGotFocus"
-                     Margin="0,0,8,0"/>
-            <TextBox x:Name="Digit5" Style="{StaticResource DigitTextBoxStyle}"
-                     PreviewTextInput="OnDigitPreviewTextInput"
-                     PreviewKeyDown="OnDigitKeyDown"
-                     TextChanged="OnDigitTextChanged"
-                     GotFocus="OnDigitGotFocus"
-                     Margin="0,0,8,0"/>
-            <TextBox x:Name="Digit6" Style="{StaticResource DigitTextBoxStyle}"
-                     PreviewTextInput="OnDigitPreviewTextInput"
-                     PreviewKeyDown="OnDigitKeyDown"
-                     TextChanged="OnDigitTextChanged"
-                     GotFocus="OnDigitGotFocus"/>
-        </StackPanel>
+        <!-- How it works -->
+        <Border Grid.Row="3" Background="#2D2D44" CornerRadius="10" Margin="0,16,0,0" Padding="16">
+            <StackPanel>
+                <TextBlock Text="How it works:" FontSize="12" FontWeight="SemiBold" Foreground="#9999AA" Margin="0,0,0,12"/>
+
+                <!-- Step 1 -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Border Style="{StaticResource StepNumberStyle}">
+                        <TextBlock Text="1" FontSize="11" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Click the button below to open your browser"
+                               FontSize="12" Foreground="#9999AA" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                </StackPanel>
+
+                <!-- Step 2 -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Border Style="{StaticResource StepNumberStyle}">
+                        <TextBlock Text="2" FontSize="11" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Enter your 6-digit code on the web page"
+                               FontSize="12" Foreground="#9999AA" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                </StackPanel>
+
+                <!-- Step 3 -->
+                <StackPanel Orientation="Horizontal">
+                    <Border Style="{StaticResource StepNumberStyle}">
+                        <TextBlock Text="3" FontSize="11" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="You'll be automatically signed in here"
+                               FontSize="12" Foreground="#9999AA" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
 
         <!-- Error Message (fixed height to prevent layout shifts) -->
-        <Border Grid.Row="4" Height="40">
+        <Border Grid.Row="4" Height="40" Margin="0,8,0,0">
             <TextBlock x:Name="ErrorText"
                        FontSize="13"
                        Foreground="#FF6B6B"
@@ -188,35 +163,27 @@
                        Visibility="Collapsed"/>
         </Border>
 
-        <!-- Connect Button -->
+        <!-- Login with Browser Button -->
         <Button Grid.Row="5"
-                x:Name="ConnectButton"
-                Content="Connect"
+                x:Name="LoginButton"
                 Style="{StaticResource PrimaryButtonStyle}"
-                Click="OnConnectClick"
-                IsEnabled="False"
+                Click="OnLoginWithBrowserClick"
                 HorizontalAlignment="Center"
-                MinWidth="200"/>
-
-        <!-- Loading Indicator -->
-        <StackPanel Grid.Row="5"
-                    x:Name="LoadingPanel"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Visibility="Collapsed">
-            <TextBlock Text="Connecting..."
-                       Foreground="#9999AA"
-                       FontSize="14"
-                       VerticalAlignment="Center"/>
-        </StackPanel>
+                MinWidth="220">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="ButtonIcon" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets"
+                           FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock x:Name="ButtonText" Text="Login with Browser" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
 
         <!-- Sign Up Link -->
         <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
-            <TextBlock Text="Don't have a workspace? "
+            <TextBlock Text="Need an account? "
                        Foreground="#9999AA"
                        FontSize="13"
                        VerticalAlignment="Center"/>
-            <Button Content="Sign up"
+            <Button Content="Sign up free"
                     Style="{StaticResource LinkButtonStyle}"
                     Click="OnSignUpClick"/>
         </StackPanel>

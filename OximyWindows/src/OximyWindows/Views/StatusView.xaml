@@ -4,7 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="420" d:DesignWidth="340">
+             d:DesignHeight="380" d:DesignWidth="340">
 
     <Grid Background="{DynamicResource BackgroundBrush}">
         <Grid.RowDefinitions>
@@ -43,29 +43,26 @@
                        FontSize="12"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        HorizontalAlignment="Center"
-                       Margin="0,0,0,20"
+                       Margin="0,0,0,16"
                        Visibility="Collapsed"/>
 
-            <!-- Toggle Button -->
-            <Button x:Name="CaptureToggleButton"
-                    Style="{DynamicResource PrimaryButtonStyle}"
-                    Padding="16,10"
-                    Margin="32,0,32,8"
-                    HorizontalAlignment="Stretch"
-                    Click="CaptureToggleButton_Click">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock x:Name="CaptureButtonIcon"
-                               Text="&#xE768;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="14"
-                               VerticalAlignment="Center"
-                               Margin="0,0,8,0"/>
-                    <TextBlock x:Name="CaptureButtonText"
-                               Text="Start Monitoring"
-                               FontSize="14"
-                               FontWeight="SemiBold"/>
-                </StackPanel>
-            </Button>
+            <!-- Admin Paused Message (shown when sensor_enabled=false) -->
+            <StackPanel x:Name="AdminPausedPanel"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,16"
+                        Visibility="Collapsed">
+                <TextBlock Text="Monitoring paused by administrator"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock x:Name="ItSupportText"
+                           Text=""
+                           FontSize="12"
+                           Foreground="{DynamicResource AccentBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,4,0,0"
+                           Visibility="Collapsed"/>
+            </StackPanel>
 
             <!-- Certificate Warning -->
             <TextBlock x:Name="CertWarningText"

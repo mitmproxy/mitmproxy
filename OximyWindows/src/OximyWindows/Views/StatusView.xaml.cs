@@ -6,10 +6,13 @@ using OximyWindows.Core;
 
 namespace OximyWindows.Views;
 
+/// <summary>
+/// Status view showing monitoring state based on RemoteStateService.
+/// The toggle button has been removed - monitoring is now admin-controlled.
+/// </summary>
 public partial class StatusView : UserControl
 {
     private readonly DispatcherTimer _refreshTimer;
-    private bool _isToggling;
 
     // Debouncing: coalesce rapid property changes into a single UI update
     private bool _updatePending;
@@ -34,6 +37,7 @@ public partial class StatusView : UserControl
     private void SubscribeToEvents()
     {
         AppState.Instance.PropertyChanged += OnAppStateChanged;
+        App.RemoteStateService.PropertyChanged += OnRemoteStateChanged;
         App.MitmService.Started += OnMitmStarted;
         App.MitmService.Stopped += OnMitmStopped;
     }
@@ -41,6 +45,7 @@ public partial class StatusView : UserControl
     private void UnsubscribeFromEvents()
     {
         AppState.Instance.PropertyChanged -= OnAppStateChanged;
+        App.RemoteStateService.PropertyChanged -= OnRemoteStateChanged;
         App.MitmService.Started -= OnMitmStarted;
         App.MitmService.Stopped -= OnMitmStopped;
     }
@@ -63,6 +68,11 @@ public partial class StatusView : UserControl
     }
 
     private void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        ScheduleUIUpdate();
+    }
+
+    private void OnRemoteStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         ScheduleUIUpdate();
     }
@@ -121,36 +131,54 @@ public partial class StatusView : UserControl
         }
 
         // Certificate status - run on background thread to avoid blocking UI
-        // X509Store operations can take 100-500ms+
         await Task.Run(() => App.CertificateService.CheckStatus());
         CertWarningText.Visibility = App.CertificateService.IsCAInstalled ? Visibility.Collapsed : Visibility.Visible;
-
-        // Update capture button
-        UpdateCaptureButton();
     }
 
     private void UpdateStatusUI()
     {
         var successBrush = TryFindResource("SuccessBrush") as SolidColorBrush ?? Brushes.Green;
         var warningBrush = TryFindResource("WarningBrush") as SolidColorBrush ?? Brushes.Orange;
+        var yellowBrush = new SolidColorBrush(Color.FromRgb(0xFF, 0xC1, 0x07)); // Yellow for paused
         var errorBrush = TryFindResource("ErrorBrush") as SolidColorBrush ?? Brushes.Red;
         var grayBrush = TryFindResource("TextSecondaryBrush") as SolidColorBrush ?? Brushes.Gray;
 
-        var isRunning = App.MitmService.IsRunning;
+        var remote = App.RemoteStateService;
         var isCertInstalled = App.CertificateService.IsCAInstalled;
         var status = AppState.Instance.ConnectionStatus;
 
-        // Determine status color and icon based on state (like Mac)
+        // Determine status color and icon based on remote state
         SolidColorBrush statusColor;
         string statusIcon;
         string statusText;
 
-        if (isRunning && status == ConnectionStatus.Connected)
+        if (!remote.SensorEnabled)
+        {
+            // Monitoring Paused by Admin - Yellow
+            statusColor = yellowBrush;
+            statusIcon = "\uE769"; // Pause
+            statusText = "Monitoring Paused";
+            PortText.Visibility = Visibility.Collapsed;
+
+            // Show admin paused message
+            AdminPausedPanel.Visibility = Visibility.Visible;
+            if (!string.IsNullOrEmpty(remote.ItSupport))
+            {
+                ItSupportText.Text = $"Contact: {remote.ItSupport}";
+                ItSupportText.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ItSupportText.Visibility = Visibility.Collapsed;
+            }
+        }
+        else if (remote.ProxyActive)
         {
             // Monitoring Active - Green
             statusColor = successBrush;
             statusIcon = "\uEA18"; // Shield with checkmark
             statusText = "Monitoring Active";
+            AdminPausedPanel.Visibility = Visibility.Collapsed;
 
             // Show port info
             if (App.MitmService.CurrentPort.HasValue)
@@ -159,13 +187,14 @@ public partial class StatusView : UserControl
                 PortText.Visibility = Visibility.Visible;
             }
         }
-        else if (status == ConnectionStatus.Connecting)
+        else if (!isCertInstalled)
         {
-            // Starting - Orange
-            statusColor = warningBrush;
-            statusIcon = "\uE916"; // Progress ring
-            statusText = "Starting...";
+            // Setup Required - Gray
+            statusColor = grayBrush;
+            statusIcon = "\uEAFC"; // Shield slash
+            statusText = "Setup Required";
             PortText.Visibility = Visibility.Collapsed;
+            AdminPausedPanel.Visibility = Visibility.Collapsed;
         }
         else if (status == ConnectionStatus.Error)
         {
@@ -174,22 +203,16 @@ public partial class StatusView : UserControl
             statusIcon = "\uEA39"; // Shield error
             statusText = "Error";
             PortText.Visibility = Visibility.Collapsed;
-        }
-        else if (!isCertInstalled)
-        {
-            // Setup Required - Gray
-            statusColor = grayBrush;
-            statusIcon = "\uEAFC"; // Shield slash
-            statusText = "Setup Required";
-            PortText.Visibility = Visibility.Collapsed;
+            AdminPausedPanel.Visibility = Visibility.Collapsed;
         }
         else
         {
-            // Monitoring Paused - Orange
+            // Starting... - Orange (sensor enabled but proxy not yet active)
             statusColor = warningBrush;
-            statusIcon = "\uEA18"; // Shield
-            statusText = "Monitoring Paused";
+            statusIcon = "\uE916"; // Progress ring / sync
+            statusText = "Starting...";
             PortText.Visibility = Visibility.Collapsed;
+            AdminPausedPanel.Visibility = Visibility.Collapsed;
         }
 
         StatusCircle.Fill = statusColor;
@@ -211,92 +234,13 @@ public partial class StatusView : UserControl
             AppState.Instance.ErrorMessage = string.Empty;
             ErrorPanel.Visibility = Visibility.Collapsed;
 
-            // Restart mitmproxy
+            // Restart mitmproxy - addon will handle proxy configuration
             await App.MitmService.RestartAsync();
-
-            // Re-enable proxy
-            if (App.MitmService.CurrentPort.HasValue)
-            {
-                App.ProxyService.EnableProxy(App.MitmService.CurrentPort.Value);
-            }
         }
         catch (Exception ex)
         {
             AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
             AppState.Instance.ErrorMessage = ex.Message;
         }
-    }
-
-    private async void CaptureToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isToggling) return;
-        _isToggling = true;
-        CaptureToggleButton.IsEnabled = false;
-
-        try
-        {
-            if (App.MitmService.IsRunning)
-            {
-                // Stop monitoring - run blocking ops on background thread
-                await Task.Run(() =>
-                {
-                    App.ProxyService.DisableProxy();
-                    App.MitmService.Stop();
-                });
-                AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
-            }
-            else
-            {
-                // Verify certificate is installed first - run on background thread
-                await Task.Run(() => App.CertificateService.CheckStatus());
-                if (!App.CertificateService.IsCAInstalled)
-                {
-                    MessageBox.Show(
-                        "Please install the CA certificate first.\n\nGo to Settings to install the certificate.",
-                        "Certificate Required",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    return;
-                }
-
-                // Start monitoring
-                AppState.Instance.ConnectionStatus = ConnectionStatus.Connecting;
-                await App.MitmService.StartAsync();
-
-                if (App.MitmService.CurrentPort.HasValue)
-                {
-                    await Task.Run(() => App.ProxyService.EnableProxy(App.MitmService.CurrentPort.Value));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
-            AppState.Instance.ErrorMessage = ex.Message;
-        }
-        finally
-        {
-            _isToggling = false;
-            CaptureToggleButton.IsEnabled = true;
-            UpdateUI();
-        }
-    }
-
-    private void UpdateCaptureButton()
-    {
-        var isRunning = App.MitmService.IsRunning;
-        var isCertInstalled = App.CertificateService.IsCAInstalled;
-
-        // Update icon and text
-        CaptureButtonIcon.Text = isRunning ? "\uE71A" : "\uE768"; // Stop : Play
-        CaptureButtonText.Text = isRunning ? "Stop Monitoring" : "Start Monitoring";
-
-        // Update button color (orange when running, accent when stopped)
-        var accentBrush = TryFindResource("AccentBrush") as SolidColorBrush ?? Brushes.Blue;
-        var warningBrush = TryFindResource("WarningBrush") as SolidColorBrush ?? Brushes.Orange;
-        CaptureToggleButton.Background = isRunning ? warningBrush : accentBrush;
-
-        // Disable button if certificate not installed
-        CaptureToggleButton.IsEnabled = isCertInstalled || isRunning;
     }
 }

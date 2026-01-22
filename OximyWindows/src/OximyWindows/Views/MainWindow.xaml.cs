@@ -94,6 +94,45 @@ public partial class MainWindow : Window
         TrayIcon.ToolTipText = $"Oximy - {status}";
     }
 
+    /// <summary>
+    /// Update the tray icon based on sensor enabled state.
+    /// Uses yellow-tinted icon when monitoring is paused by admin.
+    /// </summary>
+    public void UpdateTrayIcon(bool sensorEnabled)
+    {
+        try
+        {
+            var iconName = sensorEnabled ? "oximy.ico" : "oximy-paused.ico";
+
+            // Try multiple possible locations
+            var possiblePaths = new[]
+            {
+                System.IO.Path.Combine(AppContext.BaseDirectory, iconName),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", iconName),
+            };
+
+            foreach (var iconPath in possiblePaths)
+            {
+                if (System.IO.File.Exists(iconPath))
+                {
+                    TrayIcon.Icon = new Icon(iconPath);
+                    Debug.WriteLine($"[MainWindow] Updated tray icon to: {iconPath}");
+                    return;
+                }
+            }
+
+            // If paused icon doesn't exist, fall back to normal icon
+            if (!sensorEnabled)
+            {
+                Debug.WriteLine("[MainWindow] Paused icon not found, using normal icon");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MainWindow] Failed to update tray icon: {ex.Message}");
+        }
+    }
+
     private void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(AppState.ConnectionStatus))
@@ -151,14 +190,9 @@ public partial class MainWindow : Window
         {
             AppState.Instance.ConnectionStatus = ConnectionStatus.Connecting;
 
-            // Start mitmproxy
+            // Start mitmproxy - the addon will handle proxy configuration
+            // based on the remote sensor_enabled state
             await App.MitmService.StartAsync();
-
-            // Enable proxy
-            if (App.MitmService.CurrentPort.HasValue)
-            {
-                App.ProxyService.EnableProxy(App.MitmService.CurrentPort.Value);
-            }
 
             AppState.Instance.ConnectionStatus = ConnectionStatus.Connected;
         }
