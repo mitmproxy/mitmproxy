@@ -56,6 +56,9 @@ logger = logging.getLogger(__name__)
 
 PROXY_HOST = "127.0.0.1"
 
+# Thread safety locks for global state
+_globals_lock = threading.Lock()  # Protects _previous_sensor_enabled, _proxy_port, _addon_manages_proxy
+
 # Track previous sensor_enabled state to detect changes
 _previous_sensor_enabled: bool | None = None
 
@@ -248,7 +251,8 @@ def _is_cert_trusted() -> bool:
             timeout=10
         )
         return result.returncode == 0
-    except (subprocess.SubprocessError, FileNotFoundError):
+    except (subprocess.SubprocessError, FileNotFoundError) as e:
+        logger.debug(f"Could not verify certificate trust: {e}")
         return False
 
 
@@ -328,9 +332,19 @@ def _ensure_cert_trusted() -> bool:
 # CONFIG LOADING
 # =============================================================================
 
-DEFAULT_SENSOR_CONFIG_URL = "https://api.oximy.com/api/v1/sensor-config"
-DEFAULT_SENSOR_CONFIG_CACHE = "~/.oximy/sensor-config.json"
-DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = 1800  # 30 minutes (fallback)
+# Support environment variable overrides for testing/CI
+DEFAULT_SENSOR_CONFIG_URL = os.environ.get(
+    "OXIMY_CONFIG_URL",
+    "https://api.oximy.com/api/v1/sensor-config"
+)
+DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
+    "OXIMY_CONFIG_CACHE",
+    "~/.oximy/sensor-config.json"
+)
+DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = int(os.environ.get(
+    "OXIMY_CONFIG_REFRESH_INTERVAL",
+    "1800"  # 30 minutes default
+))
 
 
 def fetch_sensor_config(
@@ -345,9 +359,6 @@ def fetch_sensor_config(
         cache_path: Local cache file path
         addon_instance: Optional Oximy addon instance for command execution
     """
-    import urllib.request
-    import urllib.error
-
     cache_file = Path(cache_path).expanduser()
 
     default_config = {
@@ -420,15 +431,16 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
 
     # --- EXECUTE COMMANDS DIRECTLY ---
 
-    # Handle sensor_enabled (proxy management)
+    # Handle sensor_enabled (proxy management) - thread-safe access
     sensor_enabled = commands.get("sensor_enabled", True)
-    if _previous_sensor_enabled is not None and sensor_enabled != _previous_sensor_enabled:
-        logger.info(f"sensor_enabled changed: {_previous_sensor_enabled} -> {sensor_enabled}")
-        if sensor_enabled:
-            _set_system_proxy(enable=True)
-        else:
-            _set_system_proxy(enable=False)
-    _previous_sensor_enabled = sensor_enabled
+    with _globals_lock:
+        if _previous_sensor_enabled is not None and sensor_enabled != _previous_sensor_enabled:
+            logger.info(f"sensor_enabled changed: {_previous_sensor_enabled} -> {sensor_enabled}")
+            if sensor_enabled:
+                _set_system_proxy(enable=True)
+            else:
+                _set_system_proxy(enable=False)
+        _previous_sensor_enabled = sensor_enabled
 
     # Handle force_sync (upload pending traces)
     if commands.get("force_sync"):
@@ -525,47 +537,69 @@ def load_output_config(config_path: Path | None = None) -> dict:
 # =============================================================================
 
 _device_id_cache: str | None = None
+_device_id_lock = threading.Lock()
 
 
 def get_device_id() -> str | None:
     """Get hardware UUID for this device. Cached after first call."""
     global _device_id_cache
+
+    # Fast path: check cache without lock (safe for reads)
     if _device_id_cache is not None:
         return _device_id_cache
 
-    try:
-        if sys.platform == "darwin":
-            result = subprocess.run(
-                ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0:
-                for line in result.stdout.split("\n"):
-                    if "IOPlatformUUID" in line:
-                        parts = line.split('"')
-                        if len(parts) >= 4:
-                            _device_id_cache = parts[3]
-                            return _device_id_cache
-        elif sys.platform == "win32":
-            result = subprocess.run(
-                ["wmic", "csproduct", "get", "UUID"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            if result.returncode == 0:
-                lines = result.stdout.strip().split("\n")
-                if len(lines) >= 2:
-                    uuid = lines[1].strip()
-                    if uuid and uuid != "UUID":
-                        _device_id_cache = uuid
-                        return _device_id_cache
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
-        logger.debug(f"Failed to get device ID: {e}")
+    # UUID validation pattern (8-4-4-4-12 hex format)
+    UUID_PATTERN = re.compile(r'^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$')
 
-    return None
+    def _is_valid_uuid(value: str) -> bool:
+        return bool(UUID_PATTERN.match(value))
+
+    with _device_id_lock:
+        # Double-check after acquiring lock
+        if _device_id_cache is not None:
+            return _device_id_cache
+
+        try:
+            if sys.platform == "darwin":
+                result = subprocess.run(
+                    ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.split("\n"):
+                        if "IOPlatformUUID" in line:
+                            # Use regex to extract UUID safely
+                            uuid_match = re.search(r'"([a-fA-F0-9\-]{36})"', line)
+                            if uuid_match:
+                                candidate = uuid_match.group(1)
+                                if _is_valid_uuid(candidate):
+                                    _device_id_cache = candidate
+                                    return _device_id_cache
+                                else:
+                                    logger.warning(f"Invalid UUID format from ioreg: {candidate}")
+            elif sys.platform == "win32":
+                result = subprocess.run(
+                    ["wmic", "csproduct", "get", "UUID"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if result.returncode == 0:
+                    lines = result.stdout.strip().split("\n")
+                    if len(lines) >= 2:
+                        candidate = lines[1].strip()
+                        if candidate and candidate != "UUID":
+                            if _is_valid_uuid(candidate):
+                                _device_id_cache = candidate
+                                return _device_id_cache
+                            else:
+                                logger.warning(f"Invalid UUID format from wmic: {candidate}")
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+            logger.debug(f"Failed to get device ID: {e}")
+
+        return None
 
 
 # =============================================================================
@@ -573,7 +607,10 @@ def get_device_id() -> str | None:
 # =============================================================================
 
 # Cache for compiled URL pattern regexes (pattern -> compiled regex)
-_url_pattern_cache: dict[str, re.Pattern] = {}
+# Use OrderedDict for LRU eviction
+from collections import OrderedDict
+_url_pattern_cache: OrderedDict[str, re.Pattern] = OrderedDict()
+_URL_PATTERN_CACHE_MAX_SIZE = 1000
 
 
 def _build_url_regex(pattern: str) -> str:
@@ -608,11 +645,22 @@ def _build_url_regex(pattern: str) -> str:
 
 
 def _get_compiled_url_pattern(pattern: str) -> re.Pattern:
-    """Get or create compiled regex for URL pattern."""
-    if pattern not in _url_pattern_cache:
-        regex_str = _build_url_regex(pattern)
-        _url_pattern_cache[pattern] = re.compile(regex_str, re.IGNORECASE)
-    return _url_pattern_cache[pattern]
+    """Get or create compiled regex for URL pattern. Uses LRU eviction."""
+    if pattern in _url_pattern_cache:
+        # Move to end (most recently used)
+        _url_pattern_cache.move_to_end(pattern)
+        return _url_pattern_cache[pattern]
+
+    # Compile new pattern
+    regex_str = _build_url_regex(pattern)
+    compiled = re.compile(regex_str, re.IGNORECASE)
+
+    # Evict oldest if cache is full
+    if len(_url_pattern_cache) >= _URL_PATTERN_CACHE_MAX_SIZE:
+        _url_pattern_cache.popitem(last=False)  # Remove oldest
+
+    _url_pattern_cache[pattern] = compiled
+    return compiled
 
 
 def _extract_domain_from_pattern(pattern: str) -> str:
@@ -798,8 +846,8 @@ def extract_graphql_operation(body: bytes | None) -> str | None:
         if isinstance(data, dict):
             return data.get('operationName')
 
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        pass
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        logger.debug(f"Could not parse GraphQL operation name: {e}")
 
     return None
 
@@ -885,11 +933,13 @@ LEARNED_PASSTHROUGH_CACHE = Path("~/.oximy/learned-passthrough.json").expanduser
 class TLSPassthrough:
     """Manages TLS passthrough for certificate-pinned hosts."""
 
+    _CACHE_MAX_SIZE = 1000  # LRU cache limit
+
     def __init__(self, patterns: list[str]):
         """Initialize with patterns from API config."""
         self._patterns: list[re.Pattern] = []
         self._learned_patterns: list[str] = []
-        self._result_cache: dict[str, bool] = {}  # host -> should_passthrough result
+        self._result_cache: OrderedDict[str, bool] = OrderedDict()  # LRU cache
 
         # Load patterns from API config
         for p in patterns:
@@ -911,24 +961,26 @@ class TLSPassthrough:
                 for p in self._learned_patterns:
                     try:
                         self._patterns.append(re.compile(p, re.IGNORECASE))
-                    except re.error:
-                        pass
+                    except re.error as e:
+                        logger.debug(f"Invalid learned passthrough pattern '{p}': {e}")
                 if self._learned_patterns:
                     logger.info(f"Loaded {len(self._learned_patterns)} learned passthrough patterns")
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError) as e:
+                logger.debug(f"Could not load learned passthrough cache: {e}")
 
     def should_passthrough(self, host: str) -> bool:
         """Check if host should bypass TLS interception."""
-        # Check cache first
+        # Check cache first (LRU)
         if host in self._result_cache:
+            self._result_cache.move_to_end(host)  # Mark as recently used
             return self._result_cache[host]
 
         result = any(p.match(host) for p in self._patterns)
 
-        # Cache the result (limit cache size to prevent memory growth)
-        if len(self._result_cache) < 10000:
-            self._result_cache[host] = result
+        # Cache the result with LRU eviction
+        if len(self._result_cache) >= self._CACHE_MAX_SIZE:
+            self._result_cache.popitem(last=False)  # Remove oldest
+        self._result_cache[host] = result
 
         return result
 
@@ -981,8 +1033,8 @@ class TLSPassthrough:
         for p in self._learned_patterns:
             try:
                 new_patterns.append(re.compile(p, re.IGNORECASE))
-            except re.error:
-                pass
+            except re.error as e:
+                logger.debug(f"Invalid learned passthrough pattern '{p}': {e}")
         self._patterns = new_patterns
         logger.debug(f"Updated passthrough patterns: {len(patterns)} from config + {len(self._learned_patterns)} learned")
 
@@ -1053,7 +1105,7 @@ def _get_dynamic_buffer_size() -> int:
         try:
             return int(override) * 1024 * 1024
         except ValueError:
-            pass
+            logger.warning(f"Invalid OXIMY_BUFFER_MAX_MB value '{override}', using auto-detection")
 
     # Get total system memory (cross-platform)
     try:
@@ -1065,7 +1117,8 @@ def _get_dynamic_buffer_size() -> int:
             import psutil
             total_ram = psutil.virtual_memory().total
         except ImportError:
-            total_ram = 8 * 1024 * 1024 * 1024  # Assume 8 GB if detection fails
+            logger.warning("Could not detect system memory, using conservative 2GB assumption")
+            total_ram = 2 * 1024 * 1024 * 1024  # Conservative 2 GB fallback
 
     # 1% of total RAM, capped
     target = total_ram // 100
@@ -1167,8 +1220,8 @@ def _get_device_token() -> str | None:
             token = DEVICE_TOKEN_FILE.read_text().strip()
             if token:
                 return token
-    except (IOError, OSError):
-        pass
+    except (IOError, OSError) as e:
+        logger.debug(f"Could not read device token: {e}")
     return None
 
 
@@ -1177,7 +1230,12 @@ class DirectTraceUploader:
 
     BATCH_MAX_BYTES = 5 * 1024 * 1024  # 5 MB per upload batch
     MAX_RETRIES = 3
-    RETRY_DELAYS = [0.5, 1.0, 2.0]  # Seconds between retries
+    # Support env var override: OXIMY_UPLOAD_RETRY_DELAYS="0.5,1.0,2.0"
+    _retry_delays_str = os.environ.get("OXIMY_UPLOAD_RETRY_DELAYS", "0.5,1.0,2.0")
+    try:
+        RETRY_DELAYS = [float(x) for x in _retry_delays_str.split(",")]
+    except ValueError:
+        RETRY_DELAYS = [0.5, 1.0, 2.0]  # Fallback to defaults
 
     def __init__(self, buffer: MemoryTraceBuffer, api_url: str = INGEST_API_URL):
         self._buffer = buffer
@@ -1274,8 +1332,8 @@ class TraceUploader:
             try:
                 with open(UPLOAD_STATE_FILE, encoding="utf-8") as f:
                     self._upload_state = json.load(f)
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError) as e:
+                logger.debug(f"Could not load upload state: {e}")
 
     def _save_state(self) -> None:
         """Save upload state to disk."""
@@ -1295,8 +1353,6 @@ class TraceUploader:
                 - is_fully_uploaded: True if all lines in file have been uploaded
         """
         import gzip
-        import urllib.request
-        import urllib.error
 
         if not trace_file.exists():
             return 0, False
@@ -1469,6 +1525,7 @@ class OximyAddon:
         self._config_refresh_thread: threading.Thread | None = None
         self._config_refresh_stop: threading.Event = threading.Event()
         self._config_lock: threading.Lock = threading.Lock()  # Protects config updates
+        self._thread_start_lock: threading.Lock = threading.Lock()  # Protects thread startup
         self._force_sync_thread: threading.Thread | None = None
         self._force_sync_stop: threading.Event = threading.Event()
         self._debug_ingestion: bool = False  # Debug mode: write to disk AND memory buffer
@@ -1632,8 +1689,8 @@ class OximyAddon:
                     logger.info("Force sync trigger detected")
                     try:
                         FORCE_SYNC_TRIGGER.unlink()  # Delete trigger file
-                    except OSError:
-                        pass
+                    except OSError as e:
+                        logger.debug(f"Could not delete force sync trigger: {e}")
 
                     # Cloud-first: upload from memory buffer first
                     buffer_uploaded = 0
@@ -1767,9 +1824,12 @@ class OximyAddon:
         self._allowed_app_non_hosts = tuple(app_origins.get("non_hosts", []))
         self._allowed_host_origins = tuple(sensor_config.get("allowed_host_origins", []))
 
-        # Start periodic config refresh (only if not already running)
+        # Start periodic config refresh (only if not already running) - thread-safe
         if self._config_refresh_thread is None or not self._config_refresh_thread.is_alive():
-            self._start_config_refresh_task()
+            with self._thread_start_lock:
+                # Double-check after acquiring lock
+                if self._config_refresh_thread is None or not self._config_refresh_thread.is_alive():
+                    self._start_config_refresh_task()
 
         # Start background trigger file monitor
         self._start_force_sync_monitor()
@@ -1822,10 +1882,11 @@ class OximyAddon:
         # Get actual bound port from proxyserver (available now that server is running)
         proxyserver = ctx.master.addons.get("proxyserver")
         if proxyserver and proxyserver.listen_addrs():
-            _proxy_port = str(proxyserver.listen_addrs()[0][1])
-            logger.info(f"Configuring system proxy with port {_proxy_port}")
-            _set_system_proxy(enable=True)
-            _addon_manages_proxy = True
+            with _globals_lock:
+                _proxy_port = str(proxyserver.listen_addrs()[0][1])
+                logger.info(f"Configuring system proxy with port {_proxy_port}")
+                _set_system_proxy(enable=True)
+                _addon_manages_proxy = True
         else:
             logger.warning("Could not get proxy port - system proxy not configured")
 
@@ -1856,8 +1917,8 @@ class OximyAddon:
                 parsed = urlparse(origin_header)
                 if parsed.netloc:
                     return parsed.netloc
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not parse Origin header '{origin_header}': {e}")
 
         # Fall back to Referer header
         referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
@@ -1866,8 +1927,8 @@ class OximyAddon:
                 parsed = urlparse(referer_header)
                 if parsed.netloc:
                     return parsed.netloc
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not parse Referer header '{referer_header}': {e}")
 
         return None
 
@@ -2105,8 +2166,8 @@ class OximyAddon:
                 parsed = urlparse(referer_header)
                 if parsed.netloc:
                     referrer_origin = parsed.netloc
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not parse Referer header: {e}")
 
         if referrer_origin and client_info:
             client_info["referrer_origin"] = referrer_origin
@@ -2257,8 +2318,8 @@ class OximyAddon:
                 if status.get("ok") is True or status.get("code") == "OK":
                     return True
 
-        except (json.JSONDecodeError, TypeError):
-            pass
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.debug(f"Could not parse WebSocket message for turn completion: {e}")
         return False
 
     def _write_ws_turn_aggregate(self, flow: http.HTTPFlow) -> None:
@@ -2304,8 +2365,8 @@ class OximyAddon:
                     parsed = urlparse(referer_header)
                     if parsed.netloc:
                         referrer_origin = parsed.netloc
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Could not parse Referer header: {e}")
 
             if referrer_origin:
                 client_info["referrer_origin"] = referrer_origin
@@ -2365,8 +2426,8 @@ class OximyAddon:
                 parsed = urlparse(referer_header)
                 if parsed.netloc:
                     referrer_origin = parsed.netloc
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not parse Referer header: {e}")
 
         event: dict = {
             "event_id": generate_event_id(),
@@ -2470,9 +2531,15 @@ class OximyAddon:
                 "is_text": is_text,
             }
 
-            # Accumulate for aggregate events
+            # Accumulate for aggregate events (with limit to prevent memory leak)
+            MAX_WS_MESSAGES_PER_TURN = 1000
             if "oximy_ws_messages" not in flow.metadata:
                 flow.metadata["oximy_ws_messages"] = []
+            ws_messages = flow.metadata["oximy_ws_messages"]
+            if len(ws_messages) >= MAX_WS_MESSAGES_PER_TURN:
+                # Keep newest messages, discard oldest
+                flow.metadata["oximy_ws_messages"] = ws_messages[-(MAX_WS_MESSAGES_PER_TURN - 1):]
+                logger.debug(f"WebSocket message buffer full, discarding oldest messages")
             flow.metadata["oximy_ws_messages"].append(message_data)
             flow.metadata["oximy_ws_message_count"] = current_count
 
@@ -2538,8 +2605,8 @@ class OximyAddon:
                 parsed = urlparse(referer_header)
                 if parsed.netloc:
                     referrer_origin = parsed.netloc
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not parse Referer header: {e}")
 
         event: dict = {
             "event_id": generate_event_id(),
