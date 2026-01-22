@@ -3,11 +3,9 @@ import SwiftUI
 struct HomeTab: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var proxyService = ProxyService.shared
-    @StateObject private var mitmService = MITMService.shared
     @StateObject private var certService = CertificateService.shared
     @StateObject private var syncService = SyncService.shared
-
-    @State private var isToggling = false
+    @StateObject private var remoteStateService = RemoteStateService.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,14 +19,9 @@ struct HomeTab: View {
                             .fill(statusColor.opacity(0.15))
                             .frame(width: 80, height: 80)
 
-                        if isToggling {
-                            ProgressView()
-                                .scaleEffect(1.2)
-                        } else {
-                            Image(systemName: statusIcon)
-                                .font(.system(size: 36))
-                                .foregroundColor(statusColor)
-                        }
+                        Image(systemName: statusIcon)
+                            .font(.system(size: 36))
+                            .foregroundColor(statusColor)
                     }
 
                     // Status Text
@@ -36,26 +29,27 @@ struct HomeTab: View {
                         .font(.title3)
                         .fontWeight(.semibold)
 
-                    if proxyService.isProxyEnabled, let port = proxyService.configuredPort {
+                    // Subtext explaining admin control when paused
+                    if !remoteStateService.sensorEnabled {
+                        VStack(spacing: 4) {
+                            Text("Monitoring paused by administrator")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            if let itSupport = remoteStateService.itSupport, !itSupport.isEmpty {
+                                Text("Contact: \(itSupport)")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+
+                    if remoteStateService.proxyActive, let port = proxyService.configuredPort {
                         Text("Port \(port)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-
-                // Toggle Button
-                Button(action: toggleProxy) {
-                    HStack {
-                        Image(systemName: proxyService.isProxyEnabled ? "stop.fill" : "play.fill")
-                        Text(proxyService.isProxyEnabled ? "Stop Monitoring" : "Start Monitoring")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(proxyService.isProxyEnabled ? .orange : .accentColor)
-                .disabled(isToggling || !certService.isCAInstalled)
-                .padding(.horizontal, 32)
 
                 if !certService.isCAInstalled {
                     Text("Install certificate in Settings first")
@@ -105,32 +99,38 @@ struct HomeTab: View {
     }
 
     private var statusColor: Color {
-        if proxyService.isProxyEnabled {
-            return .green
+        if !remoteStateService.sensorEnabled {
+            return .yellow  // Paused by admin
+        } else if remoteStateService.proxyActive {
+            return .green  // Actively monitoring
         } else if !certService.isCAInstalled {
-            return .gray
+            return .gray  // Setup required
         } else {
-            return .orange
+            return .orange  // Starting...
         }
     }
 
     private var statusIcon: String {
-        if proxyService.isProxyEnabled {
-            return "checkmark.shield.fill"
+        if !remoteStateService.sensorEnabled {
+            return "pause.circle.fill"  // Paused by admin
+        } else if remoteStateService.proxyActive {
+            return "checkmark.shield.fill"  // Actively monitoring
         } else if !certService.isCAInstalled {
-            return "shield.slash"
+            return "shield.slash"  // Setup required
         } else {
-            return "shield"
+            return "arrow.triangle.2.circlepath"  // Starting...
         }
     }
 
     private var statusText: String {
-        if proxyService.isProxyEnabled {
+        if !remoteStateService.sensorEnabled {
+            return "Monitoring Paused"
+        } else if remoteStateService.proxyActive {
             return "Monitoring Active"
         } else if !certService.isCAInstalled {
             return "Setup Required"
         } else {
-            return "Monitoring Paused"
+            return "Starting..."
         }
     }
 
@@ -139,34 +139,6 @@ struct HomeTab: View {
             return lastSync.relativeFormatted
         } else {
             return "–"
-        }
-    }
-
-    private func toggleProxy() {
-        isToggling = true
-
-        Task {
-            do {
-                if proxyService.isProxyEnabled {
-                    // Stop
-                    try await proxyService.disableProxy()
-                    mitmService.stop()
-                    appState.isProxyEnabled = false
-                } else {
-                    // Start
-                    try await mitmService.start()
-                    guard let port = mitmService.currentPort else {
-                        throw ProxyError.commandFailed("Failed to start proxy")
-                    }
-                    try await proxyService.enableProxy(port: port)
-                    appState.isProxyEnabled = true
-                    appState.currentPort = port
-                }
-            } catch {
-                print("Toggle proxy error: \(error)")
-                mitmService.stop()
-            }
-            isToggling = false
         }
     }
 }

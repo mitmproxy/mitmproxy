@@ -24,15 +24,12 @@ struct MainView: View {
 struct SetupView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var certService = CertificateService.shared
-    @StateObject private var proxyService = ProxyService.shared
-    @StateObject private var mitmService = MITMService.shared
 
     @State private var isProcessingCert = false
-    @State private var isProcessingProxy = false
     @State private var errorMessage: String?
 
     private var allComplete: Bool {
-        certService.isCAInstalled && proxyService.isProxyEnabled
+        certService.isCAInstalled
     }
 
     var body: some View {
@@ -105,17 +102,6 @@ struct SetupView: View {
                 ) {
                     installCertificate()
                 }
-
-                SetupStep(
-                    number: 2,
-                    title: "Enable Proxy",
-                    description: "Routes traffic through Oximy",
-                    isComplete: proxyService.isProxyEnabled,
-                    isProcessing: isProcessingProxy,
-                    isDisabled: !certService.isCAInstalled
-                ) {
-                    enableProxy()
-                }
             }
             .padding(.horizontal, 24)
 
@@ -135,14 +121,14 @@ struct SetupView: View {
 
             Spacer()
 
-            // Start Button
+            // Continue Button
             VStack(spacing: 12) {
                 Button(action: startMonitoring) {
                     HStack {
                         if allComplete {
-                            Image(systemName: "play.fill")
+                            Image(systemName: "checkmark.circle.fill")
                         }
-                        Text(allComplete ? "Start Monitoring" : "Complete Setup Above")
+                        Text(allComplete ? "Continue" : "Complete Setup Above")
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -184,32 +170,6 @@ struct SetupView: View {
                 errorMessage = error.localizedDescription
             }
             isProcessingCert = false
-        }
-    }
-
-    private func enableProxy() {
-        guard certService.isCAInstalled else {
-            errorMessage = "Install certificate first"
-            return
-        }
-
-        isProcessingProxy = true
-        errorMessage = nil
-
-        Task {
-            do {
-                try await mitmService.start()
-                guard let port = mitmService.currentPort else {
-                    throw ProxyError.commandFailed("Proxy failed to start")
-                }
-                try await proxyService.enableProxy(port: port)
-                appState.isProxyEnabled = true
-                appState.currentPort = port
-            } catch {
-                errorMessage = error.localizedDescription
-                mitmService.stop()
-            }
-            isProcessingProxy = false
         }
     }
 
@@ -297,6 +257,7 @@ struct SetupStep: View {
 
 struct DashboardView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var mitmService = MITMService.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -324,6 +285,20 @@ struct DashboardView: View {
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .onAppear {
+            // Auto-start mitmproxy when entering ready phase
+            // The addon will control proxy enable/disable based on remote sensor_enabled state
+            if !mitmService.isRunning {
+                Task {
+                    do {
+                        try await mitmService.start()
+                        print("[DashboardView] MITMService auto-started successfully")
+                    } catch {
+                        print("[DashboardView] MITMService auto-start failed: \(error)")
+                    }
+                }
+            }
+        }
     }
 }
 

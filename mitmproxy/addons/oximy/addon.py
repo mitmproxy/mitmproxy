@@ -57,13 +57,27 @@ logger = logging.getLogger(__name__)
 PROXY_HOST = "127.0.0.1"
 
 # Thread safety locks for global state
-_globals_lock = threading.Lock()  # Protects _previous_sensor_enabled, _proxy_port, _addon_manages_proxy
+_globals_lock = threading.RLock()  # Reentrant lock - allows nested acquisition by same thread
 
 # Track previous sensor_enabled state to detect changes
 _previous_sensor_enabled: bool | None = None
 
 # Store the actual proxy port once configured (needed for enable/disable toggle)
 _proxy_port: str | None = None
+
+# Master switch for all traffic interception - when False, all hooks return immediately
+_sensor_active: bool = True
+
+# Debounce state for sensor toggle (prevents rapid on/off from network glitches)
+SENSOR_DEBOUNCE_SECONDS = 6.0  # 2 poll cycles at 3s interval
+_sensor_pending_state: bool | None = None  # Pending state change waiting for debounce
+_sensor_pending_since: float = 0.0  # Timestamp when pending state was first seen
+
+# Track previous force_sync state to detect false→true transitions (one-shot trigger)
+_previous_force_sync: bool = False
+
+# Track if system proxy is actively configured (written to remote-state.json for Swift)
+_proxy_active: bool = False
 
 
 def _get_network_services() -> list[str]:
@@ -185,16 +199,42 @@ _cleanup_done = False
 _addon_manages_proxy = False  # Tracks if addon enabled system proxy (for cleanup)
 
 
+def _write_proxy_state() -> None:
+    """Write current proxy state to remote-state.json for Swift app."""
+    state_file = Path("~/.oximy/remote-state.json").expanduser()
+    try:
+        # Read existing state if present
+        existing = {}
+        if state_file.exists():
+            with open(state_file, encoding="utf-8") as f:
+                existing = json.load(f)
+
+        # Update proxy status
+        existing["proxy_active"] = _proxy_active
+        existing["proxy_port"] = _proxy_port
+        existing["timestamp"] = datetime.now(timezone.utc).isoformat()
+
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(state_file, "w", encoding="utf-8") as f:
+            json.dump(existing, f, indent=2)
+        logger.debug(f"Proxy state written: active={_proxy_active}, port={_proxy_port}")
+    except (IOError, OSError, json.JSONDecodeError) as e:
+        logger.warning(f"Failed to write proxy state: {e}")
+
+
 def _emergency_cleanup() -> None:
     """Emergency cleanup - disable proxy even if mitmproxy crashes."""
-    global _cleanup_done
+    global _cleanup_done, _proxy_active
     if _cleanup_done:
         return
     _cleanup_done = True
     # Only disable proxy if we enabled it (host app may handle proxy management)
-    if _addon_manages_proxy:
-        logger.info("Emergency cleanup: disabling system proxy...")
-        _set_system_proxy(enable=False)
+    with _globals_lock:
+        if _addon_manages_proxy:
+            logger.info("Emergency cleanup: disabling system proxy...")
+            _set_system_proxy(enable=False)
+            _proxy_active = False
+            _write_proxy_state()
 
 
 def _signal_handler(signum: int, frame) -> None:
@@ -343,7 +383,7 @@ DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
 )
 DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = int(os.environ.get(
     "OXIMY_CONFIG_REFRESH_INTERVAL",
-    "1800"  # 30 minutes default
+    "3"  # 3 seconds for real-time sensor control
 ))
 
 
@@ -411,16 +451,57 @@ def fetch_sensor_config(
         return default_config
 
 
+def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
+    """Apply sensor state change - enables or disables all interception.
+
+    When disabling:
+    - Sets _sensor_active = False (stops all hook processing)
+    - Disables system proxy
+    - Flushes pending traces to cloud
+
+    When enabling:
+    - Sets _sensor_active = True (resumes hook processing)
+    - Enables system proxy
+    """
+    global _sensor_active, _previous_sensor_enabled, _addon_manages_proxy, _proxy_active
+
+    with _globals_lock:
+        if enabled:
+            logger.info("===== SENSOR ENABLED - Resuming all interception =====")
+            _sensor_active = True
+            _set_system_proxy(enable=True)
+            _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
+            _proxy_active = True
+            _write_proxy_state()
+        else:
+            logger.info("===== SENSOR DISABLED - Stopping all interception =====")
+            _sensor_active = False
+            _set_system_proxy(enable=False)
+            _proxy_active = False
+            _write_proxy_state()
+
+            # Flush pending traces before going quiet
+            if addon_instance and addon_instance._direct_uploader:
+                try:
+                    uploaded = addon_instance._direct_uploader.upload_all()
+                    if uploaded > 0:
+                        logger.info(f"Flushed {uploaded} traces before sensor disable")
+                except Exception as e:
+                    logger.warning(f"Failed to flush traces on sensor disable: {e}")
+
+        _previous_sensor_enabled = enabled
+
+
 def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     """Parse API response into normalized config format.
 
     Also executes remote commands directly:
-    - sensor_enabled: Enable/disable system proxy
+    - sensor_enabled: Enable/disable system proxy (with 6s debounce)
     - force_sync: Upload pending traces immediately
     - clear_cache: Delete local trace files
     - force_logout: Written to state file for Swift to handle (clears credentials)
     """
-    global _previous_sensor_enabled
+    global _previous_sensor_enabled, _sensor_pending_state, _sensor_pending_since, _previous_force_sync
     data = raw.get("data", raw)
 
     # Parse allowed_app_origins (hosts = browsers, non_hosts = AI-native apps)
@@ -431,20 +512,45 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
 
     # --- EXECUTE COMMANDS DIRECTLY ---
 
-    # Handle sensor_enabled (proxy management) - thread-safe access
+    # Handle sensor_enabled with debounce (prevents rapid toggle from glitches)
     sensor_enabled = commands.get("sensor_enabled", True)
-    with _globals_lock:
-        if _previous_sensor_enabled is not None and sensor_enabled != _previous_sensor_enabled:
-            logger.info(f"sensor_enabled changed: {_previous_sensor_enabled} -> {sensor_enabled}")
-            if sensor_enabled:
-                _set_system_proxy(enable=True)
-            else:
-                _set_system_proxy(enable=False)
-        _previous_sensor_enabled = sensor_enabled
+    current_time = time.time()
 
-    # Handle force_sync (upload pending traces)
-    if commands.get("force_sync"):
-        logger.info("Executing force_sync command")
+    with _globals_lock:
+        # First time initialization - apply immediately, no debounce
+        if _previous_sensor_enabled is None:
+            if not sensor_enabled:
+                logger.info("Sensor disabled on startup - proxy not activated")
+            _apply_sensor_state(sensor_enabled, addon_instance)
+            _sensor_pending_state = None
+
+        # State changed from current active state
+        elif sensor_enabled != _previous_sensor_enabled:
+            # Check if this is a new pending state or continuation
+            if _sensor_pending_state != sensor_enabled:
+                # New pending state, start debounce timer
+                _sensor_pending_state = sensor_enabled
+                _sensor_pending_since = current_time
+                logger.info(f"Sensor state change pending: {_previous_sensor_enabled} -> {sensor_enabled} (debouncing for {SENSOR_DEBOUNCE_SECONDS}s)")
+            elif current_time - _sensor_pending_since >= SENSOR_DEBOUNCE_SECONDS:
+                # State has been stable for debounce period, apply it
+                logger.info(f"Sensor state confirmed after {SENSOR_DEBOUNCE_SECONDS}s debounce")
+                _apply_sensor_state(sensor_enabled, addon_instance)
+                _sensor_pending_state = None
+            else:
+                # Still waiting for debounce
+                remaining = SENSOR_DEBOUNCE_SECONDS - (current_time - _sensor_pending_since)
+                logger.debug(f"Sensor state change pending, {remaining:.1f}s remaining")
+
+        # State reverted to current before debounce completed
+        elif _sensor_pending_state is not None:
+            logger.info(f"Sensor state change cancelled (reverted to {sensor_enabled})")
+            _sensor_pending_state = None
+
+    # Handle force_sync (upload pending traces) - only on false→true transition
+    force_sync = commands.get("force_sync", False)
+    if force_sync and not _previous_force_sync:
+        logger.info("Executing force_sync command (remote trigger)")
         if addon_instance is not None:
             try:
                 addon_instance.upload_all_traces()
@@ -452,6 +558,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
                 logger.warning(f"force_sync failed: {e}")
         else:
             logger.debug("force_sync skipped: no addon instance available")
+    _previous_force_sync = force_sync
 
     # Handle clear_cache (delete local trace files)
     if commands.get("clear_cache"):
@@ -467,6 +574,8 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "force_logout": commands.get("force_logout", False),
             "tenantId": data.get("tenantId"),
             "itSupport": data.get("itSupport"),
+            "proxy_active": _proxy_active,
+            "proxy_port": _proxy_port,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         state_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1876,7 +1985,7 @@ class OximyAddon:
         if self._port_configured:
             return
 
-        global _addon_manages_proxy, _proxy_port
+        global _addon_manages_proxy, _proxy_port, _proxy_active
         self._port_configured = True
 
         # Get actual bound port from proxyserver (available now that server is running)
@@ -1884,9 +1993,18 @@ class OximyAddon:
         if proxyserver and proxyserver.listen_addrs():
             with _globals_lock:
                 _proxy_port = str(proxyserver.listen_addrs()[0][1])
-                logger.info(f"Configuring system proxy with port {_proxy_port}")
-                _set_system_proxy(enable=True)
-                _addon_manages_proxy = True
+                # Only enable proxy if sensor is active (may be disabled on startup)
+                if _sensor_active:
+                    logger.info(f"Configuring system proxy with port {_proxy_port}")
+                    _set_system_proxy(enable=True)
+                    _addon_manages_proxy = True
+                    _proxy_active = True
+                    _write_proxy_state()
+                else:
+                    logger.info(f"Proxy port {_proxy_port} captured, but sensor disabled - proxy not activated")
+                    _addon_manages_proxy = False
+                    _proxy_active = False
+                    _write_proxy_state()
         else:
             logger.warning("Could not get proxy port - system proxy not configured")
 
@@ -1948,6 +2066,11 @@ class OximyAddon:
         if not self._enabled:
             return
 
+        # Sensor disabled - passthrough ALL TLS connections (no interception)
+        if not _sensor_active:
+            data.ignore_connection = True
+            return
+
         host = data.client_hello.sni or (data.context.server.address[0] if data.context.server.address else None)
         if not host:
             return
@@ -1966,6 +2089,8 @@ class OximyAddon:
         """Learn certificate-pinned hosts from TLS failures."""
         if not self._enabled or not self._tls:
             return
+        if not _sensor_active:
+            return  # Sensor disabled - don't record failures
 
         host = data.context.server.sni or (data.context.server.address[0] if data.context.server.address else None)
         if host:
@@ -1987,6 +2112,8 @@ class OximyAddon:
         """
         if not self._enabled:
             return
+        if not _sensor_active:
+            return  # Sensor disabled - passthrough all traffic
 
         host = flow.request.pretty_host
         path = flow.request.path
@@ -2086,6 +2213,8 @@ class OximyAddon:
         """Write trace for captured response."""
         if not self._enabled:
             return
+        if not _sensor_active:
+            return  # Sensor disabled - skip trace writing
 
         if not flow.response:
             return
@@ -2480,6 +2609,8 @@ class OximyAddon:
         """Called when WebSocket connection is established."""
         if not self._enabled:
             return
+        if not _sensor_active:
+            return  # Sensor disabled - skip WebSocket tracking
 
         host = flow.request.pretty_host
         path = flow.request.path
@@ -2494,6 +2625,8 @@ class OximyAddon:
         """Capture WebSocket messages in real-time."""
         if not self._enabled:
             return
+        if not _sensor_active:
+            return  # Sensor disabled - skip message capture
 
         host = flow.request.pretty_host
         path = flow.request.path
@@ -2554,6 +2687,8 @@ class OximyAddon:
         """Write WebSocket trace on connection close."""
         if not self._enabled:
             return
+        if not _sensor_active:
+            return  # Sensor disabled - skip final trace write
 
         host = flow.request.pretty_host
         path = flow.request.path
@@ -2667,6 +2802,11 @@ class OximyAddon:
         if not self._direct_uploader or not self._buffer:
             return
 
+        # Skip regular uploads when sensor is disabled
+        # (Any pending traces were flushed when sensor was disabled)
+        if not _sensor_active:
+            return
+
         now = time.time()
         time_elapsed = now - self._last_upload_time >= self._upload_interval_seconds
         count_reached = self._traces_since_upload >= self._upload_threshold_count
@@ -2742,7 +2882,7 @@ class OximyAddon:
 
     def _cleanup(self) -> None:
         """Clean up resources."""
-        global _cleanup_done
+        global _cleanup_done, _proxy_active
         if _cleanup_done:
             return
         _cleanup_done = True
@@ -2758,8 +2898,11 @@ class OximyAddon:
             self._force_sync_thread.join(timeout=1)
 
         # Only disable system proxy if we enabled it
-        if _addon_manages_proxy:
-            _set_system_proxy(enable=False)
+        with _globals_lock:
+            if _addon_manages_proxy:
+                _set_system_proxy(enable=False)
+                _proxy_active = False
+                _write_proxy_state()
 
         # Cloud-first: try to upload remaining traces from memory buffer
         if self._buffer and self._buffer.size() > 0:

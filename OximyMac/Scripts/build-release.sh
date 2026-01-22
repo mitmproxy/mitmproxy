@@ -119,46 +119,13 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 Oximy. All rights reserved.</string>
-    <key>SUFeedURL</key>
-    <string>https://github.com/OximyHQ/mitmproxy/releases/latest/download/appcast.xml</string>
-    <key>SUPublicEDKey</key>
-    <string>${SPARKLE_PUBLIC_KEY:-3oJZV2w0DvQ80LCetz3lgL+DwfsFFYfqxsFHPlj0KQE=}</string>
-    <key>SUEnableAutomaticChecks</key>
-    <true/>
-    <key>SUAllowsAutomaticUpdates</key>
-    <true/>
-    <key>SUScheduledCheckInterval</key>
-    <integer>86400</integer>
 </dict>
 </plist>
 EOF
 
-# Copy frameworks (Sparkle, Sentry)
+# Copy frameworks (Sentry)
 echo "[5/8] Copying frameworks..."
 mkdir -p "$APP_BUNDLE/Contents/Frameworks"
-
-# Copy Sparkle.framework - check multiple possible locations
-# Universal builds and xcframework both use macos-arm64_x86_64 which is already universal
-SPARKLE_FRAMEWORK=""
-for path in \
-    "$PROJECT_DIR/.build/apple/Products/Release/Sparkle.framework" \
-    "$PROJECT_DIR/.build/apple/Products/Debug/Sparkle.framework" \
-    "$PROJECT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG/Sparkle.framework" \
-    "$PROJECT_DIR/.build/$BUILD_CONFIG/Sparkle.framework" \
-    "$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"; do
-    if [ -d "$path" ]; then
-        SPARKLE_FRAMEWORK="$path"
-        break
-    fi
-done
-if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    echo "    Copying Sparkle.framework from $SPARKLE_FRAMEWORK..."
-    cp -R "$SPARKLE_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/"
-else
-    echo "    ERROR: Sparkle.framework not found"
-    echo "    Run 'swift build -c $BUILD_CONFIG' first to fetch Sparkle package"
-    exit 1
-fi
 
 # Copy Sentry.framework - check multiple possible locations
 SENTRY_FRAMEWORK=""
@@ -258,26 +225,6 @@ if [ -n "$DEVELOPER_ID" ]; then
     ENTITLEMENTS_FILE="$PROJECT_DIR/OximyMac.entitlements"
 
     # Sign embedded frameworks first (required for notarization)
-    # Sparkle framework
-    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]; then
-        echo "    Signing Sparkle.framework..."
-        codesign --force --options runtime --timestamp \
-            --sign "$DEVELOPER_ID" \
-            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc"
-        codesign --force --options runtime --timestamp \
-            --sign "$DEVELOPER_ID" \
-            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc"
-        codesign --force --options runtime --timestamp \
-            --sign "$DEVELOPER_ID" \
-            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate"
-        codesign --force --options runtime --timestamp \
-            --sign "$DEVELOPER_ID" \
-            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app"
-        codesign --force --options runtime --timestamp \
-            --sign "$DEVELOPER_ID" \
-            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
-    fi
-
     # Sentry framework
     if [ -d "$APP_BUNDLE/Contents/Frameworks/Sentry.framework" ]; then
         echo "    Signing Sentry.framework..."
@@ -375,9 +322,6 @@ DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_PATH="$BUILD_DIR/$DMG_NAME"
 echo "    App bundle ready for notarization: $APP_BUNDLE"
 echo "    DMG will be created after stapling notarization ticket"
-
-# Note: Sparkle signing happens in CI after DMG creation
-echo "    Sparkle signing will be done in CI after DMG creation"
 
 echo ""
 echo "=== Build Complete ==="

@@ -4,22 +4,15 @@ import AppKit
 struct EnrollmentView: View {
     @EnvironmentObject var appState: AppState
 
-    @State private var digits: [String] = Array(repeating: "", count: 6)
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @State private var showSuccess = false
-    @FocusState private var focusedIndex: Int?
-
-    private var enrollmentCode: String {
-        digits.joined()
-    }
 
     var body: some View {
         VStack(spacing: 0) {
             // Progress indicator - Step 1 of 2
             HStack(spacing: 8) {
-                ProgressDot(step: 1, isComplete: showSuccess, isCurrent: !showSuccess)
-                ProgressLine(isComplete: showSuccess)
+                ProgressDot(step: 1, isComplete: false, isCurrent: true)
+                ProgressLine(isComplete: false)
                 ProgressDot(step: 2, isComplete: false, isCurrent: false)
             }
             .padding(.top, 20)
@@ -42,14 +35,14 @@ struct EnrollmentView: View {
 
             // Instructions
             HStack(spacing: 10) {
-                Image(systemName: "number.square.fill")
+                Image(systemName: "globe")
                     .font(.system(size: 20))
                     .foregroundColor(.accentColor)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Enter your 6-digit code")
+                    Text("Sign in with your browser")
                         .font(.system(size: 13, weight: .medium))
-                    Text("Find it in your Oximy dashboard")
+                    Text("You'll be redirected to authenticate")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                 }
@@ -61,34 +54,57 @@ struct EnrollmentView: View {
             .padding(.horizontal, 24)
             .padding(.top, 16)
 
-            // Digit Boxes
-            HStack(spacing: 8) {
-                ForEach(0..<6, id: \.self) { index in
-                    DigitField(
-                        digit: $digits[index],
-                        isFocused: focusedIndex == index,
-                        onTap: { focusedIndex = index },
-                        onDigitEntered: {
-                            if index < 5 {
-                                focusedIndex = index + 1
-                            } else {
-                                focusedIndex = nil
-                                if enrollmentCode.count == 6 {
-                                    submitCode()
-                                }
-                            }
-                        },
-                        onDelete: {
-                            if digits[index].isEmpty && index > 0 {
-                                focusedIndex = index - 1
-                            }
-                        }
-                    )
-                    .focused($focusedIndex, equals: index)
+            // How it works
+            VStack(alignment: .leading, spacing: 12) {
+                Text("How it works:")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.secondary)
+
+                HStack(alignment: .top, spacing: 10) {
+                    Text("1")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 18, height: 18)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+
+                    Text("Click the button below to open your browser")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+
+                HStack(alignment: .top, spacing: 10) {
+                    Text("2")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 18, height: 18)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+
+                    Text("Enter your 6-digit code on the web page")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+
+                HStack(alignment: .top, spacing: 10) {
+                    Text("3")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 18, height: 18)
+                        .background(Color.accentColor)
+                        .clipShape(Circle())
+
+                    Text("You'll be automatically signed in here")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
                 }
             }
-            .padding(.top, 20)
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .cornerRadius(10)
             .padding(.horizontal, 24)
+            .padding(.top, 16)
 
             // Error message - fixed height container to prevent layout shifts
             VStack {
@@ -112,25 +128,25 @@ struct EnrollmentView: View {
 
             Spacer()
 
-            // Submit Button
+            // Login Button
             VStack(spacing: 12) {
-                Button(action: submitCode) {
+                Button(action: startBrowserLogin) {
                     HStack(spacing: 8) {
                         if isLoading {
                             ProgressView()
                                 .scaleEffect(0.7)
                                 .frame(width: 16, height: 16)
-                        } else if showSuccess {
-                            Image(systemName: "checkmark.circle.fill")
+                        } else {
+                            Image(systemName: "arrow.up.right.square")
                         }
-                        Text(buttonText)
+                        Text(isLoading ? "Opening Browser..." : "Login with Browser")
                             .fontWeight(.medium)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 38)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(enrollmentCode.count != 6 || isLoading || showSuccess)
+                .disabled(isLoading)
                 .padding(.horizontal, 24)
 
                 HStack(spacing: 4) {
@@ -147,203 +163,65 @@ struct EnrollmentView: View {
             .padding(.bottom, 20)
         }
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                focusedIndex = 0
-            }
-        }
     }
 
-    private var buttonText: String {
-        if showSuccess {
-            return "Connected!"
-        } else if isLoading {
-            return "Connecting..."
-        } else {
-            return "Connect"
-        }
-    }
-
-    private func submitCode() {
-        guard enrollmentCode.count == 6, !isLoading else { return }
-
+    private func startBrowserLogin() {
+        print("[EnrollmentView] startBrowserLogin called")
         isLoading = true
         errorMessage = nil
 
-        Task {
-            do {
-                let deviceData = try await APIClient.shared.registerDevice(enrollmentCode: enrollmentCode)
+        // Generate and store state for CSRF protection
+        let state = UUID().uuidString
+        UserDefaults.standard.set(state, forKey: Constants.Defaults.authState)
+        print("[EnrollmentView] State generated: \(state)")
 
-                showSuccess = true
-                try? await Task.sleep(nanoseconds: 500_000_000)
+        // Collect device info to send to auth page
+        let deviceInfo = collectDeviceInfo()
 
-                appState.login(
-                    workspaceName: deviceData.workspaceName ?? deviceData.workspaceId,
-                    deviceToken: deviceData.deviceToken
-                )
-                appState.deviceId = deviceData.deviceId
-                appState.completeEnrollment()
+        // Build auth URL
+        var components = URLComponents(url: Constants.authURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "state", value: state),
+            URLQueryItem(name: "device_info", value: deviceInfo),
+            URLQueryItem(name: "callback", value: "oximy://auth/callback")
+        ]
 
-                SentryService.shared.addStateBreadcrumb(
-                    category: "enrollment",
-                    message: "Device enrolled",
-                    data: ["deviceId": deviceData.deviceId]
-                )
+        if let url = components.url {
+            print("[EnrollmentView] Opening URL: \(url.absoluteString)")
+            let success = NSWorkspace.shared.open(url)
+            print("[EnrollmentView] NSWorkspace.open returned: \(success)")
+        } else {
+            print("[EnrollmentView] ERROR: Failed to construct URL")
+        }
 
-            } catch APIError.invalidEnrollmentCode {
-                errorMessage = "Invalid code. Please check and try again."
-                clearDigits()
-            } catch APIError.enrollmentExpired {
-                errorMessage = "Code expired. Get a new one from your dashboard."
-                clearDigits()
-            } catch APIError.conflict {
-                errorMessage = "This device is already registered."
-            } catch {
-                errorMessage = "Connection failed. Please try again."
-            }
-
+        // Reset loading state after a delay (user is in browser now)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             isLoading = false
         }
     }
 
-    private func clearDigits() {
-        digits = Array(repeating: "", count: 6)
-        focusedIndex = 0
+    private func collectDeviceInfo() -> String {
+        // Collect device info to send to auth page
+        let hostname = Host.current().localizedName ?? "Unknown"
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let sensorVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+
+        let info: [String: String] = [
+            "hostname": hostname,
+            "os_version": osVersion,
+            "sensor_version": sensorVersion
+        ]
+
+        // Encode as base64 JSON
+        if let jsonData = try? JSONEncoder().encode(info),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            return Data(jsonString.utf8).base64EncodedString()
+        }
+        return ""
     }
 
     private func openSignUp() {
         NSWorkspace.shared.open(Constants.signUpURL)
-    }
-}
-
-// MARK: - Single Digit Field
-
-struct DigitField: View {
-    @Binding var digit: String
-    let isFocused: Bool
-    let onTap: () -> Void
-    let onDigitEntered: () -> Void
-    let onDelete: () -> Void
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(fillColor)
-
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(borderColor, lineWidth: isFocused ? 2.5 : 1.5)
-
-            if digit.isEmpty {
-                if isFocused {
-                    // Blinking cursor
-                    Rectangle()
-                        .fill(Color.accentColor)
-                        .frame(width: 2, height: 24)
-                }
-            } else {
-                Text(digit)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-            }
-        }
-        .frame(width: 44, height: 54)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
-        .background(
-            DigitInputHandler(
-                digit: $digit,
-                isFocused: isFocused,
-                onDigitEntered: onDigitEntered,
-                onDelete: onDelete
-            )
-        )
-    }
-
-    private var fillColor: Color {
-        if !digit.isEmpty {
-            return Color.accentColor.opacity(0.1)
-        }
-        return Color(nsColor: .controlBackgroundColor)
-    }
-
-    private var borderColor: Color {
-        if isFocused {
-            return .accentColor
-        } else if !digit.isEmpty {
-            return .accentColor.opacity(0.4)
-        } else {
-            return .secondary.opacity(0.3)
-        }
-    }
-}
-
-// MARK: - Input Handler (NSViewRepresentable for key events)
-
-struct DigitInputHandler: NSViewRepresentable {
-    @Binding var digit: String
-    let isFocused: Bool
-    let onDigitEntered: () -> Void
-    let onDelete: () -> Void
-
-    func makeNSView(context: Context) -> KeyCaptureView {
-        let view = KeyCaptureView()
-        view.onKeyPress = { key in
-            handleKey(key)
-        }
-        return view
-    }
-
-    func updateNSView(_ nsView: KeyCaptureView, context: Context) {
-        if isFocused {
-            DispatchQueue.main.async {
-                nsView.window?.makeFirstResponder(nsView)
-            }
-        }
-    }
-
-    private func handleKey(_ key: String) {
-        if key == "delete" {
-            if digit.isEmpty {
-                onDelete()
-            } else {
-                digit = ""
-            }
-        } else if key.count == 1, let char = key.first, char.isNumber {
-            digit = key
-            onDigitEntered()
-        }
-    }
-}
-
-class KeyCaptureView: NSView {
-    var onKeyPress: ((String) -> Void)?
-
-    override var acceptsFirstResponder: Bool { true }
-
-    override func keyDown(with event: NSEvent) {
-        if event.keyCode == 51 { // Delete key
-            onKeyPress?("delete")
-        } else if let chars = event.characters {
-            onKeyPress?(chars)
-        }
-    }
-
-    // Handle paste
-    @objc func paste(_ sender: Any?) {
-        if let string = NSPasteboard.general.string(forType: .string) {
-            let digits = string.filter { $0.isNumber }
-            for char in digits.prefix(6) {
-                onKeyPress?(String(char))
-            }
-        }
-    }
-
-    override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "v" {
-            paste(nil)
-            return true
-        }
-        return super.performKeyEquivalent(with: event)
     }
 }
 

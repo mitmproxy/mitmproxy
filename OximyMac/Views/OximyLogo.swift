@@ -109,6 +109,44 @@ func createMenuBarIcon() -> NSImage {
     return NSImage(systemSymbolName: "square.grid.3x3.fill", accessibilityDescription: "Oximy")!
 }
 
+/// Creates a yellow-tinted menu bar icon for "monitoring paused" state
+/// Non-template so the yellow color is preserved
+func createMenuBarIconPaused() -> NSImage {
+    // Use frame.png (transparent background) for menu bar
+    if let path = resolveResourcePath("frame", extension: "png"),
+       let originalImage = NSImage(contentsOfFile: path) {
+
+        let size = NSSize(width: 18, height: 18)
+        let tintedImage = NSImage(size: size, flipped: false) { rect in
+            // Draw the original image scaled to menu bar size
+            originalImage.draw(in: rect,
+                             from: NSRect(origin: .zero, size: originalImage.size),
+                             operation: .sourceOver,
+                             fraction: 1.0)
+
+            // Apply yellow tint over the existing pixels
+            NSColor.systemYellow.set()
+            rect.fill(using: .sourceAtop)
+
+            return true
+        }
+
+        // NOT a template - preserve the yellow color
+        tintedImage.isTemplate = false
+        return tintedImage
+    }
+
+    // Fallback to SF Symbol with yellow configuration
+    let config = NSImage.SymbolConfiguration(paletteColors: [.systemYellow])
+    if let symbol = NSImage(systemSymbolName: "pause.circle.fill", accessibilityDescription: "Oximy Paused")?
+        .withSymbolConfiguration(config) {
+        symbol.size = NSSize(width: 18, height: 18)
+        return symbol
+    }
+
+    return NSImage(systemSymbolName: "pause.circle.fill", accessibilityDescription: "Oximy Paused")!
+}
+
 #Preview("Logo") {
     OximyLogo(size: 90)
         .padding()

@@ -11,7 +11,7 @@
     "state_file": "~/.oximy/upload-state.json",
     "force_sync_trigger": "~/.oximy/force-sync",
     "batch_size": 500,
-    "interval_seconds": 2,
+    "interval_seconds": 3,
     "threshold_count": 100
   }
 }

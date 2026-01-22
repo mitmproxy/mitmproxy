@@ -1,5 +1,6 @@
 import Foundation
 import ServiceManagement
+import AppKit
 
 /// Service to manage auto-start on login
 @MainActor
@@ -9,8 +10,40 @@ class LaunchService: ObservableObject {
     @Published var isEnabled: Bool = false
     @Published var lastError: String?
 
+    /// UserDefaults key to track if we've done the initial auto-enable
+    private static let initialAutoEnableDone = "launchAtLoginInitialSetupDone"
+
     private init() {
         checkStatus()
+        enableOnFirstLaunch()
+    }
+
+    // MARK: - First Launch Auto-Enable
+
+    /// Automatically enable launch at login on first run
+    /// Users can still disable this from macOS System Settings > Login Items
+    private func enableOnFirstLaunch() {
+        // Check if we've already done the initial auto-enable
+        if UserDefaults.standard.bool(forKey: Self.initialAutoEnableDone) {
+            print("[LaunchService] Initial auto-enable already done, skipping")
+            return
+        }
+
+        // Mark that we've done the initial setup (do this BEFORE enabling to avoid re-trying on failure)
+        UserDefaults.standard.set(true, forKey: Self.initialAutoEnableDone)
+
+        // Only enable if not already enabled
+        if !isEnabled {
+            do {
+                try enable()
+                print("[LaunchService] Auto-enabled launch at login on first run")
+            } catch {
+                print("[LaunchService] Failed to auto-enable launch at login: \(error)")
+                // Don't reset the flag - user can enable from macOS System Settings if needed
+            }
+        } else {
+            print("[LaunchService] Launch at login already enabled")
+        }
     }
 
     // MARK: - Status
@@ -124,6 +157,9 @@ class LaunchService: ObservableObject {
     }
 
     private func createLaunchAgentPlist() throws {
+        // Use the actual executable path instead of hardcoded path
+        let executablePath = Bundle.main.executableURL?.path ?? "/Applications/Oximy.app/Contents/MacOS/Oximy"
+
         let plistContent = """
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -133,7 +169,7 @@ class LaunchService: ObservableObject {
             <string>com.oximy.agent</string>
             <key>ProgramArguments</key>
             <array>
-                <string>/Applications/Oximy.app/Contents/MacOS/Oximy</string>
+                <string>\(executablePath)</string>
             </array>
             <key>RunAtLoad</key>
             <true/>
@@ -179,6 +215,21 @@ class LaunchService: ObservableObject {
             }
         } else {
             return isEnabled ? "Enabled (LaunchAgent)" : "Disabled"
+        }
+    }
+
+    /// Check if the app requires user approval in System Settings
+    var requiresApproval: Bool {
+        if #available(macOS 13.0, *) {
+            return SMAppService.mainApp.status == .requiresApproval
+        }
+        return false
+    }
+
+    /// Open System Settings to Login Items
+    func openLoginItemsSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") {
+            NSWorkspace.shared.open(url)
         }
     }
 }
