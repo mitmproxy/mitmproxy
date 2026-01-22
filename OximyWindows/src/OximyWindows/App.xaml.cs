@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Web;
 using System.Windows;
 using Microsoft.Win32;
 using OximyWindows.Core;
@@ -14,6 +15,7 @@ public partial class App : Application
     private static Mutex? _mutex;
     private MainWindow? _mainWindow;
     private static TextWriterTraceListener? _fileTraceListener;
+    private string? _pendingAuthUrl;
 
     // Core Services
     public static MitmService MitmService { get; } = new();
@@ -26,6 +28,7 @@ public partial class App : Application
     public static APIClient APIClient => APIClient.Instance;
     public static HeartbeatService HeartbeatService => HeartbeatService.Instance;
     public static SyncService SyncService => SyncService.Instance;
+    public static RemoteStateService RemoteStateService => RemoteStateService.Instance;
 
     /// <summary>
     /// Path to the debug log file.
@@ -57,6 +60,16 @@ public partial class App : Application
             return;
         }
 
+        // Register oximy:// URL scheme for deep linking
+        RegisterUrlScheme();
+
+        // Handle deep link if launched via oximy:// URL
+        if (e.Args.Length > 0 && e.Args[0].StartsWith("oximy://", StringComparison.OrdinalIgnoreCase))
+        {
+            // Store the URL to handle after main window is created
+            _pendingAuthUrl = e.Args[0];
+        }
+
         base.OnStartup(e);
 
         // Ensure directories exist
@@ -86,6 +99,14 @@ public partial class App : Application
         HeartbeatService.RestartProxyRequested += OnRestartProxyRequested;
         HeartbeatService.DisableProxyRequested += OnDisableProxyRequested;
 
+        // Start remote state monitoring
+        RemoteStateService.Start();
+        RemoteStateService.ForceLogoutRequested += OnForceLogoutRequested;
+        RemoteStateService.SensorEnabledChanged += OnSensorStateChanged;
+
+        // Auto-enable launch at startup on first run
+        StartupService.CheckAndAutoEnableOnFirstLaunch();
+
         // Start services if already connected
         if (AppState.Instance.Phase == Phase.Connected)
         {
@@ -93,12 +114,14 @@ public partial class App : Application
             SyncService.Start();
         }
 
-        // Check for updates in background after startup (5 second delay)
-        Task.Run(async () =>
+        // Handle pending auth URL if launched via deep link
+        if (!string.IsNullOrEmpty(_pendingAuthUrl))
         {
-            await Task.Delay(5000);
-            await UpdateService.Instance.CheckForUpdatesAsync();
-        });
+            HandleAuthCallback(_pendingAuthUrl);
+            _pendingAuthUrl = null;
+        }
+
+        // Note: Auto-update check removed - updates handled manually via Settings
     }
 
     private void OnLogoutRequested(object? sender, EventArgs e)
@@ -125,6 +148,103 @@ public partial class App : Application
         Debug.WriteLine("[App] Disable proxy requested by server");
         ProxyService.DisableProxy();
         MitmService.Stop();
+    }
+
+    private void OnForceLogoutRequested(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() => OnLogoutRequested(sender, e));
+    }
+
+    private void OnSensorStateChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() => _mainWindow?.UpdateTrayIcon(RemoteStateService.SensorEnabled));
+    }
+
+    /// <summary>
+    /// Register the oximy:// URL scheme in Windows Registry.
+    /// This allows the browser to redirect back to our app after authentication.
+    /// </summary>
+    private void RegisterUrlScheme()
+    {
+        try
+        {
+            var exePath = Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(exePath)) return;
+
+            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Classes\oximy");
+            if (key == null) return;
+
+            key.SetValue("", "URL:Oximy Protocol");
+            key.SetValue("URL Protocol", "");
+
+            using var shellKey = key.CreateSubKey(@"shell\open\command");
+            shellKey?.SetValue("", $"\"{exePath}\" \"%1\"");
+
+            Debug.WriteLine("[App] URL scheme registered successfully");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Failed to register URL scheme: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle authentication callback from browser redirect.
+    /// URL format: oximy://auth/callback?token=xxx&state=xxx&workspace_name=xxx&device_id=xxx
+    /// </summary>
+    private void HandleAuthCallback(string url)
+    {
+        Debug.WriteLine($"[App] Received auth callback: {url}");
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            Debug.WriteLine("[App] Invalid URL format");
+            return;
+        }
+
+        if (uri.Scheme != "oximy" || uri.Host != "auth" || uri.AbsolutePath != "/callback")
+        {
+            Debug.WriteLine("[App] URL doesn't match auth callback pattern");
+            return;
+        }
+
+        var query = HttpUtility.ParseQueryString(uri.Query);
+        var token = query["token"];
+        var state = query["state"];
+        var workspaceName = query["workspace_name"];
+        var deviceId = query["device_id"];
+
+        // Validate CSRF state
+        var storedState = Properties.Settings.Default.AuthState;
+        if (state != storedState)
+        {
+            Debug.WriteLine($"[App] State mismatch - stored: {storedState}, received: {state}");
+            return;
+        }
+
+        // Clear stored state
+        Properties.Settings.Default.AuthState = "";
+        Properties.Settings.Default.Save();
+
+        if (string.IsNullOrEmpty(token))
+        {
+            Debug.WriteLine("[App] No token in callback URL");
+            return;
+        }
+
+        // Complete enrollment
+        var workspace = workspaceName ?? "Connected";
+        AppState.Instance.CompleteEnrollment(deviceId ?? "", token, workspace, "");
+
+        SentryService.AddStateChangeBreadcrumb(
+            category: "enrollment",
+            message: "Device enrolled via browser auth",
+            data: new Dictionary<string, string> { ["deviceId"] = deviceId ?? "unknown" });
+
+        Debug.WriteLine("[App] Auth callback processed successfully");
+
+        // Show the popup so user sees they're logged in
+        _mainWindow?.ShowPopup();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -164,17 +284,21 @@ public partial class App : Application
             // Ignore errors during shutdown
         }
 
-        // Dispose services
+        // Stop and dispose services
+        RemoteStateService.Stop();
         MitmService.Dispose();
         NetworkMonitorService.Dispose();
         HeartbeatService.Dispose();
         SyncService.Dispose();
+        RemoteStateService.Dispose();
 
         // Unsubscribe from system events
         SystemEvents.SessionEnding -= OnSessionEnding;
         HeartbeatService.LogoutRequested -= OnLogoutRequested;
         HeartbeatService.RestartProxyRequested -= OnRestartProxyRequested;
         HeartbeatService.DisableProxyRequested -= OnDisableProxyRequested;
+        RemoteStateService.ForceLogoutRequested -= OnForceLogoutRequested;
+        RemoteStateService.SensorEnabledChanged -= OnSensorStateChanged;
 
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();

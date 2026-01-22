@@ -27,6 +27,11 @@
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
+  <!-- Framework reference for System.Web.HttpUtility -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <!-- Copy Python embed and addon to output -->
   <ItemGroup>
     <None Update="Resources\python-embed\**">
@@ -45,6 +50,10 @@
   <!-- Copy Assets folder to output for tray icon -->
   <ItemGroup>
     <Content Include="Assets\oximy.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Assets\oximy-paused.ico" Condition="Exists('Assets\oximy-paused.ico')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
