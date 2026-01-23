@@ -119,6 +119,17 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 Oximy. All rights reserved.</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.oximy.auth</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>oximy</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
 EOF

@@ -15,7 +15,8 @@ struct MainView: View {
                 DashboardView()
             }
         }
-        .frame(width: 340, height: 420)
+        .frame(width: 340, height: 500)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 

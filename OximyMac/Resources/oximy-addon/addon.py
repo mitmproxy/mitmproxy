@@ -56,28 +56,61 @@ logger = logging.getLogger(__name__)
 
 PROXY_HOST = "127.0.0.1"
 
-# Thread safety locks for global state
-_globals_lock = threading.RLock()  # Reentrant lock - allows nested acquisition by same thread
+# =============================================================================
+# CENTRALIZED PATHS - All file paths derive from OXIMY_DIR
+# =============================================================================
+OXIMY_DIR = Path(os.environ.get("OXIMY_HOME", "~/.oximy")).expanduser()
+OXIMY_TRACES_DIR = OXIMY_DIR / "traces"
+OXIMY_CONFIG_FILE = OXIMY_DIR / "config.json"
+OXIMY_STATE_FILE = OXIMY_DIR / "remote-state.json"
+OXIMY_TOKEN_FILE = OXIMY_DIR / "device-token"
+OXIMY_UPLOAD_STATE_FILE = OXIMY_DIR / "upload-state.json"
+OXIMY_PASSTHROUGH_CACHE = OXIMY_DIR / "learned-passthrough.json"
+OXIMY_FORCE_SYNC_TRIGGER = OXIMY_DIR / "force-sync"
+OXIMY_SENSOR_CONFIG_CACHE = OXIMY_DIR / "sensor-config.json"
 
-# Track previous sensor_enabled state to detect changes
-_previous_sensor_enabled: bool | None = None
+# =============================================================================
+# WINDOWS BROWSER DETECTION
+# =============================================================================
+# Windows browser executables - treated as browsers ("host" type)
+# On Windows, bundle_id is the exe name, so we need to recognize common browsers
+WINDOWS_BROWSERS = frozenset({
+    "chrome.exe", "msedge.exe", "firefox.exe",
+    "brave.exe", "opera.exe", "vivaldi.exe",
+})
 
-# Store the actual proxy port once configured (needed for enable/disable toggle)
-_proxy_port: str | None = None
+# =============================================================================
+# SENSOR STATE MANAGEMENT
+# =============================================================================
+# Debounce prevents rapid on/off from network glitches (2 poll cycles at 3s interval)
+SENSOR_DEBOUNCE_SECONDS = 6.0
 
-# Master switch for all traffic interception - when False, all hooks return immediately
-_sensor_active: bool = True
 
-# Debounce state for sensor toggle (prevents rapid on/off from network glitches)
-SENSOR_DEBOUNCE_SECONDS = 6.0  # 2 poll cycles at 3s interval
-_sensor_pending_state: bool | None = None  # Pending state change waiting for debounce
-_sensor_pending_since: float = 0.0  # Timestamp when pending state was first seen
+class _SensorState:
+    """Thread-safe sensor state management.
 
-# Track previous force_sync state to detect false→true transitions (one-shot trigger)
-_previous_force_sync: bool = False
+    Consolidates all mutable global state into a single class with proper locking.
+    """
 
-# Track if system proxy is actively configured (written to remote-state.json for Swift)
-_proxy_active: bool = False
+    def __init__(self):
+        self._lock = threading.RLock()  # Reentrant lock - allows nested acquisition
+        self.previous_sensor_enabled: bool | None = None  # Detect state changes
+        self.proxy_port: str | None = None  # Actual proxy port once configured
+        self.sensor_active: bool = True  # Master switch - when False, all hooks return immediately
+        self.pending_state: bool | None = None  # Pending state change waiting for debounce
+        self.pending_since: float = 0.0  # Timestamp when pending state was first seen
+        self.previous_force_sync: bool = False  # Detect false→true transitions (one-shot trigger)
+        self.proxy_active: bool = False  # System proxy is actively configured
+
+    @property
+    def lock(self) -> threading.RLock:
+        return self._lock
+
+
+_state = _SensorState()
+
+# Legacy aliases for backwards compatibility during transition
+_globals_lock = _state.lock
 
 
 def _get_network_services() -> list[str]:
@@ -114,45 +147,57 @@ def _set_system_proxy(enable: bool) -> None:
         _set_windows_proxy(enable)
 
 
-def _set_windows_proxy(enable: bool) -> None:
-    """Enable or disable Windows system proxy via registry."""
-    global _proxy_port
+def _set_windows_proxy(enable: bool) -> bool:
+    """Enable or disable Windows system proxy via registry. Returns success status."""
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 
     try:
         if enable:
-            if not _proxy_port:
-                logger.warning("Cannot enable Windows proxy: port not configured")
-                return
-            proxy_server = f"{PROXY_HOST}:{_proxy_port}"
+            if not _state.proxy_port:
+                logger.debug("Cannot enable Windows proxy: port not configured yet")
+                return False
+            proxy_server = f"{PROXY_HOST}:{_state.proxy_port}"
+
+            # Set both values
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"],
                            check=True, capture_output=True)
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyServer", "/t", "REG_SZ", "/d", proxy_server, "/f"],
                            check=True, capture_output=True)
-            logger.info(f"Windows proxy enabled: {proxy_server}")
+
+            # Verify the setting was applied
+            result = subprocess.run(["reg", "query", reg_path, "/v", "ProxyEnable"],
+                                    capture_output=True, text=True)
+            if "0x1" in result.stdout:
+                logger.info(f"Windows proxy enabled: {proxy_server}")
+                return True
+            else:
+                logger.warning("Windows proxy registry set but verification failed")
+                return False
         else:
+            # Always try to disable, even if we think it's already disabled
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "0", "/f"],
                            check=True, capture_output=True)
             logger.info("Windows proxy disabled")
+            return True
     except subprocess.CalledProcessError as e:
         logger.warning(f"Failed to set Windows proxy: {e}")
+        return False
 
 
 def _set_macos_proxy(enable: bool) -> None:
     """Enable or disable macOS system proxy for all network services."""
-    global _proxy_port
     services = _get_network_services()
 
-    if enable and not _proxy_port:
+    if enable and not _state.proxy_port:
         logger.warning("Cannot enable macOS proxy: port not configured")
         return
 
     for service in services:
         try:
             if enable:
-                subprocess.run(["networksetup", "-setsecurewebproxy", service, PROXY_HOST, _proxy_port],
+                subprocess.run(["networksetup", "-setsecurewebproxy", service, PROXY_HOST, _state.proxy_port],
                                check=True, capture_output=True)
-                subprocess.run(["networksetup", "-setwebproxy", service, PROXY_HOST, _proxy_port],
+                subprocess.run(["networksetup", "-setwebproxy", service, PROXY_HOST, _state.proxy_port],
                                check=True, capture_output=True)
             else:
                 subprocess.run(["networksetup", "-setsecurewebproxystate", service, "off"],
@@ -163,15 +208,15 @@ def _set_macos_proxy(enable: bool) -> None:
             logger.debug(f"Could not set proxy for {service}: {e}")
 
     if enable:
-        logger.info(f"macOS proxy enabled: {PROXY_HOST}:{_proxy_port} on {services}")
+        logger.info(f"macOS proxy enabled: {PROXY_HOST}:{_state.proxy_port} on {services}")
     else:
         logger.info(f"macOS proxy disabled on {services}")
 
 
 def _clear_local_cache() -> None:
     """Delete all trace files and reset upload state."""
-    traces_dir = Path("~/.oximy/traces").expanduser()
-    upload_state = Path("~/.oximy/upload-state.json").expanduser()
+    traces_dir = OXIMY_TRACES_DIR
+    upload_state = OXIMY_UPLOAD_STATE_FILE
 
     deleted_count = 0
     if traces_dir.exists():
@@ -201,40 +246,40 @@ _addon_manages_proxy = False  # Tracks if addon enabled system proxy (for cleanu
 
 def _write_proxy_state() -> None:
     """Write current proxy state to remote-state.json for Swift app."""
-    state_file = Path("~/.oximy/remote-state.json").expanduser()
     try:
         # Read existing state if present
         existing = {}
-        if state_file.exists():
-            with open(state_file, encoding="utf-8") as f:
+        if OXIMY_STATE_FILE.exists():
+            with open(OXIMY_STATE_FILE, encoding="utf-8") as f:
                 existing = json.load(f)
 
         # Update proxy status
-        existing["proxy_active"] = _proxy_active
-        existing["proxy_port"] = _proxy_port
+        existing["proxy_active"] = _state.proxy_active
+        existing["proxy_port"] = _state.proxy_port
         existing["timestamp"] = datetime.now(timezone.utc).isoformat()
 
-        state_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(state_file, "w", encoding="utf-8") as f:
+        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(existing, f, indent=2)
-        logger.debug(f"Proxy state written: active={_proxy_active}, port={_proxy_port}")
+        logger.debug(f"Proxy state written: active={_state.proxy_active}, port={_state.proxy_port}")
     except (IOError, OSError, json.JSONDecodeError) as e:
         logger.warning(f"Failed to write proxy state: {e}")
 
 
 def _emergency_cleanup() -> None:
     """Emergency cleanup - disable proxy even if mitmproxy crashes."""
-    global _cleanup_done, _proxy_active
+    global _cleanup_done
     if _cleanup_done:
         return
     _cleanup_done = True
-    # Only disable proxy if we enabled it (host app may handle proxy management)
-    with _globals_lock:
-        if _addon_manages_proxy:
-            logger.info("Emergency cleanup: disabling system proxy...")
-            _set_system_proxy(enable=False)
-            _proxy_active = False
-            _write_proxy_state()
+
+    # ALWAYS try to disable proxy on Windows, regardless of _addon_manages_proxy
+    # This is defensive - better to disable twice than leave proxy orphaned
+    logger.info("Emergency cleanup: disabling system proxy...")
+    _set_system_proxy(enable=False)
+    with _state.lock:
+        _state.proxy_active = False
+    _write_proxy_state()
 
 
 def _signal_handler(signum: int, frame) -> None:
@@ -379,7 +424,7 @@ DEFAULT_SENSOR_CONFIG_URL = os.environ.get(
 )
 DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
     "OXIMY_CONFIG_CACHE",
-    "~/.oximy/sensor-config.json"
+    str(OXIMY_SENSOR_CONFIG_CACHE)
 )
 DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = int(os.environ.get(
     "OXIMY_CONFIG_REFRESH_INTERVAL",
@@ -408,11 +453,10 @@ def fetch_sensor_config(
     }
 
     # Read device token from file (written by Swift app)
-    token_file = Path("~/.oximy/device-token").expanduser()
     token = None
-    if token_file.exists():
+    if OXIMY_TOKEN_FILE.exists():
         try:
-            token = token_file.read_text().strip()
+            token = OXIMY_TOKEN_FILE.read_text().strip()
             if token:
                 logger.debug("Device token loaded for authenticated request")
         except (IOError, OSError) as e:
@@ -455,29 +499,31 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
     """Apply sensor state change - enables or disables all interception.
 
     When disabling:
-    - Sets _sensor_active = False (stops all hook processing)
+    - Sets _state.sensor_active = False (stops all hook processing)
     - Disables system proxy
     - Flushes pending traces to cloud
 
     When enabling:
-    - Sets _sensor_active = True (resumes hook processing)
+    - Sets _state.sensor_active = True (resumes hook processing)
     - Enables system proxy
     """
-    global _sensor_active, _previous_sensor_enabled, _addon_manages_proxy, _proxy_active
+    global _addon_manages_proxy
 
-    with _globals_lock:
+    with _state.lock:
         if enabled:
             logger.info("===== SENSOR ENABLED - Resuming all interception =====")
-            _sensor_active = True
-            _set_system_proxy(enable=True)
-            _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
-            _proxy_active = True
-            _write_proxy_state()
+            _state.sensor_active = True
+            # Only try to enable proxy if port is configured (running() will handle it otherwise)
+            if _state.proxy_port:
+                _set_system_proxy(enable=True)
+                _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
+                _state.proxy_active = True
+                _write_proxy_state()
         else:
             logger.info("===== SENSOR DISABLED - Stopping all interception =====")
-            _sensor_active = False
+            _state.sensor_active = False
             _set_system_proxy(enable=False)
-            _proxy_active = False
+            _state.proxy_active = False
             _write_proxy_state()
 
             # Flush pending traces before going quiet
@@ -489,7 +535,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
                 except Exception as e:
                     logger.warning(f"Failed to flush traces on sensor disable: {e}")
 
-        _previous_sensor_enabled = enabled
+        _state.previous_sensor_enabled = enabled
 
 
 def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
@@ -501,7 +547,6 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     - clear_cache: Delete local trace files
     - force_logout: Written to state file for Swift to handle (clears credentials)
     """
-    global _previous_sensor_enabled, _sensor_pending_state, _sensor_pending_since, _previous_force_sync
     data = raw.get("data", raw)
 
     # Parse allowed_app_origins (hosts = browsers, non_hosts = AI-native apps)
@@ -516,40 +561,40 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     sensor_enabled = commands.get("sensor_enabled", True)
     current_time = time.time()
 
-    with _globals_lock:
+    with _state.lock:
         # First time initialization - apply immediately, no debounce
-        if _previous_sensor_enabled is None:
+        if _state.previous_sensor_enabled is None:
             if not sensor_enabled:
                 logger.info("Sensor disabled on startup - proxy not activated")
             _apply_sensor_state(sensor_enabled, addon_instance)
-            _sensor_pending_state = None
+            _state.pending_state = None
 
         # State changed from current active state
-        elif sensor_enabled != _previous_sensor_enabled:
+        elif sensor_enabled != _state.previous_sensor_enabled:
             # Check if this is a new pending state or continuation
-            if _sensor_pending_state != sensor_enabled:
+            if _state.pending_state != sensor_enabled:
                 # New pending state, start debounce timer
-                _sensor_pending_state = sensor_enabled
-                _sensor_pending_since = current_time
-                logger.info(f"Sensor state change pending: {_previous_sensor_enabled} -> {sensor_enabled} (debouncing for {SENSOR_DEBOUNCE_SECONDS}s)")
-            elif current_time - _sensor_pending_since >= SENSOR_DEBOUNCE_SECONDS:
+                _state.pending_state = sensor_enabled
+                _state.pending_since = current_time
+                logger.info(f"Sensor state change pending: {_state.previous_sensor_enabled} -> {sensor_enabled} (debouncing for {SENSOR_DEBOUNCE_SECONDS}s)")
+            elif current_time - _state.pending_since >= SENSOR_DEBOUNCE_SECONDS:
                 # State has been stable for debounce period, apply it
                 logger.info(f"Sensor state confirmed after {SENSOR_DEBOUNCE_SECONDS}s debounce")
                 _apply_sensor_state(sensor_enabled, addon_instance)
-                _sensor_pending_state = None
+                _state.pending_state = None
             else:
                 # Still waiting for debounce
-                remaining = SENSOR_DEBOUNCE_SECONDS - (current_time - _sensor_pending_since)
+                remaining = SENSOR_DEBOUNCE_SECONDS - (current_time - _state.pending_since)
                 logger.debug(f"Sensor state change pending, {remaining:.1f}s remaining")
 
         # State reverted to current before debounce completed
-        elif _sensor_pending_state is not None:
+        elif _state.pending_state is not None:
             logger.info(f"Sensor state change cancelled (reverted to {sensor_enabled})")
-            _sensor_pending_state = None
+            _state.pending_state = None
 
     # Handle force_sync (upload pending traces) - only on false→true transition
     force_sync = commands.get("force_sync", False)
-    if force_sync and not _previous_force_sync:
+    if force_sync and not _state.previous_force_sync:
         logger.info("Executing force_sync command (remote trigger)")
         if addon_instance is not None:
             try:
@@ -558,7 +603,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
                 logger.warning(f"force_sync failed: {e}")
         else:
             logger.debug("force_sync skipped: no addon instance available")
-    _previous_force_sync = force_sync
+    _state.previous_force_sync = force_sync
 
     # Handle clear_cache (delete local trace files)
     if commands.get("clear_cache"):
@@ -567,21 +612,20 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
 
     # --- WRITE STATE FILE FOR SWIFT UI DISPLAY ---
     # Swift only reads this for display purposes and handles force_logout
-    state_file = Path("~/.oximy/remote-state.json").expanduser()
     try:
         state_data = {
             "sensor_enabled": sensor_enabled,
             "force_logout": commands.get("force_logout", False),
             "tenantId": data.get("tenantId"),
             "itSupport": data.get("itSupport"),
-            "proxy_active": _proxy_active,
-            "proxy_port": _proxy_port,
+            "proxy_active": _state.proxy_active,
+            "proxy_port": _state.proxy_port,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        state_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(state_file, "w", encoding="utf-8") as f:
+        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(state_data, f, indent=2)
-        logger.debug(f"Remote state written to {state_file}")
+        logger.debug(f"Remote state written to {OXIMY_STATE_FILE}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write remote state file: {e}")
 
@@ -597,9 +641,6 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     }
 
 
-DEFAULT_CONFIG_PATH = Path("~/.oximy/config.json").expanduser()
-
-
 def load_output_config(config_path: Path | None = None) -> dict:
     """Load output configuration.
 
@@ -608,7 +649,7 @@ def load_output_config(config_path: Path | None = None) -> dict:
     2. Default path: ~/.oximy/config.json
     """
     default = {
-        "output": {"directory": "~/.oximy/traces", "filename_pattern": "traces_{date}.jsonl"},
+        "output": {"directory": str(OXIMY_TRACES_DIR), "filename_pattern": "traces_{date}.jsonl"},
         "sensor_config_url": DEFAULT_SENSOR_CONFIG_URL,
         "sensor_config_cache": DEFAULT_SENSOR_CONFIG_CACHE,
         "config_refresh_interval_seconds": DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS,
@@ -618,7 +659,7 @@ def load_output_config(config_path: Path | None = None) -> dict:
     paths_to_check = []
     if config_path:
         paths_to_check.append(config_path)
-    paths_to_check.append(DEFAULT_CONFIG_PATH)
+    paths_to_check.append(OXIMY_CONFIG_FILE)
 
     for path in paths_to_check:
         if path.exists():
@@ -697,14 +738,18 @@ def get_device_id() -> str | None:
                 )
                 if result.returncode == 0:
                     lines = result.stdout.strip().split("\n")
-                    if len(lines) >= 2:
-                        candidate = lines[1].strip()
-                        if candidate and candidate != "UUID":
-                            if _is_valid_uuid(candidate):
-                                _device_id_cache = candidate
-                                return _device_id_cache
-                            else:
-                                logger.warning(f"Invalid UUID format from wmic: {candidate}")
+                    # Skip header and empty lines to find UUID
+                    for line in lines:
+                        candidate = line.strip()
+                        # Skip empty lines and header
+                        if not candidate or candidate.upper() == "UUID":
+                            continue
+                        if _is_valid_uuid(candidate):
+                            _device_id_cache = candidate
+                            return _device_id_cache
+                        else:
+                            logger.warning(f"Invalid UUID format from wmic: {candidate}")
+                            break
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
             logger.debug(f"Failed to get device ID: {e}")
 
@@ -988,6 +1033,10 @@ def matches_app_origin(
 
     bundle_lower = bundle_id.lower()
 
+    # Windows browser detection - uses module-level WINDOWS_BROWSERS constant
+    if bundle_lower in WINDOWS_BROWSERS:
+        return "host"
+
     # Check non_hosts first (AI-native apps - more specific)
     for pattern in non_hosts:
         if bundle_lower == pattern.lower():
@@ -1036,8 +1085,6 @@ def matches_host_origin(origin: str | None, allowed_origins: list[str]) -> bool:
 # TLS PASSTHROUGH
 # =============================================================================
 
-LEARNED_PASSTHROUGH_CACHE = Path("~/.oximy/learned-passthrough.json").expanduser()
-
 
 class TLSPassthrough:
     """Manages TLS passthrough for certificate-pinned hosts."""
@@ -1062,9 +1109,9 @@ class TLSPassthrough:
 
     def _load_learned(self) -> None:
         """Load learned passthrough patterns from local cache."""
-        if LEARNED_PASSTHROUGH_CACHE.exists():
+        if OXIMY_PASSTHROUGH_CACHE.exists():
             try:
-                with open(LEARNED_PASSTHROUGH_CACHE, encoding="utf-8") as f:
+                with open(OXIMY_PASSTHROUGH_CACHE, encoding="utf-8") as f:
                     data = json.load(f)
                 self._learned_patterns = data.get("patterns", [])
                 for p in self._learned_patterns:
@@ -1107,8 +1154,8 @@ class TLSPassthrough:
             self._result_cache.clear()
 
             # Save to local cache
-            LEARNED_PASSTHROUGH_CACHE.parent.mkdir(parents=True, exist_ok=True)
-            with open(LEARNED_PASSTHROUGH_CACHE, "w", encoding="utf-8") as f:
+            OXIMY_PASSTHROUGH_CACHE.parent.mkdir(parents=True, exist_ok=True)
+            with open(OXIMY_PASSTHROUGH_CACHE, "w", encoding="utf-8") as f:
                 json.dump({"patterns": self._learned_patterns}, f, indent=2)
             logger.info(f"Added to learned passthrough: {host}")
         except (IOError, re.error) as e:
@@ -1318,15 +1365,43 @@ class MemoryTraceBuffer:
 # DIRECT TRACE UPLOADER (Memory to API)
 # =============================================================================
 
-INGEST_API_URL = "https://api.oximy.com/api/v1/ingest/network-traces"
-DEVICE_TOKEN_FILE = Path("~/.oximy/device-token").expanduser()
+# Ingest API URL - configurable via environment variable for testing/staging
+DEFAULT_INGEST_API_URL = "https://api.oximy.com/api/v1/ingest/network-traces"
+INGEST_API_URL = os.environ.get("OXIMY_INGEST_URL", DEFAULT_INGEST_API_URL)
+
+
+def _log_api_call(
+    url: str,
+    method: str,
+    headers: dict,
+    body_bytes: bytes,
+    response_code: int | None,
+    response_body: str | None,
+    error: str | None = None,
+) -> None:
+    """Log an API call as a curl command with its response to terminal (verbose)."""
+    # Build curl command (body is gzipped, so we note that)
+    header_args = " ".join(f"-H '{k}: {v}'" for k, v in headers.items() if k != "Authorization")
+    auth_header = "-H 'Authorization: Bearer <TOKEN>'" if "Authorization" in headers else ""
+
+    curl_cmd = (
+        f"curl -s -X {method} {header_args} {auth_header} "
+        f"--data-binary '<gzip: {len(body_bytes)}B>' '{url}'"
+    )
+
+    if error:
+        logger.info(f"[API] {curl_cmd}")
+        logger.info(f"[API] ERROR: {error}")
+    else:
+        logger.info(f"[API] {curl_cmd}")
+        logger.info(f"[API] Response {response_code}: {response_body}")
 
 
 def _get_device_token() -> str | None:
     """Read device token from file (written by Swift/host app)."""
     try:
-        if DEVICE_TOKEN_FILE.exists():
-            token = DEVICE_TOKEN_FILE.read_text().strip()
+        if OXIMY_TOKEN_FILE.exists():
+            token = OXIMY_TOKEN_FILE.read_text().strip()
             if token:
                 return token
     except (IOError, OSError) as e:
@@ -1381,7 +1456,17 @@ class DirectTraceUploader:
                 )
 
                 with _no_proxy_opener.open(req, timeout=30) as resp:
-                    response_data = json.loads(resp.read().decode("utf-8"))
+                    response_body = resp.read().decode("utf-8")
+                    response_data = json.loads(response_body)
+                    # Log successful API call
+                    _log_api_call(
+                        url=self._api_url,
+                        method="POST",
+                        headers=headers,
+                        body_bytes=compressed,
+                        response_code=resp.status,
+                        response_body=response_body,
+                    )
                     if response_data.get("success"):
                         logger.info(f"Uploaded {len(batch)} traces ({len(compressed)} bytes compressed)")
                         return True
@@ -1390,11 +1475,31 @@ class DirectTraceUploader:
 
             except urllib.error.HTTPError as e:
                 error_body = e.read().decode("utf-8", errors="replace")
+                # Log failed API call
+                _log_api_call(
+                    url=self._api_url,
+                    method="POST",
+                    headers=headers,
+                    body_bytes=compressed,
+                    response_code=e.code,
+                    response_body=error_body,
+                    error=f"HTTPError {e.code}",
+                )
                 if e.code == 401:
                     logger.warning(f"Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
                 else:
                     logger.debug(f"Upload attempt {attempt + 1} HTTP error {e.code}: {error_body[:200]}")
             except (urllib.error.URLError, OSError) as e:
+                # Log network error
+                _log_api_call(
+                    url=self._api_url,
+                    method="POST",
+                    headers=headers,
+                    body_bytes=compressed,
+                    response_code=None,
+                    response_body=None,
+                    error=str(e),
+                )
                 logger.debug(f"Upload attempt {attempt + 1} failed: {e}")
 
             if attempt < self.MAX_RETRIES - 1:
@@ -1420,9 +1525,9 @@ class DirectTraceUploader:
 # TRACE UPLOADER (Disk-based fallback)
 # =============================================================================
 
-UPLOAD_STATE_FILE = Path("~/.oximy/upload-state.json").expanduser()
-FORCE_SYNC_TRIGGER = Path("~/.oximy/force-sync").expanduser()  # Trigger file for immediate sync
-BATCH_SIZE = 500  # Traces per upload batch (for disk-based uploads)
+# Number of traces per upload batch (for disk-based uploads)
+# Chosen for balance between API call overhead and memory usage
+BATCH_SIZE = 500
 # Upload interval/threshold are now configurable via config.json (upload.interval_seconds, upload.threshold_count)
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 3.0  # Default: upload every N seconds
 DEFAULT_UPLOAD_THRESHOLD_COUNT = 100  # Default: or every N traces
@@ -1437,9 +1542,9 @@ class TraceUploader:
 
     def _load_state(self) -> None:
         """Load upload state from disk."""
-        if UPLOAD_STATE_FILE.exists():
+        if OXIMY_UPLOAD_STATE_FILE.exists():
             try:
-                with open(UPLOAD_STATE_FILE, encoding="utf-8") as f:
+                with open(OXIMY_UPLOAD_STATE_FILE, encoding="utf-8") as f:
                     self._upload_state = json.load(f)
             except (json.JSONDecodeError, IOError) as e:
                 logger.debug(f"Could not load upload state: {e}")
@@ -1447,8 +1552,8 @@ class TraceUploader:
     def _save_state(self) -> None:
         """Save upload state to disk."""
         try:
-            UPLOAD_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(UPLOAD_STATE_FILE, "w", encoding="utf-8") as f:
+            OXIMY_UPLOAD_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with open(OXIMY_UPLOAD_STATE_FILE, "w", encoding="utf-8") as f:
                 json.dump(self._upload_state, f)
         except IOError as e:
             logger.warning(f"Failed to save upload state: {e}")
@@ -1523,7 +1628,17 @@ class TraceUploader:
                 )
 
                 with _no_proxy_opener.open(req, timeout=30) as resp:
-                    response_data = json.loads(resp.read().decode("utf-8"))
+                    response_body = resp.read().decode("utf-8")
+                    response_data = json.loads(response_body)
+                    # Log successful API call
+                    _log_api_call(
+                        url=INGEST_API_URL,
+                        method="POST",
+                        headers=headers,
+                        body_bytes=compressed,
+                        response_code=resp.status,
+                        response_body=response_body,
+                    )
 
                 if response_data.get("success"):
                     uploaded_count = len(batch)
@@ -1538,12 +1653,32 @@ class TraceUploader:
 
             except urllib.error.HTTPError as e:
                 error_body = e.read().decode("utf-8", errors="replace")
+                # Log failed API call
+                _log_api_call(
+                    url=INGEST_API_URL,
+                    method="POST",
+                    headers=headers,
+                    body_bytes=compressed,
+                    response_code=e.code,
+                    response_body=error_body,
+                    error=f"HTTPError {e.code}",
+                )
                 if e.code == 401:
                     logger.warning(f"Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
                 else:
                     logger.warning(f"Upload HTTP error {e.code}: {error_body[:200]}")
                 break
             except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+                # Log network error
+                _log_api_call(
+                    url=INGEST_API_URL,
+                    method="POST",
+                    headers=headers,
+                    body_bytes=compressed,
+                    response_code=None,
+                    response_body=None,
+                    error=str(e),
+                )
                 logger.warning(f"Upload failed: {e}")
                 break
 
@@ -1794,10 +1929,10 @@ class OximyAddon:
                     break
 
                 # Check for trigger file
-                if FORCE_SYNC_TRIGGER.exists():
+                if OXIMY_FORCE_SYNC_TRIGGER.exists():
                     logger.info("Force sync trigger detected")
                     try:
-                        FORCE_SYNC_TRIGGER.unlink()  # Delete trigger file
+                        OXIMY_FORCE_SYNC_TRIGGER.unlink()  # Delete trigger file
                     except OSError as e:
                         logger.debug(f"Could not delete force sync trigger: {e}")
 
@@ -1985,25 +2120,25 @@ class OximyAddon:
         if self._port_configured:
             return
 
-        global _addon_manages_proxy, _proxy_port, _proxy_active
+        global _addon_manages_proxy
         self._port_configured = True
 
         # Get actual bound port from proxyserver (available now that server is running)
         proxyserver = ctx.master.addons.get("proxyserver")
         if proxyserver and proxyserver.listen_addrs():
-            with _globals_lock:
-                _proxy_port = str(proxyserver.listen_addrs()[0][1])
+            with _state.lock:
+                _state.proxy_port = str(proxyserver.listen_addrs()[0][1])
                 # Only enable proxy if sensor is active (may be disabled on startup)
-                if _sensor_active:
-                    logger.info(f"Configuring system proxy with port {_proxy_port}")
+                if _state.sensor_active:
+                    logger.info(f"Configuring system proxy with port {_state.proxy_port}")
                     _set_system_proxy(enable=True)
                     _addon_manages_proxy = True
-                    _proxy_active = True
+                    _state.proxy_active = True
                     _write_proxy_state()
                 else:
-                    logger.info(f"Proxy port {_proxy_port} captured, but sensor disabled - proxy not activated")
+                    logger.info(f"Proxy port {_state.proxy_port} captured, but sensor disabled - proxy not activated")
                     _addon_manages_proxy = False
-                    _proxy_active = False
+                    _state.proxy_active = False
                     _write_proxy_state()
         else:
             logger.warning("Could not get proxy port - system proxy not configured")
@@ -2050,6 +2185,37 @@ class OximyAddon:
 
         return None
 
+    def _build_client_info(self, flow: http.HTTPFlow) -> dict | None:
+        """Build client info dict from flow metadata.
+
+        Returns a dict with process info (pid, bundle_id, name) and
+        hierarchical filter metadata (app_type, host_origin, referrer_origin),
+        or None if no client process info is available.
+        """
+        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
+        if not client_process:
+            return None
+
+        client_info = {
+            "pid": client_process.pid,
+            "bundle_id": client_process.bundle_id,
+        }
+        if client_process.name:
+            client_info["name"] = client_process.name
+
+        # Add hierarchical filter metadata
+        if flow.metadata.get("oximy_app_type"):
+            client_info["app_type"] = flow.metadata["oximy_app_type"]
+        if flow.metadata.get("oximy_host_origin"):
+            client_info["host_origin"] = flow.metadata["oximy_host_origin"]
+
+        # Add referrer origin from headers
+        referrer_origin = self._extract_request_origin(flow)
+        if referrer_origin:
+            client_info["referrer_origin"] = referrer_origin
+
+        return client_info
+
     # =========================================================================
     # TLS Hooks
     # =========================================================================
@@ -2067,7 +2233,7 @@ class OximyAddon:
             return
 
         # Sensor disabled - passthrough ALL TLS connections (no interception)
-        if not _sensor_active:
+        if not _state.sensor_active:
             data.ignore_connection = True
             return
 
@@ -2089,7 +2255,7 @@ class OximyAddon:
         """Learn certificate-pinned hosts from TLS failures."""
         if not self._enabled or not self._tls:
             return
-        if not _sensor_active:
+        if not _state.sensor_active:
             return  # Sensor disabled - don't record failures
 
         host = data.context.server.sni or (data.context.server.address[0] if data.context.server.address else None)
@@ -2112,7 +2278,7 @@ class OximyAddon:
         """
         if not self._enabled:
             return
-        if not _sensor_active:
+        if not _state.sensor_active:
             return  # Sensor disabled - passthrough all traffic
 
         host = flow.request.pretty_host
@@ -2173,6 +2339,7 @@ class OximyAddon:
         # STEP 5: App Origin Check (Layer 1)
         # =====================================================================
         bundle_id = client_process.bundle_id if client_process else None
+        logger.debug(f"[APP_CHECK] bundle_id={bundle_id}")
         app_type = matches_app_origin(
             bundle_id,
             config["allowed_app_hosts"],
@@ -2213,7 +2380,7 @@ class OximyAddon:
         """Write trace for captured response."""
         if not self._enabled:
             return
-        if not _sensor_active:
+        if not _state.sensor_active:
             return  # Sensor disabled - skip trace writing
 
         if not flow.response:
@@ -2268,38 +2435,10 @@ class OximyAddon:
         if self._device_id:
             event["device_id"] = self._device_id
 
-        # Add client info
-        client_info: dict | None = None
-        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
-        if client_process:
-            client_info = {
-                "pid": client_process.pid,
-                "bundle_id": client_process.bundle_id,
-            }
-            if client_process.name:
-                client_info["name"] = client_process.name
-
-            # Add hierarchical filter metadata
-            if flow.metadata.get("oximy_app_type"):
-                client_info["app_type"] = flow.metadata["oximy_app_type"]
-            if flow.metadata.get("oximy_host_origin"):
-                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
-
+        # Add client info (includes referrer_origin from headers)
+        client_info = self._build_client_info(flow)
+        if client_info:
             event["client"] = client_info
-
-        # Extract referrer origin from headers
-        referrer_origin: str | None = None
-        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
-        if referer_header:
-            try:
-                parsed = urlparse(referer_header)
-                if parsed.netloc:
-                    referrer_origin = parsed.netloc
-            except Exception as e:
-                logger.debug(f"Could not parse Referer header: {e}")
-
-        if referrer_origin and client_info:
-            client_info["referrer_origin"] = referrer_origin
 
         # Filter out cookie headers for privacy
         request_headers = {k: v for k, v in flow.request.headers.items() if k.lower() != "cookie"}
@@ -2469,37 +2608,9 @@ class OximyAddon:
         if self._device_id:
             event["device_id"] = self._device_id
 
-        # Build client info from stored process data
-        client_info: dict | None = None
-        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
-        if client_process:
-            client_info = {
-                "pid": client_process.pid,
-                "bundle_id": client_process.bundle_id,
-            }
-            if client_process.name:
-                client_info["name"] = client_process.name
-
-            # Add hierarchical filter metadata
-            if flow.metadata.get("oximy_app_type"):
-                client_info["app_type"] = flow.metadata["oximy_app_type"]
-            if flow.metadata.get("oximy_host_origin"):
-                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
-
-            # Extract referrer origin from headers
-            referrer_origin: str | None = None
-            referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
-            if referer_header:
-                try:
-                    parsed = urlparse(referer_header)
-                    if parsed.netloc:
-                        referrer_origin = parsed.netloc
-                except Exception as e:
-                    logger.debug(f"Could not parse Referer header: {e}")
-
-            if referrer_origin:
-                client_info["referrer_origin"] = referrer_origin
-
+        # Add client info (includes referrer_origin from headers)
+        client_info = self._build_client_info(flow)
+        if client_info:
             event["client"] = client_info
 
         # Add WebSocket-specific fields
@@ -2536,28 +2647,6 @@ class OximyAddon:
         request_headers = {k: v for k, v in flow.request.headers.items() if k.lower() != "cookie"}
         response_headers = {k: v for k, v in flow.response.headers.items() if k.lower() != "set-cookie"} if flow.response else {}
 
-        # Build client info from stored process data
-        client_info: dict | None = None
-        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
-        if client_process:
-            client_info = {
-                "pid": client_process.pid,
-                "bundle_id": client_process.bundle_id,
-            }
-            if client_process.name:
-                client_info["name"] = client_process.name
-
-        # Extract referrer origin from headers
-        referrer_origin: str | None = None
-        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
-        if referer_header:
-            try:
-                parsed = urlparse(referer_header)
-                if parsed.netloc:
-                    referrer_origin = parsed.netloc
-            except Exception as e:
-                logger.debug(f"Could not parse Referer header: {e}")
-
         event: dict = {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
@@ -2567,17 +2656,9 @@ class OximyAddon:
         if self._device_id:
             event["device_id"] = self._device_id
 
-        # Add client info
+        # Add client info (includes referrer_origin from headers)
+        client_info = self._build_client_info(flow)
         if client_info:
-            if referrer_origin:
-                client_info["referrer_origin"] = referrer_origin
-
-            # Add hierarchical filter metadata
-            if flow.metadata.get("oximy_app_type"):
-                client_info["app_type"] = flow.metadata["oximy_app_type"]
-            if flow.metadata.get("oximy_host_origin"):
-                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
-
             event["client"] = client_info
 
         # Add request/response/timing
@@ -2609,7 +2690,7 @@ class OximyAddon:
         """Called when WebSocket connection is established."""
         if not self._enabled:
             return
-        if not _sensor_active:
+        if not _state.sensor_active:
             return  # Sensor disabled - skip WebSocket tracking
 
         host = flow.request.pretty_host
@@ -2625,7 +2706,7 @@ class OximyAddon:
         """Capture WebSocket messages in real-time."""
         if not self._enabled:
             return
-        if not _sensor_active:
+        if not _state.sensor_active:
             return  # Sensor disabled - skip message capture
 
         host = flow.request.pretty_host
@@ -2687,7 +2768,7 @@ class OximyAddon:
         """Write WebSocket trace on connection close."""
         if not self._enabled:
             return
-        if not _sensor_active:
+        if not _state.sensor_active:
             return  # Sensor disabled - skip final trace write
 
         host = flow.request.pretty_host
@@ -2721,28 +2802,6 @@ class OximyAddon:
 
         start = flow.metadata.get("oximy_ws_start", time.time())
 
-        # Build client info from stored process data
-        client_info: dict | None = None
-        client_process: ClientProcess | None = flow.metadata.get("oximy_client")
-        if client_process:
-            client_info = {
-                "pid": client_process.pid,
-                "bundle_id": client_process.bundle_id,
-            }
-            if client_process.name:
-                client_info["name"] = client_process.name
-
-        # Extract referrer origin from headers
-        referrer_origin: str | None = None
-        referer_header = flow.request.headers.get("referer") or flow.request.headers.get("Referer")
-        if referer_header:
-            try:
-                parsed = urlparse(referer_header)
-                if parsed.netloc:
-                    referrer_origin = parsed.netloc
-            except Exception as e:
-                logger.debug(f"Could not parse Referer header: {e}")
-
         event: dict = {
             "event_id": generate_event_id(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
@@ -2752,17 +2811,9 @@ class OximyAddon:
         if self._device_id:
             event["device_id"] = self._device_id
 
-        # Add client info
+        # Add client info (includes referrer_origin from headers)
+        client_info = self._build_client_info(flow)
         if client_info:
-            if referrer_origin:
-                client_info["referrer_origin"] = referrer_origin
-
-            # Add hierarchical filter metadata
-            if flow.metadata.get("oximy_app_type"):
-                client_info["app_type"] = flow.metadata["oximy_app_type"]
-            if flow.metadata.get("oximy_host_origin"):
-                client_info["host_origin"] = flow.metadata["oximy_host_origin"]
-
             event["client"] = client_info
 
         # Add WebSocket-specific fields
@@ -2804,7 +2855,7 @@ class OximyAddon:
 
         # Skip regular uploads when sensor is disabled
         # (Any pending traces were flushed when sensor was disabled)
-        if not _sensor_active:
+        if not _state.sensor_active:
             return
 
         now = time.time()
@@ -2882,7 +2933,7 @@ class OximyAddon:
 
     def _cleanup(self) -> None:
         """Clean up resources."""
-        global _cleanup_done, _proxy_active
+        global _cleanup_done
         if _cleanup_done:
             return
         _cleanup_done = True
@@ -2897,11 +2948,16 @@ class OximyAddon:
         if self._force_sync_thread and self._force_sync_thread.is_alive():
             self._force_sync_thread.join(timeout=1)
 
-        # Only disable system proxy if we enabled it
-        with _globals_lock:
-            if _addon_manages_proxy:
+        # ALWAYS disable system proxy on Windows to prevent orphaned proxy
+        # On macOS, only disable if we enabled it (host app may manage proxy)
+        with _state.lock:
+            if sys.platform == "win32":
                 _set_system_proxy(enable=False)
-                _proxy_active = False
+                _state.proxy_active = False
+                _write_proxy_state()
+            elif _addon_manages_proxy:
+                _set_system_proxy(enable=False)
+                _state.proxy_active = False
                 _write_proxy_state()
 
         # Cloud-first: try to upload remaining traces from memory buffer

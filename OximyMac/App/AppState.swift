@@ -141,6 +141,11 @@ final class AppState: ObservableObject {
         let hasDeviceToken = defaults.string(forKey: Constants.Defaults.deviceToken) != nil
         let setupComplete = defaults.bool(forKey: Constants.Defaults.setupComplete)
 
+        // Ensure device token file exists (handles upgrade from older versions)
+        if hasDeviceToken {
+            ensureDeviceTokenFile()
+        }
+
         if hasDeviceToken && setupComplete {
             // Both enrollment and setup done
             phase = .ready
@@ -216,6 +221,9 @@ final class AppState: ObservableObject {
         defaults.removeObject(forKey: Constants.Defaults.deviceId)
         defaults.removeObject(forKey: Constants.Defaults.workspaceId)
 
+        // Delete device token file
+        deleteDeviceTokenFile()
+
         phase = .enrollment
         connectionStatus = .disconnected
         workspaceName = ""
@@ -225,12 +233,102 @@ final class AppState: ObservableObject {
         isProxyEnabled = false
     }
 
+    // MARK: - Device Token File Management
+
+    /// Write device token to ~/.oximy/device-token for the Python addon
+    @discardableResult
+    private func writeDeviceTokenFile(_ token: String) -> Bool {
+        let tokenPath = Constants.deviceTokenPath
+        let oximyDir = Constants.oximyDir
+        let fm = FileManager.default
+
+        do {
+            // Ensure ~/.oximy directory exists
+            if !fm.fileExists(atPath: oximyDir.path) {
+                try fm.createDirectory(at: oximyDir, withIntermediateDirectories: true)
+            }
+
+            // Write token as plain text (addon uses .strip() on read)
+            try token.write(to: tokenPath, atomically: true, encoding: .utf8)
+
+            // Set file permissions to owner-only readable (0600) for security
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tokenPath.path)
+
+            print("[AppState] Device token written to \(tokenPath.path)")
+            return true
+        } catch {
+            print("[AppState] Failed to write device token file: \(error.localizedDescription)")
+            SentryService.shared.captureError(error, context: [
+                "operation": "write_device_token",
+                "path": tokenPath.path
+            ])
+            return false
+        }
+    }
+
+    /// Delete the device token file on logout/reset
+    @discardableResult
+    private func deleteDeviceTokenFile() -> Bool {
+        let tokenPath = Constants.deviceTokenPath
+        let fm = FileManager.default
+
+        guard fm.fileExists(atPath: tokenPath.path) else {
+            return true  // File doesn't exist, nothing to delete
+        }
+
+        do {
+            try fm.removeItem(at: tokenPath)
+            print("[AppState] Device token file deleted")
+            return true
+        } catch {
+            print("[AppState] Failed to delete device token file: \(error.localizedDescription)")
+            SentryService.shared.captureError(error, context: [
+                "operation": "delete_device_token",
+                "path": tokenPath.path
+            ])
+            return false
+        }
+    }
+
+    /// Ensure device token file exists if we have a token (handles app upgrades)
+    private func ensureDeviceTokenFile() {
+        guard let token = UserDefaults.standard.string(forKey: Constants.Defaults.deviceToken),
+              !token.isEmpty else {
+            return
+        }
+
+        let tokenPath = Constants.deviceTokenPath
+        let fm = FileManager.default
+
+        // Check if file already exists with correct content
+        if fm.fileExists(atPath: tokenPath.path),
+           let existingToken = try? String(contentsOf: tokenPath, encoding: .utf8),
+           existingToken.trimmingCharacters(in: .whitespacesAndNewlines) == token {
+            return  // File exists with correct content
+        }
+
+        // File missing or has stale content - write it
+        writeDeviceTokenFile(token)
+    }
+
     // MARK: - Account
 
-    func login(workspaceName: String, deviceToken: String) {
+    func login(workspaceName: String, deviceToken: String, deviceId: String?, workspaceId: String?) {
         let defaults = UserDefaults.standard
         defaults.set(workspaceName, forKey: Constants.Defaults.workspaceName)
         defaults.set(deviceToken, forKey: Constants.Defaults.deviceToken)
+
+        // Write token to file for Python addon
+        writeDeviceTokenFile(deviceToken)
+
+        if let deviceId = deviceId {
+            defaults.set(deviceId, forKey: Constants.Defaults.deviceId)
+            self.deviceId = deviceId
+        }
+
+        if let workspaceId = workspaceId {
+            defaults.set(workspaceId, forKey: Constants.Defaults.workspaceId)
+        }
 
         self.workspaceName = workspaceName
         self.isLoggedIn = true
@@ -255,6 +353,9 @@ final class AppState: ObservableObject {
         defaults.removeObject(forKey: Constants.Defaults.deviceId)
         defaults.removeObject(forKey: Constants.Defaults.workspaceId)
         defaults.removeObject(forKey: Constants.Defaults.setupComplete)
+
+        // Delete device token file
+        deleteDeviceTokenFile()
 
         // Clear Sentry user context
         SentryService.shared.clearUser()

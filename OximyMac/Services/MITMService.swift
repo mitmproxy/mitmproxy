@@ -317,8 +317,8 @@ class MITMService: ObservableObject {
         // First, terminate our tracked process if running
         if let process = process, process.isRunning {
             process.terminate()
-            // Give it a moment to terminate gracefully
-            Thread.sleep(forTimeInterval: 0.1)
+            // Give addon time to complete final upload (typically 1-2s, max 3s)
+            Thread.sleep(forTimeInterval: 3.0)
             // Force kill if still running
             if process.isRunning {
                 process.interrupt()  // Send SIGINT

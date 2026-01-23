@@ -19,13 +19,34 @@ struct OximyApp: App {
             Text("Settings are managed in the popover")
                 .frame(width: 200, height: 50)
         }
+        // Hidden WindowGroup for URL handling - catches oximy:// deep links
+        // and prevents SwiftUI from launching a new app instance
+        WindowGroup("URLHandler") {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .onOpenURL { url in
+                    NotificationCenter.default.post(name: .handleAuthURL, object: url)
+                }
+                .onAppear {
+                    // Close this window immediately - we only need it for URL handling
+                    DispatchQueue.main.async {
+                        for window in NSApplication.shared.windows {
+                            if window.title == "URLHandler" {
+                                window.close()
+                            }
+                        }
+                    }
+                }
+        }
+        .handlesExternalEvents(matching: Set(arrayLiteral: "oximy"))
+        .defaultSize(width: 0, height: 0)
     }
 
     init() {
         // Close any windows that might be open on launch
         DispatchQueue.main.async {
             for window in NSApplication.shared.windows {
-                if window.title.contains("Settings") || window.title.isEmpty {
+                if window.title.contains("Settings") || window.title.isEmpty || window.title == "URLHandler" {
                     window.close()
                 }
             }
@@ -114,6 +135,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        // Listen for URL auth callbacks (from SwiftUI onOpenURL)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAuthURLNotification(_:)),
+            name: .handleAuthURL,
+            object: nil
+        )
+
         // Start remote state monitoring (reads Python addon's state file)
         RemoteStateService.shared.start()
 
@@ -153,6 +182,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showPopover() {
         guard let button = statusItem.button else { return }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        makePopoverOpaque()
+    }
+
+    /// Remove visual effect view from popover to prevent desktop bleeding through
+    private func makePopoverOpaque() {
+        guard let popoverWindow = popover.contentViewController?.view.window else { return }
+        // Find and disable the visual effect view in the popover
+        if let frameView = popoverWindow.contentView?.superview {
+            for subview in frameView.subviews {
+                if let visualEffectView = subview as? NSVisualEffectView {
+                    visualEffectView.state = .inactive
+                    visualEffectView.material = .windowBackground
+                }
+            }
+        }
+        popoverWindow.isOpaque = true
+        popoverWindow.backgroundColor = NSColor.windowBackgroundColor
     }
 
     /// Show popover and ensure it's focused (for first launch)
@@ -166,6 +212,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Show the popover
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        makePopoverOpaque()
         print("[OximyApp] showPopoverAndFocus: popover.isShown = \(popover.isShown)")
 
         // Make the popover window key and bring to front
@@ -228,6 +275,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - URL Handling (for oximy:// deep links)
 
+    @objc private func handleAuthURLNotification(_ notification: Notification) {
+        if let url = notification.object as? URL {
+            print("[OximyApp] Received URL via notification: \(url)")
+            handleAuthCallback(url: url)
+        }
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             handleAuthCallback(url: url)
@@ -253,6 +307,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let state = queryItems.first { $0.name == "state" }?.value
         let workspaceName = queryItems.first { $0.name == "workspace_name" }?.value
         let deviceId = queryItems.first { $0.name == "device_id" }?.value
+        let workspaceId = queryItems.first { $0.name == "workspace_id" }?.value
 
         // Validate state matches what we stored (CSRF protection)
         let storedState = UserDefaults.standard.string(forKey: Constants.Defaults.authState)
@@ -271,11 +326,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let workspace = workspaceName ?? "Connected"
-        appState.login(workspaceName: workspace, deviceToken: token)
-
-        if let deviceId = deviceId {
-            appState.deviceId = deviceId
-        }
+        appState.login(workspaceName: workspace, deviceToken: token, deviceId: deviceId, workspaceId: workspaceId)
 
         appState.completeEnrollment()
 
@@ -344,6 +395,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self, name: .networkChanged, object: nil)
         NotificationCenter.default.removeObserver(self, name: .mitmproxyFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .authenticationFailed, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .handleAuthURL, object: nil)
 
         // Remove remote state observer
         if let observer = remoteStateObserver {
@@ -460,7 +512,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let contentView = MainView()
             .environmentObject(appState)
 
-        popover.contentViewController = NSHostingController(rootView: contentView)
+        let hostingController = NSHostingController(rootView: contentView)
+        // Make the popover background opaque to prevent desktop bleeding through
+        hostingController.view.wantsLayer = true
+        hostingController.view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        popover.contentViewController = hostingController
 
         // Set up event monitor to close popover when clicking outside
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
@@ -478,6 +534,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            makePopoverOpaque()
 
             // Ensure the popover window becomes key
             popover.contentViewController?.view.window?.makeKey()

@@ -6,6 +6,7 @@ struct EnrollmentView: View {
 
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var linkCopied = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,11 +16,11 @@ struct EnrollmentView: View {
                 ProgressLine(isComplete: false)
                 ProgressDot(step: 2, isComplete: false, isCurrent: false)
             }
-            .padding(.top, 20)
+            .padding(.top, 40)
             .padding(.horizontal, 60)
 
             // Header
-            VStack(spacing: 6) {
+            VStack(spacing: 10) {
                 OximyLogo(size: 52)
                     .cornerRadius(12)
                     .padding(.top, 20)
@@ -71,6 +72,7 @@ struct EnrollmentView: View {
                     Text("Click the button below to open your browser")
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 HStack(alignment: .top, spacing: 10) {
@@ -106,47 +108,55 @@ struct EnrollmentView: View {
             .padding(.horizontal, 24)
             .padding(.top, 16)
 
-            // Error message - fixed height container to prevent layout shifts
-            VStack {
-                if let error = errorMessage {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 11))
-                        Text(error)
-                            .font(.system(size: 12))
-                    }
-                    .foregroundColor(.red)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(8)
+            // Error message
+            if let error = errorMessage {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                    Text(error)
+                        .font(.system(size: 12))
                 }
+                .foregroundColor(.red)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(8)
+                .padding(.top, 8)
+                .padding(.horizontal, 24)
             }
-            .frame(height: 44) // Fixed height to prevent layout shifts
-            .padding(.top, 8)
-            .padding(.horizontal, 24)
 
-            Spacer()
+            Spacer(minLength: 12)
 
-            // Login Button
+            // Login Button with Copy Icon
             VStack(spacing: 12) {
-                Button(action: startBrowserLogin) {
-                    HStack(spacing: 8) {
-                        if isLoading {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 16, height: 16)
-                        } else {
-                            Image(systemName: "arrow.up.right.square")
+                HStack(spacing: 8) {
+                    Button(action: startBrowserLogin) {
+                        HStack(spacing: 8) {
+                            if isLoading {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 16, height: 16)
+                            } else {
+                                Image(systemName: "arrow.up.right.square")
+                            }
+                            Text(isLoading ? "Opening Browser..." : "Login with Browser")
+                                .fontWeight(.medium)
                         }
-                        Text(isLoading ? "Opening Browser..." : "Login with Browser")
-                            .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 38)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isLoading)
+
+                    // Copy link button
+                    Button(action: copyAuthLink) {
+                        Image(systemName: linkCopied ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 14))
+                            .frame(width: 38, height: 38)
+                    }
+                    .buttonStyle(.bordered)
+                    .help(linkCopied ? "Copied!" : "Copy login link")
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(isLoading)
                 .padding(.horizontal, 24)
 
                 HStack(spacing: 4) {
@@ -162,6 +172,7 @@ struct EnrollmentView: View {
             }
             .padding(.bottom, 20)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
     }
 
@@ -183,7 +194,7 @@ struct EnrollmentView: View {
         components.queryItems = [
             URLQueryItem(name: "state", value: state),
             URLQueryItem(name: "device_info", value: deviceInfo),
-            URLQueryItem(name: "callback", value: "oximy://auth/callback")
+            URLQueryItem(name: "callback", value: Constants.authCallbackURL)
         ]
 
         if let url = components.url {
@@ -201,23 +212,66 @@ struct EnrollmentView: View {
     }
 
     private func collectDeviceInfo() -> String {
-        // Collect device info to send to auth page
         let hostname = Host.current().localizedName ?? "Unknown"
         let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
         let sensorVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let hardwareId = APIClient.getHardwareUUID() ?? UUID().uuidString
 
-        let info: [String: String] = [
+        let info: [String: Any] = [
             "hostname": hostname,
-            "os_version": osVersion,
-            "sensor_version": sensorVersion
+            "os": "mac",
+            "osVersion": osVersion,
+            "sensorVersion": sensorVersion,
+            "hardwareId": hardwareId,
+            "permissions": [
+                "networkCapture": true,
+                "systemExtension": false,
+                "fullDiskAccess": false
+            ]
         ]
 
         // Encode as base64 JSON
-        if let jsonData = try? JSONEncoder().encode(info),
+        if let jsonData = try? JSONSerialization.data(withJSONObject: info, options: .prettyPrinted),
            let jsonString = String(data: jsonData, encoding: .utf8) {
-            return Data(jsonString.utf8).base64EncodedString()
+            print("[EnrollmentView] Device info (raw): \(jsonString)")
+
+            // Re-encode without pretty printing for compact base64
+            if let compactData = try? JSONSerialization.data(withJSONObject: info) {
+                return Data(compactData).base64EncodedString()
+            }
         }
         return ""
+    }
+
+    private func buildAuthURL() -> URL? {
+        // Get or create state for CSRF protection
+        var state = UserDefaults.standard.string(forKey: Constants.Defaults.authState)
+        if state == nil {
+            state = UUID().uuidString
+            UserDefaults.standard.set(state, forKey: Constants.Defaults.authState)
+        }
+
+        let deviceInfo = collectDeviceInfo()
+
+        var components = URLComponents(url: Constants.authURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "state", value: state),
+            URLQueryItem(name: "device_info", value: deviceInfo),
+            URLQueryItem(name: "callback", value: Constants.authCallbackURL)
+        ]
+        return components.url
+    }
+
+    private func copyAuthLink() {
+        guard let url = buildAuthURL() else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(url.absoluteString, forType: .string)
+        print("[EnrollmentView] Copied auth URL to clipboard: \(url.absoluteString)")
+
+        linkCopied = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            linkCopied = false
+        }
     }
 
     private func openSignUp() {
@@ -276,5 +330,5 @@ struct ProgressLine: View {
 #Preview("Enrollment") {
     EnrollmentView()
         .environmentObject(AppState())
-        .frame(width: 340, height: 420)
+        .frame(width: 340, height: 500)
 }

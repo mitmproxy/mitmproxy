@@ -23,6 +23,10 @@ enum Constants {
         oximyDir.appendingPathComponent("bundle_cache.json")
     }
 
+    static var deviceTokenPath: URL {
+        oximyDir.appendingPathComponent("device-token")
+    }
+
     // MARK: - Certificates
     static var caKeyPath: URL {
         oximyDir.appendingPathComponent("oximy-ca.pem")
@@ -89,12 +93,13 @@ enum Constants {
     }
 
     // MARK: - URLs
-    static let signUpURL = URL(string: "https://app.oximy.com")!
-    static let authURL = URL(string: "https://app.oximy.com/auth/enroll")!
+    static let signUpURL = URL(string: "https://staging.oximy.com")!
+    static let authURL = URL(string: "https://staging.oximy.com/auth/enroll")!
     static let helpURL = URL(string: "https://docs.oximy.com")!
     static let termsURL = URL(string: "https://oximy.com/terms")!
     static let privacyURL = URL(string: "https://oximy.com/privacy")!
     static let githubURL = URL(string: "https://github.com/oximyhq/sensor")!
+    static let authCallbackURL = "oximy://auth/callback"
 
     // MARK: - Support Email
     static let supportEmail = "support@oximy.com"
