@@ -65,56 +65,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Updates Section -->
-                <TextBlock Text="UPDATES"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="0,0,0,8"/>
-
-                <Border Background="{DynamicResource SurfaceBrush}"
-                        CornerRadius="8"
-                        Padding="16"
-                        Margin="0,0,0,20">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Column="0" Grid.Row="0">
-                                <TextBlock Text="App Updates"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock x:Name="UpdateStatusText"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-
-                            <Button x:Name="CheckUpdateButton"
-                                    Grid.Column="1" Grid.Row="0"
-                                    Content="Check for Updates"
-                                    Style="{DynamicResource SecondaryButtonStyle}"
-                                    Padding="12,6"
-                                    VerticalAlignment="Center"
-                                    Click="CheckUpdateButton_Click"/>
-
-                            <!-- Progress bar for download (hidden by default) -->
-                            <ProgressBar x:Name="UpdateProgressBar"
-                                         Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
-                                         Height="4"
-                                         Margin="0,12,0,0"
-                                         Minimum="0" Maximum="100"
-                                         Visibility="Collapsed"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
                 <!-- Support Section -->
                 <TextBlock Text="SUPPORT"
                            FontSize="11"
@@ -139,114 +89,6 @@
                                 <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
                         </Button>
-                    </StackPanel>
-                </Border>
-
-                <!-- Certificate Section -->
-                <TextBlock Text="CERTIFICATE"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="0,0,0,8"/>
-
-                <Border Background="{DynamicResource SurfaceBrush}"
-                        CornerRadius="8"
-                        Margin="0,0,0,20">
-                    <StackPanel>
-                        <!-- Certificate Status -->
-                        <Grid Margin="16,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="CA Certificate"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock x:Name="CertStatusText"
-                                           Text="Not installed"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                            <Ellipse x:Name="CertStatusIndicator"
-                                     Grid.Column="1"
-                                     Width="10" Height="10"
-                                     Fill="{DynamicResource ErrorBrush}"
-                                     VerticalAlignment="Center"/>
-                        </Grid>
-                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
-                        <!-- Generate Certificate Button -->
-                        <Button x:Name="GenerateCertButton"
-                                Style="{DynamicResource SettingsButtonStyle}"
-                                Click="GenerateCertButton_Click">
-                            <Grid>
-                                <TextBlock x:Name="GenerateCertText" Text="Generate Certificate" HorizontalAlignment="Left"/>
-                                <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </Grid>
-                        </Button>
-                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
-                        <!-- Install Certificate Button -->
-                        <Button x:Name="InstallCertButton"
-                                Style="{DynamicResource SettingsButtonStyle}"
-                                Click="InstallCertButton_Click">
-                            <Grid>
-                                <TextBlock x:Name="InstallCertText" Text="Install Certificate" HorizontalAlignment="Left"/>
-                                <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </Grid>
-                        </Button>
-                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
-                        <!-- Uninstall Certificate Button -->
-                        <Button x:Name="UninstallCertButton"
-                                Style="{DynamicResource SettingsButtonStyle}"
-                                Click="UninstallCertButton_Click"
-                                Visibility="Collapsed">
-                            <Grid>
-                                <TextBlock Text="Uninstall Certificate" HorizontalAlignment="Left" Foreground="{DynamicResource ErrorBrush}"/>
-                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource ErrorBrush}"/>
-                            </Grid>
-                        </Button>
-                    </StackPanel>
-                </Border>
-
-                <!-- Advanced Section -->
-                <TextBlock Text="ADVANCED"
-                           FontSize="11"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="0,0,0,8"/>
-
-                <Border Background="{DynamicResource SurfaceBrush}"
-                        CornerRadius="8"
-                        Margin="0,0,0,20">
-                    <StackPanel>
-                        <Button Style="{DynamicResource SettingsButtonStyle}" Click="OpenLogsButton_Click">
-                            <Grid>
-                                <TextBlock Text="Open Logs Folder" HorizontalAlignment="Left"/>
-                                <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </Grid>
-                        </Button>
-                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
-                        <Button Style="{DynamicResource SettingsButtonStyle}" Click="OpenTracesButton_Click">
-                            <Grid>
-                                <TextBlock Text="Open Traces Folder" HorizontalAlignment="Left"/>
-                                <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </Grid>
-                        </Button>
-                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
-                        <Grid Margin="16,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="Launch at Startup"
-                                       VerticalAlignment="Center"/>
-                            <CheckBox x:Name="StartupToggle"
-                                      Grid.Column="1"
-                                      Style="{DynamicResource ToggleSwitchStyle}"
-                                      VerticalAlignment="Center"
-                                      Click="StartupToggle_Click"/>
-                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -286,23 +128,18 @@
 
                 <Border Background="{DynamicResource SurfaceBrush}"
                         CornerRadius="8"
+                        Padding="16"
                         Margin="0,0,0,20">
-                    <StackPanel>
-                        <Grid Margin="16,12">
-                            <TextBlock Text="Workspace"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       VerticalAlignment="Center"/>
-                            <TextBlock x:Name="WorkspaceText"
-                                       Text="My Workspace"
-                                       HorizontalAlignment="Right"
-                                       FontWeight="SemiBold"
-                                       VerticalAlignment="Center"/>
-                        </Grid>
-                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}"/>
-                        <Button Style="{DynamicResource SettingsButtonStyle}" Click="LogoutButton_Click">
-                            <TextBlock Text="Log Out" Foreground="{DynamicResource ErrorBrush}"/>
-                        </Button>
-                    </StackPanel>
+                    <Grid>
+                        <TextBlock Text="Workspace"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="WorkspaceText"
+                                   Text="My Workspace"
+                                   HorizontalAlignment="Right"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
                 </Border>
 
                 <!-- Quit Button -->

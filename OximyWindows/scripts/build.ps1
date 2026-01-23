@@ -5,7 +5,6 @@ param(
     [switch]$Release,
     [switch]$Clean,
     [switch]$CreateInstaller,
-    [switch]$CreateVelopack,
     [string]$Version = "1.0.0"
 )
 
@@ -15,7 +14,6 @@ $Configuration = if ($Release) { "Release" } else { "Debug" }
 $ProjectDir = Join-Path $PSScriptRoot "..\src\OximyWindows"
 $OutputDir = Join-Path $PSScriptRoot "..\publish\win-x64"
 $InstallerDir = Join-Path $PSScriptRoot "..\installer"
-$VelopackDir = Join-Path $PSScriptRoot "..\releases"
 
 Write-Host "=== Oximy Windows Build ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration"
@@ -139,54 +137,6 @@ if ($CreateInstaller) {
     }
 
     Write-Host "  Installer created in: $(Join-Path $InstallerDir 'Output')" -ForegroundColor Green
-}
-
-# Step 7: Create Velopack release if requested
-if ($CreateVelopack) {
-    Write-Host ""
-    Write-Host "Creating Velopack release..." -ForegroundColor Yellow
-
-    # Ensure releases directory exists
-    if (-not (Test-Path $VelopackDir)) {
-        New-Item -ItemType Directory -Path $VelopackDir | Out-Null
-    }
-
-    # Install vpk tool if not available
-    $vpkPath = (Get-Command vpk -ErrorAction SilentlyContinue)
-    if (-not $vpkPath) {
-        Write-Host "  Installing Velopack CLI tool..." -ForegroundColor Yellow
-        dotnet tool install -g vpk
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Failed to install vpk tool. Please install manually: dotnet tool install -g vpk"
-            exit 1
-        }
-    }
-
-    # Get icon path
-    $IconPath = Join-Path $ProjectDir "Assets\oximy.ico"
-
-    # Create Velopack release
-    Write-Host "  Packaging with Velopack (Version: $Version)..." -ForegroundColor Yellow
-    vpk pack `
-        --packId "Oximy" `
-        --packVersion $Version `
-        --packDir $OutputDir `
-        --mainExe "OximyWindows.exe" `
-        --outputDir $VelopackDir `
-        --icon $IconPath
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Velopack packaging failed"
-        exit $LASTEXITCODE
-    }
-
-    Write-Host "  Velopack release created in: $VelopackDir" -ForegroundColor Green
-
-    # List created files
-    Write-Host "  Release files:" -ForegroundColor Green
-    Get-ChildItem $VelopackDir | ForEach-Object {
-        Write-Host "    - $($_.Name)"
-    }
 }
 
 Write-Host ""

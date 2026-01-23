@@ -114,28 +114,42 @@ def _set_system_proxy(enable: bool) -> None:
         _set_windows_proxy(enable)
 
 
-def _set_windows_proxy(enable: bool) -> None:
-    """Enable or disable Windows system proxy via registry."""
+def _set_windows_proxy(enable: bool) -> bool:
+    """Enable or disable Windows system proxy via registry. Returns success status."""
     global _proxy_port
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 
     try:
         if enable:
             if not _proxy_port:
-                logger.warning("Cannot enable Windows proxy: port not configured")
-                return
+                logger.debug("Cannot enable Windows proxy: port not configured yet")
+                return False
             proxy_server = f"{PROXY_HOST}:{_proxy_port}"
+
+            # Set both values
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"],
                            check=True, capture_output=True)
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyServer", "/t", "REG_SZ", "/d", proxy_server, "/f"],
                            check=True, capture_output=True)
-            logger.info(f"Windows proxy enabled: {proxy_server}")
+
+            # Verify the setting was applied
+            result = subprocess.run(["reg", "query", reg_path, "/v", "ProxyEnable"],
+                                    capture_output=True, text=True)
+            if "0x1" in result.stdout:
+                logger.info(f"Windows proxy enabled: {proxy_server}")
+                return True
+            else:
+                logger.warning("Windows proxy registry set but verification failed")
+                return False
         else:
+            # Always try to disable, even if we think it's already disabled
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "0", "/f"],
                            check=True, capture_output=True)
             logger.info("Windows proxy disabled")
+            return True
     except subprocess.CalledProcessError as e:
         logger.warning(f"Failed to set Windows proxy: {e}")
+        return False
 
 
 def _set_macos_proxy(enable: bool) -> None:
@@ -228,13 +242,14 @@ def _emergency_cleanup() -> None:
     if _cleanup_done:
         return
     _cleanup_done = True
-    # Only disable proxy if we enabled it (host app may handle proxy management)
+
+    # ALWAYS try to disable proxy on Windows, regardless of _addon_manages_proxy
+    # This is defensive - better to disable twice than leave proxy orphaned
+    logger.info("Emergency cleanup: disabling system proxy...")
+    _set_system_proxy(enable=False)
     with _globals_lock:
-        if _addon_manages_proxy:
-            logger.info("Emergency cleanup: disabling system proxy...")
-            _set_system_proxy(enable=False)
-            _proxy_active = False
-            _write_proxy_state()
+        _proxy_active = False
+    _write_proxy_state()
 
 
 def _signal_handler(signum: int, frame) -> None:
@@ -469,10 +484,12 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
         if enabled:
             logger.info("===== SENSOR ENABLED - Resuming all interception =====")
             _sensor_active = True
-            _set_system_proxy(enable=True)
-            _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
-            _proxy_active = True
-            _write_proxy_state()
+            # Only try to enable proxy if port is configured (running() will handle it otherwise)
+            if _proxy_port:
+                _set_system_proxy(enable=True)
+                _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
+                _proxy_active = True
+                _write_proxy_state()
         else:
             logger.info("===== SENSOR DISABLED - Stopping all interception =====")
             _sensor_active = False
@@ -697,14 +714,18 @@ def get_device_id() -> str | None:
                 )
                 if result.returncode == 0:
                     lines = result.stdout.strip().split("\n")
-                    if len(lines) >= 2:
-                        candidate = lines[1].strip()
-                        if candidate and candidate != "UUID":
-                            if _is_valid_uuid(candidate):
-                                _device_id_cache = candidate
-                                return _device_id_cache
-                            else:
-                                logger.warning(f"Invalid UUID format from wmic: {candidate}")
+                    # Skip header and empty lines to find UUID
+                    for line in lines:
+                        candidate = line.strip()
+                        # Skip empty lines and header
+                        if not candidate or candidate.upper() == "UUID":
+                            continue
+                        if _is_valid_uuid(candidate):
+                            _device_id_cache = candidate
+                            return _device_id_cache
+                        else:
+                            logger.warning(f"Invalid UUID format from wmic: {candidate}")
+                            break
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
             logger.debug(f"Failed to get device ID: {e}")
 
@@ -987,6 +1008,16 @@ def matches_app_origin(
         return None
 
     bundle_lower = bundle_id.lower()
+
+    # Windows browser detection - exe names used as bundle_id on Windows
+    # This handles the case where API config only has macOS-style bundle IDs
+    WINDOWS_BROWSERS = {
+        "chrome.exe", "msedge.exe", "firefox.exe",
+        "brave.exe", "opera.exe", "vivaldi.exe",
+        "iexplore.exe", "microsoftedge.exe",
+    }
+    if bundle_lower in WINDOWS_BROWSERS:
+        return "host"
 
     # Check non_hosts first (AI-native apps - more specific)
     for pattern in non_hosts:
@@ -2173,6 +2204,7 @@ class OximyAddon:
         # STEP 5: App Origin Check (Layer 1)
         # =====================================================================
         bundle_id = client_process.bundle_id if client_process else None
+        logger.debug(f"[APP_CHECK] bundle_id={bundle_id}")
         app_type = matches_app_origin(
             bundle_id,
             config["allowed_app_hosts"],
@@ -2897,9 +2929,14 @@ class OximyAddon:
         if self._force_sync_thread and self._force_sync_thread.is_alive():
             self._force_sync_thread.join(timeout=1)
 
-        # Only disable system proxy if we enabled it
+        # ALWAYS disable system proxy on Windows to prevent orphaned proxy
+        # On macOS, only disable if we enabled it (host app may manage proxy)
         with _globals_lock:
-            if _addon_manages_proxy:
+            if sys.platform == "win32":
+                _set_system_proxy(enable=False)
+                _proxy_active = False
+                _write_proxy_state()
+            elif _addon_manages_proxy:
                 _set_system_proxy(enable=False)
                 _proxy_active = False
                 _write_proxy_state()

@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
 using Microsoft.Win32;
 using OximyWindows.Core;
 using OximyWindows.Services;
 using OximyWindows.Views;
-using Velopack;
 
 namespace OximyWindows;
 
@@ -37,10 +37,6 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // CRITICAL: Velopack hooks must be called FIRST before any other code.
-        // This handles update installation, uninstallation, and first-run scenarios.
-        VelopackApp.Build().Run();
-
         // Set up file logging for Debug output
         SetupFileLogging();
 
@@ -121,7 +117,7 @@ public partial class App : Application
             _pendingAuthUrl = null;
         }
 
-        // Note: Auto-update check removed - updates handled manually via Settings
+        // Note: Auto-update disabled for MDM deployment
     }
 
     private void OnLogoutRequested(object? sender, EventArgs e)
@@ -215,7 +211,7 @@ public partial class App : Application
         var deviceId = query["device_id"];
 
         // Validate CSRF state
-        var storedState = Properties.Settings.Default.AuthState;
+        var storedState = OximyWindows.Properties.Settings.Default.AuthState;
         if (state != storedState)
         {
             Debug.WriteLine($"[App] State mismatch - stored: {storedState}, received: {state}");
@@ -223,8 +219,8 @@ public partial class App : Application
         }
 
         // Clear stored state
-        Properties.Settings.Default.AuthState = "";
-        Properties.Settings.Default.Save();
+        OximyWindows.Properties.Settings.Default.AuthState = "";
+        OximyWindows.Properties.Settings.Default.Save();
 
         if (string.IsNullOrEmpty(token))
         {
@@ -243,8 +239,55 @@ public partial class App : Application
 
         Debug.WriteLine("[App] Auth callback processed successfully");
 
+        // Start services in background (certificate, mitmproxy, heartbeat, sync)
+        _ = StartServicesAfterEnrollmentAsync();
+
         // Show the popup so user sees they're logged in
         _mainWindow?.ShowPopup();
+    }
+
+    /// <summary>
+    /// Start all services after enrollment completes.
+    /// Certificate installation and mitmproxy startup happen in background.
+    /// </summary>
+    private async Task StartServicesAfterEnrollmentAsync()
+    {
+        Debug.WriteLine("[App] Starting services after enrollment...");
+
+        // Install certificate in background (will prompt user via Windows UAC if needed)
+        CertificateService.CheckStatus();
+        if (!CertificateService.IsCAInstalled)
+        {
+            try
+            {
+                await CertificateService.InstallCAAsync();
+                Debug.WriteLine("[App] Certificate installed after enrollment");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] Certificate install failed (user can retry from settings): {ex.Message}");
+                // Don't block - user can install from settings later
+            }
+        }
+
+        // Start mitmproxy
+        if (!MitmService.IsRunning)
+        {
+            try
+            {
+                await MitmService.StartAsync();
+                Debug.WriteLine("[App] MitmService started after enrollment");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] MitmService start failed: {ex.Message}");
+            }
+        }
+
+        // Start heartbeat and sync services
+        HeartbeatService.Start();
+        SyncService.Start();
+        Debug.WriteLine("[App] All services started after enrollment");
     }
 
     protected override void OnExit(ExitEventArgs e)

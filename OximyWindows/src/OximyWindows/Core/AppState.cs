@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace OximyWindows.Core;
@@ -135,15 +136,11 @@ public class AppState : INotifyPropertyChanged
             WorkspaceName = settings.WorkspaceName;
             WorkspaceId = settings.WorkspaceId;
 
-            // Check if setup is complete
-            if (settings.SetupComplete)
-            {
-                Phase = Phase.Connected;
-            }
-            else
-            {
-                Phase = Phase.Setup;
-            }
+            // Always go to Connected if we have a token (setup happens in background)
+            Phase = Phase.Connected;
+
+            // Ensure token file exists for Python addon (handles upgrade from older versions)
+            WriteDeviceTokenFile(settings.DeviceToken);
         }
         else
         {
@@ -156,7 +153,7 @@ public class AppState : INotifyPropertyChanged
 
     /// <summary>
     /// Complete enrollment with device registration response.
-    /// Transitions to Setup phase.
+    /// Transitions directly to Connected phase (setup happens in background).
     /// </summary>
     public void CompleteEnrollment(string deviceId, string deviceToken, string workspaceName, string workspaceId)
     {
@@ -165,13 +162,35 @@ public class AppState : INotifyPropertyChanged
         settings.DeviceToken = deviceToken;
         settings.WorkspaceName = workspaceName;
         settings.WorkspaceId = workspaceId;
+        settings.SetupComplete = true;  // Mark setup complete immediately
         settings.Save();
 
         DeviceId = deviceId;
         DeviceToken = deviceToken;
         WorkspaceName = workspaceName;
         WorkspaceId = workspaceId;
-        Phase = Phase.Setup;
+        Phase = Phase.Connected;  // Go directly to Connected (skip Setup)
+
+        // Write device token to file for Python addon to read
+        WriteDeviceTokenFile(deviceToken);
+    }
+
+    /// <summary>
+    /// Write device token to ~/.oximy/device-token file for Python addon.
+    /// </summary>
+    private static void WriteDeviceTokenFile(string token)
+    {
+        try
+        {
+            var tokenPath = Path.Combine(Constants.OximyDir, "device-token");
+            Directory.CreateDirectory(Constants.OximyDir);
+            File.WriteAllText(tokenPath, token);
+            System.Diagnostics.Debug.WriteLine($"[AppState] Device token written to {tokenPath}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AppState] Failed to write device token file: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -264,6 +283,29 @@ public class AppState : INotifyPropertyChanged
         IsSetupCertificateComplete = false;
         IsSetupProxyComplete = false;
         Phase = Phase.Enrollment;
+
+        // Remove device token file
+        DeleteDeviceTokenFile();
+    }
+
+    /// <summary>
+    /// Delete the device token file on logout.
+    /// </summary>
+    private static void DeleteDeviceTokenFile()
+    {
+        try
+        {
+            var tokenPath = Path.Combine(Constants.OximyDir, "device-token");
+            if (File.Exists(tokenPath))
+            {
+                File.Delete(tokenPath);
+                System.Diagnostics.Debug.WriteLine($"[AppState] Device token file deleted");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AppState] Failed to delete device token file: {ex.Message}");
+        }
     }
 
     /// <summary>

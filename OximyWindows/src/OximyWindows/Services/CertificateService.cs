@@ -4,16 +4,18 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace OximyWindows.Services;
 
 /// <summary>
-/// Manages CA certificate generation and Windows certificate store installation.
-/// Generates mitmproxy-compatible PEM certificates.
+/// Manages CA certificate installation to Windows certificate store.
+/// Uses oximy's auto-generated certificates from ~/.mitmproxy/
 /// </summary>
 public class CertificateService : INotifyPropertyChanged
 {
+    // Oximy CA common name (matches CONF_BASENAME in mitmproxy/options.py)
+    private const string OximyCACommonName = "oximy";
+
     private bool _isCAGenerated;
     public bool IsCAGenerated
     {
@@ -39,6 +41,7 @@ public class CertificateService : INotifyPropertyChanged
     /// </summary>
     public void CheckStatus()
     {
+        // Check if mitmproxy has generated its certificates
         IsCAGenerated = File.Exists(Constants.CACertPath) && File.Exists(Constants.CAKeyPath);
         IsCAInstalled = IsCAInCertStoreCached();
     }
@@ -70,7 +73,7 @@ public class CertificateService : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Check if our CA is installed in the Windows certificate store.
+    /// Check if Oximy's CA is installed in the Windows certificate store.
     /// </summary>
     private bool IsCAInCertStore()
     {
@@ -81,7 +84,7 @@ public class CertificateService : INotifyPropertyChanged
             store.Open(OpenFlags.ReadOnly);
             var certs = store.Certificates.Find(
                 X509FindType.FindBySubjectName,
-                Constants.CACommonName,
+                OximyCACommonName,
                 validOnly: false);
             if (certs.Count > 0)
                 return true;
@@ -98,7 +101,7 @@ public class CertificateService : INotifyPropertyChanged
             store.Open(OpenFlags.ReadOnly);
             var certs = store.Certificates.Find(
                 X509FindType.FindBySubjectName,
-                Constants.CACommonName,
+                OximyCACommonName,
                 validOnly: false);
             return certs.Count > 0;
         }
@@ -109,83 +112,18 @@ public class CertificateService : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Generate CA certificate using .NET cryptography APIs.
-    /// Creates mitmproxy-compatible PEM files.
+    /// Ensure mitmproxy directory exists. mitmproxy auto-generates certificates on first run.
     /// </summary>
-    public async Task GenerateCAAsync()
+    public Task GenerateCAAsync()
     {
-        if (File.Exists(Constants.CACertPath) && File.Exists(Constants.CAKeyPath))
-        {
-            IsCAGenerated = true;
-            return;
-        }
+        // mitmproxy will auto-generate certificates when it starts
+        // Just ensure the directory exists
+        Directory.CreateDirectory(Constants.MitmproxyDir);
 
-        await Task.Run(() =>
-        {
-            Directory.CreateDirectory(Constants.OximyDir);
+        // Check if mitmproxy has already generated certs (from a previous run)
+        IsCAGenerated = File.Exists(Constants.CACertPath) && File.Exists(Constants.CAKeyPath);
 
-            // Generate RSA key pair (4096-bit for security)
-            using var rsa = RSA.Create(4096);
-
-            // Create certificate request
-            var subjectName = new X500DistinguishedName(
-                $"CN={Constants.CACommonName}, O={Constants.CAOrganization}, C={Constants.CACountry}");
-
-            var request = new CertificateRequest(
-                subjectName,
-                rsa,
-                HashAlgorithmName.SHA256,
-                RSASignaturePadding.Pkcs1);
-
-            // Add CA extensions
-            request.CertificateExtensions.Add(
-                new X509BasicConstraintsExtension(
-                    certificateAuthority: true,
-                    hasPathLengthConstraint: true,
-                    pathLengthConstraint: 0,
-                    critical: true));
-
-            request.CertificateExtensions.Add(
-                new X509KeyUsageExtension(
-                    X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign,
-                    critical: true));
-
-            // Add Subject Key Identifier
-            request.CertificateExtensions.Add(
-                new X509SubjectKeyIdentifierExtension(request.PublicKey, critical: false));
-
-            // Self-sign for 10 years
-            var notBefore = DateTimeOffset.UtcNow;
-            var notAfter = notBefore.AddDays(Constants.CAValidityDays);
-
-            using var cert = request.CreateSelfSigned(notBefore, notAfter);
-
-            // Export certificate (PEM format)
-            var certPem = new StringBuilder();
-            certPem.AppendLine("-----BEGIN CERTIFICATE-----");
-            certPem.AppendLine(Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
-            certPem.AppendLine("-----END CERTIFICATE-----");
-            File.WriteAllText(Constants.CACertPath, certPem.ToString());
-
-            // Export private key (PEM format) - required by mitmproxy
-            var keyPem = new StringBuilder();
-            keyPem.AppendLine("-----BEGIN PRIVATE KEY-----");
-            keyPem.AppendLine(Convert.ToBase64String(
-                rsa.ExportPkcs8PrivateKey(),
-                Base64FormattingOptions.InsertLineBreaks));
-            keyPem.AppendLine("-----END PRIVATE KEY-----");
-
-            // mitmproxy expects combined cert+key in mitmproxy-ca.pem
-            var combinedPem = certPem.ToString() + keyPem.ToString();
-            File.WriteAllText(Constants.CAKeyPath, combinedPem);
-
-            // Also create separate cert file for installation
-            File.WriteAllText(
-                Path.Combine(Constants.OximyDir, "mitmproxy-ca-cert.pem"),
-                certPem.ToString());
-        });
-
-        IsCAGenerated = true;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -276,7 +214,57 @@ public class CertificateService : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Remove CA from certificate store.
+    /// Install certificate automatically with elevation prompt to LocalMachine store.
+    /// Shows UAC prompt for admin elevation.
+    /// Returns true if installation succeeded, false if user cancelled UAC.
+    /// </summary>
+    public async Task<bool> InstallCAAutomaticallyAsync()
+    {
+        if (!IsCAGenerated)
+            await GenerateCAAsync();
+
+        // Use certutil with elevation to install to LocalMachine\Root (system-wide)
+        // This will show UAC prompt
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "certutil.exe",
+            Arguments = $"-addstore Root \"{Constants.CACertPath}\"",
+            UseShellExecute = true,
+            Verb = "runas",  // Request admin elevation
+            CreateNoWindow = false  // Allow UAC dialog to show
+        };
+
+        try
+        {
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                Debug.WriteLine("[CertificateService] Failed to start certutil process");
+                return false;
+            }
+
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode == 0)
+            {
+                RefreshStatus();
+                Debug.WriteLine("[CertificateService] CA installed to LocalMachine store via certutil");
+                return true;
+            }
+
+            Debug.WriteLine($"[CertificateService] certutil failed with exit code {process.ExitCode}");
+            return false;
+        }
+        catch (Win32Exception ex)
+        {
+            // User cancelled UAC prompt
+            Debug.WriteLine($"[CertificateService] UAC cancelled or error: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Remove Oximy CA from certificate store.
     /// </summary>
     public void RemoveCA()
     {
@@ -289,7 +277,7 @@ public class CertificateService : INotifyPropertyChanged
 
                 var certs = store.Certificates.Find(
                     X509FindType.FindBySubjectName,
-                    Constants.CACommonName,
+                    OximyCACommonName,
                     validOnly: false);
 
                 foreach (var cert in certs)
@@ -311,21 +299,28 @@ public class CertificateService : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Delete CA files from disk.
+    /// Delete Oximy CA files from disk.
+    /// This will cause mitmproxy to regenerate them on next start.
     /// </summary>
     public void DeleteCAFiles()
     {
         try
         {
+            // Delete oximy's certificate files
             if (File.Exists(Constants.CACertPath))
                 File.Delete(Constants.CACertPath);
 
             if (File.Exists(Constants.CAKeyPath))
                 File.Delete(Constants.CAKeyPath);
 
-            var separateCertPath = Path.Combine(Constants.OximyDir, "mitmproxy-ca-cert.pem");
-            if (File.Exists(separateCertPath))
-                File.Delete(separateCertPath);
+            // Also delete the other formats mitmproxy creates
+            var p12Path = Path.Combine(Constants.MitmproxyDir, "oximy-ca.p12");
+            if (File.Exists(p12Path))
+                File.Delete(p12Path);
+
+            var cerPath = Path.Combine(Constants.MitmproxyDir, "oximy-ca-cert.cer");
+            if (File.Exists(cerPath))
+                File.Delete(cerPath);
 
             IsCAGenerated = false;
         }

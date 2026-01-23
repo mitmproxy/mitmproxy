@@ -78,6 +78,7 @@ public partial class SetupView : UserControl
 
     /// <summary>
     /// Handle install certificate click.
+    /// Uses automatic installation with UAC elevation prompt.
     /// </summary>
     private async void OnInstallCertificateClick(object sender, RoutedEventArgs e)
     {
@@ -91,23 +92,26 @@ public partial class SetupView : UserControl
 
         try
         {
-            // Generate and install certificate
-            await App.CertificateService.InstallCAAsync();
+            // Try automatic installation with elevation (shows UAC prompt)
+            var success = await App.CertificateService.InstallCAAutomaticallyAsync();
 
-            MarkCertificateComplete();
-            Debug.WriteLine("[SetupView] Certificate installed successfully");
-        }
-        catch (CertificateException ex)
-        {
-            ShowError($"Certificate installation failed: {ex.Message}");
-            CertificateArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Certificate error: {ex.Message}");
+            if (success)
+            {
+                MarkCertificateComplete();
+                Debug.WriteLine("[SetupView] Certificate installed automatically via UAC");
+            }
+            else
+            {
+                ShowError("Certificate installation was cancelled. Please try again.");
+                CertificateArrow.Visibility = Visibility.Visible;
+                Debug.WriteLine("[SetupView] Certificate installation cancelled by user");
+            }
         }
         catch (Exception ex)
         {
-            ShowError("Failed to install certificate. Please try again.");
+            ShowError($"Failed to install certificate: {ex.Message}");
             CertificateArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Unexpected error: {ex.Message}");
+            Debug.WriteLine($"[SetupView] Certificate error: {ex.Message}");
         }
         finally
         {

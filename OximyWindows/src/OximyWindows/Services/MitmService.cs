@@ -41,9 +41,8 @@ public class MitmService : IDisposable
         if (port == 0)
             throw new MitmException("No available port found in range");
 
-        // Ensure CA certificate exists
-        if (!File.Exists(Constants.CACertPath))
-            throw new MitmException("CA certificate not found. Please install certificate first.");
+        // Ensure mitmproxy directory exists - mitmproxy will auto-generate CA certificate
+        Directory.CreateDirectory(Constants.MitmproxyDir);
 
         // Ensure mitmdump exists
         if (!File.Exists(Constants.MitmdumpExePath))
@@ -285,7 +284,8 @@ public class MitmService : IDisposable
             $"-s \"{Constants.AddonPath}\"",
             "--set oximy_enabled=true",
             $"--set \"oximy_output_dir={Constants.TracesDir}\"",
-            $"--set \"confdir={Constants.OximyDir}\"",
+            // Use mitmproxy's default confdir (~/.mitmproxy) for certificates
+            // This avoids certificate format/installation issues
             "--set oximy_manage_proxy=true",   // Python addon manages proxy based on sensor_enabled
             $"--mode regular@{port}",
             "--listen-host 127.0.0.1",
