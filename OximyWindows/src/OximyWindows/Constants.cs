@@ -48,7 +48,7 @@ public static class Constants
     public static string AddonPath => Path.Combine(AddonDir, "addon.py");
 
     // URLs (matching Mac app)
-    public const string SignUpUrl = "https://app.oximy.com";
+    public const string SignUpUrl = "https://staging.oximy.com";
     public const string HelpUrl = "https://docs.oximy.com";
     public const string SupportEmail = "support@oximy.com";
     public const string TermsUrl = "https://oximy.com/terms";
@@ -136,7 +136,7 @@ public static class Constants
 
     // Auth constants for browser-based enrollment
     public const string AuthStateKey = "authState";
-    public const string AuthUrl = "https://app.oximy.com/auth/enroll";
+    public const string AuthUrl = "https://staging.oximy.com/auth/enroll";
 
     // Remote state file path (written by Python addon)
     public static string RemoteStatePath => Path.Combine(OximyDir, "remote-state.json");

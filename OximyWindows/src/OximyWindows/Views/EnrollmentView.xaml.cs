@@ -13,6 +13,7 @@ namespace OximyWindows.Views;
 public partial class EnrollmentView : UserControl
 {
     private bool _isLoading;
+    private bool _linkCopied;
 
     public EnrollmentView()
     {
@@ -119,18 +120,90 @@ public partial class EnrollmentView : UserControl
 
     /// <summary>
     /// Collect device info to send to the auth page.
+    /// Matches Mac app structure with permissions object.
     /// </summary>
     private static string CollectDeviceInfo()
     {
-        var info = new Dictionary<string, string>
+        var permissions = new Dictionary<string, bool>
+        {
+            ["networkCapture"] = true,
+            ["systemExtension"] = false,
+            ["fullDiskAccess"] = false
+        };
+
+        var info = new Dictionary<string, object>
         {
             ["hostname"] = Environment.MachineName,
-            ["os_version"] = $"Windows {Environment.OSVersion.Version}",
-            ["sensor_version"] = Constants.Version
+            ["os"] = "windows",
+            ["osVersion"] = $"Windows {Environment.OSVersion.Version}",
+            ["sensorVersion"] = Constants.Version,
+            ["hardwareId"] = Services.APIClient.GetHardwareId(),
+            ["permissions"] = permissions
         };
 
         var json = JsonSerializer.Serialize(info);
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+    }
+
+    /// <summary>
+    /// Build the complete auth URL with state and device info.
+    /// </summary>
+    private string BuildAuthUrl()
+    {
+        // Get or generate state for CSRF protection
+        var state = Properties.Settings.Default.AuthState;
+        if (string.IsNullOrEmpty(state))
+        {
+            state = Guid.NewGuid().ToString();
+            Properties.Settings.Default.AuthState = state;
+            Properties.Settings.Default.Save();
+        }
+
+        var deviceInfo = CollectDeviceInfo();
+        return $"{Constants.AuthUrl}?state={Uri.EscapeDataString(state)}&device_info={Uri.EscapeDataString(deviceInfo)}&callback=oximy://auth/callback";
+    }
+
+    /// <summary>
+    /// Handle Copy Link button click.
+    /// Copies the auth URL to clipboard with visual feedback.
+    /// </summary>
+    private void OnCopyLinkClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Generate state if not already set
+            var state = Properties.Settings.Default.AuthState;
+            if (string.IsNullOrEmpty(state))
+            {
+                state = Guid.NewGuid().ToString();
+                Properties.Settings.Default.AuthState = state;
+                Properties.Settings.Default.Save();
+            }
+
+            var authUrl = BuildAuthUrl();
+            Clipboard.SetText(authUrl);
+            Debug.WriteLine($"[EnrollmentView] Copied auth URL to clipboard: {authUrl}");
+
+            // Show checkmark feedback
+            _linkCopied = true;
+            CopyLinkIcon.Text = "\uE73E"; // Checkmark icon
+            CopyLinkButton.ToolTip = "Copied!";
+
+            // Reset after 2 seconds
+            Task.Delay(2000).ContinueWith(_ =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    _linkCopied = false;
+                    CopyLinkIcon.Text = "\uE8C8"; // Copy icon
+                    CopyLinkButton.ToolTip = "Copy login link";
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EnrollmentView] Failed to copy auth URL: {ex.Message}");
+        }
     }
 
     /// <summary>

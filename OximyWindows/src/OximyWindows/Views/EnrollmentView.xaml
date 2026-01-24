@@ -63,6 +63,34 @@
             </Setter>
         </Style>
 
+        <!-- Copy Link Button Style -->
+        <Style x:Key="CopyLinkButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#2D2D44"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="ToolTip" Value="Copy login link"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3D3D5C"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Step Number Style -->
         <Style x:Key="StepNumberStyle" TargetType="Border">
             <Setter Property="Width" Value="22"/>
@@ -163,19 +191,26 @@
                        Visibility="Collapsed"/>
         </Border>
 
-        <!-- Login with Browser Button -->
-        <Button Grid.Row="5"
-                x:Name="LoginButton"
-                Style="{StaticResource PrimaryButtonStyle}"
-                Click="OnLoginWithBrowserClick"
-                HorizontalAlignment="Center"
-                MinWidth="220">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="ButtonIcon" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets"
-                           FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <TextBlock x:Name="ButtonText" Text="Login with Browser" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Button>
+        <!-- Login with Browser Button + Copy Link -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button x:Name="LoginButton"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="OnLoginWithBrowserClick"
+                    MinWidth="180">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="ButtonIcon" Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets"
+                               FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="ButtonText" Text="Login with Browser" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="CopyLinkButton"
+                    Style="{StaticResource CopyLinkButtonStyle}"
+                    Click="OnCopyLinkClick"
+                    Margin="8,0,0,0">
+                <TextBlock x:Name="CopyLinkIcon" Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets"
+                           FontSize="14" VerticalAlignment="Center"/>
+            </Button>
+        </StackPanel>
 
         <!-- Sign Up Link -->
         <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">

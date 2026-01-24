@@ -5,6 +5,7 @@ param(
     [switch]$Release,
     [switch]$Clean,
     [switch]$CreateInstaller,
+    [switch]$Install,
     [string]$Version = "1.0.0"
 )
 
@@ -137,6 +138,67 @@ if ($CreateInstaller) {
     }
 
     Write-Host "  Installer created in: $(Join-Path $InstallerDir 'Output')" -ForegroundColor Green
+}
+
+# Step 7: Install to user's local app data if requested
+if ($Install) {
+    Write-Host ""
+    Write-Host "Installing to local app data..." -ForegroundColor Yellow
+
+    $InstallDir = Join-Path $env:LOCALAPPDATA "Programs\Oximy"
+
+    # Stop any running instance
+    $RunningProcess = Get-Process -Name "OximyWindows" -ErrorAction SilentlyContinue
+    if ($RunningProcess) {
+        Write-Host "  Stopping running instance..." -ForegroundColor Yellow
+        $RunningProcess | Stop-Process -Force
+        Start-Sleep -Seconds 1
+    }
+
+    # Remove old installation
+    if (Test-Path $InstallDir) {
+        Write-Host "  Removing old installation..." -ForegroundColor Yellow
+        Remove-Item $InstallDir -Recurse -Force
+    }
+
+    # Copy published files
+    Copy-Item $OutputDir -Destination $InstallDir -Recurse
+    Write-Host "  Installed to: $InstallDir" -ForegroundColor Green
+
+    # Register URL scheme
+    $ExePath = Join-Path $InstallDir "OximyWindows.exe"
+    $RegPath = "HKCU:\Software\Classes\oximy"
+
+    Write-Host "  Registering oximy:// URL scheme..." -ForegroundColor Yellow
+    if (Test-Path $RegPath) {
+        Remove-Item $RegPath -Recurse -Force
+    }
+
+    New-Item -Path $RegPath -Force | Out-Null
+    Set-ItemProperty -Path $RegPath -Name "(Default)" -Value "URL:Oximy Protocol"
+    Set-ItemProperty -Path $RegPath -Name "URL Protocol" -Value ""
+
+    New-Item -Path "$RegPath\shell\open\command" -Force | Out-Null
+    Set-ItemProperty -Path "$RegPath\shell\open\command" -Name "(Default)" -Value "`"$ExePath`" `"%1`""
+
+    Write-Host "  Registered oximy:// URL scheme" -ForegroundColor Green
+
+    # Create Start Menu shortcut
+    $StartMenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+    $ShortcutPath = Join-Path $StartMenuDir "Oximy.lnk"
+
+    Write-Host "  Creating Start Menu shortcut..." -ForegroundColor Yellow
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+    $Shortcut.TargetPath = $ExePath
+    $Shortcut.WorkingDirectory = $InstallDir
+    $Shortcut.Description = "Oximy Sensor"
+    $Shortcut.Save()
+
+    Write-Host "  Created Start Menu shortcut" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Installation complete!" -ForegroundColor Cyan
+    Write-Host "Run 'Oximy' from Start Menu or: $ExePath" -ForegroundColor Cyan
 }
 
 Write-Host ""

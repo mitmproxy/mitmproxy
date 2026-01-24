@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
@@ -16,6 +18,11 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private static TextWriterTraceListener? _fileTraceListener;
     private string? _pendingAuthUrl;
+
+    // Named Pipe IPC for passing auth URLs from second instances
+    private const string PipeName = "OximyWindowsAuthPipe";
+    private Thread? _pipeServerThread;
+    private volatile bool _pipeServerRunning;
 
     // Core Services
     public static MitmService MitmService { get; } = new();
@@ -50,11 +57,26 @@ public partial class App : Application
 
         if (!createdNew)
         {
-            // Another instance is running
+            // Another instance is running - try to send URL via pipe
+            if (e.Args.Length > 0 && e.Args[0].StartsWith("oximy://", StringComparison.OrdinalIgnoreCase))
+            {
+                if (SendUrlToRunningInstance(e.Args[0]))
+                {
+                    // URL sent successfully, exit silently
+                    Debug.WriteLine("[App] URL sent to running instance, exiting");
+                    Shutdown();
+                    return;
+                }
+            }
+
+            // No URL or send failed - show message
             MessageBox.Show("Oximy is already running.", "Oximy", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
         }
+
+        // Start pipe server for receiving URLs from future instances
+        StartPipeServer();
 
         // Register oximy:// URL scheme for deep linking
         RegisterUrlScheme();
@@ -185,6 +207,70 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// Start the Named Pipe server to receive auth URLs from second instances.
+    /// When browser redirects to oximy://, Windows launches a new instance.
+    /// That instance detects the mutex, sends the URL via pipe, and exits.
+    /// </summary>
+    private void StartPipeServer()
+    {
+        _pipeServerRunning = true;
+        _pipeServerThread = new Thread(() =>
+        {
+            Debug.WriteLine("[App] Pipe server started");
+            while (_pipeServerRunning)
+            {
+                try
+                {
+                    using var server = new NamedPipeServerStream(PipeName, PipeDirection.In);
+                    server.WaitForConnection();
+
+                    using var reader = new StreamReader(server);
+                    var url = reader.ReadLine();
+
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        Debug.WriteLine($"[App] Received URL via pipe: {url}");
+                        Dispatcher.Invoke(() => HandleAuthCallback(url));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (_pipeServerRunning)
+                        Debug.WriteLine($"[App] Pipe server error: {ex.Message}");
+                }
+            }
+            Debug.WriteLine("[App] Pipe server stopped");
+        });
+        _pipeServerThread.IsBackground = true;
+        _pipeServerThread.Start();
+    }
+
+    /// <summary>
+    /// Send URL to the running instance via Named Pipe.
+    /// Called by second instances that detect the mutex.
+    /// </summary>
+    private static bool SendUrlToRunningInstance(string url)
+    {
+        try
+        {
+            using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+            client.Connect(2000); // 2 second timeout
+
+            using var writer = new StreamWriter(client);
+            writer.WriteLine(url);
+            writer.Flush();
+
+            Debug.WriteLine($"[App] Sent URL to running instance: {url}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Failed to send URL to running instance: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Handle authentication callback from browser redirect.
     /// URL format: oximy://auth/callback?token=xxx&state=xxx&workspace_name=xxx&device_id=xxx
     /// </summary>
@@ -293,6 +379,9 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         Debug.WriteLine("[App] Exiting, performing cleanup...");
+
+        // Stop pipe server
+        _pipeServerRunning = false;
 
         // Flush pending events before shutdown
         try
