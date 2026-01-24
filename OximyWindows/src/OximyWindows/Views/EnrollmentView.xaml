@@ -100,8 +100,9 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="20,16,20,20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -112,40 +113,41 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Logo -->
+        <Image Grid.Row="0" Source="/Assets/oximy.png" Width="48" Height="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+
         <!-- Progress Indicator -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
             <Ellipse Width="10" Height="10" Fill="#6C63FF"/>
             <Rectangle Width="40" Height="2" Fill="#3D3D5C" Margin="8,0"/>
             <Ellipse Width="10" Height="10" Fill="#3D3D5C"/>
         </StackPanel>
 
         <!-- Title -->
-        <TextBlock Grid.Row="1"
+        <TextBlock Grid.Row="2"
                    Text="Connect to Workspace"
-                   FontSize="22"
+                   FontSize="20"
                    FontWeight="SemiBold"
                    Foreground="White"
                    HorizontalAlignment="Center"
                    Margin="0,0,0,8"/>
 
         <!-- Instructions Panel -->
-        <Border Grid.Row="2" Background="#6C63FF" Opacity="0.15" CornerRadius="10" Margin="0,12,0,0">
-            <Border Background="Transparent" Padding="12">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="20"
-                               Foreground="#6C63FF" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Sign in with your browser" FontSize="13" FontWeight="Medium" Foreground="White"/>
-                        <TextBlock Text="You'll be redirected to authenticate" FontSize="11" Foreground="#9999AA"/>
-                    </StackPanel>
+        <Border Grid.Row="3" Background="#262640" CornerRadius="10" Margin="0,8,0,0" Padding="12">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                           Foreground="#8B84FF" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <StackPanel>
+                    <TextBlock Text="Sign in with your browser" FontSize="13" FontWeight="Medium" Foreground="White"/>
+                    <TextBlock Text="You'll be redirected to authenticate" FontSize="11" Foreground="#AAAACC"/>
                 </StackPanel>
-            </Border>
+            </StackPanel>
         </Border>
 
         <!-- How it works -->
-        <Border Grid.Row="3" Background="#2D2D44" CornerRadius="10" Margin="0,16,0,0" Padding="16">
+        <Border Grid.Row="4" Background="#2D2D44" CornerRadius="10" Margin="0,12,0,0" Padding="14">
             <StackPanel>
-                <TextBlock Text="How it works:" FontSize="12" FontWeight="SemiBold" Foreground="#9999AA" Margin="0,0,0,12"/>
+                <TextBlock Text="How it works:" FontSize="12" FontWeight="SemiBold" Foreground="#B0B0CC" Margin="0,0,0,12"/>
 
                 <!-- Step 1 -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -154,7 +156,7 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="Click the button below to open your browser"
-                               FontSize="12" Foreground="#9999AA" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                               FontSize="12" Foreground="#B0B0CC" VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </StackPanel>
 
                 <!-- Step 2 -->
@@ -164,7 +166,7 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="Enter your 6-digit code on the web page"
-                               FontSize="12" Foreground="#9999AA" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                               FontSize="12" Foreground="#B0B0CC" VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </StackPanel>
 
                 <!-- Step 3 -->
@@ -174,13 +176,13 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="You'll be automatically signed in here"
-                               FontSize="12" Foreground="#9999AA" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                               FontSize="12" Foreground="#B0B0CC" VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- Error Message (fixed height to prevent layout shifts) -->
-        <Border Grid.Row="4" Height="40" Margin="0,8,0,0">
+        <Border Grid.Row="5" Height="32" Margin="0,6,0,0">
             <TextBlock x:Name="ErrorText"
                        FontSize="13"
                        Foreground="#FF6B6B"
@@ -192,7 +194,7 @@
         </Border>
 
         <!-- Login with Browser Button + Copy Link -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="LoginButton"
                     Style="{StaticResource PrimaryButtonStyle}"
                     Click="OnLoginWithBrowserClick"
@@ -213,9 +215,9 @@
         </StackPanel>
 
         <!-- Sign Up Link -->
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,4">
             <TextBlock Text="Need an account? "
-                       Foreground="#9999AA"
+                       Foreground="#B0B0CC"
                        FontSize="13"
                        VerticalAlignment="Center"/>
             <Button Content="Sign up free"
