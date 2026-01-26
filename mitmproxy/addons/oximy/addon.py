@@ -1987,11 +1987,14 @@ class OximyAddon:
         # Check certificate before anything else (macOS only)
         if sys.platform == "darwin":
             if not _ensure_cert_trusted():
-                logger.error("=" * 60)
-                logger.error("CERTIFICATE NOT TRUSTED - HTTPS interception will fail!")
-                logger.error("To install manually, run:")
-                logger.error(f"  sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain {_get_cert_path()}")
-                logger.error("=" * 60)
+                # Use warning (not error) to avoid triggering mitmproxy's errorcheck addon
+                # which exits the process on startup errors. The proxy can still run;
+                # HTTPS interception just won't work until cert is installed via MDM.
+                logger.warning("=" * 60)
+                logger.warning("CERTIFICATE NOT TRUSTED - HTTPS interception will fail!")
+                logger.warning("To install manually, run:")
+                logger.warning(f"  sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain {_get_cert_path()}")
+                logger.warning("=" * 60)
                 # Continue anyway - user might install manually or cert will be generated
             else:
                 logger.info("***** OXIMY CERTIFICATE TRUSTED ****")
