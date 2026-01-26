@@ -119,18 +119,28 @@ struct SettingsTab: View {
                                 Text(appState.workspaceName.isEmpty ? "Connected" : appState.workspaceName)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
-                                Text("Logged in")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
+
+                                if MDMConfigService.shared.isManagedDevice {
+                                    Text("Managed by your organization")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                } else {
+                                    Text("Logged in")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                }
                             }
 
                             Spacer()
 
-                            Button("Log Out") {
-                                appState.logout()
+                            // Hide logout button if MDM disables it
+                            if appState.canLogout {
+                                Button("Log Out") {
+                                    appState.logout()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
                         }
                     } else {
                         HStack {
@@ -177,16 +187,33 @@ struct SettingsTab: View {
                                 .fontWeight(.medium)
                         }
 
-                        Divider()
-
-                        Button(role: .destructive) {
-                            appState.reset()
-                        } label: {
-                            Text("Reset All Settings")
-                                .font(.caption)
+                        // Show managed device indicator
+                        if MDMConfigService.shared.isManagedDevice {
+                            HStack {
+                                Text("Management")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("MDM Managed")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.blue)
+                            }
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+
+                        // Hide reset button for managed devices
+                        if appState.canLogout {
+                            Divider()
+
+                            Button(role: .destructive) {
+                                appState.reset()
+                            } label: {
+                                Text("Reset All Settings")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
                     }
                 }
             }

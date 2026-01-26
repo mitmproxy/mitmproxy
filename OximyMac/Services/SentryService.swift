@@ -373,6 +373,8 @@ extension LaunchServiceError {
             return "LAUNCH_REG_FAILED"
         case .unregistrationFailed:
             return "LAUNCH_UNREG_FAILED"
+        case .managedByMDM:
+            return "LAUNCH_MDM_BLOCKED"
         }
     }
 }

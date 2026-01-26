@@ -272,6 +272,15 @@ class MITMService: ObservableObject {
         // CRITICAL: Set working directory to home to avoid local mitmproxy source
         process.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
 
+        // CRITICAL: Clear Python environment variables to prevent conflicts with local source
+        // The mitmdump wrapper script will set the correct values for bundled Python
+        var env = ProcessInfo.processInfo.environment
+        env.removeValue(forKey: "PYTHONPATH")
+        env.removeValue(forKey: "PYTHONHOME")
+        env.removeValue(forKey: "PYTHONSTARTUP")
+        env.removeValue(forKey: "VIRTUAL_ENV")
+        process.environment = env
+
         // Run via bash wrapper script
         process.arguments = [
             mitmdumpPath,

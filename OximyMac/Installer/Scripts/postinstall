@@ -1,41 +1,188 @@
 #!/bin/bash
 # Oximy Post-Install Script
 # Runs after the app is installed
+#
+# For MDM deployments, this script can:
+# - Write pre-provisioned device token
+# - Install system-level LaunchAgent for managed auto-start
+# - Trust CA certificate (if deploying via MDM script)
 
 set -e
 
 echo "=== Oximy Post-Install ==="
 
-# Create Oximy config directory
-OXIMY_DIR="$HOME/.oximy"
-echo "Creating config directory: $OXIMY_DIR"
-mkdir -p "$OXIMY_DIR"
-mkdir -p "$OXIMY_DIR/traces"
-mkdir -p "$OXIMY_DIR/logs"
+# Determine the target user's home directory
+# For Jamf deployments, the console user might not be available during install
+# Use multiple detection methods to handle various scenarios
 
-# Set proper permissions
-chmod 700 "$OXIMY_DIR"
+# Method 1: Check /dev/console (works when user is logged in)
+CONSOLE_USER=$(stat -f "%Su" /dev/console 2>/dev/null)
 
-# Remove any stale LaunchAgent (in case of upgrade)
-LAUNCH_AGENT="$HOME/Library/LaunchAgents/com.oximy.agent.plist"
-if [ -f "$LAUNCH_AGENT" ]; then
-    echo "Removing old LaunchAgent..."
-    launchctl unload "$LAUNCH_AGENT" 2>/dev/null || true
-    rm -f "$LAUNCH_AGENT"
+# Method 2: If root or empty, try scutil (more reliable for active sessions)
+if [ "$CONSOLE_USER" = "root" ] || [ -z "$CONSOLE_USER" ]; then
+    CONSOLE_USER=$(scutil <<< "show State:/Users/ConsoleUser" 2>/dev/null | awk '/Name :/ { print $3 }')
 fi
 
-# Note: We don't auto-register login item here
-# The app will do this via SMAppService when user completes setup
+# Method 3: If still root/empty, look for first real user in /Users
+if [ "$CONSOLE_USER" = "root" ] || [ -z "$CONSOLE_USER" ]; then
+    CONSOLE_USER=$(ls -1 /Users 2>/dev/null | grep -v "^Shared$" | grep -v "^Guest$" | grep -v "^\." | head -1)
+fi
+
+# Final fallback
+if [ -z "$CONSOLE_USER" ]; then
+    echo "WARNING: Could not determine console user, using current user"
+    CONSOLE_USER="$USER"
+fi
+
+# Handle case where we still got root
+if [ "$CONSOLE_USER" = "root" ]; then
+    echo "WARNING: Could not determine target user (got root)."
+    echo "    User-specific setup will be skipped. The app will handle this on first launch."
+    USER_HOME=""
+else
+    USER_HOME=$(eval echo ~"$CONSOLE_USER")
+fi
+
+# Only perform user-specific setup if we have a valid user home
+if [ -n "$USER_HOME" ] && [ -d "$USER_HOME" ]; then
+    OXIMY_DIR="$USER_HOME/.oximy"
+    echo "Target user: $CONSOLE_USER"
+    echo "Config directory: $OXIMY_DIR"
+
+    # Create Oximy config directory
+    mkdir -p "$OXIMY_DIR"
+    mkdir -p "$OXIMY_DIR/traces"
+    mkdir -p "$OXIMY_DIR/logs"
+
+    # Set proper ownership and permissions
+    if [ "$CONSOLE_USER" != "root" ]; then
+        chown -R "$CONSOLE_USER" "$OXIMY_DIR"
+    fi
+    chmod 700 "$OXIMY_DIR"
+
+    # Remove any stale user LaunchAgent (in case of upgrade)
+    USER_LAUNCH_AGENT="$USER_HOME/Library/LaunchAgents/com.oximy.agent.plist"
+    if [ -f "$USER_LAUNCH_AGENT" ]; then
+        echo "Removing old user LaunchAgent..."
+        sudo -u "$CONSOLE_USER" launchctl unload "$USER_LAUNCH_AGENT" 2>/dev/null || true
+        rm -f "$USER_LAUNCH_AGENT"
+    fi
+else
+    echo "Skipping user-specific directory setup (no user home available)"
+    OXIMY_DIR=""
+fi
+
+# MDM Integration: Check for MDM-provided device token
+# MDM can set this via configuration profile or pre-stage script
+# IMPORTANT: MDM profiles are stored in /Library/Managed Preferences/, not standard UserDefaults
+MDM_TOKEN=$(defaults read "/Library/Managed Preferences/com.oximy.mac" ManagedDeviceToken 2>/dev/null || echo "")
+
+# Fallback to standard defaults (for manual testing or direct defaults write)
+if [ -z "$MDM_TOKEN" ]; then
+    MDM_TOKEN=$(defaults read com.oximy.mac ManagedDeviceToken 2>/dev/null || echo "")
+fi
+if [ -n "$MDM_TOKEN" ]; then
+    if [ -n "$OXIMY_DIR" ]; then
+        echo "MDM: Writing pre-provisioned device token..."
+        echo -n "$MDM_TOKEN" > "$OXIMY_DIR/device-token"
+        chmod 600 "$OXIMY_DIR/device-token"
+        if [ "$CONSOLE_USER" != "root" ]; then
+            chown "$CONSOLE_USER" "$OXIMY_DIR/device-token"
+        fi
+    else
+        echo "MDM: Device token found but no user home available - app will apply on first launch"
+    fi
+fi
+
+# MDM Integration: Install system-level LaunchAgent for managed devices
+# Check if ForceAutoStart is enabled via MDM
+# IMPORTANT: Read from managed preferences first, then fallback to standard defaults
+FORCE_AUTO_START=$(defaults read "/Library/Managed Preferences/com.oximy.mac" ForceAutoStart 2>/dev/null || echo "")
+if [ -z "$FORCE_AUTO_START" ]; then
+    FORCE_AUTO_START=$(defaults read com.oximy.mac ForceAutoStart 2>/dev/null || echo "0")
+fi
+if [ "$FORCE_AUTO_START" = "1" ] || [ "$FORCE_AUTO_START" = "true" ]; then
+    echo "MDM: Installing system LaunchAgent for forced auto-start..."
+
+    SYSTEM_LAUNCH_AGENT="/Library/LaunchAgents/com.oximy.agent.plist"
+
+    cat > "$SYSTEM_LAUNCH_AGENT" << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.oximy.agent</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Applications/Oximy.app/Contents/MacOS/Oximy</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+    <key>LimitLoadToSessionType</key>
+    <string>Aqua</string>
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>
+PLIST
+
+    chmod 644 "$SYSTEM_LAUNCH_AGENT"
+    chown root:wheel "$SYSTEM_LAUNCH_AGENT"
+
+    # Load the LaunchAgent for the current user session
+    if [ "$CONSOLE_USER" != "root" ]; then
+        sudo -u "$CONSOLE_USER" launchctl load "$SYSTEM_LAUNCH_AGENT" 2>/dev/null || true
+    fi
+
+    echo "    System LaunchAgent installed at: $SYSTEM_LAUNCH_AGENT"
+fi
+
+# MDM Integration: Trust CA certificate if it exists and MDM says to
+# This allows MDM admins to script CA trust without user password prompt
+# IMPORTANT: Read from managed preferences first, then fallback to standard defaults
+MDM_CA_INSTALLED=$(defaults read "/Library/Managed Preferences/com.oximy.mac" ManagedCACertInstalled 2>/dev/null || echo "")
+if [ -z "$MDM_CA_INSTALLED" ]; then
+    MDM_CA_INSTALLED=$(defaults read com.oximy.mac ManagedCACertInstalled 2>/dev/null || echo "0")
+fi
+
+if [ "$MDM_CA_INSTALLED" = "1" ] || [ "$MDM_CA_INSTALLED" = "true" ]; then
+    if [ -n "$USER_HOME" ]; then
+        CA_CERT_PATH="$USER_HOME/.mitmproxy/oximy-ca-cert.pem"
+        if [ -f "$CA_CERT_PATH" ]; then
+            echo "MDM: Trusting CA certificate in System Keychain..."
+            security add-trusted-cert -d -r trustRoot \
+                -k /Library/Keychains/System.keychain \
+                "$CA_CERT_PATH" 2>/dev/null || echo "    (Certificate may already be trusted or requires interactive auth)"
+        else
+            echo "    CA certificate not found yet - will be generated on first app launch"
+        fi
+    else
+        echo "MDM: CA trust requested but no user home available - app will handle on first launch"
+    fi
+fi
 
 echo ""
 echo "=== Installation Complete ==="
 echo ""
 echo "Oximy has been installed to /Applications/Oximy.app"
 echo ""
-echo "Next steps:"
-echo "1. Open Oximy from Applications or Spotlight"
-echo "2. Follow the onboarding to set up certificate and proxy"
-echo "3. Enter your 6-digit code from the Oximy dashboard"
+
+# Different messaging for MDM vs user installations
+if [ -n "$MDM_TOKEN" ]; then
+    echo "This device is managed by your organization."
+    echo "Oximy will start automatically and connect to your workspace."
+else
+    echo "Next steps:"
+    echo "1. Open Oximy from Applications or Spotlight"
+    echo "2. Follow the onboarding to set up certificate and proxy"
+    echo "3. Sign in with your Oximy account"
+fi
 echo ""
 
 exit 0

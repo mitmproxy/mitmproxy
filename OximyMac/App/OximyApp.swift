@@ -366,6 +366,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var allowQuit = false
 
     @objc private func quitApp() {
+        // Check if MDM blocks quitting
+        if MDMConfigService.shared.disableQuit {
+            print("[OximyApp] Quit blocked by MDM policy (DisableQuit)")
+            return
+        }
+
         print("[OximyApp] Quit requested - setting allowQuit=true")
         allowQuit = true
 
@@ -378,6 +384,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Block CMD+Q unless explicitly allowed via quitApp()
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         print("[OximyApp] applicationShouldTerminate called, allowQuit=\(allowQuit)")
+
+        // Check if MDM blocks quitting
+        if MDMConfigService.shared.disableQuit {
+            print("[OximyApp] Termination blocked by MDM policy")
+            return .terminateCancel
+        }
+
         if allowQuit {
             print("[OximyApp] Allowing termination")
             return .terminateNow

@@ -28,7 +28,7 @@ import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
-from mitmproxy import ctx, http, tls
+from mitmproxy import connection, ctx, http, tls
 
 # Create urllib opener that bypasses system proxy settings.
 # This is critical: when Mac app enables system proxy pointing to mitmproxy,
@@ -1759,6 +1759,7 @@ class OximyAddon:
         self._debug_writer: TraceWriter | None = None  # Unfiltered logs
         self._uploader: TraceUploader | None = None  # For uploading fallback JSONL files
         self._resolver: ProcessResolver | None = None
+        self._client_processes: dict[str, ClientProcess] = {}  # client_conn.id -> ClientProcess
         self._device_id: str | None = None
         self._output_dir: Path | None = None
         self._last_upload_time: float = 0
@@ -1797,10 +1798,11 @@ class OximyAddon:
         }
 
     def _ensure_writer(self) -> TraceWriter | None:
-        """Lazily initialize disk-based trace writer for emergency fallback."""
+        """Lazily initialize disk-based trace writer for debug ingestion or emergency fallback."""
+        logger.debug(f"_ensure_writer: _writer is None={self._writer is None}, _output_dir={self._output_dir}")
         if self._writer is None and self._output_dir:
             self._writer = TraceWriter(self._output_dir, self._filename_pattern)
-            logger.info("Emergency disk writer initialized (API upload failed)")
+            logger.info(f"Disk writer initialized: {self._output_dir}")
         return self._writer
 
     def _write_to_buffer(self, event: dict) -> bool:
@@ -1814,9 +1816,12 @@ class OximyAddon:
 
         # Debug mode: also write to disk for inspection
         if self._debug_ingestion:
+            logger.debug(f"_write_to_buffer: debug_ingestion=True, calling _ensure_writer")
             writer = self._ensure_writer()
             if writer:
                 writer.write(event)
+            else:
+                logger.warning("_write_to_buffer: _ensure_writer returned None!")
 
         # Add to memory buffer for cloud upload
         if self._buffer.append(event):
@@ -1979,7 +1984,10 @@ class OximyAddon:
             return
 
         self._enabled = True
-        logger.setLevel(logging.DEBUG if ctx.options.oximy_verbose else logging.INFO)
+        log_level = logging.DEBUG if ctx.options.oximy_verbose else logging.INFO
+        logger.setLevel(log_level)
+        # Also set process module logger to same level for debugging
+        logging.getLogger("mitmproxy.addons.oximy.process").setLevel(log_level)
 
         # Register cleanup handlers for graceful shutdown
         _register_cleanup_handlers()
@@ -1987,11 +1995,14 @@ class OximyAddon:
         # Check certificate before anything else (macOS only)
         if sys.platform == "darwin":
             if not _ensure_cert_trusted():
-                logger.error("=" * 60)
-                logger.error("CERTIFICATE NOT TRUSTED - HTTPS interception will fail!")
-                logger.error("To install manually, run:")
-                logger.error(f"  sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain {_get_cert_path()}")
-                logger.error("=" * 60)
+                # Use warning (not error) to avoid triggering mitmproxy's errorcheck addon
+                # which exits the process on startup errors. The proxy can still run;
+                # HTTPS interception just won't work until cert is installed via MDM.
+                logger.warning("=" * 60)
+                logger.warning("CERTIFICATE NOT TRUSTED - HTTPS interception will fail!")
+                logger.warning("To install manually, run:")
+                logger.warning(f"  sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain {_get_cert_path()}")
+                logger.warning("=" * 60)
                 # Continue anyway - user might install manually or cert will be generated
             else:
                 logger.info("***** OXIMY CERTIFICATE TRUSTED ****")
@@ -2000,6 +2011,7 @@ class OximyAddon:
         output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
         self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
         self._filename_pattern = output_config["output"].get("filename_pattern", "traces_{date}.jsonl")
+        logger.info(f"Output dir: {self._output_dir}, Pattern: {self._filename_pattern}")
 
         # Cloud-first ingestion: initialize memory buffer and direct uploader
         self._buffer = MemoryTraceBuffer()
@@ -2101,7 +2113,9 @@ class OximyAddon:
             logger.info("Trace upload disabled (host app handles sync)")
 
         # Initialize process resolver for client attribution
-        self._resolver = ProcessResolver()
+        # Pass proxy port so resolver can query active connections efficiently
+        proxy_port = ctx.options.listen_port or 8080
+        self._resolver = ProcessResolver(proxy_port=proxy_port)
 
         # Get device ID
         self._device_id = get_device_id()
@@ -2142,6 +2156,28 @@ class OximyAddon:
                     _write_proxy_state()
         else:
             logger.warning("Could not get proxy port - system proxy not configured")
+
+    async def client_connected(self, client: connection.Client) -> None:
+        """Resolve client process at connection time when TCP is definitely active.
+
+        This is more reliable than resolving during request() because the TCP
+        connection is guaranteed to be active at this point. For HTTP/2 and
+        keep-alive connections, this amortizes the cost across many requests.
+        """
+        if not self._enabled or not self._resolver:
+            return
+
+        try:
+            client_port = client.peername[1]
+            client_process = await self._resolver.get_process_for_port(client_port)
+            self._client_processes[client.id] = client_process
+            logger.debug(f"[CLIENT_CONNECTED] port={client_port} -> {client_process.name} (bundle: {client_process.bundle_id})")
+        except Exception as e:
+            logger.debug(f"[CLIENT_CONNECTED] Failed to resolve process for port {client.peername[1] if client.peername else 'unknown'}: {e}")
+
+    def client_disconnected(self, client: connection.Client) -> None:
+        """Clean up client process mapping when connection closes."""
+        self._client_processes.pop(client.id, None)
 
     def _check_blacklist(self, *texts: str, blacklist: list[str] | None = None) -> str | None:
         """Check if any text contains a blacklisted word.
@@ -2323,17 +2359,27 @@ class OximyAddon:
 
         # =====================================================================
         # STEP 4: Resolve client process (only for whitelisted requests)
-        # This is the expensive operation - runs lsof/ps/defaults subprocesses
+        # First: try connection-time cache (most reliable, populated by client_connected hook)
+        # Fallback: lsof lookup if not in cache
         # =====================================================================
         client_process: ClientProcess | None = None
-        if self._resolver and flow.client_conn and flow.client_conn.peername:
+
+        # First: try connection-time cache (most reliable)
+        if flow.client_conn and flow.client_conn.id in self._client_processes:
+            client_process = self._client_processes[flow.client_conn.id]
+            logger.debug(f"[PROCESS] Using cached: {client_process.name} (bundle: {client_process.bundle_id})")
+
+        # Fallback: lsof lookup if not in cache
+        elif self._resolver and flow.client_conn and flow.client_conn.peername:
             try:
                 client_port = flow.client_conn.peername[1]
                 client_process = await self._resolver.get_process_for_port(client_port)
-                flow.metadata["oximy_client"] = client_process
-                logger.debug(f"Client: {client_process.name} (PID {client_process.pid}, bundle: {client_process.bundle_id})")
+                logger.debug(f"[PROCESS] lsof lookup: {client_process.name} (bundle: {client_process.bundle_id})")
             except Exception as e:
-                logger.debug(f"Failed to get client process: {e}")
+                logger.debug(f"[PROCESS] lsof fallback failed: {e}")
+
+        if client_process:
+            flow.metadata["oximy_client"] = client_process
 
         # =====================================================================
         # STEP 5: App Origin Check (Layer 1)
@@ -2346,9 +2392,16 @@ class OximyAddon:
             config["allowed_app_non_hosts"],
         )
 
+        # Fallback: if bundle_id is None but User-Agent looks like a browser, treat as "host"
+        if app_type is None and bundle_id is None:
+            user_agent = flow.request.headers.get("User-Agent", "").lower()
+            if any(browser in user_agent for browser in ("chrome", "firefox", "safari", "edge", "mozilla")):
+                app_type = "host"
+                logger.info(f"[APP_FALLBACK] bundle_id=None but User-Agent looks like browser, treating as host")
+
         if app_type is None:
             # App not in allowed list - skip capture
-            logger.debug(f"[APP_SKIP] bundle_id={bundle_id} not in allowed apps")
+            logger.info(f"[APP_SKIP] bundle_id={bundle_id} not in allowed apps (host={flow.request.pretty_host})")
             flow.metadata["oximy_skip"] = True
             flow.metadata["oximy_skip_reason"] = "app_not_allowed"
             return
@@ -2395,7 +2448,12 @@ class OximyAddon:
         # EARLY EXIT: Skip expensive operations for non-captured requests
         # This check MUST happen BEFORE normalize_body and _build_event
         if flow.metadata.get("oximy_skip"):
+            skip_reason = flow.metadata.get("oximy_skip_reason", "unknown")
+            logger.info(f"[SKIP] {flow.request.pretty_host}{flow.request.path} - reason: {skip_reason}")
             return
+
+        # Log when requests pass all filters and will be captured
+        logger.info(f"[CAPTURE] {flow.request.pretty_host}{flow.request.path}")
 
         # Only do expensive operations for captured (whitelisted) requests
         host = flow.request.pretty_host

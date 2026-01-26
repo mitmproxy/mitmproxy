@@ -18,6 +18,14 @@ class CertificateService: ObservableObject {
 
     /// Check current CA status
     func checkStatus() {
+        // Check if MDM says CA is already installed via configuration profile
+        if MDMConfigService.shared.managedCACertInstalled {
+            print("[CertificateService] CA marked as installed via MDM profile")
+            isCAGenerated = true
+            isCAInstalled = true
+            return
+        }
+
         let fm = FileManager.default
         let keyExists = fm.fileExists(atPath: Constants.caKeyPath.path)
         let certExists = fm.fileExists(atPath: Constants.caCertPath.path)
@@ -214,8 +222,16 @@ class CertificateService: ObservableObject {
     // MARK: - Keychain Installation
 
     /// Install CA certificate to Keychain with trust settings
-    /// This will prompt the user for their password
+    /// This will prompt the user for their password (unless MDM has pre-installed)
     func installCA() async throws {
+        // Check if MDM says CA is already installed via configuration profile
+        if MDMConfigService.shared.managedCACertInstalled {
+            print("[CertificateService] CA already installed via MDM - skipping installation")
+            isCAInstalled = true
+            lastError = nil
+            return
+        }
+
         if !isCAGenerated {
             try await generateCA()
         }

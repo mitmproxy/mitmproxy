@@ -128,6 +128,47 @@ final class AppState: ObservableObject {
     private func loadPersistedState() {
         let defaults = UserDefaults.standard
 
+        // Check for MDM-managed configuration FIRST
+        let mdmConfig = MDMConfigService.shared
+
+        if mdmConfig.isManagedDevice {
+            print("[AppState] MDM-managed device detected")
+
+            // Apply MDM configuration to standard UserDefaults
+            mdmConfig.applyManagedConfiguration()
+
+            // Handle managed device token
+            if let token = mdmConfig.managedDeviceToken {
+                writeDeviceTokenFile(token)
+            }
+
+            // Set account info from MDM if available
+            if let workspaceName = mdmConfig.managedWorkspaceName {
+                self.workspaceName = workspaceName
+                isLoggedIn = true
+            }
+
+            if let deviceId = mdmConfig.managedDeviceId {
+                self.deviceId = deviceId
+            }
+
+            // Determine phase for managed device
+            if mdmConfig.shouldSkipAllSetup {
+                // MDM says skip everything - go directly to ready
+                print("[AppState] MDM: Skipping all setup, going to ready phase")
+                phase = .ready
+                startServices()
+                return
+            } else if mdmConfig.shouldSkipEnrollment {
+                // MDM says skip enrollment only - go to setup
+                print("[AppState] MDM: Skipping enrollment, going to setup phase")
+                phase = .setup
+                return
+            }
+            // Fall through to normal logic if MDM doesn't specify phase
+        }
+
+        // Standard (non-MDM) state loading
         // Load account info if available
         if let workspace = defaults.string(forKey: Constants.Defaults.workspaceName) {
             workspaceName = workspace
@@ -195,8 +236,24 @@ final class AppState: ObservableObject {
 
     /// Start background services
     private func startServices() {
+        NSLog("[AppState] startServices() called")
         HeartbeatService.shared.start()
         SyncService.shared.start()
+
+        // Start the proxy when entering ready phase
+        // Use a slight delay to ensure app initialization is complete
+        NSLog("[AppState] Scheduling MITMService start...")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            Task { @MainActor in
+                NSLog("[AppState] Starting MITMService now...")
+                do {
+                    try await MITMService.shared.start()
+                    NSLog("[AppState] MITMService started successfully")
+                } catch {
+                    NSLog("[AppState] Failed to start MITMService: %@", String(describing: error))
+                }
+            }
+        }
     }
 
     /// Stop background services
@@ -343,7 +400,18 @@ final class AppState: ObservableObject {
         )
     }
 
+    /// Check if logout is allowed (not blocked by MDM)
+    var canLogout: Bool {
+        !MDMConfigService.shared.disableUserLogout
+    }
+
     func logout() {
+        // Check if logout is blocked by MDM
+        if MDMConfigService.shared.disableUserLogout {
+            print("[AppState] Logout blocked by MDM policy")
+            return
+        }
+
         // Stop services first
         stopServices()
 
