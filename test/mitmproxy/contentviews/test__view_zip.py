@@ -28,7 +28,9 @@ def create_test_zip(files: dict[str, bytes]) -> bytes:
 
 def test_view_zip_basic():
     """Test basic ZIP file viewing."""
-    zip_data = create_test_zip({"file1.txt": b"Hello, World!", "file2.txt": b"Test content"})
+    zip_data = create_test_zip(
+        {"file1.txt": b"Hello, World!", "file2.txt": b"Test content"}
+    )
     result = zip.prettify(zip_data, meta("application/zip"))
     assert "# ZIP Archive" in result
     assert "Total files: 2" in result
@@ -73,7 +75,9 @@ def test_view_zip_compression_methods():
         # Stored (no compression)
         zf.writestr("stored.txt", b"stored content", compress_type=zipfile.ZIP_STORED)
         # Deflated
-        zf.writestr("deflated.txt", b"deflated content", compress_type=zipfile.ZIP_DEFLATED)
+        zf.writestr(
+            "deflated.txt", b"deflated content", compress_type=zipfile.ZIP_DEFLATED
+        )
     zip_data = buffer.getvalue()
 
     result = zip.prettify(zip_data, meta("application/zip"))
@@ -123,7 +127,10 @@ def test_view_zip_invalid_data():
 def test_render_priority():
     """Test render priority logic."""
     # Should match application/zip content type
-    assert zip.render_priority(b"PK\x03\x04", Metadata(content_type="application/zip")) == 1.0
+    assert (
+        zip.render_priority(b"PK\x03\x04", Metadata(content_type="application/zip"))
+        == 1.0
+    )
 
     # Should match even without magic bytes if content-type is correct
     assert zip.render_priority(b"data", Metadata(content_type="application/zip")) == 1.0
@@ -140,7 +147,9 @@ def test_render_priority():
 
 def test_view_zip_special_characters():
     """Test ZIP file with special characters in filenames."""
-    zip_data = create_test_zip({"file with spaces.txt": b"content", "file-with-dashes.txt": b"content2"})
+    zip_data = create_test_zip(
+        {"file with spaces.txt": b"content", "file-with-dashes.txt": b"content2"}
+    )
     result = zip.prettify(zip_data, meta("application/zip"))
     assert "file with spaces.txt" in result
     assert "file-with-dashes.txt" in result

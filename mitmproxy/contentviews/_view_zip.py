@@ -44,7 +44,9 @@ class ZipContentview(Contentview):
                             pass
 
                     if info.comment:
-                        file_meta["comment"] = info.comment.decode("utf-8", errors="replace")
+                        file_meta["comment"] = info.comment.decode(
+                            "utf-8", errors="replace"
+                        )
 
                     files_data[info.filename] = file_meta
 
@@ -55,7 +57,9 @@ class ZipContentview(Contentview):
                 }
 
                 if total_uncompressed > 0:
-                    compression_ratio = (1 - total_compressed / total_uncompressed) * 100
+                    compression_ratio = (
+                        1 - total_compressed / total_uncompressed
+                    ) * 100
                     archive_meta["Compression ratio"] = f"{compression_ratio:.1f}%"
 
                 archive_meta["Files"] = files_data
