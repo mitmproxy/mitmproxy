@@ -13,6 +13,9 @@
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
 - Fix a bug where mitmweb would show a blank page on Windows.
   ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
+- Switch all content-encoding compression algorithms to use fastest settings by default.
+  This significantly improves addon runtime performance when assigning to `message.content`.
+  (Brotli: 80x faster, Gzip: 4x faster, Deflate: 6x faster, Zstd: 4x faster)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
