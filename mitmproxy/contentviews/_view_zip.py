@@ -4,12 +4,30 @@ from datetime import datetime
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
-from mitmproxy.contentviews._utils import yaml_dumps
+
+
+def _get_compression_method_name(info: zipfile.ZipInfo) -> str:
+    """Get human-readable compression method name."""
+    method = info.compress_type
+    method_names = getattr(zipfile, "compressor_names", {})
+    if method in method_names:
+        return method_names[method]
+    # Fallback for common methods
+    if method == zipfile.ZIP_STORED:
+        return "Stored"
+    elif method == zipfile.ZIP_DEFLATED:
+        return "Deflated"
+    elif method == zipfile.ZIP_BZIP2:
+        return "BZip2"
+    elif method == zipfile.ZIP_LZMA:
+        return "LZMA"
+    else:
+        return f"Method {method}"
 
 
 class ZipContentview(Contentview):
     name = "ZIP Archive"
-    syntax_highlight = "yaml"
+    syntax_highlight = "none"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         try:
@@ -17,54 +35,57 @@ class ZipContentview(Contentview):
                 info_list = zip_file.infolist()
 
                 if not info_list:
-                    return "# ZIP Archive\nEmpty archive"
+                    return "ZIP Archive\nEmpty archive"
 
-                total_compressed = sum(info.compress_size for info in info_list)
-                total_uncompressed = sum(info.file_size for info in info_list)
+                # Collect file information
+                file_rows = []
+                total_length = 0
 
-                files_data = {}
                 for info in info_list:
-                    # compressor_names exists at runtime but not in type stubs
-                    compression_names = getattr(zipfile, "compressor_names", {})
-                    compression_method = compression_names.get(
-                        info.compress_type, f"unknown({info.compress_type})"
-                    )
+                    length = info.file_size
+                    total_length += length
 
-                    file_meta = {
-                        "compressed": f"{info.compress_size:,} bytes",
-                        "uncompressed": f"{info.file_size:,} bytes",
-                        "method": compression_method,
-                    }
-
+                    # Format date and time
+                    date_str = ""
+                    time_str = ""
                     if info.date_time:
                         try:
                             dt = datetime(*info.date_time)
-                            file_meta["modified"] = dt.strftime("%Y-%m-%d %H:%M:%S")
+                            date_str = dt.strftime("%Y-%m-%d")
+                            time_str = dt.strftime("%H:%M")
                         except (ValueError, OverflowError):
                             pass
 
-                    if info.comment:
-                        file_meta["comment"] = info.comment.decode(
-                            "utf-8", errors="replace"
-                        )
+                    file_rows.append((length, date_str, time_str, info.filename))
 
-                    files_data[info.filename] = file_meta
-
-                archive_meta = {
-                    "Total files": len(info_list),
-                    "Total compressed size": f"{total_compressed:,} bytes",
-                    "Total uncompressed size": f"{total_uncompressed:,} bytes",
-                }
-
-                if total_uncompressed > 0:
-                    compression_ratio = (
-                        1 - total_compressed / total_uncompressed
-                    ) * 100
-                    archive_meta["Compression ratio"] = f"{compression_ratio:.1f}%"
-
-                archive_meta["Files"] = files_data
-
-                return "# ZIP Archive\n" + yaml_dumps(archive_meta)
+                # Calculate column widths - match unzip -l format
+                # Length column: right-aligned, at least 9 chars (for "Length" header)
+                max_length = max(len(str(row[0])) for row in file_rows) if file_rows else 1
+                max_length = max(max_length, 9)
+                # Date column: YYYY-MM-DD format (10 chars)
+                max_date = 10
+                # Time column: HH:MM format (5 chars)
+                max_time = 5
+                # Build output matching unzip -l format
+                lines = []
+                # Header
+                header = f"  Length      Date    Time    Name"
+                lines.append(header)
+                # Separator
+                separator = "---------  ---------- -----   ----"
+                lines.append(separator)
+                # File rows
+                for length, date, time, filename in file_rows:
+                    date_pad = date if date else "          "  # 10 spaces
+                    time_pad = time if time else "     "  # 5 spaces
+                    row = f"{length:>9}  {date_pad:<10} {time_pad:<5}   {filename}"
+                    lines.append(row)
+                # Summary separator
+                lines.append("---------                     -------")
+                # Summary line
+                summary = f"{total_length:>9}                      {len(file_rows)} file{'s' if len(file_rows) != 1 else ''}"
+                lines.append(summary)
+                return "\n".join(lines)
 
         except zipfile.BadZipFile:
             raise ValueError("Invalid or corrupted ZIP file")
@@ -79,4 +100,109 @@ class ZipContentview(Contentview):
         return 0
 
 
+class ZipVerboseContentview(Contentview):
+    name = "ZIP Archive (verbose)"
+    syntax_highlight = "none"
+
+    def prettify(self, data: bytes, metadata: Metadata) -> str:
+        try:
+            with zipfile.ZipFile(io.BytesIO(data), "r") as zip_file:
+                info_list = zip_file.infolist()
+
+                if not info_list:
+                    return "ZIP Archive (verbose)\nEmpty archive"
+
+                # Collect file information with verbose details
+                file_rows = []
+                total_length = 0
+                total_compressed = 0
+
+                for info in info_list:
+                    length = info.file_size
+                    compressed = info.compress_size
+                    total_length += length
+                    total_compressed += compressed
+
+                    # Calculate compression ratio
+                    if length > 0:
+                        ratio = (1 - compressed / length) * 100
+                    else:
+                        ratio = 0.0
+                    # Format date and time
+                    date_str = ""
+                    time_str = ""
+                    if info.date_time:
+                        try:
+                            dt = datetime(*info.date_time)
+                            date_str = dt.strftime("%Y-%m-%d")
+                            time_str = dt.strftime("%H:%M")
+                        except (ValueError, OverflowError):
+                            pass
+
+                    method = _get_compression_method_name(info)
+                    crc = info.CRC
+                    file_rows.append((
+                        length, compressed, ratio, method, crc, date_str, time_str, info.filename
+                    ))
+                # Calculate column widths
+                max_length = max(len(str(row[0])) for row in file_rows) if file_rows else 1
+                max_length = max(max_length, 9)
+                max_compressed = max(len(str(row[1])) for row in file_rows) if file_rows else 1
+                max_compressed = max(max_compressed, 9)
+                max_method = max(len(row[3]) for row in file_rows) if file_rows else 1
+                max_method = max(max_method, len("Method"))
+                max_date = 10
+                max_time = 5
+
+                # Build output matching unzip -l -v format
+                lines = []
+
+                # Header
+                header = f" Length   Method    Size  Cmpr    Date    Time   CRC-32   Name"
+                lines.append(header)
+                
+                # Separator
+                separator = "--------  ------  ------- ---- ---------- ----- --------  ----"
+                lines.append(separator)
+
+                # File rows
+                for length, compressed, ratio, method, crc, date, time, filename in file_rows:
+                    date_pad = date if date else "          "
+                    time_pad = time if time else "     "
+                    ratio_str = f"{ratio:.0f}%" if ratio > 0 else "  0%"
+                    crc_str = f"{crc:08x}"
+                    row = (
+                        f"{length:>8}  {method:<{max_method}} {compressed:>7} {ratio_str:>4} "
+                        f"{date_pad:<10} {time_pad:<5} {crc_str}   {filename}"
+                    )
+                    lines.append(row)
+
+                # Summary separator
+                lines.append("--------          ------- ---                            -------")
+
+                # Summary line
+                total_ratio = (1 - total_compressed / total_length) * 100 if total_length > 0 else 0.0
+                ratio_str = f"{total_ratio:.0f}%" if total_ratio > 0 else "  0%"
+                summary = (
+                    f"{total_length:>8}          {total_compressed:>7} {ratio_str:>4} "
+                    f"                            {len(file_rows)} file{'s' if len(file_rows) != 1 else ''}"
+                )
+                lines.append(summary)
+
+                return "\n".join(lines)
+
+        except zipfile.BadZipFile:
+            raise ValueError("Invalid or corrupted ZIP file")
+        except Exception as e:
+            raise ValueError(f"Error parsing ZIP file: {e}")
+
+    def render_priority(self, data: bytes, metadata: Metadata) -> float:
+        if not data:
+            return 0
+        if metadata.content_type == "application/zip":
+            return 0.9  # Lower priority than regular ZIP view
+        return 0
+
+
 zip = ZipContentview()
+zip_verbose = ZipVerboseContentview()
