@@ -162,7 +162,8 @@ def decode_gzip(content: bytes) -> bytes:
 def encode_gzip(content: bytes) -> bytes:
     s = BytesIO()
     # set mtime to 0 so that gzip encoding is deterministic.
-    with gzip.GzipFile(fileobj=s, mode="wb", mtime=0) as f:
+    # Use compresslevel=1 for fastest compression speed.
+    with gzip.GzipFile(fileobj=s, mode="wb", mtime=0, compresslevel=1) as f:
         f.write(content)
     return s.getvalue()
 
@@ -174,7 +175,8 @@ def decode_brotli(content: bytes) -> bytes:
 
 
 def encode_brotli(content: bytes) -> bytes:
-    return brotli.compress(content)
+    # Use quality=0 for fastest compression speed.
+    return brotli.compress(content, quality=0)
 
 
 def decode_zstd(content: bytes) -> bytes:
@@ -185,7 +187,8 @@ def decode_zstd(content: bytes) -> bytes:
 
 
 def encode_zstd(content: bytes) -> bytes:
-    zstd_ctx = zstd.ZstdCompressor()
+    # Use level=1 for fastest compression speed.
+    zstd_ctx = zstd.ZstdCompressor(level=1)
     return zstd_ctx.compress(content)
 
 
@@ -210,7 +213,8 @@ def encode_deflate(content: bytes) -> bytes:
     """
     Returns compressed content, always including zlib header and checksum.
     """
-    return zlib.compress(content)
+    # Use level=1 for fastest compression speed.
+    return zlib.compress(content, level=1)
 
 
 custom_decode = {
