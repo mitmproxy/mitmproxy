@@ -39,7 +39,8 @@ from ._view_socketio import socket_io
 from ._view_urlencoded import urlencoded
 from ._view_wbxml import wbxml
 from ._view_xml_html import xml_html
-from ._view_zip import zip, zip_verbose
+from ._view_zip import zip
+from ._view_zip import zip_verbose
 from .base import View
 import mitmproxy_rs.contentviews
 from mitmproxy import flow
