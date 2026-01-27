@@ -5,7 +5,8 @@ import pytest
 
 from mitmproxy import http
 from mitmproxy.contentviews import Metadata
-from mitmproxy.contentviews._view_zip import zip, zip_verbose
+from mitmproxy.contentviews._view_zip import zip
+from mitmproxy.contentviews._view_zip import zip_verbose
 
 
 def meta(content_type: str) -> Metadata:
@@ -356,14 +357,7 @@ def test_view_zip_verbose_invalid_date_time():
 
 def test_view_zip_verbose_overflow_date_time():
     """Test verbose view handling of date_time values that cause OverflowError."""
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w") as zf:
-        info = zipfile.ZipInfo("test.txt")
-        # Use a valid date_time first to create the ZIP
-        info.date_time = (2024, 1, 1, 12, 0, 0)
-        zf.writestr(info, b"test content")
-    zip_data = buffer.getvalue()
-    # Create a new ZIP with the modified info
+    # Create a new ZIP with date_time that might cause OverflowError
     buffer2 = io.BytesIO()
     with zipfile.ZipFile(buffer2, "w") as zf2:
         info2 = zipfile.ZipInfo("test.txt")
@@ -415,8 +409,9 @@ def test_view_zip_verbose_general_exception(monkeypatch):
 
 def test_get_compression_method_name_fallbacks(monkeypatch):
     """Test _get_compression_method_name fallback logic for different compression methods."""
-    from mitmproxy.contentviews import _view_zip
     import zipfile
+
+    from mitmproxy.contentviews import _view_zip
     
     # Mock compressor_names in the module where it's used
     # This ensures getattr(zipfile, "compressor_names", {}) returns empty dict

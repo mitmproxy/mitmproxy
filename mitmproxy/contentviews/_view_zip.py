@@ -62,10 +62,6 @@ class ZipContentview(Contentview):
                 # Length column: right-aligned, at least 9 chars (for "Length" header)
                 max_length = max(len(str(row[0])) for row in file_rows) if file_rows else 1
                 max_length = max(max_length, 9)
-                # Date column: YYYY-MM-DD format (10 chars)
-                max_date = 10
-                # Time column: HH:MM format (5 chars)
-                max_time = 5
                 # Build output matching unzip -l format
                 lines = []
                 # Header
@@ -151,8 +147,6 @@ class ZipVerboseContentview(Contentview):
                 max_compressed = max(max_compressed, 9)
                 max_method = max(len(row[3]) for row in file_rows) if file_rows else 1
                 max_method = max(max_method, len("Method"))
-                max_date = 10
-                max_time = 5
 
                 # Build output matching unzip -l -v format
                 lines = []
