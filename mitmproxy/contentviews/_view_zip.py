@@ -1,7 +1,8 @@
 import io
 import zipfile
 
-from mitmproxy.contentviews._api import Contentview, Metadata
+from mitmproxy.contentviews._api import Contentview
+from mitmproxy.contentviews._api import Metadata
 from mitmproxy.contentviews._utils import yaml_dumps
 
 
