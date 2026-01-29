@@ -193,7 +193,14 @@ def test_view_zip_invalid_date_time():
     with zipfile.ZipFile(buffer, "w") as zf:
         info = zipfile.ZipInfo("test.txt")
         # Invalid date_time that will cause ValueError
-        info.date_time = (2024, 13, 32, 25, 70, 100)  # Invalid month, day, hour, minute, second
+        info.date_time = (
+            2024,
+            13,
+            32,
+            25,
+            70,
+            100,
+        )  # Invalid month, day, hour, minute, second
         zf.writestr(info, b"test content")
     zip_data = buffer.getvalue()
 
@@ -221,14 +228,21 @@ def test_view_zip_overflow_date_time():
         info_list = zf_read.infolist()
         # Manually set an invalid date_time that will cause OverflowError
         info_list[0].date_time = (3000, 1, 1, 0, 0, 0)  # Year 3000 might cause issues
-    
+
     # Create a new ZIP with the modified info
     buffer2 = io.BytesIO()
     with zipfile.ZipFile(buffer2, "w") as zf2:
         info2 = zipfile.ZipInfo("test.txt")
         # Set date_time to a value that will cause OverflowError when creating datetime
         # Use a very large timestamp value
-        info2.date_time = (2100, 1, 1, 0, 0, 0)  # Valid for ZIP but might overflow datetime
+        info2.date_time = (
+            2100,
+            1,
+            1,
+            0,
+            0,
+            0,
+        )  # Valid for ZIP but might overflow datetime
         zf2.writestr(info2, b"test content")
     zip_data2 = buffer2.getvalue()
 
@@ -241,28 +255,28 @@ def test_view_zip_general_exception(monkeypatch):
     """Test handling of general exceptions during ZIP parsing."""
     # Create a valid ZIP file
     zip_data = create_test_zip({"test.txt": b"content"})
-    
+
     # Mock zipfile.ZipFile to raise an exception when infolist() is called
     # This will trigger the general exception handler
     from mitmproxy.contentviews import _view_zip
-    
+
     original_zipfile = _view_zip.zipfile.ZipFile
-    
+
     class MockZipFile:
         def __init__(self, *args, **kwargs):
             self._zipfile = original_zipfile(*args, **kwargs)
-        
+
         def __enter__(self):
             return self
-        
+
         def __exit__(self, *args):
             return False
-        
+
         def infolist(self):
             raise RuntimeError("Mocked infolist error")
-    
+
     monkeypatch.setattr(_view_zip.zipfile, "ZipFile", MockZipFile)
-    
+
     # This should trigger the general exception handler
     with pytest.raises(ValueError, match="Error parsing ZIP file"):
         zip.prettify(zip_data, meta("application/zip"))
@@ -289,6 +303,7 @@ def test_view_zip_verbose_basic():
     # Check format matches unzip -l -v style
     assert " Length   Method    Size  Cmpr    Date    Time   CRC-32   Name" in result
 
+
 def test_view_zip_verbose_empty():
     """Test empty ZIP file in verbose mode."""
     buffer = io.BytesIO()
@@ -299,12 +314,15 @@ def test_view_zip_verbose_empty():
     assert "ZIP Archive (verbose)" in result
     assert "Empty archive" in result
 
+
 def test_view_zip_verbose_compression_info():
     """Test verbose view shows compression method and ratio."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as zf:
         zf.writestr("stored.txt", b"stored content", compress_type=zipfile.ZIP_STORED)
-        zf.writestr("deflated.txt", b"deflated content", compress_type=zipfile.ZIP_DEFLATED)
+        zf.writestr(
+            "deflated.txt", b"deflated content", compress_type=zipfile.ZIP_DEFLATED
+        )
     zip_data = buffer.getvalue()
     result = zip_verbose.prettify(zip_data, meta("application/zip"))
     assert "stored.txt" in result
@@ -313,16 +331,27 @@ def test_view_zip_verbose_compression_info():
     assert "store" in result.lower() or "deflate" in result.lower()
     assert "Method" in result
 
+
 def test_view_zip_verbose_render_priority():
     """Test verbose view render priority (lower than regular ZIP view)."""
     assert (
-        zip_verbose.render_priority(b"PK\x03\x04", Metadata(content_type="application/zip"))
+        zip_verbose.render_priority(
+            b"PK\x03\x04", Metadata(content_type="application/zip")
+        )
         == 0.9
     )
-    assert zip_verbose.render_priority(b"data", Metadata(content_type="application/zip")) == 0.9
-    assert zip_verbose.render_priority(b"PK\x03\x04", Metadata(content_type="text/plain")) == 0
+    assert (
+        zip_verbose.render_priority(b"data", Metadata(content_type="application/zip"))
+        == 0.9
+    )
+    assert (
+        zip_verbose.render_priority(b"PK\x03\x04", Metadata(content_type="text/plain"))
+        == 0
+    )
     # Test empty data branch
-    assert zip_verbose.render_priority(b"", Metadata(content_type="application/zip")) == 0
+    assert (
+        zip_verbose.render_priority(b"", Metadata(content_type="application/zip")) == 0
+    )
 
 
 def test_view_zip_verbose_zero_length_file():
@@ -362,7 +391,14 @@ def test_view_zip_verbose_overflow_date_time():
     with zipfile.ZipFile(buffer2, "w") as zf2:
         info2 = zipfile.ZipInfo("test.txt")
         # Set date_time to a value that will cause OverflowError when creating datetime
-        info2.date_time = (2100, 1, 1, 0, 0, 0)  # Valid for ZIP but might overflow datetime
+        info2.date_time = (
+            2100,
+            1,
+            1,
+            0,
+            0,
+            0,
+        )  # Valid for ZIP but might overflow datetime
         zf2.writestr(info2, b"test content")
     zip_data2 = buffer2.getvalue()
     # The code should handle this gracefully
@@ -381,27 +417,27 @@ def test_view_zip_verbose_general_exception(monkeypatch):
     """Test verbose view handling of general exceptions during ZIP parsing."""
     # Create a valid ZIP file
     zip_data = create_test_zip({"test.txt": b"content"})
-    
+
     # Mock zipfile.ZipFile to raise an exception when infolist() is called
     from mitmproxy.contentviews import _view_zip
-    
+
     original_zipfile = _view_zip.zipfile.ZipFile
-    
+
     class MockZipFile:
         def __init__(self, *args, **kwargs):
             self._zipfile = original_zipfile(*args, **kwargs)
-        
+
         def __enter__(self):
             return self
-        
+
         def __exit__(self, *args):
             return False
-        
+
         def infolist(self):
             raise RuntimeError("Mocked infolist error")
-    
+
     monkeypatch.setattr(_view_zip.zipfile, "ZipFile", MockZipFile)
-    
+
     # This should trigger the general exception handler
     with pytest.raises(ValueError, match="Error parsing ZIP file"):
         zip_verbose.prettify(zip_data, meta("application/zip"))
@@ -412,35 +448,35 @@ def test_get_compression_method_name_fallbacks(monkeypatch):
     import zipfile
 
     from mitmproxy.contentviews import _view_zip
-    
+
     # Mock compressor_names in the module where it's used
     # This ensures getattr(zipfile, "compressor_names", {}) returns empty dict
     monkeypatch.setattr(_view_zip.zipfile, "compressor_names", {})
-    
+
     # Test ZIP_STORED fallback (line 17)
     info_stored = zipfile.ZipInfo("stored.txt")
     info_stored.compress_type = zipfile.ZIP_STORED
     result_stored = _view_zip._get_compression_method_name(info_stored)
     assert result_stored == "Stored"
-    
+
     # Test ZIP_DEFLATED fallback (line 19)
     info_deflated = zipfile.ZipInfo("deflated.txt")
     info_deflated.compress_type = zipfile.ZIP_DEFLATED
     result_deflated = _view_zip._get_compression_method_name(info_deflated)
     assert result_deflated == "Deflated"
-    
+
     # Test ZIP_BZIP2 fallback (line 21)
     info_bzip2 = zipfile.ZipInfo("bzip2.txt")
     info_bzip2.compress_type = zipfile.ZIP_BZIP2
     result_bzip2 = _view_zip._get_compression_method_name(info_bzip2)
     assert result_bzip2 == "BZip2"
-    
+
     # Test ZIP_LZMA fallback (line 23)
     info_lzma = zipfile.ZipInfo("lzma.txt")
     info_lzma.compress_type = zipfile.ZIP_LZMA
     result_lzma = _view_zip._get_compression_method_name(info_lzma)
     assert result_lzma == "LZMA"
-    
+
     # Test unknown method (else branch - line 25)
     info_unknown = zipfile.ZipInfo("unknown.txt")
     info_unknown.compress_type = 999  # Unknown compression method

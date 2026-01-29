@@ -60,7 +60,9 @@ class ZipContentview(Contentview):
 
                 # Calculate column widths - match unzip -l format
                 # Length column: right-aligned, at least 9 chars (for "Length" header)
-                max_length = max(len(str(row[0])) for row in file_rows) if file_rows else 1
+                max_length = (
+                    max(len(str(row[0])) for row in file_rows) if file_rows else 1
+                )
                 max_length = max(max_length, 9)
                 # Build output matching unzip -l format
                 lines = []
@@ -137,13 +139,26 @@ class ZipVerboseContentview(Contentview):
 
                     method = _get_compression_method_name(info)
                     crc = info.CRC
-                    file_rows.append((
-                        length, compressed, ratio, method, crc, date_str, time_str, info.filename
-                    ))
+                    file_rows.append(
+                        (
+                            length,
+                            compressed,
+                            ratio,
+                            method,
+                            crc,
+                            date_str,
+                            time_str,
+                            info.filename,
+                        )
+                    )
                 # Calculate column widths
-                max_length = max(len(str(row[0])) for row in file_rows) if file_rows else 1
+                max_length = (
+                    max(len(str(row[0])) for row in file_rows) if file_rows else 1
+                )
                 max_length = max(max_length, 9)
-                max_compressed = max(len(str(row[1])) for row in file_rows) if file_rows else 1
+                max_compressed = (
+                    max(len(str(row[1])) for row in file_rows) if file_rows else 1
+                )
                 max_compressed = max(max_compressed, 9)
                 max_method = max(len(row[3]) for row in file_rows) if file_rows else 1
                 max_method = max(max_method, len("Method"))
@@ -152,30 +167,49 @@ class ZipVerboseContentview(Contentview):
                 lines = []
 
                 # Header
-                header = f" Length   Method    Size  Cmpr    Date    Time   CRC-32   Name"
+                header = (
+                    f" Length   Method    Size  Cmpr    Date    Time   CRC-32   Name"
+                )
                 lines.append(header)
-                
+
                 # Separator
-                separator = "--------  ------  ------- ---- ---------- ----- --------  ----"
+                separator = (
+                    "--------  ------  ------- ---- ---------- ----- --------  ----"
+                )
                 lines.append(separator)
 
                 # File rows
-                for length, compressed, ratio, method, crc, date, time, filename in file_rows:
+                for (
+                    length,
+                    compressed,
+                    ratio,
+                    method,
+                    crc,
+                    date,
+                    time,
+                    filename,
+                ) in file_rows:
                     date_pad = date if date else "          "
                     time_pad = time if time else "     "
                     ratio_str = f"{ratio:.0f}%" if ratio > 0 else "  0%"
                     crc_str = f"{crc:08x}"
                     row = (
                         f"{length:>8}  {method:<{max_method}} {compressed:>7} {ratio_str:>4} "
-                        f"{date_pad:<10} {time_pad:<5} {crc_str}   {filename}"
+                        f"{date_pad:<10} {time_pad:<5} {crc_str}  {filename}"
                     )
                     lines.append(row)
 
                 # Summary separator
-                lines.append("--------          ------- ---                            -------")
+                lines.append(
+                    "--------          ------- ----                            -------"
+                )
 
                 # Summary line
-                total_ratio = (1 - total_compressed / total_length) * 100 if total_length > 0 else 0.0
+                total_ratio = (
+                    (1 - total_compressed / total_length) * 100
+                    if total_length > 0
+                    else 0.0
+                )
                 ratio_str = f"{total_ratio:.0f}%" if total_ratio > 0 else "  0%"
                 summary = (
                     f"{total_length:>8}          {total_compressed:>7} {ratio_str:>4} "
