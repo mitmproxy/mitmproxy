@@ -32,12 +32,10 @@ def test_view_zip_basic():
         {"file1.txt": b"Hello, World!", "file2.txt": b"Test content"}
     )
     result = zip.prettify(zip_data, meta("application/zip"))
-    assert "file1.txt" in result
-    assert "file2.txt" in result
-    assert "filename:" in result
+    assert "filename: file1.txt" in result
+    assert "filename: file2.txt" in result
     assert "size:" in result
     assert zip.syntax_highlight == "yaml"
-    assert result.startswith("-") or result.startswith("filename:")
 
 
 def test_view_zip_empty():
@@ -48,7 +46,7 @@ def test_view_zip_empty():
     zip_data = buffer.getvalue()
 
     result = zip.prettify(zip_data, meta("application/zip"))
-    assert result == "[]\n" or result == ""
+    assert result == ""
 
 
 def test_view_zip_with_directories():
@@ -61,9 +59,9 @@ def test_view_zip_with_directories():
         }
     )
     result = zip.prettify(zip_data, meta("application/zip"))
-    assert "dir1/file1.txt" in result
-    assert "dir1/subdir/file2.txt" in result
-    assert "file3.txt" in result
+    assert "filename: dir1/file1.txt" in result
+    assert "filename: dir1/subdir/file2.txt" in result
+    assert "filename: file3.txt" in result
 
 
 def test_view_zip_file_sizes():
@@ -76,26 +74,20 @@ def test_view_zip_file_sizes():
         }
     )
     result = zip.prettify(zip_data, meta("application/zip"))
-    assert "small.txt" in result
-    assert "medium.txt" in result
-    assert "large.txt" in result
-    assert "size: 1" in result or "1" in result
-    assert "size: 100" in result or "100" in result
-    assert "size: 1000" in result or "1000" in result
+    assert "filename: small.txt, size: 1" in result
+    assert "filename: medium.txt, size: 100" in result
+    assert "filename: large.txt, size: 1000" in result
 
 
 def test_view_zip_zero_size_file():
-    """Test zero-size file (should not include size field)."""
+    """Test zero-size file shows size 0."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as zf:
-        info = zipfile.ZipInfo("empty.txt")
-        info.file_size = 0
-        zf.writestr(info, b"")
+        zf.writestr("empty.txt", b"")
     zip_data = buffer.getvalue()
 
     result = zip.prettify(zip_data, meta("application/zip"))
-    assert "empty.txt" in result
-    assert "filename: empty.txt" in result or "filename: empty.txt" in result
+    assert "filename: empty.txt, size: 0" in result
 
 
 def test_view_zip_corrupted():
@@ -184,35 +176,8 @@ def test_view_zip_long_filenames():
     assert long_filename in result
 
 
-def test_view_zip_extract_file_info_helper():
-    """Test the _extract_file_info helper method directly."""
-    import io
-    import zipfile
-
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w") as zf:
-        zf.writestr("file1.txt", b"content")
-        info = zipfile.ZipInfo("file2.txt")
-        info.file_size = 0
-        zf.writestr(info, b"")
-    buffer.seek(0)
-
-    with zipfile.ZipFile(buffer, "r") as zf:
-        info_list = zf.infolist()
-        files = zip._extract_file_info(info_list)
-
-    assert len(files) == 2
-    assert files[0]["filename"] == "file1.txt"
-    assert "size" in files[0]
-    assert files[0]["size"] > 0
-    assert files[1]["filename"] == "file2.txt"
-    assert "size" not in files[1]
-
-
-def test_view_zip_yaml_output_format():
-    """Test that output is valid YAML format."""
-    from mitmproxy.contentviews._utils import yaml_loads
-
+def test_view_zip_one_line_format():
+    """Test that each file is on one line with filename and size."""
     zip_data = create_test_zip(
         {
             "file1.txt": b"content1",
@@ -220,7 +185,7 @@ def test_view_zip_yaml_output_format():
         }
     )
     result = zip.prettify(zip_data, meta("application/zip"))
-    parsed = yaml_loads(result)
-    assert isinstance(parsed, list)
-    assert len(parsed) == 2
-    assert all("filename" in f for f in parsed)
+    lines = result.strip().split("\n")
+    assert len(lines) == 2
+    assert "- filename: file1.txt, size: 8" == lines[0]
+    assert "- filename: file2.txt, size: 8" == lines[1]
