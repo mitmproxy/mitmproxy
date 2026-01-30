@@ -15,6 +15,8 @@
   ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
 - Switch all content-encoding compression algorithms to use fastest settings by default.
   This significantly improves addon runtime performance when assigning to `message.content`.
+- Added support for adding and editing comments on individual flows in the mitmproxy console.
+  ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
