@@ -13,6 +13,8 @@
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
 - Fix a bug where mitmweb would show a blank page on Windows.
   ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
+- Added support for adding and editing comments on individual flows in the mitmproxy console.
+  ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
