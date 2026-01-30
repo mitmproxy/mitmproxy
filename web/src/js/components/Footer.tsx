@@ -2,6 +2,7 @@ import * as React from "react";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
+import { createSelector } from '@reduxjs/toolkit'
 
 export default function Footer() {
     const version = useAppSelector((state) => state.backendState.version);
@@ -24,10 +25,14 @@ export default function Footer() {
         ssl_insecure,
     } = useAppSelector((state) => state.options);
 
-    const num_flows = useAppSelector((state) => [
-        state.flows.selected.length,
-        state.flows.list.length,
-    ]);
+    // Create a memoized selector to avoid failing tests
+    const num_flow_selector = createSelector(
+        (state) => state.flows.selected.length,
+        (state) => state.flows.list.length,
+        (selectedLength, listLength) => [selectedLength, listLength]
+    );
+    
+    const num_flows = useAppSelector(num_flow_selector);
 
     return (
         <footer>
