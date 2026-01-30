@@ -11,6 +11,8 @@
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
+- Fix a bug where mitmweb would show a blank page on Windows.
+  ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
 
