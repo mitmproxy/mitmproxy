@@ -26,7 +26,7 @@ export default function Footer() {
 
     const num_flows = useAppSelector((state) => [
         state.flows.selected.length,
-        state.flows.list.length
+        state.flows.list.length,
     ]);
 
     return (
