@@ -594,7 +594,7 @@ class ConsoleAddon:
     @command.command("console.grideditor.load")
     def grideditor_load(self, path: mitmproxy.types.Path) -> None:
         """
-        Read a file into the currrent cell.
+        Read a file into the current cell.
         """
         self._grideditor().cmd_read_file(path)
 
@@ -602,7 +602,7 @@ class ConsoleAddon:
     def grideditor_load_escaped(self, path: mitmproxy.types.Path) -> None:
         """
         Read a file containing a Python-style escaped string into the
-        currrent cell.
+        current cell.
         """
         self._grideditor().cmd_read_file_escaped(path)
 
