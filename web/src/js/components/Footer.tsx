@@ -2,7 +2,6 @@ import * as React from "react";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
-import { createSelector } from "@reduxjs/toolkit";
 
 export default function Footer() {
     const version = useAppSelector((state) => state.backendState.version);
@@ -25,14 +24,8 @@ export default function Footer() {
         ssl_insecure,
     } = useAppSelector((state) => state.options);
 
-    // Create a memoized selector to avoid failing tests
-    const num_flow_selector = createSelector(
-        (state) => state.flows.selected.length,
-        (state) => state.flows.list.length,
-        (selectedLength, listLength) => [selectedLength, listLength],
-    );
-
-    const num_flows = useAppSelector(num_flow_selector);
+    const selectedFlowsLength = useAppSelector((state) => state.flows.selected.length);
+    const totalFlowsLength = useAppSelector((state) => state.flows.list.length);
 
     return (
         <footer>
@@ -75,9 +68,9 @@ export default function Footer() {
                     stream: {formatSize(stream_large_bodies)}
                 </span>
             )}
-            {num_flows[1] > 0 && (
+            {totalFlowsLength > 0 && (
                 <span className="label label-default">
-                    {num_flows[0]} of {num_flows[1]} flows selected
+                    {selectedFlowsLength} of {totalFlowsLength} flows selected
                 </span>
             )}
             <div className="pull-right">
