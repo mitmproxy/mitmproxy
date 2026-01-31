@@ -24,6 +24,11 @@ export default function Footer() {
         ssl_insecure,
     } = useAppSelector((state) => state.options);
 
+    const selectedFlowsLength = useAppSelector(
+        (state) => state.flows.selected.length,
+    );
+    const totalFlowsLength = useAppSelector((state) => state.flows.list.length);
+
     return (
         <footer>
             {mode && (mode.length !== 1 || mode[0] !== "regular") && (
@@ -63,6 +68,11 @@ export default function Footer() {
             {stream_large_bodies && (
                 <span className="label label-success">
                     stream: {formatSize(stream_large_bodies)}
+                </span>
+            )}
+            {totalFlowsLength > 0 && (
+                <span className="label label-default">
+                    {selectedFlowsLength} of {totalFlowsLength} flows selected
                 </span>
             )}
             <div className="pull-right">

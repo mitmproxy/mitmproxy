@@ -13,6 +13,8 @@
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
 - Fix a bug where mitmweb would show a blank page on Windows.
   ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
+- mitmweb: Add number of selected flows in the footer
+  ([#8057](https://github.com/mitmproxy/mitmproxy/pull/8057), @skrattara)
 - Switch all content-encoding compression algorithms to use fastest settings by default.
   This significantly improves addon runtime performance when assigning to `message.content`.
   ([#8055](https://github.com/mitmproxy/mitmproxy/pull/8055), @Copilot)
