@@ -24,7 +24,9 @@ export default function Footer() {
         ssl_insecure,
     } = useAppSelector((state) => state.options);
 
-    const selectedFlowsLength = useAppSelector((state) => state.flows.selected.length);
+    const selectedFlowsLength = useAppSelector(
+        (state) => state.flows.selected.length,
+    );
     const totalFlowsLength = useAppSelector((state) => state.flows.list.length);
 
     return (
