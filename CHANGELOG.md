@@ -20,6 +20,8 @@
   ([#8055](https://github.com/mitmproxy/mitmproxy/pull/8055), @Copilot)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
+- mitmweb: Added initial support for exporting a flow request as a browser fetch command
+  ([#8060](https://github.com/mitmproxy/mitmproxy/pull/8060), @skrattara)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
