@@ -7,6 +7,7 @@ from collections.abc import Sequence
 import pyperclip
 
 import mitmproxy.types
+from typing import Any
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -116,8 +117,8 @@ def browser_fetch_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     pop_headers(request)
 
-    headers = {}
-    options = {}
+    headers : dict[str, Any] = {}
+    options : dict[str, str | dict[str, Any]] = {}
 
     for k, v in request.headers.items(multi=True):
         headers[k] = v
@@ -126,7 +127,9 @@ def browser_fetch_command(f: flow.Flow) -> str:
         headers["Content-Length"] = 0
     
     options['method'] = request.method
-    options["headers"] = headers
+    
+    if headers:
+        options["headers"] = headers
 
     if request.content:
         options["body"] = request_content_for_fetch(request)
@@ -192,8 +195,8 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
 
 
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
-    curl=curl_command,
     browser_fetch=browser_fetch_command,
+    curl=curl_command,
     httpie=httpie_command,
     raw=raw,
     raw_request=raw_request,
