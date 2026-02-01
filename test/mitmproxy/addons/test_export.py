@@ -164,38 +164,32 @@ class TestExportCurlCommand:
 
 class TestExportBrowserFetchCommand:
     def test_get(self, get_request):
-        result = (
-            """fetch("http://address:22/path?a=foo&a=bar&b=baz", {
+        result = """fetch("http://address:22/path?a=foo&a=bar&b=baz", {
     "method": "GET",
     "headers": {
         "header": "qvalue"
     }
 })"""
-        )
         assert export.browser_fetch_command(get_request) == result
-    
+
     def test_post(self, post_request):
         post_request.request.content = b"nobinarysupport"
-        result = (
-            """fetch("http://address:22/path", {
+        result = """fetch("http://address:22/path", {
     "method": "POST",
     "body": "nobinarysupport"
 })"""
-        )
         assert export.browser_fetch_command(post_request) == result
-    
+
     def test_post_with_no_content_has_explicit_content_length_header(
         self, post_request
     ):
         post_request.request.content = None
-        result = (
-            """fetch("http://address:22/path", {
+        result = """fetch("http://address:22/path", {
     "method": "POST",
     "headers": {
         "Content-Length": 0
     }
 })"""
-        )
         assert export.browser_fetch_command(post_request) == result
 
     def test_fails_with_binary_data(self, post_request):
@@ -204,15 +198,13 @@ class TestExportBrowserFetchCommand:
             export.browser_fetch_command(post_request)
 
     def test_patch(self, patch_request):
-        result = (
-            """fetch("http://address:22/path?query=param", {
+        result = """fetch("http://address:22/path?query=param", {
     "method": "PATCH",
     "headers": {
         "header": "qvalue"
     },
     "body": "content"
 })"""
-        )
         assert export.browser_fetch_command(patch_request) == result
 
     def test_tcp(self, tcp_flow):
@@ -225,14 +217,14 @@ class TestExportBrowserFetchCommand:
 
     def test_escape_double_quotes_in_body(self):
         request = tflow.tflow(
-            req=tutils.treq(method=b"POST", headers=(), content=b"\"'\"\'\\\"" + b'"\'\\\'')
+            req=tutils.treq(
+                method=b"POST", headers=(), content=b'"\'"\'\\"' + b"\"'\\'"
+            )
         )
-        result = (
-            """fetch("http://address:22/path", {
+        result = """fetch("http://address:22/path", {
     "method": "POST",
     "body": "\\"'\\"'\\\\\\\"\\"'\\\\\'"
 })"""
-        )
         assert export.browser_fetch_command(request) == result
 
     def test_strip_unnecessary(self, export_curl, get_request):
@@ -240,14 +232,12 @@ class TestExportBrowserFetchCommand:
         get_request.request.headers["host"] = "address"
         get_request.request.headers[":authority"] = "address"
         get_request.request.headers["accept-encoding"] = "br"
-        result = (
-            """fetch("http://address:22/path?a=foo&a=bar&b=baz", {
+        result = """fetch("http://address:22/path?a=foo&a=bar&b=baz", {
     "method": "GET",
     "headers": {
         "accept-encoding": "br"
     }
 })"""
-        )
         assert export.browser_fetch_command(get_request) == result
 
     def test_correct_host_used(self, get_request):
@@ -256,15 +246,13 @@ class TestExportBrowserFetchCommand:
             tctx.configure(e)
             get_request.request.headers["host"] = "domain:22"
 
-            result = (
-                """fetch("http://domain:22/path?a=foo&a=bar&b=baz", {
+            result = """fetch("http://domain:22/path?a=foo&a=bar&b=baz", {
     "method": "GET",
     "headers": {
         "header": "qvalue",
         "host": "domain:22"
     }
 })"""
-            )
             assert export.browser_fetch_command(get_request) == result
 
             # Can't set host header or resolve IPs in browsers
@@ -416,7 +404,14 @@ def test_export(tmp_path) -> None:
     with taddons.context() as tctx:
         tctx.configure(e)
 
-        assert e.formats() == ["browser_fetch", "curl", "httpie", "raw", "raw_request", "raw_response"]
+        assert e.formats() == [
+            "browser_fetch",
+            "curl",
+            "httpie",
+            "raw",
+            "raw_request",
+            "raw_response",
+        ]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
 

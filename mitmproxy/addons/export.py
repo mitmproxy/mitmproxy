@@ -3,11 +3,11 @@ import logging
 import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
+from typing import Any
 
 import pyperclip
 
 import mitmproxy.types
-from typing import Any
 from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -117,8 +117,8 @@ def browser_fetch_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     pop_headers(request)
 
-    headers : dict[str, Any] = {}
-    options : dict[str, str | dict[str, Any]] = {}
+    headers: dict[str, Any] = {}
+    options: dict[str, str | dict[str, Any]] = {}
 
     for k, v in request.headers.items(multi=True):
         headers[k] = v
@@ -126,8 +126,8 @@ def browser_fetch_command(f: flow.Flow) -> str:
     if request.method != "GET" and not request.content:
         headers["Content-Length"] = 0
 
-    options['method'] = request.method
-    
+    options["method"] = request.method
+
     if headers:
         options["headers"] = headers
 
