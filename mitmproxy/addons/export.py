@@ -1,6 +1,6 @@
+import json
 import logging
 import shlex
-import json
 from collections.abc import Callable
 from collections.abc import Sequence
 
@@ -124,14 +124,14 @@ def browser_fetch_command(f: flow.Flow) -> str:
 
     if request.method != "GET" and not request.content:
         headers["Content-Length"] = 0
-    
-    options['method'] = request.method
+
+    options["method"] = request.method
     options["headers"] = headers
 
     if request.content:
         options["body"] = request_content_for_fetch(request)
 
-    command = f"fetch(\"{request.pretty_url}\", {json.dumps(options, indent=4)})"
+    command = f'fetch("{request.pretty_url}", {json.dumps(options, indent=4)})'
     return command
 
 
