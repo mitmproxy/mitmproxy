@@ -89,7 +89,7 @@ ruff = [
     "ruff==0.14.10",
 ]
 deploy = [
-    "awscli==1.44.9",
+    "awscli==1.44.29",
     "twine==6.2.0",
 ]
 
