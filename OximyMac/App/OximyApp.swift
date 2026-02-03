@@ -291,7 +291,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func handleAuthCallback(url: URL) {
         print("[OximyApp] Received URL: \(url)")
 
-        // Parse: oximy://auth/callback?token=xxx&state=xxx&workspace_name=xxx&device_id=xxx
+        // Parse: oximy://auth/callback?token=xxx&state=xxx&device_id=xxx
+        // Note: workspace_name and workspace_id are NOT in the callback URL.
+        // They are fetched from the API using the device token.
         guard url.scheme == "oximy",
               url.host == "auth",
               url.path == "/callback" else {
@@ -302,12 +304,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems ?? []
 
-        // Extract parameters
+        // Extract parameters (only token, state, and device_id expected)
         let token = queryItems.first { $0.name == "token" }?.value
         let state = queryItems.first { $0.name == "state" }?.value
-        let workspaceName = queryItems.first { $0.name == "workspace_name" }?.value
         let deviceId = queryItems.first { $0.name == "device_id" }?.value
-        let workspaceId = queryItems.first { $0.name == "workspace_id" }?.value
 
         // Validate state matches what we stored (CSRF protection)
         let storedState = UserDefaults.standard.string(forKey: Constants.Defaults.authState)
@@ -319,27 +319,78 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Clear stored state
         UserDefaults.standard.removeObject(forKey: Constants.Defaults.authState)
 
-        // Login with received credentials
+        // Validate we have a token
         guard let token = token else {
             print("[OximyApp] No token in callback URL")
             return
         }
 
-        let workspace = workspaceName ?? "Connected"
-        appState.login(workspaceName: workspace, deviceToken: token, deviceId: deviceId, workspaceId: workspaceId)
+        print("[OximyApp] Auth callback parameters:")
+        print("[OximyApp]   token: \(token.prefix(20))...")
+        print("[OximyApp]   device_id: \(deviceId ?? "not provided")")
 
-        appState.completeEnrollment()
+        // Fetch workspace info from API using the token
+        Task {
+            do {
+                print("[OximyApp] Fetching device info from API...")
+                let deviceInfo = try await APIClient.shared.fetchDeviceInfo(token: token)
 
-        SentryService.shared.addStateBreadcrumb(
-            category: "enrollment",
-            message: "Device enrolled via browser auth",
-            data: ["deviceId": deviceId ?? "unknown"]
-        )
+                print("[OximyApp] Device info received:")
+                print("[OximyApp]   workspaceName: \(deviceInfo.workspaceName)")
+                print("[OximyApp]   workspaceId: \(deviceInfo.workspaceId)")
+                print("[OximyApp]   deviceId: \(deviceInfo.deviceId)")
 
-        print("[OximyApp] Auth callback processed successfully")
+                // Use deviceId from API response (authoritative), fallback to URL if API doesn't return it
+                let finalDeviceId = deviceInfo.deviceId
 
-        // Show the popover so user sees they're logged in
-        showPopover()
+                appState.login(
+                    workspaceName: deviceInfo.workspaceName,
+                    deviceToken: token,
+                    deviceId: finalDeviceId,
+                    workspaceId: deviceInfo.workspaceId
+                )
+
+                appState.completeEnrollment()
+
+                SentryService.shared.addStateBreadcrumb(
+                    category: "enrollment",
+                    message: "Device enrolled via browser auth",
+                    data: [
+                        "deviceId": finalDeviceId,
+                        "workspaceId": deviceInfo.workspaceId,
+                        "workspaceName": deviceInfo.workspaceName
+                    ]
+                )
+
+                print("[OximyApp] Auth callback processed successfully")
+
+                // Show the popover so user sees they're logged in
+                showPopover()
+
+            } catch {
+                print("[OximyApp] Failed to fetch device info: \(error)")
+
+                // Fallback: Log in with minimal info but warn
+                // The heartbeat service will eventually get the workspace info
+                print("[OximyApp] Falling back to minimal login (device_id from URL: \(deviceId ?? "nil"))")
+
+                appState.login(
+                    workspaceName: "Loading...",
+                    deviceToken: token,
+                    deviceId: deviceId,
+                    workspaceId: nil
+                )
+
+                appState.completeEnrollment()
+
+                SentryService.shared.addErrorBreadcrumb(
+                    service: "enrollment",
+                    error: "Failed to fetch device info after browser auth: \(error.localizedDescription)"
+                )
+
+                showPopover()
+            }
+        }
     }
 
     private func setupMainMenu() {

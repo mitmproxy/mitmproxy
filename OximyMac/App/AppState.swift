@@ -85,13 +85,11 @@ final class AppState: ObservableObject {
     enum MainTab: String, CaseIterable {
         case home = "Home"
         case settings = "Settings"
-        case support = "Support"
 
         var icon: String {
             switch self {
             case .home: return "house.fill"
             case .settings: return "gearshape.fill"
-            case .support: return "questionmark.circle.fill"
             }
         }
     }
@@ -118,6 +116,7 @@ final class AppState: ObservableObject {
             queue: .main
         ) { [weak self] notification in
             if let newName = notification.object as? String {
+                print("[AppState] NOTIFICATION: workspaceNameUpdated to '\(newName)'")
                 self?.workspaceName = newName
             }
         }
@@ -128,8 +127,20 @@ final class AppState: ObservableObject {
     private func loadPersistedState() {
         let defaults = UserDefaults.standard
 
+        // DEBUG: Log all relevant UserDefaults at startup
+        let storedWorkspace = defaults.string(forKey: Constants.Defaults.workspaceName)
+        let storedToken = defaults.string(forKey: Constants.Defaults.deviceToken)
+        let storedDeviceId = defaults.string(forKey: Constants.Defaults.deviceId)
+        let storedWorkspaceId = defaults.string(forKey: Constants.Defaults.workspaceId)
+        print("[AppState] INIT - UserDefaults state:")
+        print("[AppState]   workspaceName: '\(storedWorkspace ?? "nil")'")
+        print("[AppState]   deviceToken: \(storedToken != nil ? "***" : "nil")")
+        print("[AppState]   deviceId: '\(storedDeviceId ?? "nil")'")
+        print("[AppState]   workspaceId: '\(storedWorkspaceId ?? "nil")'")
+
         // Check for MDM-managed configuration FIRST
         let mdmConfig = MDMConfigService.shared
+        print("[AppState] isManagedDevice: \(mdmConfig.isManagedDevice)")
 
         if mdmConfig.isManagedDevice {
             print("[AppState] MDM-managed device detected")
@@ -144,6 +155,7 @@ final class AppState: ObservableObject {
 
             // Set account info from MDM if available
             if let workspaceName = mdmConfig.managedWorkspaceName {
+                print("[AppState] Setting workspace from MDM: '\(workspaceName)'")
                 self.workspaceName = workspaceName
                 isLoggedIn = true
             }
@@ -171,6 +183,7 @@ final class AppState: ObservableObject {
         // Standard (non-MDM) state loading
         // Load account info if available
         if let workspace = defaults.string(forKey: Constants.Defaults.workspaceName) {
+            print("[AppState] Setting workspace from UserDefaults: '\(workspace)'")
             workspaceName = workspace
             isLoggedIn = true
         }

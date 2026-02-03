@@ -59,6 +59,9 @@ final class HeartbeatService: ObservableObject {
 
         let uptimeSeconds = Int(Date().timeIntervalSince(startTime ?? Date()))
 
+        // Read command results from file if available
+        let commandResults = readCommandResults()
+
         let request = HeartbeatRequest(
             sensorVersion: Bundle.main.appVersion,
             uptimeSeconds: uptimeSeconds,
@@ -71,7 +74,8 @@ final class HeartbeatService: ObservableObject {
                 cpuPercent: Self.getCPUUsage(),
                 memoryMb: Self.getMemoryUsageMB(),
                 eventsQueued: SyncService.shared.pendingEventCount
-            )
+            ),
+            commandResults: commandResults
         )
 
         do {
@@ -85,13 +89,37 @@ final class HeartbeatService: ObservableObject {
                 data: ["status": response.status]
             )
 
-            // Update workspace name if returned from server
-            if let workspaceName = response.workspaceName, !workspaceName.isEmpty {
+            // Validate workspace name from server - don't blindly trust it
+            if let serverWorkspaceName = response.workspaceName, !serverWorkspaceName.isEmpty {
                 let defaults = UserDefaults.standard
                 let currentName = defaults.string(forKey: Constants.Defaults.workspaceName)
-                if currentName != workspaceName {
-                    defaults.set(workspaceName, forKey: Constants.Defaults.workspaceName)
-                    NotificationCenter.default.post(name: .workspaceNameUpdated, object: workspaceName)
+                let currentWorkspaceId = defaults.string(forKey: Constants.Defaults.workspaceId)
+
+                // Log for diagnostics
+                print("[HeartbeatService] Workspace check - stored: '\(currentName ?? "nil")', server: '\(serverWorkspaceName)'")
+
+                if currentName != serverWorkspaceName {
+                    // Server returned different workspace name - validate before accepting
+                    if let serverWorkspaceId = response.workspaceId, serverWorkspaceId == currentWorkspaceId {
+                        // WorkspaceId matches - safe to update the display name
+                        defaults.set(serverWorkspaceName, forKey: Constants.Defaults.workspaceName)
+                        NotificationCenter.default.post(name: .workspaceNameUpdated, object: serverWorkspaceName)
+                        print("[HeartbeatService] Workspace name updated from '\(currentName ?? "nil")' to '\(serverWorkspaceName)' (workspaceId validated)")
+                    } else if response.workspaceId != nil {
+                        // WorkspaceId mismatch - critical error, do not update
+                        print("[HeartbeatService] CRITICAL: WorkspaceId mismatch - local: '\(currentWorkspaceId ?? "nil")', server: '\(response.workspaceId ?? "nil")' - ignoring workspace name update")
+                        SentryService.shared.addErrorBreadcrumb(
+                            service: "heartbeat",
+                            error: "WorkspaceId mismatch - local: '\(currentWorkspaceId ?? "nil")', server: '\(response.workspaceId ?? "nil")'"
+                        )
+                    } else {
+                        // No workspaceId in response - don't update to prevent data corruption
+                        print("[HeartbeatService] WARNING: Server returned different workspace name '\(serverWorkspaceName)' vs stored '\(currentName ?? "nil")' - ignoring (no workspaceId to validate)")
+                        SentryService.shared.addErrorBreadcrumb(
+                            service: "heartbeat",
+                            error: "Workspace name mismatch - stored: '\(currentName ?? "nil")', server: '\(serverWorkspaceName)'"
+                        )
+                    }
                 }
             }
 
@@ -106,6 +134,58 @@ final class HeartbeatService: ObservableObject {
                 service: "heartbeat",
                 error: error.localizedDescription
             )
+        }
+    }
+
+    // MARK: - Command Results
+
+    /// Read command execution results from file
+    private func readCommandResults() -> [String: HeartbeatRequest.CommandResult]? {
+        let commandResultsPath = FileManager.default
+            .homeDirectoryForCurrentUser
+            .appendingPathComponent(".oximy/command-results.json")
+
+        guard FileManager.default.fileExists(atPath: commandResultsPath.path) else {
+            return nil
+        }
+
+        do {
+            let data = try Data(contentsOf: commandResultsPath)
+            let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: [String: Any]]
+
+            guard let json = json else { return nil }
+
+            // Convert to CommandResult structs
+            var results: [String: HeartbeatRequest.CommandResult] = [:]
+            for (key, value) in json {
+                if let success = value["success"] as? Bool,
+                   let executedAt = value["executedAt"] as? String {
+                    results[key] = HeartbeatRequest.CommandResult(
+                        success: success,
+                        executedAt: executedAt,
+                        error: value["error"] as? String
+                    )
+                }
+            }
+
+            // Delete file after reading (consumed by heartbeat)
+            try? FileManager.default.removeItem(at: commandResultsPath)
+
+            if !results.isEmpty {
+                SentryService.shared.addStateBreadcrumb(
+                    category: "heartbeat",
+                    message: "Including command results",
+                    data: ["commands": Array(results.keys)]
+                )
+            }
+
+            return results.isEmpty ? nil : results
+        } catch {
+            SentryService.shared.addErrorBreadcrumb(
+                service: "heartbeat",
+                error: "Failed to read command results: \(error.localizedDescription)"
+            )
+            return nil
         }
     }
 
