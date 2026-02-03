@@ -1522,19 +1522,8 @@ def matches_host_origin(origin: str | None, allowed_origins: list[str]) -> bool:
 def _load_no_parser_apps_cache() -> dict:
     """Load no-parser apps cache from disk.
 
-    Tracks apps that don't have parsers so we only capture one request per day
-    for identification purposes (prevents flooding network traces).
-
-    Returns dict with structure:
-    {
-        "date": "YYYY-MM-DD",
-        "apps": {
-            "bundle.id": {"first_seen": "...", "event_sent": bool},
-            ...
-        }
-    }
-
-    If date doesn't match today, returns empty structure (auto-reset).
+    Returns {"date": "YYYY-MM-DD", "apps": {"bundle.id": True, ...}}.
+    Auto-resets if date doesn't match today.
     """
     today = date.today().isoformat()
 
@@ -1573,39 +1562,17 @@ def _check_no_parser_app_allowed(
     cache: dict,
     lock: threading.Lock,
 ) -> tuple[bool, dict]:
-    """Check if a no-parser app should be allowed to proceed (for potential capture).
-
-    Apps without parsers are rate-limited to ONE request per day for identification.
-    This prevents flooding network traces while still allowing app discovery.
-
-    Args:
-        bundle_id: The app's bundle identifier
-        cache: In-memory cache dict
-        lock: Threading lock for cache access
-
-    Returns:
-        tuple of (allowed: bool, updated_cache: dict)
-        - allowed=True if this is the first request today for this bundle_id
-        - allowed=False if a request was already allowed today
-    """
+    """Check if a no-parser app should be allowed (first request of day only)."""
     today = date.today().isoformat()
 
     with lock:
-        # Reset cache if date changed
         if cache.get("date") != today:
             cache = {"date": today, "apps": {}}
 
         bundle_lower = bundle_id.lower()
-
         if bundle_lower not in cache["apps"]:
-            # First time seeing this app today - allow and mark
-            cache["apps"][bundle_lower] = {
-                "first_seen": datetime.now(timezone.utc).isoformat(),
-                "event_sent": True,
-            }
+            cache["apps"][bundle_lower] = True
             return True, cache
-
-        # Already seen today - rate limited
         return False, cache
 
 
@@ -2841,12 +2808,7 @@ class OximyAddon:
         data.ignore_connection = True
 
     def _should_intercept_for_discovery(self, client) -> bool:
-        """Check if we should intercept TLS for a no-parser app discovery capture.
-
-        Returns True if:
-        - Client is a known no-parser app (in non_hosts but not browsers/parsers)
-        - Client hasn't been seen today (first request of day)
-        """
+        """Check if we should intercept TLS for app discovery (non-browser, no parser, first today)."""
         if not client or not hasattr(client, 'id'):
             return False
 
@@ -2905,7 +2867,7 @@ class OximyAddon:
             return  # Sensor disabled - passthrough all traffic
 
         host = flow.request.pretty_host
-        logger.info(f"[REQUEST] {flow.request.method} {host}{flow.request.path[:50]}")
+        logger.debug(f"[REQUEST] {flow.request.method} {host}{flow.request.path[:50]}")
         path = flow.request.path
         url = f"{host}{path}"
 
@@ -2941,7 +2903,7 @@ class OximyAddon:
             is_browser = bundle_lower in self._allowed_app_hosts_set
             has_parser = bundle_lower in self._apps_with_parsers
 
-            logger.info(f"[STEP0] {bundle_id}: is_browser={is_browser}, has_parser={has_parser}")
+            logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, has_parser={has_parser}")
 
             if not is_browser and not has_parser:
                 # Non-browser app without parser - apply daily rate limit to ALL traffic
@@ -2955,7 +2917,7 @@ class OximyAddon:
                     flow.metadata["oximy_discovery_capture"] = True  # Bypass whitelist for app discovery
                 else:
                     # Rate limited - bypass entirely (don't capture, request still proxied)
-                    logger.info(f"[NO_PARSER_APP] {bundle_id} - already seen today, bypassing")
+                    logger.debug(f"[NO_PARSER_APP] {bundle_id} - already seen today, bypassing")
                     return
 
         # Store client process for later use
@@ -3105,7 +3067,7 @@ class OximyAddon:
         # This check MUST happen BEFORE normalize_body and _build_event
         if flow.metadata.get("oximy_skip"):
             skip_reason = flow.metadata.get("oximy_skip_reason", "unknown")
-            logger.info(f"[SKIP] {flow.request.pretty_host}{flow.request.path} - reason: {skip_reason}")
+            logger.debug(f"[SKIP] {flow.request.pretty_host}{flow.request.path} - reason: {skip_reason}")
             return
 
         # Log when requests pass all filters and will be captured
