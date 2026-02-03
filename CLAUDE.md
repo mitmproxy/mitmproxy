@@ -48,7 +48,7 @@ Restart the browser after installation.
 
 ## Sensor Configuration (Whitelist/Blacklist)
 The addon fetches its filtering configuration from the API, **not** from local files:
-- **API endpoint:** `https://api.oximy.com/api/v1/sensor-config`
+- **API endpoint:** `https://api.oximy.com/api/v1/sensor-config` use the device token from .oximy/device-token, as the bearer token for auth
 - **Local cache:** `~/.oximy/sensor-config.json` (fallback only when API is unreachable)
 
 **Claude Note:** Always fetch config directly from the API to see the current state:
