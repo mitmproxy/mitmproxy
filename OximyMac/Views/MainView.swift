@@ -269,8 +269,6 @@ struct DashboardView: View {
                     HomeTab()
                 case .settings:
                     SettingsTab()
-                case .support:
-                    SupportTab()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

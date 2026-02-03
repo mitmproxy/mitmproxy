@@ -132,15 +132,6 @@ struct SettingsTab: View {
                             }
 
                             Spacer()
-
-                            // Hide logout button if MDM disables it
-                            if appState.canLogout {
-                                Button("Log Out") {
-                                    appState.logout()
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            }
                         }
                     } else {
                         HStack {
@@ -201,19 +192,6 @@ struct SettingsTab: View {
                             }
                         }
 
-                        // Hide reset button for managed devices
-                        if appState.canLogout {
-                            Divider()
-
-                            Button(role: .destructive) {
-                                appState.reset()
-                            } label: {
-                                Text("Reset All Settings")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                        }
                     }
                 }
             }

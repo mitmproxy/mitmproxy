@@ -115,9 +115,13 @@ final class AppState: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
+            guard let self = self else { return }
             if let newName = notification.object as? String {
                 print("[AppState] NOTIFICATION: workspaceNameUpdated to '\(newName)'")
-                self?.workspaceName = newName
+                // Use MainActor.assumeIsolated since we're on .main queue
+                MainActor.assumeIsolated {
+                    self.workspaceName = newName
+                }
             }
         }
     }

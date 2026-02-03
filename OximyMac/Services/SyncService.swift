@@ -40,7 +40,8 @@ final class SyncService: ObservableObject {
     private var timer: Timer?
 
     /// Force sync trigger file - writing this tells the addon to sync immediately
-    private static let forceSyncTrigger = Constants.oximyDir.appendingPathComponent("force-sync")
+    /// nonisolated(unsafe) because this is a constant path that doesn't need actor isolation
+    nonisolated(unsafe) private static let forceSyncTrigger = Constants.oximyDir.appendingPathComponent("force-sync")
 
     private init() {
         updatePendingCount()
@@ -133,7 +134,8 @@ final class SyncService: ObservableObject {
 
     /// Trigger addon to sync on app termination
     nonisolated func flushSync() {
-        try? "sync".write(to: Self.forceSyncTrigger, atomically: true, encoding: .utf8)
+        let triggerFile = Constants.oximyDir.appendingPathComponent("force-sync")
+        try? "sync".write(to: triggerFile, atomically: true, encoding: .utf8)
         Thread.sleep(forTimeInterval: 0.5)
     }
 
