@@ -65,6 +65,7 @@ OXIMY_DIR = Path(os.environ.get("OXIMY_HOME", "~/.oximy")).expanduser()
 OXIMY_TRACES_DIR = OXIMY_DIR / "traces"
 OXIMY_CONFIG_FILE = OXIMY_DIR / "config.json"
 OXIMY_STATE_FILE = OXIMY_DIR / "remote-state.json"
+OXIMY_COMMAND_RESULTS_FILE = OXIMY_DIR / "command-results.json"
 OXIMY_TOKEN_FILE = OXIMY_DIR / "device-token"
 OXIMY_UPLOAD_STATE_FILE = OXIMY_DIR / "upload-state.json"
 OXIMY_PASSTHROUGH_CACHE = OXIMY_DIR / "learned-passthrough.json"
@@ -113,6 +114,7 @@ class _SensorState:
         self.pending_state: bool | None = None  # Pending state change waiting for debounce
         self.pending_since: float = 0.0  # Timestamp when pending state was first seen
         self.previous_force_sync: bool = False  # Detect false→true transitions (one-shot trigger)
+        self.previous_force_logout: bool = False  # Detect false→true transitions (one-shot trigger)
         self.proxy_active: bool = False  # System proxy is actively configured
 
     @property
@@ -124,6 +126,10 @@ _state = _SensorState()
 
 # Legacy aliases for backwards compatibility during transition
 _globals_lock = _state.lock
+
+# Command execution results tracking - populated by _parse_sensor_config()
+# and consumed by desktop apps for heartbeat reporting
+_command_results: dict[str, dict[str, str | bool | None]] = {}
 
 
 def _get_network_services() -> list[str]:
@@ -969,6 +975,48 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
         _state.previous_sensor_enabled = enabled
 
 
+def _post_command_results_immediate(command_results: dict) -> None:
+    """Post command results immediately to API for faster feedback.
+
+    This is best-effort - failures are logged but don't affect sensor operation.
+    Heartbeat reporting serves as fallback if immediate POST fails.
+    """
+    try:
+        # Read device token
+        if not OXIMY_TOKEN_FILE.exists():
+            logger.debug("No device token found - skipping immediate command result POST")
+            return
+
+        with open(OXIMY_TOKEN_FILE, encoding="utf-8") as f:
+            device_token = f.read().strip()
+
+        if not device_token:
+            return
+
+        # Prepare API request
+        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "https://api.oximy.com/api/v1")
+        url = f"{api_endpoint}/devices/command-results"
+
+        headers = {
+            "Authorization": f"Bearer {device_token}",
+            "Content-Type": "application/json",
+        }
+
+        payload = json.dumps({"commandResults": command_results})
+
+        # POST with short timeout (don't block sensor-config refresh)
+        req = urllib.request.Request(url, data=payload.encode(), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=2) as response:
+            if response.status == 200:
+                logger.debug(f"Immediately posted command results: {list(command_results.keys())}")
+            else:
+                logger.debug(f"Immediate command POST returned status {response.status}")
+
+    except Exception as e:
+        # Silent failure - heartbeat will report results as fallback
+        logger.debug(f"Failed to immediately POST command results (will retry via heartbeat): {e}")
+
+
 def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     """Parse API response into normalized config format.
 
@@ -977,7 +1025,9 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     - force_sync: Upload pending traces immediately
     - clear_cache: Delete local trace files
     - force_logout: Written to state file for Swift to handle (clears credentials)
+    - appConfig: App-level feature flags for Swift to consume
     """
+    global _command_results
     data = raw.get("data", raw)
 
     # Parse allowed_app_origins (hosts = browsers, non_hosts = AI-native apps)
@@ -985,6 +1035,9 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
 
     # Extract commands from API response
     commands = data.get("commands", {})
+
+    # Extract appConfig from API response (app-level feature flags)
+    app_config = data.get("appConfig", {})
 
     # --- EXECUTE COMMANDS DIRECTLY ---
 
@@ -997,8 +1050,21 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
         if _state.previous_sensor_enabled is None:
             if not sensor_enabled:
                 logger.info("Sensor disabled on startup - proxy not activated")
-            _apply_sensor_state(sensor_enabled, addon_instance)
-            _state.pending_state = None
+            try:
+                _apply_sensor_state(sensor_enabled, addon_instance)
+                _state.pending_state = None
+                # Track execution result for heartbeat reporting
+                _command_results["sensor_enabled"] = {
+                    "success": True,
+                    "executedAt": datetime.now(timezone.utc).isoformat(),
+                }
+            except Exception as e:
+                logger.warning(f"Failed to apply sensor state on startup: {e}")
+                _command_results["sensor_enabled"] = {
+                    "success": False,
+                    "executedAt": datetime.now(timezone.utc).isoformat(),
+                    "error": str(e),
+                }
 
         # State changed from current active state
         elif sensor_enabled != _state.previous_sensor_enabled:
@@ -1011,8 +1077,22 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             elif current_time - _state.pending_since >= SENSOR_DEBOUNCE_SECONDS:
                 # State has been stable for debounce period, apply it
                 logger.info(f"Sensor state confirmed after {SENSOR_DEBOUNCE_SECONDS}s debounce")
-                _apply_sensor_state(sensor_enabled, addon_instance)
-                _state.pending_state = None
+                try:
+                    _apply_sensor_state(sensor_enabled, addon_instance)
+                    _state.pending_state = None
+                    # Track execution result for heartbeat reporting
+                    _command_results["sensor_enabled"] = {
+                        "success": True,
+                        "executedAt": datetime.now(timezone.utc).isoformat(),
+                    }
+                except Exception as e:
+                    logger.warning(f"Failed to apply sensor state change: {e}")
+                    _state.pending_state = None
+                    _command_results["sensor_enabled"] = {
+                        "success": False,
+                        "executedAt": datetime.now(timezone.utc).isoformat(),
+                        "error": str(e),
+                    }
             else:
                 # Still waiting for debounce
                 remaining = SENSOR_DEBOUNCE_SECONDS - (current_time - _state.pending_since)
@@ -1022,27 +1102,83 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
         elif _state.pending_state is not None:
             logger.info(f"Sensor state change cancelled (reverted to {sensor_enabled})")
             _state.pending_state = None
+            # Track cancellation as a failed command execution
+            _command_results["sensor_enabled"] = {
+                "success": False,
+                "executedAt": datetime.now(timezone.utc).isoformat(),
+                "error": "State change cancelled - reverted before debounce completed",
+            }
 
-    # Handle force_sync (upload pending traces) - only on false→true transition
+    # Handle force_sync (upload pending traces) - execute whenever present
     force_sync = commands.get("force_sync", False)
-    if force_sync and not _state.previous_force_sync:
+    if force_sync:
         logger.info("Executing force_sync command (remote trigger)")
+        start_time = time.time()
+        success = False
+        error_msg = None
+        events_uploaded = 0
+        bytes_uploaded = 0
+
         if addon_instance is not None:
             try:
-                addon_instance.upload_all_traces()
+                metrics = addon_instance.upload_all_traces()
+                events_uploaded = metrics.get("eventsUploaded", 0)
+                bytes_uploaded = metrics.get("bytesUploaded", 0)
+                success = True
             except Exception as e:
+                error_msg = str(e)
                 logger.warning(f"force_sync failed: {e}")
         else:
+            error_msg = "No addon instance available"
             logger.debug("force_sync skipped: no addon instance available")
-    _state.previous_force_sync = force_sync
+
+        duration = time.time() - start_time
+
+        # Track execution result for heartbeat reporting with detailed metrics
+        result_data = {
+            "success": success,
+            "executedAt": datetime.now(timezone.utc).isoformat(),
+            "eventsUploaded": events_uploaded,
+            "bytesUploaded": bytes_uploaded,
+            "duration": round(duration, 2),
+        }
+        if error_msg:
+            result_data["error"] = error_msg
+
+        _command_results["force_sync"] = result_data
 
     # Handle clear_cache (delete local trace files)
     if commands.get("clear_cache"):
         logger.info("Executing clear_cache command")
-        _clear_local_cache()
+        success = False
+        error_msg = None
+        try:
+            _clear_local_cache()
+            success = True
+        except Exception as e:
+            error_msg = str(e)
+            logger.warning(f"clear_cache failed: {e}")
+
+        # Track execution result for heartbeat reporting
+        _command_results["clear_cache"] = {
+            "success": success,
+            "executedAt": datetime.now(timezone.utc).isoformat(),
+            "error": error_msg,
+        }
+
+    # Handle force_logout - execute whenever present
+    force_logout = commands.get("force_logout", False)
+    if force_logout:
+        logger.info("Executing force_logout command (remote trigger)")
+        # Track execution result for heartbeat reporting
+        # Swift app handles the actual logout by monitoring remote-state.json
+        _command_results["force_logout"] = {
+            "success": True,
+            "executedAt": datetime.now(timezone.utc).isoformat(),
+        }
 
     # --- WRITE STATE FILE FOR SWIFT UI DISPLAY ---
-    # Swift only reads this for display purposes and handles force_logout
+    # Swift reads this for display purposes and handles force_logout + appConfig
     try:
         state_data = {
             "sensor_enabled": sensor_enabled,
@@ -1052,6 +1188,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "proxy_active": _state.proxy_active,
             "proxy_port": _state.proxy_port,
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "appConfig": app_config,
         }
         OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
@@ -1059,6 +1196,24 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
         logger.debug(f"Remote state written to {OXIMY_STATE_FILE}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write remote state file: {e}")
+
+    # --- WRITE COMMAND RESULTS FILE FOR HEARTBEAT REPORTING ---
+    # Desktop apps read this file and include results in heartbeat payload
+    if _command_results:
+        try:
+            OXIMY_COMMAND_RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with open(OXIMY_COMMAND_RESULTS_FILE, "w", encoding="utf-8") as f:
+                json.dump(_command_results, f, indent=2)
+            logger.debug(f"Command results written to {OXIMY_COMMAND_RESULTS_FILE}: {list(_command_results.keys())}")
+
+            # Immediately POST results to API for faster feedback (best effort)
+            # Falls back to heartbeat reporting if this fails
+            _post_command_results_immediate(_command_results)
+
+            # Clear results after writing - they'll be sent in next heartbeat as fallback
+            _command_results = {}
+        except (IOError, OSError) as e:
+            logger.warning(f"Failed to write command results file: {e}")
 
     return {
         "whitelist": data.get("whitelistedDomains", []),
@@ -2558,11 +2713,24 @@ class OximyAddon:
             f"{len(self._allowed_host_origins)} host_origins ====="
         )
 
+        # Start delayed proxy activation fallback (workaround for unreliable running() callback)
+        threading.Timer(5.0, self._delayed_proxy_activation).start()
+        logger.info("[OXIMY] Scheduled delayed proxy activation fallback in 5s")
+
     def running(self) -> None:
         """Called after mitmproxy is fully started and listening."""
-        if not self._enabled or not ctx.options.oximy_manage_proxy:
+        logger.info("[OXIMY] running() callback triggered")
+
+        if not self._enabled:
+            logger.info("[OXIMY] Addon disabled, skipping proxy setup in running()")
             return
+
+        if not ctx.options.oximy_manage_proxy:
+            logger.info("[OXIMY] Proxy management disabled, skipping proxy setup in running()")
+            return
+
         if self._port_configured:
+            logger.info("[OXIMY] Proxy already configured (likely by fallback), skipping running()")
             return
 
         global _addon_manages_proxy
@@ -2593,6 +2761,68 @@ class OximyAddon:
         # Set up terminal env (shell profile injection, env scripts, CA bundle).
         # Runs outside the lock — idempotent and non-fatal.
         _setup_terminal_env()
+
+    def _delayed_proxy_activation(self):
+        """Fallback activation if running() hook isn't called.
+
+        This is a workaround for mitmproxy's unreliable lifecycle hooks.
+        If running() executes first, it will set proxy_active and this will be a no-op.
+        """
+        try:
+            if self._port_configured:
+                logger.info("[OXIMY] Fallback: Proxy already configured by running(), skipping")
+                return
+
+            if not self._enabled:
+                logger.info("[OXIMY] Fallback: Addon disabled, skipping")
+                return
+
+            if not ctx.options.oximy_manage_proxy:
+                logger.info("[OXIMY] Fallback: Proxy management disabled, skipping")
+                return
+
+            # Get the actual bound port from proxyserver
+            proxyserver = ctx.master.addons.get("proxyserver")
+            if not proxyserver:
+                logger.warning("[OXIMY] Fallback: proxyserver addon not found")
+                return
+
+            listen_addrs = proxyserver.listen_addrs()
+            if not listen_addrs:
+                logger.warning("[OXIMY] Fallback: No listen addresses found")
+                return
+
+            port = listen_addrs[0][1]
+            logger.info(f"[OXIMY] Fallback: Detected proxy listening on port {port}")
+
+            # Mark as configured to prevent running() from also doing this
+            global _addon_manages_proxy
+            self._port_configured = True
+
+            # Set proxy active
+            with _state.lock:
+                _state.proxy_port = str(port)
+                _write_proxy_port_file(_state.proxy_port)
+
+                # Only enable proxy if sensor is active
+                if _state.sensor_active:
+                    logger.info(f"[OXIMY] Fallback: Configuring system proxy with port {_state.proxy_port}")
+                    _set_system_proxy(enable=True)
+                    _addon_manages_proxy = True
+                    _state.proxy_active = True
+                    _write_proxy_state()
+                    logger.info(f"[OXIMY] Fallback: Proxy marked as active on port {port}")
+                else:
+                    logger.info(f"[OXIMY] Fallback: Proxy port {_state.proxy_port} captured, but sensor disabled")
+                    _addon_manages_proxy = False
+                    _state.proxy_active = False
+                    _write_proxy_state()
+
+            # Set up terminal env
+            _setup_terminal_env()
+
+        except Exception as e:
+            logger.error(f"[OXIMY] Fallback activation failed: {e}", exc_info=True)
 
     async def client_connected(self, client: connection.Client) -> None:
         """Resolve client process at connection time when TCP is definitely active.
@@ -3452,16 +3682,25 @@ class OximyAddon:
             except Exception as e:
                 logger.warning(f"Failed to upload traces: {e}")
 
-    def upload_all_traces(self) -> None:
+    def upload_all_traces(self) -> dict[str, int]:
         """Upload all pending traces (memory buffer and disk fallback).
 
         Called by remote command execution (force_sync).
+
+        Returns:
+            dict with keys: eventsUploaded (int), bytesUploaded (int)
         """
+        total_uploaded = 0
+        total_bytes = 0
+
         try:
             # Upload from memory buffer first
             if self._direct_uploader and self._buffer and self._buffer.size() > 0:
                 uploaded_count = self._direct_uploader.upload_all()
                 if uploaded_count > 0:
+                    total_uploaded += uploaded_count
+                    # Estimate bytes (rough approximation)
+                    total_bytes += uploaded_count * 500  # ~500 bytes per trace avg
                     logger.info(f"Force sync: uploaded {uploaded_count} traces from memory buffer")
 
             # Upload from disk fallback files
@@ -3473,9 +3712,14 @@ class OximyAddon:
                 active_file = self._writer._current_file if self._writer else None
                 uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
                 if uploaded > 0:
+                    total_uploaded += uploaded
+                    # Estimate bytes (rough approximation)
+                    total_bytes += uploaded * 500  # ~500 bytes per trace avg
                     logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
         except Exception as e:
             logger.warning(f"upload_all_traces failed: {e}")
+
+        return {"eventsUploaded": total_uploaded, "bytesUploaded": total_bytes}
 
     # =========================================================================
     # Lifecycle

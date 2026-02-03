@@ -5,6 +5,22 @@ extension Notification.Name {
     static let sensorEnabledChanged = Notification.Name("sensorEnabledChanged")
 }
 
+/// App-level feature flags from sensor-config API
+struct AppConfigFlags: Codable {
+    let disableUserLogout: Bool?
+    let disableQuit: Bool?
+    let forceAutoStart: Bool?
+    let managedSetupComplete: Bool?
+    let managedEnrollmentComplete: Bool?
+    let managedCACertInstalled: Bool?
+    let managedDeviceToken: String?
+    let managedDeviceId: String?
+    let managedWorkspaceId: String?
+    let managedWorkspaceName: String?
+    let apiEndpoint: String?
+    let heartbeatInterval: Int?
+}
+
 /// Remote state from Python addon (written to ~/.oximy/remote-state.json)
 struct RemoteState: Codable {
     let sensorEnabled: Bool
@@ -13,6 +29,7 @@ struct RemoteState: Codable {
     let tenantId: String?
     let itSupport: String?
     let timestamp: String
+    let appConfig: AppConfigFlags?
 
     enum CodingKeys: String, CodingKey {
         case sensorEnabled = "sensor_enabled"
@@ -21,6 +38,7 @@ struct RemoteState: Codable {
         case tenantId
         case itSupport
         case timestamp
+        case appConfig
     }
 }
 
@@ -38,6 +56,7 @@ final class RemoteStateService: ObservableObject {
     @Published var itSupport: String?
     @Published var lastUpdate: Date?
     @Published var isRunning = false
+    @Published var appConfig: AppConfigFlags?
 
     // MARK: - Private
 
@@ -98,6 +117,7 @@ final class RemoteStateService: ObservableObject {
             proxyActive = state.proxyActive
             tenantId = state.tenantId
             itSupport = state.itSupport
+            appConfig = state.appConfig
             lastUpdate = Date()
 
             // Handle state changes
