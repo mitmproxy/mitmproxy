@@ -131,6 +131,15 @@ _globals_lock = _state.lock
 # and consumed by desktop apps for heartbeat reporting
 _command_results: dict[str, dict[str, str | bool | None]] = {}
 
+# Track executed commands to prevent re-execution when using cached config
+# Commands like force_sync should only execute once, not on every config poll
+_executed_command_hashes: set[str] = set()
+
+
+def _get_command_hash(command_name: str) -> str:
+    """Generate a unique hash for a command to track execution."""
+    return f"{command_name}:executed"
+
 
 def _get_network_services() -> list[str]:
     """Get list of active network services (Wi-Fi, Ethernet, etc.)."""
@@ -914,6 +923,11 @@ def fetch_sensor_config(
             json.dump(raw, f, indent=2)
         logger.info(f"Sensor config cached to {cache_file}")
 
+        # Clear executed commands on fresh API fetch - allows commands to re-execute
+        # when they appear in a new API response (vs repeated execution from cache)
+        global _executed_command_hashes
+        _executed_command_hashes.clear()
+
         return _parse_sensor_config(raw, addon_instance)
 
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError) as e:
@@ -1109,9 +1123,12 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
                 "error": "State change cancelled - reverted before debounce completed",
             }
 
-    # Handle force_sync (upload pending traces) - execute whenever present
+    # Handle force_sync (upload pending traces) - only execute if not already executed
+    # This prevents re-execution on every config poll when using cached config
     force_sync = commands.get("force_sync", False)
-    if force_sync:
+    force_sync_hash = _get_command_hash("force_sync")
+    if force_sync and force_sync_hash not in _executed_command_hashes:
+        _executed_command_hashes.add(force_sync_hash)
         logger.info("Executing force_sync command (remote trigger)")
         start_time = time.time()
         success = False
@@ -1146,9 +1163,14 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             result_data["error"] = error_msg
 
         _command_results["force_sync"] = result_data
+    elif force_sync:
+        logger.debug("force_sync already executed, skipping")
 
-    # Handle clear_cache (delete local trace files)
-    if commands.get("clear_cache"):
+    # Handle clear_cache (delete local trace files) - only execute if not already executed
+    clear_cache = commands.get("clear_cache", False)
+    clear_cache_hash = _get_command_hash("clear_cache")
+    if clear_cache and clear_cache_hash not in _executed_command_hashes:
+        _executed_command_hashes.add(clear_cache_hash)
         logger.info("Executing clear_cache command")
         success = False
         error_msg = None
@@ -1165,6 +1187,8 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "executedAt": datetime.now(timezone.utc).isoformat(),
             "error": error_msg,
         }
+    elif clear_cache:
+        logger.debug("clear_cache already executed, skipping")
 
     # Handle force_logout - execute whenever present
     force_logout = commands.get("force_logout", False)
