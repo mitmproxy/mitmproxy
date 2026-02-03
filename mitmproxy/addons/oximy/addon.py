@@ -135,10 +135,40 @@ _command_results: dict[str, dict[str, str | bool | None]] = {}
 # Commands like force_sync should only execute once, not on every config poll
 _executed_command_hashes: set[str] = set()
 
+# Track 401 errors and force_logout state
+_consecutive_401_count: int = 0
+_force_logout_triggered: bool = False
+_MAX_401_RETRIES: int = 5  # Wait for 5 consecutive 401s before triggering logout
+
 
 def _get_command_hash(command_name: str) -> str:
     """Generate a unique hash for a command to track execution."""
     return f"{command_name}:executed"
+
+
+def _write_force_logout_state() -> None:
+    """Write force_logout=true to remote-state.json for Swift to pick up.
+
+    Called when we detect an invalid device token (401 error) so the app
+    will log out and prompt for re-enrollment.
+    """
+    try:
+        state_data = {
+            "sensor_enabled": False,
+            "force_logout": True,
+            "proxy_active": False,
+            "proxy_port": None,
+            "tenantId": None,
+            "itSupport": None,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "appConfig": None,
+        }
+        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state_data, f, indent=2)
+        logger.info("Force logout state written to remote-state.json")
+    except (IOError, OSError) as e:
+        logger.warning(f"Failed to write force logout state: {e}")
 
 
 def _get_network_services() -> list[str]:
@@ -925,12 +955,47 @@ def fetch_sensor_config(
 
         # Clear executed commands on fresh API fetch - allows commands to re-execute
         # when they appear in a new API response (vs repeated execution from cache)
-        global _executed_command_hashes
+        global _executed_command_hashes, _consecutive_401_count, _force_logout_triggered
         _executed_command_hashes.clear()
+        _consecutive_401_count = 0  # Reset 401 counter on successful fetch
+        _force_logout_triggered = False  # Reset logout flag so it can trigger again if needed
 
         return _parse_sensor_config(raw, addon_instance)
 
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, OSError) as e:
+    except urllib.error.HTTPError as e:
+        # Handle 401 specifically - invalid device token requires logout after retries
+        if e.code == 401:
+            # Note: _force_logout_triggered and _consecutive_401_count already declared global above
+            _consecutive_401_count += 1
+            logger.warning(f"Device token invalid (401) - attempt {_consecutive_401_count}/{_MAX_401_RETRIES}")
+
+            if _consecutive_401_count >= _MAX_401_RETRIES and not _force_logout_triggered:
+                _force_logout_triggered = True
+                logger.warning(f"Max 401 retries ({_MAX_401_RETRIES}) reached - triggering force_logout for re-enrollment")
+                _write_force_logout_state()
+            elif _force_logout_triggered:
+                logger.debug("401 error but force_logout already triggered")
+
+            # Don't use cache with invalid token - return empty config
+            return default_config
+        else:
+            # Non-401 HTTP errors: log and fall through to cache
+            logger.warning(f"Failed to fetch sensor config: HTTP {e.code}")
+            # Fall through to cache fallback below
+
+        if cache_file.exists():
+            try:
+                with open(cache_file, encoding="utf-8") as f:
+                    cached = json.load(f)
+                logger.info(f"Using cached sensor config from {cache_file}")
+                return _parse_sensor_config(cached, addon_instance)
+            except (json.JSONDecodeError, IOError) as cache_err:
+                logger.warning(f"Failed to load cached config: {cache_err}")
+
+        logger.warning("Using empty default config")
+        return default_config
+
+    except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
         logger.warning(f"Failed to fetch sensor config: {e}")
 
         if cache_file.exists():
