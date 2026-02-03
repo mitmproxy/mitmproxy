@@ -75,6 +75,7 @@ OXIMY_PROXY_PORT_FILE = OXIMY_DIR / "proxy-port"
 OXIMY_ENV_SCRIPT = OXIMY_DIR / "oximy_env.sh"
 OXIMY_COMBINED_CA_BUNDLE = OXIMY_DIR / "combined-ca-bundle.pem"
 OXIMY_CA_CERT = OXIMY_DIR / "oximy-ca-cert.pem"
+OXIMY_NO_PARSER_APPS_CACHE = OXIMY_DIR / "no-parser-apps.json"
 
 # Shell profile markers for idempotent injection/removal
 _SHELL_MARKER = "# --- Oximy (do not edit this block) ---"
@@ -787,7 +788,7 @@ def _register_cleanup_handlers() -> None:
 # CERTIFICATE MANAGEMENT
 # =============================================================================
 
-CERT_DIR = Path("~/.mitmproxy").expanduser()
+CERT_DIR = OXIMY_DIR  # Use same directory as other Oximy files
 CERT_NAME = "oximy"  # Must match CONF_BASENAME in mitmproxy/options.py
 
 
@@ -939,7 +940,7 @@ def fetch_sensor_config(
             logger.debug(f"Could not read device token: {e}")
 
     try:
-        logger.info(f"Fetching sensor config from {url}")
+        logger.debug(f"Fetching sensor config from {url}")
         headers = {"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"}
         if token:
             headers["Authorization"] = f"Bearer {token}"
@@ -951,7 +952,7 @@ def fetch_sensor_config(
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         with open(cache_file, "w", encoding="utf-8") as f:
             json.dump(raw, f, indent=2)
-        logger.info(f"Sensor config cached to {cache_file}")
+        logger.debug(f"Sensor config cached to {cache_file}")
 
         # Clear executed commands on fresh API fetch - allows commands to re-execute
         # when they appear in a new API response (vs repeated execution from cache)
@@ -1311,6 +1312,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
         "allowed_app_origins": {
             "hosts": app_origins.get("hosts", []),
             "non_hosts": app_origins.get("non_hosts", []),
+            "apps_with_parsers": app_origins.get("apps_with_parsers", []),
         },
         "allowed_host_origins": data.get("allowed_host_origins", []),
     }
@@ -1754,6 +1756,68 @@ def matches_host_origin(origin: str | None, allowed_origins: list[str]) -> bool:
             return True
 
     return False
+
+
+# =============================================================================
+# UNKNOWN APPS RATE LIMITING
+# =============================================================================
+
+
+def _load_no_parser_apps_cache() -> dict:
+    """Load no-parser apps cache from disk.
+
+    Returns {"date": "YYYY-MM-DD", "apps": {"bundle.id": True, ...}}.
+    Auto-resets if date doesn't match today.
+    """
+    today = date.today().isoformat()
+
+    if not OXIMY_NO_PARSER_APPS_CACHE.exists():
+        return {"date": today, "apps": {}}
+
+    try:
+        with open(OXIMY_NO_PARSER_APPS_CACHE, encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Auto-reset if date changed (new day)
+        if data.get("date") != today:
+            logger.info(
+                f"No-parser apps cache date mismatch ({data.get('date')} != {today}), resetting"
+            )
+            return {"date": today, "apps": {}}
+
+        return data
+    except (json.JSONDecodeError, IOError) as e:
+        logger.warning(f"Could not load no-parser apps cache: {e}")
+        return {"date": today, "apps": {}}
+
+
+def _save_no_parser_apps_cache(cache: dict) -> None:
+    """Save no-parser apps cache to disk."""
+    try:
+        OXIMY_NO_PARSER_APPS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with open(OXIMY_NO_PARSER_APPS_CACHE, "w", encoding="utf-8") as f:
+            json.dump(cache, f, indent=2)
+    except (IOError, OSError) as e:
+        logger.warning(f"Failed to save no-parser apps cache: {e}")
+
+
+def _check_no_parser_app_allowed(
+    bundle_id: str,
+    cache: dict,
+    lock: threading.Lock,
+) -> tuple[bool, dict]:
+    """Check if a no-parser app should be allowed (first request of day only)."""
+    today = date.today().isoformat()
+
+    with lock:
+        if cache.get("date") != today:
+            cache = {"date": today, "apps": {}}
+
+        bundle_lower = bundle_id.lower()
+        if bundle_lower not in cache["apps"]:
+            cache["apps"][bundle_lower] = True
+            return True, cache
+        return False, cache
 
 
 # =============================================================================
@@ -2423,8 +2487,12 @@ class OximyAddon:
         self._blacklist: list[str] = []
         # Hierarchical filtering: app origins and host origins
         self._allowed_app_hosts: list[str] = []  # Browser bundle IDs
+        self._allowed_app_hosts_set: set[str] = set()  # O(1) browser lookup (lowercase)
         self._allowed_app_non_hosts: list[str] = []  # AI-native app bundle IDs
         self._allowed_host_origins: list[str] = []  # Website origins (for browsers)
+        self._apps_with_parsers: set[str] = set()  # Bundle IDs with server-side parsers
+        self._no_parser_apps_cache: dict = {}  # Daily cache for rate-limiting apps without parsers
+        self._no_parser_apps_lock: threading.Lock = threading.Lock()  # Thread safety for cache
         self._tls: TLSPassthrough | None = None
         # Cloud-first ingestion: memory buffer with disk fallback
         self._buffer: MemoryTraceBuffer | None = None
@@ -2548,14 +2616,17 @@ class OximyAddon:
                     # Update hierarchical filtering config
                     app_origins = config.get("allowed_app_origins", {})
                     self._allowed_app_hosts = tuple(app_origins.get("hosts", []))
+                    self._allowed_app_hosts_set = {h.lower() for h in app_origins.get("hosts", [])}
                     self._allowed_app_non_hosts = tuple(app_origins.get("non_hosts", []))
                     self._allowed_host_origins = tuple(config.get("allowed_host_origins", []))
+                    # Convert parsers to lowercase set for O(1) case-insensitive lookup
+                    self._apps_with_parsers = {p.lower() for p in app_origins.get("apps_with_parsers", [])}
 
                     # Update TLS passthrough patterns
                     if self._tls:
                         self._tls.update_passthrough(config.get("passthrough", []))
 
-                logger.info(
+                logger.debug(
                     f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
                     f"{len(self._allowed_app_hosts)} app_hosts, {len(self._allowed_host_origins)} host_origins"
                 )
@@ -2752,8 +2823,14 @@ class OximyAddon:
         # Hierarchical filtering config
         app_origins = sensor_config.get("allowed_app_origins", {})
         self._allowed_app_hosts = tuple(app_origins.get("hosts", []))
+        self._allowed_app_hosts_set = {h.lower() for h in app_origins.get("hosts", [])}
         self._allowed_app_non_hosts = tuple(app_origins.get("non_hosts", []))
         self._allowed_host_origins = tuple(sensor_config.get("allowed_host_origins", []))
+        # Convert parsers to lowercase set for O(1) case-insensitive lookup
+        self._apps_with_parsers = {p.lower() for p in app_origins.get("apps_with_parsers", [])}
+
+        # Load unknown apps cache for daily rate limiting
+        self._no_parser_apps_cache = _load_no_parser_apps_cache()
 
         # Start periodic config refresh (only if not already running) - thread-safe
         if self._config_refresh_thread is None or not self._config_refresh_thread.is_alive():
@@ -2927,7 +3004,7 @@ class OximyAddon:
             client_port = client.peername[1]
             client_process = await self._resolver.get_process_for_port(client_port)
             self._client_processes[client.id] = client_process
-            logger.debug(f"[CLIENT_CONNECTED] port={client_port} -> {client_process.name} (bundle: {client_process.bundle_id})")
+            logger.info(f"[CLIENT] {client_process.name} ({client_process.bundle_id}) connected on port {client_port}")
         except Exception as e:
             logger.debug(f"[CLIENT_CONNECTED] Failed to resolve process for port {client.peername[1] if client.peername else 'unknown'}: {e}")
 
@@ -3033,15 +3110,50 @@ class OximyAddon:
         if not host:
             return
 
-        # Skip TLS interception for non-whitelisted domains (HUGE performance win)
-        # This avoids cert generation + decrypt/re-encrypt for 99% of traffic
-        if not matches_domain(host, self._whitelist):
-            data.ignore_connection = True
+        # Whitelisted domains: always intercept TLS
+        if matches_domain(host, self._whitelist):
+            # Check for learned passthrough patterns (cert-pinned hosts)
+            if self._tls and self._tls.should_passthrough(host):
+                data.ignore_connection = True
             return
 
-        # Also skip for learned passthrough patterns (cert-pinned hosts)
-        if self._tls and self._tls.should_passthrough(host):
-            data.ignore_connection = True
+        # Non-whitelisted domain: check if we should intercept for app discovery
+        # Allow TLS interception for no-parser apps that haven't been seen today
+        if self._should_intercept_for_discovery(data.context.client):
+            # Don't passthrough - we want to capture this for discovery
+            return
+
+        # Default: skip TLS interception for non-whitelisted domains
+        data.ignore_connection = True
+
+    def _should_intercept_for_discovery(self, client) -> bool:
+        """Check if we should intercept TLS for app discovery (non-browser, no parser, first today)."""
+        if not client or not hasattr(client, 'id'):
+            return False
+
+        # Look up the client process
+        client_process = self._client_processes.get(client.id)
+        if not client_process or not client_process.bundle_id:
+            return False
+
+        bundle_lower = client_process.bundle_id.lower()
+
+        # Browsers always use whitelist (they're the host for web apps)
+        if bundle_lower in self._allowed_app_hosts_set:
+            return False
+
+        # Apps with parsers don't need discovery
+        if bundle_lower in self._apps_with_parsers:
+            return False
+
+        # Check if already seen today (use read-only check without lock for performance)
+        today = date.today().isoformat()
+        cache = self._no_parser_apps_cache
+        if cache.get("date") == today and bundle_lower in cache.get("apps", {}):
+            return False  # Already seen today, no need to intercept
+
+        # This is a no-parser app's first request today - intercept for discovery
+        return True
 
     def tls_failed_client(self, data: tls.TlsData) -> None:
         """Learn certificate-pinned hosts from TLS failures."""
@@ -3074,6 +3186,7 @@ class OximyAddon:
             return  # Sensor disabled - passthrough all traffic
 
         host = flow.request.pretty_host
+        logger.debug(f"[REQUEST] {flow.request.method} {host}{flow.request.path[:50]}")
         path = flow.request.path
         url = f"{host}{path}"
 
@@ -3081,12 +3194,66 @@ class OximyAddon:
         config = self._get_config_snapshot()
 
         # =====================================================================
-        # STEP 1: Whitelist check FIRST (fast - filters out 99%+ of traffic)
+        # STEP 0: Bundle ID Rate Limiting (applies to ALL traffic)
+        # Resolve client process early for rate-limiting decision
         # =====================================================================
-        if not matches_whitelist(host, path, config["whitelist"]):
+        client_process: ClientProcess | None = None
+
+        # Fast path: connection-time cache (populated by client_connected hook)
+        if flow.client_conn and flow.client_conn.id in self._client_processes:
+            client_process = self._client_processes[flow.client_conn.id]
+
+        # Fallback: lsof lookup if not in cache
+        elif self._resolver and flow.client_conn and flow.client_conn.peername:
+            try:
+                client_port = flow.client_conn.peername[1]
+                client_process = await self._resolver.get_process_for_port(client_port)
+            except Exception:
+                pass  # Silent fail - will be None
+
+        bundle_id = client_process.bundle_id if client_process else None
+
+        # Rate limit non-browser apps without parsers (Terminal and browsers always proceed)
+        if bundle_id is None:
+            # Process not resolved - likely race condition with client_connected hook
+            logger.info(f"[STEP0] No bundle_id for {host} - process not resolved")
+        else:
+            bundle_lower = bundle_id.lower()
+            is_browser = bundle_lower in self._allowed_app_hosts_set
+            has_parser = bundle_lower in self._apps_with_parsers
+
+            logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, has_parser={has_parser}")
+
+            if not is_browser and not has_parser:
+                # Non-browser app without parser - apply daily rate limit to ALL traffic
+                allowed, self._no_parser_apps_cache = _check_no_parser_app_allowed(
+                    bundle_id, self._no_parser_apps_cache, self._no_parser_apps_lock
+                )
+
+                if allowed:
+                    _save_no_parser_apps_cache(self._no_parser_apps_cache)
+                    logger.info(f"[NO_PARSER_APP] {bundle_id} - first request today, capturing for discovery")
+                    flow.metadata["oximy_discovery_capture"] = True  # Bypass whitelist for app discovery
+                else:
+                    # Rate limited - bypass entirely (don't capture, request still proxied)
+                    logger.debug(f"[NO_PARSER_APP] {bundle_id} - already seen today, bypassing")
+                    return
+
+        # Store client process for later use
+        if client_process:
+            flow.metadata["oximy_client"] = client_process
+
+        # =====================================================================
+        # STEP 1: Whitelist check (skip for discovery captures from no-parser apps)
+        # =====================================================================
+        is_discovery = flow.metadata.get("oximy_discovery_capture", False)
+        if not is_discovery and not matches_whitelist(host, path, config["whitelist"]):
             flow.metadata["oximy_skip"] = True
             flow.metadata["oximy_skip_reason"] = "not_whitelisted"
             return
+
+        if is_discovery:
+            logger.info(f"[DISCOVERY] {host}{path} - capturing for app discovery (bypassing whitelist)")
 
         # Log only for whitelisted requests (99% of traffic skips this)
         logger.debug(f">>> {flow.request.method} {url[:100]}")
@@ -3114,49 +3281,22 @@ class OximyAddon:
                     return
 
         # =====================================================================
-        # STEP 4: Resolve client process (only for whitelisted requests)
-        # First: try connection-time cache (most reliable, populated by client_connected hook)
-        # Fallback: lsof lookup if not in cache
+        # STEP 4: App Origin Check - assign app_type
+        # (Client process already resolved in STEP 0, rate limiting done there)
         # =====================================================================
-        client_process: ClientProcess | None = None
-
-        # First: try connection-time cache (most reliable)
-        if flow.client_conn and flow.client_conn.id in self._client_processes:
-            client_process = self._client_processes[flow.client_conn.id]
-            logger.debug(f"[PROCESS] Using cached: {client_process.name} (bundle: {client_process.bundle_id})")
-
-        # Fallback: lsof lookup if not in cache
-        elif self._resolver and flow.client_conn and flow.client_conn.peername:
-            try:
-                client_port = flow.client_conn.peername[1]
-                client_process = await self._resolver.get_process_for_port(client_port)
-                logger.debug(f"[PROCESS] lsof lookup: {client_process.name} (bundle: {client_process.bundle_id})")
-            except Exception as e:
-                logger.debug(f"[PROCESS] lsof fallback failed: {e}")
-
-        if client_process:
-            flow.metadata["oximy_client"] = client_process
-
-        # =====================================================================
-        # STEP 5: App Origin Check (Layer 1)
-        # =====================================================================
+        client_process = flow.metadata.get("oximy_client")
         bundle_id = client_process.bundle_id if client_process else None
-        logger.debug(f"[APP_CHECK] bundle_id={bundle_id}")
-        app_type = matches_app_origin(
-            bundle_id,
-            config["allowed_app_hosts"],
-            config["allowed_app_non_hosts"],
-        )
 
-        # Fallback: if no match, determine app type by User-Agent heuristic
-        if app_type is None:
-            user_agent = flow.request.headers.get("User-Agent", "").lower()
-            if any(browser in user_agent for browser in ("chrome", "firefox", "safari", "edge", "mozilla")):
-                app_type = "host"
-                logger.info(f"[APP_FALLBACK] bundle_id={bundle_id} unmatched but User-Agent looks like browser, treating as host")
-            else:
-                app_type = "non_host"
-                logger.info(f"[APP_FALLBACK] bundle_id={bundle_id} unmatched, defaulting to non_host")
+        if bundle_id is None:
+            app_type = "non_host"  # Terminal
+        else:
+            app_type = matches_app_origin(
+                bundle_id,
+                config["allowed_app_hosts"],
+                config["allowed_app_non_hosts"],
+            )
+            if app_type is None:
+                app_type = "non_host"  # Unknown app that passed rate limit in STEP 0
 
         flow.metadata["oximy_app_type"] = app_type
 
@@ -3246,7 +3386,7 @@ class OximyAddon:
         # This check MUST happen BEFORE normalize_body and _build_event
         if flow.metadata.get("oximy_skip"):
             skip_reason = flow.metadata.get("oximy_skip_reason", "unknown")
-            logger.info(f"[SKIP] {flow.request.pretty_host}{flow.request.path} - reason: {skip_reason}")
+            logger.debug(f"[SKIP] {flow.request.pretty_host}{flow.request.path} - reason: {skip_reason}")
             return
 
         # Log when requests pass all filters and will be captured
