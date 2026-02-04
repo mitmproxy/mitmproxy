@@ -356,23 +356,6 @@ class MITMService: ObservableObject {
         try await start()
     }
 
-    /// Force refresh the OISP bundle by restarting mitmproxy
-    /// This triggers a fresh fetch from the remote URL
-    func refreshBundle() async throws {
-        NSLog("[MITMService] Force bundle refresh requested - restarting proxy")
-
-        // Delete the cached bundle to force a fresh fetch
-        let bundleCachePath = Constants.bundleCachePath
-        if FileManager.default.fileExists(atPath: bundleCachePath.path) {
-            try? FileManager.default.removeItem(at: bundleCachePath)
-            NSLog("[MITMService] Deleted bundle cache at %@", bundleCachePath.path)
-        }
-
-        // Restart to pick up fresh bundle
-        try await restart()
-        NSLog("[MITMService] Bundle refresh complete")
-    }
-
     // MARK: - Auto-Restart
 
     /// Schedule an automatic restart with exponential backoff
