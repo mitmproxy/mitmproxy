@@ -76,6 +76,7 @@ OXIMY_ENV_SCRIPT = OXIMY_DIR / "oximy_env.sh"
 OXIMY_COMBINED_CA_BUNDLE = OXIMY_DIR / "combined-ca-bundle.pem"
 OXIMY_CA_CERT = OXIMY_DIR / "oximy-ca-cert.pem"
 OXIMY_NO_PARSER_APPS_CACHE = OXIMY_DIR / "no-parser-apps.json"
+OXIMY_NO_PARSER_DOMAINS_CACHE = OXIMY_DIR / "no-parser-domains.json"
 
 # Shell profile markers for idempotent injection/removal
 _SHELL_MARKER = "# --- Oximy (do not edit this block) ---"
@@ -1821,6 +1822,68 @@ def _check_no_parser_app_allowed(
 
 
 # =============================================================================
+# NO-PARSER DOMAINS RATE LIMITING (Website Catalog Discovery)
+# =============================================================================
+
+
+def _load_no_parser_domains_cache() -> dict:
+    """Load no-parser domains cache from disk.
+
+    Returns {"date": "YYYY-MM-DD", "domains": {"domain.com": True, ...}}.
+    Auto-resets if date doesn't match today.
+    """
+    today = date.today().isoformat()
+
+    if not OXIMY_NO_PARSER_DOMAINS_CACHE.exists():
+        return {"date": today, "domains": {}}
+
+    try:
+        with open(OXIMY_NO_PARSER_DOMAINS_CACHE, encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Auto-reset if date changed (new day)
+        if data.get("date") != today:
+            logger.info(
+                f"No-parser domains cache date mismatch ({data.get('date')} != {today}), resetting"
+            )
+            return {"date": today, "domains": {}}
+
+        return data
+    except (json.JSONDecodeError, IOError) as e:
+        logger.warning(f"Could not load no-parser domains cache: {e}")
+        return {"date": today, "domains": {}}
+
+
+def _save_no_parser_domains_cache(cache: dict) -> None:
+    """Save no-parser domains cache to disk."""
+    try:
+        OXIMY_NO_PARSER_DOMAINS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with open(OXIMY_NO_PARSER_DOMAINS_CACHE, "w", encoding="utf-8") as f:
+            json.dump(cache, f, indent=2)
+    except (IOError, OSError) as e:
+        logger.warning(f"Failed to save no-parser domains cache: {e}")
+
+
+def _check_no_parser_domain_allowed(
+    domain: str,
+    cache: dict,
+    lock: threading.Lock,
+) -> tuple[bool, dict]:
+    """Check if a no-parser domain should be allowed (first request of day only)."""
+    today = date.today().isoformat()
+
+    with lock:
+        if cache.get("date") != today:
+            cache = {"date": today, "domains": {}}
+
+        domain_lower = domain.lower()
+        if domain_lower not in cache["domains"]:
+            cache["domains"][domain_lower] = True
+            return True, cache
+        return False, cache
+
+
+# =============================================================================
 # TLS PASSTHROUGH
 # =============================================================================
 
@@ -2493,6 +2556,8 @@ class OximyAddon:
         self._apps_with_parsers: set[str] = set()  # Bundle IDs with server-side parsers
         self._no_parser_apps_cache: dict = {}  # Daily cache for rate-limiting apps without parsers
         self._no_parser_apps_lock: threading.Lock = threading.Lock()  # Thread safety for cache
+        self._no_parser_domains_cache: dict = {}  # Daily cache for rate-limiting domains without parsers
+        self._no_parser_domains_lock: threading.Lock = threading.Lock()  # Thread safety for cache
         self._tls: TLSPassthrough | None = None
         # Cloud-first ingestion: memory buffer with disk fallback
         self._buffer: MemoryTraceBuffer | None = None
@@ -2831,6 +2896,8 @@ class OximyAddon:
 
         # Load unknown apps cache for daily rate limiting
         self._no_parser_apps_cache = _load_no_parser_apps_cache()
+        # Load unknown domains cache for website catalog discovery
+        self._no_parser_domains_cache = _load_no_parser_domains_cache()
 
         # Start periodic config refresh (only if not already running) - thread-safe
         if self._config_refresh_thread is None or not self._config_refresh_thread.is_alive():
@@ -3123,6 +3190,12 @@ class OximyAddon:
             # Don't passthrough - we want to capture this for discovery
             return
 
+        # Non-whitelisted domain: check if we should intercept for domain discovery
+        # Allow TLS interception for browsers visiting domains in catalog (allowed_host_origins)
+        if self._should_intercept_for_domain_discovery(host, data.context.client):
+            # Don't passthrough - we want to capture this for discovery
+            return
+
         # Default: skip TLS interception for non-whitelisted domains
         data.ignore_connection = True
 
@@ -3153,6 +3226,41 @@ class OximyAddon:
             return False  # Already seen today, no need to intercept
 
         # This is a no-parser app's first request today - intercept for discovery
+        return True
+
+    def _should_intercept_for_domain_discovery(self, host: str, client) -> bool:
+        """Check if we should intercept TLS for domain discovery (browser, catalog domain, first today).
+
+        This allows browsers to discover new domains that are in allowed_host_origins
+        but not yet whitelisted (no parser exists yet).
+        """
+        if not host or not client or not hasattr(client, 'id'):
+            return False
+
+        # Look up the client process
+        client_process = self._client_processes.get(client.id)
+        if not client_process or not client_process.bundle_id:
+            return False
+
+        bundle_lower = client_process.bundle_id.lower()
+
+        # Only applies to browsers (non-browsers handled by _should_intercept_for_discovery)
+        if bundle_lower not in self._allowed_app_hosts_set:
+            return False
+
+        # Check if host is in the catalog (allowed_host_origins)
+        if not matches_host_origin(host, self._allowed_host_origins):
+            return False
+
+        # Check if already seen today (read-only check without lock for performance)
+        today = date.today().isoformat()
+        cache = self._no_parser_domains_cache
+        host_lower = host.lower()
+        if cache.get("date") == today and host_lower in cache.get("domains", {}):
+            return False  # Already seen today, no need to intercept
+
+        # Browser visiting catalog domain for first time today - intercept for discovery
+        logger.debug(f"[TLS_DISCOVERY] Intercepting {host} for domain discovery (browser: {client_process.bundle_id})")
         return True
 
     def tls_failed_client(self, data: tls.TlsData) -> None:
@@ -3213,6 +3321,9 @@ class OximyAddon:
 
         bundle_id = client_process.bundle_id if client_process else None
 
+        # Initialize browser flag (used in STEP 1 for domain discovery)
+        is_browser = False
+
         # Rate limit non-browser apps without parsers (Terminal and browsers always proceed)
         if bundle_id is None:
             # Process not resolved - likely race condition with client_connected hook
@@ -3244,16 +3355,42 @@ class OximyAddon:
             flow.metadata["oximy_client"] = client_process
 
         # =====================================================================
-        # STEP 1: Whitelist check (skip for discovery captures from no-parser apps)
+        # STEP 1: Whitelist check (skip for discovery captures)
+        # Discovery modes: "app" (no-parser apps) or "domain" (website catalog)
         # =====================================================================
         is_discovery = flow.metadata.get("oximy_discovery_capture", False)
+        discovery_type = flow.metadata.get("oximy_discovery_type", "app")
+
         if not is_discovery and not matches_whitelist(host, path, config["whitelist"]):
-            flow.metadata["oximy_skip"] = True
-            flow.metadata["oximy_skip_reason"] = "not_whitelisted"
-            return
+            # Not whitelisted - check if we should capture for domain discovery
+            # Domain discovery: browser traffic to a domain in allowed_host_origins (catalog)
+            if is_browser and matches_host_origin(host, config["allowed_host_origins"]):
+                # Browser visiting a known domain that doesn't have a parser yet
+                allowed, self._no_parser_domains_cache = _check_no_parser_domain_allowed(
+                    host, self._no_parser_domains_cache, self._no_parser_domains_lock
+                )
+                if allowed:
+                    _save_no_parser_domains_cache(self._no_parser_domains_cache)
+                    logger.info(f"[NO_PARSER_DOMAIN] {host} - first request today, capturing for discovery")
+                    flow.metadata["oximy_discovery_capture"] = True
+                    flow.metadata["oximy_discovery_type"] = "domain"
+                    is_discovery = True
+                    discovery_type = "domain"
+                else:
+                    logger.debug(f"[NO_PARSER_DOMAIN] {host} - already seen today, bypassing")
+                    flow.metadata["oximy_skip"] = True
+                    flow.metadata["oximy_skip_reason"] = "domain_rate_limited"
+                    return
+            else:
+                flow.metadata["oximy_skip"] = True
+                flow.metadata["oximy_skip_reason"] = "not_whitelisted"
+                return
 
         if is_discovery:
-            logger.info(f"[DISCOVERY] {host}{path} - capturing for app discovery (bypassing whitelist)")
+            if discovery_type == "domain":
+                logger.info(f"[DISCOVERY] {host}{path} - capturing for domain discovery (bypassing whitelist)")
+            else:
+                logger.info(f"[DISCOVERY] {host}{path} - capturing for app discovery (bypassing whitelist)")
 
         # Log only for whitelisted requests (99% of traffic skips this)
         logger.debug(f">>> {flow.request.method} {url[:100]}")
@@ -3302,8 +3439,10 @@ class OximyAddon:
 
         # =====================================================================
         # STEP 6: Host Origin Check (Layer 2) - only for "host" (browser) apps
+        # Skip for discovery captures (already validated in STEP 1)
         # =====================================================================
-        if app_type == "host":
+        is_discovery = flow.metadata.get("oximy_discovery_capture", False)
+        if app_type == "host" and not is_discovery:
             request_origin = self._extract_request_origin(flow)
 
             if not matches_host_origin(request_origin, config["allowed_host_origins"]):
