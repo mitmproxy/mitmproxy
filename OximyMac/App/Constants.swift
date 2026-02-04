@@ -19,10 +19,6 @@ enum Constants {
         oximyDir.appendingPathComponent("logs")
     }
 
-    static var bundleCachePath: URL {
-        oximyDir.appendingPathComponent("bundle_cache.json")
-    }
-
     static var deviceTokenPath: URL {
         oximyDir.appendingPathComponent("device-token")
     }

@@ -70,6 +70,23 @@ struct HomeTab: View {
                 Divider()
                     .padding(.vertical, 4)
 
+                // Sensor State
+                HStack {
+                    Text("Sensor State")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(remoteStateService.sensorEnabled ? Color.green : Color.gray)
+                            .frame(width: 6, height: 6)
+                        Text(remoteStateService.sensorEnabled ? "ON" : "OFF")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(remoteStateService.sensorEnabled ? .green : .secondary)
+                    }
+                }
+
                 // Sync Status
                 HStack {
                     Text("Events Pending")

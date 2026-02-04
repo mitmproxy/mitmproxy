@@ -48,7 +48,7 @@ Restart the browser after installation.
 
 ## Sensor Configuration (Whitelist/Blacklist)
 The addon fetches its filtering configuration from the API, **not** from local files:
-- **API endpoint:** `https://api.oximy.com/api/v1/sensor-config`
+- **API endpoint:** `https://api.oximy.com/api/v1/sensor-config` use the device token from .oximy/device-token, as the bearer token for auth
 - **Local cache:** `~/.oximy/sensor-config.json` (fallback only when API is unreachable)
 
 **Claude Note:** Always fetch config directly from the API to see the current state:
@@ -81,3 +81,91 @@ Path pattern wildcards:
 **Claude Note:** Do NOT edit `~/.oximy/sensor-config.json` directly - it gets overwritten by the API. Instead, tell the user what needs to be added to the API backend:
 - For new domains to capture: add to `whitelistedDomains` and `allowed_host_origins`
 - Example: "To capture replit.com, add `replit.com/**/graphql` to whitelistedDomains and `replit.com` to allowed_host_origins in the API"
+
+## App Configuration (Feature Flags)
+
+The macOS app supports configuration via a 3-tier fallback chain:
+
+1. **MDM (highest priority)**: `/Library/Managed Preferences/com.oximy.mac.plist`
+2. **Sensor Config (from API)**: `~/.oximy/remote-state.json` (refreshed every 3s from API)
+3. **App defaults**: Built-in defaults
+
+### How It Works
+- **MDM deployments**: MDM profile takes absolute priority (cannot be overridden)
+- **Direct DMG / API-managed**: Feature flags delivered via sensor-config API → addon writes to remote-state.json → Swift reads
+- **Offline / API unavailable**: Falls back to last cached remote-state or app defaults
+
+### Architecture Flow
+```
+Backend API (sensor-config endpoint)
+    ↓ addon fetches every 3s
+Python Addon (mitmproxy)
+    ↓ writes to
+~/.oximy/remote-state.json
+    ↓ Swift polls every 2s
+macOS App (RemoteStateService)
+    ↓ consumed by
+MDMConfigService (with MDM fallback)
+```
+
+### Available Configuration Options (appConfig field in sensor-config)
+- `disableUserLogout`: Hide logout button (default: false)
+- `disableQuit`: Prevent CMD+Q / quit (default: false)
+- `forceAutoStart`: Force auto-start on login (default: false)
+- `managedSetupComplete`: Skip all setup UI (default: false)
+- `managedEnrollmentComplete`: Skip enrollment UI only (default: false)
+- `managedCACertInstalled`: CA cert already installed (default: false)
+- `managedDeviceToken`: Pre-provision device token (default: null)
+- `managedDeviceId`: Pre-provision device ID (default: null)
+- `managedWorkspaceId`: Pre-provision workspace ID (default: null)
+- `managedWorkspaceName`: Pre-provision workspace name (default: null)
+- `apiEndpoint`: Custom API endpoint URL (default: null)
+- `heartbeatInterval`: Custom heartbeat interval in seconds (default: null)
+
+### For Direct DMG Distribution
+
+**Option 1: Centralized API Management (Recommended)**
+Update the sensor-config API response to include `appConfig` with desired feature flags. The app will pick up changes within 3 seconds (next sensor-config refresh).
+
+**Backend API:**
+```bash
+# Update workspace appConfig via API
+PATCH /api/v1/workspaces/{workspaceId}/app-config
+{
+  "disableUserLogout": true,
+  "disableQuit": true,
+  "forceAutoStart": true
+}
+```
+
+**Option 2: Manual Override (Not Recommended)**
+IT admins can manually edit `~/.oximy/remote-state.json` and add:
+```json
+{
+  "sensor_enabled": true,
+  "appConfig": {
+    "disableUserLogout": true,
+    "disableQuit": true,
+    "forceAutoStart": true
+  }
+}
+```
+⚠️ Note: Manual edits will be overwritten on next sensor-config refresh (3s) unless the API also returns these values.
+
+### Checking Current Config Source
+The app logs which config source is active for each setting:
+
+```
+[Config] disableUserLogout=true (source: MDM)
+[Config] disableQuit=false (source: remote-state/API)
+[Config] forceAutoStart=false (source: default)
+```
+
+Check Console.app or app logs to debug config issues.
+
+### Technical Implementation Notes
+- **Command pattern**: Consistent with existing commands like `force_logout` and `sensor_enabled`
+- **Addon changes**: `mitmproxy/addons/oximy/addon.py` - `_parse_sensor_config()` extracts `appConfig` and writes to remote-state.json
+- **Swift models**: `OximyMac/Services/RemoteStateService.swift` - `AppConfigFlags` struct and `RemoteState.appConfig` field
+- **Fallback logic**: `OximyMac/Services/MDMConfigService.swift` - All accessors implement MDM → remote-state → defaults
+- **Per-field fallback**: Each config option falls back independently (not all-or-nothing)

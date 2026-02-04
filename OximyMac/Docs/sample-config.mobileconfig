@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+    Oximy MDM Configuration Profile Template
+
+    Instructions:
+    1. Replace all {{PLACEHOLDER}} values with your organization's settings
+    2. Generate new UUIDs for PayloadUUID fields (use `uuidgen` command)
+    3. Sign the profile with your organization's certificate (optional but recommended)
+    4. Deploy via your MDM solution
+
+    Required placeholders:
+    - {{DEVICE_TOKEN}}      : API token from Oximy dashboard
+    - {{WORKSPACE_ID}}      : Your organization's workspace ID
+    - {{WORKSPACE_NAME}}    : Display name (e.g., "Acme Corp")
+    - {{PROFILE_UUID}}      : Unique ID for this profile
+    - {{PAYLOAD_UUID}}      : Unique ID for the payload
+    - {{ORGANIZATION}}      : Your organization name
+-->
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <!-- Oximy App Configuration -->
+        <dict>
+            <key>PayloadType</key>
+            <string>com.oximy.mac</string>
+            <key>PayloadUUID</key>
+            <string>{{PAYLOAD_UUID}}</string>
+            <key>PayloadIdentifier</key>
+            <string>com.oximy.mac.managed-config</string>
+            <key>PayloadDisplayName</key>
+            <string>Oximy Configuration</string>
+            <key>PayloadDescription</key>
+            <string>Managed configuration for Oximy AI traffic monitoring</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>PayloadOrganization</key>
+            <string>{{ORGANIZATION}}</string>
+
+            <!-- ========================== -->
+            <!-- CREDENTIALS (Required)     -->
+            <!-- ========================== -->
+
+            <!-- Pre-provisioned device token from Oximy dashboard -->
+            <key>ManagedDeviceToken</key>
+            <string>{{DEVICE_TOKEN}}</string>
+
+            <!-- Organization workspace ID -->
+            <key>ManagedWorkspaceId</key>
+            <string>{{WORKSPACE_ID}}</string>
+
+            <!-- Display name for the workspace -->
+            <key>ManagedWorkspaceName</key>
+            <string>{{WORKSPACE_NAME}}</string>
+
+            <!-- ========================== -->
+            <!-- SETUP CONTROL              -->
+            <!-- ========================== -->
+
+            <!-- Skip all setup UI (enrollment + certificate installation) -->
+            <key>ManagedSetupComplete</key>
+            <true/>
+
+            <!-- Skip enrollment UI only (still show cert installation) -->
+            <key>ManagedEnrollmentComplete</key>
+            <true/>
+
+            <!-- Indicate CA certificate is already installed via MDM -->
+            <!-- Set to true if deploying CA cert via separate profile -->
+            <key>ManagedCACertInstalled</key>
+            <false/>
+
+            <!-- ========================== -->
+            <!-- LOCKDOWN CONTROLS          -->
+            <!-- ========================== -->
+
+            <!-- Prevent user from disabling auto-start -->
+            <key>ForceAutoStart</key>
+            <true/>
+
+            <!-- Hide logout option in settings UI -->
+            <key>DisableUserLogout</key>
+            <true/>
+
+            <!-- Prevent user from quitting the app (CMD+Q blocked) -->
+            <key>DisableQuit</key>
+            <true/>
+
+            <!-- ========================== -->
+            <!-- ADVANCED CONFIGURATION     -->
+            <!-- ========================== -->
+
+            <!-- Custom API endpoint (optional - defaults to production) -->
+            <!-- <key>APIEndpoint</key> -->
+            <!-- <string>https://api.oximy.com/api/v1</string> -->
+
+            <!-- Heartbeat interval in seconds (optional - defaults to 60) -->
+            <!-- <key>HeartbeatInterval</key> -->
+            <!-- <integer>60</integer> -->
+        </dict>
+    </array>
+
+    <!-- Profile Metadata -->
+    <key>PayloadDisplayName</key>
+    <string>Oximy MDM Configuration</string>
+    <key>PayloadDescription</key>
+    <string>Configures Oximy for managed enterprise deployment</string>
+    <key>PayloadIdentifier</key>
+    <string>com.oximy.mac.mdm-profile</string>
+    <key>PayloadOrganization</key>
+    <string>{{ORGANIZATION}}</string>
+    <key>PayloadRemovalDisallowed</key>
+    <true/>
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>{{PROFILE_UUID}}</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

@@ -101,8 +101,19 @@ class LaunchService: ObservableObject {
         UserDefaults.standard.set(true, forKey: Constants.Defaults.autoStartEnabled)
     }
 
+    /// Check if auto-start can be toggled (not enforced by MDM)
+    var canToggle: Bool {
+        !MDMConfigService.shared.forceAutoStart
+    }
+
     /// Disable auto-start on login
     func disable() throws {
+        // Check if MDM enforces auto-start
+        if MDMConfigService.shared.forceAutoStart {
+            print("[LaunchService] Disable blocked by MDM policy (ForceAutoStart)")
+            throw LaunchServiceError.managedByMDM
+        }
+
         if #available(macOS 13.0, *) {
             do {
                 try SMAppService.mainApp.unregister()
@@ -239,6 +250,7 @@ class LaunchService: ObservableObject {
 enum LaunchServiceError: LocalizedError {
     case registrationFailed(String)
     case unregistrationFailed(String)
+    case managedByMDM
 
     var errorDescription: String? {
         switch self {
@@ -246,6 +258,8 @@ enum LaunchServiceError: LocalizedError {
             return "Failed to enable auto-start: \(reason)"
         case .unregistrationFailed(let reason):
             return "Failed to disable auto-start: \(reason)"
+        case .managedByMDM:
+            return "Cannot change auto-start: This setting is managed by your organization."
         }
     }
 }

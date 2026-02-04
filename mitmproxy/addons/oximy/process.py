@@ -24,13 +24,29 @@ class ClientProcess:
 
 
 class ProcessResolver:
-    """Resolves network connections to originating processes."""
+    """Resolves network connections to originating processes.
 
-    def __init__(self):
+    Uses platform-specific tools to map network ports to process information:
+    - macOS/Linux: lsof for port lookup, ps for process info
+    - Windows: netstat for port lookup, wmic for process info
+
+    The resolver queries the proxy port (always active) rather than ephemeral
+    client ports to avoid timing issues where connections close before lookup.
+    """
+
+    def __init__(self, proxy_port: int = 8080):
+        """Initialize the ProcessResolver.
+
+        Args:
+            proxy_port: The proxy's listening port (default 8080). Used to query
+                        active connections and filter for specific client ports.
+        """
+        self._proxy_port = proxy_port
         self._cache: dict[int, dict] = {}  # PID -> process info
-        self._bundle_id_cache: dict[str, str | None] = {}
+        self._bundle_id_cache: dict[str, str | None] = {}  # app_path -> bundle_id
         self._port_cache: dict[int, tuple[ClientProcess, float]] = {}  # port -> (ClientProcess, timestamp)
         self._port_cache_ttl = 10.0  # Cache port->process mapping for 10 seconds
+
         self._is_macos = platform.system() == "Darwin"
         self._is_linux = platform.system() == "Linux"
         self._is_windows = platform.system() == "Windows"
@@ -62,6 +78,7 @@ class ProcessResolver:
         # Step 1: Find PID that owns this port
         pid = await self._find_pid_for_port(port)
         if pid is None:
+            logger.debug(f"[PROCESS] Could not find PID for port {port} - process may have exited")
             return ClientProcess(
                 pid=None,
                 name="Unknown (exited)",
@@ -125,41 +142,98 @@ class ProcessResolver:
         return result
 
     async def _find_pid_for_port(self, port: int) -> int | None:
-        """Find the PID that owns a local port as the SOURCE (client side)."""
+        """Find the PID that owns a local port as the SOURCE (client side).
+
+        Strategy: Query the proxy port (always has active connections) and filter
+        for the specific client port. This avoids timing issues where ephemeral
+        client ports close before lsof can query them.
+
+        Uses lsof -F format for machine-readable output, which is more robust
+        than parsing the human-readable text format.
+        """
         if self._is_windows:
             return await self._find_pid_for_port_windows(port)
 
-        try:
-            # Use regular lsof output (not -F) so we can parse the connection direction
-            proc = await asyncio.create_subprocess_exec(
-                "lsof", "-i", f"TCP:{port}", "-n", "-P",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+        # Retry once on failure to handle transient issues
+        for attempt in range(2):
             try:
-                stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2)
-            except asyncio.TimeoutError:
-                proc.kill()
-                await proc.wait()
-                logger.debug(f"lsof timed out for port {port}")
-                return None
+                # Use -F for machine-readable format (more robust parsing)
+                # p = PID, n = network address
+                # Query proxy port (always active) instead of ephemeral client port
+                proc = await asyncio.create_subprocess_exec(
+                    "lsof", "-i", f"TCP:{self._proxy_port}", "-n", "-P", "-F", "pn",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                try:
+                    stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2)
+                except asyncio.TimeoutError:
+                    proc.kill()
+                    await proc.wait()
+                    if attempt == 0:
+                        await asyncio.sleep(0.1)  # Brief delay before retry
+                        continue
+                    logger.debug(f"lsof timed out for port {port}")
+                    return None
 
-            if proc.returncode == 0:
-                for line in stdout.decode().strip().split("\n")[1:]:  # Skip header
-                    # Look for lines where our port is the SOURCE (left side of ->)
-                    # Format: COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME (STATE)
-                    # NAME is like: 127.0.0.1:54029->127.0.0.1:8088
-                    # STATE is like: (ESTABLISHED) or (CLOSE_WAIT)
-                    parts = line.split()
-                    if len(parts) >= 9:
-                        # Connection string can be last or second-to-last
-                        # (depends on whether state is shown)
-                        for field in [parts[-1], parts[-2]]:
-                            if f":{port}->" in field:
-                                return int(parts[1])  # PID is second field
+                if proc.returncode == 0:
+                    output = stdout.decode()
+                    pid = self._parse_lsof_F_output(output, port)
+                    if pid:
+                        logger.debug(f"[LSOF] Found PID {pid} for port {port}")
+                        return pid
+                    else:
+                        logger.debug(f"[LSOF] Port {port} not found in lsof output")
 
-        except (ValueError, OSError) as e:
-            logger.debug(f"Failed to find PID for port {port}: {e}")
+                # If no match found on first attempt, retry after brief delay
+                if attempt == 0:
+                    await asyncio.sleep(0.05)
+                    continue
+
+                logger.debug(f"[LSOF] No matching connection found for port {port}")
+
+            except (ValueError, OSError) as e:
+                logger.debug(f"lsof attempt {attempt + 1} failed for port {port}: {e}")
+                if attempt == 0:
+                    await asyncio.sleep(0.05)
+                    continue
+
+        return None
+
+    def _parse_lsof_F_output(self, output: str, target_port: int) -> int | None:
+        """Parse lsof -F output format to find PID for a specific client port.
+
+        The -F format outputs one field per line:
+        - p<pid>: Process ID
+        - n<network_address>: Network address (e.g., n127.0.0.1:54029->127.0.0.1:8080)
+
+        We look for the client port as the SOURCE side (left of ->).
+
+        Args:
+            output: Raw output from lsof -F pn
+            target_port: The client port to find
+
+        Returns:
+            PID if found, None otherwise
+        """
+        current_pid = None
+        for line in output.strip().split('\n'):
+            if not line:
+                continue
+
+            field_type = line[0]
+            field_value = line[1:]
+
+            if field_type == 'p':
+                try:
+                    current_pid = int(field_value)
+                except ValueError:
+                    current_pid = None
+            elif field_type == 'n' and current_pid:
+                # Look for our client port as SOURCE: :{port}->
+                # Format: 127.0.0.1:54029->127.0.0.1:8080
+                if f":{target_port}->" in field_value:
+                    return current_pid
 
         return None
 
@@ -368,10 +442,53 @@ class ProcessResolver:
         return exe if exe and exe.lower().endswith(".exe") else None
 
     async def _extract_bundle_id(self, path: str | None) -> str | None:
-        """Extract macOS bundle identifier from an app path."""
-        if not path or not self._is_macos or ".app" not in path:
+        """Extract macOS bundle identifier from an app path or process name.
+
+        Handles:
+        - .app bundles (e.g., /Applications/Safari.app/Contents/MacOS/Safari)
+        - .xpc services (e.g., com.apple.WebKit.Networking.xpc)
+        - Process names that are already bundle IDs (e.g., com.apple.WebKit.Networking)
+        """
+        if not path or not self._is_macos:
             return None
 
+        # Check cache first
+        if path in self._bundle_id_cache:
+            return self._bundle_id_cache[path]
+
+        bundle_id = None
+
+        # Strategy 1: Extract from .app bundle
+        if ".app" in path:
+            bundle_id = await self._extract_bundle_id_from_app(path)
+
+        # Strategy 2: Extract from .xpc bundle
+        if not bundle_id and ".xpc" in path:
+            bundle_id = await self._extract_bundle_id_from_xpc(path)
+
+        # Strategy 3: Check if process name itself is a bundle ID
+        # (reverse domain format: com.company.product or similar)
+        if not bundle_id:
+            name = self._extract_name(path)
+            if name and self._looks_like_bundle_id(name):
+                bundle_id = name
+
+        self._bundle_id_cache[path] = bundle_id
+        return bundle_id
+
+    def _looks_like_bundle_id(self, name: str) -> bool:
+        """Check if a string looks like a reverse-domain bundle identifier."""
+        # Bundle IDs typically have format: com.company.product or similar
+        # Must have at least 2 dots and start with known prefixes
+        if not name or name.count('.') < 2:
+            return False
+        parts = name.split('.')
+        # Common prefixes for bundle IDs
+        known_prefixes = ('com', 'org', 'net', 'io', 'app', 'me', 'co', 'dev')
+        return parts[0].lower() in known_prefixes and all(p.replace('-', '').replace('_', '').isalnum() for p in parts)
+
+    async def _extract_bundle_id_from_app(self, path: str) -> str | None:
+        """Extract bundle ID from a .app bundle's Info.plist."""
         try:
             app_path = path.split(".app")[0] + ".app"
             if app_path in self._bundle_id_cache:
@@ -398,7 +515,38 @@ class ProcessResolver:
 
             self._bundle_id_cache[app_path] = None
         except OSError as e:
-            logger.debug(f"Failed to extract bundle_id from {path}: {e}")
+            logger.debug(f"Failed to extract bundle_id from app {path}: {e}")
+        return None
+
+    async def _extract_bundle_id_from_xpc(self, path: str) -> str | None:
+        """Extract bundle ID from a .xpc service's Info.plist."""
+        try:
+            xpc_path = path.split(".xpc")[0] + ".xpc"
+            if xpc_path in self._bundle_id_cache:
+                return self._bundle_id_cache[xpc_path]
+
+            plist_path = f"{xpc_path}/Contents/Info.plist"
+            proc = await asyncio.create_subprocess_exec(
+                "defaults", "read", plist_path, "CFBundleIdentifier",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=1)
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                self._bundle_id_cache[xpc_path] = None
+                return None
+
+            if proc.returncode == 0 and stdout.strip():
+                bundle_id = stdout.decode().strip()
+                self._bundle_id_cache[xpc_path] = bundle_id
+                return bundle_id
+
+            self._bundle_id_cache[xpc_path] = None
+        except OSError as e:
+            logger.debug(f"Failed to extract bundle_id from xpc {path}: {e}")
         return None
 
     def clear_cache(self) -> None:

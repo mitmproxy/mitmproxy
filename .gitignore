@@ -55,3 +55,4 @@ OximyMac/App/Secrets.swift
 .env
 .env.local
 .env.*.local
+/test_har

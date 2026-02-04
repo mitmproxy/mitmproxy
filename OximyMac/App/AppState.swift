@@ -85,13 +85,11 @@ final class AppState: ObservableObject {
     enum MainTab: String, CaseIterable {
         case home = "Home"
         case settings = "Settings"
-        case support = "Support"
 
         var icon: String {
             switch self {
             case .home: return "house.fill"
             case .settings: return "gearshape.fill"
-            case .support: return "questionmark.circle.fill"
             }
         }
     }
@@ -117,8 +115,13 @@ final class AppState: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
+            guard let self = self else { return }
             if let newName = notification.object as? String {
-                self?.workspaceName = newName
+                print("[AppState] NOTIFICATION: workspaceNameUpdated to '\(newName)'")
+                // Use MainActor.assumeIsolated since we're on .main queue
+                MainActor.assumeIsolated {
+                    self.workspaceName = newName
+                }
             }
         }
     }
@@ -128,8 +131,63 @@ final class AppState: ObservableObject {
     private func loadPersistedState() {
         let defaults = UserDefaults.standard
 
+        // DEBUG: Log all relevant UserDefaults at startup
+        let storedWorkspace = defaults.string(forKey: Constants.Defaults.workspaceName)
+        let storedToken = defaults.string(forKey: Constants.Defaults.deviceToken)
+        let storedDeviceId = defaults.string(forKey: Constants.Defaults.deviceId)
+        let storedWorkspaceId = defaults.string(forKey: Constants.Defaults.workspaceId)
+        print("[AppState] INIT - UserDefaults state:")
+        print("[AppState]   workspaceName: '\(storedWorkspace ?? "nil")'")
+        print("[AppState]   deviceToken: \(storedToken != nil ? "***" : "nil")")
+        print("[AppState]   deviceId: '\(storedDeviceId ?? "nil")'")
+        print("[AppState]   workspaceId: '\(storedWorkspaceId ?? "nil")'")
+
+        // Check for MDM-managed configuration FIRST
+        let mdmConfig = MDMConfigService.shared
+        print("[AppState] isManagedDevice: \(mdmConfig.isManagedDevice)")
+
+        if mdmConfig.isManagedDevice {
+            print("[AppState] MDM-managed device detected")
+
+            // Apply MDM configuration to standard UserDefaults
+            mdmConfig.applyManagedConfiguration()
+
+            // Handle managed device token
+            if let token = mdmConfig.managedDeviceToken {
+                writeDeviceTokenFile(token)
+            }
+
+            // Set account info from MDM if available
+            if let workspaceName = mdmConfig.managedWorkspaceName {
+                print("[AppState] Setting workspace from MDM: '\(workspaceName)'")
+                self.workspaceName = workspaceName
+                isLoggedIn = true
+            }
+
+            if let deviceId = mdmConfig.managedDeviceId {
+                self.deviceId = deviceId
+            }
+
+            // Determine phase for managed device
+            if mdmConfig.shouldSkipAllSetup {
+                // MDM says skip everything - go directly to ready
+                print("[AppState] MDM: Skipping all setup, going to ready phase")
+                phase = .ready
+                startServices()
+                return
+            } else if mdmConfig.shouldSkipEnrollment {
+                // MDM says skip enrollment only - go to setup
+                print("[AppState] MDM: Skipping enrollment, going to setup phase")
+                phase = .setup
+                return
+            }
+            // Fall through to normal logic if MDM doesn't specify phase
+        }
+
+        // Standard (non-MDM) state loading
         // Load account info if available
         if let workspace = defaults.string(forKey: Constants.Defaults.workspaceName) {
+            print("[AppState] Setting workspace from UserDefaults: '\(workspace)'")
             workspaceName = workspace
             isLoggedIn = true
         }
@@ -195,8 +253,24 @@ final class AppState: ObservableObject {
 
     /// Start background services
     private func startServices() {
+        NSLog("[AppState] startServices() called")
         HeartbeatService.shared.start()
         SyncService.shared.start()
+
+        // Start the proxy when entering ready phase
+        // Use a slight delay to ensure app initialization is complete
+        NSLog("[AppState] Scheduling MITMService start...")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            Task { @MainActor in
+                NSLog("[AppState] Starting MITMService now...")
+                do {
+                    try await MITMService.shared.start()
+                    NSLog("[AppState] MITMService started successfully")
+                } catch {
+                    NSLog("[AppState] Failed to start MITMService: %@", String(describing: error))
+                }
+            }
+        }
     }
 
     /// Stop background services
@@ -343,7 +417,18 @@ final class AppState: ObservableObject {
         )
     }
 
+    /// Check if logout is allowed (not blocked by MDM)
+    var canLogout: Bool {
+        !MDMConfigService.shared.disableUserLogout
+    }
+
     func logout() {
+        // Check if logout is blocked by MDM
+        if MDMConfigService.shared.disableUserLogout {
+            print("[AppState] Logout blocked by MDM policy")
+            return
+        }
+
         // Stop services first
         stopServices()
 

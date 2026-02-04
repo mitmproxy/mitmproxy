@@ -272,6 +272,15 @@ class MITMService: ObservableObject {
         // CRITICAL: Set working directory to home to avoid local mitmproxy source
         process.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
 
+        // CRITICAL: Clear Python environment variables to prevent conflicts with local source
+        // The mitmdump wrapper script will set the correct values for bundled Python
+        var env = ProcessInfo.processInfo.environment
+        env.removeValue(forKey: "PYTHONPATH")
+        env.removeValue(forKey: "PYTHONHOME")
+        env.removeValue(forKey: "PYTHONSTARTUP")
+        env.removeValue(forKey: "VIRTUAL_ENV")
+        process.environment = env
+
         // Run via bash wrapper script
         process.arguments = [
             mitmdumpPath,
@@ -345,23 +354,6 @@ class MITMService: ObservableObject {
         stop()
         try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
         try await start()
-    }
-
-    /// Force refresh the OISP bundle by restarting mitmproxy
-    /// This triggers a fresh fetch from the remote URL
-    func refreshBundle() async throws {
-        NSLog("[MITMService] Force bundle refresh requested - restarting proxy")
-
-        // Delete the cached bundle to force a fresh fetch
-        let bundleCachePath = Constants.bundleCachePath
-        if FileManager.default.fileExists(atPath: bundleCachePath.path) {
-            try? FileManager.default.removeItem(at: bundleCachePath)
-            NSLog("[MITMService] Deleted bundle cache at %@", bundleCachePath.path)
-        }
-
-        // Restart to pick up fresh bundle
-        try await restart()
-        NSLog("[MITMService] Bundle refresh complete")
     }
 
     // MARK: - Auto-Restart

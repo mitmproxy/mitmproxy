@@ -6,8 +6,10 @@
 #   make run        - Sync + build + run
 #   make clean      - Clean build artifacts
 #   make release    - Build release version
+#   make dmg        - Build release DMG for distribution
+#   make pkg        - Build PKG installer for MDM deployment
 
-.PHONY: all build sync run clean release help
+.PHONY: all build sync run clean release pkg help
 
 # Default target
 all: build
@@ -48,6 +50,11 @@ dmg: sync
 	@echo "==> Building release DMG..."
 	./Scripts/build-release.sh
 
+# Build PKG installer for MDM deployment
+pkg: sync
+	@echo "==> Building PKG installer for MDM..."
+	./Scripts/build-pkg.sh
+
 # Help
 help:
 	@echo "OximyMac Build System"
@@ -60,7 +67,11 @@ help:
 	@echo "  make release   - Build release version"
 	@echo "  make bundle    - Build debug app bundle (for testing auto-update)"
 	@echo "  make dmg       - Build release DMG for distribution"
+	@echo "  make pkg       - Build PKG installer for MDM deployment"
 	@echo ""
 	@echo "The 'sync' step automatically copies Python files from"
 	@echo "mitmproxy/addons/oximy/ to Resources/oximy-addon/"
 	@echo "and converts absolute imports to relative imports."
+	@echo ""
+	@echo "For MDM deployment, use 'make pkg' which creates a signed"
+	@echo "PKG installer suitable for Jamf, Kandji, Intune, etc."

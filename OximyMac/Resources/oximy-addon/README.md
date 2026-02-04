@@ -158,3 +158,36 @@ sudo security add-trusted-cert -d -r trustRoot -p ssl \
 
 ### Homebrew/Anaconda curl fails but system curl works
 Non-system curl uses OpenSSL which doesn't read macOS Keychain. Use `/usr/bin/curl` or add the cert to OpenSSL's trust store.
+
+## Browser Helper Processes (IMPORTANT for allowed_app_hosts)
+
+**On macOS, browsers don't make network requests directly** - they use helper processes with different bundle IDs. If you only add the main browser bundle ID to `allowed_app_hosts`, requests will be rejected.
+
+### Known Helper Bundle IDs
+
+Add these to your `allowed_app_hosts` configuration:
+
+| Browser | Main Bundle ID | Helper Bundle IDs (ADD THESE) |
+|---------|---------------|-------------------------------|
+| Safari | `com.apple.Safari` | `com.apple.WebKit.Networking`, `com.apple.WebKit.WebContent` |
+| Chrome | `com.google.Chrome` | `com.google.Chrome.helper` |
+| Firefox | `org.mozilla.firefox` | `org.mozilla.plugincontainer` |
+| Edge | `com.microsoft.edgemac` | `com.microsoft.edgemac.helper` |
+| Arc | `company.thebrowser.Browser` | `company.thebrowser.Browser.helper` |
+| Brave | `com.brave.Browser` | `com.brave.Browser.helper` |
+| Opera | `com.operasoftware.Opera` | `com.operasoftware.Opera.helper` |
+
+### How to Find New Helper Bundle IDs
+
+Run the proxy with verbose logging and look for `[CLIENT_CONNECTED]` messages:
+
+```bash
+mitmdump -s mitmproxy/addons/oximy/addon.py --set oximy_enabled=true --set oximy_verbose=true
+```
+
+Output will show the actual process making requests:
+```
+[CLIENT_CONNECTED] port=52018 -> com.apple.WebKit.Networking (bundle: com.apple.WebKit.Networking)
+```
+
+If you see `[APP_SKIP] bundle_id=X not in allowed apps`, add that bundle ID to your database.

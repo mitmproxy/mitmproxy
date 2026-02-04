@@ -71,6 +71,22 @@ struct DeviceConfig: Codable {
     }
 }
 
+// MARK: - Device Info (for fetching workspace after browser auth)
+
+struct DeviceInfoResponse: Decodable {
+    let success: Bool
+    let data: DeviceInfo?
+    let error: APIErrorData?
+    let meta: ResponseMeta?
+
+    struct DeviceInfo: Decodable {
+        let deviceId: String
+        let deviceName: String?
+        let workspaceId: String
+        let workspaceName: String
+    }
+}
+
 // MARK: - Heartbeat
 
 struct HeartbeatRequest: Encodable {
@@ -78,11 +94,18 @@ struct HeartbeatRequest: Encodable {
     let uptimeSeconds: Int
     let permissions: DeviceRegistrationRequest.Permissions
     let metrics: Metrics?
+    let commandResults: [String: CommandResult]?
 
     struct Metrics: Encodable {
         let cpuPercent: Double?
         let memoryMb: Int?
         let eventsQueued: Int
+    }
+
+    struct CommandResult: Encodable {
+        let success: Bool
+        let executedAt: String
+        let error: String?
     }
 }
 
@@ -97,6 +120,7 @@ struct HeartbeatResponse: Decodable {
         let configUpdate: DeviceConfig?
         let commands: [String]?
         let workspaceName: String?
+        let workspaceId: String?  // For validating workspace name updates
     }
 }
 
