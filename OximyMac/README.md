@@ -290,6 +290,58 @@ rm -f /Applications/Oximy.app/Contents/Resources/python-embed/*/lib/python3.12/s
 
 ---
 
+### Issue 7: MDM Profile Overwrites User Credentials on Every Launch
+
+**Symptoms:**
+- User logs in to their workspace (e.g., "Vertexa")
+- After quitting and relaunching, app shows a different workspace (e.g., "Oximy - Development")
+- Credentials keep getting reset on every app launch
+
+**Debug Command:**
+```bash
+defaults read com.oximy.mac | grep -E 'deviceToken|workspaceName'
+```
+
+**Root Cause:** An MDM configuration profile is installed with `ManagedDeviceToken` and `ManagedWorkspaceName`. The app is designed so MDM configuration **always takes priority** - on every launch, `applyManagedConfiguration()` overwrites UserDefaults with MDM values.
+
+**Diagnosis:**
+```bash
+# Check for MDM profile
+defaults read "/Library/Managed Preferences/com.oximy.mac" 2>/dev/null
+
+# If this returns ManagedDeviceToken, ManagedWorkspaceName, etc. - that's the cause
+```
+
+**⚠️ IMPORTANT: This is BY DESIGN for enterprise deployments.**
+
+If an MDM profile is installed, the user **MUST** enroll through that MDM profile's workspace. Manual login to a different workspace will NOT persist - MDM credentials will be restored on next launch.
+
+**Solutions:**
+
+1. **If you want to use the MDM workspace:** The app automatically uses MDM credentials. No action needed.
+
+2. **If you want to use a different workspace (dev/testing):**
+```bash
+# Remove the MDM profile
+sudo rm "/Library/Managed Preferences/com.oximy.mac.plist"
+
+# Clear stale credentials from UserDefaults
+defaults delete com.oximy.mac deviceToken
+defaults delete com.oximy.mac workspaceName
+defaults delete com.oximy.mac deviceId
+defaults delete com.oximy.mac workspaceId
+defaults delete com.oximy.mac setupComplete
+
+# Relaunch app and log in to desired workspace
+```
+
+**Files Involved:**
+- MDM Config: `/Library/Managed Preferences/com.oximy.mac.plist`
+- `OximyMac/Services/MDMConfigService.swift:138` - `applyManagedConfiguration()`
+- `OximyMac/App/AppState.swift:146` - `loadPersistedState()` calls MDM
+
+---
+
 ### Prevention Checklist
 
 1. **Always clean rebuild** when debugging bundled Python issues
@@ -299,6 +351,7 @@ rm -f /Applications/Oximy.app/Contents/Resources/python-embed/*/lib/python3.12/s
 5. **MDM preferences are in `/Library/Managed Preferences/`** not standard UserDefaults
 6. **Use multiple methods for console user detection** to handle headless deployments
 7. **ruamel.yaml C extension must be removed** - use pure Python version only
+8. **MDM profile overwrites credentials on every launch** - if testing with a different workspace, remove the MDM profile first
 
 ## Data Locations
 

@@ -179,80 +179,32 @@ final class MDMConfigService: ObservableObject {
     /// Pre-provisioned device token from MDM
     /// Priority: MDM > remote-state (API) > default (nil)
     var managedDeviceToken: String? {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedString(for: .deviceToken) {
-            print("[Config] managedDeviceToken=*** (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedDeviceToken {
-            print("[Config] managedDeviceToken=*** (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedDeviceToken=nil (source: default)")
+        if let mdmValue = getManagedString(for: .deviceToken) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedDeviceToken { return apiValue }
         return nil
     }
 
     /// Pre-assigned device ID from MDM
     /// Priority: MDM > remote-state (API) > default (nil)
     var managedDeviceId: String? {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedString(for: .deviceId) {
-            print("[Config] managedDeviceId=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedDeviceId {
-            print("[Config] managedDeviceId=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedDeviceId=nil (source: default)")
+        if let mdmValue = getManagedString(for: .deviceId) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedDeviceId { return apiValue }
         return nil
     }
 
     /// Organization workspace ID from MDM
     /// Priority: MDM > remote-state (API) > default (nil)
     var managedWorkspaceId: String? {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedString(for: .workspaceId) {
-            print("[Config] managedWorkspaceId=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedWorkspaceId {
-            print("[Config] managedWorkspaceId=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedWorkspaceId=nil (source: default)")
+        if let mdmValue = getManagedString(for: .workspaceId) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedWorkspaceId { return apiValue }
         return nil
     }
 
     /// Display name for workspace from MDM
     /// Priority: MDM > remote-state (API) > default (nil)
     var managedWorkspaceName: String? {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedString(for: .workspaceName) {
-            print("[Config] managedWorkspaceName=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedWorkspaceName {
-            print("[Config] managedWorkspaceName=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedWorkspaceName=nil (source: default)")
+        if let mdmValue = getManagedString(for: .workspaceName) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedWorkspaceName { return apiValue }
         return nil
     }
 
@@ -261,60 +213,24 @@ final class MDMConfigService: ObservableObject {
     /// Skip all setup UI when true (requires device token)
     /// Priority: MDM > remote-state (API) > default
     var managedSetupComplete: Bool {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedBool(for: .setupComplete) {
-            print("[Config] managedSetupComplete=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedSetupComplete {
-            print("[Config] managedSetupComplete=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedSetupComplete=false (source: default)")
+        if let mdmValue = getManagedBool(for: .setupComplete) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedSetupComplete { return apiValue }
         return false
     }
 
     /// Skip enrollment UI only when true (requires device token)
     /// Priority: MDM > remote-state (API) > default
     var managedEnrollmentComplete: Bool {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedBool(for: .enrollmentComplete) {
-            print("[Config] managedEnrollmentComplete=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedEnrollmentComplete {
-            print("[Config] managedEnrollmentComplete=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedEnrollmentComplete=false (source: default)")
+        if let mdmValue = getManagedBool(for: .enrollmentComplete) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedEnrollmentComplete { return apiValue }
         return false
     }
 
     /// CA certificate is already installed via MDM profile
     /// Priority: MDM > remote-state (API) > default
     var managedCACertInstalled: Bool {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedBool(for: .caCertInstalled) {
-            print("[Config] managedCACertInstalled=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.managedCACertInstalled {
-            print("[Config] managedCACertInstalled=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedCACertInstalled=false (source: default)")
+        if let mdmValue = getManagedBool(for: .caCertInstalled) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.managedCACertInstalled { return apiValue }
         return false
     }
 
@@ -323,60 +239,24 @@ final class MDMConfigService: ObservableObject {
     /// Prevent user from disabling auto-start
     /// Priority: MDM > remote-state (API) > default
     var forceAutoStart: Bool {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedBool(for: .forceAutoStart) {
-            print("[Config] forceAutoStart=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.forceAutoStart {
-            print("[Config] forceAutoStart=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] forceAutoStart=false (source: default)")
+        if let mdmValue = getManagedBool(for: .forceAutoStart) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.forceAutoStart { return apiValue }
         return false
     }
 
     /// Hide logout option in UI
     /// Priority: MDM > remote-state (API) > default
     var disableUserLogout: Bool {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedBool(for: .disableUserLogout) {
-            print("[Config] disableUserLogout=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.disableUserLogout {
-            print("[Config] disableUserLogout=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] disableUserLogout=false (source: default)")
+        if let mdmValue = getManagedBool(for: .disableUserLogout) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.disableUserLogout { return apiValue }
         return false
     }
 
     /// Prevent CMD+Q from quitting the app
     /// Priority: MDM > remote-state (API) > default
     var disableQuit: Bool {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedBool(for: .disableQuit) {
-            print("[Config] disableQuit=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.disableQuit {
-            print("[Config] disableQuit=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] disableQuit=false (source: default)")
+        if let mdmValue = getManagedBool(for: .disableQuit) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.disableQuit { return apiValue }
         return false
     }
 
@@ -385,40 +265,16 @@ final class MDMConfigService: ObservableObject {
     /// Custom API endpoint from MDM
     /// Priority: MDM > remote-state (API) > default (nil)
     var managedAPIEndpoint: String? {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedString(for: .apiEndpoint) {
-            print("[Config] managedAPIEndpoint=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.apiEndpoint {
-            print("[Config] managedAPIEndpoint=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedAPIEndpoint=nil (source: default)")
+        if let mdmValue = getManagedString(for: .apiEndpoint) { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.apiEndpoint { return apiValue }
         return nil
     }
 
     /// Heartbeat interval override from MDM (in seconds)
     /// Priority: MDM > remote-state (API) > default (nil)
     var managedHeartbeatInterval: Int? {
-        // 1. Check MDM (highest priority)
-        if let mdmValue = getManagedInt(for: .heartbeatInterval), mdmValue > 0 {
-            print("[Config] managedHeartbeatInterval=\(mdmValue) (source: MDM)")
-            return mdmValue
-        }
-
-        // 2. Check remote-state from API (via sensor-config)
-        if let apiValue = RemoteStateService.shared.appConfig?.heartbeatInterval, apiValue > 0 {
-            print("[Config] managedHeartbeatInterval=\(apiValue) (source: remote-state/API)")
-            return apiValue
-        }
-
-        // 3. App default
-        print("[Config] managedHeartbeatInterval=nil (source: default)")
+        if let mdmValue = getManagedInt(for: .heartbeatInterval), mdmValue > 0 { return mdmValue }
+        if let apiValue = RemoteStateService.shared.appConfig?.heartbeatInterval, apiValue > 0 { return apiValue }
         return nil
     }
 
