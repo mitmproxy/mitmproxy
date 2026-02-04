@@ -7,57 +7,10 @@ struct SettingsTab: View {
     @StateObject private var mitmService = MITMService.shared
 
     @State private var isProcessingCert = false
-    @State private var isRefreshingBundle = false
-    @State private var lastBundleRefresh: Date? = nil
 
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                // Bundle Section
-                SettingsSection(title: "Detection Bundle", icon: "doc.text.fill") {
-                    VStack(spacing: 12) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("OISP Bundle")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-
-                                if let lastRefresh = lastBundleRefresh {
-                                    Text("Last updated: \(lastRefresh, formatter: Self.timeFormatter)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                } else {
-                                    Text("Auto-refreshes every 30 minutes")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-
-                            Spacer()
-
-                            Button {
-                                refreshBundle()
-                            } label: {
-                                if isRefreshingBundle {
-                                    ProgressView()
-                                        .scaleEffect(0.7)
-                                } else {
-                                    Text("Refresh Now")
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                            .disabled(isRefreshingBundle || !mitmService.isRunning)
-                        }
-
-                        if !mitmService.isRunning {
-                            Text("Proxy starting...")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-
                 // Certificate Section
                 SettingsSection(title: "Certificate", icon: "lock.shield.fill") {
                     VStack(spacing: 12) {
@@ -132,6 +85,15 @@ struct SettingsTab: View {
                             }
 
                             Spacer()
+
+                            // Logout button - hidden when disableUserLogout is true
+                            if appState.canLogout {
+                                Button("Sign Out") {
+                                    appState.logout()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
                         }
                     } else {
                         HStack {
@@ -232,29 +194,6 @@ struct SettingsTab: View {
         }
     }
 
-    private func refreshBundle() {
-        isRefreshingBundle = true
-
-        Task {
-            do {
-                // Force bundle refresh by restarting mitmproxy
-                // Addon will re-enable proxy automatically after restart (if sensor_enabled)
-                try await mitmService.refreshBundle()
-                lastBundleRefresh = Date()
-            } catch {
-                print("Failed to refresh bundle: \(error)")
-            }
-            isRefreshingBundle = false
-        }
-    }
-
-    // Time formatter for last bundle refresh
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter
-    }()
 }
 
 struct SettingsSection<Content: View>: View {

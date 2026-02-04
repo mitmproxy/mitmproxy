@@ -113,12 +113,21 @@ final class HeartbeatService: ObservableObject {
                             error: "WorkspaceId mismatch - local: '\(currentWorkspaceId ?? "nil")', server: '\(response.workspaceId ?? "nil")'"
                         )
                     } else {
-                        // No workspaceId in response - don't update to prevent data corruption
-                        print("[HeartbeatService] WARNING: Server returned different workspace name '\(serverWorkspaceName)' vs stored '\(currentName ?? "nil")' - ignoring (no workspaceId to validate)")
-                        SentryService.shared.addErrorBreadcrumb(
-                            service: "heartbeat",
-                            error: "Workspace name mismatch - stored: '\(currentName ?? "nil")', server: '\(serverWorkspaceName)'"
-                        )
+                        // No workspaceId in response
+                        // Special case: If current name is "Loading..." (initial fetch failed),
+                        // allow the update since we're recovering from a failed state
+                        if currentName == "Loading..." {
+                            defaults.set(serverWorkspaceName, forKey: Constants.Defaults.workspaceName)
+                            NotificationCenter.default.post(name: .workspaceNameUpdated, object: serverWorkspaceName)
+                            print("[HeartbeatService] Workspace name recovered from 'Loading...' to '\(serverWorkspaceName)'")
+                        } else {
+                            // Don't update - can't validate without workspaceId
+                            print("[HeartbeatService] WARNING: Server returned different workspace name '\(serverWorkspaceName)' vs stored '\(currentName ?? "nil")' - ignoring (no workspaceId to validate)")
+                            SentryService.shared.addErrorBreadcrumb(
+                                service: "heartbeat",
+                                error: "Workspace name mismatch - stored: '\(currentName ?? "nil")', server: '\(serverWorkspaceName)'"
+                            )
+                        }
                     }
                 }
             }
