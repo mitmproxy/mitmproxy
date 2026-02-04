@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignWidth="320" d:DesignHeight="400"
+             d:DesignWidth="320" d:DesignHeight="350"
              Background="#1A1A2E">
 
     <UserControl.Resources>
@@ -99,14 +99,13 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="40"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Progress Indicator -->
+        <!-- Progress Indicator (2 steps: enrollment complete, setup current) -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
             <Ellipse Width="10" Height="10" Fill="#4CAF50"/>
             <Rectangle Width="40" Height="2" Fill="#6C63FF" Margin="8,0"/>
@@ -124,7 +123,7 @@
 
         <!-- Subtitle -->
         <TextBlock Grid.Row="2"
-                   Text="Complete these steps to start monitoring"
+                   Text="Install the certificate to start monitoring"
                    FontSize="13"
                    Foreground="#9999AA"
                    HorizontalAlignment="Center"
@@ -190,67 +189,8 @@
             </Grid>
         </Button>
 
-        <!-- Step 2: Enable Proxy -->
-        <Button Grid.Row="4"
-                x:Name="ProxyButton"
-                Style="{StaticResource StepButtonStyle}"
-                Click="OnEnableProxyClick"
-                IsEnabled="False"
-                Margin="0,0,0,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Step Number / Checkmark -->
-                <Border Grid.Column="0"
-                        x:Name="ProxyStepBorder"
-                        Width="32" Height="32"
-                        CornerRadius="16"
-                        Background="#3D3D5C"
-                        HorizontalAlignment="Left">
-                    <TextBlock x:Name="ProxyStepText"
-                               Text="2"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="White"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
-                </Border>
-
-                <!-- Step Info -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
-                    <TextBlock Text="Configure Proxy"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               Foreground="White"/>
-                    <TextBlock Text="Route traffic through Oximy"
-                               FontSize="12"
-                               Foreground="#9999AA"
-                               Margin="0,2,0,0"/>
-                </StackPanel>
-
-                <!-- Arrow / Loading / Check -->
-                <TextBlock Grid.Column="2"
-                           x:Name="ProxyArrow"
-                           Text=">"
-                           FontSize="18"
-                           Foreground="#6C63FF"
-                           VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="2"
-                           x:Name="ProxyLoading"
-                           Text="..."
-                           FontSize="18"
-                           Foreground="#9999AA"
-                           VerticalAlignment="Center"
-                           Visibility="Collapsed"/>
-            </Grid>
-        </Button>
-
         <!-- Error Message -->
-        <Border Grid.Row="5" Height="40">
+        <Border Grid.Row="4" Height="40">
             <TextBlock x:Name="ErrorText"
                        FontSize="13"
                        Foreground="#FF6B6B"
@@ -261,10 +201,10 @@
                        Visibility="Collapsed"/>
         </Border>
 
-        <!-- Start Monitoring Button -->
-        <Button Grid.Row="6"
+        <!-- Continue Button -->
+        <Button Grid.Row="5"
                 x:Name="StartButton"
-                Content="Start Monitoring"
+                Content="Continue"
                 Style="{StaticResource PrimaryButtonStyle}"
                 Click="OnStartMonitoringClick"
                 IsEnabled="False"
@@ -272,7 +212,7 @@
                 MinWidth="200"/>
 
         <!-- Skip Link -->
-        <Button Grid.Row="8"
+        <Button Grid.Row="7"
                 Content="Set up later"
                 Style="{StaticResource LinkButtonStyle}"
                 Click="OnSkipClick"

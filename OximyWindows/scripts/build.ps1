@@ -5,7 +5,7 @@ param(
     [switch]$Release,
     [switch]$Clean,
     [switch]$CreateInstaller,
-    [switch]$CreateVelopack,
+    [switch]$Install,
     [string]$Version = "1.0.0"
 )
 
@@ -15,7 +15,6 @@ $Configuration = if ($Release) { "Release" } else { "Debug" }
 $ProjectDir = Join-Path $PSScriptRoot "..\src\OximyWindows"
 $OutputDir = Join-Path $PSScriptRoot "..\publish\win-x64"
 $InstallerDir = Join-Path $PSScriptRoot "..\installer"
-$VelopackDir = Join-Path $PSScriptRoot "..\releases"
 
 Write-Host "=== Oximy Windows Build ===" -ForegroundColor Cyan
 Write-Host "Configuration: $Configuration"
@@ -141,52 +140,65 @@ if ($CreateInstaller) {
     Write-Host "  Installer created in: $(Join-Path $InstallerDir 'Output')" -ForegroundColor Green
 }
 
-# Step 7: Create Velopack release if requested
-if ($CreateVelopack) {
+# Step 7: Install to user's local app data if requested
+if ($Install) {
     Write-Host ""
-    Write-Host "Creating Velopack release..." -ForegroundColor Yellow
+    Write-Host "Installing to local app data..." -ForegroundColor Yellow
 
-    # Ensure releases directory exists
-    if (-not (Test-Path $VelopackDir)) {
-        New-Item -ItemType Directory -Path $VelopackDir | Out-Null
+    $InstallDir = Join-Path $env:LOCALAPPDATA "Programs\Oximy"
+
+    # Stop any running instance
+    $RunningProcess = Get-Process -Name "OximyWindows" -ErrorAction SilentlyContinue
+    if ($RunningProcess) {
+        Write-Host "  Stopping running instance..." -ForegroundColor Yellow
+        $RunningProcess | Stop-Process -Force
+        Start-Sleep -Seconds 1
     }
 
-    # Install vpk tool if not available
-    $vpkPath = (Get-Command vpk -ErrorAction SilentlyContinue)
-    if (-not $vpkPath) {
-        Write-Host "  Installing Velopack CLI tool..." -ForegroundColor Yellow
-        dotnet tool install -g vpk
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Failed to install vpk tool. Please install manually: dotnet tool install -g vpk"
-            exit 1
-        }
+    # Remove old installation
+    if (Test-Path $InstallDir) {
+        Write-Host "  Removing old installation..." -ForegroundColor Yellow
+        Remove-Item $InstallDir -Recurse -Force
     }
 
-    # Get icon path
-    $IconPath = Join-Path $ProjectDir "Assets\oximy.ico"
+    # Copy published files
+    Copy-Item $OutputDir -Destination $InstallDir -Recurse
+    Write-Host "  Installed to: $InstallDir" -ForegroundColor Green
 
-    # Create Velopack release
-    Write-Host "  Packaging with Velopack (Version: $Version)..." -ForegroundColor Yellow
-    vpk pack `
-        --packId "Oximy" `
-        --packVersion $Version `
-        --packDir $OutputDir `
-        --mainExe "OximyWindows.exe" `
-        --outputDir $VelopackDir `
-        --icon $IconPath
+    # Register URL scheme
+    $ExePath = Join-Path $InstallDir "OximyWindows.exe"
+    $RegPath = "HKCU:\Software\Classes\oximy"
 
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Velopack packaging failed"
-        exit $LASTEXITCODE
+    Write-Host "  Registering oximy:// URL scheme..." -ForegroundColor Yellow
+    if (Test-Path $RegPath) {
+        Remove-Item $RegPath -Recurse -Force
     }
 
-    Write-Host "  Velopack release created in: $VelopackDir" -ForegroundColor Green
+    New-Item -Path $RegPath -Force | Out-Null
+    Set-ItemProperty -Path $RegPath -Name "(Default)" -Value "URL:Oximy Protocol"
+    Set-ItemProperty -Path $RegPath -Name "URL Protocol" -Value ""
 
-    # List created files
-    Write-Host "  Release files:" -ForegroundColor Green
-    Get-ChildItem $VelopackDir | ForEach-Object {
-        Write-Host "    - $($_.Name)"
-    }
+    New-Item -Path "$RegPath\shell\open\command" -Force | Out-Null
+    Set-ItemProperty -Path "$RegPath\shell\open\command" -Name "(Default)" -Value "`"$ExePath`" `"%1`""
+
+    Write-Host "  Registered oximy:// URL scheme" -ForegroundColor Green
+
+    # Create Start Menu shortcut
+    $StartMenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+    $ShortcutPath = Join-Path $StartMenuDir "Oximy.lnk"
+
+    Write-Host "  Creating Start Menu shortcut..." -ForegroundColor Yellow
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+    $Shortcut.TargetPath = $ExePath
+    $Shortcut.WorkingDirectory = $InstallDir
+    $Shortcut.Description = "Oximy Sensor"
+    $Shortcut.Save()
+
+    Write-Host "  Created Start Menu shortcut" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Installation complete!" -ForegroundColor Cyan
+    Write-Host "Run 'Oximy' from Start Menu or: $ExePath" -ForegroundColor Cyan
 }
 
 Write-Host ""

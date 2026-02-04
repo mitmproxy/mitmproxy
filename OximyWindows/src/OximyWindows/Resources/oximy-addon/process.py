@@ -1,9 +1,4 @@
-"""
-Process attribution for Oximy addon.
-
-Maps network connections back to originating processes by querying
-the kernel for socket ownership information.
-"""
+"""Process attribution for Oximy addon."""
 
 from __future__ import annotations
 
@@ -18,76 +13,40 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ClientProcess:
     """Information about the client process that made a request."""
-
     pid: int | None
-    name: str | None  # e.g., "curl", "python3.11"
-    path: str | None  # e.g., "/usr/bin/curl"
-    ppid: int | None  # Parent PID
-    parent_name: str | None  # e.g., "Cursor" for "Cursor Helper"
+    name: str | None
+    path: str | None
+    ppid: int | None
+    parent_name: str | None
     user: str | None
-    port: int  # The ephemeral port used for lookup
-    bundle_id: str | None = None  # macOS bundle identifier
-    id: str | None = None  # App ID from registry (e.g., "granola")
-
-    def to_dict(self) -> dict:
-        """Serialize to dictionary for JSON output."""
-        result: dict = {"port": self.port}
-
-        if self.pid is not None:
-            result["pid"] = self.pid
-        if self.name is not None:
-            result["name"] = self.name
-        if self.path is not None:
-            result["path"] = self.path
-        if self.ppid is not None:
-            result["ppid"] = self.ppid
-        if self.parent_name is not None:
-            result["parent_name"] = self.parent_name
-        if self.user is not None:
-            result["user"] = self.user
-        if self.bundle_id is not None:
-            result["bundle_id"] = self.bundle_id
-        if self.id is not None:
-            result["id"] = self.id
-
-        return result
+    port: int
+    bundle_id: str | None = None
 
 
 class ProcessResolver:
-    """
-    Resolves network connections to originating processes.
-
-    Uses a cache to avoid repeated lookups for the same PID.
-    Strategy: Look up parent process first (more useful for helper processes),
-    fall back to actual process if parent is launchd/init.
-    """
+    """Resolves network connections to originating processes."""
 
     def __init__(self):
         self._cache: dict[int, dict] = {}  # PID -> process info
-        self._bundle_id_cache: dict[str, str | None] = {}  # app_path -> bundle_id
+        self._bundle_id_cache: dict[str, str | None] = {}
+        self._port_cache: dict[int, tuple[ClientProcess, float]] = {}  # port -> (ClientProcess, timestamp)
+        self._port_cache_ttl = 10.0  # Cache port->process mapping for 10 seconds
         self._is_macos = platform.system() == "Darwin"
         self._is_linux = platform.system() == "Linux"
         self._is_windows = platform.system() == "Windows"
-        self._bundle_id_to_app_id: dict[str, str] = {}  # bundle_id -> app_id
-
-    def set_bundle_id_index(self, index: dict[str, str]) -> None:
-        """Set the bundle_id/exe -> app_id mapping from the registry.
-
-        On macOS, this maps bundle_id -> app_id.
-        On Windows, this maps exe name -> app_id.
-        """
-        self._bundle_id_to_app_id = index
 
     async def get_process_for_port(self, port: int) -> ClientProcess:
-        """
-        Get process information for a connection on the given local port.
+        """Get process information for a connection on the given local port."""
+        import time
 
-        Args:
-            port: The client's ephemeral source port
+        # Check port cache first (avoids expensive lsof/netstat calls)
+        if port in self._port_cache:
+            cached_process, timestamp = self._port_cache[port]
+            if time.time() - timestamp < self._port_cache_ttl:
+                return cached_process
+            # Cache expired, remove it
+            del self._port_cache[port]
 
-        Returns:
-            ClientProcess with available information, or minimal info on failure
-        """
         if not (self._is_macos or self._is_linux or self._is_windows):
             return ClientProcess(
                 pid=None,
@@ -135,36 +94,14 @@ class ProcessResolver:
             if parent_info:
                 parent_name = self._extract_name(parent_info.get("path"))
 
-        # Step 4: Decide which name to surface
-        # If parent exists and is meaningful, prefer parent context
-        # The actual process name is still available in the full info
         name = self._extract_name(proc_info.get("path"))
-
-        # Step 5: Extract bundle_id from path (macOS apps) or exe name (Windows)
         bundle_id = await self._extract_bundle_id(proc_info.get("path"))
 
-        # Step 6: Look up app_id from bundle_id (macOS) or exe name (Windows)
-        app_id = None
-        exe_name = None
-        if bundle_id:
-            # macOS: use bundle_id
-            app_id = self._bundle_id_to_app_id.get(bundle_id)
-        elif self._is_windows:
-            # Windows: extract exe name and use it for lookup
-            exe_name = self._extract_exe_name(proc_info.get("path"))
-            if exe_name:
-                # Try exact match first, then lowercase
-                app_id = self._bundle_id_to_app_id.get(exe_name)
-                if not app_id:
-                    app_id = self._bundle_id_to_app_id.get(exe_name.lower())
-            # Also try parent exe name for helper processes
-            if not app_id and parent_name:
-                parent_exe = f"{parent_name}.exe"
-                app_id = self._bundle_id_to_app_id.get(parent_exe)
-                if not app_id:
-                    app_id = self._bundle_id_to_app_id.get(parent_exe.lower())
+        # On Windows, use exe name as bundle_id fallback
+        if not bundle_id and self._is_windows:
+            bundle_id = self._extract_exe_name(proc_info.get("path"))
 
-        return ClientProcess(
+        result = ClientProcess(
             pid=pid,
             name=name,
             path=proc_info.get("path"),
@@ -172,20 +109,23 @@ class ProcessResolver:
             parent_name=parent_name,
             user=proc_info.get("user"),
             port=port,
-            bundle_id=bundle_id if bundle_id else exe_name,  # Use exe_name as identifier on Windows
-            id=app_id,
+            bundle_id=bundle_id,
         )
 
+        # Cache the result to avoid expensive subprocess calls for same port
+        self._port_cache[port] = (result, time.time())
+
+        # Limit cache size to prevent memory growth
+        if len(self._port_cache) > 1000:
+            # Remove oldest entries
+            sorted_entries = sorted(self._port_cache.items(), key=lambda x: x[1][1])
+            for old_port, _ in sorted_entries[:500]:
+                del self._port_cache[old_port]
+
+        return result
+
     async def _find_pid_for_port(self, port: int) -> int | None:
-        """
-        Find the PID that owns a local port as the SOURCE (client side).
-
-        When looking up port 54029, lsof returns both sides:
-        - Python ... 127.0.0.1:8088->127.0.0.1:54029 (proxy, port is DEST)
-        - Comet  ... 127.0.0.1:54029->127.0.0.1:8088 (client, port is SOURCE)
-
-        We want the client side where the port is the source.
-        """
+        """Find the PID that owns a local port as the SOURCE (client side)."""
         if self._is_windows:
             return await self._find_pid_for_port_windows(port)
 
@@ -224,13 +164,7 @@ class ProcessResolver:
         return None
 
     async def _find_pid_for_port_windows(self, port: int) -> int | None:
-        """
-        Find the PID that owns a local port on Windows using netstat.
-
-        Uses 'netstat -aon' which shows:
-        Proto  Local Address          Foreign Address        State           PID
-        TCP    127.0.0.1:54029        127.0.0.1:8088         ESTABLISHED     1234
-        """
+        """Find the PID that owns a local port on Windows using netstat."""
         try:
             proc = await asyncio.create_subprocess_exec(
                 "netstat", "-aon",
@@ -268,11 +202,7 @@ class ProcessResolver:
         return None
 
     async def _get_process_info(self, pid: int) -> dict | None:
-        """
-        Get process information for a PID, using cache if available.
-
-        Returns dict with keys: pid, ppid, user, path
-        """
+        """Get process information for a PID, using cache if available."""
         if pid in self._cache:
             return self._cache[pid]
 
@@ -320,8 +250,6 @@ class ProcessResolver:
     async def _fetch_process_info_windows(self, pid: int) -> dict | None:
         """Fetch process info on Windows using wmic."""
         try:
-            # Use wmic to get process info
-            # wmic process where processid=1234 get name,executablepath,parentprocessid /format:csv
             proc = await asyncio.create_subprocess_exec(
                 "wmic", "process", "where", f"processid={pid}",
                 "get", "name,executablepath,parentprocessid",
@@ -371,8 +299,6 @@ class ProcessResolver:
     async def _get_process_user_windows(self, pid: int) -> str | None:
         """Get the username that owns a process on Windows."""
         try:
-            # Use tasklist with verbose mode to get user info
-            # tasklist /FI "PID eq 1234" /FO CSV /V
             proc = await asyncio.create_subprocess_exec(
                 "tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/V",
                 stdout=asyncio.subprocess.PIPE,
@@ -420,68 +346,38 @@ class ProcessResolver:
         return None
 
     def _extract_name(self, path: str | None) -> str | None:
-        """Extract a readable process name from a path."""
+        """Extract process name from path."""
         if not path:
             return None
-
-        # Get the last component of the path (handle both Unix and Windows)
-        # Try backslash first (Windows), then forward slash (Unix)
         if "\\" in path:
             name = path.rsplit("\\", 1)[-1]
         else:
             name = path.rsplit("/", 1)[-1]
-
-        # Remove .exe extension on Windows for cleaner display
         if name.lower().endswith(".exe"):
             name = name[:-4]
-
-        # Clean up macOS app bundle names
-        # e.g., "Cursor Helper (Renderer)" stays as is
-        # e.g., "/Applications/Cursor.app/Contents/MacOS/Cursor" -> "Cursor"
-
         return name if name else None
 
     def _extract_exe_name(self, path: str | None) -> str | None:
-        """Extract the executable filename from a Windows path.
-
-        Returns the full exe name including .exe extension for registry matching.
-        e.g., "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" -> "chrome.exe"
-        """
+        """Extract exe filename from Windows path (e.g. 'chrome.exe')."""
         if not path:
             return None
-
-        # Get the last component of the path
         if "\\" in path:
             exe = path.rsplit("\\", 1)[-1]
         else:
             exe = path.rsplit("/", 1)[-1]
-
-        # Only return if it looks like an exe
-        if exe and exe.lower().endswith(".exe"):
-            return exe
-
-        return None
+        return exe if exe and exe.lower().endswith(".exe") else None
 
     async def _extract_bundle_id(self, path: str | None) -> str | None:
         """Extract macOS bundle identifier from an app path."""
-        if not path or not self._is_macos:
-            return None
-
-        # Find the .app bundle in the path
-        # e.g., "/Applications/Arc.app/Contents/..." -> "/Applications/Arc.app"
-        if ".app" not in path:
+        if not path or not self._is_macos or ".app" not in path:
             return None
 
         try:
             app_path = path.split(".app")[0] + ".app"
-
-            # Check cache first
             if app_path in self._bundle_id_cache:
                 return self._bundle_id_cache[app_path]
 
             plist_path = f"{app_path}/Contents/Info.plist"
-
-            # Use defaults to read bundle identifier from plist
             proc = await asyncio.create_subprocess_exec(
                 "defaults", "read", plist_path, "CFBundleIdentifier",
                 stdout=asyncio.subprocess.PIPE,
@@ -492,23 +388,21 @@ class ProcessResolver:
             except asyncio.TimeoutError:
                 proc.kill()
                 await proc.wait()
-                self._bundle_id_cache[app_path] = None  # Cache negative result
+                self._bundle_id_cache[app_path] = None
                 return None
 
             if proc.returncode == 0 and stdout.strip():
                 bundle_id = stdout.decode().strip()
-                self._bundle_id_cache[app_path] = bundle_id  # Cache result
+                self._bundle_id_cache[app_path] = bundle_id
                 return bundle_id
 
-            # Cache negative result
             self._bundle_id_cache[app_path] = None
-
         except OSError as e:
             logger.debug(f"Failed to extract bundle_id from {path}: {e}")
-
         return None
 
     def clear_cache(self) -> None:
-        """Clear the process info cache."""
+        """Clear all caches."""
         self._cache.clear()
         self._bundle_id_cache.clear()
+        self._port_cache.clear()

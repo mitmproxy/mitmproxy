@@ -8,20 +8,17 @@ using OximyWindows.Services;
 namespace OximyWindows.Views;
 
 /// <summary>
-/// Setup view for certificate installation and proxy configuration.
-/// Matches the Mac app's SetupView functionality.
+/// Setup view for certificate installation.
+/// Proxy configuration is now handled automatically by the Python addon.
 /// </summary>
 public partial class SetupView : UserControl
 {
     private bool _isCertificateInstalled;
-    private bool _isProxyConfigured;
     private bool _isProcessing;
 
     public SetupView()
     {
         InitializeComponent();
-
-        // Check current status
         Loaded += OnLoaded;
     }
 
@@ -32,13 +29,6 @@ public partial class SetupView : UserControl
         if (App.CertificateService.IsCAInstalled)
         {
             MarkCertificateComplete();
-        }
-
-        // Check if proxy is configured
-        App.ProxyService.CheckStatus();
-        if (App.ProxyService.IsProxyEnabled)
-        {
-            MarkProxyComplete();
         }
 
         UpdateButtonStates();
@@ -60,30 +50,12 @@ public partial class SetupView : UserControl
     }
 
     /// <summary>
-    /// Mark proxy step as complete.
-    /// </summary>
-    private void MarkProxyComplete()
-    {
-        _isProxyConfigured = true;
-        ProxyStepBorder.Background = new SolidColorBrush(Color.FromRgb(0x4C, 0xAF, 0x50));
-        ProxyStepText.Text = "\u2713"; // Checkmark
-        ProxyArrow.Visibility = Visibility.Collapsed;
-        ProxyButton.IsEnabled = false;
-        ProxyButton.Opacity = 0.7;
-
-        AppState.Instance.IsSetupProxyComplete = true;
-    }
-
-    /// <summary>
     /// Update button states based on completion.
     /// </summary>
     private void UpdateButtonStates()
     {
-        // Proxy button is enabled only after certificate is installed
-        ProxyButton.IsEnabled = _isCertificateInstalled && !_isProxyConfigured && !_isProcessing;
-
-        // Start button is enabled only when both steps are complete
-        StartButton.IsEnabled = _isCertificateInstalled && _isProxyConfigured && !_isProcessing;
+        // Continue button is enabled when certificate is installed
+        StartButton.IsEnabled = _isCertificateInstalled && !_isProcessing;
     }
 
     /// <summary>
@@ -106,6 +78,7 @@ public partial class SetupView : UserControl
 
     /// <summary>
     /// Handle install certificate click.
+    /// Uses automatic installation with UAC elevation prompt.
     /// </summary>
     private async void OnInstallCertificateClick(object sender, RoutedEventArgs e)
     {
@@ -119,23 +92,26 @@ public partial class SetupView : UserControl
 
         try
         {
-            // Generate and install certificate
-            await App.CertificateService.InstallCAAsync();
+            // Try automatic installation with elevation (shows UAC prompt)
+            var success = await App.CertificateService.InstallCAAutomaticallyAsync();
 
-            MarkCertificateComplete();
-            Debug.WriteLine("[SetupView] Certificate installed successfully");
-        }
-        catch (CertificateException ex)
-        {
-            ShowError($"Certificate installation failed: {ex.Message}");
-            CertificateArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Certificate error: {ex.Message}");
+            if (success)
+            {
+                MarkCertificateComplete();
+                Debug.WriteLine("[SetupView] Certificate installed automatically via UAC");
+            }
+            else
+            {
+                ShowError("Certificate installation was cancelled. Please try again.");
+                CertificateArrow.Visibility = Visibility.Visible;
+                Debug.WriteLine("[SetupView] Certificate installation cancelled by user");
+            }
         }
         catch (Exception ex)
         {
-            ShowError("Failed to install certificate. Please try again.");
+            ShowError($"Failed to install certificate: {ex.Message}");
             CertificateArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Unexpected error: {ex.Message}");
+            Debug.WriteLine($"[SetupView] Certificate error: {ex.Message}");
         }
         finally
         {
@@ -146,68 +122,19 @@ public partial class SetupView : UserControl
     }
 
     /// <summary>
-    /// Handle enable proxy click.
-    /// </summary>
-    private async void OnEnableProxyClick(object sender, RoutedEventArgs e)
-    {
-        if (_isProcessing || _isProxyConfigured || !_isCertificateInstalled)
-            return;
-
-        _isProcessing = true;
-        ClearError();
-        ProxyArrow.Visibility = Visibility.Collapsed;
-        ProxyLoading.Visibility = Visibility.Visible;
-
-        try
-        {
-            // Start mitmproxy first
-            await App.MitmService.StartAsync();
-
-            // Then enable system proxy
-            var port = App.MitmService.CurrentPort ?? Constants.PreferredPort;
-            App.ProxyService.EnableProxy(port);
-
-            MarkProxyComplete();
-            Debug.WriteLine($"[SetupView] Proxy enabled on port {port}");
-        }
-        catch (MitmException ex)
-        {
-            ShowError($"Failed to start proxy: {ex.Message}");
-            ProxyArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Mitm error: {ex.Message}");
-        }
-        catch (ProxyException ex)
-        {
-            ShowError($"Failed to configure proxy: {ex.Message}");
-            ProxyArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Proxy error: {ex.Message}");
-        }
-        catch (Exception ex)
-        {
-            ShowError("Failed to configure proxy. Please try again.");
-            ProxyArrow.Visibility = Visibility.Visible;
-            Debug.WriteLine($"[SetupView] Unexpected error: {ex.Message}");
-        }
-        finally
-        {
-            _isProcessing = false;
-            ProxyLoading.Visibility = Visibility.Collapsed;
-            UpdateButtonStates();
-        }
-    }
-
-    /// <summary>
-    /// Handle start monitoring click.
+    /// Handle continue button click.
+    /// Completes setup and transitions to Connected phase.
+    /// MitmService will be started automatically and the addon will enable the proxy.
     /// </summary>
     private void OnStartMonitoringClick(object sender, RoutedEventArgs e)
     {
-        if (!_isCertificateInstalled || !_isProxyConfigured)
+        if (!_isCertificateInstalled)
             return;
 
         // Complete setup and transition to Connected phase
         AppState.Instance.CompleteSetup();
 
-        // Start services if not already running
+        // Start mitmproxy - the addon will handle proxy configuration
         if (!App.MitmService.IsRunning)
         {
             _ = App.MitmService.StartAsync();

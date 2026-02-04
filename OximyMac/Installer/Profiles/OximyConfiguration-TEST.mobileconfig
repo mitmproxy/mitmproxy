@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadType</key>
+            <string>com.oximy.mac</string>
+            <key>PayloadIdentifier</key>
+            <string>com.oximy.mac.preferences</string>
+            <key>PayloadUUID</key>
+            <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>PayloadDisplayName</key>
+            <string>Oximy Preferences (TEST)</string>
+            <key>PayloadEnabled</key>
+            <true/>
+            <key>PayloadDescription</key>
+            <string>TEST - Configures Oximy for managed deployment</string>
+            <key>PayloadOrganization</key>
+            <string>Oximy</string>
+
+            <!-- MDM-specific keys -->
+            <key>ManagedDeviceToken</key>
+            <string>dev_tk_GtbQUA2EXnL74F6mqGJ-ATv9nWnulmphK_vFm3GexFE</string>
+            <key>ManagedWorkspaceName</key>
+            <string>Oximy - Development</string>
+            <key>ManagedSetupComplete</key>
+            <true/>
+            <key>ForceAutoStart</key>
+            <true/>
+        </dict>
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>Oximy Configuration (TEST)</string>
+    <key>PayloadIdentifier</key>
+    <string>com.oximy.mdm.config.test</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>C3D4E5F6-A7B8-9012-CDEF-123456789012</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+    <key>PayloadOrganization</key>
+    <string>Oximy</string>
+    <key>PayloadDescription</key>
+    <string>TEST PROFILE - Remove after testing</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+</dict>
+</plist>

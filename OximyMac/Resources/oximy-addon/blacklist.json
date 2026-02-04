@@ -1,0 +1,29 @@
+{
+  "words": [
+    "analytics",
+    "sentry",
+    "posthog",
+    "healthcheck",
+    "health-check",
+    "health_check",
+    "/health",
+    "/alive",
+    "/ready",
+    "beacon",
+    "telemetry",
+    "tracking",
+    "metrics",
+    "gtm",
+    "gtag",
+    "segment",
+    "mixpanel",
+    "amplitude",
+    "hotjar",
+    "clarity",
+    "datadog",
+    "newrelic",
+    "bugsnag",
+    "rollbar",
+    "logrocket"
+  ]
+}

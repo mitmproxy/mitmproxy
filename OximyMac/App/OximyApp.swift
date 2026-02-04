@@ -3,6 +3,7 @@ import AppKit
 
 extension Notification.Name {
     static let quitApp = Notification.Name("quitApp")
+    static let handleAuthURL = Notification.Name("handleAuthURL")
 }
 
 @main
@@ -18,13 +19,34 @@ struct OximyApp: App {
             Text("Settings are managed in the popover")
                 .frame(width: 200, height: 50)
         }
+        // Hidden WindowGroup for URL handling - catches oximy:// deep links
+        // and prevents SwiftUI from launching a new app instance
+        WindowGroup("URLHandler") {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .onOpenURL { url in
+                    NotificationCenter.default.post(name: .handleAuthURL, object: url)
+                }
+                .onAppear {
+                    // Close this window immediately - we only need it for URL handling
+                    DispatchQueue.main.async {
+                        for window in NSApplication.shared.windows {
+                            if window.title == "URLHandler" {
+                                window.close()
+                            }
+                        }
+                    }
+                }
+        }
+        .handlesExternalEvents(matching: Set(arrayLiteral: "oximy"))
+        .defaultSize(width: 0, height: 0)
     }
 
     init() {
         // Close any windows that might be open on launch
         DispatchQueue.main.async {
             for window in NSApplication.shared.windows {
-                if window.title.contains("Settings") || window.title.isEmpty {
+                if window.title.contains("Settings") || window.title.isEmpty || window.title == "URLHandler" {
                     window.close()
                 }
             }
@@ -41,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
+    private var remoteStateObserver: NSObjectProtocol?
 
     // MARK: - App Lifecycle
 
@@ -112,6 +135,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        // Listen for URL auth callbacks (from SwiftUI onOpenURL)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAuthURLNotification(_:)),
+            name: .handleAuthURL,
+            object: nil
+        )
+
+        // Start remote state monitoring (reads Python addon's state file)
+        RemoteStateService.shared.start()
+
+        // Observe sensor state changes for menu bar icon
+        remoteStateObserver = NotificationCenter.default.addObserver(
+            forName: .sensorEnabledChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateMenuBarIcon()
+            }
+        }
+
         // Start network monitoring
         NetworkMonitor.shared.startMonitoring()
 
@@ -132,18 +177,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             print("[OximyApp] Phase is ready, not auto-showing popover")
         }
-
-        // Check for updates in background after startup (5 second delay)
-        // This avoids blocking the main thread during launch
-        Task {
-            try? await Task.sleep(for: .seconds(5))
-            UpdateService.shared.checkForUpdatesInBackground()
-        }
     }
 
     private func showPopover() {
         guard let button = statusItem.button else { return }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        makePopoverOpaque()
+    }
+
+    /// Remove visual effect view from popover to prevent desktop bleeding through
+    private func makePopoverOpaque() {
+        guard let popoverWindow = popover.contentViewController?.view.window else { return }
+        // Find and disable the visual effect view in the popover
+        if let frameView = popoverWindow.contentView?.superview {
+            for subview in frameView.subviews {
+                if let visualEffectView = subview as? NSVisualEffectView {
+                    visualEffectView.state = .inactive
+                    visualEffectView.material = .windowBackground
+                }
+            }
+        }
+        popoverWindow.isOpaque = true
+        popoverWindow.backgroundColor = NSColor.windowBackgroundColor
     }
 
     /// Show popover and ensure it's focused (for first launch)
@@ -157,6 +212,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Show the popover
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        makePopoverOpaque()
         print("[OximyApp] showPopoverAndFocus: popover.isShown = \(popover.isShown)")
 
         // Make the popover window key and bring to front
@@ -217,6 +273,126 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showPopover()
     }
 
+    // MARK: - URL Handling (for oximy:// deep links)
+
+    @objc private func handleAuthURLNotification(_ notification: Notification) {
+        if let url = notification.object as? URL {
+            print("[OximyApp] Received URL via notification: \(url)")
+            handleAuthCallback(url: url)
+        }
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            handleAuthCallback(url: url)
+        }
+    }
+
+    private func handleAuthCallback(url: URL) {
+        print("[OximyApp] Received URL: \(url)")
+
+        // Parse: oximy://auth/callback?token=xxx&state=xxx&device_id=xxx
+        // Note: workspace_name and workspace_id are NOT in the callback URL.
+        // They are fetched from the API using the device token.
+        guard url.scheme == "oximy",
+              url.host == "auth",
+              url.path == "/callback" else {
+            print("[OximyApp] URL doesn't match auth callback pattern")
+            return
+        }
+
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let queryItems = components?.queryItems ?? []
+
+        // Extract parameters (only token, state, and device_id expected)
+        let token = queryItems.first { $0.name == "token" }?.value
+        let state = queryItems.first { $0.name == "state" }?.value
+        let deviceId = queryItems.first { $0.name == "device_id" }?.value
+
+        // Validate state matches what we stored (CSRF protection)
+        let storedState = UserDefaults.standard.string(forKey: Constants.Defaults.authState)
+        guard state == storedState else {
+            print("[OximyApp] State mismatch - stored: \(storedState ?? "nil"), received: \(state ?? "nil")")
+            return
+        }
+
+        // Clear stored state
+        UserDefaults.standard.removeObject(forKey: Constants.Defaults.authState)
+
+        // Validate we have a token
+        guard let token = token else {
+            print("[OximyApp] No token in callback URL")
+            return
+        }
+
+        print("[OximyApp] Auth callback parameters:")
+        print("[OximyApp]   token: \(token.prefix(20))...")
+        print("[OximyApp]   device_id: \(deviceId ?? "not provided")")
+
+        // Fetch workspace info from API using the token
+        Task {
+            do {
+                print("[OximyApp] Fetching device info from API...")
+                let deviceInfo = try await APIClient.shared.fetchDeviceInfo(token: token)
+
+                print("[OximyApp] Device info received:")
+                print("[OximyApp]   workspaceName: \(deviceInfo.workspaceName)")
+                print("[OximyApp]   workspaceId: \(deviceInfo.workspaceId)")
+                print("[OximyApp]   deviceId: \(deviceInfo.deviceId)")
+
+                // Use deviceId from API response (authoritative), fallback to URL if API doesn't return it
+                let finalDeviceId = deviceInfo.deviceId
+
+                appState.login(
+                    workspaceName: deviceInfo.workspaceName,
+                    deviceToken: token,
+                    deviceId: finalDeviceId,
+                    workspaceId: deviceInfo.workspaceId
+                )
+
+                appState.completeEnrollment()
+
+                SentryService.shared.addStateBreadcrumb(
+                    category: "enrollment",
+                    message: "Device enrolled via browser auth",
+                    data: [
+                        "deviceId": finalDeviceId,
+                        "workspaceId": deviceInfo.workspaceId,
+                        "workspaceName": deviceInfo.workspaceName
+                    ]
+                )
+
+                print("[OximyApp] Auth callback processed successfully")
+
+                // Show the popover so user sees they're logged in
+                showPopover()
+
+            } catch {
+                print("[OximyApp] Failed to fetch device info: \(error)")
+
+                // Fallback: Log in with minimal info but warn
+                // The heartbeat service will eventually get the workspace info
+                print("[OximyApp] Falling back to minimal login (device_id from URL: \(deviceId ?? "nil"))")
+
+                appState.login(
+                    workspaceName: "Loading...",
+                    deviceToken: token,
+                    deviceId: deviceId,
+                    workspaceId: nil
+                )
+
+                appState.completeEnrollment()
+
+                SentryService.shared.addErrorBreadcrumb(
+                    service: "enrollment",
+                    error: "Failed to fetch device info after browser auth: \(error.localizedDescription)"
+                )
+
+                showPopover()
+            }
+        }
+    }
+
     private func setupMainMenu() {
         let mainMenu = NSMenu()
 
@@ -241,6 +417,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var allowQuit = false
 
     @objc private func quitApp() {
+        // Check if MDM blocks quitting
+        if MDMConfigService.shared.disableQuit {
+            print("[OximyApp] Quit blocked by MDM policy (DisableQuit)")
+            return
+        }
+
         print("[OximyApp] Quit requested - setting allowQuit=true")
         allowQuit = true
 
@@ -253,6 +435,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Block CMD+Q unless explicitly allowed via quitApp()
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         print("[OximyApp] applicationShouldTerminate called, allowQuit=\(allowQuit)")
+
+        // Check if MDM blocks quitting
+        if MDMConfigService.shared.disableQuit {
+            print("[OximyApp] Termination blocked by MDM policy")
+            return .terminateCancel
+        }
+
         if allowQuit {
             print("[OximyApp] Allowing termination")
             return .terminateNow
@@ -270,6 +459,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self, name: .networkChanged, object: nil)
         NotificationCenter.default.removeObserver(self, name: .mitmproxyFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .authenticationFailed, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .handleAuthURL, object: nil)
+
+        // Remove remote state observer
+        if let observer = remoteStateObserver {
+            NotificationCenter.default.removeObserver(observer)
+            remoteStateObserver = nil
+        }
 
         // Remove global event monitor
         if let monitor = clickMonitor {
@@ -279,6 +475,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Stop network monitoring
         NetworkMonitor.shared.stopMonitoring()
+
+        // Stop remote state monitoring
+        RemoteStateService.shared.stop()
 
         // Stop API services
         HeartbeatService.shared.stop()
@@ -338,12 +537,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private var statusText: String {
-        if ProxyService.shared.isProxyEnabled {
+        if !RemoteStateService.shared.sensorEnabled {
+            return "○ Monitoring Paused"
+        } else if RemoteStateService.shared.proxyActive {
             return "● Monitoring Active"
         } else if appState.phase == .setup {
             return "○ Setup Required"
         } else {
-            return "○ Proxy Disabled"
+            return "○ Starting..."
+        }
+    }
+
+    private func updateMenuBarIcon() {
+        guard let button = statusItem.button else { return }
+        if RemoteStateService.shared.sensorEnabled {
+            button.image = createMenuBarIcon()
+        } else {
+            button.image = createMenuBarIconPaused()
         }
     }
 
@@ -366,7 +576,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let contentView = MainView()
             .environmentObject(appState)
 
-        popover.contentViewController = NSHostingController(rootView: contentView)
+        let hostingController = NSHostingController(rootView: contentView)
+        // Make the popover background opaque to prevent desktop bleeding through
+        hostingController.view.wantsLayer = true
+        hostingController.view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        popover.contentViewController = hostingController
 
         // Set up event monitor to close popover when clicking outside
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
@@ -384,6 +598,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            makePopoverOpaque()
 
             // Ensure the popover window becomes key
             popover.contentViewController?.view.window?.makeKey()

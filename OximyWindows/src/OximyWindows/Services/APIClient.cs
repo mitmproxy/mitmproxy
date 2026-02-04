@@ -300,7 +300,7 @@ public class APIClient
     /// <summary>
     /// Get hardware ID using WMI. Result is cached to avoid expensive repeated queries.
     /// </summary>
-    private static string GetHardwareId()
+    public static string GetHardwareId()
     {
         // Return cached value if available
         if (_cachedHardwareId != null)

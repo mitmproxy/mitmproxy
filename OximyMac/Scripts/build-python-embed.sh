@@ -52,7 +52,7 @@ mkdir -p "$EMBED_DIR"
 # These are truly standalone - no system dependencies!
 PYTHON_RELEASE_URL="https://github.com/indygreg/python-build-standalone/releases/download/${PYTHON_RELEASE_DATE}"
 
-# Function to download and setup Python for a specific architecture
+# Function to download Python for a specific architecture (download only, no pip install)
 download_python_arch() {
     local arch_name="$1"  # "arm64" or "x86_64"
     local python_tag="$2" # "aarch64-apple-darwin" or "x86_64-apple-darwin"
@@ -87,13 +87,132 @@ download_python_arch() {
     mkdir -p "$target_dir"
     cp -R "python-$arch_name/"* "$target_dir/"
 
-    echo "Installing mitmproxy from LOCAL source for $arch_name..."
-    "$target_dir/bin/pip3" install --upgrade pip
-    # Install mitmproxy from local source to include Oximy customizations
-    # (CONF_BASENAME = "oximy" for certificate naming)
-    "$target_dir/bin/pip3" install "$MITMPROXY_SOURCE" jsonata-python
+    echo "✓ Python $arch_name downloaded"
+    return 0
+}
 
-    echo "✓ Python $arch_name ready (with local mitmproxy)"
+# Function to install packages for a specific architecture using cross-platform pip
+# Uses host pip to download platform-specific wheels, then installs to target
+install_packages_for_arch() {
+    local arch_name="$1"      # "arm64" or "x86_64"
+    local target_dir="$2"     # Target Python directory
+    local pip_executable="$3" # Host pip to use for downloading/installing
+
+    echo ""
+    echo "=== Installing packages for $arch_name ==="
+
+    local site_packages="$target_dir/lib/python3.12/site-packages"
+    local pip_platform=""
+
+    if [ "$arch_name" = "arm64" ]; then
+        pip_platform="macosx_11_0_arm64"
+    else
+        pip_platform="macosx_10_9_x86_64"
+    fi
+
+    # Check if we can run the target Python directly (same architecture)
+    if "$target_dir/bin/python3" --version >/dev/null 2>&1; then
+        echo "    Running native pip for $arch_name..."
+        "$target_dir/bin/pip3" install --upgrade pip
+
+        # Pre-install ruamel.yaml WITHOUT the C extension
+        echo "    Pre-installing ruamel.yaml (pure Python, no C extension)..."
+        "$target_dir/bin/pip3" install "ruamel.yaml>=0.18.10,<=0.19.0" --no-binary ruamel.yaml.clib --no-deps
+
+        # Install mitmproxy from local source
+        "$target_dir/bin/pip3" install "$MITMPROXY_SOURCE" jsonata-python
+    else
+        echo "    Cross-installing packages for $arch_name (cannot run $arch_name Python on this host)..."
+
+        # Strategy: Copy pure Python packages from x86_64, then replace only arch-specific binaries
+        # This is more reliable than trying to download and install wheels separately
+
+        local x86_site_packages="$EMBED_DIR/x86_64/lib/python3.12/site-packages"
+
+        if [ -d "$x86_site_packages/mitmproxy" ]; then
+            echo "    Copying packages from x86_64 to $arch_name..."
+            # Copy all packages (most are pure Python and work on both architectures)
+            cp -R "$x86_site_packages"/* "$site_packages/"
+
+            # Copy ALL pip-installed scripts from x86_64/bin to arm64/bin
+            # These are Python entry point scripts that work on both architectures
+            local x86_bin="$EMBED_DIR/x86_64/bin"
+            local target_bin="$target_dir/bin"
+            echo "    Copying pip-installed scripts to $arch_name/bin/..."
+
+            # Copy any script that exists in x86_64/bin but not in arm64/bin
+            for script in "$x86_bin"/*; do
+                script_name=$(basename "$script")
+                # Skip if already exists in target (base Python scripts)
+                if [ ! -e "$target_bin/$script_name" ]; then
+                    if [ -f "$script" ]; then
+                        cp "$script" "$target_bin/"
+                        # Fix shebang to be portable
+                        if head -1 "$target_bin/$script_name" | grep -q "python"; then
+                            sed -i '' "1s|.*python.*|#!/usr/bin/env python3|" "$target_bin/$script_name" 2>/dev/null || true
+                        fi
+                        chmod +x "$target_bin/$script_name"
+                        echo "      Copied: $script_name"
+                    fi
+                fi
+            done
+
+            # Now replace architecture-specific compiled extensions
+            echo "    Downloading $arch_name-specific compiled extensions..."
+
+            local wheel_dir="$BUILD_DIR/wheels-$arch_name"
+            rm -rf "$wheel_dir"
+            mkdir -p "$wheel_dir"
+
+            # Download arm64-specific wheels for packages with compiled extensions
+            "$pip_executable" download \
+                --platform macosx_11_0_arm64 \
+                --python-version 3.12 \
+                --only-binary=:all: \
+                --no-deps \
+                -d "$wheel_dir" \
+                aioquic==1.2.0 \
+                brotli==1.2.0 \
+                cryptography==46.0.3 \
+                msgpack==1.1.2 \
+                tornado==6.5.4 \
+                zstandard==0.25.0 \
+                cffi==2.0.0 \
+                markupsafe==3.0.3 \
+                argon2-cffi-bindings==25.1.0 \
+                pylsqpack==0.3.23 \
+                bcrypt==5.0.0 \
+                2>/dev/null || true
+
+            # Extract arm64 wheels and overwrite the x86_64 compiled files
+            echo "    Extracting $arch_name compiled extensions..."
+            for whl in "$wheel_dir"/*arm64*.whl "$wheel_dir"/*universal*.whl; do
+                if [ -f "$whl" ]; then
+                    unzip -q -o "$whl" -d "$site_packages" 2>/dev/null || true
+                fi
+            done
+
+            rm -rf "$wheel_dir"
+        else
+            echo "    ERROR: x86_64 packages not found. Build x86_64 first!"
+            return 1
+        fi
+    fi
+
+    # Remove any ruamel.yaml C extension that may cause issues
+    echo "    Removing ruamel.yaml C extension (if present)..."
+    rm -f "$site_packages/_ruamel_yaml"*.so 2>/dev/null || true
+    rm -f "$site_packages/ruamel.yaml.clib"* 2>/dev/null || true
+
+    # Verify critical packages are installed
+    if [ ! -f "$site_packages/kaitaistruct.py" ]; then
+        echo "    WARNING: kaitaistruct.py not found, downloading directly..."
+        "$pip_executable" download --no-deps -d "$BUILD_DIR" kaitaistruct==0.11 2>/dev/null
+        unzip -q -o "$BUILD_DIR/kaitaistruct-0.11"*.whl -d "$site_packages" 2>/dev/null || true
+        rm -f "$BUILD_DIR/kaitaistruct-0.11"*.whl
+    fi
+
+    echo "✓ Python $arch_name packages installed"
     return 0
 }
 
@@ -105,16 +224,28 @@ if [ "$BUILD_UNIVERSAL" = "true" ]; then
     mkdir -p "$EMBED_DIR/arm64"
     mkdir -p "$EMBED_DIR/x86_64"
 
-    # Download ARM64
+    # Download ARM64 Python
     if ! download_python_arch "arm64" "aarch64-apple-darwin" "$EMBED_DIR/arm64"; then
-        echo "ERROR: Failed to setup ARM64 Python"
+        echo "ERROR: Failed to download ARM64 Python"
         exit 1
     fi
 
-    # Download x86_64
+    # Download x86_64 Python
     if ! download_python_arch "x86_64" "x86_64-apple-darwin" "$EMBED_DIR/x86_64"; then
-        echo "ERROR: Failed to setup x86_64 Python"
+        echo "ERROR: Failed to download x86_64 Python"
         exit 1
+    fi
+
+    # Install packages - do x86_64 first since we'll use its pip for cross-install
+    HOST_ARCH=$(uname -m)
+    if [ "$HOST_ARCH" = "arm64" ]; then
+        # Host is arm64, install arm64 first (native), then cross-install x86_64
+        install_packages_for_arch "arm64" "$EMBED_DIR/arm64" "$EMBED_DIR/arm64/bin/pip3"
+        install_packages_for_arch "x86_64" "$EMBED_DIR/x86_64" "$EMBED_DIR/arm64/bin/pip3"
+    else
+        # Host is x86_64, install x86_64 first (native), then cross-install arm64
+        install_packages_for_arch "x86_64" "$EMBED_DIR/x86_64" "$EMBED_DIR/x86_64/bin/pip3"
+        install_packages_for_arch "arm64" "$EMBED_DIR/arm64" "$EMBED_DIR/x86_64/bin/pip3"
     fi
 
     # Create architecture-detecting wrapper scripts in the main bin directory
@@ -135,6 +266,9 @@ else
         echo "ERROR: Failed to setup Python"
         exit 1
     fi
+
+    # Install packages for single architecture (native pip works)
+    install_packages_for_arch "$ARCH" "$EMBED_DIR" "$EMBED_DIR/bin/pip3"
 fi
 
 # Create architecture-detecting wrapper scripts
@@ -279,9 +413,45 @@ fi
 # Make all scripts executable
 chmod +x "$EMBED_DIR/bin/"* 2>/dev/null || true
 
-# Verify installation
+# Verify both architectures have critical packages (for universal builds)
+if [ "$BUILD_UNIVERSAL" = "true" ]; then
+    echo ""
+    echo "Verifying both architectures have critical dependencies..."
+    VERIFICATION_FAILED=false
+
+    for arch_dir in "$EMBED_DIR/arm64" "$EMBED_DIR/x86_64"; do
+        arch_name=$(basename "$arch_dir")
+        site_packages="$arch_dir/lib/python3.12/site-packages"
+
+        # Check for kaitaistruct (critical TLS parsing dependency)
+        if [ ! -f "$site_packages/kaitaistruct.py" ]; then
+            echo "ERROR: $arch_name missing kaitaistruct.py!"
+            VERIFICATION_FAILED=true
+        else
+            echo "✓ $arch_name has kaitaistruct.py"
+        fi
+
+        # Check for mitmproxy
+        if [ ! -d "$site_packages/mitmproxy" ]; then
+            echo "ERROR: $arch_name missing mitmproxy package!"
+            VERIFICATION_FAILED=true
+        else
+            echo "✓ $arch_name has mitmproxy"
+        fi
+    done
+
+    if [ "$VERIFICATION_FAILED" = "true" ]; then
+        echo ""
+        echo "ERROR: Cross-architecture package installation failed!"
+        echo "Some packages may not have arm64 wheels available."
+        echo "Consider building on an Apple Silicon Mac instead."
+        exit 1
+    fi
+fi
+
+# Verify installation (runs on host architecture)
 echo ""
-echo "Verifying installation..."
+echo "Verifying installation on host architecture..."
 if "$EMBED_DIR/bin/mitmdump" --version; then
     echo ""
 

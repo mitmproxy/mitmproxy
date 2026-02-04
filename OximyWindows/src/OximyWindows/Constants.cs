@@ -17,25 +17,28 @@ public static class Constants
     // Auto-restart configuration
     public const int MaxRestartAttempts = 3;
 
-    // Certificate configuration
-    public const string CACommonName = "Oximy CA";
-    public const string CAOrganization = "Oximy Inc";
-    public const string CACountry = "US";
-    public const int CAValidityDays = 3650; // 10 years
+    // Certificate validity (mitmproxy defaults to 10 years for CA)
+    public const int CAValidityDays = 3650; // 10 years - for reference only
 
     // Directory paths
     public static string OximyDir => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".oximy");
 
+    // mitmproxy uses its own directory for certificates
+    public static string MitmproxyDir => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".mitmproxy");
+
     public static string TracesDir => Path.Combine(OximyDir, "traces");
     public static string LogsDir => Path.Combine(OximyDir, "logs");
     public static string CacheDir => Path.Combine(OximyDir, "cache");
     public static string SyncStatePath => Path.Combine(OximyDir, "sync_state.json");
 
-    // Certificate file paths
-    public static string CACertPath => Path.Combine(OximyDir, "mitmproxy-ca-cert.pem");
-    public static string CAKeyPath => Path.Combine(OximyDir, "mitmproxy-ca.pem");
+    // Certificate file paths - use oximy naming (matches CONF_BASENAME in mitmproxy/options.py)
+    // mitmproxy auto-generates these when it starts with CN=oximy
+    public static string CACertPath => Path.Combine(MitmproxyDir, "oximy-ca-cert.pem");
+    public static string CAKeyPath => Path.Combine(MitmproxyDir, "oximy-ca.pem");
 
     // Python paths (relative to app directory)
     public static string PythonEmbedDir => Path.Combine(AppContext.BaseDirectory, "Resources", "python-embed");
@@ -45,7 +48,7 @@ public static class Constants
     public static string AddonPath => Path.Combine(AddonDir, "addon.py");
 
     // URLs (matching Mac app)
-    public const string SignUpUrl = "https://app.oximy.com";
+    public const string SignUpUrl = "https://staging.oximy.com";
     public const string HelpUrl = "https://docs.oximy.com";
     public const string SupportEmail = "support@oximy.com";
     public const string TermsUrl = "https://oximy.com/terms";
@@ -130,6 +133,13 @@ public static class Constants
     public const string SettingsWorkspaceName = "WorkspaceName";
     public const string SettingsDeviceToken = "DeviceToken";
     public const string SettingsDeviceName = "DeviceName";
+
+    // Auth constants for browser-based enrollment
+    public const string AuthStateKey = "authState";
+    public const string AuthUrl = "https://staging.oximy.com/auth/enroll";
+
+    // Remote state file path (written by Python addon)
+    public static string RemoteStatePath => Path.Combine(OximyDir, "remote-state.json");
 
     /// <summary>
     /// Ensure all required directories exist.

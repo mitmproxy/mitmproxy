@@ -85,13 +85,11 @@ final class AppState: ObservableObject {
     enum MainTab: String, CaseIterable {
         case home = "Home"
         case settings = "Settings"
-        case support = "Support"
 
         var icon: String {
             switch self {
             case .home: return "house.fill"
             case .settings: return "gearshape.fill"
-            case .support: return "questionmark.circle.fill"
             }
         }
     }
@@ -117,8 +115,13 @@ final class AppState: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
+            guard let self = self else { return }
             if let newName = notification.object as? String {
-                self?.workspaceName = newName
+                print("[AppState] NOTIFICATION: workspaceNameUpdated to '\(newName)'")
+                // Use MainActor.assumeIsolated since we're on .main queue
+                MainActor.assumeIsolated {
+                    self.workspaceName = newName
+                }
             }
         }
     }
@@ -128,8 +131,63 @@ final class AppState: ObservableObject {
     private func loadPersistedState() {
         let defaults = UserDefaults.standard
 
+        // DEBUG: Log all relevant UserDefaults at startup
+        let storedWorkspace = defaults.string(forKey: Constants.Defaults.workspaceName)
+        let storedToken = defaults.string(forKey: Constants.Defaults.deviceToken)
+        let storedDeviceId = defaults.string(forKey: Constants.Defaults.deviceId)
+        let storedWorkspaceId = defaults.string(forKey: Constants.Defaults.workspaceId)
+        print("[AppState] INIT - UserDefaults state:")
+        print("[AppState]   workspaceName: '\(storedWorkspace ?? "nil")'")
+        print("[AppState]   deviceToken: \(storedToken != nil ? "***" : "nil")")
+        print("[AppState]   deviceId: '\(storedDeviceId ?? "nil")'")
+        print("[AppState]   workspaceId: '\(storedWorkspaceId ?? "nil")'")
+
+        // Check for MDM-managed configuration FIRST
+        let mdmConfig = MDMConfigService.shared
+        print("[AppState] isManagedDevice: \(mdmConfig.isManagedDevice)")
+
+        if mdmConfig.isManagedDevice {
+            print("[AppState] MDM-managed device detected")
+
+            // Apply MDM configuration to standard UserDefaults
+            mdmConfig.applyManagedConfiguration()
+
+            // Handle managed device token
+            if let token = mdmConfig.managedDeviceToken {
+                writeDeviceTokenFile(token)
+            }
+
+            // Set account info from MDM if available
+            if let workspaceName = mdmConfig.managedWorkspaceName {
+                print("[AppState] Setting workspace from MDM: '\(workspaceName)'")
+                self.workspaceName = workspaceName
+                isLoggedIn = true
+            }
+
+            if let deviceId = mdmConfig.managedDeviceId {
+                self.deviceId = deviceId
+            }
+
+            // Determine phase for managed device
+            if mdmConfig.shouldSkipAllSetup {
+                // MDM says skip everything - go directly to ready
+                print("[AppState] MDM: Skipping all setup, going to ready phase")
+                phase = .ready
+                startServices()
+                return
+            } else if mdmConfig.shouldSkipEnrollment {
+                // MDM says skip enrollment only - go to setup
+                print("[AppState] MDM: Skipping enrollment, going to setup phase")
+                phase = .setup
+                return
+            }
+            // Fall through to normal logic if MDM doesn't specify phase
+        }
+
+        // Standard (non-MDM) state loading
         // Load account info if available
         if let workspace = defaults.string(forKey: Constants.Defaults.workspaceName) {
+            print("[AppState] Setting workspace from UserDefaults: '\(workspace)'")
             workspaceName = workspace
             isLoggedIn = true
         }
@@ -140,6 +198,11 @@ final class AppState: ObservableObject {
         // Determine phase based on what's been completed
         let hasDeviceToken = defaults.string(forKey: Constants.Defaults.deviceToken) != nil
         let setupComplete = defaults.bool(forKey: Constants.Defaults.setupComplete)
+
+        // Ensure device token file exists (handles upgrade from older versions)
+        if hasDeviceToken {
+            ensureDeviceTokenFile()
+        }
 
         if hasDeviceToken && setupComplete {
             // Both enrollment and setup done
@@ -190,8 +253,24 @@ final class AppState: ObservableObject {
 
     /// Start background services
     private func startServices() {
+        NSLog("[AppState] startServices() called")
         HeartbeatService.shared.start()
         SyncService.shared.start()
+
+        // Start the proxy when entering ready phase
+        // Use a slight delay to ensure app initialization is complete
+        NSLog("[AppState] Scheduling MITMService start...")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            Task { @MainActor in
+                NSLog("[AppState] Starting MITMService now...")
+                do {
+                    try await MITMService.shared.start()
+                    NSLog("[AppState] MITMService started successfully")
+                } catch {
+                    NSLog("[AppState] Failed to start MITMService: %@", String(describing: error))
+                }
+            }
+        }
     }
 
     /// Stop background services
@@ -216,6 +295,9 @@ final class AppState: ObservableObject {
         defaults.removeObject(forKey: Constants.Defaults.deviceId)
         defaults.removeObject(forKey: Constants.Defaults.workspaceId)
 
+        // Delete device token file
+        deleteDeviceTokenFile()
+
         phase = .enrollment
         connectionStatus = .disconnected
         workspaceName = ""
@@ -225,12 +307,102 @@ final class AppState: ObservableObject {
         isProxyEnabled = false
     }
 
+    // MARK: - Device Token File Management
+
+    /// Write device token to ~/.oximy/device-token for the Python addon
+    @discardableResult
+    private func writeDeviceTokenFile(_ token: String) -> Bool {
+        let tokenPath = Constants.deviceTokenPath
+        let oximyDir = Constants.oximyDir
+        let fm = FileManager.default
+
+        do {
+            // Ensure ~/.oximy directory exists
+            if !fm.fileExists(atPath: oximyDir.path) {
+                try fm.createDirectory(at: oximyDir, withIntermediateDirectories: true)
+            }
+
+            // Write token as plain text (addon uses .strip() on read)
+            try token.write(to: tokenPath, atomically: true, encoding: .utf8)
+
+            // Set file permissions to owner-only readable (0600) for security
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: tokenPath.path)
+
+            print("[AppState] Device token written to \(tokenPath.path)")
+            return true
+        } catch {
+            print("[AppState] Failed to write device token file: \(error.localizedDescription)")
+            SentryService.shared.captureError(error, context: [
+                "operation": "write_device_token",
+                "path": tokenPath.path
+            ])
+            return false
+        }
+    }
+
+    /// Delete the device token file on logout/reset
+    @discardableResult
+    private func deleteDeviceTokenFile() -> Bool {
+        let tokenPath = Constants.deviceTokenPath
+        let fm = FileManager.default
+
+        guard fm.fileExists(atPath: tokenPath.path) else {
+            return true  // File doesn't exist, nothing to delete
+        }
+
+        do {
+            try fm.removeItem(at: tokenPath)
+            print("[AppState] Device token file deleted")
+            return true
+        } catch {
+            print("[AppState] Failed to delete device token file: \(error.localizedDescription)")
+            SentryService.shared.captureError(error, context: [
+                "operation": "delete_device_token",
+                "path": tokenPath.path
+            ])
+            return false
+        }
+    }
+
+    /// Ensure device token file exists if we have a token (handles app upgrades)
+    private func ensureDeviceTokenFile() {
+        guard let token = UserDefaults.standard.string(forKey: Constants.Defaults.deviceToken),
+              !token.isEmpty else {
+            return
+        }
+
+        let tokenPath = Constants.deviceTokenPath
+        let fm = FileManager.default
+
+        // Check if file already exists with correct content
+        if fm.fileExists(atPath: tokenPath.path),
+           let existingToken = try? String(contentsOf: tokenPath, encoding: .utf8),
+           existingToken.trimmingCharacters(in: .whitespacesAndNewlines) == token {
+            return  // File exists with correct content
+        }
+
+        // File missing or has stale content - write it
+        writeDeviceTokenFile(token)
+    }
+
     // MARK: - Account
 
-    func login(workspaceName: String, deviceToken: String) {
+    func login(workspaceName: String, deviceToken: String, deviceId: String?, workspaceId: String?) {
         let defaults = UserDefaults.standard
         defaults.set(workspaceName, forKey: Constants.Defaults.workspaceName)
         defaults.set(deviceToken, forKey: Constants.Defaults.deviceToken)
+
+        // Write token to file for Python addon
+        writeDeviceTokenFile(deviceToken)
+
+        if let deviceId = deviceId {
+            defaults.set(deviceId, forKey: Constants.Defaults.deviceId)
+            self.deviceId = deviceId
+        }
+
+        if let workspaceId = workspaceId {
+            defaults.set(workspaceId, forKey: Constants.Defaults.workspaceId)
+        }
 
         self.workspaceName = workspaceName
         self.isLoggedIn = true
@@ -245,7 +417,18 @@ final class AppState: ObservableObject {
         )
     }
 
+    /// Check if logout is allowed (not blocked by MDM)
+    var canLogout: Bool {
+        !MDMConfigService.shared.disableUserLogout
+    }
+
     func logout() {
+        // Check if logout is blocked by MDM
+        if MDMConfigService.shared.disableUserLogout {
+            print("[AppState] Logout blocked by MDM policy")
+            return
+        }
+
         // Stop services first
         stopServices()
 
@@ -255,6 +438,9 @@ final class AppState: ObservableObject {
         defaults.removeObject(forKey: Constants.Defaults.deviceId)
         defaults.removeObject(forKey: Constants.Defaults.workspaceId)
         defaults.removeObject(forKey: Constants.Defaults.setupComplete)
+
+        // Delete device token file
+        deleteDeviceTokenFile()
 
         // Clear Sentry user context
         SentryService.shared.clearUser()

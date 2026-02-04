@@ -48,7 +48,7 @@ class SentryService: ObservableObject {
             #if DEBUG
             options.environment = "development"
             options.debug = true
-            options.enableTracing = true
+            options.tracesSampleRate = 1.0
             // Don't send events in debug mode by default
             options.beforeSend = { event in
                 // Allow sending in debug if explicitly enabled
@@ -61,7 +61,7 @@ class SentryService: ObservableObject {
             #else
             options.environment = "production"
             options.debug = false
-            options.enableTracing = true
+            options.tracesSampleRate = 1.0
             options.tracesSampleRate = NSNumber(value: Constants.Sentry.productionSampleRate)
             #endif
 
@@ -373,6 +373,8 @@ extension LaunchServiceError {
             return "LAUNCH_REG_FAILED"
         case .unregistrationFailed:
             return "LAUNCH_UNREG_FAILED"
+        case .managedByMDM:
+            return "LAUNCH_MDM_BLOCKED"
         }
     }
 }

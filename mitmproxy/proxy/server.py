@@ -219,7 +219,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 keep_ref=False,
                 client=self.client.peername,
             )
-            self.transports[self.client].handler = handler
+            if self.client in self.transports:
+                self.transports[self.client].handler = handler
             await asyncio.wait([handler])
             if not handler.cancelled() and (e := handler.exception()):
                 self.log(
@@ -527,9 +528,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             connection.state = ConnectionState.CLOSED
 
         if connection.state is ConnectionState.CLOSED:
-            handler = self.transports[connection].handler
-            assert handler
-            handler.cancel("closed by command")
+            transport = self.transports.get(connection)
+            handler = transport.handler if transport else None
+            if handler:
+                handler.cancel("closed by command")
 
 
 class LiveConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):

@@ -1,11 +1,14 @@
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
 using Microsoft.Win32;
 using OximyWindows.Core;
 using OximyWindows.Services;
 using OximyWindows.Views;
-using Velopack;
 
 namespace OximyWindows;
 
@@ -14,6 +17,12 @@ public partial class App : Application
     private static Mutex? _mutex;
     private MainWindow? _mainWindow;
     private static TextWriterTraceListener? _fileTraceListener;
+    private string? _pendingAuthUrl;
+
+    // Named Pipe IPC for passing auth URLs from second instances
+    private const string PipeName = "OximyWindowsAuthPipe";
+    private Thread? _pipeServerThread;
+    private volatile bool _pipeServerRunning;
 
     // Core Services
     public static MitmService MitmService { get; } = new();
@@ -26,6 +35,7 @@ public partial class App : Application
     public static APIClient APIClient => APIClient.Instance;
     public static HeartbeatService HeartbeatService => HeartbeatService.Instance;
     public static SyncService SyncService => SyncService.Instance;
+    public static RemoteStateService RemoteStateService => RemoteStateService.Instance;
 
     /// <summary>
     /// Path to the debug log file.
@@ -34,10 +44,6 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        // CRITICAL: Velopack hooks must be called FIRST before any other code.
-        // This handles update installation, uninstallation, and first-run scenarios.
-        VelopackApp.Build().Run();
-
         // Set up file logging for Debug output
         SetupFileLogging();
 
@@ -51,10 +57,35 @@ public partial class App : Application
 
         if (!createdNew)
         {
-            // Another instance is running
+            // Another instance is running - try to send URL via pipe
+            if (e.Args.Length > 0 && e.Args[0].StartsWith("oximy://", StringComparison.OrdinalIgnoreCase))
+            {
+                if (SendUrlToRunningInstance(e.Args[0]))
+                {
+                    // URL sent successfully, exit silently
+                    Debug.WriteLine("[App] URL sent to running instance, exiting");
+                    Shutdown();
+                    return;
+                }
+            }
+
+            // No URL or send failed - show message
             MessageBox.Show("Oximy is already running.", "Oximy", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
+        }
+
+        // Start pipe server for receiving URLs from future instances
+        StartPipeServer();
+
+        // Register oximy:// URL scheme for deep linking
+        RegisterUrlScheme();
+
+        // Handle deep link if launched via oximy:// URL
+        if (e.Args.Length > 0 && e.Args[0].StartsWith("oximy://", StringComparison.OrdinalIgnoreCase))
+        {
+            // Store the URL to handle after main window is created
+            _pendingAuthUrl = e.Args[0];
         }
 
         base.OnStartup(e);
@@ -86,6 +117,14 @@ public partial class App : Application
         HeartbeatService.RestartProxyRequested += OnRestartProxyRequested;
         HeartbeatService.DisableProxyRequested += OnDisableProxyRequested;
 
+        // Start remote state monitoring
+        RemoteStateService.Start();
+        RemoteStateService.ForceLogoutRequested += OnForceLogoutRequested;
+        RemoteStateService.SensorEnabledChanged += OnSensorStateChanged;
+
+        // Auto-enable launch at startup on first run
+        StartupService.CheckAndAutoEnableOnFirstLaunch();
+
         // Start services if already connected
         if (AppState.Instance.Phase == Phase.Connected)
         {
@@ -93,12 +132,14 @@ public partial class App : Application
             SyncService.Start();
         }
 
-        // Check for updates in background after startup (5 second delay)
-        Task.Run(async () =>
+        // Handle pending auth URL if launched via deep link
+        if (!string.IsNullOrEmpty(_pendingAuthUrl))
         {
-            await Task.Delay(5000);
-            await UpdateService.Instance.CheckForUpdatesAsync();
-        });
+            HandleAuthCallback(_pendingAuthUrl);
+            _pendingAuthUrl = null;
+        }
+
+        // Note: Auto-update disabled for MDM deployment
     }
 
     private void OnLogoutRequested(object? sender, EventArgs e)
@@ -127,9 +168,220 @@ public partial class App : Application
         MitmService.Stop();
     }
 
+    private void OnForceLogoutRequested(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() => OnLogoutRequested(sender, e));
+    }
+
+    private void OnSensorStateChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() => _mainWindow?.UpdateTrayIcon(RemoteStateService.SensorEnabled));
+    }
+
+    /// <summary>
+    /// Register the oximy:// URL scheme in Windows Registry.
+    /// This allows the browser to redirect back to our app after authentication.
+    /// </summary>
+    private void RegisterUrlScheme()
+    {
+        try
+        {
+            var exePath = Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(exePath)) return;
+
+            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Classes\oximy");
+            if (key == null) return;
+
+            key.SetValue("", "URL:Oximy Protocol");
+            key.SetValue("URL Protocol", "");
+
+            using var shellKey = key.CreateSubKey(@"shell\open\command");
+            shellKey?.SetValue("", $"\"{exePath}\" \"%1\"");
+
+            Debug.WriteLine("[App] URL scheme registered successfully");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Failed to register URL scheme: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Start the Named Pipe server to receive auth URLs from second instances.
+    /// When browser redirects to oximy://, Windows launches a new instance.
+    /// That instance detects the mutex, sends the URL via pipe, and exits.
+    /// </summary>
+    private void StartPipeServer()
+    {
+        _pipeServerRunning = true;
+        _pipeServerThread = new Thread(() =>
+        {
+            Debug.WriteLine("[App] Pipe server started");
+            while (_pipeServerRunning)
+            {
+                try
+                {
+                    using var server = new NamedPipeServerStream(PipeName, PipeDirection.In);
+                    server.WaitForConnection();
+
+                    using var reader = new StreamReader(server);
+                    var url = reader.ReadLine();
+
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        Debug.WriteLine($"[App] Received URL via pipe: {url}");
+                        Dispatcher.Invoke(() => HandleAuthCallback(url));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (_pipeServerRunning)
+                        Debug.WriteLine($"[App] Pipe server error: {ex.Message}");
+                }
+            }
+            Debug.WriteLine("[App] Pipe server stopped");
+        });
+        _pipeServerThread.IsBackground = true;
+        _pipeServerThread.Start();
+    }
+
+    /// <summary>
+    /// Send URL to the running instance via Named Pipe.
+    /// Called by second instances that detect the mutex.
+    /// </summary>
+    private static bool SendUrlToRunningInstance(string url)
+    {
+        try
+        {
+            using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+            client.Connect(2000); // 2 second timeout
+
+            using var writer = new StreamWriter(client);
+            writer.WriteLine(url);
+            writer.Flush();
+
+            Debug.WriteLine($"[App] Sent URL to running instance: {url}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Failed to send URL to running instance: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Handle authentication callback from browser redirect.
+    /// URL format: oximy://auth/callback?token=xxx&state=xxx&workspace_name=xxx&device_id=xxx
+    /// </summary>
+    private void HandleAuthCallback(string url)
+    {
+        Debug.WriteLine($"[App] Received auth callback: {url}");
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            Debug.WriteLine("[App] Invalid URL format");
+            return;
+        }
+
+        if (uri.Scheme != "oximy" || uri.Host != "auth" || uri.AbsolutePath != "/callback")
+        {
+            Debug.WriteLine("[App] URL doesn't match auth callback pattern");
+            return;
+        }
+
+        var query = HttpUtility.ParseQueryString(uri.Query);
+        var token = query["token"];
+        var state = query["state"];
+        var workspaceName = query["workspace_name"];
+        var deviceId = query["device_id"];
+
+        // Validate CSRF state
+        var storedState = OximyWindows.Properties.Settings.Default.AuthState;
+        if (state != storedState)
+        {
+            Debug.WriteLine($"[App] State mismatch - stored: {storedState}, received: {state}");
+            return;
+        }
+
+        // Clear stored state
+        OximyWindows.Properties.Settings.Default.AuthState = "";
+        OximyWindows.Properties.Settings.Default.Save();
+
+        if (string.IsNullOrEmpty(token))
+        {
+            Debug.WriteLine("[App] No token in callback URL");
+            return;
+        }
+
+        // Complete enrollment
+        var workspace = workspaceName ?? "Connected";
+        AppState.Instance.CompleteEnrollment(deviceId ?? "", token, workspace, "");
+
+        SentryService.AddStateChangeBreadcrumb(
+            category: "enrollment",
+            message: "Device enrolled via browser auth",
+            data: new Dictionary<string, string> { ["deviceId"] = deviceId ?? "unknown" });
+
+        Debug.WriteLine("[App] Auth callback processed successfully");
+
+        // Start services in background (certificate, mitmproxy, heartbeat, sync)
+        _ = StartServicesAfterEnrollmentAsync();
+
+        // Show the popup so user sees they're logged in
+        _mainWindow?.ShowPopup();
+    }
+
+    /// <summary>
+    /// Start all services after enrollment completes.
+    /// Certificate installation and mitmproxy startup happen in background.
+    /// </summary>
+    private async Task StartServicesAfterEnrollmentAsync()
+    {
+        Debug.WriteLine("[App] Starting services after enrollment...");
+
+        // Install certificate in background (will prompt user via Windows UAC if needed)
+        CertificateService.CheckStatus();
+        if (!CertificateService.IsCAInstalled)
+        {
+            try
+            {
+                await CertificateService.InstallCAAsync();
+                Debug.WriteLine("[App] Certificate installed after enrollment");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] Certificate install failed (user can retry from settings): {ex.Message}");
+                // Don't block - user can install from settings later
+            }
+        }
+
+        // Start mitmproxy
+        if (!MitmService.IsRunning)
+        {
+            try
+            {
+                await MitmService.StartAsync();
+                Debug.WriteLine("[App] MitmService started after enrollment");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] MitmService start failed: {ex.Message}");
+            }
+        }
+
+        // Start heartbeat and sync services
+        HeartbeatService.Start();
+        SyncService.Start();
+        Debug.WriteLine("[App] All services started after enrollment");
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         Debug.WriteLine("[App] Exiting, performing cleanup...");
+
+        // Stop pipe server
+        _pipeServerRunning = false;
 
         // Flush pending events before shutdown
         try
@@ -164,17 +416,21 @@ public partial class App : Application
             // Ignore errors during shutdown
         }
 
-        // Dispose services
+        // Stop and dispose services
+        RemoteStateService.Stop();
         MitmService.Dispose();
         NetworkMonitorService.Dispose();
         HeartbeatService.Dispose();
         SyncService.Dispose();
+        RemoteStateService.Dispose();
 
         // Unsubscribe from system events
         SystemEvents.SessionEnding -= OnSessionEnding;
         HeartbeatService.LogoutRequested -= OnLogoutRequested;
         HeartbeatService.RestartProxyRequested -= OnRestartProxyRequested;
         HeartbeatService.DisableProxyRequested -= OnDisableProxyRequested;
+        RemoteStateService.ForceLogoutRequested -= OnForceLogoutRequested;
+        RemoteStateService.SensorEnabledChanged -= OnSensorStateChanged;
 
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();

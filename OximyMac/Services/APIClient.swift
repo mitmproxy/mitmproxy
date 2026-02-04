@@ -74,6 +74,25 @@ final class APIClient: ObservableObject {
         return data
     }
 
+    // MARK: - Device Info
+
+    /// Fetch device info (including workspace) using a specific token.
+    /// Used after browser auth callback to get workspace info that isn't in the callback URL.
+    func fetchDeviceInfo(token: String) async throws -> DeviceInfoResponse.DeviceInfo {
+        var request = URLRequest(url: baseURL.appendingPathComponent("devices/me"))
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let response: DeviceInfoResponse = try await performRequest(request, authenticated: false)
+
+        guard response.success, let data = response.data else {
+            throw APIError.from(response.error)
+        }
+
+        return data
+    }
+
     // MARK: - Heartbeat
 
     func sendHeartbeat(_ heartbeat: HeartbeatRequest) async throws -> HeartbeatResponse.HeartbeatData {
@@ -233,6 +252,18 @@ final class APIClient: ObservableObject {
 
     private func clearCredentialsAndNotify() async {
         let defaults = UserDefaults.standard
+
+        // Log what we're clearing for diagnostics
+        let deviceId = defaults.string(forKey: Constants.Defaults.deviceId)
+        let workspaceId = defaults.string(forKey: Constants.Defaults.workspaceId)
+        let workspaceName = defaults.string(forKey: Constants.Defaults.workspaceName)
+
+        print("[APIClient] LOGOUT TRIGGERED - clearing credentials:")
+        print("[APIClient]   deviceId: \(deviceId ?? "nil")")
+        print("[APIClient]   workspaceId: \(workspaceId ?? "nil")")
+        print("[APIClient]   workspaceName: \(workspaceName ?? "nil")")
+        print("[APIClient]   authFailureCount: \(authFailureCount)")
+
         defaults.removeObject(forKey: Constants.Defaults.deviceToken)
         defaults.removeObject(forKey: Constants.Defaults.deviceId)
         defaults.removeObject(forKey: Constants.Defaults.workspaceId)
@@ -241,7 +272,13 @@ final class APIClient: ObservableObject {
 
         SentryService.shared.addStateBreadcrumb(
             category: "api",
-            message: "Credentials cleared due to auth failure"
+            message: "Credentials cleared due to auth failure",
+            data: [
+                "deviceId": deviceId ?? "nil",
+                "workspaceId": workspaceId ?? "nil",
+                "workspaceName": workspaceName ?? "nil",
+                "authFailureCount": String(authFailureCount)
+            ]
         )
 
         NotificationCenter.default.post(name: .authenticationFailed, object: nil)

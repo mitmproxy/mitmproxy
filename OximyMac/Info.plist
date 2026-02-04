@@ -22,6 +22,17 @@
 	<string>1</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.oximy.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>oximy</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright 2024 Oximy, Inc. All rights reserved.</string>
 </dict>

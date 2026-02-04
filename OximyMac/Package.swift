@@ -10,15 +10,13 @@ let package = Package(
         .executable(name: "OximyMac", targets: ["OximyMac"])
     ],
     dependencies: [
-        .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.20.0"),
-        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0")
+        .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.20.0")
     ],
     targets: [
         .executableTarget(
             name: "OximyMac",
             dependencies: [
-                .product(name: "Sentry", package: "sentry-cocoa"),
-                .product(name: "Sparkle", package: "Sparkle")
+                .product(name: "Sentry", package: "sentry-cocoa")
             ],
             path: ".",
             exclude: [
@@ -30,7 +28,6 @@ let package = Package(
                 "project.yml",
                 "create-xcode-project.sh",
                 "App/Secrets.example.swift",
-                "api-docs.md",
                 "README.md"
             ],
             sources: [

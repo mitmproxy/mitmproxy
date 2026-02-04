@@ -1,0 +1,17 @@
+{
+  "output": {
+    "directory": "~/.oximy/traces",
+    "filename_pattern": "traces_{date}.jsonl"
+  },
+  "sensor_config_url": "https://api.oximy.com/api/v1/sensor-config",
+  "sensor_config_cache": "~/.oximy/sensor-config.json",
+  "config_refresh_interval_seconds": 1800,
+  "upload": {
+    "ingest_api_url": "https://api.oximy.com/api/v1/ingest/network-traces",
+    "state_file": "~/.oximy/upload-state.json",
+    "force_sync_trigger": "~/.oximy/force-sync",
+    "batch_size": 500,
+    "interval_seconds": 3,
+    "threshold_count": 100
+  }
+}
