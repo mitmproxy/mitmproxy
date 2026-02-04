@@ -11,8 +11,6 @@
 #     - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
 #     - APPLE_ID: Apple ID email for notarization
 #     - APPLE_APP_PASSWORD: App-specific password for notarization
-#     - SPARKLE_PRIVATE_KEY: EdDSA private key for Sparkle update signing
-#     - SPARKLE_PUBLIC_KEY: EdDSA public key for Info.plist
 #     - SENTRY_DSN: (Optional) Sentry DSN for crash reporting
 #
 #   Windows:
@@ -80,8 +78,6 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
-          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-          SPARKLE_PUBLIC_KEY: ${{ secrets.SPARKLE_PUBLIC_KEY }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
           chmod +x build-prod.sh
@@ -92,9 +88,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-release
-          path: |
-            OximyMac/build/Oximy-${{ inputs.version }}.dmg
-            OximyMac/build/appcast.xml
+          path: OximyMac/build/Oximy-${{ inputs.version }}.dmg
           retention-days: 30
 
   # ===========================================
@@ -203,7 +197,6 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/macos/Oximy-${{ inputs.version }}.dmg
-            release-assets/macos/appcast.xml
             release-assets/windows/releases/*
             release-assets/windows/Output/*.exe
           body: |
@@ -223,9 +216,6 @@ jobs:
 
             ### Auto-Updates
 
-            Existing installations will be automatically notified of this update.
-
-            - **macOS**: Sparkle framework checks for updates every 24 hours
             - **Windows**: Velopack checks for updates on app startup
 
             ---

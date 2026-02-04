@@ -11,8 +11,6 @@
 #   APPLE_ID            - Your Apple ID email for notarization
 #   APPLE_APP_PASSWORD  - App-specific password for notarization
 #   TEAM_ID             - Your Apple Team ID
-#   SPARKLE_PRIVATE_KEY - EdDSA private key for Sparkle signing (optional)
-#   SPARKLE_PUBLIC_KEY  - EdDSA public key for Info.plist (optional)
 #   SENTRY_DSN          - Sentry DSN for crash reporting (optional)
 #
 # You can put these in a .env.local file and source it before running:
@@ -75,8 +73,6 @@ usage() {
     echo "  APPLE_ID            Apple ID for notarization"
     echo "  APPLE_APP_PASSWORD  App-specific password"
     echo "  TEAM_ID             Apple Team ID"
-    echo "  SPARKLE_PRIVATE_KEY EdDSA private key (optional)"
-    echo "  SPARKLE_PUBLIC_KEY  EdDSA public key (optional)"
     echo ""
     echo "Tip: Create a .env.local file with your credentials:"
     echo "  export DEVELOPER_ID=\"Developer ID Application: ...\""
@@ -154,13 +150,11 @@ build_mac() {
     echo "  DEVELOPER_ID: ${DEVELOPER_ID:0:50}..."
     echo "  APPLE_ID: $APPLE_ID"
     echo "  TEAM_ID: $TEAM_ID"
-    [ -n "$SPARKLE_PRIVATE_KEY" ] && echo "  SPARKLE_PRIVATE_KEY: (set)"
-    [ -n "$SPARKLE_PUBLIC_KEY" ] && echo "  SPARKLE_PUBLIC_KEY: (set)"
 
     cd "$SCRIPT_DIR/OximyMac"
 
     # Step 1: Create Secrets.swift
-    print_header "Step 1/9: Creating Secrets.swift"
+    print_header "Step 1/8: Creating Secrets.swift"
     if [ -n "$SENTRY_DSN" ]; then
         cat > App/Secrets.swift << EOF
 import Foundation
@@ -176,7 +170,7 @@ EOF
     fi
 
     # Step 2: Build Python embed
-    print_header "Step 2/9: Building Python Embed"
+    print_header "Step 2/8: Building Python Embed"
     if [ "$SKIP_PYTHON_BUILD" = true ] && [ -d "Resources/python-embed" ]; then
         print_warning "Skipping Python build (using existing)"
     else
@@ -187,27 +181,26 @@ EOF
     fi
 
     # Step 3: Sync addon
-    print_header "Step 3/9: Syncing Addon"
+    print_header "Step 3/8: Syncing Addon"
     make sync
     print_success "Addon synced"
 
     # Step 4: Fetch Swift dependencies
-    print_header "Step 4/9: Fetching Swift Dependencies"
+    print_header "Step 4/8: Fetching Swift Dependencies"
     swift package resolve
     swift build --target OximyMac 2>/dev/null || true
     print_success "Dependencies fetched"
 
     # Step 5: Build release
-    print_header "Step 5/9: Building Release"
+    print_header "Step 5/8: Building Release"
     export VERSION
     export DEVELOPER_ID
-    export SPARKLE_PUBLIC_KEY
     chmod +x Scripts/build-release.sh
     ./Scripts/build-release.sh
     print_success "App bundle built and signed"
 
     # Step 6: Notarize
-    print_header "Step 6/9: Notarizing App"
+    print_header "Step 6/8: Notarizing App"
     cd build
 
     echo "Creating zip for notarization..."
@@ -248,7 +241,7 @@ EOF
     rm -f "Oximy.zip"
 
     # Step 7: Verify
-    print_header "Step 7/9: Verifying Notarization"
+    print_header "Step 7/8: Verifying Notarization"
     echo "Verifying code signature..."
     codesign -dvv Oximy.app
     echo ""
@@ -260,7 +253,7 @@ EOF
     print_success "All verifications passed"
 
     # Step 8: Create DMG
-    print_header "Step 8/9: Creating DMG"
+    print_header "Step 8/8: Creating DMG"
     DMG_NAME="Oximy-$VERSION.dmg"
 
     # Check for create-dmg
@@ -283,80 +276,18 @@ EOF
     print_success "DMG created: $DMG_NAME"
     ls -lh "$DMG_NAME"
 
-    # Step 9: Sign DMG for Sparkle (optional)
-    print_header "Step 9/9: Sparkle Signing"
-
-    if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
-        print_warning "SPARKLE_PRIVATE_KEY not set, skipping Sparkle signing"
-        print_warning "Auto-updates will not work without appcast.xml"
-    else
-        # Find Sparkle sign_update tool
-        SPARKLE_SIGN=""
-        for path in \
-            "../.build/artifacts/sparkle/Sparkle/bin/sign_update" \
-            "../.build/checkouts/Sparkle/sign_update"; do
-            if [ -f "$path" ]; then
-                SPARKLE_SIGN="$path"
-                break
-            fi
-        done
-
-        if [ -z "$SPARKLE_SIGN" ]; then
-            print_warning "Sparkle sign_update tool not found"
-        else
-            echo "Signing DMG with Sparkle EdDSA key..."
-            SIGNATURE=$("$SPARKLE_SIGN" "$DMG_NAME" -s "$SPARKLE_PRIVATE_KEY" 2>/dev/null | grep "sparkle:edSignature" | cut -d'"' -f2 || echo "")
-
-            if [ -n "$SIGNATURE" ]; then
-                print_success "EdDSA Signature generated"
-
-                # Generate appcast.xml
-                DMG_SIZE=$(stat -f%z "$DMG_NAME")
-                PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
-                DOWNLOAD_URL="https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v$VERSION/$DMG_NAME"
-                RELEASE_NOTES_URL="https://github.com/OximyHQ/mitmproxy/releases/tag/oximy-v$VERSION"
-
-                cat > appcast.xml << EOF
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>Oximy Updates</title>
-    <link>https://github.com/OximyHQ/mitmproxy/releases</link>
-    <description>Updates for Oximy macOS</description>
-    <language>en</language>
-    <item>
-      <title>Version $VERSION</title>
-      <pubDate>$PUB_DATE</pubDate>
-      <sparkle:version>$VERSION</sparkle:version>
-      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
-      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-      <enclosure url="$DOWNLOAD_URL" length="$DMG_SIZE" type="application/octet-stream" sparkle:edSignature="$SIGNATURE" />
-      <sparkle:releaseNotesLink>$RELEASE_NOTES_URL</sparkle:releaseNotesLink>
-    </item>
-  </channel>
-</rss>
-EOF
-                print_success "Generated appcast.xml"
-            else
-                print_warning "Failed to generate EdDSA signature"
-            fi
-        fi
-    fi
-
     # Done!
     print_header "macOS Build Complete!"
     echo ""
     echo "Output files in: $SCRIPT_DIR/OximyMac/build/"
     echo ""
     ls -lh "$SCRIPT_DIR/OximyMac/build/"*.dmg 2>/dev/null || true
-    ls -lh "$SCRIPT_DIR/OximyMac/build/appcast.xml" 2>/dev/null || true
     echo ""
     echo "To test: open $SCRIPT_DIR/OximyMac/build/Oximy.app"
     echo ""
     echo "To release:"
     echo "  1. Create GitHub release tagged 'oximy-v$VERSION'"
     echo "  2. Upload: Oximy-$VERSION.dmg"
-    [ -f "appcast.xml" ] && echo "  3. Upload: appcast.xml"
 }
 
 # =============================================================================
