@@ -118,8 +118,8 @@ final class AppState: ObservableObject {
             guard let self = self else { return }
             if let newName = notification.object as? String {
                 print("[AppState] NOTIFICATION: workspaceNameUpdated to '\(newName)'")
-                // Use MainActor.assumeIsolated since we're on .main queue
-                MainActor.assumeIsolated {
+                // Use Task to update on MainActor (compatible with macOS 13+)
+                Task { @MainActor in
                     self.workspaceName = newName
                 }
             }
