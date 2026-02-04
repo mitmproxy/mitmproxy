@@ -37,9 +37,13 @@ import functools
 import os
 import re
 import sys
+from abc import ABC
+from abc import abstractmethod
 from collections.abc import Sequence
-from typing import Any
+from typing import AnyStr
+from typing import cast
 from typing import ClassVar
+from typing import Generic
 from typing import Protocol
 
 import pyparsing as pp
@@ -50,8 +54,10 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import udp
 
-maybe_ignore_case = (
-    re.IGNORECASE if os.environ.get("MITMPROXY_CASE_SENSITIVE_FILTERS") != "1" else 0
+maybe_ignore_case: re.RegexFlag = (
+    cast(re.RegexFlag, re.IGNORECASE)
+    if os.environ.get("MITMPROXY_CASE_SENSITIVE_FILTERS") != "1"
+    else re.NOFLAG
 )
 
 
@@ -68,8 +74,8 @@ def only(*types):
     return decorator
 
 
-class _Token:
-    def dump(self, indent=0, fp=sys.stdout):
+class _Token(ABC):
+    def dump(self, indent=0, fp=sys.stdout) -> None:
         print(
             "{spacing}{name}{expr}".format(
                 spacing="\t" * indent,
@@ -79,30 +85,39 @@ class _Token:
             file=fp,
         )
 
+    @abstractmethod
+    def __str__(self) -> str: ...
 
-class _Action(_Token):
+
+class _Action(_Token, ABC):
     code: ClassVar[str]
     help: ClassVar[str]
 
     @classmethod
-    def make(klass, s, loc, toks):
-        return klass(*toks[1:])
+    def make(cls, s, loc, toks):
+        return cls(*toks[1:])
 
 
 class FErr(_Action):
     code = "e"
     help = "Match error"
 
-    def __call__(self, f):
-        return True if f.error else False
+    def __call__(self, f) -> bool:
+        return bool(f.error)
+
+    def __str__(self) -> str:
+        return "has error"
 
 
 class FMarked(_Action):
     code = "marked"
     help = "Match marked flows"
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return bool(f.marked)
+
+    def __str__(self) -> str:
+        return "is marked"
 
 
 class FHTTP(_Action):
@@ -110,8 +125,11 @@ class FHTTP(_Action):
     help = "Match HTTP flows"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return True
+
+    def __str__(self) -> str:
+        return "is an HTTP Flow"
 
 
 class FWebSocket(_Action):
@@ -122,14 +140,20 @@ class FWebSocket(_Action):
     def __call__(self, f: http.HTTPFlow):
         return f.websocket is not None
 
+    def __str__(self) -> str:
+        return "is a Websocket Flow"
+
 
 class FTCP(_Action):
     code = "tcp"
     help = "Match TCP flows"
 
     @only(tcp.TCPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return True
+
+    def __str__(self) -> str:
+        return "is a TCP Flow"
 
 
 class FUDP(_Action):
@@ -137,8 +161,11 @@ class FUDP(_Action):
     help = "Match UDP flows"
 
     @only(udp.UDPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return True
+
+    def __str__(self) -> str:
+        return "is a UDP Flow"
 
 
 class FDNS(_Action):
@@ -146,8 +173,11 @@ class FDNS(_Action):
     help = "Match DNS flows"
 
     @only(dns.DNSFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return True
+
+    def __str__(self) -> str:
+        return "is a DNS Flow"
 
 
 class FReq(_Action):
@@ -155,9 +185,11 @@ class FReq(_Action):
     help = "Match request with no response"
 
     @only(http.HTTPFlow, dns.DNSFlow)
-    def __call__(self, f):
-        if not f.response:
-            return True
+    def __call__(self, f) -> bool:
+        return not f.response
+
+    def __str__(self) -> str:
+        return "has no response"
 
 
 class FResp(_Action):
@@ -165,8 +197,11 @@ class FResp(_Action):
     help = "Match response"
 
     @only(http.HTTPFlow, dns.DNSFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return bool(f.response)
+
+    def __str__(self) -> str:
+        return "has response"
 
 
 class FAll(_Action):
@@ -176,22 +211,46 @@ class FAll(_Action):
     def __call__(self, f: flow.Flow):
         return True
 
+    def __str__(self) -> str:
+        return "all flows"
 
-class _Rex(_Action):
-    flags = 0
-    is_binary = True
 
-    def __init__(self, expr):
-        self.expr = expr
-        if self.is_binary:
-            expr = expr.encode()
+class _Rex(Generic[AnyStr], _Action, ABC):
+    flags: ClassVar[re.RegexFlag] = re.RegexFlag.NOFLAG
+
+    expr: str
+    re: re.Pattern[AnyStr]
+
+    def __init__(self, expr_str: str, expr: AnyStr):
+        self.expr = expr_str
         try:
             self.re = re.compile(expr, self.flags | maybe_ignore_case)
         except Exception:
             raise ValueError("Cannot compile expression.")
 
+    @property
+    def regex_str(self) -> str:
+        flags = ""
+        if self.re.flags & re.IGNORECASE:
+            flags += "i"
+        if self.re.flags & re.MULTILINE:
+            flags += "m"
+        if self.re.flags & re.DOTALL:
+            flags += "s"
+        return f"/{self.expr}/{flags}"
 
-def _check_content_type(rex, message):
+
+class _StrRex(_Rex[str], ABC):
+    def __init__(self, expr: str):
+        super().__init__(expr, expr)
+
+
+class _BinRex(_Rex[bytes], ABC):
+    def __init__(self, expr: str):
+        super().__init__(expr, expr.encode())
+
+
+def _check_content_type(rex: re.Pattern[bytes], message: http.Message) -> bool:
     return any(
         name.lower() == b"content-type" and rex.search(value)
         for name, value in message.headers.fields
@@ -215,90 +274,113 @@ class FAsset(_Action):
     ]
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if f.response:
             for i in self.ASSET_TYPES:
                 if _check_content_type(i, f.response):
                     return True
         return False
 
+    def __str__(self) -> str:
+        return "is asset"
 
-class FContentType(_Rex):
+
+class FContentType(_BinRex):
     code = "t"
     help = "Content-type header"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if _check_content_type(self.re, f.request):
             return True
         elif f.response and _check_content_type(self.re, f.response):
             return True
         return False
 
+    def __str__(self) -> str:
+        return f"content type matches {self.regex_str}"
 
-class FContentTypeRequest(_Rex):
+
+class FContentTypeRequest(_BinRex):
     code = "tq"
     help = "Request Content-Type header"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return _check_content_type(self.re, f.request)
 
+    def __str__(self) -> str:
+        return f"req. content type matches {self.regex_str}"
 
-class FContentTypeResponse(_Rex):
+
+class FContentTypeResponse(_BinRex):
     code = "ts"
     help = "Response Content-Type header"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if f.response:
             return _check_content_type(self.re, f.response)
         return False
 
+    def __str__(self) -> str:
+        return f"resp. content type matches {self.regex_str}"
 
-class FHead(_Rex):
+
+class FHead(_BinRex):
     code = "h"
     help = "Header"
     flags = re.MULTILINE
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
         if f.response and self.re.search(bytes(f.response.headers)):
             return True
         return False
 
+    def __str__(self) -> str:
+        return f"header matches {self.regex_str}"
 
-class FHeadRequest(_Rex):
+
+class FHeadRequest(_BinRex):
     code = "hq"
     help = "Request header"
     flags = re.MULTILINE
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
+        return False
+
+    def __str__(self) -> str:
+        return f"req. header matches {self.regex_str}"
 
 
-class FHeadResponse(_Rex):
+class FHeadResponse(_BinRex):
     code = "hs"
     help = "Response header"
     flags = re.MULTILINE
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if f.response and self.re.search(bytes(f.response.headers)):
             return True
+        return False
+
+    def __str__(self) -> str:
+        return f"resp. header matches {self.regex_str}"
 
 
-class FBod(_Rex):
+class FBod(_BinRex):
     code = "b"
     help = "Body"
     flags = re.DOTALL
 
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if isinstance(f, http.HTTPFlow):
             if (
                 f.request
@@ -327,14 +409,17 @@ class FBod(_Rex):
                 return True
         return False
 
+    def __str__(self) -> str:
+        return f"body matches {self.regex_str}"
 
-class FBodRequest(_Rex):
+
+class FBodRequest(_BinRex):
     code = "bq"
     help = "Request body"
     flags = re.DOTALL
 
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if isinstance(f, http.HTTPFlow):
             if (
                 f.request
@@ -353,15 +438,19 @@ class FBodRequest(_Rex):
         elif isinstance(f, dns.DNSFlow):
             if f.request and self.re.search(str(f.request).encode()):
                 return True
+        return False
+
+    def __str__(self) -> str:
+        return f"req. body matches {self.regex_str}"
 
 
-class FBodResponse(_Rex):
+class FBodResponse(_BinRex):
     code = "bs"
     help = "Response body"
     flags = re.DOTALL
 
     @only(http.HTTPFlow, tcp.TCPFlow, udp.UDPFlow, dns.DNSFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if isinstance(f, http.HTTPFlow):
             if (
                 f.response
@@ -380,131 +469,164 @@ class FBodResponse(_Rex):
         elif isinstance(f, dns.DNSFlow):
             if f.response and self.re.search(str(f.response).encode()):
                 return True
+        return False
+
+    def __str__(self) -> str:
+        return f"resp. body matches {self.regex_str}"
 
 
-class FMethod(_Rex):
+class FMethod(_BinRex):
     code = "m"
     help = "Method"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return bool(self.re.search(f.request.data.method))
 
+    def __str__(self) -> str:
+        return f"method matches {self.regex_str}"
 
-class FDomain(_Rex):
+
+class FDomain(_StrRex):
     code = "d"
     help = "Domain"
-    is_binary = False
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return bool(
             self.re.search(f.request.host) or self.re.search(f.request.pretty_host)
         )
 
+    def __str__(self) -> str:
+        return f"domain matches {self.regex_str}"
 
-class FUrl(_Rex):
+
+class FUrl(_StrRex):
     code = "u"
     help = "URL"
-    is_binary = False
 
     # FUrl is special, because it can be "naked".
 
     @classmethod
-    def make(klass, s, loc, toks):
+    def make(cls, s, loc, toks):
         if len(toks) > 1:
             toks = toks[1:]
-        return klass(*toks)
+        return cls(*toks)
 
     @only(http.HTTPFlow, dns.DNSFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if not f or not f.request:
             return False
         if isinstance(f, http.HTTPFlow):
-            return self.re.search(f.request.pretty_url)
+            return bool(self.re.search(f.request.pretty_url))
         elif isinstance(f, dns.DNSFlow):
-            return f.request.questions and self.re.search(f.request.questions[0].name)
+            return bool(
+                f.request.questions and self.re.search(f.request.questions[0].name)
+            )
+        return False
+
+    def __str__(self) -> str:
+        return f"url matches {self.regex_str}"
 
 
-class FSrc(_Rex):
+class FSrc(_StrRex):
     code = "src"
     help = "Match source address"
-    is_binary = False
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if not f.client_conn or not f.client_conn.peername:
             return False
         r = f"{f.client_conn.peername[0]}:{f.client_conn.peername[1]}"
-        return self.re.search(r)
+        return bool(self.re.search(r))
+
+    def __str__(self) -> str:
+        return f"source address matches {self.regex_str}"
 
 
-class FDst(_Rex):
+class FDst(_StrRex):
     code = "dst"
     help = "Match destination address"
-    is_binary = False
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if not f.server_conn or not f.server_conn.address:
             return False
         r = f"{f.server_conn.address[0]}:{f.server_conn.address[1]}"
-        return self.re.search(r)
+        return bool(self.re.search(r))
+
+    def __str__(self) -> str:
+        return f"destination address matches {self.regex_str}"
 
 
 class FReplay(_Action):
     code = "replay"
     help = "Match replayed flows"
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return f.is_replay is not None
+
+    def __str__(self) -> str:
+        return "flow has been replayed"
 
 
 class FReplayClient(_Action):
     code = "replayq"
     help = "Match replayed client request"
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return f.is_replay == "request"
+
+    def __str__(self) -> str:
+        return "request has been replayed"
 
 
 class FReplayServer(_Action):
     code = "replays"
     help = "Match replayed server response"
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return f.is_replay == "response"
 
+    def __str__(self) -> str:
+        return "response has been replayed"
 
-class FMeta(_Rex):
+
+class FMeta(_StrRex):
     code = "meta"
     help = "Flow metadata"
     flags = re.MULTILINE
-    is_binary = False
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         m = "\n".join([f"{key}: {value}" for key, value in f.metadata.items()])
-        return self.re.search(m)
+        return bool(self.re.search(m))
+
+    def __str__(self) -> str:
+        return f"metadata matches {self.regex_str}"
 
 
-class FMarker(_Rex):
+class FMarker(_StrRex):
     code = "marker"
     help = "Match marked flows with specified marker"
-    is_binary = False
 
-    def __call__(self, f):
-        return self.re.search(f.marked)
+    def __call__(self, f) -> bool:
+        return bool(self.re.search(f.marked))
+
+    def __str__(self) -> str:
+        return f"marker matches {self.regex_str}"
 
 
-class FComment(_Rex):
+class FComment(_StrRex):
     code = "comment"
     help = "Flow comment"
     flags = re.MULTILINE
-    is_binary = False
 
-    def __call__(self, f):
-        return self.re.search(f.comment)
+    def __call__(self, f) -> bool:
+        return bool(self.re.search(f.comment))
+
+    def __str__(self) -> str:
+        return f"comment matches {self.regex_str}"
 
 
-class _Int(_Action):
+class _Int(_Action, ABC):
     def __init__(self, num):
         self.num = int(num)
 
@@ -514,9 +636,20 @@ class FCode(_Int):
     help = "HTTP response code"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         if f.response and f.response.status_code == self.num:
             return True
+        return False
+
+    def __str__(self) -> str:
+        return f"resp. code is {self.num}"
+
+
+def _parenthesize(t: _Token) -> str:
+    if isinstance(t, (FAnd, FOr)):
+        return f"({t})"
+    else:
+        return str(t)
 
 
 class FAnd(_Token):
@@ -528,8 +661,11 @@ class FAnd(_Token):
         for i in self.lst:
             i.dump(indent + 1, fp)
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return all(i(f) for i in self.lst)
+
+    def __str__(self) -> str:
+        return " and ".join(_parenthesize(x) for x in self.lst)
 
 
 class FOr(_Token):
@@ -541,8 +677,11 @@ class FOr(_Token):
         for i in self.lst:
             i.dump(indent + 1, fp)
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return any(i(f) for i in self.lst)
+
+    def __str__(self) -> str:
+        return " or ".join(_parenthesize(x) for x in self.lst)
 
 
 class FNot(_Token):
@@ -553,8 +692,11 @@ class FNot(_Token):
         super().dump(indent, fp)
         self.itm.dump(indent + 1, fp)
 
-    def __call__(self, f):
+    def __call__(self, f) -> bool:
         return not self.itm(f)
+
+    def __str__(self) -> str:
+        return f"not {_parenthesize(self.itm)}"
 
 
 filter_unary: Sequence[type[_Action]] = [
@@ -648,9 +790,11 @@ bnf = _make()
 class TFilter(Protocol):
     pattern: str
 
-    # TODO: This should be `-> bool`, but some filters aren't behaving correctly (requiring `bool()` by the caller).
-    #       Correct this when we properly type filters.
-    def __call__(self, f: flow.Flow) -> Any: ...  # pragma: no cover
+    def __call__(self, f: flow.Flow) -> bool: ...  # pragma: no cover
+
+    def __str__(self) -> str: ...  # pragma: no cover
+
+    def dump(self, indent=0, fp=sys.stdout): ...  # pragma: no cover
 
 
 def parse(s: str) -> TFilter:
@@ -661,14 +805,14 @@ def parse(s: str) -> TFilter:
     if not s:
         raise ValueError("Empty filter expression")
     try:
-        flt = bnf.parseString(s, parseAll=True)[0]
+        flt = bnf.parse_string(s, parseAll=True)[0]
         flt.pattern = s
         return flt
     except (pp.ParseException, ValueError) as e:
         raise ValueError(f"Invalid filter expression: {s!r}") from e
 
 
-def match(flt: str | TFilter, flow: flow.Flow) -> bool:
+def match(flt: str | TFilter | None, f: flow.Flow) -> bool:
     """
     Matches a flow against a compiled filter expression.
     Returns True if matched, False if not.
@@ -679,7 +823,7 @@ def match(flt: str | TFilter, flow: flow.Flow) -> bool:
     if isinstance(flt, str):
         flt = parse(flt)
     if flt:
-        return flt(flow)
+        return flt(f)
     return True
 
 
