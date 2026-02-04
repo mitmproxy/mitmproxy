@@ -2552,6 +2552,7 @@ class OximyAddon:
         self._allowed_app_hosts: list[str] = []  # Browser bundle IDs
         self._allowed_app_hosts_set: set[str] = set()  # O(1) browser lookup (lowercase)
         self._allowed_app_non_hosts: list[str] = []  # AI-native app bundle IDs
+        self._allowed_app_non_hosts_set: set[str] = set()  # O(1) non-host app lookup (lowercase)
         self._allowed_host_origins: list[str] = []  # Website origins (for browsers)
         self._apps_with_parsers: set[str] = set()  # Bundle IDs with server-side parsers
         self._no_parser_apps_cache: dict = {}  # Daily cache for rate-limiting apps without parsers
@@ -2683,6 +2684,7 @@ class OximyAddon:
                     self._allowed_app_hosts = tuple(app_origins.get("hosts", []))
                     self._allowed_app_hosts_set = {h.lower() for h in app_origins.get("hosts", [])}
                     self._allowed_app_non_hosts = tuple(app_origins.get("non_hosts", []))
+                    self._allowed_app_non_hosts_set = {h.lower() for h in app_origins.get("non_hosts", [])}
                     self._allowed_host_origins = tuple(config.get("allowed_host_origins", []))
                     # Convert parsers to lowercase set for O(1) case-insensitive lookup
                     self._apps_with_parsers = {p.lower() for p in app_origins.get("apps_with_parsers", [])}
@@ -2890,6 +2892,7 @@ class OximyAddon:
         self._allowed_app_hosts = tuple(app_origins.get("hosts", []))
         self._allowed_app_hosts_set = {h.lower() for h in app_origins.get("hosts", [])}
         self._allowed_app_non_hosts = tuple(app_origins.get("non_hosts", []))
+        self._allowed_app_non_hosts_set = {h.lower() for h in app_origins.get("non_hosts", [])}
         self._allowed_host_origins = tuple(sensor_config.get("allowed_host_origins", []))
         # Convert parsers to lowercase set for O(1) case-insensitive lookup
         self._apps_with_parsers = {p.lower() for p in app_origins.get("apps_with_parsers", [])}
@@ -3324,19 +3327,25 @@ class OximyAddon:
         # Initialize browser flag (used in STEP 1 for domain discovery)
         is_browser = False
 
-        # Rate limit non-browser apps without parsers (Terminal and browsers always proceed)
+        # Check if app is in any allowed list (browsers, non-host apps, or apps with parsers)
         if bundle_id is None:
             # Process not resolved - likely race condition with client_connected hook
             logger.info(f"[STEP0] No bundle_id for {host} - process not resolved")
         else:
             bundle_lower = bundle_id.lower()
             is_browser = bundle_lower in self._allowed_app_hosts_set
+            is_allowed_non_host = bundle_lower in self._allowed_app_non_hosts_set
             has_parser = bundle_lower in self._apps_with_parsers
 
-            logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, has_parser={has_parser}")
+            logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, is_allowed_non_host={is_allowed_non_host}, has_parser={has_parser}")
 
-            if not is_browser and not has_parser:
-                # Non-browser app without parser - apply daily rate limit to ALL traffic
+            # GATE: If not in ANY allowed list, skip entirely
+            if not is_browser and not is_allowed_non_host and not has_parser:
+                logger.debug(f"[APP_SKIP] {bundle_id} not in allowed apps, skipping")
+                return
+
+            # For allowed apps without parsers: apply daily rate limit for discovery
+            if not has_parser:
                 allowed, self._no_parser_apps_cache = _check_no_parser_app_allowed(
                     bundle_id, self._no_parser_apps_cache, self._no_parser_apps_lock
                 )
