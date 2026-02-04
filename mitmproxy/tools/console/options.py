@@ -9,7 +9,6 @@ from typing import Optional
 import urwid
 
 from mitmproxy import exceptions
-from mitmproxy import optmanager
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -163,7 +162,7 @@ class OptionsList(urwid.ListBox):
 
     def save_config(self, path):
         try:
-            optmanager.save(self.master.options, path)
+            self.master.options.save(path)
         except exceptions.OptionsError as e:
             signals.status_message.send(message=str(e))
 

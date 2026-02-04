@@ -8,7 +8,6 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import hooks
-from mitmproxy import optmanager
 from mitmproxy.log import ALERT
 from mitmproxy.net.http import status_codes
 from mitmproxy.utils import emoji
@@ -251,7 +250,7 @@ class Core:
         Load options from a file.
         """
         try:
-            optmanager.load_paths(ctx.options, path)
+            ctx.options.load_paths(path)
         except (OSError, exceptions.OptionsError) as e:
             raise exceptions.CommandError("Could not load options - %s" % e) from e
 
@@ -261,7 +260,7 @@ class Core:
         Save options to a file.
         """
         try:
-            optmanager.save(ctx.options, path)
+            ctx.options.save(path)
         except OSError as e:
             raise exceptions.CommandError("Could not save options - %s" % e) from e
 
