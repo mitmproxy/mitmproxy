@@ -358,7 +358,9 @@ class MITMService: ObservableObject {
 
     // MARK: - Auto-Restart
 
-    /// Schedule an automatic restart with exponential backoff
+    /// Schedule an automatic restart - FAIL-OPEN: Restart immediately to minimize downtime
+    /// Previous behavior used exponential backoff (2s, 4s, 8s) which left users without internet.
+    /// New behavior: Restart immediately (100ms delay just for cleanup) to minimize proxy downtime.
     private func scheduleRestart() {
         guard restartAttempts < maxRestartAttempts else {
             lastError = "mitmproxy crashed too many times. Please restart Oximy."
@@ -377,20 +379,21 @@ class MITMService: ObservableObject {
         restartAttempts += 1
         restartCount += 1
 
-        // Exponential backoff: 2s, 4s, 8s
-        let delay = UInt64(pow(2.0, Double(restartAttempts))) * 1_000_000_000
+        // FAIL-OPEN: Immediate restart with minimal delay (100ms) for cleanup
+        // Previously used exponential backoff (2s, 4s, 8s) which blocked internet
+        let delay: UInt64 = 100_000_000  // 100ms - just enough for process cleanup
 
         let maxAttempts = self.maxRestartAttempts
-        NSLog("[MITMService] Scheduling restart attempt \(self.restartAttempts)/\(maxAttempts) in \(delay / 1_000_000_000)s")
+        NSLog("[MITMService] FAIL-OPEN: Immediate restart attempt \(self.restartAttempts)/\(maxAttempts) in 100ms")
 
         // Add breadcrumb for restart attempt
         SentryService.shared.addStateBreadcrumb(
             category: "mitm",
-            message: "Restart scheduled",
+            message: "Immediate restart scheduled (fail-open)",
             data: [
                 "attempt": restartAttempts,
                 "max_attempts": maxRestartAttempts,
-                "delay_seconds": delay / 1_000_000_000
+                "delay_ms": 100
             ]
         )
 
@@ -404,9 +407,9 @@ class MITMService: ObservableObject {
                 try await start()
                 // Success - reset counter
                 restartAttempts = 0
-                NSLog("[MITMService]  Auto-restart successful")
+                NSLog("[MITMService] FAIL-OPEN: Auto-restart successful, proxy will be re-enabled by addon")
             } catch {
-                NSLog("[MITMService]  Auto-restart failed: \(error)")
+                NSLog("[MITMService] FAIL-OPEN: Auto-restart failed: \(error)")
                 // Will trigger another restart attempt via termination handler
             }
         }

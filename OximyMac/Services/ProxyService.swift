@@ -16,20 +16,52 @@ class ProxyService: ObservableObject {
     // MARK: - Startup Cleanup
 
     /// Clean up orphaned proxy settings on app launch
-    /// This handles the case where the app crashed with proxy enabled
+    /// FAIL-OPEN: This handles the case where the app crashed with proxy enabled,
+    /// leaving the system proxy pointing to a dead port (blocking all traffic).
     func cleanupOrphanedProxy() {
-        // Check if proxy is enabled pointing to localhost
-        if let (enabled, _) = getProxySettings(for: "Wi-Fi"), enabled {
-            // If proxy is enabled on startup but we just launched, it must be orphaned
-            // (from a previous crash or force-quit)
-            NSLog("[ProxyService] Found orphaned proxy settings on startup - cleaning up")
-            disableProxySync()
+        // Check all network services for orphaned proxies
+        let services = getNetworkServices()
 
-            SentryService.shared.addStateBreadcrumb(
-                category: "proxy",
-                message: "Cleaned up orphaned proxy settings on startup"
-            )
+        for service in services {
+            if let (enabled, port) = getProxySettings(for: service), enabled {
+                // Proxy is enabled - check if it's pointing to a dead port
+                if !isPortListening(port) {
+                    // FAIL-OPEN: Proxy is pointing to dead port - clear it immediately
+                    NSLog("[ProxyService] FAIL-OPEN: Found orphaned proxy on %@ pointing to dead port %d - cleaning up", service, port)
+                    disableProxySync()
+
+                    SentryService.shared.addStateBreadcrumb(
+                        category: "proxy",
+                        message: "FAIL-OPEN: Cleaned up orphaned proxy pointing to dead port",
+                        data: ["service": service, "dead_port": port]
+                    )
+                    return  // Already cleaned up all services
+                } else {
+                    // Port is listening - might be another proxy instance, log but don't clean
+                    NSLog("[ProxyService] Proxy on %@ port %d is active (something is listening)", service, port)
+                }
+            }
         }
+    }
+
+    /// Check if something is listening on a port
+    private func isPortListening(_ port: Int) -> Bool {
+        let socketFD = socket(AF_INET, SOCK_STREAM, 0)
+        guard socketFD >= 0 else { return false }
+        defer { close(socketFD) }
+
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = in_port_t(port).bigEndian
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+        let connectResult = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                connect(socketFD, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+
+        return connectResult == 0
     }
 
     // MARK: - Status Check

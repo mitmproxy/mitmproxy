@@ -27,6 +27,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import IO
 import urllib.error
+import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
 
@@ -141,6 +142,17 @@ _executed_command_hashes: set[str] = set()
 _consecutive_401_count: int = 0
 _force_logout_triggered: bool = False
 _MAX_401_RETRIES: int = 5  # Wait for 5 consecutive 401s before triggering logout
+
+# =============================================================================
+# FAIL-OPEN: CIRCUIT BREAKER FOR API CALLS
+# =============================================================================
+# After repeated API failures, stop trying for a cooldown period.
+# This prevents blocking on API calls and lets the addon work with cached config.
+_circuit_breaker_failures: int = 0
+_circuit_breaker_open_until: float = 0.0
+_CIRCUIT_BREAKER_THRESHOLD: int = 3  # Open circuit after 3 consecutive failures
+_CIRCUIT_BREAKER_COOLDOWN: float = 300.0  # 5 minutes cooldown before retrying
+_CIRCUIT_BREAKER_HALF_OPEN: bool = False  # Allow single probe request after cooldown
 
 
 def _get_command_hash(command_name: str) -> str:
@@ -910,12 +922,64 @@ DEFAULT_CONFIG_REFRESH_INTERVAL_SECONDS = int(os.environ.get(
 ))
 
 
+def _check_circuit_breaker() -> bool:
+    """Check if circuit breaker allows API calls.
+
+    FAIL-OPEN: Returns True if API calls should be skipped (circuit is open).
+
+    Returns:
+        True if circuit is open (skip API call), False if closed (allow API call)
+    """
+    global _circuit_breaker_failures, _circuit_breaker_open_until, _CIRCUIT_BREAKER_HALF_OPEN
+
+    now = time.time()
+
+    # Circuit is open - check if cooldown has passed
+    if _circuit_breaker_open_until > now:
+        return True  # Skip API call
+
+    # Cooldown passed - enter half-open state for single probe
+    if _circuit_breaker_failures >= _CIRCUIT_BREAKER_THRESHOLD:
+        _CIRCUIT_BREAKER_HALF_OPEN = True
+        logger.info("FAIL-OPEN: Circuit breaker half-open - allowing probe request")
+
+    return False  # Allow API call
+
+
+def _record_circuit_breaker_success() -> None:
+    """Record successful API call - reset circuit breaker."""
+    global _circuit_breaker_failures, _circuit_breaker_open_until, _CIRCUIT_BREAKER_HALF_OPEN
+    _circuit_breaker_failures = 0
+    _circuit_breaker_open_until = 0.0
+    _CIRCUIT_BREAKER_HALF_OPEN = False
+
+
+def _record_circuit_breaker_failure() -> None:
+    """Record failed API call - potentially open circuit breaker."""
+    global _circuit_breaker_failures, _circuit_breaker_open_until, _CIRCUIT_BREAKER_HALF_OPEN
+
+    _circuit_breaker_failures += 1
+
+    if _circuit_breaker_failures >= _CIRCUIT_BREAKER_THRESHOLD:
+        _circuit_breaker_open_until = time.time() + _CIRCUIT_BREAKER_COOLDOWN
+        _CIRCUIT_BREAKER_HALF_OPEN = False
+        logger.warning(
+            f"FAIL-OPEN: Circuit breaker OPEN after {_circuit_breaker_failures} failures. "
+            f"Skipping API calls for {_CIRCUIT_BREAKER_COOLDOWN}s. Using cached/passthrough config."
+        )
+
+
 def fetch_sensor_config(
     url: str = DEFAULT_SENSOR_CONFIG_URL,
     cache_path: str = DEFAULT_SENSOR_CONFIG_CACHE,
     addon_instance=None,
 ) -> dict:
     """Fetch sensor config from API and cache locally.
+
+    FAIL-OPEN DESIGN:
+    - Circuit breaker skips API calls after repeated failures
+    - Empty whitelist triggers passthrough mode (no capture, traffic flows)
+    - Graceful degradation to cached config on any failure
 
     Args:
         url: Sensor config API URL
@@ -924,11 +988,18 @@ def fetch_sensor_config(
     """
     cache_file = Path(cache_path).expanduser()
 
+    # FAIL-OPEN: Empty config with special marker to trigger passthrough
     default_config = {
         "whitelist": [],
         "blacklist": [],
         "passthrough": [],
+        "_fail_open_passthrough": True,  # Marker to trigger passthrough mode
     }
+
+    # FAIL-OPEN: Check circuit breaker before making API call
+    if _check_circuit_breaker():
+        logger.debug("FAIL-OPEN: Circuit breaker open - skipping API call, using cache")
+        return _load_cached_config_or_passthrough(cache_file, addon_instance, default_config)
 
     # Read device token from file (written by Swift app)
     token = None
@@ -948,6 +1019,9 @@ def fetch_sensor_config(
         req = urllib.request.Request(url, headers=headers)
         with _no_proxy_opener.open(req, timeout=10) as resp:
             raw = json.loads(resp.read().decode("utf-8"))
+
+        # SUCCESS: Reset circuit breaker
+        _record_circuit_breaker_success()
 
         # Cache the raw response locally
         cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -978,39 +1052,46 @@ def fetch_sensor_config(
             elif _force_logout_triggered:
                 logger.debug("401 error but force_logout already triggered")
 
-            # Don't use cache with invalid token - return empty config
+            # FAIL-OPEN: On 401, use passthrough mode (don't capture with invalid token)
+            # but keep proxy enabled so user has internet
             return default_config
         else:
-            # Non-401 HTTP errors: log and fall through to cache
+            # Non-401 HTTP errors: record failure and fall through to cache
+            _record_circuit_breaker_failure()
             logger.warning(f"Failed to fetch sensor config: HTTP {e.code}")
             # Fall through to cache fallback below
 
-        if cache_file.exists():
-            try:
-                with open(cache_file, encoding="utf-8") as f:
-                    cached = json.load(f)
-                logger.info(f"Using cached sensor config from {cache_file}")
-                return _parse_sensor_config(cached, addon_instance)
-            except (json.JSONDecodeError, IOError) as cache_err:
-                logger.warning(f"Failed to load cached config: {cache_err}")
-
-        logger.warning("Using empty default config")
-        return default_config
+        return _load_cached_config_or_passthrough(cache_file, addon_instance, default_config)
 
     except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+        # FAIL-OPEN: Record failure for circuit breaker
+        _record_circuit_breaker_failure()
         logger.warning(f"Failed to fetch sensor config: {e}")
 
-        if cache_file.exists():
-            try:
-                with open(cache_file, encoding="utf-8") as f:
-                    cached = json.load(f)
-                logger.info(f"Using cached sensor config from {cache_file}")
-                return _parse_sensor_config(cached, addon_instance)
-            except (json.JSONDecodeError, IOError) as cache_err:
-                logger.warning(f"Failed to load cached config: {cache_err}")
+        return _load_cached_config_or_passthrough(cache_file, addon_instance, default_config)
 
-        logger.warning("Using empty default config")
-        return default_config
+
+def _load_cached_config_or_passthrough(
+    cache_file: Path,
+    addon_instance,
+    default_config: dict
+) -> dict:
+    """Load cached config or return passthrough config.
+
+    FAIL-OPEN: If no valid config available, returns passthrough mode config
+    which lets all traffic through without capture.
+    """
+    if cache_file.exists():
+        try:
+            with open(cache_file, encoding="utf-8") as f:
+                cached = json.load(f)
+            logger.info(f"FAIL-OPEN: Using cached sensor config from {cache_file}")
+            return _parse_sensor_config(cached, addon_instance)
+        except (json.JSONDecodeError, IOError) as cache_err:
+            logger.warning(f"Failed to load cached config: {cache_err}")
+
+    logger.warning("FAIL-OPEN: No valid config available - enabling passthrough mode")
+    return default_config
 
 
 def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
@@ -2548,6 +2629,9 @@ class OximyAddon:
         self._enabled = False
         self._whitelist: list[str] = []
         self._blacklist: list[str] = []
+        # FAIL-OPEN: When True, all traffic passes through without capture
+        # Set when API is down and no valid cached config is available
+        self._fail_open_passthrough: bool = False
         # Hierarchical filtering: app origins and host origins
         self._allowed_app_hosts: list[str] = []  # Browser bundle IDs
         self._allowed_app_hosts_set: set[str] = set()  # O(1) browser lookup (lowercase)
@@ -2604,6 +2688,7 @@ class OximyAddon:
             "allowed_app_hosts": self._allowed_app_hosts,
             "allowed_app_non_hosts": self._allowed_app_non_hosts,
             "allowed_host_origins": self._allowed_host_origins,
+            "fail_open_passthrough": self._fail_open_passthrough,  # FAIL-OPEN flag
         }
 
     def _ensure_writer(self) -> TraceWriter | None:
@@ -2675,6 +2760,11 @@ class OximyAddon:
                 # Atomic update with lock to ensure consistent state
                 # Use tuples for immutability - safe to share across requests without copying
                 with self._config_lock:
+                    # FAIL-OPEN: Check if this is a passthrough config (API down, no valid cache)
+                    self._fail_open_passthrough = config.get("_fail_open_passthrough", False)
+                    if self._fail_open_passthrough:
+                        logger.warning("FAIL-OPEN: Passthrough mode enabled - all traffic will pass without capture")
+
                     self._whitelist = tuple(config.get("whitelist", []))
                     # Pre-lowercase blacklist words for faster matching
                     self._blacklist = tuple(w.lower() for w in config.get("blacklist", []))
@@ -2881,6 +2971,12 @@ class OximyAddon:
             self._sensor_config_cache,
             addon_instance=self
         )
+
+        # FAIL-OPEN: Check if this is a passthrough config (API down, no valid cache)
+        self._fail_open_passthrough = sensor_config.get("_fail_open_passthrough", False)
+        if self._fail_open_passthrough:
+            logger.warning("FAIL-OPEN: Starting in passthrough mode - all traffic will pass without capture")
+
         self._whitelist = tuple(sensor_config.get("whitelist", []))
         # Pre-lowercase blacklist words for faster matching
         self._blacklist = tuple(w.lower() for w in sensor_config.get("blacklist", []))
@@ -2935,9 +3031,8 @@ class OximyAddon:
             logger.info("Trace upload disabled (host app handles sync)")
 
         # Initialize process resolver for client attribution
-        # Pass proxy port so resolver can query active connections efficiently
-        proxy_port = ctx.options.listen_port or 8080
-        self._resolver = ProcessResolver(proxy_port=proxy_port)
+        # Port is updated to the actual listening port in running() once the server starts
+        self._resolver = ProcessResolver(proxy_port=ctx.options.listen_port)
 
         # Get device ID
         self._device_id = get_device_id()
@@ -2977,6 +3072,9 @@ class OximyAddon:
         if proxyserver and proxyserver.listen_addrs():
             with _state.lock:
                 _state.proxy_port = str(proxyserver.listen_addrs()[0][1])
+                # Sync resolver with actual port
+                if self._resolver:
+                    self._resolver.update_proxy_port(int(_state.proxy_port))
                 # Write port file so terminal env script can discover the port
                 _write_proxy_port_file(_state.proxy_port)
                 # Only enable proxy if sensor is active (may be disabled on startup)
@@ -3038,6 +3136,9 @@ class OximyAddon:
             # Set proxy active
             with _state.lock:
                 _state.proxy_port = str(port)
+                # Sync resolver with actual port
+                if self._resolver:
+                    self._resolver.update_proxy_port(port)
                 _write_proxy_port_file(_state.proxy_port)
 
                 # Only enable proxy if sensor is active
@@ -3176,24 +3277,36 @@ class OximyAddon:
             data.ignore_connection = True
             return
 
+        # FAIL-OPEN: No valid config - passthrough ALL TLS (no interception)
+        if self._fail_open_passthrough:
+            data.ignore_connection = True
+            return
+
         host = data.client_hello.sni or (data.context.server.address[0] if data.context.server.address else None)
         if not host:
             return
 
-        # Whitelisted domains: always intercept TLS
+        # Whitelisted domains: always intercept TLS (unless cert-pinned)
         if matches_domain(host, self._whitelist):
             # Check for learned passthrough patterns (cert-pinned hosts)
             if self._tls and self._tls.should_passthrough(host):
                 data.ignore_connection = True
             return
 
-        # Non-whitelisted domain: check if we should intercept for app discovery
+        # Passthrough domains (*.apple.com, *.slack.com, etc.) must ALWAYS
+        # bypass TLS - even for discovery-eligible apps. These are services
+        # with cert pinning or that should never be intercepted.
+        if self._tls and self._tls.should_passthrough(host):
+            data.ignore_connection = True
+            return
+
+        # Non-whitelisted, non-passthrough domain: check app discovery
         # Allow TLS interception for no-parser apps that haven't been seen today
         if self._should_intercept_for_discovery(data.context.client):
             # Don't passthrough - we want to capture this for discovery
             return
 
-        # Non-whitelisted domain: check if we should intercept for domain discovery
+        # Non-whitelisted, non-passthrough domain: check domain discovery
         # Allow TLS interception for browsers visiting domains in catalog (allowed_host_origins)
         if self._should_intercept_for_domain_discovery(host, data.context.client):
             # Don't passthrough - we want to capture this for discovery
@@ -3234,8 +3347,10 @@ class OximyAddon:
     def _should_intercept_for_domain_discovery(self, host: str, client) -> bool:
         """Check if we should intercept TLS for domain discovery (browser, catalog domain, first today).
 
-        This allows browsers to discover new domains that are in allowed_host_origins
-        but not yet whitelisted (no parser exists yet).
+        Uses host-based catalog matching at TLS level (referer unavailable during handshake).
+        At HTTP level, request() uses referer-based matching to decide whether to actually
+        capture the request. This TLS interception enables visibility into catalog domains
+        so their sub-requests' referer headers can be inspected.
         """
         if not host or not client or not hasattr(client, 'id'):
             return False
@@ -3296,13 +3411,18 @@ class OximyAddon:
         if not _state.sensor_active:
             return  # Sensor disabled - passthrough all traffic
 
+        # Get config snapshot for thread-safe filtering
+        config = self._get_config_snapshot()
+
+        # FAIL-OPEN: If no valid config, passthrough without capture
+        # This ensures traffic flows even when API is down and no cache exists
+        if config.get("fail_open_passthrough", False):
+            return  # Passthrough - traffic flows, no capture
+
         host = flow.request.pretty_host
         logger.debug(f"[REQUEST] {flow.request.method} {host}{flow.request.path[:50]}")
         path = flow.request.path
         url = f"{host}{path}"
-
-        # Get config snapshot for thread-safe filtering
-        config = self._get_config_snapshot()
 
         # =====================================================================
         # STEP 0: Bundle ID Rate Limiting (applies to ALL traffic)
@@ -3344,8 +3464,9 @@ class OximyAddon:
                 logger.debug(f"[APP_SKIP] {bundle_id} not in allowed apps, skipping")
                 return
 
-            # For allowed apps without parsers: apply daily rate limit for discovery
-            if not has_parser:
+            # For allowed non-host apps without parsers: apply daily rate limit for discovery
+            # Browsers are excluded — they use domain catalog discovery in STEP 1 instead
+            if not has_parser and not is_browser:
                 allowed, self._no_parser_apps_cache = _check_no_parser_app_allowed(
                     bundle_id, self._no_parser_apps_cache, self._no_parser_apps_lock
                 )
@@ -3372,15 +3493,26 @@ class OximyAddon:
 
         if not is_discovery and not matches_whitelist(host, path, config["whitelist"]):
             # Not whitelisted - check if we should capture for domain discovery
-            # Domain discovery: browser traffic to a domain in allowed_host_origins (catalog)
-            if is_browser and matches_host_origin(host, config["allowed_host_origins"]):
-                # Browser visiting a known domain that doesn't have a parser yet
+            # Domain discovery: browser sub-requests with a referer from a catalog domain
+            # This captures API calls/resources initiated FROM a known website, without
+            # needing every subdomain in the catalog.
+            referer = flow.request.headers.get("referer", "") or flow.request.headers.get("origin", "")
+            referer_domain = ""
+            if referer:
+                # Extract domain from referer URL (e.g., "https://slack.com/path" -> "slack.com")
+                try:
+                    referer_domain = urllib.parse.urlparse(referer).hostname or ""
+                except Exception:
+                    referer_domain = ""
+
+            if is_browser and referer_domain and matches_host_origin(referer_domain, config["allowed_host_origins"]):
+                # Browser sub-request with referer from a catalog domain
                 allowed, self._no_parser_domains_cache = _check_no_parser_domain_allowed(
                     host, self._no_parser_domains_cache, self._no_parser_domains_lock
                 )
                 if allowed:
                     _save_no_parser_domains_cache(self._no_parser_domains_cache)
-                    logger.info(f"[NO_PARSER_DOMAIN] {host} - first request today, capturing for discovery")
+                    logger.info(f"[NO_PARSER_DOMAIN] {host} (referer: {referer_domain}) - first request today, capturing for discovery")
                     flow.metadata["oximy_discovery_capture"] = True
                     flow.metadata["oximy_discovery_type"] = "domain"
                     is_discovery = True
@@ -3520,6 +3652,9 @@ class OximyAddon:
             return
         if not _state.sensor_active:
             return  # Sensor disabled - skip trace writing
+        # FAIL-OPEN: No valid config - skip capture
+        if self._fail_open_passthrough:
+            return
 
         if not flow.response:
             return
@@ -3853,6 +3988,8 @@ class OximyAddon:
             return
         if not _state.sensor_active:
             return  # Sensor disabled - skip WebSocket tracking
+        if self._fail_open_passthrough:
+            return  # FAIL-OPEN: No valid config - skip capture
 
         host = flow.request.pretty_host
         path = flow.request.path
@@ -3869,6 +4006,8 @@ class OximyAddon:
             return
         if not _state.sensor_active:
             return  # Sensor disabled - skip message capture
+        if self._fail_open_passthrough:
+            return  # FAIL-OPEN: No valid config - skip capture
 
         host = flow.request.pretty_host
         path = flow.request.path
@@ -3931,6 +4070,8 @@ class OximyAddon:
             return
         if not _state.sensor_active:
             return  # Sensor disabled - skip final trace write
+        if self._fail_open_passthrough:
+            return  # FAIL-OPEN: No valid config - skip capture
 
         host = flow.request.pretty_host
         path = flow.request.path

@@ -241,20 +241,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         print("[OximyApp] Network changed - checking if proxy needs reconfiguration")
 
         Task {
-            // Only reconfigure if we're ready and proxy was enabled
-            guard appState.phase == .ready,
-                  ProxyService.shared.isProxyEnabled,
-                  let port = MITMService.shared.currentPort else {
-                print("[OximyApp] Skipping proxy reconfiguration (not in ready state or proxy not enabled)")
+            // Only reconfigure if we're ready
+            guard appState.phase == .ready else {
+                print("[OximyApp] Skipping proxy reconfiguration (not in ready state)")
+                return
+            }
+
+            // FAIL-OPEN: Get port from mitmproxy if running, otherwise use default
+            // This ensures we can re-enable proxy even if state is inconsistent
+            var port = MITMService.shared.currentPort
+
+            if port == nil {
+                // FAIL-OPEN: mitmproxy might have crashed - try to restart it
+                if !MITMService.shared.isRunning {
+                    print("[OximyApp] FAIL-OPEN: mitmproxy not running after network change - attempting restart")
+                    // Reset restart counter so we get fresh attempts
+                    MITMService.shared.resetRestartCounter()
+                    do {
+                        try await MITMService.shared.start()
+                        port = MITMService.shared.currentPort
+                        print("[OximyApp] FAIL-OPEN: mitmproxy restarted on port \(port ?? 0)")
+                    } catch {
+                        print("[OximyApp] FAIL-OPEN: mitmproxy restart failed: \(error)")
+                        // Continue without proxy rather than blocking user
+                        return
+                    }
+                }
+            }
+
+            guard let port = port else {
+                print("[OximyApp] No proxy port available - skipping reconfiguration")
                 return
             }
 
             do {
                 // Re-enable proxy on all current network services
+                // FAIL-OPEN: Uses local state, no API dependency
                 try await ProxyService.shared.enableProxy(port: port)
-                print("[OximyApp] Proxy reconfigured successfully for new network")
+                print("[OximyApp] Proxy reconfigured successfully for new network on port \(port)")
             } catch {
                 print("[OximyApp] Failed to reconfigure proxy: \(error)")
+                // FAIL-OPEN: Log error but don't block user's internet
                 appState.connectionStatus = .error("Network change failed")
             }
         }
