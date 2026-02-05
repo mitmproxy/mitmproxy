@@ -39,7 +39,9 @@ class VersionInfo(urwid.ListBox, layoutwidget.LayoutWidget):
             for key, value in git_info.items():
                 text.append(urwid.Text([("head", f"{key}: "), ("text", value)]))
         else:
-            text.append(urwid.Text([("head", "Git Information: "), ("text", "Not available")]))
+            text.append(
+                urwid.Text([("head", "Git Information: "), ("text", "Not available")])
+            )
 
         text.extend([urwid.Text("")] * 5)
 
@@ -59,37 +61,53 @@ class VersionInfo(urwid.ListBox, layoutwidget.LayoutWidget):
                 check=True,
             )
 
-            commit_hash = subprocess.check_output(
-                ["git", "rev-parse", "HEAD"],
-                stderr=subprocess.DEVNULL,
-                cwd=here,
-            ).decode().strip()
+            commit_hash = (
+                subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                    cwd=here,
+                )
+                .decode()
+                .strip()
+            )
             git_info["Commit Hash"] = commit_hash[:7]
             git_info["Full Commit Hash"] = commit_hash
 
-            commit_date = subprocess.check_output(
-                ["git", "log", "-1", "--format=%ci"],
-                stderr=subprocess.DEVNULL,
-                cwd=here,
-            ).decode().strip()
+            commit_date = (
+                subprocess.check_output(
+                    ["git", "log", "-1", "--format=%ci"],
+                    stderr=subprocess.DEVNULL,
+                    cwd=here,
+                )
+                .decode()
+                .strip()
+            )
             git_info["Commit Date"] = commit_date
 
             try:
-                last_tag = subprocess.check_output(
-                    ["git", "describe", "--tags", "--abbrev=0"],
-                    stderr=subprocess.DEVNULL,
-                    cwd=here,
-                ).decode().strip()
+                last_tag = (
+                    subprocess.check_output(
+                        ["git", "describe", "--tags", "--abbrev=0"],
+                        stderr=subprocess.DEVNULL,
+                        cwd=here,
+                    )
+                    .decode()
+                    .strip()
+                )
                 git_info["Last Tag"] = last_tag
             except subprocess.CalledProcessError:
                 pass
 
             try:
-                branch = subprocess.check_output(
-                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                    stderr=subprocess.DEVNULL,
-                    cwd=here,
-                ).decode().strip()
+                branch = (
+                    subprocess.check_output(
+                        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                        stderr=subprocess.DEVNULL,
+                        cwd=here,
+                    )
+                    .decode()
+                    .strip()
+                )
                 git_info["Branch"] = branch
             except subprocess.CalledProcessError:
                 pass

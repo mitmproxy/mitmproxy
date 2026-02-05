@@ -31,7 +31,7 @@ class TestVersionInfo:
 
         text_content = []
         for item in content:
-            if hasattr(item, 'text'):
+            if hasattr(item, "text"):
                 if isinstance(item.text, list):
                     text_content.extend([str(t) for t in item.text])
                 else:
@@ -151,7 +151,7 @@ class TestVersionInfo:
 
         text_content = []
         for item in content:
-            if hasattr(item, 'text'):
+            if hasattr(item, "text"):
                 if isinstance(item.text, list):
                     text_content.extend([str(t) for t in item.text])
                 else:
@@ -211,7 +211,7 @@ class TestVersionInfo:
 
         text_content = []
         for item in content:
-            if hasattr(item, 'text'):
+            if hasattr(item, "text"):
                 if isinstance(item.text, list):
                     text_content.extend([str(t) for t in item.text])
                 else:
