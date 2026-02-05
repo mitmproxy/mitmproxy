@@ -96,6 +96,7 @@ WINDOWS_BROWSERS = frozenset({
     "brave.exe", "opera.exe", "vivaldi.exe",
 })
 
+
 # =============================================================================
 # SENSOR STATE MANAGEMENT
 # =============================================================================
@@ -3242,6 +3243,9 @@ class OximyAddon:
         }
         if client_process.name:
             client_info["name"] = client_process.name
+        # Fallback: include process_name when bundle_id is null (CLI tools)
+        if not client_process.bundle_id and client_process.name:
+            client_info["process_name"] = client_process.name
 
         # Add hierarchical filter metadata
         if flow.metadata.get("oximy_app_type"):

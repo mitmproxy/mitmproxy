@@ -225,51 +225,48 @@ class ProcessResolver:
         name = self._extract_name(proc_info.get("path"))
         bundle_id = await self._extract_bundle_id(proc_info.get("path"))
 
-        # Step 4 (macOS only): Resolve responsible process for XPC/system services
-        # When apps use WKWebView or system networking, the actual TCP connection
-        # comes from an XPC service (e.g., com.apple.WebKit.Networking), not the app.
-        # Use macOS's responsible-PID API to trace back to the originating app.
+        # Step 4 (macOS only): Resolve responsible process
+        # Always try responsible PID on macOS — any process might delegate networking
+        # via XPC services, helper processes, or system daemons.
+        # The ctypes call is <0.1ms so there's no performance concern.
         resp_proc_info = None  # Track responsible process info for ClientProcess fields
         if self._is_macos:
-            resolved_via = None
-
-            # Case A: Resolved to a known system service - always try responsible PID
+            # Classify for logging only
             if bundle_id and bundle_id.lower() in _MACOS_SYSTEM_SERVICES:
                 resolved_via = "system_service"
-
-            # Case B: No bundle_id resolved - try responsible PID as fallback
             elif not bundle_id:
                 resolved_via = "no_bundle_id"
+            else:
+                resolved_via = "app_delegation_check"
 
-            if resolved_via:
-                responsible_pid = _get_responsible_pid(pid)
-                if responsible_pid:
-                    resp_path = _proc_pidpath(responsible_pid)
-                    if resp_path:
-                        resp_bundle_id = await self._extract_bundle_id(resp_path)
-                        if resp_bundle_id:
+            responsible_pid = _get_responsible_pid(pid)
+            if responsible_pid:
+                resp_path = _proc_pidpath(responsible_pid)
+                if resp_path:
+                    resp_bundle_id = await self._extract_bundle_id(resp_path)
+                    if resp_bundle_id and resp_bundle_id != bundle_id:
+                        logger.info(
+                            f"[PROCESS] Responsible PID: {bundle_id or name} (PID {pid}) "
+                            f"-> {resp_bundle_id} (PID {responsible_pid}) [{resolved_via}]"
+                        )
+                        bundle_id = resp_bundle_id
+                        name = self._extract_name(resp_path)
+                        pid = responsible_pid
+                        # Get full process info for the responsible process
+                        resp_proc_info = await self._get_process_info(responsible_pid)
+                else:
+                    # libproc failed, fall back to ps for both path and info
+                    resp_proc_info = await self._get_process_info(responsible_pid)
+                    if resp_proc_info:
+                        resp_bundle_id = await self._extract_bundle_id(resp_proc_info.get("path"))
+                        if resp_bundle_id and resp_bundle_id != bundle_id:
                             logger.info(
-                                f"[PROCESS] Responsible PID: {bundle_id or name} (PID {pid}) "
+                                f"[PROCESS] Responsible PID (ps): {bundle_id or name} (PID {pid}) "
                                 f"-> {resp_bundle_id} (PID {responsible_pid}) [{resolved_via}]"
                             )
                             bundle_id = resp_bundle_id
-                            name = self._extract_name(resp_path)
+                            name = self._extract_name(resp_proc_info.get("path"))
                             pid = responsible_pid
-                            # Get full process info for the responsible process
-                            resp_proc_info = await self._get_process_info(responsible_pid)
-                    else:
-                        # libproc failed, fall back to ps for both path and info
-                        resp_proc_info = await self._get_process_info(responsible_pid)
-                        if resp_proc_info:
-                            resp_bundle_id = await self._extract_bundle_id(resp_proc_info.get("path"))
-                            if resp_bundle_id:
-                                logger.info(
-                                    f"[PROCESS] Responsible PID (ps): {bundle_id or name} (PID {pid}) "
-                                    f"-> {resp_bundle_id} (PID {responsible_pid}) [{resolved_via}]"
-                                )
-                                bundle_id = resp_bundle_id
-                                name = self._extract_name(resp_proc_info.get("path"))
-                                pid = responsible_pid
 
         # On Windows, use exe name as bundle_id fallback
         if not bundle_id and self._is_windows:
