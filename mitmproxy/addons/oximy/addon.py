@@ -737,11 +737,14 @@ def _remove_cmd_autorun() -> None:
 def _write_proxy_state() -> None:
     """Write current proxy state to remote-state.json for Swift app."""
     try:
-        # Read existing state if present
+        # Read existing state if present (tolerates corrupt JSON)
         existing = {}
         if OXIMY_STATE_FILE.exists():
-            with open(OXIMY_STATE_FILE, encoding="utf-8") as f:
-                existing = json.load(f)
+            try:
+                with open(OXIMY_STATE_FILE, encoding="utf-8") as f:
+                    existing = json.load(f)
+            except json.JSONDecodeError:
+                existing = {}  # Start fresh if file is corrupt
 
         # Update proxy status
         existing["proxy_active"] = _state.proxy_active
@@ -752,7 +755,7 @@ def _write_proxy_state() -> None:
         with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(existing, f, indent=2)
         logger.debug(f"Proxy state written: active={_state.proxy_active}, port={_state.proxy_port}")
-    except (IOError, OSError, json.JSONDecodeError) as e:
+    except (IOError, OSError) as e:
         logger.warning(f"Failed to write proxy state: {e}")
 
 
@@ -911,7 +914,7 @@ def _ensure_cert_trusted() -> bool:
 # Support environment variable overrides for testing/CI
 DEFAULT_SENSOR_CONFIG_URL = os.environ.get(
     "OXIMY_CONFIG_URL",
-    "https://api.oximy.com/api/v1/sensor-config"
+    "http://localhost:4000/api/v1/sensor-config"
 )
 DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
     "OXIMY_CONFIG_CACHE",
@@ -1157,7 +1160,7 @@ def _post_command_results_immediate(command_results: dict) -> None:
             return
 
         # Prepare API request
-        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "https://api.oximy.com/api/v1")
+        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "http://localhost:4000/api/v1")
         url = f"{api_endpoint}/devices/command-results"
 
         headers = {
@@ -2061,6 +2064,52 @@ class TLSPassthrough:
         if any(ind in error.lower() for ind in pinning_indicators):
             self.add_host(host)
 
+    def clean_learned_against_whitelist(self, whitelist: list[str]) -> None:
+        """Remove learned passthrough entries that conflict with whitelisted domains.
+
+        Stale entries can exist from before the whitelist guard was added to
+        record_tls_failure(). This cleans them up on config load.
+        """
+        if not self._learned_patterns or not whitelist:
+            return
+
+        original_count = len(self._learned_patterns)
+        cleaned = []
+        removed = []
+        for p in self._learned_patterns:
+            # Extract hostname from pattern like "^chatgpt\\.com$"
+            host = p.strip("^$").replace("\\.", ".")
+            if matches_domain(host, whitelist):
+                removed.append(host)
+            else:
+                cleaned.append(p)
+
+        if removed:
+            self._learned_patterns = cleaned
+            # Rebuild patterns list: config patterns + cleaned learned patterns
+            self._patterns = [pat for pat in self._patterns]
+            # Remove the stale compiled patterns by rebuilding
+            new_patterns = []
+            for pat in self._patterns:
+                # Keep pattern if it's NOT one of the removed learned patterns
+                pat_str = pat.pattern
+                host = pat_str.strip("^$").replace("\\.", ".").replace("\\-", "-")
+                if not matches_domain(host, whitelist):
+                    new_patterns.append(pat)
+            self._patterns = new_patterns
+            self._result_cache.clear()
+
+            # Save cleaned patterns back to disk
+            try:
+                with open(OXIMY_PASSTHROUGH_CACHE, "w", encoding="utf-8") as f:
+                    json.dump({"patterns": self._learned_patterns}, f, indent=2)
+            except IOError:
+                pass
+            logger.info(
+                f"Cleaned {len(removed)} learned passthrough entries that conflict with whitelist: "
+                f"{', '.join(removed)}"
+            )
+
     def update_passthrough(self, patterns: list[str]) -> None:
         """Update passthrough patterns from refreshed config."""
         new_patterns: list[re.Pattern] = []
@@ -2417,6 +2466,11 @@ BATCH_SIZE = 500
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 3.0  # Default: upload every N seconds
 DEFAULT_UPLOAD_THRESHOLD_COUNT = 100  # Default: or every N traces
 
+# Disk cleanup thresholds (for emergency fallback trace files)
+DISK_MAX_AGE_DAYS = 7          # Delete trace files older than 7 days
+DISK_MAX_TOTAL_BYTES = 50 * 1024 * 1024  # 50 MB hard cap for traces directory
+DISK_CLEANUP_INTERVAL = 3600   # Run cleanup at most once per hour (seconds)
+
 
 class TraceUploader:
     """Uploads traces to the ingestion API with gzip compression."""
@@ -2669,6 +2723,7 @@ class OximyAddon:
         self._force_sync_thread: threading.Thread | None = None
         self._force_sync_stop: threading.Event = threading.Event()
         self._debug_ingestion: bool = False  # Debug mode: write to disk AND memory buffer
+        self._last_cleanup_time: float = 0.0  # Throttle for _cleanup_stale_traces()
         # Configurable upload settings (read from config.json)
         self._upload_interval_seconds: float = DEFAULT_UPLOAD_INTERVAL_SECONDS
         self._upload_threshold_count: int = DEFAULT_UPLOAD_THRESHOLD_COUNT
@@ -2784,6 +2839,7 @@ class OximyAddon:
                     # Update TLS passthrough patterns
                     if self._tls:
                         self._tls.update_passthrough(config.get("passthrough", []))
+                        self._tls.clean_learned_against_whitelist(list(self._whitelist))
 
                 logger.debug(
                     f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
@@ -2989,6 +3045,8 @@ class OximyAddon:
         self._blacklist = tuple(w.lower() for w in sensor_config.get("blacklist", []))
         passthrough_patterns = sensor_config.get("passthrough", [])
         self._tls = TLSPassthrough(passthrough_patterns)
+        # Clean stale learned passthrough entries that now conflict with whitelist
+        self._tls.clean_learned_against_whitelist(list(self._whitelist))
 
         # Hierarchical filtering config
         app_origins = sensor_config.get("allowed_app_origins", {})
@@ -3033,9 +3091,17 @@ class OximyAddon:
                         logger.info(f"Uploaded {uploaded} traces from previous emergency disk writes")
                 except Exception as e:
                     logger.warning(f"Failed to upload existing disk traces on startup: {e}")
+
+            # Cleanup stale/oversized trace files (force run on startup, bypass throttle)
+            self._last_cleanup_time = 0.0
+            self._cleanup_stale_traces()
         else:
             self._uploader = None
             logger.info("Trace upload disabled (host app handles sync)")
+
+            # Still cleanup stale traces even when upload is disabled (host app mode)
+            self._last_cleanup_time = 0.0
+            self._cleanup_stale_traces()
 
         # Initialize process resolver for client attribution
         # Port is updated to the actual listening port in running() once the server starts
@@ -3434,7 +3500,7 @@ class OximyAddon:
         path = flow.request.path
         url = f"{host}{path}"
 
-        
+
         # =====================================================================
         # STEP 0: Bundle ID Rate Limiting (applies to ALL traffic)
         # Resolve client process early for rate-limiting decision
@@ -3462,19 +3528,23 @@ class OximyAddon:
         if bundle_id is None:
             # Process not resolved - likely race condition with client_connected hook
             logger.info(f"[STEP0] No bundle_id for {host} - process not resolved")
+            flow.metadata["oximy_skip"] = True
+            flow.metadata["oximy_skip_reason"] = "no_bundle_id"
             return
         else:
             bundle_lower = bundle_id.lower()
             is_browser = bundle_lower in self._allowed_app_hosts_set
             is_allowed_non_host = bundle_lower in self._allowed_app_non_hosts_set
             has_parser = bundle_lower in self._apps_with_parsers
-            
+
 
             logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, is_allowed_non_host={is_allowed_non_host}, has_parser={has_parser}")
 
             # GATE: If not in ANY allowed list, skip entirely
             if not is_browser and not is_allowed_non_host and not has_parser:
                 logger.debug(f"[APP_SKIP] {bundle_id} not in allowed apps, skipping")
+                flow.metadata["oximy_skip"] = True
+                flow.metadata["oximy_skip_reason"] = "app_not_allowed"
                 return
 
             # For allowed non-host apps without parsers: apply daily rate limit for discovery
@@ -3486,11 +3556,14 @@ class OximyAddon:
 
                 if allowed:
                     _save_no_parser_apps_cache(self._no_parser_apps_cache)
-                    logger.info(f"[NO_PARSER_APP] {bundle_id} - first request today, capturing for discovery")
+                    logger.info(f"[NO_PARSER_APP] {bundle_id} - first request today, capturing metadata for discovery")
                     flow.metadata["oximy_discovery_capture"] = True  # Bypass whitelist for app discovery
+                    flow.metadata["oximy_metadata_only"] = True  # Lightweight event, no bodies
                 else:
                     # Rate limited - bypass entirely (don't capture, request still proxied)
                     logger.debug(f"[NO_PARSER_APP] {bundle_id} - already seen today, bypassing")
+                    flow.metadata["oximy_skip"] = True
+                    flow.metadata["oximy_skip_reason"] = "app_rate_limited"
                     return
 
         # Store client process for later use
@@ -3626,6 +3699,10 @@ class OximyAddon:
         if not flow.response:
             return
 
+        # Only set up streaming for flows that will be captured
+        if not flow.metadata.get("oximy_capture"):
+            return
+
         content_type = flow.response.headers.get("content-type", "")
         host = flow.request.pretty_host
         should_stream = False
@@ -3683,6 +3760,40 @@ class OximyAddon:
         if flow.metadata.get("oximy_skip"):
             skip_reason = flow.metadata.get("oximy_skip_reason", "unknown")
             logger.debug(f"[SKIP] {flow.request.pretty_host}{flow.request.path} - reason: {skip_reason}")
+            return
+
+        # CRITICAL: Only process flows explicitly marked for capture by request()
+        # Without this, flows rejected by early returns in request() leak through
+        if not flow.metadata.get("oximy_capture"):
+            logger.debug(f"[NO_CAPTURE] {flow.request.pretty_host}{flow.request.path} - not marked for capture")
+            return
+
+        # Metadata-only event: lightweight trace for non-browser apps without parsers
+        # Records that the app was seen (1 per device+app+day), no request/response bodies
+        if flow.metadata.get("oximy_metadata_only"):
+            host = flow.request.pretty_host
+            path = flow.request.path
+            event: dict = {
+                "event_id": generate_event_id(),
+                "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+                "type": "app_metadata",
+            }
+            if self._device_id:
+                event["device_id"] = self._device_id
+            client_info = self._build_client_info(flow)
+            if client_info:
+                event["client"] = client_info
+            event["request"] = {
+                "method": flow.request.method,
+                "host": host,
+                "path": path,
+            }
+            if self._debug_writer:
+                self._debug_writer.write(event)
+            if self._write_to_buffer(event):
+                bundle = client_info.get("bundle_id", "?") if client_info else "?"
+                logger.info(f"<<< APP_METADATA: {flow.request.method} {host}{path[:60]} (bundle: {bundle})")
+                self._maybe_upload()
             return
 
         # Log when requests pass all filters and will be captured
@@ -3771,6 +3882,11 @@ class OximyAddon:
         # Skip writing to main traces if marked by filters
         if flow.metadata.get("oximy_skip"):
             logger.debug(f"[WS_UPGRADE_SKIP] {url} - skipped due to: {flow.metadata.get('oximy_skip_reason', 'unknown')}")
+            return
+
+        # Only process flows explicitly marked for capture by request()
+        if not flow.metadata.get("oximy_capture"):
+            logger.debug(f"[WS_UPGRADE_NO_CAPTURE] {url} - not marked for capture")
             return
 
         # Write to memory buffer (cloud-first ingestion)
@@ -3904,6 +4020,10 @@ class OximyAddon:
         if not ws_messages:
             return
 
+        # Only write aggregates for flows explicitly marked for capture
+        if not flow.metadata.get("oximy_capture"):
+            return
+
         host = flow.request.pretty_host
         path = flow.request.path
 
@@ -4030,6 +4150,10 @@ class OximyAddon:
         if flow.metadata.get("oximy_skip"):
             return
 
+        # Only process flows explicitly marked for capture by request()
+        if not flow.metadata.get("oximy_capture"):
+            return
+
         # Ensure we have WebSocket messages to process
         if not flow.websocket or not flow.websocket.messages:
             logger.warning(f"[WS_MESSAGE] {url} - called but no websocket messages found")
@@ -4145,6 +4269,11 @@ class OximyAddon:
         if flow.metadata.get("oximy_skip"):
             return
 
+        # Only process flows explicitly marked for capture by request()
+        if not flow.metadata.get("oximy_capture"):
+            logger.debug(f"[WS_END_NO_CAPTURE] {url} - not marked for capture")
+            return
+
         # Write to memory buffer (cloud-first ingestion)
         if self._write_to_buffer(event):
             logger.debug(f"<<< CAPTURED WS: {flow.request.pretty_host} ({len(ws_messages)} messages)")
@@ -4212,6 +4341,116 @@ class OximyAddon:
 
             except Exception as e:
                 logger.warning(f"Failed to upload traces: {e}")
+
+        # Periodic disk cleanup (throttled to once per hour)
+        self._cleanup_stale_traces()
+
+    def _cleanup_stale_traces(self) -> None:
+        """Prune old/excess trace files from disk. Fail-open: errors logged, never raised.
+
+        Policy:
+        1. Delete any trace file older than DISK_MAX_AGE_DAYS (7 days)
+        2. If total size still exceeds DISK_MAX_TOTAL_BYTES (50 MB), delete oldest first
+
+        Safety:
+        - Never deletes the active writer's file
+        - Runs at most once per DISK_CLEANUP_INTERVAL (1 hour)
+        - All exceptions caught — addon continues normally on failure
+        """
+        try:
+            # Throttle: skip if called too recently
+            now = time.time()
+            if now - self._last_cleanup_time < DISK_CLEANUP_INTERVAL:
+                return
+
+            self._last_cleanup_time = now
+
+            if not self._output_dir or not self._output_dir.exists():
+                return
+
+            # Resolve active file path to avoid deleting the file currently being written
+            active_file = None
+            if self._writer and self._writer._current_file:
+                try:
+                    active_file = self._writer._current_file.resolve()
+                except OSError:
+                    pass
+
+            # Collect all trace files with their stat info
+            cutoff = now - (DISK_MAX_AGE_DAYS * 86400)
+            files_with_stat: list[tuple[Path, float, int]] = []  # (path, mtime, size)
+
+            for pattern in ("traces_*.jsonl", "all_traces_*.jsonl"):
+                for f in self._output_dir.glob(pattern):
+                    # Never touch the active writer's file
+                    try:
+                        if active_file and f.resolve() == active_file:
+                            continue
+                    except OSError:
+                        continue
+
+                    try:
+                        st = f.stat()
+                        files_with_stat.append((f, st.st_mtime, st.st_size))
+                    except OSError as e:
+                        logger.debug(f"Could not stat {f.name}: {e}")
+
+            if not files_with_stat:
+                return
+
+            # Pass 1: Delete files older than max age
+            remaining: list[tuple[Path, float, int]] = []
+            deleted_age = 0
+            for f, mtime, size in files_with_stat:
+                if mtime < cutoff:
+                    try:
+                        f.unlink()
+                        deleted_age += 1
+                        self._remove_upload_state(f)
+                    except OSError as e:
+                        logger.debug(f"Could not delete old trace {f.name}: {e}")
+                        remaining.append((f, mtime, size))
+                else:
+                    remaining.append((f, mtime, size))
+
+            # Pass 2: Enforce size budget on remaining files (delete oldest first)
+            total_size = sum(size for _, _, size in remaining)
+            deleted_size = 0
+            if total_size > DISK_MAX_TOTAL_BYTES:
+                # Sort by mtime ascending (oldest first)
+                remaining.sort(key=lambda x: x[1])
+                still_kept: list[tuple[Path, float, int]] = []
+                for f, mtime, size in remaining:
+                    if total_size > DISK_MAX_TOTAL_BYTES:
+                        try:
+                            f.unlink()
+                            total_size -= size
+                            deleted_size += 1
+                            self._remove_upload_state(f)
+                        except OSError as e:
+                            logger.debug(f"Could not delete excess trace {f.name}: {e}")
+                            still_kept.append((f, mtime, size))
+                    else:
+                        still_kept.append((f, mtime, size))
+
+            total_deleted = deleted_age + deleted_size
+            if total_deleted > 0:
+                logger.info(f"Disk cleanup: deleted {total_deleted} trace files "
+                            f"({deleted_age} expired, {deleted_size} over budget)")
+
+        except Exception as e:
+            logger.warning(f"Disk cleanup failed (non-fatal): {e}")
+
+    def _remove_upload_state(self, trace_file: Path) -> None:
+        """Remove a deleted file's entry from the upload state tracker."""
+        try:
+            if self._uploader and hasattr(self._uploader, '_upload_state'):
+                file_key = str(trace_file)
+                if file_key in self._uploader._upload_state:
+                    del self._uploader._upload_state[file_key]
+                    self._uploader._save_state()
+        except Exception:
+            pass  # Non-critical, best-effort cleanup
 
     def upload_all_traces(self) -> dict[str, int]:
         """Upload all pending traces (memory buffer and disk fallback).

@@ -16,6 +16,18 @@ repos:
         files: \.(py|swift|cs)$
         pass_filenames: true
 
+  # Local hook: Run oximy addon tests before committing
+  - repo: local
+    hooks:
+      - id: oximy-addon-tests
+        name: Run oximy addon tests
+        description: Runs pytest on oximy addon to catch regressions
+        entry: .venv/bin/python -m pytest mitmproxy/addons/oximy/tests/ --tb=short -q
+        language: system
+        files: ^mitmproxy/addons/oximy/
+        pass_filenames: false
+        always_run: false
+
   # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

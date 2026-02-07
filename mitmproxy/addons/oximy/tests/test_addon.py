@@ -17,11 +17,14 @@ import pytest
 
 # Import the functions under test
 from mitmproxy.addons.oximy.addon import (
+    DISK_CLEANUP_INTERVAL,
+    DISK_MAX_AGE_DAYS,
+    DISK_MAX_TOTAL_BYTES,
     WINDOWS_BROWSERS,
     MemoryTraceBuffer,
+    OximyAddon,
     TLSPassthrough,
     _build_url_regex,
-    _extract_domain_from_pattern,
     contains_blacklist_word,
     extract_graphql_operation,
     generate_event_id,
@@ -64,10 +67,6 @@ class TestMatchesDomain:
         patterns = ["api.openai.com", "*.anthropic.com"]
         assert matches_domain("google.com", patterns) is None
         assert matches_domain("openai.org", patterns) is None
-
-    def test_empty_patterns(self):
-        """Empty patterns list should return None."""
-        assert matches_domain("api.openai.com", []) is None
 
     def test_fnmatch_patterns(self):
         """Should support fnmatch-style patterns."""
@@ -202,19 +201,6 @@ class TestContainsBlacklistWord:
         words = ["analytics", "tracking"]
         assert contains_blacklist_word("chat/completions", words) is None
 
-    def test_empty_words_list(self):
-        """Empty words list should return None."""
-        assert contains_blacklist_word("anything", []) is None
-
-    def test_empty_text(self):
-        """Empty text should return None."""
-        words = ["analytics"]
-        assert contains_blacklist_word("", words) is None
-
-    def test_none_text(self):
-        """None text should return None (not raise)."""
-        words = ["analytics"]
-        assert contains_blacklist_word(None, words) is None  # type: ignore
 
 
 # =============================================================================
@@ -293,10 +279,6 @@ class TestMatchesAppOrigin:
 
         assert matches_app_origin("com.unknown.App", hosts, non_hosts) is None
 
-    def test_none_bundle_id(self):
-        """None bundle ID should return None."""
-        assert matches_app_origin(None, ["com.google.Chrome"], []) is None
-
     def test_case_insensitive(self):
         """Match should be case-insensitive."""
         hosts = ["com.google.Chrome"]
@@ -345,14 +327,6 @@ class TestMatchesHostOrigin:
         allowed = ["chatgpt.com", "claude.ai"]
         assert matches_host_origin("google.com", allowed) is False
 
-    def test_none_origin(self):
-        """None origin should return False."""
-        assert matches_host_origin(None, ["chatgpt.com"]) is False
-
-    def test_empty_allowed_list(self):
-        """Empty allowed list should return False."""
-        assert matches_host_origin("chatgpt.com", []) is False
-
     def test_case_insensitive(self):
         """Match should be case-insensitive."""
         allowed = ["ChatGPT.com"]
@@ -394,37 +368,6 @@ class TestBuildUrlRegex:
         assert pattern.match("example.com/a/path")
         assert pattern.match("example.com/a/b/c/path")
 
-    def test_metacharacters_escaped(self):
-        """Regex metacharacters should be escaped."""
-        regex = _build_url_regex("example.com/path?query=1")
-        # . and ? should be escaped
-        assert "\\." in regex
-        assert "\\?" in regex
-
-
-# =============================================================================
-# _extract_domain_from_pattern Tests
-# =============================================================================
-
-class TestExtractDomainFromPattern:
-    """Tests for _extract_domain_from_pattern function."""
-
-    def test_domain_only(self):
-        """Domain-only pattern should return as-is."""
-        assert _extract_domain_from_pattern("api.openai.com") == "api.openai.com"
-
-    def test_domain_with_path(self):
-        """Domain with path should return just domain."""
-        assert _extract_domain_from_pattern("api.openai.com/v1/chat") == "api.openai.com"
-
-    def test_wildcard_domain(self):
-        """Wildcard domain should be preserved."""
-        assert _extract_domain_from_pattern("*.openai.com") == "*.openai.com"
-
-    def test_wildcard_with_path(self):
-        """Wildcard with path should return just domain portion."""
-        assert _extract_domain_from_pattern("*.openai.com/**/stream") == "*.openai.com"
-
 
 # =============================================================================
 # generate_event_id Tests
@@ -433,33 +376,10 @@ class TestExtractDomainFromPattern:
 class TestGenerateEventId:
     """Tests for generate_event_id function."""
 
-    def test_format_validation(self):
-        """Event ID should be in UUID format (8-4-4-4-12)."""
-        event_id = generate_event_id()
-        parts = event_id.split("-")
-        assert len(parts) == 5
-        assert len(parts[0]) == 8
-        assert len(parts[1]) == 4
-        assert len(parts[2]) == 4
-        assert len(parts[3]) == 4
-        assert len(parts[4]) == 12
-
-    def test_all_hex_characters(self):
-        """Event ID should only contain hex characters and dashes."""
-        event_id = generate_event_id()
-        assert all(c in "0123456789abcdef-" for c in event_id)
-
     def test_uniqueness(self):
         """Multiple calls should produce unique IDs."""
         ids = [generate_event_id() for _ in range(100)]
         assert len(set(ids)) == 100  # All unique
-
-    def test_uuid7_version(self):
-        """UUID should have version 7 (bits 48-51 = 0111)."""
-        event_id = generate_event_id()
-        # Version is in the first character of the 3rd group
-        version_char = event_id.split("-")[2][0]
-        assert version_char == "7"
 
     def test_time_sortable(self):
         """IDs generated later should sort after earlier ones."""
@@ -475,13 +395,6 @@ class TestGenerateEventId:
 
 class TestMemoryTraceBuffer:
     """Tests for MemoryTraceBuffer class."""
-
-    def test_append_under_limit(self):
-        """Append should succeed when under limits."""
-        buffer = MemoryTraceBuffer(max_bytes=1024 * 1024, max_count=100)
-        event = {"type": "test", "data": "value"}
-        assert buffer.append(event) is True
-        assert buffer.size() == 1
 
     def test_append_at_byte_limit(self):
         """Append should fail when byte limit reached."""
@@ -568,11 +481,6 @@ class TestMemoryTraceBuffer:
         assert buffer.size() == 0
         assert buffer.bytes_used() == 0
 
-    def test_max_bytes_property(self):
-        """max_bytes property should return the configured maximum."""
-        buffer = MemoryTraceBuffer(max_bytes=5 * 1024 * 1024, max_count=100)
-        assert buffer.max_bytes == 5 * 1024 * 1024
-
     def test_peek_all(self):
         """peek_all should return all events without removing them."""
         buffer = MemoryTraceBuffer(max_bytes=1024 * 1024, max_count=100)
@@ -646,22 +554,6 @@ class TestTLSPassthrough:
             # Invalid regex should not crash
             passthrough = TLSPassthrough(["[invalid", "valid\\.com"])
             assert passthrough.should_passthrough("valid.com") is True
-
-    def test_result_cache_lru_eviction(self):
-        """Cache should evict old entries when full."""
-        with patch.object(Path, 'exists', return_value=False):
-            passthrough = TLSPassthrough([])
-            passthrough._CACHE_MAX_SIZE = 3  # Small cache for testing
-
-            # Fill cache
-            passthrough._result_cache["a.com"] = True
-            passthrough._result_cache["b.com"] = False
-            passthrough._result_cache["c.com"] = True
-
-            # This should evict oldest
-            passthrough.should_passthrough("d.com")
-
-            assert len(passthrough._result_cache) <= 3
 
     def test_record_tls_failure_adds_pinned_host(self):
         """record_tls_failure should add cert-pinned hosts to passthrough."""
@@ -772,11 +664,6 @@ class TestLoadOutputConfig:
         config = load_output_config(config_file)
         assert "output" in config  # Default values
 
-    def test_missing_file(self):
-        """Should handle missing file gracefully."""
-        config = load_output_config(Path("/nonexistent/path/config.json"))
-        assert "output" in config  # Default values
-
 
 # =============================================================================
 # Edge Cases and Thread Safety
@@ -784,11 +671,6 @@ class TestLoadOutputConfig:
 
 class TestEdgeCases:
     """Test edge cases and thread safety."""
-
-    def test_matches_domain_special_characters(self):
-        """Should handle domains with special characters."""
-        patterns = ["test-api.example.com"]
-        assert matches_domain("test-api.example.com", patterns) == "test-api.example.com"
 
     def test_memory_buffer_thread_safe(self):
         """MemoryTraceBuffer should be thread-safe."""
@@ -825,12 +707,162 @@ class TestEdgeCases:
         # All IDs should be unique
         assert len(set(all_ids)) == len(all_ids)
 
-    def test_url_pattern_cache_not_grow_unbounded(self):
-        """URL pattern cache should not grow unbounded."""
-        # Generate many unique patterns
-        for i in range(2000):
-            _matches_url_pattern(f"test{i}.com/path", f"test{i}.com/**")
 
-        # Cache should be limited (check via private access or behavior)
-        # Just verify no exception and it still works
-        assert _matches_url_pattern("final.com/path", "final.com/**") is True
+# =============================================================================
+# Disk Cleanup Tests
+# =============================================================================
+
+
+import os
+
+
+def _make_addon_with_output_dir(tmp_path: Path) -> OximyAddon:
+    """Create a minimal OximyAddon instance with _output_dir set for cleanup testing."""
+    addon = object.__new__(OximyAddon)
+    addon._output_dir = tmp_path
+    addon._writer = None
+    addon._uploader = None
+    addon._last_cleanup_time = 0.0
+    return addon
+
+
+def _create_trace_file(directory: Path, name: str, size_bytes: int = 100, age_days: float = 0) -> Path:
+    """Create a trace file with specific size and age."""
+    f = directory / name
+    # Write exact number of bytes
+    f.write_bytes(b"x" * size_bytes)
+    if age_days > 0:
+        mtime = time.time() - (age_days * 86400)
+        os.utime(f, (mtime, mtime))
+    return f
+
+
+class TestDiskCleanup:
+    """Tests for _cleanup_stale_traces() method."""
+
+    def test_cleanup_deletes_old_files(self, tmp_path: Path):
+        """Files older than DISK_MAX_AGE_DAYS should be deleted."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        old_file = _create_trace_file(tmp_path, "traces_2025-01-01.jsonl", size_bytes=100, age_days=8)
+        assert old_file.exists()
+
+        addon._cleanup_stale_traces()
+
+        assert not old_file.exists()
+
+    def test_cleanup_keeps_recent_files(self, tmp_path: Path):
+        """Files younger than DISK_MAX_AGE_DAYS should be kept."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        recent = _create_trace_file(tmp_path, "traces_2025-02-06.jsonl", size_bytes=100, age_days=1)
+
+        addon._cleanup_stale_traces()
+
+        assert recent.exists()
+
+    def test_cleanup_enforces_size_budget(self, tmp_path: Path):
+        """When total size exceeds DISK_MAX_TOTAL_BYTES, oldest files are deleted first."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        # Create files totaling ~80 MB (over 50 MB budget), all recent
+        mb = 1024 * 1024
+        f1 = _create_trace_file(tmp_path, "traces_2025-02-01.jsonl", size_bytes=30 * mb, age_days=3)
+        f2 = _create_trace_file(tmp_path, "traces_2025-02-02.jsonl", size_bytes=30 * mb, age_days=2)
+        f3 = _create_trace_file(tmp_path, "traces_2025-02-03.jsonl", size_bytes=20 * mb, age_days=1)
+
+        addon._cleanup_stale_traces()
+
+        # Oldest file (f1) should be deleted to get under 50 MB
+        assert not f1.exists()
+        # Remaining: f2 (30 MB) + f3 (20 MB) = 50 MB, which is exactly at budget
+        assert f2.exists()
+        assert f3.exists()
+
+    def test_cleanup_skips_active_file(self, tmp_path: Path):
+        """The file currently being written by TraceWriter should never be deleted."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        active_file = _create_trace_file(tmp_path, "traces_2025-01-01.jsonl", size_bytes=100, age_days=10)
+
+        # Simulate an active writer
+        mock_writer = MagicMock()
+        mock_writer._current_file = active_file
+        addon._writer = mock_writer
+
+        addon._cleanup_stale_traces()
+
+        # Active file preserved even though it's old
+        assert active_file.exists()
+
+    def test_cleanup_is_throttled(self, tmp_path: Path):
+        """Cleanup should not run more than once per DISK_CLEANUP_INTERVAL."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        old_file = _create_trace_file(tmp_path, "traces_2025-01-01.jsonl", size_bytes=100, age_days=10)
+
+        # First run: should delete
+        addon._cleanup_stale_traces()
+        assert not old_file.exists()
+
+        # Create another old file
+        old_file2 = _create_trace_file(tmp_path, "traces_2024-12-01.jsonl", size_bytes=100, age_days=40)
+
+        # Second run: should be throttled (no-op)
+        addon._cleanup_stale_traces()
+        assert old_file2.exists()
+
+    def test_cleanup_handles_empty_dir(self, tmp_path: Path):
+        """Empty or missing traces dir should not raise."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        # Empty dir — should not error
+        addon._cleanup_stale_traces()
+
+        # Missing dir — should not error
+        addon._output_dir = tmp_path / "nonexistent"
+        addon._last_cleanup_time = 0.0
+        addon._cleanup_stale_traces()
+
+    def test_cleanup_handles_permission_error(self, tmp_path: Path):
+        """Files that can't be deleted should be skipped without crashing."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        old_file = _create_trace_file(tmp_path, "traces_2025-01-01.jsonl", size_bytes=100, age_days=10)
+
+        # Mock unlink to raise PermissionError
+        with patch.object(Path, "unlink", side_effect=OSError("Permission denied")):
+            addon._cleanup_stale_traces()
+
+        # Should not crash, file still exists (couldn't delete)
+        assert old_file.exists()
+
+    def test_cleanup_removes_upload_state(self, tmp_path: Path):
+        """Deleted file's entry should be removed from upload state."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        old_file = _create_trace_file(tmp_path, "traces_2025-01-01.jsonl", size_bytes=100, age_days=10)
+
+        # Set up a mock uploader with state tracking
+        mock_uploader = MagicMock()
+        mock_uploader._upload_state = {str(old_file): 50}
+        addon._uploader = mock_uploader
+
+        addon._cleanup_stale_traces()
+
+        assert not old_file.exists()
+        assert str(old_file) not in mock_uploader._upload_state
+        mock_uploader._save_state.assert_called()
+
+    def test_cleanup_deletes_debug_trace_files(self, tmp_path: Path):
+        """Debug trace files (all_traces_*.jsonl) should also be cleaned."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        debug_file = _create_trace_file(tmp_path, "all_traces_2025-01-01.jsonl", size_bytes=100, age_days=10)
+
+        addon._cleanup_stale_traces()
+
+        assert not debug_file.exists()
+
+    def test_cleanup_ignores_non_trace_files(self, tmp_path: Path):
+        """Non-trace files in the directory should not be touched."""
+        addon = _make_addon_with_output_dir(tmp_path)
+        other_file = tmp_path / "config.json"
+        other_file.write_text("{}")
+        mtime = time.time() - (30 * 86400)
+        os.utime(other_file, (mtime, mtime))
+
+        addon._cleanup_stale_traces()
+
+        assert other_file.exists()

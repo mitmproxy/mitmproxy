@@ -131,6 +131,7 @@ class ProcessResolver:
         self._is_linux = platform.system() == "Linux"
         self._is_windows = platform.system() == "Windows"
         self._bundle_cache_prepopulated = False
+        self._bundle_cache_task: asyncio.Task | None = None
 
     def update_proxy_port(self, port: int) -> None:
         """Update the proxy port after the actual listening port is known."""
@@ -149,7 +150,7 @@ class ProcessResolver:
         # Lazily trigger bundle cache prepopulation (non-blocking background task)
         if self._is_macos and not self._bundle_cache_prepopulated:
             self._bundle_cache_prepopulated = True
-            asyncio.create_task(self._prepopulate_bundle_cache())
+            self._bundle_cache_task = asyncio.create_task(self._prepopulate_bundle_cache())
 
         # Check port cache first (avoids expensive lsof/netstat calls)
         if port in self._port_cache:
@@ -308,36 +309,60 @@ class ProcessResolver:
         return result
 
     async def _find_pid_for_port(self, port: int) -> int | None:
-        """Find PID that owns a local port. Cross-platform using psutil."""
+        """Find PID that owns a local port. Cross-platform using psutil.
+
+        On macOS, psutil.net_connections() requires root, so we iterate
+        user-owned processes and check their connections individually (~18ms).
+        """
         if not _HAS_PSUTIL:
             return None
 
         try:
             loop = asyncio.get_event_loop()
-            connections = await loop.run_in_executor(
-                None, lambda: psutil.net_connections(kind="tcp")
+            pid = await loop.run_in_executor(
+                None, lambda: self._find_pid_for_port_sync(port)
             )
-
-            # Primary match: client's source port connecting TO our proxy port
-            for conn in connections:
-                if (conn.laddr
-                    and conn.raddr
-                    and conn.laddr.port == port
-                    and conn.raddr.port == self._proxy_port
-                    and conn.pid):
-                    logger.debug(f"[PSUTIL] Found PID {conn.pid} for port {port}")
-                    return conn.pid
-
-            # Fallback: match just by local port
-            for conn in connections:
-                if conn.laddr and conn.laddr.port == port and conn.pid:
-                    logger.debug(f"[PSUTIL] Found PID {conn.pid} for port {port} (fallback)")
-                    return conn.pid
-
+            return pid
         except Exception as e:
             logger.debug(f"[PSUTIL] Lookup failed for port {port}: {e}")
 
         return None
+
+    def _find_pid_for_port_sync(self, port: int) -> int | None:
+        """Synchronous PID lookup by iterating user-owned processes.
+
+        This avoids psutil.net_connections() which requires root on macOS.
+        Instead, iterates each process's connections (~18ms total).
+        """
+        import os
+        uid = os.getuid() if hasattr(os, "getuid") else None
+        fallback_pid: int | None = None
+
+        for proc in psutil.process_iter(["pid", "uids"]):
+            try:
+                # On Unix, skip processes owned by other users
+                if uid is not None:
+                    proc_uids = proc.info.get("uids")
+                    if proc_uids and proc_uids.real != uid:
+                        continue
+
+                for conn in proc.net_connections(kind="tcp"):
+                    if not conn.laddr or conn.laddr.port != port:
+                        continue
+                    # Primary: match client port connecting TO our proxy
+                    if conn.raddr and conn.raddr.port == self._proxy_port:
+                        logger.debug(f"[PSUTIL] Found PID {proc.pid} for port {port}")
+                        return proc.pid
+                    # Fallback: match just by local port (no raddr or different dest)
+                    if fallback_pid is None:
+                        fallback_pid = proc.pid
+
+            except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
+                continue
+
+        if fallback_pid is not None:
+            logger.debug(f"[PSUTIL] Found PID {fallback_pid} for port {port} (fallback)")
+        return fallback_pid
 
     async def _get_process_info(self, pid: int) -> dict | None:
         """Get process information for a PID, using cache if available."""

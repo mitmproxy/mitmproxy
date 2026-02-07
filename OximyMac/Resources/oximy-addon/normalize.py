@@ -373,18 +373,22 @@ def _normalize_anti_hijack_stream(content: bytes) -> str:
     return text
 
 
-def _normalize_sse(content: bytes) -> str:
+def _normalize_sse(content: bytes) -> tuple[str, str | None]:
     """
     Normalize SSE stream by extracting data payloads.
     Handles LLM streaming responses (ChatGPT, Claude, etc.)
+
+    Returns:
+        Tuple of (normalized_content, encoding_type)
     """
     try:
         text = content.decode('utf-8')
     except UnicodeDecodeError:
-        return _to_string(content)
+        return _to_string(content), None
 
     lines = text.split('\n')
     extracted: list[str] = []
+    encoding_type: str | None = None
 
     for line in lines:
         line = line.strip()

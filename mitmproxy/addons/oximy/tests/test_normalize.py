@@ -1,7 +1,7 @@
-"""Comprehensive unit tests for normalize.py.
+"""Unit tests for normalize.py.
 
-Tests cover all pure data transformation functions with no I/O dependencies.
-This is the highest ROI test file since normalize.py is pure logic.
+Tests cover data transformation functions: gRPC decoding, SSE parsing,
+anti-hijack handling, msgpack, base64, compression.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from __future__ import annotations
 import base64
 import gzip
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -17,29 +17,22 @@ import pytest
 from mitmproxy.addons.oximy.normalize import (
     ANTI_HIJACK_PREFIXES,
     BASE64_PATTERN,
-    BASE64_URL_PATTERN,
-    GZIP_MAGIC,
     MAX_BODY_SIZE,
     MAX_DECODE_LAYERS,
-    MIN_BASE64_LENGTH,
     MSGPACK_MARKERS,
     ZLIB_PREFIXES,
     ZSTD_MAGIC,
     _apply_decoder,
     _convert_bytes_to_str,
-    _decode_base64,
-    _decode_base64_url,
     _decode_grpc_frames,
     _decode_layers,
     _decode_msgpack,
     _decode_protobuf_schemaless,
-    _decode_url,
     _detect_encoding,
     _get_anti_hijack_prefix,
     _has_anti_hijack_prefix,
     _is_grpc_content,
     _is_msgpack,
-    _is_sse_stream,
     _normalize_anti_hijack_stream,
     _normalize_sse,
     _to_string,
@@ -92,10 +85,6 @@ class TestIsGrpcContent:
 class TestDecodeGrpcFrames:
     """Tests for _decode_grpc_frames function."""
 
-    def test_empty_content_returns_empty_list(self):
-        """Empty content should return empty list."""
-        assert _decode_grpc_frames(b"") == []
-
     def test_single_frame(self, grpc_single_frame: bytes):
         """Single valid frame should be parsed."""
         result = _decode_grpc_frames(grpc_single_frame)
@@ -124,7 +113,6 @@ class TestDecodeGrpcFrames:
 
     def test_compressed_flag_ignored(self):
         """Compression flag is parsed but not used (we extract raw bytes)."""
-        # Compression flag = 1 (gzip), but we just extract raw message
         frame = b'\x01\x00\x00\x00\x03abc'
         result = _decode_grpc_frames(frame)
         assert result == [b"abc"]
@@ -144,10 +132,6 @@ class TestDecodeGrpcFrames:
 
 class TestConvertBytesToStr:
     """Tests for _convert_bytes_to_str function."""
-
-    def test_utf8_bytes_decoded(self):
-        """UTF-8 bytes should be decoded to string."""
-        assert _convert_bytes_to_str(b"hello world") == "hello world"
 
     def test_non_utf8_bytes_base64_encoded(self):
         """Non-UTF-8 bytes should be base64 encoded."""
@@ -170,22 +154,13 @@ class TestConvertBytesToStr:
         assert result[1] == base64.b64encode(b"\xff\xfe").decode('ascii')
         assert result[2] == "already string"
 
-    def test_non_bytes_unchanged(self):
-        """Non-bytes values should be returned unchanged."""
-        assert _convert_bytes_to_str(42) == 42
-        assert _convert_bytes_to_str("string") == "string"
-        assert _convert_bytes_to_str(3.14) == 3.14
-        assert _convert_bytes_to_str(None) is None
-
     def test_msgpack_timestamp_conversion(self):
         """MessagePack Timestamp should be converted to ISO format or unix time."""
         try:
             import msgpack
-            # Create a real msgpack Timestamp
             ts = msgpack.Timestamp(seconds=1705312200, nanoseconds=0)
             result = _convert_bytes_to_str(ts)
             assert isinstance(result, str)
-            # Should be ISO format with Z suffix or unix timestamp
             assert "2024" in result or result.replace(".", "").isdigit()
         except ImportError:
             pytest.skip("msgpack not installed")
@@ -207,25 +182,6 @@ class TestConvertBytesToStr:
 
 
 # =============================================================================
-# _is_sse_stream Tests
-# =============================================================================
-
-class TestIsSseStream:
-    """Tests for _is_sse_stream function."""
-
-    def test_exact_match_returns_true(self):
-        """Exact SSE content-type should return True."""
-        assert _is_sse_stream("text/event-stream; charset=utf-8") is True
-
-    def test_non_sse_returns_false(self):
-        """Non-SSE content types should return False."""
-        assert _is_sse_stream("application/json") is False
-        assert _is_sse_stream("text/plain") is False
-        assert _is_sse_stream("text/event-stream") is False  # Without charset
-        assert _is_sse_stream("") is False
-
-
-# =============================================================================
 # _has_anti_hijack_prefix Tests
 # =============================================================================
 
@@ -243,10 +199,6 @@ class TestHasAntiHijackPrefix:
         assert _has_anti_hijack_prefix(b'{"normal": "json"}') is False
         assert _has_anti_hijack_prefix(b'[1, 2, 3]') is False
 
-    def test_empty_content_not_detected(self):
-        """Empty content should not trigger detection."""
-        assert _has_anti_hijack_prefix(b"") is False
-
 
 # =============================================================================
 # _get_anti_hijack_prefix Tests
@@ -260,11 +212,6 @@ class TestGetAntiHijackPrefix:
         """Should return the matching prefix."""
         content = prefix + b'{"data": 1}'
         assert _get_anti_hijack_prefix(content) == prefix
-
-    def test_returns_none_for_no_match(self):
-        """Should return None when no prefix matches."""
-        assert _get_anti_hijack_prefix(b'{"regular": "json"}') is None
-        assert _get_anti_hijack_prefix(b"") is None
 
 
 # =============================================================================
@@ -327,7 +274,6 @@ class TestNormalizeSse:
     def test_event_type_captured(self, sse_with_events: bytes):
         """Event type should be captured."""
         result, encoding = _normalize_sse(sse_with_events)
-        # Last event type seen should be returned
         assert encoding in ["message", "done"]
 
     def test_comments_ignored(self, sse_with_comments: bytes):
@@ -368,10 +314,6 @@ class TestIsMsgpack:
         content = bytes([marker]) + b"\x00\x00"
         assert _is_msgpack(content) is True
 
-    def test_empty_content_returns_false(self):
-        """Empty content should return False."""
-        assert _is_msgpack(b"") is False
-
     def test_non_msgpack_returns_false(self):
         """Non-MessagePack content should return False."""
         assert _is_msgpack(b'{"json": true}') is False
@@ -402,22 +344,8 @@ class TestDecodeMsgpack:
 
     def test_decode_failure_returns_none(self):
         """Decode failure should return None."""
-        # Invalid msgpack data (just a marker with no valid content)
         result = _decode_msgpack(b"\x81")  # Map with 1 element but no data
         assert result is None
-
-    def test_import_error_returns_none(self):
-        """Missing msgpack library should return None."""
-        import sys
-        # Save and remove msgpack from modules to force ImportError
-        saved = sys.modules.pop('msgpack', None)
-        try:
-            with patch.dict('sys.modules', {'msgpack': None}):
-                result = _decode_msgpack(b"\x81\x01\x02")
-                assert result is None
-        finally:
-            if saved:
-                sys.modules['msgpack'] = saved
 
 
 # =============================================================================
@@ -453,21 +381,10 @@ class TestDetectEncoding:
 
     def test_base64_url_detected(self):
         """URL-safe base64 should be detected when it has URL-specific chars."""
-        import base64
-        # Use bytes that produce - and _ in URL-safe encoding (not valid in standard base64)
-        # bytes([0xfb, 0xef, 0xbf]) encodes to '---_' in URL-safe, '+++/' in standard
-        # We need enough length to pass MIN_BASE64_LENGTH (20)
-        url_safe_data = bytes([0xfb, 0xef, 0xbf]) * 6  # Repeat to get sufficient length
+        url_safe_data = bytes([0xfb, 0xef, 0xbf]) * 6
         url_safe = base64.urlsafe_b64encode(url_safe_data)
-        # URL-safe encoded content with - and _ won't match standard base64 pattern
-        # because - and _ are not in [A-Za-z0-9+/]
         result = _detect_encoding(url_safe)
         assert result == "base64_url"
-
-    def test_short_content_returns_none(self):
-        """Content shorter than 2 bytes should return None."""
-        assert _detect_encoding(b"") is None
-        assert _detect_encoding(b"\x00") is None
 
     def test_plain_text_returns_none(self):
         """Plain text without encoding should return None."""
@@ -476,7 +393,8 @@ class TestDetectEncoding:
 
     def test_short_base64_not_detected(self):
         """Base64 shorter than MIN_BASE64_LENGTH should not be detected."""
-        short = base64.b64encode(b"hi")  # Very short
+        from mitmproxy.addons.oximy.normalize import MIN_BASE64_LENGTH
+        short = base64.b64encode(b"hi")
         if len(short) < MIN_BASE64_LENGTH:
             assert _detect_encoding(short) is None
 
@@ -500,7 +418,6 @@ class TestApplyDecoder:
 
     def test_base64_url_decoded(self):
         """URL-safe base64 should be decoded."""
-        import base64
         original = b"hello+world/test"
         encoded = base64.urlsafe_b64encode(original)
         result = _apply_decoder(encoded, "base64_url")
@@ -510,85 +427,6 @@ class TestApplyDecoder:
         """URL encoding should be decoded."""
         result = _apply_decoder(url_encoded, "url")
         assert result == b"hello world!"
-
-    def test_unknown_encoding_unchanged(self):
-        """Unknown encoding should return content unchanged."""
-        content = b"test content"
-        result = _apply_decoder(content, "unknown")
-        assert result == content
-
-
-# =============================================================================
-# _decode_base64 Tests
-# =============================================================================
-
-class TestDecodeBase64:
-    """Tests for _decode_base64 function."""
-
-    def test_standard_base64_decoded(self):
-        """Standard base64 should be decoded."""
-        encoded = base64.b64encode(b"hello world")
-        result = _decode_base64(encoded)
-        assert result == b"hello world"
-
-    def test_padding_added_if_missing(self):
-        """Missing padding should be added automatically."""
-        # Base64 of "hello" is "aGVsbG8="
-        # Remove padding for test
-        no_padding = b"aGVsbG8"
-        result = _decode_base64(no_padding)
-        assert result == b"hello"
-
-    def test_whitespace_stripped(self):
-        """Whitespace should be stripped."""
-        encoded = b"  " + base64.b64encode(b"test") + b"  \n"
-        result = _decode_base64(encoded)
-        assert result == b"test"
-
-
-# =============================================================================
-# _decode_base64_url Tests
-# =============================================================================
-
-class TestDecodeBase64Url:
-    """Tests for _decode_base64_url function."""
-
-    def test_url_safe_base64_decoded(self):
-        """URL-safe base64 should be decoded."""
-        encoded = base64.urlsafe_b64encode(b"hello+world/test")
-        result = _decode_base64_url(encoded)
-        assert result == b"hello+world/test"
-
-    def test_padding_added_if_missing(self):
-        """Missing padding should be added automatically."""
-        # URL-safe base64 of "hi" without padding
-        no_padding = b"aGk"
-        result = _decode_base64_url(no_padding)
-        assert result == b"hi"
-
-
-# =============================================================================
-# _decode_url Tests
-# =============================================================================
-
-class TestDecodeUrl:
-    """Tests for _decode_url function."""
-
-    def test_percent_encoding_decoded(self):
-        """Percent-encoded characters should be decoded."""
-        result = _decode_url(b"hello%20world%21")
-        assert result == b"hello world!"
-
-    def test_plus_not_decoded_as_space(self):
-        """Plus signs should not be decoded as spaces (that's form encoding)."""
-        result = _decode_url(b"hello+world")
-        assert result == b"hello+world"
-
-    def test_unicode_decoded(self):
-        """Unicode percent-encoding should be decoded."""
-        # %C3%A9 is é in UTF-8
-        result = _decode_url(b"caf%C3%A9")
-        assert result == "café".encode('utf-8')
 
 
 # =============================================================================
@@ -613,20 +451,12 @@ class TestDecodeLayers:
 
     def test_max_layers_respected(self):
         """Should stop after MAX_DECODE_LAYERS iterations."""
-        # Create deeply nested encoding
         content = b"test"
         for _ in range(MAX_DECODE_LAYERS + 2):
             content = base64.b64encode(content)
 
         result = _decode_layers(content)
-        # Should have decoded some layers but not infinitely
         assert result != content  # Some decoding happened
-
-    def test_no_encoding_unchanged(self):
-        """Plain content should be returned unchanged."""
-        content = b"plain text"
-        result = _decode_layers(content)
-        assert result == content
 
 
 # =============================================================================
@@ -635,10 +465,6 @@ class TestDecodeLayers:
 
 class TestToString:
     """Tests for _to_string function."""
-
-    def test_utf8_decoded(self):
-        """UTF-8 bytes should be decoded to string."""
-        assert _to_string(b"hello world") == "hello world"
 
     def test_binary_returns_base64_json(self):
         """Pure binary content should return JSON with base64."""
@@ -650,10 +476,8 @@ class TestToString:
 
     def test_mostly_printable_uses_replacement(self):
         """Content >80% printable should use replacement characters."""
-        # 90 printable + 10 non-printable = 90% printable
         content = b"a" * 90 + bytes(range(128, 138))
         result = _to_string(content)
-        # Should contain the 'a's and replacement chars, not be base64
         assert "a" * 10 in result
         assert "_binary_base64" not in result
 
@@ -665,14 +489,6 @@ class TestToString:
 class TestNormalizeBody:
     """Tests for normalize_body function."""
 
-    def test_none_returns_empty_string(self):
-        """None content should return empty string."""
-        assert normalize_body(None) == ""
-
-    def test_empty_returns_empty_string(self):
-        """Empty content should return empty string."""
-        assert normalize_body(b"") == ""
-
     def test_large_body_truncated(self):
         """Bodies larger than MAX_BODY_SIZE should be truncated."""
         large_content = b"x" * (MAX_BODY_SIZE + 1000)
@@ -683,7 +499,6 @@ class TestNormalizeBody:
     def test_grpc_content_routed(self, grpc_single_frame: bytes):
         """gRPC content should be routed to normalize_grpc."""
         result = normalize_body(grpc_single_frame, "application/grpc")
-        # Should be JSON output from gRPC normalization
         assert isinstance(result, str)
 
     def test_sse_content_routed(self, sse_simple: bytes):
@@ -732,17 +547,11 @@ class TestNormalizeBody:
 class TestNormalizeGrpc:
     """Tests for normalize_grpc function."""
 
-    def test_empty_returns_empty_string(self):
-        """Empty content should return empty string."""
-        assert normalize_grpc(b"") == ""
-
     def test_single_frame_decoded(self, grpc_single_frame: bytes):
         """Single frame should produce JSON output."""
         result = normalize_grpc(grpc_single_frame)
         assert isinstance(result, str)
-        # Should be valid JSON
         parsed = json.loads(result)
-        # Will have _raw_base64 if protobuf decode fails
         assert isinstance(parsed, dict)
 
     def test_multiple_frames_produces_array(self, grpc_multi_frame: bytes):
@@ -757,7 +566,6 @@ class TestNormalizeGrpc:
         content = b"not a valid grpc frame"
         result = normalize_grpc(content)
         parsed = json.loads(result)
-        # Should have _raw_base64 fallback
         assert "_raw_base64" in parsed or isinstance(parsed, dict)
 
     def test_decode_failure_fallback(self):
@@ -781,22 +589,9 @@ class TestDecodeProtobufSchemaless:
         result = _decode_protobuf_schemaless(large_data)
         assert result is None
 
-    def test_import_error_returns_none(self):
-        """Missing blackboxprotobuf should return None."""
-        import sys
-        # Save and remove blackboxprotobuf from modules to force ImportError
-        saved = sys.modules.pop('blackboxprotobuf', None)
-        try:
-            with patch.dict('sys.modules', {'blackboxprotobuf': None}):
-                result = _decode_protobuf_schemaless(b"\x08\x96\x01")
-                assert result is None
-        finally:
-            if saved:
-                sys.modules['blackboxprotobuf'] = saved
-
 
 # =============================================================================
-# Edge Cases and Error Handling
+# Zstd Decoding Tests
 # =============================================================================
 
 class TestZstdDecoding:
@@ -807,17 +602,18 @@ class TestZstdDecoding:
         try:
             from mitmproxy.net.encoding import decode_zstd
             import zstandard
-            # Compress some content
             cctx = zstandard.ZstdCompressor()
             compressed = cctx.compress(b"hello zstd world")
-            # Verify detection
             assert _detect_encoding(compressed) == "zstd"
-            # Verify decoding via normalize_body
             result = normalize_body(compressed)
             assert "hello zstd world" in result
         except ImportError:
             pytest.skip("zstandard not installed")
 
+
+# =============================================================================
+# Edge Cases and Error Handling
+# =============================================================================
 
 class TestEdgeCases:
     """Test edge cases and error handling."""

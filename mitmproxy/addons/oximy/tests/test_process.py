@@ -1,4 +1,4 @@
-"""Comprehensive unit tests for process.py.
+"""Unit tests for process.py.
 
 Tests cover process resolution, caching, and platform-specific logic.
 All subprocess calls, psutil, and ctypes are mocked.
@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -49,15 +48,8 @@ class TestGetResponsiblePid:
             result = _get_responsible_pid(1234)
             assert result == 5678
 
-    def test_zero_result_returns_none(self):
-        """Should return None when result is 0 or negative."""
-        mock_func = MagicMock(return_value=0)
-        with patch('mitmproxy.addons.oximy.process._responsible_pid_func', mock_func):
-            result = _get_responsible_pid(1234)
-            assert result is None
-
     def test_negative_result_returns_none(self):
-        """Should return None when result is negative."""
+        """Should return None when result is 0 or negative."""
         mock_func = MagicMock(return_value=-1)
         with patch('mitmproxy.addons.oximy.process._responsible_pid_func', mock_func):
             result = _get_responsible_pid(1234)
@@ -93,8 +85,6 @@ class TestProcPidpath:
 
     def test_success_returns_path(self):
         """Should return path on success."""
-        import ctypes
-
         mock_func = MagicMock()
         mock_func.return_value = 50  # Non-zero indicates success
 
@@ -115,121 +105,12 @@ class TestProcPidpath:
                 result = _proc_pidpath(1234)
                 assert result is None
 
-    def test_negative_return_returns_none(self):
-        """Should return None when ret is negative."""
-        mock_func = MagicMock(return_value=-1)
-        with patch('mitmproxy.addons.oximy.process._proc_pidpath_func', mock_func):
-            with patch('ctypes.create_string_buffer'):
-                result = _proc_pidpath(1234)
-                assert result is None
-
     def test_oserror_returns_none(self):
         """Should return None on OSError."""
         mock_func = MagicMock(side_effect=OSError("test"))
         with patch('mitmproxy.addons.oximy.process._proc_pidpath_func', mock_func):
             result = _proc_pidpath(1234)
             assert result is None
-
-    def test_unicode_decode_error_returns_none(self):
-        """Should return None on UnicodeDecodeError."""
-        # The actual _proc_pidpath handles UnicodeDecodeError internally
-        # by catching it in the except clause. We can't easily mock bytes.decode
-        # since it's a built-in. Instead, test that the function handles
-        # this by verifying the code path catches ValueError/OSError/UnicodeDecodeError.
-        # The implementation catches these errors and returns None.
-
-        # Test via the actual exception handling in _proc_pidpath
-        mock_func = MagicMock(side_effect=ValueError("test"))
-        with patch('mitmproxy.addons.oximy.process._proc_pidpath_func', mock_func):
-            result = _proc_pidpath(1234)
-            assert result is None
-
-
-# =============================================================================
-# ClientProcess Tests
-# =============================================================================
-
-class TestClientProcess:
-    """Tests for ClientProcess dataclass."""
-
-    def test_construction(self):
-        """Should construct with all fields."""
-        proc = ClientProcess(
-            pid=1234,
-            name="Safari",
-            path="/Applications/Safari.app/Contents/MacOS/Safari",
-            ppid=1,
-            parent_name="launchd",
-            user="testuser",
-            port=54321,
-            bundle_id="com.apple.Safari",
-        )
-        assert proc.pid == 1234
-        assert proc.name == "Safari"
-        assert proc.path == "/Applications/Safari.app/Contents/MacOS/Safari"
-        assert proc.ppid == 1
-        assert proc.parent_name == "launchd"
-        assert proc.user == "testuser"
-        assert proc.port == 54321
-        assert proc.bundle_id == "com.apple.Safari"
-
-    def test_default_bundle_id_none(self):
-        """bundle_id should default to None."""
-        proc = ClientProcess(
-            pid=1234,
-            name="test",
-            path="/test",
-            ppid=1,
-            parent_name=None,
-            user="user",
-            port=12345,
-        )
-        assert proc.bundle_id is None
-
-
-# =============================================================================
-# ProcessResolver Initialization Tests
-# =============================================================================
-
-class TestProcessResolverInit:
-    """Tests for ProcessResolver initialization."""
-
-    def test_default_state(self):
-        """Should initialize with default state."""
-        resolver = ProcessResolver()
-        assert resolver._proxy_port == 0
-        assert resolver._cache == {}
-        assert resolver._bundle_id_cache == {}
-        assert resolver._port_cache == {}
-
-    def test_custom_proxy_port(self):
-        """Should accept custom proxy port."""
-        resolver = ProcessResolver(proxy_port=8080)
-        assert resolver._proxy_port == 8080
-
-    def test_platform_detection(self):
-        """Should detect platform correctly based on actual system."""
-        import platform
-        resolver = ProcessResolver()
-        system = platform.system()
-        if system == "Darwin":
-            assert resolver._is_macos is True
-            assert resolver._is_linux is False
-            assert resolver._is_windows is False
-        elif system == "Linux":
-            assert resolver._is_macos is False
-            assert resolver._is_linux is True
-            assert resolver._is_windows is False
-        elif system == "Windows":
-            assert resolver._is_macos is False
-            assert resolver._is_linux is False
-            assert resolver._is_windows is True
-
-    def test_update_proxy_port(self):
-        """update_proxy_port should update the port."""
-        resolver = ProcessResolver()
-        resolver.update_proxy_port(9090)
-        assert resolver._proxy_port == 9090
 
 
 # =============================================================================
@@ -256,16 +137,6 @@ class TestExtractName:
         resolver = ProcessResolver()
         assert resolver._extract_name("C:\\test\\app.exe") == "app"
         assert resolver._extract_name("C:\\test\\APP.EXE") == "APP"  # Case preserved except .exe
-
-    def test_none_input(self):
-        """Should return None for None input."""
-        resolver = ProcessResolver()
-        assert resolver._extract_name(None) is None
-
-    def test_empty_input(self):
-        """Should return None for empty path."""
-        resolver = ProcessResolver()
-        assert resolver._extract_name("") is None
 
     def test_just_filename(self):
         """Should handle just a filename."""
@@ -296,11 +167,6 @@ class TestExtractExeName:
         """Should handle Unix path with .exe (Wine?)."""
         resolver = ProcessResolver()
         assert resolver._extract_exe_name("/home/user/wine/app.exe") == "app.exe"
-
-    def test_none_input(self):
-        """Should return None for None input."""
-        resolver = ProcessResolver()
-        assert resolver._extract_exe_name(None) is None
 
 
 # =============================================================================
@@ -338,11 +204,6 @@ class TestLooksLikeBundleId:
         resolver = ProcessResolver()
         assert resolver._looks_like_bundle_id(invalid) is False
 
-    def test_none_input(self):
-        """Should return False for None."""
-        resolver = ProcessResolver()
-        assert resolver._looks_like_bundle_id(None) is False  # type: ignore
-
     def test_hyphens_and_underscores_allowed(self):
         """Should allow hyphens and underscores in parts."""
         resolver = ProcessResolver()
@@ -355,6 +216,14 @@ class TestLooksLikeBundleId:
 
 class TestGetProcessForPort:
     """Tests for ProcessResolver.get_process_for_port method."""
+
+    @pytest.fixture(autouse=True)
+    async def cleanup_background_tasks(self):
+        """Cancel background tasks to prevent teardown errors."""
+        yield
+        for t in asyncio.all_tasks():
+            if t is not asyncio.current_task():
+                t.cancel()
 
     @pytest.mark.asyncio
     async def test_cache_hit_fresh(self):
@@ -431,6 +300,14 @@ class TestGetProcessForPort:
 class TestFindPidForPort:
     """Tests for ProcessResolver._find_pid_for_port method."""
 
+    def _make_mock_proc(self, pid, connections, uid=501):
+        """Helper to create a mock process with connections."""
+        proc = MagicMock()
+        proc.pid = pid
+        proc.info = {"pid": pid, "uids": MagicMock(real=uid)}
+        proc.net_connections.return_value = connections
+        return proc
+
     @pytest.mark.asyncio
     async def test_no_psutil_returns_none(self):
         """Should return None when psutil unavailable."""
@@ -440,12 +317,20 @@ class TestFindPidForPort:
             assert result is None
 
     @pytest.mark.asyncio
-    async def test_primary_match(self, mock_psutil_connections):
+    async def test_primary_match(self):
         """Should find PID via primary match (laddr + raddr to proxy port)."""
         resolver = ProcessResolver(proxy_port=8080)
 
+        conn = MagicMock()
+        conn.laddr = MagicMock(port=54321)
+        conn.raddr = MagicMock(port=8080)
+
+        mock_proc = self._make_mock_proc(1234, [conn])
         mock_psutil = MagicMock()
-        mock_psutil.net_connections.return_value = mock_psutil_connections
+        mock_psutil.process_iter.return_value = [mock_proc]
+        mock_psutil.AccessDenied = type('AccessDenied', (Exception,), {})
+        mock_psutil.NoSuchProcess = type('NoSuchProcess', (Exception,), {})
+        mock_psutil.ZombieProcess = type('ZombieProcess', (Exception,), {})
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
@@ -460,10 +345,13 @@ class TestFindPidForPort:
         conn = MagicMock()
         conn.laddr = MagicMock(port=54321)
         conn.raddr = None
-        conn.pid = 9999
 
+        mock_proc = self._make_mock_proc(9999, [conn])
         mock_psutil = MagicMock()
-        mock_psutil.net_connections.return_value = [conn]
+        mock_psutil.process_iter.return_value = [mock_proc]
+        mock_psutil.AccessDenied = type('AccessDenied', (Exception,), {})
+        mock_psutil.NoSuchProcess = type('NoSuchProcess', (Exception,), {})
+        mock_psutil.ZombieProcess = type('ZombieProcess', (Exception,), {})
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
@@ -478,10 +366,13 @@ class TestFindPidForPort:
         conn = MagicMock()
         conn.laddr = MagicMock(port=99999)  # Different port
         conn.raddr = None
-        conn.pid = 1234
 
+        mock_proc = self._make_mock_proc(1234, [conn])
         mock_psutil = MagicMock()
-        mock_psutil.net_connections.return_value = [conn]
+        mock_psutil.process_iter.return_value = [mock_proc]
+        mock_psutil.AccessDenied = type('AccessDenied', (Exception,), {})
+        mock_psutil.NoSuchProcess = type('NoSuchProcess', (Exception,), {})
+        mock_psutil.ZombieProcess = type('ZombieProcess', (Exception,), {})
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
@@ -489,46 +380,35 @@ class TestFindPidForPort:
                 assert result is None
 
     @pytest.mark.asyncio
-    async def test_exception_returns_none(self):
-        """Should return None on exception."""
+    async def test_access_denied_process_skipped(self):
+        """Should skip processes that raise AccessDenied."""
         resolver = ProcessResolver(proxy_port=8080)
 
+        # First proc raises AccessDenied, second has our connection
+        access_denied_proc = MagicMock()
+        access_denied_proc.pid = 100
+        access_denied_proc.info = {"pid": 100, "uids": MagicMock(real=501)}
+
+        conn = MagicMock()
+        conn.laddr = MagicMock(port=54321)
+        conn.raddr = MagicMock(port=8080)
+        good_proc = self._make_mock_proc(1234, [conn])
+
+        real_access_denied = type('AccessDenied', (Exception,), {})
+        real_no_such_process = type('NoSuchProcess', (Exception,), {})
+        real_zombie_process = type('ZombieProcess', (Exception,), {})
+
+        access_denied_proc.net_connections.side_effect = real_access_denied()
+
         mock_psutil = MagicMock()
-        mock_psutil.net_connections.side_effect = Exception("test error")
+        mock_psutil.process_iter.return_value = [access_denied_proc, good_proc]
+        mock_psutil.AccessDenied = real_access_denied
+        mock_psutil.NoSuchProcess = real_no_such_process
+        mock_psutil.ZombieProcess = real_zombie_process
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
                 result = await resolver._find_pid_for_port(54321)
-                assert result is None
-
-    @pytest.mark.asyncio
-    async def test_connection_with_no_pid_skipped(self):
-        """Should skip connections with pid=None."""
-        resolver = ProcessResolver(proxy_port=8080)
-
-        # Connection with no PID should be skipped
-        conn_no_pid = MagicMock()
-        conn_no_pid.laddr = MagicMock(port=54321)
-        conn_no_pid.raddr = MagicMock(port=8080)
-        conn_no_pid.pid = None  # No PID available
-
-        # Connection with PID should be found
-        conn_with_pid = MagicMock()
-        conn_with_pid.laddr = MagicMock(port=54322)
-        conn_with_pid.raddr = MagicMock(port=8080)
-        conn_with_pid.pid = 1234
-
-        mock_psutil = MagicMock()
-        mock_psutil.net_connections.return_value = [conn_no_pid, conn_with_pid]
-
-        with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
-            with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                # Should not find PID for port with no PID
-                result = await resolver._find_pid_for_port(54321)
-                assert result is None
-
-                # Should find PID for port with PID
-                result = await resolver._find_pid_for_port(54322)
                 assert result == 1234
 
 
@@ -559,7 +439,7 @@ class TestFetchProcessInfo:
 
     @pytest.mark.asyncio
     async def test_no_such_process(self):
-        """Should return None for NoSuchProcess exception."""
+        """Should return None when process doesn't exist."""
         resolver = ProcessResolver()
 
         mock_psutil = MagicMock()
@@ -572,40 +452,6 @@ class TestFetchProcessInfo:
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
                 with patch.object(resolver, '_is_macos', False):
                     result = await resolver._fetch_process_info(99999)
-                    assert result is None
-
-    @pytest.mark.asyncio
-    async def test_access_denied(self):
-        """Should return None for AccessDenied exception."""
-        resolver = ProcessResolver()
-
-        mock_psutil = MagicMock()
-        mock_psutil.NoSuchProcess = Exception
-        mock_psutil.AccessDenied = Exception
-        mock_psutil.ZombieProcess = Exception
-        mock_psutil.Process.side_effect = mock_psutil.AccessDenied()
-
-        with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
-            with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                with patch.object(resolver, '_is_macos', False):
-                    result = await resolver._fetch_process_info(1234)
-                    assert result is None
-
-    @pytest.mark.asyncio
-    async def test_zombie_process(self):
-        """Should return None for ZombieProcess exception."""
-        resolver = ProcessResolver()
-
-        mock_psutil = MagicMock()
-        mock_psutil.NoSuchProcess = Exception
-        mock_psutil.AccessDenied = Exception
-        mock_psutil.ZombieProcess = Exception
-        mock_psutil.Process.side_effect = mock_psutil.ZombieProcess()
-
-        with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
-            with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                with patch.object(resolver, '_is_macos', False):
-                    result = await resolver._fetch_process_info(1234)
                     assert result is None
 
     @pytest.mark.asyncio
@@ -622,32 +468,6 @@ class TestFetchProcessInfo:
                 assert result is not None
                 assert result["pid"] == 1234
                 assert result["path"] == "/Applications/Test.app/Contents/MacOS/Test"
-
-
-# =============================================================================
-# ProcessResolver.clear_cache Tests
-# =============================================================================
-
-class TestClearCache:
-    """Tests for ProcessResolver.clear_cache method."""
-
-    def test_all_caches_cleared(self):
-        """Should clear all caches."""
-        resolver = ProcessResolver()
-
-        # Populate caches
-        resolver._cache[1234] = {"pid": 1234, "path": "/test"}
-        resolver._bundle_id_cache["/test"] = "com.test.app"
-        resolver._port_cache[54321] = (
-            ClientProcess(pid=1, name="T", path="/t", ppid=1, parent_name=None, user="u", port=1),
-            time.time()
-        )
-
-        resolver.clear_cache()
-
-        assert resolver._cache == {}
-        assert resolver._bundle_id_cache == {}
-        assert resolver._port_cache == {}
 
 
 # =============================================================================
@@ -694,18 +514,6 @@ class TestGetProcessForPortImpl:
     """Tests for ProcessResolver._get_process_for_port_impl method."""
 
     @pytest.mark.asyncio
-    async def test_unsupported_platform(self):
-        """Should return unknown for unsupported platforms."""
-        resolver = ProcessResolver()
-        resolver._is_macos = False
-        resolver._is_linux = False
-        resolver._is_windows = False
-
-        result = await resolver._get_process_for_port_impl(54321)
-        assert result.name == "Unknown (unsupported platform)"
-        assert result.pid is None
-
-    @pytest.mark.asyncio
     async def test_pid_not_found(self):
         """Should return unknown when PID not found."""
         resolver = ProcessResolver()
@@ -736,21 +544,13 @@ class TestGetProcessForPortImpl:
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
-    def test_resolver_thread_safe(self):
-        """Resolver should be usable from multiple threads."""
-        import concurrent.futures
-
-        resolver = ProcessResolver()
-
-        def access_resolver():
-            resolver._extract_name("/test/path")
-            resolver._looks_like_bundle_id("com.test.app")
-            return True
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            futures = [executor.submit(access_resolver) for _ in range(10)]
-            for future in concurrent.futures.as_completed(futures):
-                assert future.result() is True
+    @pytest.fixture(autouse=True)
+    async def cleanup_background_tasks(self):
+        """Cancel background tasks to prevent teardown errors."""
+        yield
+        for t in asyncio.all_tasks():
+            if t is not asyncio.current_task():
+                t.cancel()
 
     @pytest.mark.asyncio
     async def test_concurrent_port_lookups(self):

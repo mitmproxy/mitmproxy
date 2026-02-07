@@ -46,9 +46,13 @@ final class APIClient: ObservableObject {
 
         let hardwareId = Self.getHardwareUUID() ?? UUID().uuidString
 
+        let deviceName = (Host.current().localizedName ?? "Unknown")
+            .replacingOccurrences(of: "\u{2018}", with: "'")
+            .replacingOccurrences(of: "\u{2019}", with: "'")
+
         let body = DeviceRegistrationRequest(
-            hostname: Host.current().localizedName ?? "Unknown",
-            displayName: Host.current().localizedName,
+            hostname: deviceName,
+            displayName: deviceName,
             osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
             sensorVersion: Bundle.main.appVersion,
             hardwareId: hardwareId,
