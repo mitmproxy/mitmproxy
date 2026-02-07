@@ -2076,6 +2076,7 @@ class TLSPassthrough:
             except re.error as e:
                 logger.debug(f"Invalid learned passthrough pattern '{p}': {e}")
         self._patterns = new_patterns
+        self._result_cache.clear()  # Clear cache since patterns changed
         logger.debug(f"Updated passthrough patterns: {len(patterns)} from config + {len(self._learned_patterns)} learned")
 
 
