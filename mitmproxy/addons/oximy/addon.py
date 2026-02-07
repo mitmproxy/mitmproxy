@@ -2893,6 +2893,11 @@ class OximyAddon:
         logger.setLevel(log_level)
         # Also set process module logger to same level for debugging
         logging.getLogger("mitmproxy.addons.oximy.process").setLevel(log_level)
+        # Suppress noisy connection logs (client connect/disconnect, server connect/disconnect)
+        # unless verbose mode is enabled
+        logging.getLogger("mitmproxy.proxy.server").setLevel(
+            logging.DEBUG if ctx.options.oximy_verbose else logging.WARNING
+        )
 
         # Register cleanup handlers for graceful shutdown
         _register_cleanup_handlers()
@@ -3429,6 +3434,7 @@ class OximyAddon:
         path = flow.request.path
         url = f"{host}{path}"
 
+        
         # =====================================================================
         # STEP 0: Bundle ID Rate Limiting (applies to ALL traffic)
         # Resolve client process early for rate-limiting decision
@@ -3444,8 +3450,8 @@ class OximyAddon:
             try:
                 client_port = flow.client_conn.peername[1]
                 client_process = await self._resolver.get_process_for_port(client_port)
-            except Exception:
-                pass  # Silent fail - will be None
+            except Exception as e:
+                logger.debug(f"[PROCESS] Failed to resolve process for port {client_port}: {e}")
 
         bundle_id = client_process.bundle_id if client_process else None
 
@@ -3456,11 +3462,13 @@ class OximyAddon:
         if bundle_id is None:
             # Process not resolved - likely race condition with client_connected hook
             logger.info(f"[STEP0] No bundle_id for {host} - process not resolved")
+            return
         else:
             bundle_lower = bundle_id.lower()
             is_browser = bundle_lower in self._allowed_app_hosts_set
             is_allowed_non_host = bundle_lower in self._allowed_app_non_hosts_set
             has_parser = bundle_lower in self._apps_with_parsers
+            
 
             logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, is_allowed_non_host={is_allowed_non_host}, has_parser={has_parser}")
 
