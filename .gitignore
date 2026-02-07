@@ -56,3 +56,5 @@ OximyMac/App/Secrets.swift
 .env.local
 .env.*.local
 /test_har
+/psutil-7.2.2.dist-info
+/psutil
