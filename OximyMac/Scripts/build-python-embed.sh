@@ -124,24 +124,33 @@ install_packages_for_arch() {
     else
         echo "    Cross-installing packages for $arch_name (cannot run $arch_name Python on this host)..."
 
-        # Strategy: Copy pure Python packages from x86_64, then replace only arch-specific binaries
+        # Strategy: Copy pure Python packages from the already-built architecture,
+        # then replace only arch-specific binaries
         # This is more reliable than trying to download and install wheels separately
 
-        local x86_site_packages="$EMBED_DIR/x86_64/lib/python3.12/site-packages"
+        # Determine source architecture (the one that's already built)
+        local source_arch=""
+        if [ "$arch_name" = "arm64" ]; then
+            source_arch="x86_64"
+        else
+            source_arch="arm64"
+        fi
 
-        if [ -d "$x86_site_packages/mitmproxy" ]; then
-            echo "    Copying packages from x86_64 to $arch_name..."
+        local source_site_packages="$EMBED_DIR/$source_arch/lib/python3.12/site-packages"
+
+        if [ -d "$source_site_packages/mitmproxy" ]; then
+            echo "    Copying packages from $source_arch to $arch_name..."
             # Copy all packages (most are pure Python and work on both architectures)
-            cp -R "$x86_site_packages"/* "$site_packages/"
+            cp -R "$source_site_packages"/* "$site_packages/"
 
-            # Copy ALL pip-installed scripts from x86_64/bin to arm64/bin
+            # Copy ALL pip-installed scripts from source/bin to target/bin
             # These are Python entry point scripts that work on both architectures
-            local x86_bin="$EMBED_DIR/x86_64/bin"
+            local source_bin="$EMBED_DIR/$source_arch/bin"
             local target_bin="$target_dir/bin"
             echo "    Copying pip-installed scripts to $arch_name/bin/..."
 
-            # Copy any script that exists in x86_64/bin but not in arm64/bin
-            for script in "$x86_bin"/*; do
+            # Copy any script that exists in source/bin but not in target/bin
+            for script in "$source_bin"/*; do
                 script_name=$(basename "$script")
                 # Skip if already exists in target (base Python scripts)
                 if [ ! -e "$target_bin/$script_name" ]; then
@@ -164,9 +173,17 @@ install_packages_for_arch() {
             rm -rf "$wheel_dir"
             mkdir -p "$wheel_dir"
 
-            # Download arm64-specific wheels for packages with compiled extensions
+            # Determine platform tag for downloads
+            local platform_tag=""
+            if [ "$arch_name" = "arm64" ]; then
+                platform_tag="macosx_11_0_arm64"
+            else
+                platform_tag="macosx_10_9_x86_64"
+            fi
+
+            # Download architecture-specific wheels for packages with compiled extensions
             "$pip_executable" download \
-                --platform macosx_11_0_arm64 \
+                --platform "$platform_tag" \
                 --python-version 3.12 \
                 --only-binary=:all: \
                 --no-deps \
@@ -185,9 +202,9 @@ install_packages_for_arch() {
                 psutil \
                 2>/dev/null || true
 
-            # Extract arm64 wheels and overwrite the x86_64 compiled files
+            # Extract wheels and overwrite the source architecture's compiled files
             echo "    Extracting $arch_name compiled extensions..."
-            for whl in "$wheel_dir"/*arm64*.whl "$wheel_dir"/*universal*.whl; do
+            for whl in "$wheel_dir"/*.whl; do
                 if [ -f "$whl" ]; then
                     unzip -q -o "$whl" -d "$site_packages" 2>/dev/null || true
                 fi
@@ -195,7 +212,7 @@ install_packages_for_arch() {
 
             rm -rf "$wheel_dir"
         else
-            echo "    ERROR: x86_64 packages not found. Build x86_64 first!"
+            echo "    ERROR: $source_arch packages not found. Build $source_arch first!"
             return 1
         fi
     fi
