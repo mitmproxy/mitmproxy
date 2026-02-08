@@ -3812,6 +3812,15 @@ class OximyAddon:
                 logger.warning(f"[STREAM] Skipping trace for truncated stream: {url[:80]}")
                 return
             full_body = b"".join(stream_chunks)
+            # Streamed chunks are raw (still compressed). Decompress based on
+            # content-encoding before normalization. flow.response.content does
+            # this automatically for non-streamed responses.
+            content_encoding = flow.response.headers.get("content-encoding", "").strip().lower()
+            if content_encoding and content_encoding != "identity":
+                try:
+                    full_body = decode_content_encoding(full_body, content_encoding)
+                except Exception as e:
+                    logger.warning(f"[STREAM] Failed to decompress {content_encoding}: {e}")
             content_type = flow.response.headers.get("content-type", "")
             response_body = normalize_body(full_body, content_type)
             event = self._build_event(flow, response_body)
