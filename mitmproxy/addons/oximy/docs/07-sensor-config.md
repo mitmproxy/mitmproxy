@@ -70,19 +70,14 @@ Add a `localDataSources` field to the existing sensor-config API response. The s
               "queries": [
                 {
                   "file_type": "sqlite_composer",
-                  "sql": "SELECT key, value FROM cursorDiskKV WHERE key LIKE 'composerData:%'",
-                  "incremental_field": "json_extract(value, '$.createdAt')"
+                  "sql": "SELECT key, value, json_extract(value, '$.createdAt') as _ts FROM cursorDiskKV WHERE key LIKE 'composerData:%' AND json_extract(value, '$.createdAt') > ? ORDER BY json_extract(value, '$.createdAt')",
+                  "incremental_field": "_ts"
                 },
                 {
                   "file_type": "sqlite_bubble",
-                  "sql": "SELECT key, value FROM cursorDiskKV WHERE key LIKE 'bubbleId:%'",
-                  "incremental_field": null,
+                  "sql": "SELECT rowid, key, value FROM cursorDiskKV WHERE key LIKE 'bubbleId:%' AND rowid > ? ORDER BY rowid",
+                  "incremental_field": "rowid",
                   "depends_on": "sqlite_composer"
-                },
-                {
-                  "file_type": "sqlite_daily_stats",
-                  "sql": "SELECT key, value FROM ItemTable WHERE key LIKE 'aiCodeTracking.dailyStats%'",
-                  "incremental_field": null
                 }
               ]
             },
@@ -97,7 +92,7 @@ Add a `localDataSources` field to the existing sensor-config API response. The s
               ]
             }
           ],
-          "detect_path": "~/.cursor/ai-tracking/"
+          "detect_path": "~/.cursor/"
         },
         {
           "name": "codex",

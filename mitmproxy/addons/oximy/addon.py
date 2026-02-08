@@ -3462,7 +3462,8 @@ class OximyAddon:
             client_port = client.peername[1]
             client_process = await self._resolver.get_process_for_port(client_port)
             self._client_processes[client.id] = client_process
-            logger.info(f"[CLIENT] {client_process.name} ({client_process.bundle_id}) connected on port {client_port}")
+            if client_process.bundle_id:
+                logger.info(f"[CLIENT] {client_process.name} ({client_process.bundle_id}) connected on port {client_port}")
         except Exception as e:
             logger.debug(f"[CLIENT_CONNECTED] Failed to resolve process for port {client.peername[1] if client.peername else 'unknown'}: {e}")
 

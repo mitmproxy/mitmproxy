@@ -206,8 +206,8 @@ def _extract_metadata_from_path(filepath: str, source_name: str) -> dict:
 class ScanState:
     """Persists per-file scan offsets/mtimes to disk."""
 
-    def __init__(self, state_file: Path = SCAN_STATE_FILE):
-        self._state_file = state_file
+    def __init__(self, state_file: Path | None = None):
+        self._state_file = state_file or SCAN_STATE_FILE
         self._data: dict = {"version": 1, "sources": {}}
         self._lock = threading.Lock()
         self._load()
@@ -315,6 +315,7 @@ class LocalDataCollector:
         self._device_id = device_id
         self._api_base_url = api_base_url or _collector_api_base
         self._scan_state = ScanState()
+        self._startup_done = False
         self._stop_event = threading.Event()
         self._watcher_thread: threading.Thread | None = None
         self._scan_thread: threading.Thread | None = None
@@ -352,7 +353,6 @@ class LocalDataCollector:
         self._max_events_per_batch = config.get("max_events_per_batch", DEFAULT_MAX_EVENTS_PER_BATCH)
         self._scan_interval = config.get("poll_interval_seconds",
                                          config.get("scan_interval_seconds", DEFAULT_SCAN_INTERVAL))
-        self._backfill_max_age_days = config.get("backfill_max_age_days", DEFAULT_BACKFILL_MAX_AGE_DAYS)
         self._max_batch_size_bytes = config.get("max_batch_size_mb", 5) * 1024 * 1024
 
         default_endpoint = f"{self._api_base_url}/ingest/local-sessions"
@@ -382,6 +382,15 @@ class LocalDataCollector:
                 name="oximy-local-watcher",
             )
             self._watcher_thread.start()
+
+            # Periodic scan thread as safety net (only needed with watchfiles;
+            # poll fallback already does full scans every cycle).
+            self._scan_thread = threading.Thread(
+                target=self._scan_loop,
+                daemon=True,
+                name="oximy-local-scanner",
+            )
+            self._scan_thread.start()
         else:
             logger.warning("watchfiles not available, using polling fallback")
             self._watcher_thread = threading.Thread(
@@ -390,14 +399,6 @@ class LocalDataCollector:
                 name="oximy-local-poller",
             )
             self._watcher_thread.start()
-
-        # Start periodic scan thread (safety net + backfill)
-        self._scan_thread = threading.Thread(
-            target=self._scan_loop,
-            daemon=True,
-            name="oximy-local-scanner",
-        )
-        self._scan_thread.start()
         logger.info("LocalDataCollector started")
 
     def stop(self) -> None:
@@ -413,6 +414,8 @@ class LocalDataCollector:
 
     def update_config(self, config: dict) -> None:
         with self._config_lock:
+            if self._config == config:
+                return  # No change
             self._config = config
             self._apply_config(config)
         logger.info("LocalDataCollector config updated")
@@ -579,15 +582,23 @@ class LocalDataCollector:
         if not config.get("enabled", False):
             return
 
+        is_startup = not self._startup_done
+
         for source_config in config.get("sources", []):
             if not source_config.get("enabled", True):
                 continue
             try:
-                self._scan_source(source_config)
+                self._scan_source(source_config, is_startup)
             except Exception as e:
                 logger.warning(f"Error scanning source '{source_config.get('name')}': {e}")
 
-    def _scan_source(self, source_config: dict) -> None:
+        if is_startup:
+            self._startup_done = True
+            logger.info(
+                "LocalDataCollector startup scan complete — now tracking incrementally"
+            )
+
+    def _scan_source(self, source_config: dict, is_startup: bool) -> None:
         """Scan one source (e.g., claude_code) for new data."""
         source_name = source_config["name"]
         detect_path = source_config.get("detect_path", "")
@@ -599,7 +610,7 @@ class LocalDataCollector:
 
         for glob_config in source_config.get("globs", []):
             try:
-                self._scan_glob(source_name, glob_config)
+                self._scan_glob(source_name, glob_config, is_startup)
             except Exception as e:
                 logger.warning(f"Error scanning glob '{glob_config.get('pattern')}': {e}")
 
@@ -607,11 +618,11 @@ class LocalDataCollector:
         sqlite_configs = source_config.get("sqlite", [])
         if sqlite_configs:
             try:
-                self._scan_sqlite_databases(source_name, sqlite_configs)
+                self._scan_sqlite_databases(source_name, sqlite_configs, is_startup)
             except Exception as e:
                 logger.warning(f"Error scanning SQLite for '{source_name}': {e}")
 
-    def _scan_glob(self, source_name: str, glob_config: dict) -> None:
+    def _scan_glob(self, source_name: str, glob_config: dict, is_startup: bool) -> None:
         """Scan files matching a glob pattern."""
         pattern = glob_config["pattern"].replace("~", str(Path.home()))
         file_type = glob_config["file_type"]
@@ -620,10 +631,11 @@ class LocalDataCollector:
 
         matched_files = glob_module.glob(pattern, recursive=True)
 
-        is_first_run = self._scan_state.is_first_run()
-        backfill_cutoff = None
-        if is_first_run and self._backfill_max_age_days >= 0:
-            backfill_cutoff = time.time() - (self._backfill_max_age_days * 86400)
+        if is_startup:
+            logger.info(
+                f"[STARTUP] Fast-forwarding {len(matched_files)} file(s) "
+                f"for '{source_name}'"
+            )
 
         for filepath in matched_files:
             filename = os.path.basename(filepath)
@@ -636,18 +648,16 @@ class LocalDataCollector:
             ):
                 continue
 
-            # Backfill filter: skip old files on first run but record their
-            # current size so future incremental reads start from the end.
-            if backfill_cutoff is not None:
+            if is_startup:
+                # Fast-forward: record current EOF, don't read anything
                 try:
                     st = os.stat(filepath)
-                    if st.st_mtime < backfill_cutoff:
-                        self._scan_state.set_file_state(
-                            source_name, filepath, st.st_size, st.st_mtime
-                        )
-                        continue
+                    self._scan_state.set_file_state(
+                        source_name, filepath, st.st_size, st.st_mtime
+                    )
                 except OSError:
-                    continue
+                    pass
+                continue
 
             try:
                 if read_mode == "full":
@@ -661,16 +671,16 @@ class LocalDataCollector:
     # SQLite scanning
     # ------------------------------------------------------------------
 
-    def _scan_sqlite_databases(self, source_name: str, sqlite_configs: list[dict]) -> None:
+    def _scan_sqlite_databases(self, source_name: str, sqlite_configs: list[dict], is_startup: bool) -> None:
         """Scan all SQLite databases configured for a source."""
         for db_config in sqlite_configs:
             try:
-                self._scan_sqlite_db(source_name, db_config)
+                self._scan_sqlite_db(source_name, db_config, is_startup)
             except Exception as e:
                 db_path = db_config.get("db_path", "?")
                 logger.warning(f"Error scanning SQLite DB '{db_path}': {e}")
 
-    def _scan_sqlite_db(self, source_name: str, db_config: dict) -> None:
+    def _scan_sqlite_db(self, source_name: str, db_config: dict, is_startup: bool) -> None:
         """Open one SQLite database, resolve query order, execute queries."""
         raw_path = db_config["db_path"].replace("~", str(Path.home()))
         db_path = os.path.expandvars(raw_path)
@@ -683,22 +693,24 @@ class LocalDataCollector:
         except OSError:
             return
 
+        # Also check WAL file for changes (SQLite WAL mode)
+        wal_path = db_path + "-wal"
+        try:
+            wal_mtime = os.stat(wal_path).st_mtime
+            current_mtime = max(current_mtime, wal_mtime)
+        except OSError:
+            pass
+
         db_key = os.path.basename(db_path)
         db_state = self._scan_state.get_sqlite_state(source_name, db_key)
         saved_mtime = db_state.get("mtime", 0)
-
-        # Backfill check on first run
-        is_first_run = self._scan_state.is_first_run()
-        if is_first_run and self._backfill_max_age_days >= 0:
-            backfill_cutoff = time.time() - (self._backfill_max_age_days * 86400)
-            if current_mtime < backfill_cutoff:
-                return
+        mtime_changed = current_mtime != saved_mtime
 
         queries = db_config.get("queries", [])
         has_incremental = any(q.get("incremental_field") for q in queries)
 
-        # Skip if mtime unchanged and no incremental queries
-        if current_mtime == saved_mtime and not has_incremental:
+        # Skip entirely if mtime unchanged and no incremental queries
+        if not is_startup and not mtime_changed and not has_incremental:
             return
 
         try:
@@ -716,9 +728,20 @@ class LocalDataCollector:
 
         try:
             for query_config in ordered_queries:
+                is_incremental = bool(query_config.get("incremental_field"))
+
+                # Non-incremental queries: only run when mtime changes or on startup
+                if not is_incremental and not mtime_changed and not is_startup:
+                    continue
+
+                # Startup seeding: skip non-incremental queries (nothing to seed)
+                if is_startup and not is_incremental:
+                    continue
+
                 try:
                     self._execute_sqlite_query(
-                        conn, source_name, db_path, db_key, query_config, db_state
+                        conn, source_name, db_path, db_key, query_config, db_state,
+                        seed_only=is_startup,
                     )
                 except sqlite3.DatabaseError as e:
                     logger.warning(f"SQLite query error in {db_path}: {e}")
@@ -741,21 +764,29 @@ class LocalDataCollector:
         db_key: str,
         query_config: dict,
         db_state: dict,
+        seed_only: bool = False,
     ) -> None:
-        """Execute one SQLite query, build envelopes for each row."""
+        """Execute one SQLite query, build envelopes for each row.
+
+        If seed_only=True, only captures the max incremental value
+        without buffering any rows (used for backfill-disabled seeding).
+        """
         file_type = query_config["file_type"]
         sql = query_config["sql"]
         incremental_field = query_config.get("incremental_field")
 
+        # Get saved incremental value for filtering
+        saved_inc_value = None
         params: tuple = ()
-        if incremental_field and "?" in sql:
-            last_val = (
+        if incremental_field:
+            saved_inc_value = (
                 db_state
                 .get("incremental", {})
                 .get(file_type, {})
-                .get("last_value", 0)
+                .get("last_value")
             )
-            params = (last_val,)
+            if "?" in sql:
+                params = (saved_inc_value or 0,)
 
         cursor = conn.execute(sql, params)
         columns = [desc[0] for desc in cursor.description] if cursor.description else []
@@ -779,6 +810,16 @@ class LocalDataCollector:
                 if inc_val is not None:
                     if max_incremental_value is None or inc_val > max_incremental_value:
                         max_incremental_value = inc_val
+
+                    # Client-side filter: skip rows already seen (for queries
+                    # without ? in SQL that can't filter at the DB level)
+                    if saved_inc_value is not None and inc_val <= saved_inc_value:
+                        continue
+
+            # seed_only: just capture the max incremental value, don't buffer rows
+            if seed_only:
+                row_count += 1
+                continue
 
             raw_line = json.dumps(row_dict, separators=(",", ":"), default=str)
             if len(raw_line.encode("utf-8")) > self._max_event_size:
@@ -820,7 +861,15 @@ class LocalDataCollector:
             )
 
         if row_count > 0:
-            logger.debug(f"Processed {row_count} rows from {db_path}:{file_type}")
+            db_name = os.path.basename(db_path)
+            if seed_only:
+                logger.info(
+                    f"[BACKFILL] Seeded {db_name}:{file_type} — skipped {row_count} existing row(s)"
+                )
+            else:
+                logger.info(
+                    f"[ACTIVE] {source_name}: {row_count} new row(s) from {db_name}:{file_type}"
+                )
 
     @staticmethod
     def _get_incremental_value(row_dict: dict, incremental_field: str) -> Any:
@@ -869,7 +918,7 @@ class LocalDataCollector:
                 db_path = os.path.expandvars(db_path)
                 if abs_path == os.path.abspath(db_path):
                     try:
-                        self._scan_sqlite_db(source["name"], db_config)
+                        self._scan_sqlite_db(source["name"], db_config, is_startup=False)
                     except Exception as e:
                         logger.warning(f"Error on SQLite change {filepath}: {e}")
                     return
@@ -930,6 +979,12 @@ class LocalDataCollector:
                     raw_line=stripped,
                     line_number=line_number,
                 )
+
+        if line_number > 0:
+            short_path = os.path.basename(os.path.dirname(filepath)) + "/" + os.path.basename(filepath)
+            logger.info(
+                f"[ACTIVE] {source_name}: {line_number} new event(s) in {short_path}"
+            )
 
         self._scan_state.set_file_state(source_name, filepath, new_offset, current_mtime)
 
@@ -1139,9 +1194,22 @@ class LocalDataCollector:
                     body = resp.read().decode("utf-8")
                     data = json.loads(body)
                     if data.get("success"):
+                        # Log source/file breakdown so we can see what's being uploaded
+                        from collections import Counter
+                        file_counts = Counter(
+                            e.get("source_file", "unknown")
+                            for e in batch
+                        )
+                        breakdown = ", ".join(
+                            f"{os.path.basename(f)}({n})"
+                            for f, n in file_counts.most_common(5)
+                        )
+                        if len(file_counts) > 5:
+                            breakdown += f", +{len(file_counts) - 5} more"
                         logger.info(
                             f"Uploaded {len(batch)} local session events "
-                            f"({len(compressed)} bytes compressed)"
+                            f"({len(compressed)} bytes compressed) "
+                            f"[{', '.join(sources)}] — {breakdown}"
                         )
                         self._consecutive_upload_failures = 0
                         return True

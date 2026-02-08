@@ -693,6 +693,14 @@ class LocalDataCollector:
         except OSError:
             return
 
+        # Also check WAL file for changes (SQLite WAL mode)
+        wal_path = db_path + "-wal"
+        try:
+            wal_mtime = os.stat(wal_path).st_mtime
+            current_mtime = max(current_mtime, wal_mtime)
+        except OSError:
+            pass
+
         db_key = os.path.basename(db_path)
         db_state = self._scan_state.get_sqlite_state(source_name, db_key)
         saved_mtime = db_state.get("mtime", 0)

@@ -64,6 +64,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     private var remoteStateObserver: NSObjectProtocol?
+    private var mainMenuQuitItem: NSMenuItem?
+    private var isShowingQuitBlockedAlert = false
 
     // MARK: - App Lifecycle
 
@@ -427,13 +429,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenu = NSMenu()
         appMenu.addItem(NSMenuItem(title: "About Oximy", action: #selector(showAbout), keyEquivalent: ""))
         appMenu.addItem(NSMenuItem.separator())
-        // NO keyboard shortcut - quit only via explicit button
-        appMenu.addItem(NSMenuItem(title: "Quit Oximy", action: #selector(quitApp), keyEquivalent: ""))
+
+        let quitItem = NSMenuItem(title: "Quit Oximy", action: #selector(quitApp), keyEquivalent: "")
+        if MDMConfigService.shared.disableQuit {
+            quitItem.isEnabled = false
+        }
+        mainMenuQuitItem = quitItem
+        appMenu.addItem(quitItem)
 
         let appMenuItem = NSMenuItem()
         appMenuItem.submenu = appMenu
         mainMenu.addItem(appMenuItem)
 
+        appMenu.delegate = self
         NSApp.mainMenu = mainMenu
     }
 
@@ -444,28 +452,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var allowQuit = false
 
     @objc private func quitApp() {
-        // Check if MDM blocks quitting
         if MDMConfigService.shared.disableQuit {
-            print("[OximyApp] Quit blocked by MDM policy (DisableQuit)")
+            print("[OximyApp] Quit blocked by policy (DisableQuit)")
+            showQuitBlockedAlert()
             return
         }
 
         print("[OximyApp] Quit requested - setting allowQuit=true")
         allowQuit = true
 
-        // Small delay to ensure UI cleanup completes
         DispatchQueue.main.async {
             NSApp.terminate(nil)
         }
+    }
+
+    private func showQuitBlockedAlert() {
+        guard !isShowingQuitBlockedAlert else { return }
+        isShowingQuitBlockedAlert = true
+
+        let alert = NSAlert()
+        alert.messageText = "Quit is disabled"
+        if let itSupport = RemoteStateService.shared.itSupport, !itSupport.isEmpty {
+            alert.informativeText = "Quitting Oximy has been disabled by your organization.\n\nContact your IT administrator: \(itSupport)"
+        } else {
+            alert.informativeText = "Quitting Oximy has been disabled by your organization.\n\nContact your IT administrator for more information."
+        }
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+
+        isShowingQuitBlockedAlert = false
     }
 
     // Block CMD+Q unless explicitly allowed via quitApp()
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         print("[OximyApp] applicationShouldTerminate called, allowQuit=\(allowQuit)")
 
-        // Check if MDM blocks quitting
         if MDMConfigService.shared.disableQuit {
-            print("[OximyApp] Termination blocked by MDM policy")
+            print("[OximyApp] Termination blocked by policy")
+            showQuitBlockedAlert()
             return .terminateCancel
         }
 
@@ -556,7 +581,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(statusItem)
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit Oximy", action: #selector(quitApp), keyEquivalent: ""))
+
+        let quitItem = NSMenuItem(title: "Quit Oximy", action: #selector(quitApp), keyEquivalent: "")
+        if MDMConfigService.shared.disableQuit {
+            quitItem.isEnabled = false
+            quitItem.toolTip = "Quit is disabled by your organization"
+        }
+        menu.addItem(quitItem)
 
         self.statusItem.menu = menu
         self.statusItem.button?.performClick(nil)
@@ -630,5 +661,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Ensure the popover window becomes key
             popover.contentViewController?.view.window?.makeKey()
         }
+    }
+}
+
+// MARK: - NSMenuDelegate
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        guard let quitItem = mainMenuQuitItem else { return }
+        quitItem.isEnabled = !MDMConfigService.shared.disableQuit
     }
 }
