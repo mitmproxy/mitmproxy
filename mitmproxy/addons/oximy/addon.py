@@ -83,6 +83,13 @@ OXIMY_NO_PARSER_DOMAINS_CACHE = OXIMY_DIR / "no-parser-domains.json"
 _SHELL_MARKER = "# --- Oximy (do not edit this block) ---"
 _SHELL_END_MARKER = "# --- End Oximy ---"
 
+# Environment variables to set via launchctl for GUI-spawned processes (macOS only)
+_LAUNCHCTL_ENV_VARS = (
+    "HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy",
+    "NO_PROXY", "no_proxy",
+    "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE",
+)
+
 # Maximum bytes to accumulate from streamed (SSE) responses before stopping capture
 _MAX_STREAM_CAPTURE_BYTES = 100 * 1024 * 1024  # 100 MB
 
@@ -380,12 +387,82 @@ def _setup_terminal_env() -> None:
                 Path.home() / ".zshrc",
                 Path.home() / ".bashrc",
             ])
+            _set_launchctl_env()
         elif sys.platform == "win32":
             _write_windows_env_scripts()
             _inject_powershell_profiles()
             _inject_cmd_autorun()
     except Exception as e:
         logger.warning(f"Terminal env setup failed (non-fatal): {e}")
+
+
+def _set_launchctl_env() -> None:
+    """Set proxy and CA env vars in launchd so GUI-spawned processes inherit them.
+
+    macOS only. launchctl setenv sets variables in the launchd environment,
+    which is inherited by all newly launched processes (including those started
+    by GUI apps like VS Code, Cursor, etc.). This complements shell profile
+    injection which only covers interactive terminal sessions.
+    """
+    if sys.platform != "darwin":
+        return
+
+    port = _state.proxy_port
+    if not port:
+        return
+
+    proxy_url = f"http://{PROXY_HOST}:{port}"
+    no_proxy = "localhost,127.0.0.1,::1,.local"
+    ca_cert = str(OXIMY_CA_CERT)
+    ca_bundle = str(OXIMY_COMBINED_CA_BUNDLE)
+
+    env_values = {
+        "HTTP_PROXY": proxy_url, "HTTPS_PROXY": proxy_url,
+        "http_proxy": proxy_url, "https_proxy": proxy_url,
+        "NO_PROXY": no_proxy, "no_proxy": no_proxy,
+        "NODE_EXTRA_CA_CERTS": ca_cert,
+        "SSL_CERT_FILE": ca_bundle,
+        "REQUESTS_CA_BUNDLE": ca_bundle,
+        "CURL_CA_BUNDLE": ca_bundle,
+    }
+
+    errors = 0
+    for name, value in env_values.items():
+        try:
+            subprocess.run(
+                ["launchctl", "setenv", name, value],
+                capture_output=True, timeout=5,
+            )
+        except (subprocess.SubprocessError, OSError) as e:
+            errors += 1
+            if errors == 1:
+                logger.debug(f"launchctl setenv failed for {name}: {e}")
+
+    if errors == 0:
+        logger.info(f"launchctl env vars set ({len(env_values)} vars, proxy={proxy_url})")
+    else:
+        logger.warning(f"launchctl setenv: {errors}/{len(env_values)} calls failed")
+
+
+def _unset_launchctl_env() -> None:
+    """Remove proxy and CA env vars from launchd environment.
+
+    macOS only. Called during shutdown and emergency cleanup to prevent
+    processes launched after proxy shutdown from trying to use a dead proxy.
+    """
+    if sys.platform != "darwin":
+        return
+
+    for name in _LAUNCHCTL_ENV_VARS:
+        try:
+            subprocess.run(
+                ["launchctl", "unsetenv", name],
+                capture_output=True, timeout=5,
+            )
+        except (subprocess.SubprocessError, OSError):
+            pass
+
+    logger.info("launchctl env vars cleared")
 
 
 def _write_env_script() -> None:
@@ -400,6 +477,15 @@ _oximy_cleanup() {
     unset NO_PROXY no_proxy
     unset NODE_EXTRA_CA_CERTS SSL_CERT_FILE REQUESTS_CA_BUNDLE CURL_CA_BUNDLE
     unset OXIMY_PROXY_ACTIVE
+    # Also clear launchctl env vars so GUI-spawned processes stop using dead proxy
+    if command -v launchctl >/dev/null 2>&1; then
+        for _v in HTTP_PROXY HTTPS_PROXY http_proxy https_proxy \
+                  NO_PROXY no_proxy NODE_EXTRA_CA_CERTS SSL_CERT_FILE \
+                  REQUESTS_CA_BUNDLE CURL_CA_BUNDLE; do
+            launchctl unsetenv "$_v" 2>/dev/null
+        done
+        unset _v
+    fi
 }
 
 # --- Pre-command hook: auto-unset vars when proxy is gone ---
@@ -651,6 +737,7 @@ def _teardown_terminal_env() -> None:
     """Remove shell profile injections and generated files on shutdown."""
     try:
         if sys.platform == "darwin":
+            _unset_launchctl_env()
             _remove_shell_profile_injections([
                 Path.home() / ".zshrc",
                 Path.home() / ".bashrc",
@@ -770,6 +857,7 @@ def _emergency_cleanup() -> None:
     # This is defensive - better to disable twice than leave proxy orphaned
     logger.info("Emergency cleanup: disabling system proxy...")
     _set_system_proxy(enable=False)
+    _unset_launchctl_env()
     _delete_proxy_port_file()
     with _state.lock:
         _state.proxy_active = False
@@ -914,7 +1002,7 @@ def _ensure_cert_trusted() -> bool:
 # Support environment variable overrides for testing/CI
 DEFAULT_SENSOR_CONFIG_URL = os.environ.get(
     "OXIMY_CONFIG_URL",
-    "http://localhost:4000/api/v1/sensor-config"
+    "https://api.oximy.com/api/v1/sensor-config"
 )
 DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
     "OXIMY_CONFIG_CACHE",
@@ -1119,6 +1207,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
             # Only try to enable proxy if port is configured (running() will handle it otherwise)
             if _state.proxy_port:
                 _set_system_proxy(enable=True)
+                _set_launchctl_env()
                 _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
                 _state.proxy_active = True
                 _write_proxy_state()
@@ -1126,6 +1215,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
             logger.info("===== SENSOR DISABLED - Stopping all interception =====")
             _state.sensor_active = False
             _set_system_proxy(enable=False)
+            _unset_launchctl_env()
             _state.proxy_active = False
             _write_proxy_state()
 
@@ -1160,7 +1250,7 @@ def _post_command_results_immediate(command_results: dict) -> None:
             return
 
         # Prepare API request
-        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "http://localhost:4000/api/v1")
+        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "https://api.oximy.com/api/v1")
         url = f"{api_endpoint}/devices/command-results"
 
         headers = {
@@ -1172,7 +1262,7 @@ def _post_command_results_immediate(command_results: dict) -> None:
 
         # POST with short timeout (don't block sensor-config refresh)
         req = urllib.request.Request(url, data=payload.encode(), headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=2) as response:
+        with _no_proxy_opener.open(req, timeout=2) as response:
             if response.status == 200:
                 logger.debug(f"Immediately posted command results: {list(command_results.keys())}")
             else:

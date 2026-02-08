@@ -570,3 +570,167 @@ class TestEdgeCases:
         results = await asyncio.gather(*[lookup(i) for i in range(100)])
         assert len(results) == 100
         assert all(r.pid == r.port for r in results)
+
+
+# =============================================================================
+# Parent Process Tree Walk Tests
+# =============================================================================
+
+class TestParentTreeWalk:
+    """Tests for the parent process tree walk (Step 5) that resolves CLI
+    processes like node/python back to their terminal app ancestor."""
+
+    @pytest.mark.asyncio
+    async def test_node_resolves_to_cursor(self):
+        """node → zsh → Cursor.app should resolve to Cursor's bundle ID."""
+        resolver = ProcessResolver(proxy_port=1030)
+        resolver._is_macos = True
+
+        # Mock: node (PID 300) → zsh (PID 200) → Cursor (PID 100)
+        process_tree = {
+            300: {"pid": 300, "ppid": 200, "user": "user", "path": "/usr/local/bin/node"},
+            200: {"pid": 200, "ppid": 100, "user": "user", "path": "/bin/zsh"},
+            100: {"pid": 100, "ppid": 1, "user": "user",
+                  "path": "/Applications/Cursor.app/Contents/MacOS/Cursor"},
+        }
+
+        async def mock_get_info(pid):
+            info = process_tree.get(pid)
+            if info:
+                resolver._cache[pid] = info
+            return info
+
+        async def mock_extract_bundle(path):
+            if path and ".app" in path:
+                return "com.todesktop.230313mzl4w4u92"
+            return None
+
+        resolver._get_process_info = mock_get_info
+        resolver._extract_bundle_id = mock_extract_bundle
+
+        # Simulate: PID found, responsible PID returns None (not XPC)
+        with patch('mitmproxy.addons.oximy.process._get_responsible_pid', return_value=None):
+            with patch.object(resolver, '_find_pid_for_port', return_value=300):
+                result = await resolver._get_process_for_port_impl(54321)
+
+        assert result.bundle_id == "com.todesktop.230313mzl4w4u92"
+
+    @pytest.mark.asyncio
+    async def test_node_resolves_to_terminal(self):
+        """node → bash → Terminal.app should resolve to Terminal's bundle ID."""
+        resolver = ProcessResolver(proxy_port=1030)
+        resolver._is_macos = True
+
+        process_tree = {
+            300: {"pid": 300, "ppid": 200, "user": "user", "path": "/usr/local/bin/node"},
+            200: {"pid": 200, "ppid": 100, "user": "user", "path": "/bin/bash"},
+            100: {"pid": 100, "ppid": 1, "user": "user",
+                  "path": "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal"},
+        }
+
+        async def mock_get_info(pid):
+            info = process_tree.get(pid)
+            if info:
+                resolver._cache[pid] = info
+            return info
+
+        async def mock_extract_bundle(path):
+            if path and "Terminal.app" in path:
+                return "com.apple.Terminal"
+            return None
+
+        resolver._get_process_info = mock_get_info
+        resolver._extract_bundle_id = mock_extract_bundle
+
+        with patch('mitmproxy.addons.oximy.process._get_responsible_pid', return_value=None):
+            with patch.object(resolver, '_find_pid_for_port', return_value=300):
+                result = await resolver._get_process_for_port_impl(54321)
+
+        assert result.bundle_id == "com.apple.Terminal"
+
+    @pytest.mark.asyncio
+    async def test_walk_stops_at_max_depth(self):
+        """Should not infinite-loop if process tree is deep."""
+        resolver = ProcessResolver(proxy_port=1030)
+        resolver._is_macos = True
+
+        # Create a chain of 20 non-app processes (deeper than max_depth=10)
+        process_tree = {}
+        for i in range(20, 0, -1):
+            process_tree[i] = {"pid": i, "ppid": i - 1, "user": "user", "path": f"/usr/bin/proc{i}"}
+        process_tree[21] = {"pid": 21, "ppid": 20, "user": "user", "path": "/usr/local/bin/node"}
+
+        async def mock_get_info(pid):
+            return process_tree.get(pid)
+
+        async def mock_extract_bundle(path):
+            return None  # Nothing in this tree has a bundle ID
+
+        resolver._get_process_info = mock_get_info
+        resolver._extract_bundle_id = mock_extract_bundle
+
+        with patch('mitmproxy.addons.oximy.process._get_responsible_pid', return_value=None):
+            with patch.object(resolver, '_find_pid_for_port', return_value=21):
+                result = await resolver._get_process_for_port_impl(54321)
+
+        # Should terminate without bundle_id, not hang
+        assert result.bundle_id is None
+
+    @pytest.mark.asyncio
+    async def test_walk_skipped_if_bundle_already_found(self):
+        """If responsible PID already found a bundle_id, walk should not happen."""
+        resolver = ProcessResolver(proxy_port=1030)
+        resolver._is_macos = True
+
+        process_tree = {
+            300: {"pid": 300, "ppid": 200, "user": "user",
+                  "path": "/Applications/Safari.app/Contents/MacOS/Safari"},
+        }
+
+        async def mock_get_info(pid):
+            info = process_tree.get(pid)
+            if info:
+                resolver._cache[pid] = info
+            return info
+
+        async def mock_extract_bundle(path):
+            if path and "Safari.app" in path:
+                return "com.apple.Safari"
+            return None
+
+        resolver._get_process_info = mock_get_info
+        resolver._extract_bundle_id = mock_extract_bundle
+
+        with patch('mitmproxy.addons.oximy.process._get_responsible_pid', return_value=None):
+            with patch.object(resolver, '_find_pid_for_port', return_value=300):
+                result = await resolver._get_process_for_port_impl(54321)
+
+        # Should find Safari directly, no tree walk needed
+        assert result.bundle_id == "com.apple.Safari"
+
+    @pytest.mark.asyncio
+    async def test_walk_handles_broken_chain(self):
+        """Should handle process tree where a parent no longer exists."""
+        resolver = ProcessResolver(proxy_port=1030)
+        resolver._is_macos = True
+
+        process_tree = {
+            300: {"pid": 300, "ppid": 200, "user": "user", "path": "/usr/local/bin/node"},
+            # PID 200 (parent) doesn't exist anymore
+        }
+
+        async def mock_get_info(pid):
+            return process_tree.get(pid)
+
+        async def mock_extract_bundle(path):
+            return None
+
+        resolver._get_process_info = mock_get_info
+        resolver._extract_bundle_id = mock_extract_bundle
+
+        with patch('mitmproxy.addons.oximy.process._get_responsible_pid', return_value=None):
+            with patch.object(resolver, '_find_pid_for_port', return_value=300):
+                result = await resolver._get_process_for_port_impl(54321)
+
+        assert result.bundle_id is None
+        assert result.name == "node"

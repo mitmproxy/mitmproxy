@@ -278,6 +278,27 @@ class ProcessResolver:
                             name = self._extract_name(resp_proc_info.get("path"))
                             pid = responsible_pid
 
+        # Step 5 (macOS): Walk parent process tree if still no bundle_id.
+        # This resolves CLI processes (node, python, curl) spawned inside a
+        # terminal app by tracing: node → zsh → Terminal.app / Cursor.app.
+        if not bundle_id and self._is_macos:
+            ancestor_pid = proc_info.get("ppid")
+            depth = 0
+            while ancestor_pid and ancestor_pid > 1 and depth < 10:
+                ancestor_info = await self._get_process_info(ancestor_pid)
+                if not ancestor_info:
+                    break
+                ancestor_bundle = await self._extract_bundle_id(ancestor_info.get("path"))
+                if ancestor_bundle:
+                    logger.info(
+                        f"[PROCESS] Parent walk: {name} (PID {pid}) "
+                        f"-> {ancestor_bundle} (PID {ancestor_pid}, depth={depth + 1})"
+                    )
+                    bundle_id = ancestor_bundle
+                    break
+                ancestor_pid = ancestor_info.get("ppid")
+                depth += 1
+
         # On Windows, use exe name as bundle_id fallback
         if not bundle_id and self._is_windows:
             bundle_id = self._extract_exe_name(proc_info.get("path"))

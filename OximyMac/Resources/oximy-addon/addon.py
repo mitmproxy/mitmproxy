@@ -914,7 +914,7 @@ def _ensure_cert_trusted() -> bool:
 # Support environment variable overrides for testing/CI
 DEFAULT_SENSOR_CONFIG_URL = os.environ.get(
     "OXIMY_CONFIG_URL",
-    "http://localhost:4000/api/v1/sensor-config"
+    "https://api.oximy.com/api/v1/sensor-config"
 )
 DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
     "OXIMY_CONFIG_CACHE",
@@ -1160,7 +1160,7 @@ def _post_command_results_immediate(command_results: dict) -> None:
             return
 
         # Prepare API request
-        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "http://localhost:4000/api/v1")
+        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "https://api.oximy.com/api/v1")
         url = f"{api_endpoint}/devices/command-results"
 
         headers = {

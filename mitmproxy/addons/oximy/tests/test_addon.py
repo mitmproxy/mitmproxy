@@ -16,15 +16,28 @@ from unittest.mock import MagicMock, patch, mock_open
 import pytest
 
 # Import the functions under test
+import subprocess
+import sys
+
 from mitmproxy.addons.oximy.addon import (
     DISK_CLEANUP_INTERVAL,
     DISK_MAX_AGE_DAYS,
     DISK_MAX_TOTAL_BYTES,
+    OXIMY_CA_CERT,
+    OXIMY_COMBINED_CA_BUNDLE,
+    PROXY_HOST,
     WINDOWS_BROWSERS,
     MemoryTraceBuffer,
     OximyAddon,
     TLSPassthrough,
     _build_url_regex,
+    _cleanup_done,
+    _emergency_cleanup,
+    _LAUNCHCTL_ENV_VARS,
+    _set_launchctl_env,
+    _state,
+    _teardown_terminal_env,
+    _unset_launchctl_env,
     contains_blacklist_word,
     extract_graphql_operation,
     generate_event_id,
@@ -866,3 +879,183 @@ class TestDiskCleanup:
         addon._cleanup_stale_traces()
 
         assert other_file.exists()
+
+
+# =============================================================================
+# launchctl env Tests
+# =============================================================================
+
+class TestLaunchctlEnv:
+    """Tests for _set_launchctl_env and _unset_launchctl_env."""
+
+    def setup_method(self):
+        self._saved_port = _state.proxy_port
+
+    def teardown_method(self):
+        _state.proxy_port = self._saved_port
+
+    @patch("mitmproxy.addons.oximy.addon.sys")
+    def test_set_skips_non_darwin(self, mock_sys):
+        mock_sys.platform = "win32"
+        # Should return immediately without calling subprocess
+        _set_launchctl_env()
+
+    @patch("mitmproxy.addons.oximy.addon.subprocess.run")
+    def test_set_skips_without_port(self, mock_run):
+        _state.proxy_port = None
+        _set_launchctl_env()
+        mock_run.assert_not_called()
+
+    @patch("mitmproxy.addons.oximy.addon.subprocess.run")
+    def test_set_calls_setenv_for_each_var(self, mock_run):
+        _state.proxy_port = "8080"
+        _set_launchctl_env()
+        assert mock_run.call_count == len(_LAUNCHCTL_ENV_VARS)
+        first_call_args = mock_run.call_args_list[0][1].get("args") or mock_run.call_args_list[0][0][0]
+        assert first_call_args[0] == "launchctl"
+        assert first_call_args[1] == "setenv"
+
+    @patch("mitmproxy.addons.oximy.addon.subprocess.run")
+    def test_set_correct_proxy_values(self, mock_run):
+        _state.proxy_port = "9090"
+        _set_launchctl_env()
+        calls = {c[0][0][2]: c[0][0][3] for c in mock_run.call_args_list}
+        assert calls["HTTP_PROXY"] == f"http://{PROXY_HOST}:9090"
+        assert calls["HTTPS_PROXY"] == f"http://{PROXY_HOST}:9090"
+        assert calls["NODE_EXTRA_CA_CERTS"] == str(OXIMY_CA_CERT)
+        assert calls["SSL_CERT_FILE"] == str(OXIMY_COMBINED_CA_BUNDLE)
+        assert calls["REQUESTS_CA_BUNDLE"] == str(OXIMY_COMBINED_CA_BUNDLE)
+        assert calls["CURL_CA_BUNDLE"] == str(OXIMY_COMBINED_CA_BUNDLE)
+
+    @patch("mitmproxy.addons.oximy.addon.subprocess.run", side_effect=OSError("no launchctl"))
+    def test_set_handles_errors_gracefully(self, mock_run):
+        _state.proxy_port = "8080"
+        _set_launchctl_env()  # Should not raise
+
+    @patch("mitmproxy.addons.oximy.addon.subprocess.run")
+    def test_unset_calls_unsetenv_for_each_var(self, mock_run):
+        _unset_launchctl_env()
+        assert mock_run.call_count == len(_LAUNCHCTL_ENV_VARS)
+        first_call_args = mock_run.call_args_list[0][0][0]
+        assert first_call_args[1] == "unsetenv"
+
+    @patch("mitmproxy.addons.oximy.addon.subprocess.run", side_effect=OSError)
+    def test_unset_ignores_errors(self, mock_run):
+        _unset_launchctl_env()  # Should not raise
+
+    @patch("mitmproxy.addons.oximy.addon.sys")
+    def test_unset_skips_non_darwin(self, mock_sys):
+        mock_sys.platform = "linux"
+        _unset_launchctl_env()
+
+
+# =============================================================================
+# launchctl env Integration Tests (macOS only, real subprocess calls)
+# =============================================================================
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="launchctl is macOS only")
+class TestLaunchctlEnvIntegration:
+    """Integration tests that actually call launchctl to verify end-to-end behavior."""
+
+    # Use a unique test-only env var name to avoid interfering with real proxy
+    _TEST_VAR = "OXIMY_TEST_LAUNCHCTL_PROBE"
+
+    def _getenv(self, name: str) -> str:
+        """Read a launchctl env var, returns empty string if unset."""
+        r = subprocess.run(
+            ["launchctl", "getenv", name],
+            capture_output=True, text=True, timeout=5,
+        )
+        return r.stdout.strip()
+
+    def test_set_and_unset_roundtrip(self):
+        """Set launchctl env vars, verify they're readable, then unset and verify they're gone."""
+        _state.proxy_port = "19999"
+        try:
+            _set_launchctl_env()
+
+            # Verify vars are actually set in launchd
+            assert self._getenv("HTTPS_PROXY") == "http://127.0.0.1:19999"
+            assert self._getenv("HTTP_PROXY") == "http://127.0.0.1:19999"
+            assert self._getenv("NODE_EXTRA_CA_CERTS") == str(OXIMY_CA_CERT)
+            assert self._getenv("SSL_CERT_FILE") == str(OXIMY_COMBINED_CA_BUNDLE)
+        finally:
+            # Always clean up
+            _unset_launchctl_env()
+            _state.proxy_port = self._saved_port if hasattr(self, '_saved_port') else None
+
+        # Verify vars are actually cleared
+        assert self._getenv("HTTPS_PROXY") == ""
+        assert self._getenv("HTTP_PROXY") == ""
+        assert self._getenv("NODE_EXTRA_CA_CERTS") == ""
+
+    def test_unset_is_idempotent(self):
+        """Calling unsetenv on vars that don't exist should not error."""
+        # Set a probe var, unset it twice — should not raise
+        subprocess.run(["launchctl", "setenv", self._TEST_VAR, "probe"], timeout=5)
+        _unset_launchctl_env()
+        _unset_launchctl_env()  # Second call should be a no-op
+        subprocess.run(["launchctl", "unsetenv", self._TEST_VAR], capture_output=True, timeout=5)
+
+    def setup_method(self):
+        self._saved_port = _state.proxy_port
+
+    def teardown_method(self):
+        _state.proxy_port = self._saved_port
+        # Defensive: always clean up in case test failed mid-way
+        _unset_launchctl_env()
+        subprocess.run(
+            ["launchctl", "unsetenv", self._TEST_VAR],
+            capture_output=True, timeout=5,
+        )
+
+
+# =============================================================================
+# Shutdown Path Tests — verify launchctl cleanup in each shutdown scenario
+# =============================================================================
+
+class TestLaunchctlShutdownPaths:
+    """Verify _unset_launchctl_env is called in every shutdown path."""
+
+    @patch("mitmproxy.addons.oximy.addon._unset_launchctl_env")
+    @patch("mitmproxy.addons.oximy.addon._remove_shell_profile_injections")
+    def test_teardown_terminal_env_calls_unset(self, mock_remove, mock_unset):
+        """Normal shutdown path: _teardown_terminal_env must call _unset_launchctl_env."""
+        _teardown_terminal_env()
+        mock_unset.assert_called_once()
+
+    @patch("mitmproxy.addons.oximy.addon._write_proxy_state")
+    @patch("mitmproxy.addons.oximy.addon._delete_proxy_port_file")
+    @patch("mitmproxy.addons.oximy.addon._unset_launchctl_env")
+    @patch("mitmproxy.addons.oximy.addon._set_system_proxy")
+    def test_emergency_cleanup_calls_unset(self, mock_proxy, mock_unset, mock_del, mock_write):
+        """Crash/signal path: _emergency_cleanup must call _unset_launchctl_env."""
+        import mitmproxy.addons.oximy.addon as addon_mod
+        saved = addon_mod._cleanup_done
+        addon_mod._cleanup_done = False
+        try:
+            _emergency_cleanup()
+            mock_unset.assert_called_once()
+        finally:
+            addon_mod._cleanup_done = saved
+
+    @patch("mitmproxy.addons.oximy.addon._write_proxy_state")
+    @patch("mitmproxy.addons.oximy.addon._unset_launchctl_env")
+    @patch("mitmproxy.addons.oximy.addon._set_launchctl_env")
+    @patch("mitmproxy.addons.oximy.addon._set_system_proxy")
+    def test_sensor_disable_calls_unset(self, mock_proxy, mock_set, mock_unset, mock_write):
+        """Remote sensor disable path: must call _unset_launchctl_env."""
+        from mitmproxy.addons.oximy.addon import _apply_sensor_state
+        _apply_sensor_state(enabled=False)
+        mock_unset.assert_called_once()
+
+    @patch("mitmproxy.addons.oximy.addon._write_proxy_state")
+    @patch("mitmproxy.addons.oximy.addon._unset_launchctl_env")
+    @patch("mitmproxy.addons.oximy.addon._set_launchctl_env")
+    @patch("mitmproxy.addons.oximy.addon._set_system_proxy")
+    def test_sensor_enable_calls_set(self, mock_proxy, mock_set, mock_unset, mock_write):
+        """Remote sensor enable path: must call _set_launchctl_env."""
+        from mitmproxy.addons.oximy.addon import _apply_sensor_state
+        _state.proxy_port = "8080"
+        _apply_sensor_state(enabled=True)
+        mock_set.assert_called_once()
