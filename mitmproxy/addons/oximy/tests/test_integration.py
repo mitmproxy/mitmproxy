@@ -158,6 +158,9 @@ def _make_addon(
     addon._resolver = None
     addon._client_processes = client_processes or {}
 
+    # Local data collector (disabled for tests)
+    addon._local_collector = None
+
     return addon
 
 

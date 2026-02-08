@@ -19,12 +19,18 @@ import pytest
 import subprocess
 import sys
 
+import os
+
 from mitmproxy.addons.oximy.addon import (
+    API_PATH_INGEST_TRACES,
+    API_PATH_SENSOR_CONFIG,
+    DEFAULT_API_BASE_URL,
     DISK_CLEANUP_INTERVAL,
     DISK_MAX_AGE_DAYS,
     DISK_MAX_TOTAL_BYTES,
     OXIMY_CA_CERT,
     OXIMY_COMBINED_CA_BUNDLE,
+    OXIMY_DEV_CONFIG,
     PROXY_HOST,
     WINDOWS_BROWSERS,
     MemoryTraceBuffer,
@@ -34,6 +40,7 @@ from mitmproxy.addons.oximy.addon import (
     _cleanup_done,
     _emergency_cleanup,
     _LAUNCHCTL_ENV_VARS,
+    _resolve_api_base_url,
     _set_launchctl_env,
     _state,
     _teardown_terminal_env,
@@ -676,6 +683,98 @@ class TestLoadOutputConfig:
         # Should not raise, returns default
         config = load_output_config(config_file)
         assert "output" in config  # Default values
+
+    def test_api_base_url_derives_endpoints(self, tmp_path: Path):
+        """api_base_url should derive sensor_config_url and ingest_api_url."""
+        config_file = tmp_path / "config.json"
+        user_config = {
+            "api_base_url": "https://api.oximy.com/api/v1"
+        }
+        config_file.write_text(json.dumps(user_config))
+
+        with patch.dict(os.environ, {}, clear=False):
+            # Remove env overrides if present
+            os.environ.pop("OXIMY_API_URL", None)
+            os.environ.pop("OXIMY_CONFIG_URL", None)
+            os.environ.pop("OXIMY_INGEST_URL", None)
+            config = load_output_config(config_file)
+
+        assert config["sensor_config_url"] == "https://api.oximy.com/api/v1/sensor-config"
+        assert config.get("upload", {}).get("ingest_api_url") == "https://api.oximy.com/api/v1/ingest/network-traces"
+
+    def test_explicit_sensor_url_overrides_api_base(self, tmp_path: Path):
+        """Explicit sensor_config_url should override api_base_url derivation."""
+        config_file = tmp_path / "config.json"
+        user_config = {
+            "api_base_url": "https://api.oximy.com/api/v1",
+            "sensor_config_url": "https://custom.api.com/config"
+        }
+        config_file.write_text(json.dumps(user_config))
+
+        config = load_output_config(config_file)
+
+        # Explicit sensor_config_url takes priority
+        assert config["sensor_config_url"] == "https://custom.api.com/config"
+
+
+class TestResolveApiBaseUrl:
+    """Tests for _resolve_api_base_url priority chain."""
+
+    def test_default_returns_hardcoded(self):
+        """Without any overrides, should return DEFAULT_API_BASE_URL."""
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("OXIMY_API_URL", None)
+            with patch("mitmproxy.addons.oximy.addon.OXIMY_DEV_CONFIG",
+                       Path("/nonexistent/dev.json")):
+                url = _resolve_api_base_url()
+                assert url == DEFAULT_API_BASE_URL
+
+    def test_env_var_takes_priority(self):
+        """OXIMY_API_URL env var should override everything."""
+        with patch.dict(os.environ, {"OXIMY_API_URL": "http://env:9999/api/v1"}):
+            url = _resolve_api_base_url()
+            assert url == "http://env:9999/api/v1"
+
+    def test_env_var_strips_trailing_slash(self):
+        """Trailing slash should be stripped."""
+        with patch.dict(os.environ, {"OXIMY_API_URL": "http://env:9999/api/v1/"}):
+            url = _resolve_api_base_url()
+            assert url == "http://env:9999/api/v1"
+
+    def test_config_base_url_used(self):
+        """config_base_url argument should be used when no env var."""
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("OXIMY_API_URL", None)
+            url = _resolve_api_base_url(config_base_url="http://config:5000/api/v1")
+            assert url == "http://config:5000/api/v1"
+
+    def test_env_var_overrides_config_base(self):
+        """Env var should take priority over config_base_url."""
+        with patch.dict(os.environ, {"OXIMY_API_URL": "http://env:9999/api/v1"}):
+            url = _resolve_api_base_url(config_base_url="http://config:5000/api/v1")
+            assert url == "http://env:9999/api/v1"
+
+    def test_dev_json_resolution(self, tmp_path: Path):
+        """dev.json API_URL should be used when no env var or config base."""
+        dev_json = tmp_path / "dev.json"
+        dev_json.write_text(json.dumps({"API_URL": "http://dev:4000/api/v1"}))
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("OXIMY_API_URL", None)
+            with patch("mitmproxy.addons.oximy.addon.OXIMY_DEV_CONFIG", dev_json):
+                url = _resolve_api_base_url()
+                assert url == "http://dev:4000/api/v1"
+
+    def test_config_base_overrides_dev_json(self, tmp_path: Path):
+        """config_base_url should take priority over dev.json."""
+        dev_json = tmp_path / "dev.json"
+        dev_json.write_text(json.dumps({"API_URL": "http://dev:4000/api/v1"}))
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("OXIMY_API_URL", None)
+            with patch("mitmproxy.addons.oximy.addon.OXIMY_DEV_CONFIG", dev_json):
+                url = _resolve_api_base_url(config_base_url="http://config:5000/api/v1")
+                assert url == "http://config:5000/api/v1"
 
 
 # =============================================================================

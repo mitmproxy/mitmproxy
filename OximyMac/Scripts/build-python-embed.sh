@@ -120,7 +120,7 @@ install_packages_for_arch() {
         "$target_dir/bin/pip3" install "ruamel.yaml>=0.18.10,<=0.19.0" --no-binary ruamel.yaml.clib --no-deps
 
         # Install mitmproxy from local source
-        "$target_dir/bin/pip3" install "$MITMPROXY_SOURCE" jsonata-python psutil
+        "$target_dir/bin/pip3" install "$MITMPROXY_SOURCE" jsonata-python psutil watchfiles
     else
         echo "    Cross-installing packages for $arch_name (cannot run $arch_name Python on this host)..."
 
@@ -200,6 +200,7 @@ install_packages_for_arch() {
                 pylsqpack==0.3.23 \
                 bcrypt==5.0.0 \
                 psutil \
+                watchfiles \
                 2>/dev/null || true
 
             # Extract wheels and overwrite the source architecture's compiled files

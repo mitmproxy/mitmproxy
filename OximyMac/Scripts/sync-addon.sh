@@ -30,6 +30,7 @@ FILES=(
     "normalize.py"
     "config.json"
     "process.py"
+    "collector.py"
     "__init__.py"
 )
 

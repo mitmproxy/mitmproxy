@@ -50,6 +50,12 @@ try:
 except ImportError:
     from normalize import normalize_body
 
+# Import LocalDataCollector - handle both package and script modes
+try:
+    from .collector import LocalDataCollector
+except ImportError:
+    from collector import LocalDataCollector
+
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(name)s: %(message)s",
@@ -82,6 +88,13 @@ OXIMY_NO_PARSER_DOMAINS_CACHE = OXIMY_DIR / "no-parser-domains.json"
 # Shell profile markers for idempotent injection/removal
 _SHELL_MARKER = "# --- Oximy (do not edit this block) ---"
 _SHELL_END_MARKER = "# --- End Oximy ---"
+
+# Environment variables to set via launchctl for GUI-spawned processes (macOS only)
+_LAUNCHCTL_ENV_VARS = (
+    "HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy",
+    "NO_PROXY", "no_proxy",
+    "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE",
+)
 
 # Maximum bytes to accumulate from streamed (SSE) responses before stopping capture
 _MAX_STREAM_CAPTURE_BYTES = 100 * 1024 * 1024  # 100 MB
@@ -380,12 +393,82 @@ def _setup_terminal_env() -> None:
                 Path.home() / ".zshrc",
                 Path.home() / ".bashrc",
             ])
+            _set_launchctl_env()
         elif sys.platform == "win32":
             _write_windows_env_scripts()
             _inject_powershell_profiles()
             _inject_cmd_autorun()
     except Exception as e:
         logger.warning(f"Terminal env setup failed (non-fatal): {e}")
+
+
+def _set_launchctl_env() -> None:
+    """Set proxy and CA env vars in launchd so GUI-spawned processes inherit them.
+
+    macOS only. launchctl setenv sets variables in the launchd environment,
+    which is inherited by all newly launched processes (including those started
+    by GUI apps like VS Code, Cursor, etc.). This complements shell profile
+    injection which only covers interactive terminal sessions.
+    """
+    if sys.platform != "darwin":
+        return
+
+    port = _state.proxy_port
+    if not port:
+        return
+
+    proxy_url = f"http://{PROXY_HOST}:{port}"
+    no_proxy = "localhost,127.0.0.1,::1,.local"
+    ca_cert = str(OXIMY_CA_CERT)
+    ca_bundle = str(OXIMY_COMBINED_CA_BUNDLE)
+
+    env_values = {
+        "HTTP_PROXY": proxy_url, "HTTPS_PROXY": proxy_url,
+        "http_proxy": proxy_url, "https_proxy": proxy_url,
+        "NO_PROXY": no_proxy, "no_proxy": no_proxy,
+        "NODE_EXTRA_CA_CERTS": ca_cert,
+        "SSL_CERT_FILE": ca_bundle,
+        "REQUESTS_CA_BUNDLE": ca_bundle,
+        "CURL_CA_BUNDLE": ca_bundle,
+    }
+
+    errors = 0
+    for name, value in env_values.items():
+        try:
+            subprocess.run(
+                ["launchctl", "setenv", name, value],
+                capture_output=True, timeout=5,
+            )
+        except (subprocess.SubprocessError, OSError) as e:
+            errors += 1
+            if errors == 1:
+                logger.debug(f"launchctl setenv failed for {name}: {e}")
+
+    if errors == 0:
+        logger.info(f"launchctl env vars set ({len(env_values)} vars, proxy={proxy_url})")
+    else:
+        logger.warning(f"launchctl setenv: {errors}/{len(env_values)} calls failed")
+
+
+def _unset_launchctl_env() -> None:
+    """Remove proxy and CA env vars from launchd environment.
+
+    macOS only. Called during shutdown and emergency cleanup to prevent
+    processes launched after proxy shutdown from trying to use a dead proxy.
+    """
+    if sys.platform != "darwin":
+        return
+
+    for name in _LAUNCHCTL_ENV_VARS:
+        try:
+            subprocess.run(
+                ["launchctl", "unsetenv", name],
+                capture_output=True, timeout=5,
+            )
+        except (subprocess.SubprocessError, OSError):
+            pass
+
+    logger.info("launchctl env vars cleared")
 
 
 def _write_env_script() -> None:
@@ -400,6 +483,15 @@ _oximy_cleanup() {
     unset NO_PROXY no_proxy
     unset NODE_EXTRA_CA_CERTS SSL_CERT_FILE REQUESTS_CA_BUNDLE CURL_CA_BUNDLE
     unset OXIMY_PROXY_ACTIVE
+    # Also clear launchctl env vars so GUI-spawned processes stop using dead proxy
+    if command -v launchctl >/dev/null 2>&1; then
+        for _v in HTTP_PROXY HTTPS_PROXY http_proxy https_proxy \
+                  NO_PROXY no_proxy NODE_EXTRA_CA_CERTS SSL_CERT_FILE \
+                  REQUESTS_CA_BUNDLE CURL_CA_BUNDLE; do
+            launchctl unsetenv "$_v" 2>/dev/null
+        done
+        unset _v
+    fi
 }
 
 # --- Pre-command hook: auto-unset vars when proxy is gone ---
@@ -651,6 +743,7 @@ def _teardown_terminal_env() -> None:
     """Remove shell profile injections and generated files on shutdown."""
     try:
         if sys.platform == "darwin":
+            _unset_launchctl_env()
             _remove_shell_profile_injections([
                 Path.home() / ".zshrc",
                 Path.home() / ".bashrc",
@@ -770,6 +863,7 @@ def _emergency_cleanup() -> None:
     # This is defensive - better to disable twice than leave proxy orphaned
     logger.info("Emergency cleanup: disabling system proxy...")
     _set_system_proxy(enable=False)
+    _unset_launchctl_env()
     _delete_proxy_port_file()
     with _state.lock:
         _state.proxy_active = False
@@ -908,13 +1002,82 @@ def _ensure_cert_trusted() -> bool:
 
 
 # =============================================================================
+# API BASE URL RESOLUTION — Single source of truth for all API endpoints
+# =============================================================================
+# Resolution order (first wins):
+#   1. OXIMY_API_URL environment variable
+#   2. config.json "api_base_url" field (set during load_output_config)
+#   3. ~/.oximy/dev.json "API_URL" field (matches Swift/C# pattern)
+#   4. Hardcoded default
+
+DEFAULT_API_BASE_URL = "https://api.oximy.com/api/v1"
+OXIMY_DEV_CONFIG = OXIMY_DIR / "dev.json"
+
+# API path suffixes (relative to base URL)
+API_PATH_SENSOR_CONFIG = "/sensor-config"
+API_PATH_INGEST_TRACES = "/ingest/network-traces"
+API_PATH_INGEST_LOCAL = "/ingest/local-sessions"
+API_PATH_COMMAND_RESULTS = "/devices/command-results"
+
+
+def _read_dev_json_api_url() -> str | None:
+    """Read API_URL from ~/.oximy/dev.json (matches Swift/C# pattern).
+
+    Dev config format: {"API_URL": "http://localhost:4000/api/v1", "DEV_MODE": true}
+    """
+    try:
+        if OXIMY_DEV_CONFIG.exists():
+            with open(OXIMY_DEV_CONFIG, encoding="utf-8") as f:
+                config = json.load(f)
+            api_url = config.get("API_URL")
+            if api_url and isinstance(api_url, str):
+                return api_url.rstrip("/")
+    except (json.JSONDecodeError, IOError, OSError) as e:
+        logger.debug(f"Could not read dev.json: {e}")
+    return None
+
+
+def _resolve_api_base_url(config_base_url: str | None = None) -> str:
+    """Resolve API base URL using priority chain.
+
+    Args:
+        config_base_url: Value from config.json "api_base_url" field.
+
+    Returns:
+        Base URL like "https://api.oximy.com/api/v1" (no trailing slash).
+    """
+    # 1. Environment variable (highest priority)
+    env_url = os.environ.get("OXIMY_API_URL")
+    if env_url:
+        return env_url.rstrip("/")
+
+    # 2. config.json api_base_url field
+    if config_base_url:
+        return config_base_url.rstrip("/")
+
+    # 3. ~/.oximy/dev.json (same mechanism as Swift/C# apps)
+    dev_url = _read_dev_json_api_url()
+    if dev_url:
+        return dev_url
+
+    # 4. Hardcoded default
+    return DEFAULT_API_BASE_URL
+
+
+# Module-level resolved base URL (before config.json is loaded).
+# Gets refined in configure() after config.json is parsed.
+_resolved_api_base = _resolve_api_base_url()
+
+
+# =============================================================================
 # CONFIG LOADING
 # =============================================================================
 
 # Support environment variable overrides for testing/CI
+# Individual env vars are escape hatches; defaults derive from _resolved_api_base
 DEFAULT_SENSOR_CONFIG_URL = os.environ.get(
     "OXIMY_CONFIG_URL",
-    "https://api.oximy.com/api/v1/sensor-config"
+    f"{_resolved_api_base}{API_PATH_SENSOR_CONFIG}"
 )
 DEFAULT_SENSOR_CONFIG_CACHE = os.environ.get(
     "OXIMY_CONFIG_CACHE",
@@ -1119,6 +1282,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
             # Only try to enable proxy if port is configured (running() will handle it otherwise)
             if _state.proxy_port:
                 _set_system_proxy(enable=True)
+                _set_launchctl_env()
                 _addon_manages_proxy = True  # Track that we enabled proxy (for cleanup)
                 _state.proxy_active = True
                 _write_proxy_state()
@@ -1126,6 +1290,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
             logger.info("===== SENSOR DISABLED - Stopping all interception =====")
             _state.sensor_active = False
             _set_system_proxy(enable=False)
+            _unset_launchctl_env()
             _state.proxy_active = False
             _write_proxy_state()
 
@@ -1160,8 +1325,8 @@ def _post_command_results_immediate(command_results: dict) -> None:
             return
 
         # Prepare API request
-        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", "https://api.oximy.com/api/v1")
-        url = f"{api_endpoint}/devices/command-results"
+        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", _resolved_api_base)
+        url = f"{api_endpoint}{API_PATH_COMMAND_RESULTS}"
 
         headers = {
             "Authorization": f"Bearer {device_token}",
@@ -1172,7 +1337,7 @@ def _post_command_results_immediate(command_results: dict) -> None:
 
         # POST with short timeout (don't block sensor-config refresh)
         req = urllib.request.Request(url, data=payload.encode(), headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=2) as response:
+        with _no_proxy_opener.open(req, timeout=2) as response:
             if response.status == 200:
                 logger.debug(f"Immediately posted command results: {list(command_results.keys())}")
             else:
@@ -1401,6 +1566,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "apps_with_parsers": app_origins.get("apps_with_parsers", []),
         },
         "allowed_host_origins": data.get("allowed_host_origins", []),
+        "localDataSources": data.get("localDataSources", {}),
     }
 
 
@@ -1410,6 +1576,10 @@ def load_output_config(config_path: Path | None = None) -> dict:
     Checks the following paths in order:
     1. Explicitly provided config_path
     2. Default path: ~/.oximy/config.json
+
+    Supports "api_base_url" field: when present, sensor_config_url and
+    upload.ingest_api_url are derived from it automatically (unless those
+    fields are also explicitly set, which take priority).
     """
     default = {
         "output": {"directory": str(OXIMY_TRACES_DIR), "filename_pattern": "traces_{date}.jsonl"},
@@ -1429,6 +1599,24 @@ def load_output_config(config_path: Path | None = None) -> dict:
             try:
                 with open(path, encoding="utf-8") as f:
                     user_config = json.load(f)
+
+                # If config has api_base_url, derive endpoint URLs from it
+                config_base = user_config.get("api_base_url")
+                if config_base:
+                    resolved_base = _resolve_api_base_url(config_base.rstrip("/"))
+                    default["api_base_url"] = resolved_base
+                    # Derive endpoints unless explicitly overridden
+                    if "sensor_config_url" not in user_config:
+                        default["sensor_config_url"] = os.environ.get(
+                            "OXIMY_CONFIG_URL",
+                            f"{resolved_base}{API_PATH_SENSOR_CONFIG}"
+                        )
+                    if "ingest_api_url" not in user_config.get("upload", {}):
+                        default.setdefault("upload", {})["ingest_api_url"] = os.environ.get(
+                            "OXIMY_INGEST_URL",
+                            f"{resolved_base}{API_PATH_INGEST_TRACES}"
+                        )
+
                 if "output" in user_config:
                     default["output"].update(user_config["output"])
                 if "sensor_config_url" in user_config:
@@ -1437,6 +1625,8 @@ def load_output_config(config_path: Path | None = None) -> dict:
                     default["sensor_config_cache"] = user_config["sensor_config_cache"]
                 if "config_refresh_interval_seconds" in user_config:
                     default["config_refresh_interval_seconds"] = user_config["config_refresh_interval_seconds"]
+                if "upload" in user_config:
+                    default.setdefault("upload", {}).update(user_config["upload"])
                 logger.debug(f"Loaded config from {path}")
                 break
             except (json.JSONDecodeError, IOError) as e:
@@ -2300,7 +2490,7 @@ class MemoryTraceBuffer:
 # =============================================================================
 
 # Ingest API URL - configurable via environment variable for testing/staging
-DEFAULT_INGEST_API_URL = "https://api.oximy.com/api/v1/ingest/network-traces"
+DEFAULT_INGEST_API_URL = f"{_resolved_api_base}{API_PATH_INGEST_TRACES}"
 INGEST_API_URL = os.environ.get("OXIMY_INGEST_URL", DEFAULT_INGEST_API_URL)
 
 
@@ -2728,6 +2918,7 @@ class OximyAddon:
         self._upload_interval_seconds: float = DEFAULT_UPLOAD_INTERVAL_SECONDS
         self._upload_threshold_count: int = DEFAULT_UPLOAD_THRESHOLD_COUNT
         self._port_configured: bool = False  # Guard against configure() recursion when setting listen_port
+        self._local_collector: LocalDataCollector | None = None
 
     def _get_config_snapshot(self) -> dict:
         """Get a consistent snapshot of all filtering config.
@@ -2840,6 +3031,21 @@ class OximyAddon:
                     if self._tls:
                         self._tls.update_passthrough(config.get("passthrough", []))
                         self._tls.clean_learned_against_whitelist(list(self._whitelist))
+
+                    # Update local data collector
+                    local_ds = config.get("localDataSources", {})
+                    if local_ds.get("enabled"):
+                        if self._local_collector:
+                            self._local_collector.update_config(local_ds)
+                        else:
+                            self._local_collector = LocalDataCollector(
+                                config=local_ds, device_id=self._device_id,
+                                api_base_url=_resolved_api_base
+                            )
+                            self._local_collector.start()
+                    elif self._local_collector:
+                        self._local_collector.stop()
+                        self._local_collector = None
 
                 logger.debug(
                     f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
@@ -2975,6 +3181,13 @@ class OximyAddon:
 
         # Load local config (output settings, refresh interval, etc.)
         output_config = load_output_config(Path(ctx.options.oximy_config) if ctx.options.oximy_config else None)
+
+        # Update the module-level resolved API base URL from config
+        global _resolved_api_base
+        config_base = output_config.get("api_base_url")
+        if config_base:
+            _resolved_api_base = config_base
+
         self._output_dir = Path(ctx.options.oximy_output_dir).expanduser()
         self._filename_pattern = output_config["output"].get("filename_pattern", "traces_{date}.jsonl")
         logger.info(f"Output dir: {self._output_dir}, Pattern: {self._filename_pattern}")
@@ -4515,6 +4728,11 @@ class OximyAddon:
         self._force_sync_stop.set()
         if self._force_sync_thread and self._force_sync_thread.is_alive():
             self._force_sync_thread.join(timeout=1)
+
+        # Stop local data collector
+        if self._local_collector:
+            self._local_collector.stop()
+            self._local_collector = None
 
         # Remove terminal env injections (shell profiles, env scripts, CA bundle)
         _teardown_terminal_env()

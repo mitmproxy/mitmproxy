@@ -60,6 +60,7 @@ dependencies = [
     "publicsuffix2>=2.20190812,<=2.20191221",
     "zstandard>=0.25,<=0.25.0",
     "jsonata-python>=0.5.0,<=1.0.0",
+    "watchfiles>=0.21.0,<=1.0.0",
 ]
 
 [dependency-groups]
