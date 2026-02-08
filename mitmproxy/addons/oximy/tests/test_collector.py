@@ -565,18 +565,17 @@ class TestLocalDataCollectorScan:
         self.tmp_path = tmp_path
         self.projects_dir = tmp_path / ".claude" / "projects" / "-Users-test-proj"
         self.projects_dir.mkdir(parents=True, exist_ok=True)
-        # Override the scan state so is_first_run returns False (no backfill filter)
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", tmp_path / "scan-state.json"):
             self.collector = LocalDataCollector(config=sample_config, device_id="test-device")
-        # Mark as not first run to skip backfill filter
-        self.collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        # Mark startup as done so scans read data normally
+        self.collector._startup_done = True
 
     def test_scan_source_detects_installed(self):
         fp = str(self.projects_dir / "sess.jsonl")
         _write_jsonl(fp, [{"data": 1, "timestamp": "2025-01-01T00:00:00Z"}])
 
         source_config = self.collector._config["sources"][0]
-        self.collector._scan_source(source_config)
+        self.collector._scan_source(source_config, is_startup=False)
         assert len(self.collector._buffer) == 1
 
     def test_scan_source_skips_uninstalled(self):
@@ -586,7 +585,7 @@ class TestLocalDataCollectorScan:
             "globs": [],
             "detect_path": str(self.tmp_path / "nonexistent"),
         }
-        self.collector._scan_source(source_config)
+        self.collector._scan_source(source_config, is_startup=False)
         assert len(self.collector._buffer) == 0
 
     def test_scan_glob_discovers_files(self):
@@ -595,7 +594,7 @@ class TestLocalDataCollectorScan:
             _write_jsonl(fp, [{"msg": f"session{i}", "timestamp": "2025-01-01T00:00:00Z"}])
 
         source_config = self.collector._config["sources"][0]
-        self.collector._scan_source(source_config)
+        self.collector._scan_source(source_config, is_startup=False)
         assert len(self.collector._buffer) == 3
 
     def test_scan_skips_disabled_source(self):
@@ -876,11 +875,11 @@ class TestCollectorLifecycle:
 
         with patch.object(c, "_upload_buffer"):
             c.start()
-            assert c._scan_thread is not None
-            assert c._scan_thread.is_alive()
+            assert c._watcher_thread is not None
+            assert c._watcher_thread.is_alive()
 
             c.stop()
-            assert not c._scan_thread.is_alive()
+            assert not c._watcher_thread.is_alive()
 
     def test_stop_flushes_buffer(self, tmp_path, sample_config):
         sample_config["enabled"] = False
@@ -945,11 +944,11 @@ class TestWatcherIntegration:
 
 
 # ===========================================================================
-# TestBackfillWindow
+# TestStartupFastForward
 # ===========================================================================
 
-class TestBackfillWindow:
-    """Tests for backfill age filtering on first run."""
+class TestStartupFastForward:
+    """Tests for startup fast-forwarding: first scan records EOF, no data buffered."""
 
     @pytest.fixture(autouse=True)
     def setup(self, tmp_path, sample_config):
@@ -958,83 +957,56 @@ class TestBackfillWindow:
         self.projects_dir.mkdir(parents=True, exist_ok=True)
         self.sample_config = sample_config
 
-    def test_filters_old_files_on_first_run(self):
+    def test_startup_scan_buffers_nothing(self):
+        """First scan (startup) should fast-forward all files to EOF."""
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state.json"):
             collector = LocalDataCollector(config=self.sample_config, device_id="dev")
 
-        # Create an old file (30 days ago)
-        old_fp = str(self.projects_dir / "old.jsonl")
-        _write_jsonl(old_fp, [{"data": "old", "timestamp": "2020-01-01T00:00:00Z"}])
-        old_time = time.time() - (30 * 86400)
-        os.utime(old_fp, (old_time, old_time))
-
-        # Create a recent file
-        new_fp = str(self.projects_dir / "new.jsonl")
-        _write_jsonl(new_fp, [{"data": "new", "timestamp": "2025-01-01T00:00:00Z"}])
-
-        collector._run_full_scan()
-        assert len(collector._buffer) == 1
-        assert collector._buffer[0]["raw"]["data"] == "new"
-
-    def test_processes_recent_files(self):
-        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state.json"):
-            collector = LocalDataCollector(config=self.sample_config, device_id="dev")
-
-        # Create recent files (within 7 day window)
+        # Create files with data
         for i in range(3):
-            fp = str(self.projects_dir / f"recent{i}.jsonl")
-            _write_jsonl(fp, [{"data": f"r{i}", "timestamp": "2025-01-01T00:00:00Z"}])
+            fp = str(self.projects_dir / f"sess{i}.jsonl")
+            _write_jsonl(fp, [{"data": f"d{i}", "timestamp": "2025-01-01T00:00:00Z"}])
 
         collector._run_full_scan()
-        assert len(collector._buffer) == 3
 
-    def test_no_filter_on_subsequent_runs(self):
+        # Nothing should be buffered — startup fast-forwards all files
+        assert len(collector._buffer) == 0
+        assert collector._startup_done is True
+
+    def test_startup_records_eof(self):
+        """Startup scan should record each file at its current size."""
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state.json"):
             collector = LocalDataCollector(config=self.sample_config, device_id="dev")
 
-        # Mark as not first run
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
-
-        # Create an old file
-        old_fp = str(self.projects_dir / "old_sess.jsonl")
-        _write_jsonl(old_fp, [{"data": "old_but_new_to_us", "timestamp": "2020-01-01T00:00:00Z"}])
-        old_time = time.time() - (30 * 86400)
-        os.utime(old_fp, (old_time, old_time))
+        fp = str(self.projects_dir / "sess.jsonl")
+        _write_jsonl(fp, [{"data": "test", "timestamp": "2025-01-01T00:00:00Z"}])
 
         collector._run_full_scan()
-        # Should process even old files since it's not first run
+
+        state = collector._scan_state.get_file_state("claude_code", fp)
+        assert state is not None
+        assert state["offset"] == os.path.getsize(fp)
+
+    def test_second_scan_reads_incrementally(self):
+        """After startup, new data written to files should be captured."""
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state.json"):
+            collector = LocalDataCollector(config=self.sample_config, device_id="dev")
+
+        fp = str(self.projects_dir / "sess.jsonl")
+        _write_jsonl(fp, [{"data": "initial", "timestamp": "2025-01-01T00:00:00Z"}])
+
+        # First scan: fast-forward
+        collector._run_full_scan()
+        assert len(collector._buffer) == 0
+
+        # Write new data after startup
+        with open(fp, "a") as f:
+            f.write('{"data": "new_line", "timestamp": "2025-06-01T00:00:00Z"}\n')
+
+        # Second scan: should capture only the new line
+        collector._run_full_scan()
         assert len(collector._buffer) == 1
-
-    def test_configurable_backfill_window(self):
-        config = self.sample_config.copy()
-        config["backfill_max_age_days"] = 1  # Only last 1 day
-
-        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state.json"):
-            collector = LocalDataCollector(config=config, device_id="dev")
-
-        # File from 3 days ago
-        fp = str(self.projects_dir / "three_days.jsonl")
-        _write_jsonl(fp, [{"data": "old", "timestamp": "2020-01-01T00:00:00Z"}])
-        old_time = time.time() - (3 * 86400)
-        os.utime(fp, (old_time, old_time))
-
-        collector._run_full_scan()
-        assert len(collector._buffer) == 0  # Filtered by 1-day window
-
-    def test_backfill_disabled_with_zero_days(self):
-        config = self.sample_config.copy()
-        config["backfill_max_age_days"] = 0  # Disabled
-
-        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state.json"):
-            collector = LocalDataCollector(config=config, device_id="dev")
-
-        fp = str(self.projects_dir / "any_age.jsonl")
-        _write_jsonl(fp, [{"data": "any", "timestamp": "2025-01-01T00:00:00Z"}])
-        old_time = time.time() - (365 * 86400)
-        os.utime(fp, (old_time, old_time))
-
-        collector._run_full_scan()
-        assert len(collector._buffer) == 0  # Backfill disabled — skip all existing files
+        assert collector._buffer[0]["raw"]["data"] == "new_line"
 
 
 # ---------------------------------------------------------------------------
@@ -1248,8 +1220,8 @@ class TestScanSqliteDb:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", tmp_path / "state.json"):
             self.collector = LocalDataCollector(config=self.config, device_id="test-dev")
-        # Mark as not first run so backfill filter doesn't interfere
-        self.collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        # Mark startup as done so scans read data normally
+        self.collector._startup_done = True
 
     def test_scan_sqlite_basic(self):
         _create_test_db(
@@ -1278,7 +1250,7 @@ class TestScanSqliteDb:
         }]
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "state2.json"):
             collector = LocalDataCollector(config=self.config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
 
         collector._run_full_scan()
         assert len(collector._buffer) == 3  # All rows (last_value defaults to 0)
@@ -1327,7 +1299,7 @@ class TestScanSqliteDb:
         self.config["sources"][0]["sqlite"][0]["db_path"] = "/nonexistent/db.sqlite"
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "s.json"):
             collector = LocalDataCollector(config=self.config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()  # Should not raise
         assert len(collector._buffer) == 0
 
@@ -1340,22 +1312,20 @@ class TestScanSqliteDb:
         self.config["sources"][0]["sqlite"][0]["db_path"] = corrupt_path
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "s.json"):
             collector = LocalDataCollector(config=self.config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()  # Should not raise
         assert len(collector._buffer) == 0
 
-    def test_scan_sqlite_backfill_old_db(self):
-        """Old database is skipped on first run (backfill filter)."""
+    def test_scan_sqlite_startup_seeds_only(self):
+        """On startup, SQLite DBs are seeded (incremental values saved) but no rows buffered."""
         _create_test_db(
             self.db_path, "composerData", ["key", "value"],
             [("k1", '{"data": 1}')]
         )
-        old_time = time.time() - (30 * 86400)
-        os.utime(self.db_path, (old_time, old_time))
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "fresh.json"):
             collector = LocalDataCollector(config=self.config, device_id="dev")
-        # Don't mark as not-first-run — leave it as first run
+        # First scan = startup, should seed only
         collector._run_full_scan()
         assert len(collector._buffer) == 0
 
@@ -1400,7 +1370,7 @@ class TestScanSqliteDb:
         ]
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "dep.json"):
             collector = LocalDataCollector(config=self.config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
 
         collector._run_full_scan()
         assert len(collector._buffer) == 2
@@ -1445,7 +1415,7 @@ class TestExecuteSqliteQuery:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", tmp_path / "state.json"):
             self.collector = LocalDataCollector(config=config, device_id="test-dev")
-        self.collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        self.collector._startup_done = True
 
     def test_envelope_structure_sqlite(self):
         _create_test_db(
@@ -1508,7 +1478,7 @@ class TestExecuteSqliteQuery:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "inc.json"):
             collector = LocalDataCollector(config=config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()
 
         db_key = os.path.basename(db_path)
@@ -1579,7 +1549,7 @@ class TestScanSourceWithSqlite:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "s.json"):
             collector = LocalDataCollector(config=config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()
 
         # Should have events from both file and SQLite
@@ -1618,7 +1588,7 @@ class TestScanSourceWithSqlite:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "s.json"):
             collector = LocalDataCollector(config=config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()
         assert len(collector._buffer) == 1
 
@@ -1652,7 +1622,7 @@ class TestScanSourceWithSqlite:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "s.json"):
             collector = LocalDataCollector(config=config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()
         assert len(collector._buffer) == 0
 
@@ -1684,7 +1654,7 @@ class TestScanSourceWithSqlite:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "s.json"):
             collector = LocalDataCollector(config=config, device_id="dev")
-        collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        collector._startup_done = True
         collector._run_full_scan()
         assert len(collector._buffer) == 0
 
@@ -1725,7 +1695,7 @@ class TestWatcherSqlite:
 
         with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", tmp_path / "s.json"):
             self.collector = LocalDataCollector(config=self.config, device_id="dev")
-        self.collector._scan_state.set_file_state("_init", "_init", 0, 0)
+        self.collector._startup_done = True
 
     def test_is_watched_sqlite_db_true(self):
         assert self.collector._is_watched_sqlite_db(self.db_path) is True
