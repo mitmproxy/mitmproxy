@@ -622,8 +622,14 @@ class LocalDataCollector:
 
         is_first_run = self._scan_state.is_first_run()
         backfill_cutoff = None
-        if is_first_run and self._backfill_max_age_days > 0:
-            backfill_cutoff = time.time() - (self._backfill_max_age_days * 86400)
+        backfill_disabled = False
+        if is_first_run:
+            if self._backfill_max_age_days > 0:
+                backfill_cutoff = time.time() - (self._backfill_max_age_days * 86400)
+            else:
+                # backfill_max_age_days == 0 means backfill is disabled;
+                # skip ALL existing files and only pick up new data.
+                backfill_disabled = True
 
         for filepath in matched_files:
             filename = os.path.basename(filepath)
@@ -638,6 +644,15 @@ class LocalDataCollector:
 
             # Backfill filter: skip old files on first run but record their
             # current size so future incremental reads start from the end.
+            if backfill_disabled:
+                try:
+                    st = os.stat(filepath)
+                    self._scan_state.set_file_state(
+                        source_name, filepath, st.st_size, st.st_mtime
+                    )
+                    continue
+                except OSError:
+                    continue
             if backfill_cutoff is not None:
                 try:
                     st = os.stat(filepath)
@@ -689,10 +704,15 @@ class LocalDataCollector:
 
         # Backfill check on first run
         is_first_run = self._scan_state.is_first_run()
-        if is_first_run and self._backfill_max_age_days > 0:
-            backfill_cutoff = time.time() - (self._backfill_max_age_days * 86400)
-            if current_mtime < backfill_cutoff:
+        if is_first_run:
+            if self._backfill_max_age_days == 0:
+                # Backfill disabled — skip all existing databases
+                self._scan_state.set_sqlite_mtime(source_name, db_key, current_mtime)
                 return
+            if self._backfill_max_age_days > 0:
+                backfill_cutoff = time.time() - (self._backfill_max_age_days * 86400)
+                if current_mtime < backfill_cutoff:
+                    return
 
         queries = db_config.get("queries", [])
         has_incremental = any(q.get("incremental_field") for q in queries)

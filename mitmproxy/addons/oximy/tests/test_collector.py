@@ -1034,7 +1034,7 @@ class TestBackfillWindow:
         os.utime(fp, (old_time, old_time))
 
         collector._run_full_scan()
-        assert len(collector._buffer) == 1  # No age filter when 0
+        assert len(collector._buffer) == 0  # Backfill disabled — skip all existing files
 
 
 # ---------------------------------------------------------------------------
