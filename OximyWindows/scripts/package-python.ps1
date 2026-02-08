@@ -196,8 +196,16 @@ try {
     }
 
     # Step 7: Install jsonata-python for configurable parsers
-    Write-Host "Step 7/7: Installing jsonata-python..." -ForegroundColor Yellow
+    Write-Host "Step 7/8: Installing jsonata-python..." -ForegroundColor Yellow
     & $PythonExe -m pip install jsonata-python --no-warn-script-location 2>&1 | ForEach-Object {
+        if ($_ -match "Successfully installed") {
+            Write-Host "  $_" -ForegroundColor Green
+        }
+    }
+
+    # Step 8: Install watchfiles for local data collection file watching
+    Write-Host "Step 8/8: Installing watchfiles..." -ForegroundColor Yellow
+    & $PythonExe -m pip install watchfiles --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
         }
