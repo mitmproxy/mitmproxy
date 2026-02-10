@@ -51,6 +51,10 @@ public partial class App : Application
         // This ensures we capture any startup errors.
         SentryService.Initialize();
 
+        // CRITICAL: Clean up any orphaned proxy settings from a previous crash.
+        // FAIL-OPEN: This MUST run before any UI loads to restore internet connectivity.
+        ProxyService.CleanupOrphanedProxy();
+
         // Single instance check
         const string mutexName = "OximyWindowsSingleInstance";
         _mutex = new Mutex(true, mutexName, out var createdNew);
@@ -550,8 +554,31 @@ public partial class App : Application
         e.Handled = true;
     }
 
+    /// <summary>
+    /// Reference to MDM configuration service for checking policies.
+    /// </summary>
+    public static MDMConfigService MDMConfigService => MDMConfigService.Instance;
+
+    /// <summary>
+    /// Quit the application.
+    /// Will be blocked if DisableQuit MDM policy is set.
+    /// </summary>
     public static void Quit()
     {
+        // Check if quit is blocked by MDM policy
+        if (MDMConfigService.Instance.DisableQuit)
+        {
+            Debug.WriteLine("[App] Quit blocked by MDM policy (DisableQuit)");
+
+            var itSupport = RemoteStateService.Instance.ItSupport;
+            var message = !string.IsNullOrEmpty(itSupport)
+                ? $"Quitting Oximy has been disabled by your organization.\n\nContact your IT administrator: {itSupport}"
+                : "Quitting Oximy has been disabled by your organization.\n\nContact your IT administrator for more information.";
+
+            MessageBox.Show(message, "Quit is disabled", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
         Current.Shutdown();
     }
 }

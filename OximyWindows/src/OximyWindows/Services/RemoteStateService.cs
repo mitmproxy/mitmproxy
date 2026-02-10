@@ -9,6 +9,49 @@ using System.Timers;
 namespace OximyWindows.Services;
 
 /// <summary>
+/// App-level feature flags from sensor-config API (delivered via remote-state.json appConfig field).
+/// This is the middle tier of the 3-tier config fallback: MDM > API (appConfig) > defaults.
+/// </summary>
+public class AppConfigFlags
+{
+    [JsonPropertyName("disableUserLogout")]
+    public bool? DisableUserLogout { get; set; }
+
+    [JsonPropertyName("disableQuit")]
+    public bool? DisableQuit { get; set; }
+
+    [JsonPropertyName("forceAutoStart")]
+    public bool? ForceAutoStart { get; set; }
+
+    [JsonPropertyName("managedSetupComplete")]
+    public bool? ManagedSetupComplete { get; set; }
+
+    [JsonPropertyName("managedEnrollmentComplete")]
+    public bool? ManagedEnrollmentComplete { get; set; }
+
+    [JsonPropertyName("managedCACertInstalled")]
+    public bool? ManagedCACertInstalled { get; set; }
+
+    [JsonPropertyName("managedDeviceToken")]
+    public string? ManagedDeviceToken { get; set; }
+
+    [JsonPropertyName("managedDeviceId")]
+    public string? ManagedDeviceId { get; set; }
+
+    [JsonPropertyName("managedWorkspaceId")]
+    public string? ManagedWorkspaceId { get; set; }
+
+    [JsonPropertyName("managedWorkspaceName")]
+    public string? ManagedWorkspaceName { get; set; }
+
+    [JsonPropertyName("apiEndpoint")]
+    public string? ApiEndpoint { get; set; }
+
+    [JsonPropertyName("heartbeatInterval")]
+    public int? HeartbeatInterval { get; set; }
+}
+
+/// <summary>
 /// Remote state from Python addon (written to ~/.oximy/remote-state.json).
 /// The addon writes this file based on server-side configuration.
 /// </summary>
@@ -31,6 +74,9 @@ public class RemoteState
 
     [JsonPropertyName("timestamp")]
     public string? Timestamp { get; set; }
+
+    [JsonPropertyName("appConfig")]
+    public AppConfigFlags? AppConfig { get; set; }
 }
 
 /// <summary>
@@ -49,6 +95,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     private bool _proxyActive;
     private string? _tenantId;
     private string? _itSupport;
+    private AppConfigFlags? _appConfig;
     private DateTime? _lastUpdate;
     private bool _isRunning;
     private bool _disposed;
@@ -88,6 +135,16 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     {
         get => _itSupport;
         private set => SetProperty(ref _itSupport, value);
+    }
+
+    /// <summary>
+    /// App configuration flags from sensor-config API.
+    /// Used as middle tier of 3-tier fallback: MDM > API (appConfig) > defaults.
+    /// </summary>
+    public AppConfigFlags? AppConfig
+    {
+        get => _appConfig;
+        private set => SetProperty(ref _appConfig, value);
     }
 
     /// <summary>
@@ -185,6 +242,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
             ProxyActive = state.ProxyActive;
             TenantId = state.TenantId;
             ItSupport = state.ItSupport;
+            AppConfig = state.AppConfig;
             LastUpdate = DateTime.Now;
 
             // Handle state changes

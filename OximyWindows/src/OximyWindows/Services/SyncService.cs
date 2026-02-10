@@ -136,19 +136,25 @@ public class SyncService : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>
-    /// Trigger an immediate sync.
+    /// Trigger an immediate sync by writing a force-sync trigger file
+    /// that the Python addon watches, then perform sync.
     /// </summary>
     public async Task SyncNowAsync()
     {
+        WriteForceSyncTrigger();
         await PerformSyncAsync();
     }
 
     /// <summary>
     /// Flush all pending events synchronously (for app shutdown).
+    /// Writes a force-sync trigger file so the Python addon also flushes immediately.
     /// </summary>
     public void FlushSync(int timeoutMs = 5000)
     {
         Debug.WriteLine("[SyncService] Flushing pending events synchronously...");
+
+        // Write force-sync trigger file for the Python addon
+        WriteForceSyncTrigger();
 
         try
         {
@@ -159,6 +165,22 @@ public class SyncService : INotifyPropertyChanged, IDisposable
         catch (Exception ex)
         {
             Debug.WriteLine($"[SyncService] Flush failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Write the force-sync trigger file that the Python addon watches.
+    /// The addon reads this file and immediately uploads pending events.
+    /// </summary>
+    private static void WriteForceSyncTrigger()
+    {
+        try
+        {
+            File.WriteAllText(Path.Combine(Constants.OximyDir, "force-sync"), "sync");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncService] Failed to write force-sync trigger: {ex.Message}");
         }
     }
 

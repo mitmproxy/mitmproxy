@@ -131,6 +131,25 @@ public class HeartbeatRequest
 
     [JsonPropertyName("metrics")]
     public DeviceMetrics Metrics { get; set; } = new();
+
+    [JsonPropertyName("commandResults")]
+    public Dictionary<string, CommandResult>? CommandResults { get; set; }
+}
+
+/// <summary>
+/// Result of a command executed by the Python addon.
+/// Read from ~/.oximy/command-results.json and included in next heartbeat.
+/// </summary>
+public class CommandResult
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("executedAt")]
+    public string ExecutedAt { get; set; } = "";
+
+    [JsonPropertyName("error")]
+    public string? Error { get; set; }
 }
 
 /// <summary>

@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO;
+using System.Text.Json;
 using OximyWindows.Core;
 using OximyWindows.Models;
 
@@ -85,6 +87,53 @@ public class HeartbeatService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Read command execution results from file (written by Python addon).
+    /// Results are included in the next heartbeat and the file is deleted after reading.
+    /// </summary>
+    private static Dictionary<string, CommandResult>? ReadCommandResults()
+    {
+        var path = Path.Combine(Constants.OximyDir, "command-results.json");
+        if (!File.Exists(path)) return null;
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            var rawResults = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+            if (rawResults == null || rawResults.Count == 0) return null;
+
+            var results = new Dictionary<string, CommandResult>();
+            foreach (var (key, value) in rawResults)
+            {
+                var success = value.TryGetProperty("success", out var successProp) && successProp.GetBoolean();
+                var executedAt = value.TryGetProperty("executedAt", out var executedAtProp) ? executedAtProp.GetString() ?? "" : "";
+                string? error = value.TryGetProperty("error", out var errorProp) && errorProp.ValueKind != JsonValueKind.Null ? errorProp.GetString() : null;
+
+                results[key] = new CommandResult
+                {
+                    Success = success,
+                    ExecutedAt = executedAt,
+                    Error = error
+                };
+            }
+
+            // Delete file after reading (consumed by heartbeat)
+            try { File.Delete(path); } catch { /* ignore */ }
+
+            if (results.Count > 0)
+            {
+                Debug.WriteLine($"[HeartbeatService] Including {results.Count} command results in heartbeat");
+            }
+
+            return results.Count > 0 ? results : null;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HeartbeatService] Failed to read command results: {ex.Message}");
+            return null;
+        }
+    }
+
     private async void OnHeartbeatTick(object? state)
     {
         if (AppState.Instance.Phase != Phase.Connected)
@@ -92,8 +141,11 @@ public class HeartbeatService : IDisposable
 
         try
         {
+            // Read command results from file if available
+            var commandResults = ReadCommandResults();
+
             var eventsQueued = SyncService.Instance.PendingEventCount;
-            var response = await APIClient.Instance.SendHeartbeatAsync(eventsQueued);
+            var response = await APIClient.Instance.SendHeartbeatAsync(eventsQueued, commandResults);
 
             // Update config if provided
             if (response.Config != null)

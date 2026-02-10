@@ -137,7 +137,7 @@ public class APIClient
     /// <summary>
     /// Send heartbeat to the backend.
     /// </summary>
-    public async Task<HeartbeatResponse> SendHeartbeatAsync(int eventsQueued)
+    public async Task<HeartbeatResponse> SendHeartbeatAsync(int eventsQueued, Dictionary<string, CommandResult>? commandResults = null)
     {
         var deviceToken = AppState.Instance.DeviceToken;
         if (string.IsNullOrEmpty(deviceToken))
@@ -158,7 +158,8 @@ public class APIClient
                 CpuPercent = GetCpuUsage(),
                 MemoryMb = GetMemoryUsageMb(),
                 EventsQueued = eventsQueued
-            }
+            },
+            CommandResults = commandResults
         };
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, Constants.DeviceHeartbeatEndpoint);
