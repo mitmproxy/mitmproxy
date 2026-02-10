@@ -5,6 +5,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OximyWindows.Core;
+using OximyWindows.Services;
 using OximyWindows.Views;
 
 namespace OximyWindows.ViewModels;
@@ -68,9 +69,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
+    /// <summary>
+    /// Whether the user can quit. Returns false if blocked by MDM policy.
+    /// </summary>
+    public bool CanQuit => !MDMConfigService.Instance.DisableQuit;
+
+    [RelayCommand(CanExecute = nameof(CanQuit))]
     private void Quit()
     {
+        // Double-check MDM policy (in case CanExecute wasn't re-evaluated)
+        if (MDMConfigService.Instance.DisableQuit)
+        {
+            MessageBox.Show(
+                "Quitting is disabled by your organization's policy.",
+                "Cannot Quit",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
         App.Quit();
     }
 

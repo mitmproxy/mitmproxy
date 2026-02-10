@@ -83,7 +83,7 @@
       "provider": "aws_bedrock"
     }
   ],
-  "generated_at": "2026-01-14T18:06:08.590041+00:00",
+  "generated_at": "2026-02-09T08:02:38.959300+00:00",
   "logos_url": "https://models.dev/logos",
   "models": {
     "abacus/Qwen-QwQ-32B": {
@@ -47162,11 +47162,105 @@
         "vendor_url": "https://ai.meta.com/"
       },
       "manus-ai": {
+        "_har_analyzed": "2026-02-09",
+        "_notes": "Connect Protocol (gRPC-style JSON over HTTP, connect-protocol-version:1). Non-streaming JSON responses over HTTP. Real-time AI response streaming via Socket.IO WebSocket on /socket.io/ and /notifier-v2-socket-io/ \u2014 MUST be whitelisted separately (not covered by service path wildcards). Endpoints needing traces for parser rules: user.v1.UserService/GetAvailableCredits, user.v1.UserService/UserInfo, session.v1.SessionService/CreateMessage (user prompt submission), session.v1.SessionService/GetSessionEvents (conversation history). Socket.IO turn detection note: _is_ws_turn_complete() cannot parse Socket.IO framing (42[...] prefix is not valid JSON) \u2014 messages aggregate at connection close instead of per-turn.",
+        "_status": "partial",
         "api_domains": [
-          "manus.im"
+          "manus.im",
+          "api.manus.im"
         ],
         "category": "ai-chat",
-        "features": {},
+        "features": {
+          "list_sessions": {
+            "description": "List all Manus agent sessions for usage inventory",
+            "name": "List Sessions",
+            "parser": {
+              "request": {
+                "limit": "limit"
+              },
+              "response": {
+                "sessions": "sessions",
+                "total": "total"
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/session.v1.SessionService/ListSessions"
+              }
+            ],
+            "type": "chat"
+          },
+          "project_file": {
+            "description": "Access code files from Manus web development projects",
+            "name": "Project File Access",
+            "parser": {
+              "request": {
+                "file_path": "path",
+                "project_id": "projectId"
+              },
+              "response": {
+                "file_url": "fileUrl"
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/webdev.v1.WebDevService/GetProjectFile"
+              }
+            ],
+            "type": "metadata"
+          },
+          "session": {
+            "description": "Retrieve a Manus agent session with conversation context",
+            "name": "Get Session",
+            "parser": {
+              "request": {
+                "session_id": "sessionUid"
+              },
+              "response": {
+                "agent_task_mode": "session.agentTaskMode",
+                "content": "session.lastDisplayMessage",
+                "created_at": "session.createdAt",
+                "credits_used": "session.costedCredits",
+                "last_message_time": "session.lastMessageTime",
+                "session_id": "session.uid",
+                "status": "session.status",
+                "title": "session.title",
+                "user_id": "session.userId"
+              }
+            },
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/session.v1.SessionService/GetSession"
+              }
+            ],
+            "type": "chat"
+          },
+          "user_credits": {
+            "description": "User credit balance for usage tracking",
+            "name": "Available Credits",
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/user.v1.UserService/GetAvailableCredits"
+              }
+            ],
+            "type": "metadata"
+          },
+          "user_info": {
+            "description": "User profile information",
+            "name": "User Info",
+            "patterns": [
+              {
+                "method": "POST",
+                "url": "**/user.v1.UserService/UserInfo"
+              }
+            ],
+            "type": "metadata"
+          }
+        },
         "name": "Manus.ai",
         "pricing": {
           "model": [

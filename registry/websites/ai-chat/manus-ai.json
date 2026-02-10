@@ -4,9 +4,100 @@
   "vendor_url": "https://manus.im/",
   "category": "ai-chat",
   "api_domains": [
-    "manus.im"
+    "manus.im",
+    "api.manus.im"
   ],
-  "features": {},
+  "features": {
+    "session": {
+      "type": "chat",
+      "name": "Get Session",
+      "description": "Retrieve a Manus agent session with conversation context",
+      "patterns": [
+        {
+          "url": "**/session.v1.SessionService/GetSession",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "session_id": "sessionUid"
+        },
+        "response": {
+          "session_id": "session.uid",
+          "user_id": "session.userId",
+          "title": "session.title",
+          "content": "session.lastDisplayMessage",
+          "status": "session.status",
+          "agent_task_mode": "session.agentTaskMode",
+          "credits_used": "session.costedCredits",
+          "last_message_time": "session.lastMessageTime",
+          "created_at": "session.createdAt"
+        }
+      }
+    },
+    "list_sessions": {
+      "type": "chat",
+      "name": "List Sessions",
+      "description": "List all Manus agent sessions for usage inventory",
+      "patterns": [
+        {
+          "url": "**/session.v1.SessionService/ListSessions",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "limit": "limit"
+        },
+        "response": {
+          "sessions": "sessions",
+          "total": "total"
+        }
+      }
+    },
+    "project_file": {
+      "type": "metadata",
+      "name": "Project File Access",
+      "description": "Access code files from Manus web development projects",
+      "patterns": [
+        {
+          "url": "**/webdev.v1.WebDevService/GetProjectFile",
+          "method": "POST"
+        }
+      ],
+      "parser": {
+        "request": {
+          "project_id": "projectId",
+          "file_path": "path"
+        },
+        "response": {
+          "file_url": "fileUrl"
+        }
+      }
+    },
+    "user_credits": {
+      "type": "metadata",
+      "name": "Available Credits",
+      "description": "User credit balance for usage tracking",
+      "patterns": [
+        {
+          "url": "**/user.v1.UserService/GetAvailableCredits",
+          "method": "POST"
+        }
+      ]
+    },
+    "user_info": {
+      "type": "metadata",
+      "name": "User Info",
+      "description": "User profile information",
+      "patterns": [
+        {
+          "url": "**/user.v1.UserService/UserInfo",
+          "method": "POST"
+        }
+      ]
+    }
+  },
   "pricing": {
     "model": [
       "subscription"
@@ -28,5 +119,8 @@
         "type": "individual"
       }
     ]
-  }
+  },
+  "_status": "partial",
+  "_har_analyzed": "2026-02-09",
+  "_notes": "Connect Protocol (gRPC-style JSON over HTTP, connect-protocol-version:1). Non-streaming JSON responses over HTTP. Real-time AI response streaming via Socket.IO WebSocket on /socket.io/ and /notifier-v2-socket-io/ — MUST be whitelisted separately (not covered by service path wildcards). Endpoints needing traces for parser rules: user.v1.UserService/GetAvailableCredits, user.v1.UserService/UserInfo, session.v1.SessionService/CreateMessage (user prompt submission), session.v1.SessionService/GetSessionEvents (conversation history). Socket.IO turn detection note: _is_ws_turn_complete() cannot parse Socket.IO framing (42[...] prefix is not valid JSON) — messages aggregate at connection close instead of per-turn."
 }

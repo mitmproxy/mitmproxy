@@ -50,6 +50,11 @@ Name: "startupicon"; Description: "Start {#MyAppName} when Windows starts"; Grou
 ; Main application and all dependencies
 Source: "..\publish\win-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+; Installer scripts for MDM deployments
+Source: "scripts\preinstall.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\postinstall.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\uninstall.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "{#MyAppDescription}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "{#MyAppDescription}"; Tasks: desktopicon
@@ -59,12 +64,18 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: 
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: """{app}\{#MyAppExeName}"""; Flags: uninsdeletevalue; Tasks: startupicon
 
 [Run]
+; Run post-install script for MDM setup (runs for all installs, script checks for MDM config)
+Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -NoProfile -File ""{app}\scripts\postinstall.ps1"" -InstallPath ""{app}"" -Silent"; Flags: runhidden; StatusMsg: "Configuring Oximy..."
+
 ; Launch after install
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 ; Stop running instance before uninstall
 Filename: "taskkill.exe"; Parameters: "/F /IM {#MyAppExeName}"; Flags: runhidden; RunOnceId: "KillOximy"
+
+; Run uninstall script for cleanup
+Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -NoProfile -File ""{app}\scripts\uninstall.ps1"" -Silent"; Flags: runhidden; RunOnceId: "RunUninstallScript"
 
 [UninstallDelete]
 ; Clean up user data (optional - ask user?)
@@ -87,7 +98,13 @@ begin
   end;
 end;
 
-// Check if the app is running and prompt to close
+// Check if MDM configuration exists (for conditional operations)
+function IsMDMInstall(): Boolean;
+begin
+  Result := RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Oximy');
+end;
+
+// Pre-install: Check if app is running and disable proxy
 function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
@@ -97,18 +114,34 @@ begin
   // Check if Oximy is running
   if Exec('tasklist.exe', '/FI "IMAGENAME eq {#MyAppExeName}" /NH', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
   begin
-    // If running, ask user to close it
-    if MsgBox('{#MyAppName} is currently running. Would you like to close it and continue with the installation?',
-              mbConfirmation, MB_YESNO) = IDYES then
+    // If running, ask user to close it (skip prompt for silent install)
+    if not WizardSilent then
     begin
-      Exec('taskkill.exe', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-      Sleep(1000); // Wait for process to fully terminate
+      if MsgBox('{#MyAppName} is currently running. Would you like to close it and continue with the installation?',
+                mbConfirmation, MB_YESNO) = IDYES then
+      begin
+        Exec('taskkill.exe', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+        Sleep(1000); // Wait for process to fully terminate
+      end
+      else
+      begin
+        Result := False;
+        Exit;
+      end;
     end
     else
     begin
-      Result := False;
+      // Silent install - just kill the process
+      Exec('taskkill.exe', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(1000);
     end;
   end;
+
+  // Stop mitmdump if running
+  Exec('taskkill.exe', '/F /IM mitmdump.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+
+  // Disable proxy as safety measure before installation
+  RegWriteDWordValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Internet Settings', 'ProxyEnable', 0);
 end;
 
 // Disable proxy on uninstall to prevent leaving user without internet
@@ -120,25 +153,13 @@ begin
   begin
     // Disable system proxy
     RegWriteDWordValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Internet Settings', 'ProxyEnable', 0);
-
-    // Notify system of change
-    // Note: This is a simplified version - the actual app uses P/Invoke for InternetSetOption
   end;
 
   if CurUninstallStep = usPostUninstall then
   begin
     // Remove certificate from trusted root store (requires admin)
     // Using certutil to remove by common name
-    Exec('certutil.exe', '-delstore -user Root "Oximy CA"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    Exec('certutil.exe', '-delstore Root "Oximy CA"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec('certutil.exe', '-delstore -user Root "mitmproxy"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec('certutil.exe', '-delstore Root "mitmproxy"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
-end;
-
-// Custom page to explain what Oximy does
-procedure InitializeWizardCustom;
-var
-  InfoPage: TNewNotebookPage;
-  InfoLabel: TNewStaticText;
-begin
-  // Could add custom wizard pages here if needed
 end;
