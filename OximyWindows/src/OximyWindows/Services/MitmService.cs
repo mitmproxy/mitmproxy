@@ -10,7 +10,7 @@ namespace OximyWindows.Services;
 
 /// <summary>
 /// Manages the mitmproxy subprocess lifecycle.
-/// Handles port finding, process spawning, crash recovery with exponential backoff.
+/// Handles port finding, process spawning, FAIL-OPEN crash recovery with immediate restart.
 /// </summary>
 public class MitmService : IDisposable
 {
@@ -30,12 +30,86 @@ public class MitmService : IDisposable
     public event EventHandler<string>? ErrorReceived;
 
     /// <summary>
+    /// Kill all existing mitmdump/mitmproxy processes to ensure clean state.
+    /// Handles zombie processes from previous runs, crashed instances, or stale processes.
+    /// </summary>
+    private static void KillAllMitmProcesses()
+    {
+        Debug.WriteLine("[MitmService] Cleaning up any existing mitmproxy processes...");
+
+        foreach (var name in new[] { "mitmdump", "mitmproxy" })
+        {
+            try
+            {
+                foreach (var proc in Process.GetProcessesByName(name))
+                {
+                    try
+                    {
+                        proc.Kill(entireProcessTree: true);
+                        Debug.WriteLine($"[MitmService] Killed {name} process (PID {proc.Id})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[MitmService] Failed to kill {name} PID {proc.Id}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        proc.Dispose();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MitmService] Error enumerating {name} processes: {ex.Message}");
+            }
+        }
+
+        // Give processes time to fully terminate
+        Thread.Sleep(200);
+        Debug.WriteLine("[MitmService] Cleanup complete");
+    }
+
+    /// <summary>
+    /// Rotate mitmdump.log if it exceeds 10MB.
+    /// </summary>
+    private static void RotateLogIfNeeded()
+    {
+        try
+        {
+            var logPath = Path.Combine(Constants.LogsDir, "mitmdump.log");
+            if (!File.Exists(logPath)) return;
+
+            var fileInfo = new FileInfo(logPath);
+            if (fileInfo.Length <= 10_000_000) return; // 10MB threshold
+
+            var rotatedPath = Path.Combine(Constants.LogsDir, "mitmdump.log.old");
+
+            if (File.Exists(rotatedPath))
+                File.Delete(rotatedPath);
+
+            File.Move(logPath, rotatedPath);
+            Debug.WriteLine($"[MitmService] Rotated mitmdump.log ({fileInfo.Length / 1_000_000}MB) to mitmdump.log.old");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MitmService] Log rotation failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Start the mitmproxy process.
     /// </summary>
     public async Task StartAsync()
     {
         if (IsRunning)
             return;
+
+        // CRITICAL: Kill any existing mitmproxy processes first
+        // This ensures no zombie processes from previous runs interfere
+        KillAllMitmProcesses();
+
+        // Rotate log file if too large
+        RotateLogIfNeeded();
 
         var port = FindAvailablePort();
         if (port == 0)
@@ -148,6 +222,8 @@ public class MitmService : IDisposable
                 if (!_mitmProcess.HasExited)
                 {
                     _mitmProcess.Kill(entireProcessTree: true);
+                    // Give addon time to complete final upload (typically 1-2s, max 3s)
+                    Thread.Sleep(3000);
                 }
             }
             catch
@@ -160,6 +236,9 @@ public class MitmService : IDisposable
                 _mitmProcess = null;
             }
         }
+
+        // Kill ALL mitmproxy processes to catch any orphans/zombies
+        KillAllMitmProcesses();
 
         CurrentPort = null;
         AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
@@ -302,10 +381,23 @@ public class MitmService : IDisposable
         var exitCode = _mitmProcess?.ExitCode ?? -1;
         CurrentPort = null;
 
-        Debug.WriteLine($"mitmproxy exited with code {exitCode}");
+        Debug.WriteLine($"[MitmService] mitmproxy exited with code {exitCode}");
+
+        // CRITICAL: Always disable proxy when mitmproxy stops to prevent internet blackhole.
+        // This handles both normal exits and crashes.
+        Debug.WriteLine("[MitmService] Process terminated, disabling proxy to prevent internet loss");
+        try
+        {
+            App.ProxyService.DisableProxy();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MitmService] Failed to disable proxy on exit: {ex.Message}");
+        }
 
         // Check if this was a crash (not a clean exit or termination by us)
-        if (exitCode != 0 && exitCode != -1 && !_disposed)
+        var isNormalExit = exitCode == 0 || exitCode == -1;
+        if (!isNormalExit && !_disposed)
         {
             ScheduleRestart();
         }
@@ -316,6 +408,11 @@ public class MitmService : IDisposable
         }
     }
 
+    /// <summary>
+    /// Schedule an automatic restart - FAIL-OPEN: Restart immediately to minimize downtime.
+    /// Previous behavior used exponential backoff (2s, 4s, 8s) which left users without internet.
+    /// New behavior: Restart immediately (100ms delay just for cleanup) to minimize proxy downtime.
+    /// </summary>
     private async void ScheduleRestart()
     {
         if (_restartAttempts >= Constants.MaxRestartAttempts)
@@ -327,9 +424,10 @@ public class MitmService : IDisposable
         }
 
         _restartAttempts++;
-        var delaySeconds = (int)Math.Pow(2, _restartAttempts); // 2, 4, 8 seconds
 
-        Debug.WriteLine($"Scheduling restart attempt {_restartAttempts} in {delaySeconds}s");
+        // FAIL-OPEN: Immediate restart with minimal delay (100ms) for cleanup
+        // Previously used exponential backoff (2s, 4s, 8s) which blocked internet
+        Debug.WriteLine($"[MitmService] FAIL-OPEN: Immediate restart attempt {_restartAttempts}/{Constants.MaxRestartAttempts} in 100ms");
 
         AppState.Instance.ConnectionStatus = ConnectionStatus.Connecting;
 
@@ -338,8 +436,11 @@ public class MitmService : IDisposable
 
         try
         {
-            await Task.Delay(TimeSpan.FromSeconds(delaySeconds), _restartCts.Token);
+            await Task.Delay(100, _restartCts.Token);
             await StartAsync();
+            // Success - reset counter
+            _restartAttempts = 0;
+            Debug.WriteLine("[MitmService] FAIL-OPEN: Auto-restart successful");
         }
         catch (TaskCanceledException)
         {
@@ -347,8 +448,8 @@ public class MitmService : IDisposable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Restart failed: {ex.Message}");
-            // Will trigger another restart via OnProcessExited
+            Debug.WriteLine($"[MitmService] FAIL-OPEN: Auto-restart failed: {ex.Message}");
+            // Will trigger another restart attempt via OnProcessExited
         }
     }
 

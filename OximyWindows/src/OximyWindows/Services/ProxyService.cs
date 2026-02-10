@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
@@ -30,6 +32,76 @@ public class ProxyService : INotifyPropertyChanged
     {
         get => _configuredPort;
         private set => SetProperty(ref _configuredPort, value);
+    }
+
+    // MARK: - Startup Cleanup
+
+    /// <summary>
+    /// Clean up orphaned proxy settings on app launch.
+    /// FAIL-OPEN: If the app crashed with proxy enabled, the system proxy points to a dead port,
+    /// blocking all traffic. This detects that case and disables the proxy immediately.
+    /// </summary>
+    public void CleanupOrphanedProxy()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(InternetSettingsKey);
+            if (key == null) return;
+
+            var proxyEnable = key.GetValue("ProxyEnable");
+            var proxyServer = key.GetValue("ProxyServer") as string;
+
+            var isEnabled = proxyEnable is int enable && enable == 1;
+            if (!isEnabled || string.IsNullOrEmpty(proxyServer) || !proxyServer.StartsWith("127.0.0.1:"))
+                return;
+
+            // Proxy is enabled and pointing to localhost — check if the port is alive
+            var parts = proxyServer.Split(':');
+            if (parts.Length != 2 || !int.TryParse(parts[1], out var port))
+                return;
+
+            if (!IsPortListening(port))
+            {
+                // FAIL-OPEN: Proxy is pointing to a dead port — clear it immediately
+                System.Diagnostics.Debug.WriteLine($"[ProxyService] FAIL-OPEN: Found orphaned proxy pointing to dead port {port} - cleaning up");
+                DisableProxy();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[ProxyService] Proxy on port {port} is active (something is listening)");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ProxyService] Error during orphaned proxy cleanup: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Check if something is listening on a port (synchronous).
+    /// </summary>
+    private static bool IsPortListening(int port)
+    {
+        try
+        {
+            using var client = new TcpClient();
+            var result = client.BeginConnect(IPAddress.Loopback, port, null, null);
+            var connected = result.AsyncWaitHandle.WaitOne(TimeSpan.FromMilliseconds(500));
+            if (connected && client.Connected)
+            {
+                client.EndConnect(result);
+                return true;
+            }
+            return false;
+        }
+        catch (SocketException)
+        {
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
