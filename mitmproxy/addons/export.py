@@ -1,7 +1,9 @@
+import json
 import logging
 import shlex
 from collections.abc import Callable
 from collections.abc import Sequence
+from typing import Any
 
 import pyperclip
 
@@ -60,6 +62,17 @@ def request_content_for_console(request: http.Request) -> str:
     return shlex.quote(escaped_text)
 
 
+def request_content_for_fetch(request: http.Request) -> str:
+    try:
+        text = request.get_text(strict=True)
+        assert text
+    except ValueError:
+        # shlex.quote doesn't support a bytes object
+        # see https://github.com/python/cpython/pull/10871
+        raise exceptions.CommandError("Request content must be valid unicode")
+    return text
+
+
 def curl_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     pop_headers(request)
@@ -97,6 +110,31 @@ def curl_command(f: flow.Flow) -> str:
     command = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
         command += f" -d {request_content_for_console(request)}"
+    return command
+
+
+def browser_fetch_command(f: flow.Flow) -> str:
+    request = cleanup_request(f)
+    pop_headers(request)
+
+    headers: dict[str, Any] = {}
+    options: dict[str, str | dict[str, Any]] = {}
+
+    for k, v in request.headers.items(multi=True):
+        headers[k] = v
+
+    if request.method != "GET" and not request.content:
+        headers["Content-Length"] = 0
+
+    options["method"] = request.method
+
+    if headers:
+        options["headers"] = headers
+
+    if request.content:
+        options["body"] = request_content_for_fetch(request)
+
+    command = f'fetch("{request.pretty_url}", {json.dumps(options, indent=4)})'
     return command
 
 
@@ -157,6 +195,7 @@ def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
 
 
 formats: dict[str, Callable[[flow.Flow], str | bytes]] = dict(
+    browser_fetch=browser_fetch_command,
     curl=curl_command,
     httpie=httpie_command,
     raw=raw,

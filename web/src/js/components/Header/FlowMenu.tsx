@@ -230,6 +230,11 @@ function ExportButton({ flow }: { flow: Flow }) {
                 Copy raw request and response
             </MenuItem>
             <MenuItem onClick={() => copy(flow, "curl")}>Copy as cURL</MenuItem>
+            <MenuItem onClick={() => copy(flow, "browser_fetch")}>
+                {/* In contrast to Node.js fetch, which may or may not be added
+                    for feature parity with Chrome DevTools */}
+                Copy as fetch (browser)
+            </MenuItem>
             <MenuItem onClick={() => copy(flow, "httpie")}>
                 Copy as HTTPie
             </MenuItem>
