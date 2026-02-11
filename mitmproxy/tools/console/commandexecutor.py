@@ -8,11 +8,17 @@ from mitmproxy.tools.console import signals
 
 
 class CommandExecutor:
+    ALIASES: dict[str, str] = {
+        "q": "console.view.pop",
+        "q!": "console.exit",
+    }
+
     def __init__(self, master):
         self.master = master
 
     def __call__(self, cmd: str) -> None:
         if cmd.strip():
+            cmd = self.ALIASES.get(cmd.strip(), cmd)
             try:
                 ret = self.master.commands.execute(cmd)
             except exceptions.CommandError as e:
