@@ -1749,6 +1749,12 @@ def _build_url_regex(pattern: str) -> str:
             regex += pattern_lower[i]
             i += 1
 
+    # If pattern ends with a word character, add a boundary to prevent prefix
+    # matching within a word (e.g., "conversation" matching "conversations")
+    # while still allowing path-segment matching (e.g., "chat" matching "chat/completions")
+    if regex and regex[-1].isalnum():
+        regex += '(?=[/?#]|$)'
+
     return f"^{regex}"
 
 

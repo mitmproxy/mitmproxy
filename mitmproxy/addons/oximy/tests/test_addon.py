@@ -150,6 +150,52 @@ class TestMatchesUrlPattern:
         assert _matches_url_pattern("api.example.com/v1/chat?key=value", "api.example.com/v1/**") is True
         assert _matches_url_pattern("api.example.com/search?q=test", "api.example.com/**") is True
 
+    def test_no_prefix_match_within_word(self):
+        """Pattern should not match when URL continues with more word characters."""
+        # conversation should not match conversations
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/conversation",
+            "chatgpt.com/backend-api/**/conversation"
+        ) is True
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/conversations",
+            "chatgpt.com/backend-api/**/conversation"
+        ) is False
+
+        # me should not match messages
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/me",
+            "chatgpt.com/backend-api/me"
+        ) is True
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/messages",
+            "chatgpt.com/backend-api/me"
+        ) is False
+
+        # completion should not match completions
+        assert _matches_url_pattern(
+            "claude.ai/api/organizations/org1/completion",
+            "claude.ai/api/organizations/**/completion"
+        ) is True
+        assert _matches_url_pattern(
+            "claude.ai/api/organizations/org1/completions",
+            "claude.ai/api/organizations/**/completion"
+        ) is False
+
+    def test_boundary_allows_query_strings(self):
+        """Pattern ending in a word should still match URLs with query strings."""
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/conversation?stream=true",
+            "chatgpt.com/backend-api/**/conversation"
+        ) is True
+
+    def test_boundary_allows_subpaths(self):
+        """Pattern ending in a word should still match URLs with additional path segments."""
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/me/settings",
+            "chatgpt.com/backend-api/me"
+        ) is True
+
 
 # =============================================================================
 # matches_whitelist Tests
@@ -196,6 +242,19 @@ class TestMatchesWhitelist:
         ]
         # First match
         assert matches_whitelist("api.anthropic.com", "/messages", patterns) == "*.anthropic.com"
+
+    def test_no_prefix_match_conversation(self):
+        """conversation pattern should not match conversations endpoint."""
+        patterns = ["chatgpt.com/backend-api/**/conversation"]
+        assert matches_whitelist("chatgpt.com", "/backend-api/conversation", patterns) == "chatgpt.com/backend-api/**/conversation"
+        assert matches_whitelist("chatgpt.com", "/backend-api/conversations", patterns) is None
+        assert matches_whitelist("chatgpt.com", "/backend-api/conversations?offset=0", patterns) is None
+
+    def test_no_prefix_match_me(self):
+        """me pattern should not match messages endpoint."""
+        patterns = ["chatgpt.com/backend-api/me"]
+        assert matches_whitelist("chatgpt.com", "/backend-api/me", patterns) == "chatgpt.com/backend-api/me"
+        assert matches_whitelist("chatgpt.com", "/backend-api/messages", patterns) is None
 
 
 # =============================================================================
@@ -387,6 +446,22 @@ class TestBuildUrlRegex:
         assert pattern.match("example.com/path")
         assert pattern.match("example.com/a/path")
         assert pattern.match("example.com/a/b/c/path")
+
+    def test_word_boundary_prevents_prefix_match(self):
+        """Patterns ending with a word character should not prefix-match."""
+        regex = _build_url_regex("example.com/conversation")
+        pattern = re.compile(regex, re.IGNORECASE)
+        assert pattern.match("example.com/conversation")
+        assert pattern.match("example.com/conversation/")
+        assert pattern.match("example.com/conversation?q=1")
+        assert pattern.match("example.com/conversations") is None
+
+    def test_no_boundary_for_wildcard_ending(self):
+        """Patterns ending with wildcard should not add boundary."""
+        regex = _build_url_regex("example.com/StreamGenerate*")
+        pattern = re.compile(regex, re.IGNORECASE)
+        assert pattern.match("example.com/StreamGenerateContent")
+        assert pattern.match("example.com/StreamGenerate")
 
 
 # =============================================================================
