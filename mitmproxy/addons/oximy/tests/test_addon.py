@@ -58,6 +58,11 @@ from mitmproxy.addons.oximy.addon import (
     matches_host_origin,
     matches_whitelist,
     _matches_url_pattern,
+    _atomic_write,
+    _write_force_logout_state,
+    _write_proxy_state,
+    OXIMY_STATE_FILE,
+    OXIMY_COMMAND_RESULTS_FILE,
 )
 
 
@@ -1430,3 +1435,41 @@ class TestDirectTraceUploaderCircuitBreaker:
 
         assert result is False
         mock_opener.open.assert_not_called()
+
+
+# =============================================================================
+# Atomic State File Writes Tests
+# =============================================================================
+
+class TestAtomicStateFileWrites:
+    """Verify that state file writes use _atomic_write to prevent corruption."""
+
+    @patch("mitmproxy.addons.oximy.addon._atomic_write")
+    def test_write_force_logout_state_uses_atomic_write(self, mock_atomic):
+        _write_force_logout_state()
+        mock_atomic.assert_called_once()
+        call_args = mock_atomic.call_args
+        assert call_args[0][0] == OXIMY_STATE_FILE
+        written_json = json.loads(call_args[0][1])
+        assert written_json["force_logout"] is True
+        assert written_json["sensor_enabled"] is False
+
+    @patch("mitmproxy.addons.oximy.addon._atomic_write")
+    def test_write_proxy_state_uses_atomic_write(self, mock_atomic):
+        with patch("mitmproxy.addons.oximy.addon.OXIMY_STATE_FILE") as mock_path:
+            mock_path.exists.return_value = False
+            _write_proxy_state()
+        mock_atomic.assert_called_once()
+        written_json = json.loads(mock_atomic.call_args[0][1])
+        assert "proxy_active" in written_json
+
+    @patch("mitmproxy.addons.oximy.addon._atomic_write")
+    def test_write_proxy_state_preserves_existing_fields(self, mock_atomic):
+        existing = json.dumps({"sensor_enabled": True, "tenantId": "t123"})
+        with patch("mitmproxy.addons.oximy.addon.OXIMY_STATE_FILE") as mock_path:
+            mock_path.exists.return_value = True
+            with patch("builtins.open", mock_open(read_data=existing)):
+                _write_proxy_state()
+        written_json = json.loads(mock_atomic.call_args[0][1])
+        assert written_json["sensor_enabled"] is True
+        assert written_json["tenantId"] == "t123"

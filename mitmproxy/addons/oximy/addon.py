@@ -192,9 +192,7 @@ def _write_force_logout_state() -> None:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "appConfig": None,
         }
-        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state_data, f, indent=2)
+        _atomic_write(OXIMY_STATE_FILE, json.dumps(state_data, indent=2))
         logger.info("Force logout state written to remote-state.json")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write force logout state: {e}")
@@ -845,9 +843,7 @@ def _write_proxy_state() -> None:
         existing["proxy_port"] = _state.proxy_port
         existing["timestamp"] = datetime.now(timezone.utc).isoformat()
 
-        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=2)
+        _atomic_write(OXIMY_STATE_FILE, json.dumps(existing, indent=2))
         logger.debug(f"Proxy state written: active={_state.proxy_active}, port={_state.proxy_port}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write proxy state: {e}")
@@ -1532,9 +1528,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "appConfig": app_config,
         }
-        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state_data, f, indent=2)
+        _atomic_write(OXIMY_STATE_FILE, json.dumps(state_data, indent=2))
         logger.debug(f"Remote state written to {OXIMY_STATE_FILE}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write remote state file: {e}")
@@ -1543,9 +1537,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     # Desktop apps read this file and include results in heartbeat payload
     if _command_results:
         try:
-            OXIMY_COMMAND_RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(OXIMY_COMMAND_RESULTS_FILE, "w", encoding="utf-8") as f:
-                json.dump(_command_results, f, indent=2)
+            _atomic_write(OXIMY_COMMAND_RESULTS_FILE, json.dumps(_command_results, indent=2))
             logger.debug(f"Command results written to {OXIMY_COMMAND_RESULTS_FILE}: {list(_command_results.keys())}")
 
             # Immediately POST results to API for faster feedback (best effort)
