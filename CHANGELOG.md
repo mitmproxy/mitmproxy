@@ -18,6 +18,8 @@
 - Switch all content-encoding compression algorithms to use fastest settings by default.
   This significantly improves addon runtime performance when assigning to `message.content`.
   ([#8055](https://github.com/mitmproxy/mitmproxy/pull/8055), @Copilot)
+- Fix `modify_body` crash when replacement strings contain backslash sequences.
+  ([#8046](https://github.com/mitmproxy/mitmproxy/pull/8046), @HueCodes)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
 
