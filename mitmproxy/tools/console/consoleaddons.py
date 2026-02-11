@@ -420,7 +420,8 @@ class ConsoleAddon:
 
         if flow is None:
             raise exceptions.CommandError("No flow selected.")
-        elif isinstance(flow, tcp.TCPFlow):
+
+        if isinstance(flow, tcp.TCPFlow):
             focus_options.append("tcp-message")
             add_message_edit_option("tcp-message", flow.messages[-1])
         elif isinstance(flow, udp.UDPFlow):
@@ -456,6 +457,8 @@ class ConsoleAddon:
                 "Cannot edit DNS flows yet, please submit a patch."
             )
 
+        focus_options.append("comment")
+
         return focus_options
 
     @command.command("console.edit.focus")
@@ -479,7 +482,9 @@ class ConsoleAddon:
         )
         if require_dummy_response:
             flow.response = http.Response.make()
-        if flow_part == "cookies":
+        if flow_part == "comment":
+            self.master.switch_view("edit_focus_comment")
+        elif flow_part == "cookies":
             self.master.switch_view("edit_focus_cookies")
         elif flow_part == "urlencoded form":
             self.master.switch_view("edit_focus_urlencoded_form")
@@ -589,7 +594,7 @@ class ConsoleAddon:
     @command.command("console.grideditor.load")
     def grideditor_load(self, path: mitmproxy.types.Path) -> None:
         """
-        Read a file into the currrent cell.
+        Read a file into the current cell.
         """
         self._grideditor().cmd_read_file(path)
 
@@ -597,7 +602,7 @@ class ConsoleAddon:
     def grideditor_load_escaped(self, path: mitmproxy.types.Path) -> None:
         """
         Read a file containing a Python-style escaped string into the
-        currrent cell.
+        current cell.
         """
         self._grideditor().cmd_read_file_escaped(path)
 
