@@ -39,10 +39,70 @@ env:
 
 jobs:
   # ===========================================
+  # Preflight — validate version & generate changelog
+  # ===========================================
+  preflight:
+    name: Preflight
+    runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for duplicate version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="oximy-v${{ inputs.version }}"
+          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::error::Version ${{ inputs.version }} already exists (tag $TAG). Use a different version number."
+            exit 1
+          fi
+          # Also check if a GitHub release already exists
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::GitHub release $TAG already exists. Delete it first or use a different version."
+            exit 1
+          fi
+          echo "Version ${{ inputs.version }} is available."
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Find the previous release tag (most recent oximy-v* tag)
+          PREV_TAG=$(git tag --list 'oximy-v*' --sort=-v:refname | head -1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous release tag found — including all commits."
+            LOG=$(git log --pretty=format:"- %s (%h)" --no-merges -50)
+          else
+            echo "Previous release: $PREV_TAG"
+            LOG=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          if [ -z "$LOG" ]; then
+            LOG="- No changes since $PREV_TAG"
+          fi
+
+          # Write to output (multiline)
+          {
+            echo "changelog<<CHANGELOG_EOF"
+            echo "$LOG"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "--- Generated Changelog ---"
+          echo "$LOG"
+
+  # ===========================================
   # Build macOS App (Universal Binary: ARM64 + x86_64)
   # ===========================================
   build-macos:
     name: Build macOS
+    needs: [preflight]
     runs-on: macos-14
     outputs:
       dmg-name: ${{ steps.build.outputs.dmg-name }}
@@ -96,6 +156,7 @@ jobs:
   # ===========================================
   build-windows:
     name: Build Windows
+    needs: [preflight]
     runs-on: windows-latest
     outputs:
       setup-name: ${{ steps.build.outputs.setup-name }}
@@ -159,7 +220,7 @@ jobs:
   # ===========================================
   create-release:
     name: Create Release
-    needs: [build-macos, build-windows]
+    needs: [preflight, build-macos, build-windows]
     runs-on: ubuntu-latest
 
     steps:
@@ -206,8 +267,12 @@ jobs:
 
             | Platform | Download |
             |----------|----------|
-            | macOS (Apple Silicon & Intel) | [Oximy-${{ inputs.version }}.dmg](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg) |
-            | Windows (64-bit) | [OximySetup-${{ inputs.version }}.exe](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe) |
+            | macOS (Apple Silicon & Intel) | [Oximy-${{ inputs.version }}.dmg](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg) |
+            | Windows (64-bit) | [OximySetup-${{ inputs.version }}.exe](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe) |
+
+            ### What's Changed
+
+            ${{ needs.preflight.outputs.changelog }}
 
             ### macOS Compatibility
 
@@ -220,7 +285,26 @@ jobs:
 
             ---
 
-            **Full Changelog**: https://github.com/OximyHQ/mitmproxy/compare/...oximy-v${{ inputs.version }}
+            **Full Changelog**: https://github.com/OximyHQ/sensor/compare/...oximy-v${{ inputs.version }}
+
+      - name: Update latest tag
+        if: ${{ inputs.prerelease == false }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Delete existing 'latest' release if it exists (tag-only, keeps the real versioned release)
+          gh release delete latest --yes 2>/dev/null || true
+          # Force-move the 'latest' git tag to this commit
+          git tag -f latest
+          git push origin latest --force
+          # Create a 'latest' release pointing to the same assets
+          gh release create latest \
+            --title "Latest Stable — Oximy v${{ inputs.version }}" \
+            --notes "This always points to the most recent stable release. Current: **v${{ inputs.version }}**" \
+            --latest \
+            release-assets/macos/Oximy-${{ inputs.version }}.dmg \
+            release-assets/windows/releases/* \
+            release-assets/windows/Output/*.exe 2>/dev/null || true
 
       - name: Summary
         run: |
@@ -231,5 +315,51 @@ jobs:
           echo "**Pre-release**: ${{ inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Download Links" >> $GITHUB_STEP_SUMMARY
-          echo "- [macOS DMG](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Windows Installer](https://github.com/OximyHQ/mitmproxy/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe)" >> $GITHUB_STEP_SUMMARY
+          echo "- [macOS DMG](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Windows Installer](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          REPO="${{ github.repository }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          RELEASE_URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/oximy-v${{ inputs.version }}"
+          TRIGGERED_BY="${{ github.actor }}"
+
+          if [ "${{ job.status }}" = "success" ]; then
+            COLOR="#22c55e"
+            TITLE=":white_check_mark: Sensor release v${{ inputs.version }} succeeded"
+            LINKS=":package: <${RELEASE_URL}|View release> · <https://github.com/${REPO}/releases/tag/latest|latest tag>"
+          else
+            COLOR="#ef4444"
+            TITLE=":x: Sensor release v${{ inputs.version }} failed"
+            LINKS=":warning: <${RUN_URL}|View build logs>"
+          fi
+
+          PRERELEASE_TAG=""
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            PRERELEASE_TAG="\n:test_tube: *Pre-release* — not tagged as latest"
+          fi
+
+          curl -sf "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d @- <<EOF
+          {
+            "attachments": [
+              {
+                "color": "${COLOR}",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*${TITLE}*\n\n:package: *Repo:* \`${REPO}\`\n:label: *Version:* \`v${{ inputs.version }}\`\n:bust_in_silhouette: *Triggered by:* ${TRIGGERED_BY}\n${LINKS}${PRERELEASE_TAG}"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+          EOF

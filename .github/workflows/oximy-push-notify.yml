@@ -1,0 +1,87 @@
+# Notify Slack when code lands on main (merge or direct push)
+# This runs independently of the release workflow — every main push gets a notification.
+
+name: Push to Main
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: push-notify
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Gather commit info
+        id: info
+        run: |
+          # Count commits in this push (for squash merges this is 1)
+          COMMIT_COUNT=$(git rev-list --count HEAD ^HEAD~1 2>/dev/null || echo "1")
+
+          # Get the commit message (first line)
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+
+          # Check if this is a merge commit (PR merge)
+          MERGE=$(git log -1 --pretty=format:"%P" | awk '{print NF}')
+          if [ "$MERGE" -gt 1 ]; then
+            IS_PR_MERGE="true"
+          else
+            IS_PR_MERGE="false"
+          fi
+
+          echo "commit_msg=$COMMIT_MSG" >> "$GITHUB_OUTPUT"
+          echo "commit_count=$COMMIT_COUNT" >> "$GITHUB_OUTPUT"
+          echo "is_pr_merge=$IS_PR_MERGE" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          REPO="${{ github.repository }}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          ACTOR="${{ github.actor }}"
+          COMMIT_MSG=$(echo '${{ steps.info.outputs.commit_msg }}' | sed 's/"/\\"/g')
+
+          if [ "${{ steps.info.outputs.is_pr_merge }}" = "true" ]; then
+            ICON=":twisted_rightwards_arrows:"
+            LABEL="PR merged"
+          else
+            ICON=":rocket:"
+            LABEL="Pushed"
+          fi
+
+          curl -sf "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d @- <<EOF
+          {
+            "attachments": [
+              {
+                "color": "#3b82f6",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "${ICON} *${LABEL} to main*\n\n:package: *Repo:* \`${REPO}\`\n:memo: *Commit:* <${COMMIT_URL}|\`${SHORT_SHA}\`> — ${COMMIT_MSG}\n:bust_in_silhouette: *By:* ${ACTOR}"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
