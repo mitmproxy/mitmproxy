@@ -117,6 +117,12 @@ public static class Constants
     public const string DeviceRegisterEndpoint = "devices/register";
     public const string DeviceHeartbeatEndpoint = "devices/heartbeat";
     public const string DeviceEventsEndpoint = "devices/events";
+    public const string SensorConfigEndpoint = "sensor-config";
+    public const string CommandResultsEndpoint = "devices/command-results";
+
+    // Remote state staleness threshold — if remote-state.json hasn't been updated
+    // in this many seconds, the C# app fetches sensor-config directly from the API
+    public const int RemoteStateStalenessSeconds = 30;
 
     // Sync Configuration
     public const int DefaultHeartbeatIntervalSeconds = 60;

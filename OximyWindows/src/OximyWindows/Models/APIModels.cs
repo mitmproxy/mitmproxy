@@ -113,6 +113,43 @@ public class DeviceConfig
 
 #endregion
 
+#region Device Info
+
+/// <summary>
+/// Response from GET /devices/me — fetches workspace info after browser auth.
+/// </summary>
+public class DeviceInfoResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("data")]
+    public DeviceInfoData? Data { get; set; }
+
+    [JsonPropertyName("error")]
+    public ApiError? Error { get; set; }
+}
+
+/// <summary>
+/// Device info data including workspace details.
+/// </summary>
+public class DeviceInfoData
+{
+    [JsonPropertyName("deviceId")]
+    public required string DeviceId { get; set; }
+
+    [JsonPropertyName("deviceName")]
+    public string? DeviceName { get; set; }
+
+    [JsonPropertyName("workspaceId")]
+    public required string WorkspaceId { get; set; }
+
+    [JsonPropertyName("workspaceName")]
+    public required string WorkspaceName { get; set; }
+}
+
+#endregion
+
 #region Heartbeat
 
 /// <summary>
@@ -168,9 +205,25 @@ public class DeviceMetrics
 }
 
 /// <summary>
-/// Response from heartbeat.
+/// Response envelope from heartbeat API.
+/// The API wraps all responses in { success, data, error } format.
 /// </summary>
 public class HeartbeatResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("data")]
+    public HeartbeatData? Data { get; set; }
+
+    [JsonPropertyName("error")]
+    public ApiError? Error { get; set; }
+}
+
+/// <summary>
+/// Heartbeat data inside the response envelope.
+/// </summary>
+public class HeartbeatData
 {
     [JsonPropertyName("status")]
     public string Status { get; set; } = "ok";
@@ -178,11 +231,14 @@ public class HeartbeatResponse
     [JsonPropertyName("workspaceName")]
     public string? WorkspaceName { get; set; }
 
-    [JsonPropertyName("config")]
-    public DeviceConfig? Config { get; set; }
+    [JsonPropertyName("workspaceId")]
+    public string? WorkspaceId { get; set; }
+
+    [JsonPropertyName("configUpdate")]
+    public DeviceConfig? ConfigUpdate { get; set; }
 
     [JsonPropertyName("commands")]
-    public List<ServerCommand>? Commands { get; set; }
+    public List<string>? Commands { get; set; }
 }
 
 /// <summary>
@@ -248,6 +304,55 @@ public class FileSyncState
 
     [JsonPropertyName("lastSyncTime")]
     public DateTime LastSyncTime { get; set; }
+}
+
+#endregion
+
+#region Sensor Config
+
+/// <summary>
+/// Response from GET /sensor-config — fetched directly when Python addon is stale.
+/// </summary>
+public class SensorConfigResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("data")]
+    public SensorConfigData? Data { get; set; }
+}
+
+/// <summary>
+/// Sensor config data containing commands and app-level feature flags.
+/// </summary>
+public class SensorConfigData
+{
+    [JsonPropertyName("commands")]
+    public SensorConfigCommands? Commands { get; set; }
+
+    [JsonPropertyName("appConfig")]
+    public OximyWindows.Services.AppConfigFlags? AppConfig { get; set; }
+
+    [JsonPropertyName("tenantId")]
+    public string? TenantId { get; set; }
+
+    [JsonPropertyName("itSupport")]
+    public string? ItSupport { get; set; }
+}
+
+/// <summary>
+/// Remote commands from sensor-config API response.
+/// </summary>
+public class SensorConfigCommands
+{
+    [JsonPropertyName("sensor_enabled")]
+    public bool SensorEnabled { get; set; } = true;
+
+    [JsonPropertyName("force_logout")]
+    public bool ForceLogout { get; set; }
+
+    [JsonPropertyName("force_sync")]
+    public bool ForceSync { get; set; }
 }
 
 #endregion

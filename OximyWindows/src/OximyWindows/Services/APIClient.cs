@@ -62,6 +62,34 @@ public class APIClient
     }
 
     /// <summary>
+    /// Fetch device info (including workspace name) using a device token.
+    /// Called after browser auth callback to get workspace info not in the callback URL.
+    /// </summary>
+    public async Task<DeviceInfoData> FetchDeviceInfoAsync(string token)
+    {
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Get, "devices/me");
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await _httpClient.SendAsync(httpRequest);
+        var content = await response.Content.ReadAsStringAsync();
+
+        Debug.WriteLine($"[APIClient] FetchDeviceInfo response: {(int)response.StatusCode}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = ParseErrorFromContent(content, response);
+            throw new ApiException(error, response.StatusCode);
+        }
+
+        var result = JsonSerializer.Deserialize<DeviceInfoResponse>(content, _jsonOptions);
+
+        if (result?.Data == null)
+            throw new ApiException("Invalid device info response", HttpStatusCode.InternalServerError);
+
+        return result.Data;
+    }
+
+    /// <summary>
     /// Register device with the backend using enrollment code.
     /// </summary>
     public async Task<DeviceRegistrationResponse> RegisterDeviceAsync(string enrollmentCode)
@@ -142,8 +170,9 @@ public class APIClient
 
     /// <summary>
     /// Send heartbeat to the backend.
+    /// Returns the unwrapped HeartbeatData from the response envelope.
     /// </summary>
-    public async Task<HeartbeatResponse> SendHeartbeatAsync(int eventsQueued, Dictionary<string, CommandResult>? commandResults = null)
+    public async Task<HeartbeatData> SendHeartbeatAsync(int eventsQueued, Dictionary<string, CommandResult>? commandResults = null)
     {
         var deviceToken = AppState.Instance.DeviceToken;
         if (string.IsNullOrEmpty(deviceToken))
@@ -193,14 +222,68 @@ public class APIClient
         _authRetryCount = 0;
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<HeartbeatResponse>(content, _jsonOptions);
+        var envelope = JsonSerializer.Deserialize<HeartbeatResponse>(content, _jsonOptions);
+        var data = envelope?.Data ?? new HeartbeatData();
 
-        if (result?.WorkspaceName != null && result.WorkspaceName != AppState.Instance.WorkspaceName)
+        // Update workspace name if server provides a different one
+        if (!string.IsNullOrEmpty(data.WorkspaceName) && data.WorkspaceName != AppState.Instance.WorkspaceName)
         {
-            WorkspaceNameUpdated?.Invoke(this, result.WorkspaceName);
+            WorkspaceNameUpdated?.Invoke(this, data.WorkspaceName);
         }
 
-        return result ?? new HeartbeatResponse();
+        return data;
+    }
+
+    /// <summary>
+    /// Fetch sensor config directly from the API.
+    /// Used as fallback when the Python addon is not running or stale.
+    /// </summary>
+    public async Task<SensorConfigData?> FetchSensorConfigAsync()
+    {
+        var deviceToken = AppState.Instance.DeviceToken;
+        if (string.IsNullOrEmpty(deviceToken))
+            return null;
+
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Get, Constants.SensorConfigEndpoint);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", deviceToken);
+
+        var response = await _httpClient.SendAsync(httpRequest);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<SensorConfigResponse>(content, _jsonOptions);
+        return result?.Data;
+    }
+
+    /// <summary>
+    /// Post command execution results to the API for immediate feedback.
+    /// Called when the C# app processes sensor-config commands directly (addon dead).
+    /// Best-effort — failures are logged but don't affect app operation.
+    /// </summary>
+    public async Task PostCommandResultsAsync(Dictionary<string, CommandResult> results)
+    {
+        var deviceToken = AppState.Instance.DeviceToken;
+        if (string.IsNullOrEmpty(deviceToken))
+            return;
+
+        try
+        {
+            var payload = new { commandResults = results };
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, Constants.CommandResultsEndpoint);
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", deviceToken);
+            httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(payload, _jsonOptions),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.SendAsync(httpRequest);
+            Debug.WriteLine($"[APIClient] Command results POST: {(int)response.StatusCode} ({string.Join(", ", results.Keys)})");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[APIClient] Failed to POST command results: {ex.Message}");
+        }
     }
 
     /// <summary>
