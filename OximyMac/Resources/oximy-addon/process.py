@@ -19,7 +19,7 @@ except ImportError:
     _HAS_PSUTIL = False
 
 try:
-    from mitmproxy.addons.oximy import sentry_service
+    import sentry_service
 except ImportError:
     try:
         import sentry_service  # type: ignore[import]

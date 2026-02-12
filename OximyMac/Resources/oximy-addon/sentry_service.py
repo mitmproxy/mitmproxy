@@ -1,9 +1,3 @@
-"""Sentry wrapper for the Python addon — fail-open design.
-
-Initializes from SENTRY_DSN environment variable (inherited from Swift parent process).
-Thread-safe, lazy import of sentry_sdk. Works even if the package is not installed.
-No automatic integrations (prevents interference with mitmproxy event loop).
-"""
 from __future__ import annotations
 
 import logging
@@ -17,11 +11,10 @@ logger = logging.getLogger(__name__)
 
 _lock = threading.Lock()
 _initialized = False
-_sentry_sdk: Any = None  # lazy import
+_sentry_sdk: Any = None
 
 
 def _get_sdk():
-    """Lazy-import sentry_sdk to avoid hard dependency."""
     global _sentry_sdk
     if _sentry_sdk is not None:
         return _sentry_sdk
@@ -30,12 +23,17 @@ def _get_sdk():
         _sentry_sdk = sdk
         return sdk
     except ImportError:
-        _sentry_sdk = False  # sentinel: import failed, don't retry
         return None
 
 
+def _sdk_or_none():
+    """Return the SDK if initialized and available, else None."""
+    if not _initialized:
+        return None
+    return _get_sdk()
+
+
 def initialize() -> bool:
-    """Initialize Sentry from SENTRY_DSN env var. Returns True if initialized."""
     global _initialized
     with _lock:
         if _initialized:
@@ -52,20 +50,36 @@ def initialize() -> bool:
             return False
 
         try:
+            from sentry_sdk.integrations.logging import LoggingIntegration
+
+            logging_integration = LoggingIntegration(
+                level=logging.INFO,          # breadcrumbs from INFO+
+                event_level=None,            # no auto-capture — explicit capture_message() only
+            )
+
+            # StdlibIntegration auto-captures urllib HTTP calls (ingestion uploads,
+            # config fetches) as HTTP breadcrumbs — matches Swift SDK's HTTP tracking
+            integrations = [logging_integration]
+            try:
+                from sentry_sdk.integrations.stdlib import StdlibIntegration
+                integrations.append(StdlibIntegration())
+            except (ImportError, Exception):
+                logger.debug("StdlibIntegration not available — urllib HTTP breadcrumbs disabled")
+
             env = os.environ.get("OXIMY_ENV", "production")
             sdk.init(
                 dsn=dsn,
                 environment=env,
-                # No automatic integrations — we only want manual events/breadcrumbs
-                default_integrations=False,
-                auto_enabling_integrations=False,
-                # Send ALL events (not sampled)
+                integrations=integrations,
                 sample_rate=1.0,
-                traces_sample_rate=0.0,  # no performance tracing
-                # Don't send PII
+                traces_sample_rate=0.0,
                 send_default_pii=False,
-                # Max breadcrumbs
                 max_breadcrumbs=200,
+                # Bypass the Oximy proxy for Sentry's own HTTP calls —
+                # the addon runs inside mitmproxy, so system proxy points
+                # back to ourselves which breaks Sentry event delivery
+                http_proxy="",
+                https_proxy="",
             )
 
             _initialized = True
@@ -82,36 +96,25 @@ def is_initialized() -> bool:
 
 def set_user(device_id: str | None = None, workspace_id: str | None = None,
              workspace_name: str | None = None) -> None:
-    """Set user context on the Sentry scope."""
-    if not _initialized:
-        return
-    sdk = _get_sdk()
-    if not sdk:
-        return
-    try:
-        sdk.set_user({
-            "id": device_id or "unknown",
-            "username": workspace_name,
-        })
-    except Exception:
-        pass
+    if sdk := _sdk_or_none():
+        try:
+            sdk.set_user({
+                "id": device_id or "unknown",
+                "username": workspace_name,
+            })
+        except Exception:
+            pass
 
 
 def set_tag(key: str, value: str) -> None:
-    """Set a tag on the current Sentry scope."""
-    if not _initialized:
-        return
-    sdk = _get_sdk()
-    if not sdk:
-        return
-    try:
-        sdk.set_tag(key, value)
-    except Exception:
-        pass
+    if sdk := _sdk_or_none():
+        try:
+            sdk.set_tag(key, value)
+        except Exception:
+            pass
 
 
 def set_initial_context() -> None:
-    """Set initial device/platform context tags."""
     set_tag("component", "python")
     set_tag("platform", sys.platform)
     set_tag("python_version", platform.python_version())
@@ -125,73 +128,53 @@ def set_initial_context() -> None:
 def capture_exception(exc: BaseException | None = None,
                       tags: dict[str, str] | None = None,
                       extras: dict[str, Any] | None = None) -> None:
-    """Capture an exception to Sentry."""
-    if not _initialized:
-        return
-    sdk = _get_sdk()
-    if not sdk:
-        return
-    try:
-        with sdk.push_scope() as scope:
-            if tags:
-                for k, v in tags.items():
-                    scope.set_tag(k, v)
-            if extras:
-                scope.set_extras(extras)
-            sdk.capture_exception(exc)
-    except Exception:
-        pass
+    if sdk := _sdk_or_none():
+        try:
+            with sdk.push_scope() as scope:
+                if tags:
+                    for k, v in tags.items():
+                        scope.set_tag(k, v)
+                if extras:
+                    scope.set_extras(extras)
+                sdk.capture_exception(exc)
+        except Exception:
+            pass
 
 
 def capture_message(message: str, level: str = "info",
                     tags: dict[str, str] | None = None,
                     extras: dict[str, Any] | None = None) -> None:
-    """Capture a message event to Sentry."""
-    if not _initialized:
-        return
-    sdk = _get_sdk()
-    if not sdk:
-        return
-    try:
-        with sdk.push_scope() as scope:
-            scope.set_level(level)
-            if tags:
-                for k, v in tags.items():
-                    scope.set_tag(k, v)
-            if extras:
-                scope.set_extras(extras)
-            sdk.capture_message(message)
-    except Exception:
-        pass
+    if sdk := _sdk_or_none():
+        try:
+            with sdk.push_scope() as scope:
+                scope.set_level(level)
+                if tags:
+                    for k, v in tags.items():
+                        scope.set_tag(k, v)
+                if extras:
+                    scope.set_extras(extras)
+                sdk.capture_message(message)
+        except Exception:
+            pass
 
 
 def add_breadcrumb(category: str, message: str, level: str = "info",
                    data: dict[str, Any] | None = None) -> None:
-    """Add a breadcrumb to the Sentry trail."""
-    if not _initialized:
-        return
-    sdk = _get_sdk()
-    if not sdk:
-        return
-    try:
-        sdk.add_breadcrumb(
-            category=category,
-            message=message,
-            level=level,
-            data=data,
-        )
-    except Exception:
-        pass
+    if sdk := _sdk_or_none():
+        try:
+            sdk.add_breadcrumb(
+                category=category,
+                message=message,
+                level=level,
+                data=data,
+            )
+        except Exception:
+            pass
 
 
-def flush(timeout: float = 2.0) -> None:
-    """Flush pending Sentry events."""
-    if not _initialized:
-        return
-    sdk = _get_sdk()
-    if not sdk:
-        return
-    try:
-        sdk.flush(timeout=timeout)
-    except Exception:
-        pass
+def flush() -> None:
+    if sdk := _sdk_or_none():
+        try:
+            sdk.flush(timeout=2)
+        except Exception:
+            pass

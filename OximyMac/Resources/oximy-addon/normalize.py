@@ -11,7 +11,7 @@ import urllib.parse
 from mitmproxy.net.encoding import decode_gzip, decode_deflate, decode_zstd
 
 try:
-    from mitmproxy.addons.oximy import sentry_service
+    import sentry_service
 except ImportError:
     try:
         import sentry_service  # type: ignore[import]

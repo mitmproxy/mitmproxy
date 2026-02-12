@@ -2740,9 +2740,11 @@ class DirectTraceUploader:
                     )
                     if response_data.get("success"):
                         logger.info(f"Uploaded {len(batch)} traces ({len(compressed)} bytes compressed)")
-                        oximy_log(OximyEventCode.UPLOAD_STATE_101, "Trace batch uploaded", data={
+                        oximy_log(OximyEventCode.UPLOAD_STATE_101, f"Uploaded {len(batch)} traces to {self._api_url}", data={
+                            "url": self._api_url,
                             "traces_count": len(batch),
                             "compressed_bytes": len(compressed),
+                            "status_code": resp.status,
                         })
                         self._record_upload_circuit_breaker_success()
                         return True
@@ -2795,7 +2797,8 @@ class DirectTraceUploader:
 
         # All retries failed (or CB tripped) — put batch back at front of buffer
         logger.warning(f"Upload failed after {attempt + 1} attempts, returning {len(batch)} traces to buffer")
-        oximy_log(OximyEventCode.UPLOAD_FAIL_203, "Upload retries exhausted", data={
+        oximy_log(OximyEventCode.UPLOAD_FAIL_203, f"Upload to {self._api_url} failed after {attempt + 1} attempts", data={
+            "url": self._api_url,
             "attempts": attempt + 1,
             "traces_count": len(batch),
         })
@@ -4103,9 +4106,10 @@ class OximyAddon:
         if flow.request.content:
             flow.metadata["oximy_request_body"] = flow.request.content
         logger.debug(f"[CAPTURE] {url[:80]} (app_type={app_type})")
-        oximy_log(OximyEventCode.TRACE_CAPTURE_001, "Request matched whitelist", data={
+        oximy_log(OximyEventCode.TRACE_CAPTURE_001, f"Captured {flow.request.method} {flow.request.pretty_host}{flow.request.path[:60]}", data={
             "host": flow.request.pretty_host,
             "method": flow.request.method,
+            "path": flow.request.path[:120],
             "app_type": app_type or "unknown",
         })
 
@@ -4262,9 +4266,10 @@ class OximyAddon:
             graphql_op = flow.metadata.get("oximy_graphql_op", "")
             op_suffix = f" op={graphql_op}" if graphql_op else ""
             logger.debug(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]{op_suffix}")
-            oximy_log(OximyEventCode.TRACE_WRITE_001, "Trace written to buffer", data={
+            oximy_log(OximyEventCode.TRACE_WRITE_001, f"Buffered {flow.request.method} {flow.request.pretty_host}{flow.request.path[:60]} [{flow.response.status_code}]", data={
                 "host": flow.request.pretty_host,
                 "method": flow.request.method,
+                "path": flow.request.path[:120],
                 "status": flow.response.status_code,
             })
 

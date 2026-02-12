@@ -30,7 +30,7 @@ except ImportError:
     HAS_WATCHFILES = False
 
 try:
-    from mitmproxy.addons.oximy import sentry_service
+    import sentry_service
     from oximy_logger import oximy_log, EventCode
 except ImportError:
     try:
