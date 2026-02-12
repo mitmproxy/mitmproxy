@@ -5,36 +5,25 @@ using Sentry;
 
 namespace OximyWindows.Services;
 
-/// <summary>
-/// Sentry integration for error tracking and performance monitoring.
-/// Matches the Mac app's SentryService functionality.
-/// </summary>
 public static class SentryService
 {
     private static bool _initialized;
     private static string? _anonymousDeviceId;
 
-    /// <summary>
-    /// Whether Sentry has been initialized. Used by OximyLogger to guard Sentry calls.
-    /// </summary>
+#if DEBUG
+    private static readonly bool _isDebug = true;
+#else
+    private static readonly bool _isDebug = false;
+#endif
+
     public static bool IsInitialized => _initialized;
 
-    /// <summary>
-    /// Sentry DSN - should be set via environment variable or secrets file.
-    /// </summary>
-    private static string? SentryDsn =>
-        Environment.GetEnvironmentVariable("SENTRY_DSN") ??
-        Secrets.SentryDsn;
-
-    /// <summary>
-    /// Initialize Sentry SDK. Must be called before any other Sentry operations.
-    /// </summary>
     public static void Initialize()
     {
         if (_initialized)
             return;
 
-        var dsn = SentryDsn;
+        var dsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? Secrets.SentryDsn;
         if (string.IsNullOrEmpty(dsn))
         {
             Debug.WriteLine("[SentryService] No DSN configured, Sentry disabled");
@@ -46,32 +35,18 @@ public static class SentryService
             SentrySdk.Init(options =>
             {
                 options.Dsn = dsn;
-                options.Debug = IsDebugBuild();
-                options.TracesSampleRate = IsDebugBuild() ? 1.0 : 0.2; // 20% in production
+                options.Debug = _isDebug;
+                options.TracesSampleRate = _isDebug ? 1.0 : 0.2;
                 options.Release = $"com.oximy.windows@{Constants.Version}";
-                options.Environment = IsDebugBuild() ? "development" : "production";
+                options.Environment = _isDebug ? "development" : "production";
                 options.MaxBreadcrumbs = 200;
                 options.AttachStacktrace = true;
                 options.SendDefaultPii = false;
-
-                // Auto session tracking
                 options.AutoSessionTracking = true;
-
-                // Don't send events in debug mode unless explicitly enabled
-                if (IsDebugBuild() && Environment.GetEnvironmentVariable("SENTRY_DEBUG_SEND") != "1")
-                {
-                    options.SetBeforeSend((@event, hint) =>
-                    {
-                        Debug.WriteLine($"[SentryService] Would send event: {@event.EventId}");
-                        return null; // Don't send in debug
-                    });
-                }
             });
 
             _initialized = true;
             Debug.WriteLine("[SentryService] Initialized successfully");
-
-            // Set initial context
             ConfigureScope();
         }
         catch (Exception ex)
@@ -80,9 +55,6 @@ public static class SentryService
         }
     }
 
-    /// <summary>
-    /// Configure the Sentry scope with user and device context.
-    /// </summary>
     public static void ConfigureScope()
     {
         if (!_initialized)
@@ -90,25 +62,20 @@ public static class SentryService
 
         SentrySdk.ConfigureScope(scope =>
         {
-            // User context
             scope.User = new SentryUser
             {
                 Id = GetAnonymousDeviceId(),
                 Username = AppState.Instance.WorkspaceName,
             };
 
-            // Device context
             scope.SetTag("os.version", Environment.OSVersion.VersionString);
             scope.SetTag("app.version", Constants.Version);
             scope.SetTag("architecture", RuntimeInformation.ProcessArchitecture.ToString());
             scope.SetTag("device_model", Environment.MachineName);
             scope.SetTag("component", "dotnet");
             scope.SetTag("session_id", OximyLogger.SessionId);
-
-            // App state context
             scope.SetTag("app.phase", AppState.Instance.Phase.ToString());
 
-            // MDM context
             try
             {
                 scope.SetTag("is_mdm_managed", MDMConfigService.Instance.IsManagedDevice.ToString().ToLowerInvariant());
@@ -120,9 +87,6 @@ public static class SentryService
         });
     }
 
-    /// <summary>
-    /// Update user context when workspace changes.
-    /// </summary>
     public static void UpdateUserContext()
     {
         if (!_initialized)
@@ -138,10 +102,6 @@ public static class SentryService
         });
     }
 
-    /// <summary>
-    /// Set full user context with workspace and device details.
-    /// Called on login/enrollment completion.
-    /// </summary>
     public static void SetFullUserContext(string? workspaceName, string? deviceId, string? workspaceId, string? tenantId = null)
     {
         if (!_initialized)
@@ -166,9 +126,6 @@ public static class SentryService
         });
     }
 
-    /// <summary>
-    /// Clear user context on logout.
-    /// </summary>
     public static void ClearUser()
     {
         if (!_initialized)
@@ -180,9 +137,6 @@ public static class SentryService
         });
     }
 
-    /// <summary>
-    /// Update app phase in context.
-    /// </summary>
     public static void UpdatePhase(Phase phase)
     {
         if (!_initialized)
@@ -194,9 +148,6 @@ public static class SentryService
         });
     }
 
-    /// <summary>
-    /// Update proxy status in context.
-    /// </summary>
     public static void UpdateProxyStatus(bool enabled, int? port)
     {
         if (!_initialized)
@@ -210,9 +161,6 @@ public static class SentryService
         });
     }
 
-    /// <summary>
-    /// Add a navigation breadcrumb.
-    /// </summary>
     public static void AddNavigationBreadcrumb(string from, string to)
     {
         if (!_initialized)
@@ -229,9 +177,6 @@ public static class SentryService
             });
     }
 
-    /// <summary>
-    /// Add a user action breadcrumb.
-    /// </summary>
     public static void AddUserActionBreadcrumb(string action, string target)
     {
         if (!_initialized)
@@ -248,9 +193,6 @@ public static class SentryService
             });
     }
 
-    /// <summary>
-    /// Add a state change breadcrumb.
-    /// </summary>
     public static void AddStateChangeBreadcrumb(string category, string message, Dictionary<string, string>? data = null)
     {
         if (!_initialized)
@@ -263,9 +205,6 @@ public static class SentryService
             data: data);
     }
 
-    /// <summary>
-    /// Add an error breadcrumb.
-    /// </summary>
     public static void AddErrorBreadcrumb(string service, string errorMessage)
     {
         if (!_initialized)
@@ -277,9 +216,6 @@ public static class SentryService
             level: BreadcrumbLevel.Error);
     }
 
-    /// <summary>
-    /// Capture an exception with additional context.
-    /// </summary>
     public static void CaptureException(Exception exception, string? errorCategory = null, Dictionary<string, string>? extras = null)
     {
         if (!_initialized)
@@ -308,9 +244,6 @@ public static class SentryService
         }
     }
 
-    /// <summary>
-    /// Capture a message.
-    /// </summary>
     public static void CaptureMessage(string message, SentryLevel level = SentryLevel.Info)
     {
         if (!_initialized)
@@ -322,9 +255,6 @@ public static class SentryService
         SentrySdk.CaptureMessage(message, level);
     }
 
-    /// <summary>
-    /// Start a performance transaction.
-    /// </summary>
     public static ITransactionTracer? StartTransaction(string name, string operation)
     {
         if (!_initialized)
@@ -333,17 +263,14 @@ public static class SentryService
         return SentrySdk.StartTransaction(name, operation);
     }
 
-    /// <summary>
-    /// Flush pending events before shutdown.
-    /// </summary>
-    public static void Flush(TimeSpan? timeout = null)
+    public static void Flush()
     {
         if (!_initialized)
             return;
 
         try
         {
-            SentrySdk.Flush(timeout ?? TimeSpan.FromSeconds(2));
+            SentrySdk.Flush(TimeSpan.FromSeconds(2));
         }
         catch (Exception ex)
         {
@@ -351,9 +278,6 @@ public static class SentryService
         }
     }
 
-    /// <summary>
-    /// Close Sentry SDK.
-    /// </summary>
     public static void Close()
     {
         if (!_initialized)
@@ -370,49 +294,23 @@ public static class SentryService
         }
     }
 
-    /// <summary>
-    /// Get or create an anonymous device ID for tracking.
-    /// </summary>
     private static string GetAnonymousDeviceId()
     {
         if (_anonymousDeviceId != null)
             return _anonymousDeviceId;
 
-        // Try to get from settings
         var settings = Properties.Settings.Default;
-        if (!string.IsNullOrEmpty(settings.DeviceId))
-        {
-            _anonymousDeviceId = settings.DeviceId;
-        }
-        else
-        {
-            // Generate a new one based on machine name
-            _anonymousDeviceId = Convert.ToBase64String(
+        _anonymousDeviceId = !string.IsNullOrEmpty(settings.DeviceId)
+            ? settings.DeviceId
+            : Convert.ToBase64String(
                 System.Security.Cryptography.SHA256.HashData(
                     System.Text.Encoding.UTF8.GetBytes(Environment.MachineName + Environment.UserName)));
-        }
 
         return _anonymousDeviceId;
     }
-
-    private static bool IsDebugBuild()
-    {
-#if DEBUG
-        return true;
-#else
-        return false;
-#endif
-    }
 }
 
-/// <summary>
-/// Secrets configuration. Override with actual values in Secrets.cs (not committed to repo).
-/// </summary>
 public static partial class Secrets
 {
-    /// <summary>
-    /// Sentry DSN for error tracking.
-    /// Set this in a separate Secrets.cs file that is not committed to version control.
-    /// </summary>
     public static string? SentryDsn => null;
 }

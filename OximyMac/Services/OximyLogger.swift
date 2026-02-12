@@ -1,32 +1,26 @@
 import Foundation
 import Sentry
 
-/// Central structured logger — wraps SentryService + Console + JSONL file output
-/// Usage: OximyLogger.shared.log(.MITM_START_002, "mitmproxy listening", data: ["port": 1030])
 @MainActor
 final class OximyLogger {
     static let shared = OximyLogger()
 
-    /// Session ID for cross-component correlation
     let sessionId = UUID().uuidString
-
-    /// Monotonically increasing sequence number for gap detection
     private var seq: Int = 0
-
-    /// JSONL file handle
     private var fileHandle: FileHandle?
     private let logFilePath: URL
     private let maxLogFileSize: Int64 = 50_000_000 // 50MB
     private let maxRotatedFiles = 5
+
+    private var sentryEventCounts: [String: (count: Int, windowStart: Date)] = [:]
+    private let maxSentryEventsPerCode = 10
+    private let sentryRateWindowSeconds: TimeInterval = 60
 
     private init() {
         logFilePath = Constants.logsDir.appendingPathComponent("app.jsonl")
         openLogFile()
     }
 
-    // MARK: - Public API
-
-    /// Log a structured event
     func log(
         _ code: EventCode,
         _ message: String,
@@ -36,29 +30,13 @@ final class OximyLogger {
         seq += 1
         let now = Date()
 
-        // Console output (human-readable)
         printConsole(code: code, message: message, data: data, timestamp: now)
-
-        // JSONL file output (AI-parseable)
         writeJSONL(code: code, message: message, data: data, err: err, timestamp: now, seq: seq)
-
-        // Sentry output (dashboards + alerts)
         sendToSentry(code: code, message: message, data: data, err: err)
     }
 
-    // MARK: - Console Output
-
     private func printConsole(code: EventCode, message: String, data: [String: Any], timestamp: Date) {
-        let levelTag: String
-        switch code.level {
-        case .debug: levelTag = "[DEBUG]"
-        case .info: levelTag = "[INFO] "
-        case .warning: levelTag = "[WARN] "
-        case .error: levelTag = "[ERROR]"
-        case .fatal: levelTag = "[FATAL]"
-        }
-
-        var line = "\(levelTag) \(code.rawValue) \(message)"
+        var line = "\(code.levelTag) \(code.rawValue) \(message)"
 
         if !data.isEmpty {
             let pairs = data.sorted(by: { $0.key < $1.key }).map { "\($0.key)=\($0.value)" }
@@ -67,8 +45,6 @@ final class OximyLogger {
 
         NSLog("[Oximy] %@", line)
     }
-
-    // MARK: - JSONL File Output
 
     private func writeJSONL(
         code: EventCode,
@@ -90,7 +66,6 @@ final class OximyLogger {
             "action": code.action.rawValue,
         ]
 
-        // Context
         var ctx: [String: Any] = ["component": "swift", "session_id": sessionId]
         if let deviceId = UserDefaults.standard.string(forKey: Constants.Defaults.deviceId) {
             ctx["device_id"] = deviceId
@@ -119,13 +94,9 @@ final class OximyLogger {
 
         guard let lineData = jsonLine.data(using: .utf8) else { return }
 
-        // Rotate if needed
         rotateIfNeeded()
-
         fileHandle?.write(lineData)
     }
-
-    // MARK: - Sentry Output
 
     private func sendToSentry(
         code: EventCode,
@@ -134,31 +105,21 @@ final class OximyLogger {
         err: (type: String, code: String, message: String)?
     ) {
         guard SentryService.shared.isInitialized else { return }
+        guard code.level >= .info else { return }
 
-        let sentryLevel: SentryLevel
-        switch code.level {
-        case .debug: sentryLevel = .debug
-        case .info: sentryLevel = .info
-        case .warning: sentryLevel = .warning
-        case .error: sentryLevel = .error
-        case .fatal: sentryLevel = .fatal
-        }
+        let sentryLevel = code.sentryLevel
 
         // Always add breadcrumb for info+
-        if code.level >= .info {
-            let crumb = Breadcrumb()
-            crumb.type = code.level >= .warning ? "error" : "info"
-            crumb.category = code.service
-            crumb.message = "[\(code.rawValue)] \(message)"
-            crumb.level = sentryLevel
-            if !data.isEmpty {
-                crumb.data = data.mapValues { "\($0)" }
-            }
-            SentrySDK.addBreadcrumb(crumb)
-        }
+        SentryService.shared.addBreadcrumb(
+            type: code.level >= .warning ? "error" : "info",
+            category: code.service,
+            message: "[\(code.rawValue)] \(message)",
+            data: data.isEmpty ? nil : data.mapValues { "\($0)" },
+            level: sentryLevel
+        )
 
-        // Capture Sentry event for warning+
-        if code.level >= .warning {
+        // Capture Sentry event (rate-limited per event code)
+        if shouldSendSentryEvent(code: code.rawValue) {
             SentrySDK.capture(message: "[\(code.rawValue)] \(message)") { scope in
                 scope.setLevel(sentryLevel)
                 scope.setTag(value: code.rawValue, key: "event_code")
@@ -177,9 +138,25 @@ final class OximyLogger {
         }
     }
 
-    // MARK: - Scope Tags
+    private func shouldSendSentryEvent(code: String) -> Bool {
+        let now = Date()
 
-    /// Update a Sentry scope tag
+        if let entry = sentryEventCounts[code] {
+            if now.timeIntervalSince(entry.windowStart) > sentryRateWindowSeconds {
+                sentryEventCounts[code] = (count: 1, windowStart: now)
+                return true
+            }
+            if entry.count >= maxSentryEventsPerCode {
+                return false
+            }
+            sentryEventCounts[code] = (count: entry.count + 1, windowStart: entry.windowStart)
+            return true
+        }
+
+        sentryEventCounts[code] = (count: 1, windowStart: now)
+        return true
+    }
+
     func setTag(_ key: String, value: String) {
         guard SentryService.shared.isInitialized else { return }
         SentrySDK.configureScope { scope in
@@ -187,27 +164,19 @@ final class OximyLogger {
         }
     }
 
-    // MARK: - File Management
-
     private func openLogFile() {
         let fm = FileManager.default
-
-        // Ensure logs directory exists
         let logsDir = Constants.logsDir
         if !fm.fileExists(atPath: logsDir.path) {
             try? fm.createDirectory(at: logsDir, withIntermediateDirectories: true)
         }
-
-        // Create file if needed
         if !fm.fileExists(atPath: logFilePath.path) {
             fm.createFile(atPath: logFilePath.path, contents: nil)
         }
-
         fileHandle = try? FileHandle(forWritingTo: logFilePath)
         fileHandle?.seekToEndOfFile()
     }
 
-    /// Flush and close the log file handle (call before app exit)
     func close() {
         fileHandle?.synchronizeFile()
         fileHandle?.closeFile()
@@ -226,7 +195,6 @@ final class OximyLogger {
 
         let fm = FileManager.default
 
-        // Shift rotated files: app.4.jsonl → app.5.jsonl, ..., app.1.jsonl → app.2.jsonl
         for i in stride(from: maxRotatedFiles - 1, through: 1, by: -1) {
             let src = Constants.logsDir.appendingPathComponent("app.\(i).jsonl")
             let dst = Constants.logsDir.appendingPathComponent("app.\(i + 1).jsonl")
@@ -234,7 +202,6 @@ final class OximyLogger {
             try? fm.moveItem(at: src, to: dst)
         }
 
-        // Current → app.1.jsonl
         let rotatedPath = Constants.logsDir.appendingPathComponent("app.1.jsonl")
         try? fm.removeItem(at: rotatedPath)
         try? fm.moveItem(at: logFilePath, to: rotatedPath)
@@ -242,8 +209,6 @@ final class OximyLogger {
         openLogFile()
     }
 }
-
-// MARK: - ISO8601 Formatter (thread-safe singleton)
 
 private extension ISO8601DateFormatter {
     static let shared: ISO8601DateFormatter = {

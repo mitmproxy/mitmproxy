@@ -1,17 +1,12 @@
 import Foundation
 import Sentry
 
-/// Service to manage Sentry SDK for crash reporting, error tracking, and performance monitoring
 @MainActor
 class SentryService: ObservableObject {
     static let shared = SentryService()
 
-    // MARK: - Published Properties
-
     @Published var isInitialized = false
     @Published var lastError: String?
-
-    // MARK: - Configuration
 
     private var dsn: String?
 
@@ -23,14 +18,9 @@ class SentryService: ObservableObject {
         #endif
     }
 
-    // MARK: - Initialization
-
     private init() {}
 
-    /// Initialize Sentry SDK with configuration
-    /// Call this FIRST in applicationDidFinishLaunching, before any other setup
     func initialize() {
-        // Get DSN: prefer Secrets.swift, fall back to environment variable
         let dsn: String? = Secrets.sentryDSN ?? ProcessInfo.processInfo.environment[Constants.Sentry.dsnEnvKey]
 
         guard let dsn = dsn, !dsn.isEmpty else {
@@ -44,84 +34,51 @@ class SentryService: ObservableObject {
         SentrySDK.start { options in
             options.dsn = dsn
 
-            // Environment configuration
             #if DEBUG
             options.environment = "development"
             options.debug = true
-            options.tracesSampleRate = 1.0
-            // Don't send events in debug mode by default
-            options.beforeSend = { event in
-                // Allow sending in debug if explicitly enabled
-                if ProcessInfo.processInfo.environment[Constants.Sentry.debugSendEnvKey] == "1" {
-                    return event
-                }
-                print("[SentryService] DEBUG: Would send event: \(event.eventId.sentryIdString)")
-                return nil
-            }
             #else
             options.environment = "production"
             options.debug = false
-            options.sampleRate = 1.0  // Send ALL events in production
-            options.tracesSampleRate = NSNumber(value: Constants.Sentry.productionSampleRate)
             #endif
 
-            // Release version
+            options.sampleRate = 1.0
+            options.tracesSampleRate = NSNumber(value: Constants.Sentry.productionSampleRate)
+
             let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
             let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
             options.releaseName = "com.oximy.mac@\(appVersion)+\(buildNumber)"
 
-            // Enable automatic breadcrumbs
             options.enableAutoBreadcrumbTracking = true
             options.enableAutoSessionTracking = true
-            options.enableNetworkTracking = true
-            options.enableFileIOTracing = true
 
-            // Crash handling
+            // DISABLED: App acts as a proxy — network tracking could capture
+            // proxied request URLs and leak user data to Sentry
+            options.enableNetworkTracking = false
+            options.enableCaptureFailedRequests = false
+            options.enableFileIOTracing = false
+
             options.attachStacktrace = true
-            options.enableCaptureFailedRequests = true
-
-            // Performance
             options.enableAppHangTracking = true
             options.appHangTimeoutInterval = Constants.Sentry.appHangTimeout
-
-            // Privacy - don't send PII by default
             options.sendDefaultPii = false
-
-            // Max breadcrumbs
             options.maxBreadcrumbs = Constants.Sentry.maxBreadcrumbs
         }
 
         isInitialized = true
         print("[SentryService] Initialized successfully")
-
-        // Set initial context
         setInitialContext()
     }
 
-    // MARK: - User Context
-
-    /// Set user context information
     func setUser(workspaceName: String?, deviceId: String? = nil) {
         guard isInitialized else { return }
 
         let user = User()
         user.username = workspaceName
-
-        // Generate anonymous device ID if not provided
-        if let deviceId = deviceId {
-            user.userId = deviceId
-        } else if let existingId = UserDefaults.standard.string(forKey: Constants.Sentry.deviceIdKey) {
-            user.userId = existingId
-        } else {
-            let newId = UUID().uuidString
-            UserDefaults.standard.set(newId, forKey: Constants.Sentry.deviceIdKey)
-            user.userId = newId
-        }
-
+        user.userId = resolveDeviceId(deviceId)
         SentrySDK.setUser(user)
     }
 
-    /// Set full user context with all identity fields
     func setFullUserContext(
         workspaceName: String?,
         deviceId: String?,
@@ -132,20 +89,9 @@ class SentryService: ObservableObject {
 
         let user = User()
         user.username = workspaceName
-
-        if let deviceId = deviceId {
-            user.userId = deviceId
-        } else if let existingId = UserDefaults.standard.string(forKey: Constants.Sentry.deviceIdKey) {
-            user.userId = existingId
-        } else {
-            let newId = UUID().uuidString
-            UserDefaults.standard.set(newId, forKey: Constants.Sentry.deviceIdKey)
-            user.userId = newId
-        }
-
+        user.userId = resolveDeviceId(deviceId)
         SentrySDK.setUser(user)
 
-        // Set identity tags on scope
         SentrySDK.configureScope { scope in
             if let deviceId = deviceId {
                 scope.setTag(value: deviceId, key: "device_id")
@@ -163,30 +109,21 @@ class SentryService: ObservableObject {
         }
     }
 
-    /// Clear user context (on logout)
     func clearUser() {
         guard isInitialized else { return }
         SentrySDK.setUser(nil)
     }
 
-    /// Set initial device and app context
     private func setInitialContext() {
         SentrySDK.configureScope { scope in
-            // Device info
             scope.setTag(value: Self.getDeviceModel(), key: "device_model")
             scope.setTag(value: ProcessInfo.processInfo.operatingSystemVersionString, key: "macos_version")
 
-            // App context
             let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
             scope.setTag(value: appVersion, key: "app_version")
-
-            // Component
             scope.setTag(value: "swift", key: "component")
-
-            // MDM managed
             scope.setTag(value: MDMConfigService.shared.isManagedDevice ? "true" : "false", key: "is_mdm_managed")
 
-            // Architecture
             #if arch(arm64)
             scope.setTag(value: "arm64", key: "architecture")
             #else
@@ -195,7 +132,6 @@ class SentryService: ObservableObject {
         }
     }
 
-    /// Update context with current app state
     func updateContext(phase: String, proxyEnabled: Bool, port: Int?) {
         guard isInitialized else { return }
 
@@ -208,9 +144,6 @@ class SentryService: ObservableObject {
         }
     }
 
-    // MARK: - Error Capture
-
-    /// Capture a LocalizedError with full context
     func captureError(_ error: Error, context: [String: Any]? = nil) {
         guard isInitialized else {
             print("[SentryService] Not initialized - error not sent: \(error)")
@@ -218,12 +151,10 @@ class SentryService: ObservableObject {
         }
 
         SentrySDK.capture(error: error) { scope in
-            // Add error-specific context
             if let context = context {
                 scope.setExtras(context)
             }
 
-            // Categorize by error type
             if let mitmError = error as? MITMError {
                 scope.setTag(value: "mitm", key: "error_category")
                 scope.setTag(value: mitmError.errorCode, key: "error_code")
@@ -246,7 +177,6 @@ class SentryService: ObservableObject {
         print("[SentryService] Captured error: \(error.localizedDescription)")
     }
 
-    /// Capture a message (non-error event)
     func captureMessage(_ message: String, level: SentryLevel = .info) {
         guard isInitialized else { return }
 
@@ -255,74 +185,48 @@ class SentryService: ObservableObject {
         }
     }
 
-    // MARK: - Breadcrumbs
-
-    /// Add a navigation breadcrumb
-    func addNavigationBreadcrumb(from: String, to: String) {
+    func addBreadcrumb(type: String, category: String, message: String = "", data: [String: Any]? = nil, level: SentryLevel = .info) {
         guard isInitialized else { return }
 
         let crumb = Breadcrumb()
-        crumb.type = "navigation"
-        crumb.category = "ui.navigation"
-        crumb.data = ["from": from, "to": to]
-        crumb.level = .info
-        SentrySDK.addBreadcrumb(crumb)
-    }
-
-    /// Add a user action breadcrumb
-    func addUserActionBreadcrumb(action: String, target: String? = nil) {
-        guard isInitialized else { return }
-
-        let crumb = Breadcrumb()
-        crumb.type = "user"
-        crumb.category = "ui.action"
-        crumb.message = action
-        if let target = target {
-            crumb.data = ["target": target]
-        }
-        crumb.level = .info
-        SentrySDK.addBreadcrumb(crumb)
-    }
-
-    /// Add a state change breadcrumb
-    func addStateBreadcrumb(category: String, message: String, data: [String: Any]? = nil) {
-        guard isInitialized else { return }
-
-        let crumb = Breadcrumb()
-        crumb.type = "info"
+        crumb.type = type
         crumb.category = category
         crumb.message = message
         crumb.data = data
-        crumb.level = .info
+        crumb.level = level
         SentrySDK.addBreadcrumb(crumb)
     }
 
-    /// Add an error breadcrumb (for non-fatal errors)
+    func addNavigationBreadcrumb(from: String, to: String) {
+        addBreadcrumb(type: "navigation", category: "ui.navigation", data: ["from": from, "to": to])
+    }
+
+    func addUserActionBreadcrumb(action: String, target: String? = nil) {
+        addBreadcrumb(
+            type: "user",
+            category: "ui.action",
+            message: action,
+            data: target.map { ["target": $0] }
+        )
+    }
+
+    func addStateBreadcrumb(category: String, message: String, data: [String: Any]? = nil) {
+        addBreadcrumb(type: "info", category: category, message: message, data: data)
+    }
+
     func addErrorBreadcrumb(service: String, error: String) {
-        guard isInitialized else { return }
-
-        let crumb = Breadcrumb()
-        crumb.type = "error"
-        crumb.category = service
-        crumb.message = error
-        crumb.level = .error
-        SentrySDK.addBreadcrumb(crumb)
+        addBreadcrumb(type: "error", category: service, message: error, level: .error)
     }
 
-    // MARK: - Performance Monitoring
-
-    /// Start a transaction for a multi-step operation
     func startTransaction(name: String, operation: String) -> Span? {
         guard isInitialized else { return nil }
         return SentrySDK.startTransaction(name: name, operation: operation)
     }
 
-    /// Start a child span within a transaction
     func startSpan(parent: Span, operation: String, description: String) -> Span {
         return parent.startChild(operation: operation, description: description)
     }
 
-    /// Convenience: Measure an async operation
     func measureAsync<T>(
         name: String,
         operation: String,
@@ -343,23 +247,29 @@ class SentryService: ObservableObject {
         }
     }
 
-    // MARK: - App Lifecycle
-
-    /// Call when app is terminating (for clean shutdown tracking)
     func appWillTerminate() {
         guard isInitialized else { return }
 
         addStateBreadcrumb(
             category: "app.lifecycle",
-            message: "App terminating",
-            data: nil
+            message: "App terminating"
         )
 
-        // Flush pending events
         SentrySDK.flush(timeout: 2.0)
     }
 
-    // MARK: - Helpers
+    // Resolve device ID: provided > stored > new UUID
+    private func resolveDeviceId(_ provided: String?) -> String {
+        if let provided = provided {
+            return provided
+        }
+        if let existingId = UserDefaults.standard.string(forKey: Constants.Sentry.deviceIdKey) {
+            return existingId
+        }
+        let newId = UUID().uuidString
+        UserDefaults.standard.set(newId, forKey: Constants.Sentry.deviceIdKey)
+        return newId
+    }
 
     private static func getDeviceModel() -> String {
         var size = 0
@@ -369,8 +279,6 @@ class SentryService: ObservableObject {
         return String(cString: model)
     }
 }
-
-// MARK: - Error Code Extensions
 
 extension MITMError {
     var errorCode: String {

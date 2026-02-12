@@ -98,7 +98,7 @@ class TestFailOpen:
         )
 
     def test_flush_noop(self):
-        sentry_service.flush(timeout=1.0)
+        sentry_service.flush()
 
 
 class TestSetUser:
@@ -201,22 +201,21 @@ class TestFlush:
         sentry_service._initialized = True
         sentry_service._sentry_sdk = mock_sdk
 
-        sentry_service.flush(timeout=3.0)
-        mock_sdk.flush.assert_called_once_with(timeout=3.0)
+        sentry_service.flush()
+        mock_sdk.flush.assert_called_once_with(timeout=2)
 
 
 class TestGetSdk:
-    def test_lazy_import_caches_sentinel_on_failure(self):
-        """Should set _sentry_sdk to False sentinel when import fails."""
+    def test_lazy_import_returns_none_on_failure(self):
         sentry_service._sentry_sdk = None
         with patch("builtins.__import__", side_effect=ImportError):
             result = sentry_service._get_sdk()
         assert result is None
-        assert sentry_service._sentry_sdk is False
 
-    def test_sentinel_prevents_retry(self):
-        """Should not retry import after sentinel is set."""
-        sentry_service._sentry_sdk = False
-        result = sentry_service._get_sdk()
-        # Returns False sentinel (falsy), not None — callers check truthiness
-        assert not result
+    def test_caches_sdk_after_successful_import(self):
+        sentry_service._sentry_sdk = None
+        mock_sdk = MagicMock()
+        with patch.dict("sys.modules", {"sentry_sdk": mock_sdk}):
+            result = sentry_service._get_sdk()
+        assert result is mock_sdk
+        assert sentry_service._sentry_sdk is mock_sdk
