@@ -12,6 +12,9 @@
 #     - APPLE_ID: Apple ID email for notarization
 #     - APPLE_APP_PASSWORD: App-specific password for notarization
 #     - SENTRY_DSN: (Optional) Sentry DSN for crash reporting
+#     - SENTRY_AUTH_TOKEN: (Optional) Sentry auth token for dSYM upload
+#     - SENTRY_ORG: (Optional) Sentry organization slug
+#     - SENTRY_PROJECT: (Optional) Sentry project slug
 #
 #   Windows:
 #     - (No secrets required for unsigned builds)
@@ -143,6 +146,17 @@ jobs:
           chmod +x build-prod.sh
           ./build-prod.sh mac --version "$VERSION"
           echo "dmg-name=Oximy-$VERSION.dmg" >> $GITHUB_OUTPUT
+
+      - name: Upload dSYMs to Sentry
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli debug-files upload --include-sources \
+            --org "${{ secrets.SENTRY_ORG }}" \
+            --project "${{ secrets.SENTRY_PROJECT }}" \
+            OximyMac/.build/
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4

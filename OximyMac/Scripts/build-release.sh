@@ -326,9 +326,25 @@ else
     echo "    To sign, run: DEVELOPER_ID='Developer ID Application: Your Name' $0"
 fi
 
+# Upload dSYMs to Sentry (optional, for local builds)
+if [ -n "$SENTRY_AUTH_TOKEN" ] && [ -n "$SENTRY_ORG" ] && [ -n "$SENTRY_PROJECT" ]; then
+    echo "[8/9] Uploading dSYMs to Sentry..."
+    if command -v sentry-cli &> /dev/null; then
+        sentry-cli debug-files upload --include-sources \
+            --org "$SENTRY_ORG" \
+            --project "$SENTRY_PROJECT" \
+            "$PROJECT_DIR/.build"
+        echo "    ✓ dSYMs uploaded to Sentry"
+    else
+        echo "    WARNING: sentry-cli not found — install with: brew install getsentry/tools/sentry-cli"
+    fi
+else
+    echo "[8/9] Skipping dSYM upload (SENTRY_AUTH_TOKEN/SENTRY_ORG/SENTRY_PROJECT not set)"
+fi
+
 # Skip DMG creation here - it will be done AFTER notarization in CI
 # This ensures the app bundle signature is not invalidated by DMG creation
-echo "[8/8] Skipping DMG creation (done after notarization in CI)..."
+echo "[9/9] Skipping DMG creation (done after notarization in CI)..."
 DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_PATH="$BUILD_DIR/$DMG_NAME"
 echo "    App bundle ready for notarization: $APP_BUNDLE"

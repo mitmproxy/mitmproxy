@@ -238,6 +238,26 @@ To update flags for a workspace:
 PATCH /api/v1/workspaces/{workspaceId}/app-config
 ```
 
+## Sentry dSYM Upload
+
+Crash symbolication requires dSYMs to be uploaded to Sentry. This happens automatically in CI (`oximy-release.yml`) and in local `build-release.sh` / `build-prod.sh` builds when the env vars are set.
+
+**Required env vars** (all optional — upload is skipped if missing):
+- `SENTRY_AUTH_TOKEN` — generate at sentry.io → Settings → Auth Tokens (scope: `project:releases`, `org:read`)
+- `SENTRY_ORG` — Sentry organization slug
+- `SENTRY_PROJECT` — Sentry project slug
+
+**Local setup:**
+```bash
+brew install getsentry/tools/sentry-cli
+# Add to .env.local:
+export SENTRY_AUTH_TOKEN="sntrys_..."
+export SENTRY_ORG="your-org"
+export SENTRY_PROJECT="your-project"
+```
+
+**CI:** Add `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` as GitHub repository secrets.
+
 ## CA Certificate
 
 Apps use `~/.mitmproxy/oximy-ca-cert.pem` (auto-generated on first run via `CONF_BASENAME = "oximy"` in `mitmproxy/options.py`). If browsers show cert errors, install and trust the cert, then restart the browser.
