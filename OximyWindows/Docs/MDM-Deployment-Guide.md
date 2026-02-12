@@ -87,7 +87,7 @@ OximySetup-1.0.0.exe /SILENT /SUPPRESSMSGBOXES /NORESTART
 6. Set detection rule:
    - Rule type: File
    - Path: `%ProgramFiles%\Oximy`
-   - File: `OximyWindows.exe`
+   - File: `Oximy.exe`
    - Detection method: File or folder exists
 
 ### Step 3: Deploy to Device Groups
@@ -120,7 +120,7 @@ Create a Group Policy Object with the following registry preferences:
 
 ```powershell
 # Check if Oximy is already installed
-if (-not (Test-Path "$env:ProgramFiles\Oximy\OximyWindows.exe")) {
+if (-not (Test-Path "$env:ProgramFiles\Oximy\Oximy.exe")) {
     # Run silent install
     Start-Process "\\server\share\OximySetup-1.0.0.exe" -ArgumentList "/SILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
 }
@@ -211,7 +211,7 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Oximy" -Name "DisableUserLogout"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Oximy" -Name "DisableQuit" -Type DWord -Value 1
 
 # Launch Oximy to test
-& "$env:ProgramFiles\Oximy\OximyWindows.exe"
+& "$env:ProgramFiles\Oximy\Oximy.exe"
 ```
 
 To remove test configuration:

@@ -89,7 +89,7 @@ if ($mdmToken) {
 if ($forceAutoStart) {
     Write-Log "MDM: Installing system Scheduled Task for forced auto-start..."
 
-    $exePath = Join-Path $InstallPath "OximyWindows.exe"
+    $exePath = Join-Path $InstallPath "Oximy.exe"
     $taskName = "Oximy\OximyAutoStart"
 
     # Remove existing task if present
@@ -142,7 +142,7 @@ Write-Log "Checking URL scheme registration..."
 $urlSchemeKey = "HKCU:\Software\Classes\oximy"
 if (-not (Test-Path $urlSchemeKey)) {
     try {
-        $exePath = Join-Path $InstallPath "OximyWindows.exe"
+        $exePath = Join-Path $InstallPath "Oximy.exe"
         New-Item -Path $urlSchemeKey -Force | Out-Null
         Set-ItemProperty -Path $urlSchemeKey -Name "(Default)" -Value "URL:Oximy Protocol"
         Set-ItemProperty -Path $urlSchemeKey -Name "URL Protocol" -Value ""

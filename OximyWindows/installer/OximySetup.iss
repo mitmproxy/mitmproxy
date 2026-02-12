@@ -5,7 +5,7 @@
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Oximy Inc"
 #define MyAppURL "https://oximy.com"
-#define MyAppExeName "OximyWindows.exe"
+#define MyAppExeName "Oximy.exe"
 #define MyAppDescription "AI Traffic Monitor"
 
 [Setup]

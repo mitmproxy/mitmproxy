@@ -148,7 +148,7 @@ if ($Install) {
     $InstallDir = Join-Path $env:LOCALAPPDATA "Programs\Oximy"
 
     # Stop any running instance
-    $RunningProcess = Get-Process -Name "OximyWindows" -ErrorAction SilentlyContinue
+    $RunningProcess = Get-Process -Name "Oximy" -ErrorAction SilentlyContinue
     if ($RunningProcess) {
         Write-Host "  Stopping running instance..." -ForegroundColor Yellow
         $RunningProcess | Stop-Process -Force
@@ -166,7 +166,7 @@ if ($Install) {
     Write-Host "  Installed to: $InstallDir" -ForegroundColor Green
 
     # Register URL scheme
-    $ExePath = Join-Path $InstallDir "OximyWindows.exe"
+    $ExePath = Join-Path $InstallDir "Oximy.exe"
     $RegPath = "HKCU:\Software\Classes\oximy"
 
     Write-Host "  Registering oximy:// URL scheme..." -ForegroundColor Yellow
@@ -205,7 +205,7 @@ Write-Host ""
 Write-Host "=== Build Complete ===" -ForegroundColor Cyan
 
 # Print summary
-$ExePath = Join-Path $OutputDir "OximyWindows.exe"
+$ExePath = Join-Path $OutputDir "Oximy.exe"
 if (Test-Path $ExePath) {
     $FileInfo = Get-Item $ExePath
     Write-Host "Executable: $ExePath"
