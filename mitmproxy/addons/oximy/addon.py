@@ -240,6 +240,45 @@ def _set_system_proxy(enable: bool) -> None:
         _set_windows_proxy(enable)
 
 
+def _notify_windows_proxy_change() -> None:
+    """Notify Windows and browsers of proxy settings change.
+
+    Mirrors ProxyService.NotifySettingsChange() in C#:
+    - InternetSetOption(INTERNET_OPTION_SETTINGS_CHANGED)
+    - InternetSetOption(INTERNET_OPTION_REFRESH)
+    - SendMessageTimeout(WM_SETTINGCHANGE, "Internet Settings")
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        INTERNET_OPTION_SETTINGS_CHANGED = 39
+        INTERNET_OPTION_REFRESH = 37
+
+        wininet = ctypes.windll.wininet  # type: ignore[attr-defined]
+        wininet.InternetSetOptionW(None, INTERNET_OPTION_SETTINGS_CHANGED, None, 0)
+        wininet.InternetSetOptionW(None, INTERNET_OPTION_REFRESH, None, 0)
+
+        # Broadcast WM_SETTINGCHANGE
+        HWND_BROADCAST = 0xFFFF
+        WM_SETTINGCHANGE = 0x001A
+        SMTO_ABORTIFHUNG = 0x0002
+        result = ctypes.c_long(0)
+        ctypes.windll.user32.SendMessageTimeoutW(  # type: ignore[attr-defined]
+            HWND_BROADCAST,
+            WM_SETTINGCHANGE,
+            0,
+            "Internet Settings",
+            SMTO_ABORTIFHUNG,
+            1000,
+            ctypes.byref(result),
+        )
+        logger.debug("Windows proxy change notification sent")
+    except Exception as e:
+        logger.warning(f"Failed to notify Windows of proxy change: {e}")
+
+
 def _set_windows_proxy(enable: bool) -> bool:
     """Enable or disable Windows system proxy via registry. Returns success status."""
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
@@ -262,6 +301,7 @@ def _set_windows_proxy(enable: bool) -> bool:
                                     capture_output=True, text=True)
             if "0x1" in result.stdout:
                 logger.info(f"Windows proxy enabled: {proxy_server}")
+                _notify_windows_proxy_change()
                 return True
             else:
                 logger.warning("Windows proxy registry set but verification failed")
@@ -271,6 +311,7 @@ def _set_windows_proxy(enable: bool) -> bool:
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "0", "/f"],
                            check=True, capture_output=True)
             logger.info("Windows proxy disabled")
+            _notify_windows_proxy_change()
             return True
     except subprocess.CalledProcessError as e:
         logger.warning(f"Failed to set Windows proxy: {e}")
