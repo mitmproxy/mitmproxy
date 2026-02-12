@@ -414,7 +414,8 @@ class TestAppGating:
 
     @pytest.mark.asyncio
     async def test_no_bundle_id_skipped(self):
-        """Flow with no resolved process → skipped."""
+        """Flow with no resolved process → skipped on macOS, captured on Windows."""
+        import sys
         addon = _make_addon(
             whitelist=["api.openai.com"],
             allowed_app_hosts=["com.google.Chrome"],
@@ -424,8 +425,13 @@ class TestAppGating:
 
         await addon.request(flow)
 
-        assert flow.metadata.get("oximy_skip") is True
-        assert flow.metadata.get("oximy_skip_reason") == "no_bundle_id"
+        if sys.platform == "win32":
+            # On Windows, bundle_id=None falls through to domain-based filtering
+            # instead of skipping, so whitelisted domains are still captured
+            assert flow.metadata.get("oximy_skip") is not True
+        else:
+            assert flow.metadata.get("oximy_skip") is True
+            assert flow.metadata.get("oximy_skip_reason") == "no_bundle_id"
 
 
 # =============================================================================
