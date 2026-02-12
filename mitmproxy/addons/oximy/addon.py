@@ -883,7 +883,12 @@ def _signal_handler(signum: int, frame) -> None:
     _emergency_cleanup()
     # Re-raise the signal to let mitmproxy handle shutdown
     signal.signal(signum, signal.SIG_DFL)
-    os.kill(os.getpid(), signum)
+    if sys.platform == "win32":
+        # On Windows, os.kill() with SIGTERM calls TerminateProcess which
+        # kills immediately without cleanup. Use raise_signal() instead.
+        signal.raise_signal(signum)
+    else:
+        os.kill(os.getpid(), signum)
 
 
 def _register_cleanup_handlers() -> None:
@@ -1699,26 +1704,24 @@ def get_device_id() -> str | None:
                                 else:
                                     logger.warning(f"Invalid UUID format from ioreg: {candidate}")
             elif sys.platform == "win32":
+                # Use PowerShell Get-CimInstance (wmic is deprecated/removed on Win11 24H2+)
                 result = subprocess.run(
-                    ["wmic", "csproduct", "get", "UUID"],
+                    ["powershell", "-NoProfile", "-Command",
+                     "(Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID"],
                     capture_output=True,
                     text=True,
-                    timeout=5,
+                    timeout=10,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
                 )
                 if result.returncode == 0:
-                    lines = result.stdout.strip().split("\n")
-                    # Skip header and empty lines to find UUID
-                    for line in lines:
-                        candidate = line.strip()
-                        # Skip empty lines and header
-                        if not candidate or candidate.upper() == "UUID":
-                            continue
-                        if _is_valid_uuid(candidate):
-                            _device_id_cache = candidate
-                            return _device_id_cache
-                        else:
-                            logger.warning(f"Invalid UUID format from wmic: {candidate}")
-                            break
+                    candidate = result.stdout.strip()
+                    if candidate and _is_valid_uuid(candidate):
+                        _device_id_cache = candidate
+                        return _device_id_cache
+                    elif candidate:
+                        logger.warning(f"Invalid UUID format from PowerShell: {candidate}")
+                else:
+                    logger.debug(f"PowerShell UUID query failed: {result.stderr.strip()}")
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
             logger.debug(f"Failed to get device ID: {e}")
 
@@ -3879,17 +3882,23 @@ class OximyAddon:
 
         # Check if app is in any allowed list (browsers, non-host apps, or apps with parsers)
         if bundle_id is None:
-            # Process not resolved - likely race condition with client_connected hook
-            logger.info(f"[STEP0] No bundle_id for {host} - process not resolved")
-            flow.metadata["oximy_skip"] = True
-            flow.metadata["oximy_skip_reason"] = "no_bundle_id"
-            return
+            if sys.platform == "win32":
+                # On Windows, process attribution requires psutil which may not be available
+                # in the embedded Python. Skip app-level filtering and rely on domain-based
+                # whitelist/blacklist filtering instead (STEP 1+).
+                is_browser = True
+                logger.debug(f"[STEP0] No bundle_id for {host} - Windows: skipping app gate, using domain filtering")
+            else:
+                # macOS/Linux: process not resolved - likely race condition with client_connected hook
+                logger.info(f"[STEP0] No bundle_id for {host} - process not resolved")
+                flow.metadata["oximy_skip"] = True
+                flow.metadata["oximy_skip_reason"] = "no_bundle_id"
+                return
         else:
             bundle_lower = bundle_id.lower()
             is_browser = bundle_lower in self._allowed_app_hosts_set
             is_allowed_non_host = bundle_lower in self._allowed_app_non_hosts_set
             has_parser = bundle_lower in self._apps_with_parsers
-
 
             logger.debug(f"[STEP0] {bundle_id}: is_browser={is_browser}, is_allowed_non_host={is_allowed_non_host}, has_parser={has_parser}")
 
