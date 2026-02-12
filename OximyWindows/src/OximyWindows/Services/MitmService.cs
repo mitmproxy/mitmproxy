@@ -172,7 +172,10 @@ public class MitmService : IDisposable
 
         var port = FindAvailablePort();
         if (port == 0)
+        {
+            OximyLogger.Log(EventCode.MITM_FAIL_301, "No available port found");
             throw new MitmException("No available port found in range");
+        }
 
         // Ensure mitmproxy directory exists - mitmproxy will auto-generate CA certificate
         Directory.CreateDirectory(Constants.MitmproxyDir);
@@ -199,6 +202,12 @@ public class MitmService : IDisposable
         startInfo.Environment["PYTHONNOUSERSITE"] = "1";
         startInfo.Environment["PYTHONDONTWRITEBYTECODE"] = "1";
         startInfo.Environment["PYTHONUTF8"] = "1";
+
+        // Pass Sentry DSN and session ID to Python addon for cross-component correlation
+        var sentryDsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? Secrets.SentryDsn;
+        if (!string.IsNullOrEmpty(sentryDsn))
+            startInfo.Environment["SENTRY_DSN"] = sentryDsn;
+        startInfo.Environment["OXIMY_SESSION_ID"] = OximyLogger.SessionId;
 
         _mitmProcess = new Process { StartInfo = startInfo };
         _mitmProcess.EnableRaisingEvents = true;
@@ -267,12 +276,22 @@ public class MitmService : IDisposable
 
             Debug.WriteLine($"[MitmService] mitmproxy is ready and listening on port {port}");
 
+            OximyLogger.Log(EventCode.MITM_START_002, "mitmproxy listening", new Dictionary<string, object>
+            {
+                ["port"] = port,
+                ["pid"] = _mitmProcess.Id
+            });
+            OximyLogger.SetTag("mitm_running", "true");
+            OximyLogger.SetTag("mitm_port", port.ToString());
+
             AppState.Instance.CurrentPort = port;
             AppState.Instance.ConnectionStatus = ConnectionStatus.Connected;
             Started?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
+            OximyLogger.Log(EventCode.MITM_FAIL_304, "MITM process start failed",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             CurrentPort = null;
             AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
             AppState.Instance.ErrorMessage = ex.Message;
@@ -314,6 +333,8 @@ public class MitmService : IDisposable
 
         CurrentPort = null;
         AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
+        OximyLogger.Log(EventCode.MITM_STOP_001, "mitmproxy stopped normally");
+        OximyLogger.SetTag("mitm_running", "false");
         Stopped?.Invoke(this, EventArgs.Empty);
     }
 
@@ -471,6 +492,25 @@ public class MitmService : IDisposable
         var isNormalExit = exitCode == 0 || exitCode == -1;
         if (!isNormalExit && !_disposed)
         {
+            var interpretation = exitCode switch
+            {
+                9 or 137 => "oom_or_force_kill",
+                11 or 139 => "memory_corruption",
+                15 or 143 => "normal_termination",
+                6 or 134 => "abort",
+                _ => "unknown"
+            };
+            OximyLogger.Log(EventCode.MITM_FAIL_306, "mitmproxy process crashed",
+                new Dictionary<string, object>
+                {
+                    ["exit_code"] = exitCode,
+                    ["interpretation"] = interpretation,
+                    ["restart_attempt"] = _restartAttempts,
+                    ["pid"] = _mitmProcess?.Id ?? -1
+                },
+                err: ("MitmException", "MITM_CRASH", $"Process exited with code {exitCode}"));
+            OximyLogger.SetTag("mitm_running", "false");
+
             ScheduleRestart();
         }
         else
@@ -489,6 +529,12 @@ public class MitmService : IDisposable
     {
         if (_restartAttempts >= Constants.MaxRestartAttempts)
         {
+            OximyLogger.Log(EventCode.MITM_RETRY_401, "Max restart attempts exceeded",
+                new Dictionary<string, object>
+                {
+                    ["max_attempts"] = Constants.MaxRestartAttempts,
+                    ["restart_count"] = _restartAttempts
+                });
             AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
             AppState.Instance.ErrorMessage = "mitmproxy crashed too many times. Please restart Oximy.";
             MaxRestartsExceeded?.Invoke(this, EventArgs.Empty);
@@ -496,6 +542,14 @@ public class MitmService : IDisposable
         }
 
         _restartAttempts++;
+
+        OximyLogger.Log(EventCode.MITM_RETRY_001, "Restart scheduled",
+            new Dictionary<string, object>
+            {
+                ["attempt"] = _restartAttempts,
+                ["max_attempts"] = Constants.MaxRestartAttempts,
+                ["delay_ms"] = 100
+            });
 
         // FAIL-OPEN: Immediate restart with minimal delay (100ms) for cleanup
         // Previously used exponential backoff (2s, 4s, 8s) which blocked internet

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -97,6 +98,16 @@ public partial class App : Application
         // Ensure directories exist
         Constants.EnsureDirectoriesExist();
 
+        // Initialize structured logger (must be after EnsureDirectoriesExist)
+        OximyLogger.Initialize();
+        OximyLogger.Log(EventCode.APP_INIT_001, "Application launched", new Dictionary<string, object>
+        {
+            ["app_version"] = Constants.Version,
+            ["windows_version"] = Environment.OSVersion.VersionString,
+            ["architecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
+            ["session_id"] = OximyLogger.SessionId
+        });
+
         // Initialize services
         CertificateService.CheckStatus();
         ProxyService.CheckStatus();
@@ -105,6 +116,14 @@ public partial class App : Application
         // Update Sentry context with initial state
         SentryService.UpdatePhase(AppState.Instance.Phase);
         SentryService.UpdateProxyStatus(ProxyService.IsProxyEnabled, MitmService.CurrentPort);
+
+        // Set initial scope tags
+        OximyLogger.SetTag("session_id", OximyLogger.SessionId);
+        OximyLogger.SetTag("sensor_enabled", RemoteStateService.SensorEnabled.ToString().ToLowerInvariant());
+        OximyLogger.SetTag("cert_generated", CertificateService.IsCAGenerated.ToString().ToLowerInvariant());
+        OximyLogger.SetTag("cert_installed", CertificateService.IsCAInstalled.ToString().ToLowerInvariant());
+        OximyLogger.SetTag("network_connected", NetworkMonitorService.IsConnected.ToString().ToLowerInvariant());
+        OximyLogger.SetTag("network_type", NetworkMonitorService.NetworkDescription);
 
         // Handle session ending (logout, shutdown, restart)
         SystemEvents.SessionEnding += OnSessionEnding;
@@ -129,6 +148,16 @@ public partial class App : Application
         // Auto-enable launch at startup on first run
         StartupService.CheckAndAutoEnableOnFirstLaunch();
 
+        // Set full user context if already logged in
+        if (AppState.Instance.Phase == Phase.Connected && !string.IsNullOrEmpty(AppState.Instance.DeviceToken))
+        {
+            SentryService.SetFullUserContext(
+                AppState.Instance.WorkspaceName,
+                AppState.Instance.DeviceId,
+                AppState.Instance.WorkspaceId,
+                RemoteStateService.Instance.TenantId);
+        }
+
         // Start services if already connected (e.g. app restart with saved credentials)
         if (AppState.Instance.Phase == Phase.Connected)
         {
@@ -150,6 +179,8 @@ public partial class App : Application
         Dispatcher.Invoke(() =>
         {
             Debug.WriteLine("[App] Logout requested by server");
+            OximyLogger.Log(EventCode.AUTH_AUTH_002, "User logged out");
+            SentryService.ClearUser();
             ProxyService.DisableProxy();
             MitmService.Stop();
             HeartbeatService.Stop();
@@ -321,10 +352,17 @@ public partial class App : Application
         var workspace = workspaceName ?? "Connected";
         AppState.Instance.CompleteEnrollment(deviceId ?? "", token, workspace, "");
 
-        SentryService.AddStateChangeBreadcrumb(
-            category: "enrollment",
-            message: "Device enrolled via browser auth",
-            data: new Dictionary<string, string> { ["deviceId"] = deviceId ?? "unknown" });
+        OximyLogger.Log(EventCode.ENROLL_STATE_101, "Enrollment complete", new Dictionary<string, object>
+        {
+            ["workspace"] = workspace,
+            ["device_id"] = deviceId ?? "unknown"
+        });
+        OximyLogger.Log(EventCode.AUTH_AUTH_001, "User logged in", new Dictionary<string, object>
+        {
+            ["workspace"] = workspace,
+            ["has_device_id"] = (!string.IsNullOrEmpty(deviceId)).ToString().ToLowerInvariant()
+        });
+        SentryService.SetFullUserContext(workspace, deviceId, AppState.Instance.WorkspaceId);
 
         Debug.WriteLine("[App] Auth callback processed successfully");
 
@@ -354,11 +392,14 @@ public partial class App : Application
             catch (Exception ex)
             {
                 Debug.WriteLine($"[App] MitmService start failed on relaunch: {ex.Message}");
+                OximyLogger.Log(EventCode.APP_FAIL_301, "Service start failed",
+                    new Dictionary<string, object> { ["error"] = ex.Message });
             }
         }
 
         HeartbeatService.Start();
         SyncService.Start();
+        OximyLogger.Log(EventCode.APP_START_001, "Services started");
         Debug.WriteLine("[App] All services started on relaunch");
     }
 
@@ -397,12 +438,15 @@ public partial class App : Application
             catch (Exception ex)
             {
                 Debug.WriteLine($"[App] MitmService start failed: {ex.Message}");
+                OximyLogger.Log(EventCode.APP_FAIL_301, "Service start failed",
+                    new Dictionary<string, object> { ["error"] = ex.Message });
             }
         }
 
         // Start heartbeat and sync services
         HeartbeatService.Start();
         SyncService.Start();
+        OximyLogger.Log(EventCode.APP_START_001, "Services started");
         Debug.WriteLine("[App] All services started after enrollment");
     }
 
@@ -464,6 +508,10 @@ public partial class App : Application
 
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
+
+        // Log shutdown and close structured logger
+        OximyLogger.Log(EventCode.APP_STOP_001, "App terminating");
+        OximyLogger.Close();
 
         // Flush and close Sentry
         SentryService.Flush(TimeSpan.FromSeconds(2));

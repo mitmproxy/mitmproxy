@@ -64,6 +64,8 @@ public class ProxyService : INotifyPropertyChanged
             {
                 // FAIL-OPEN: Proxy is pointing to a dead port — clear it immediately
                 System.Diagnostics.Debug.WriteLine($"[ProxyService] FAIL-OPEN: Found orphaned proxy pointing to dead port {port} - cleaning up");
+                OximyLogger.Log(EventCode.PROXY_CLEAN_001, "Orphaned proxy cleaned up",
+                    new Dictionary<string, object> { ["service"] = "proxy", ["dead_port"] = port });
                 DisableProxy();
             }
             else
@@ -175,11 +177,16 @@ public class ProxyService : INotifyPropertyChanged
 
             IsProxyEnabled = true;
             ConfiguredPort = port;
+            OximyLogger.Log(EventCode.PROXY_START_001, "Proxy enabled");
+            OximyLogger.SetTag("proxy_enabled", "true");
+            OximyLogger.SetTag("proxy_port", port.ToString());
             System.Diagnostics.Debug.WriteLine("[ProxyService] Proxy enabled successfully");
         }
         catch (Exception ex) when (ex is not ProxyException)
         {
             System.Diagnostics.Debug.WriteLine($"[ProxyService] ERROR enabling proxy: {ex.Message}");
+            OximyLogger.Log(EventCode.PROXY_FAIL_301, "Proxy command failed",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             throw new ProxyException($"Failed to enable proxy: {ex.Message}", ex);
         }
     }
@@ -207,6 +214,8 @@ public class ProxyService : INotifyPropertyChanged
 
             IsProxyEnabled = false;
             ConfiguredPort = null;
+            OximyLogger.Log(EventCode.PROXY_STOP_001, "Proxy disabled");
+            OximyLogger.SetTag("proxy_enabled", "false");
             System.Diagnostics.Debug.WriteLine("[ProxyService] Proxy disabled successfully");
         }
         catch (Exception ex)

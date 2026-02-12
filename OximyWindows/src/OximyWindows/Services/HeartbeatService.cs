@@ -19,6 +19,7 @@ public class HeartbeatService : IDisposable
     private int _heartbeatIntervalMs;
     private bool _disposed;
     private readonly object _lock = new();
+    private int _healthCheckCounter;
 
     public event EventHandler? SyncRequested;
     public event EventHandler? RestartProxyRequested;
@@ -167,10 +168,30 @@ public class HeartbeatService : IDisposable
                 }
             }
 
+            OximyLogger.Log(EventCode.HB_FETCH_001, "Heartbeat sent");
             Debug.WriteLine("[HeartbeatService] Heartbeat sent successfully");
+
+            // Periodic health snapshot (every ~5 minutes assuming 60s interval)
+            _healthCheckCounter++;
+            if (_healthCheckCounter % 5 == 0)
+            {
+                OximyLogger.Log(EventCode.SYS_HEALTH_001, "System health snapshot",
+                    new Dictionary<string, object>
+                    {
+                        ["mitm_running"] = App.MitmService.IsRunning,
+                        ["proxy_enabled"] = App.ProxyService.IsProxyEnabled,
+                        ["sensor_enabled"] = RemoteStateService.Instance.SensorEnabled,
+                        ["network_connected"] = App.NetworkMonitorService.IsConnected,
+                        ["cert_installed"] = App.CertificateService.IsCAInstalled,
+                        ["memory_mb"] = Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024),
+                        ["uptime_seconds"] = (long)(DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime()).TotalSeconds
+                    });
+            }
         }
         catch (ApiException ex)
         {
+            OximyLogger.Log(EventCode.HB_FAIL_201, "Heartbeat send failed",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             Debug.WriteLine($"[HeartbeatService] Heartbeat failed: {ex.Message}");
 
             if (ex.IsUnauthorized)
@@ -180,6 +201,8 @@ public class HeartbeatService : IDisposable
         }
         catch (Exception ex)
         {
+            OximyLogger.Log(EventCode.HB_FAIL_201, "Heartbeat error",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             Debug.WriteLine($"[HeartbeatService] Heartbeat error: {ex.Message}");
         }
     }
@@ -191,22 +214,32 @@ public class HeartbeatService : IDisposable
         switch (command.Type.ToLowerInvariant())
         {
             case "sync_now":
+                OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
+                    new Dictionary<string, object> { ["command"] = command.Type });
                 SyncRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "restart_proxy":
+                OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
+                    new Dictionary<string, object> { ["command"] = command.Type });
                 RestartProxyRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "disable_proxy":
+                OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
+                    new Dictionary<string, object> { ["command"] = command.Type });
                 DisableProxyRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "logout":
+                OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
+                    new Dictionary<string, object> { ["command"] = command.Type });
                 LogoutRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             default:
+                OximyLogger.Log(EventCode.HB_FAIL_202, "Unknown command received",
+                    new Dictionary<string, object> { ["command"] = command.Type });
                 Debug.WriteLine($"[HeartbeatService] Unknown command: {command.Type}");
                 break;
         }
