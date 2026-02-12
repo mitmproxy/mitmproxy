@@ -15,6 +15,11 @@ public static class SentryService
     private static string? _anonymousDeviceId;
 
     /// <summary>
+    /// Whether Sentry has been initialized. Used by OximyLogger to guard Sentry calls.
+    /// </summary>
+    public static bool IsInitialized => _initialized;
+
+    /// <summary>
     /// Sentry DSN - should be set via environment variable or secrets file.
     /// </summary>
     private static string? SentryDsn =>
@@ -45,7 +50,7 @@ public static class SentryService
                 options.TracesSampleRate = IsDebugBuild() ? 1.0 : 0.2; // 20% in production
                 options.Release = $"com.oximy.windows@{Constants.Version}";
                 options.Environment = IsDebugBuild() ? "development" : "production";
-                options.MaxBreadcrumbs = 100;
+                options.MaxBreadcrumbs = 200;
                 options.AttachStacktrace = true;
                 options.SendDefaultPii = false;
 
@@ -96,9 +101,22 @@ public static class SentryService
             scope.SetTag("os.version", Environment.OSVersion.VersionString);
             scope.SetTag("app.version", Constants.Version);
             scope.SetTag("architecture", RuntimeInformation.ProcessArchitecture.ToString());
+            scope.SetTag("device_model", Environment.MachineName);
+            scope.SetTag("component", "dotnet");
+            scope.SetTag("session_id", OximyLogger.SessionId);
 
             // App state context
             scope.SetTag("app.phase", AppState.Instance.Phase.ToString());
+
+            // MDM context
+            try
+            {
+                scope.SetTag("is_mdm_managed", MDMConfigService.Instance.IsManagedDevice.ToString().ToLowerInvariant());
+            }
+            catch
+            {
+                scope.SetTag("is_mdm_managed", "false");
+            }
         });
     }
 
@@ -117,6 +135,48 @@ public static class SentryService
                 Id = AppState.Instance.DeviceId,
                 Username = AppState.Instance.WorkspaceName,
             };
+        });
+    }
+
+    /// <summary>
+    /// Set full user context with workspace and device details.
+    /// Called on login/enrollment completion.
+    /// </summary>
+    public static void SetFullUserContext(string? workspaceName, string? deviceId, string? workspaceId, string? tenantId = null)
+    {
+        if (!_initialized)
+            return;
+
+        SentrySdk.ConfigureScope(scope =>
+        {
+            scope.User = new SentryUser
+            {
+                Id = deviceId ?? GetAnonymousDeviceId(),
+                Username = workspaceName,
+            };
+
+            if (!string.IsNullOrEmpty(deviceId))
+                scope.SetTag("device_id", deviceId);
+            if (!string.IsNullOrEmpty(workspaceId))
+                scope.SetTag("workspace_id", workspaceId);
+            if (!string.IsNullOrEmpty(workspaceName))
+                scope.SetTag("workspace_name", workspaceName);
+            if (!string.IsNullOrEmpty(tenantId))
+                scope.SetTag("tenant_id", tenantId);
+        });
+    }
+
+    /// <summary>
+    /// Clear user context on logout.
+    /// </summary>
+    public static void ClearUser()
+    {
+        if (!_initialized)
+            return;
+
+        SentrySdk.ConfigureScope(scope =>
+        {
+            scope.User = new SentryUser { Id = GetAnonymousDeviceId() };
         });
     }
 
@@ -228,21 +288,24 @@ public static class SentryService
             return;
         }
 
-        SentrySdk.ConfigureScope(scope =>
+        using (SentrySdk.PushScope())
         {
-            if (!string.IsNullOrEmpty(errorCategory))
-                scope.SetTag("error_category", errorCategory);
-
-            if (extras != null)
+            SentrySdk.ConfigureScope(scope =>
             {
-                foreach (var kvp in extras)
-                {
-                    scope.SetExtra(kvp.Key, kvp.Value);
-                }
-            }
-        });
+                if (!string.IsNullOrEmpty(errorCategory))
+                    scope.SetTag("error_category", errorCategory);
 
-        SentrySdk.CaptureException(exception);
+                if (extras != null)
+                {
+                    foreach (var kvp in extras)
+                    {
+                        scope.SetExtra(kvp.Key, kvp.Value);
+                    }
+                }
+            });
+
+            SentrySdk.CaptureException(exception);
+        }
     }
 
     /// <summary>
