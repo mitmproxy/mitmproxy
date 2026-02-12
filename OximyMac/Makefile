@@ -47,8 +47,28 @@ bundle: sync
 
 # Build release app bundle with DMG
 dmg: sync
-	@echo "==> Building release DMG..."
+	@echo "==> Building release app bundle..."
 	./Scripts/build-release.sh
+	@echo "==> Creating DMG with volume icon..."
+	@cd build && \
+	DMG_TEMP="Oximy-temp.dmg" && \
+	DMG_NAME="Oximy.dmg" && \
+	APP_ICNS="Oximy.app/Contents/Resources/AppIcon.icns" && \
+	rm -f "$$DMG_NAME" "$$DMG_TEMP" 2>/dev/null; \
+	hdiutil create -size 300m -fs HFS+ -volname "Oximy" -ov "$$DMG_TEMP" && \
+	MOUNT_DIR=$$(hdiutil attach "$$DMG_TEMP" -readwrite -noverify | grep "/Volumes/Oximy" | sed 's/.*\(\/Volumes\/Oximy\)/\1/') && \
+	cp -R Oximy.app "$$MOUNT_DIR/" && \
+	ln -s /Applications "$$MOUNT_DIR/Applications" && \
+	if [ -f "$$APP_ICNS" ]; then \
+		cp "$$APP_ICNS" "$$MOUNT_DIR/.VolumeIcon.icns" && \
+		SetFile -a C "$$MOUNT_DIR" 2>/dev/null || true; \
+	fi && \
+	sync && sleep 1 && \
+	hdiutil detach "$$MOUNT_DIR" -quiet 2>/dev/null || hdiutil detach "$$MOUNT_DIR" -force 2>/dev/null || true; \
+	hdiutil convert "$$DMG_TEMP" -format UDZO -o "$$DMG_NAME" && \
+	rm -f "$$DMG_TEMP" && \
+	echo "==> DMG ready: build/$$DMG_NAME" && \
+	ls -lh "$$DMG_NAME"
 
 # Build PKG installer for MDM deployment
 pkg: sync
