@@ -196,7 +196,7 @@ try {
     }
 
     # Step 7: Install jsonata-python for configurable parsers
-    Write-Host "Step 7/8: Installing jsonata-python..." -ForegroundColor Yellow
+    Write-Host "Step 7/9: Installing jsonata-python..." -ForegroundColor Yellow
     & $PythonExe -m pip install jsonata-python --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
@@ -204,8 +204,16 @@ try {
     }
 
     # Step 8: Install watchfiles for local data collection file watching
-    Write-Host "Step 8/8: Installing watchfiles..." -ForegroundColor Yellow
+    Write-Host "Step 8/9: Installing watchfiles..." -ForegroundColor Yellow
     & $PythonExe -m pip install watchfiles --no-warn-script-location 2>&1 | ForEach-Object {
+        if ($_ -match "Successfully installed") {
+            Write-Host "  $_" -ForegroundColor Green
+        }
+    }
+
+    # Step 9: Install sentry-sdk for addon error tracking and event reporting
+    Write-Host "Step 9/9: Installing sentry-sdk..." -ForegroundColor Yellow
+    & $PythonExe -m pip install sentry-sdk --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
         }

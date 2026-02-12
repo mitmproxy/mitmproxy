@@ -208,6 +208,8 @@ public class MitmService : IDisposable
         if (!string.IsNullOrEmpty(sentryDsn))
             startInfo.Environment["SENTRY_DSN"] = sentryDsn;
         startInfo.Environment["OXIMY_SESSION_ID"] = OximyLogger.SessionId;
+        var oximyEnv = Environment.GetEnvironmentVariable("OXIMY_ENV") ?? "production";
+        startInfo.Environment["OXIMY_ENV"] = oximyEnv;
 
         _mitmProcess = new Process { StartInfo = startInfo };
         _mitmProcess.EnableRaisingEvents = true;

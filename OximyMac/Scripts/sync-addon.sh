@@ -31,6 +31,8 @@ FILES=(
     "config.json"
     "process.py"
     "collector.py"
+    "oximy_logger.py"
+    "sentry_service.py"
     "__init__.py"
 )
 

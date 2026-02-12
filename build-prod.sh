@@ -252,26 +252,86 @@ EOF
     xcrun stapler validate Oximy.app
     print_success "All verifications passed"
 
-    # Step 8: Create DMG
+    # Step 8: Create DMG with volume icon + Applications symlink
     print_header "Step 8/8: Creating DMG"
     DMG_NAME="Oximy-$VERSION.dmg"
+    DMG_TEMP="Oximy-temp.dmg"
+    VOLUME_NAME="Oximy"
+    VOLUME_ICON="$SCRIPT_DIR/OximyMac/Resources/Oximy-dmg.png"
+    APP_ICNS="Oximy.app/Contents/Resources/AppIcon.icns"
 
-    # Check for create-dmg
-    if command -v create-dmg &> /dev/null; then
-        echo "Using create-dmg..."
-        rm -f "$DMG_NAME" "Oximy $VERSION.dmg" 2>/dev/null || true
-        create-dmg "Oximy.app" "." --overwrite 2>&1 || true
+    rm -f "$DMG_NAME" "$DMG_TEMP" 2>/dev/null || true
 
-        if [ -f "Oximy $VERSION.dmg" ]; then
-            mv "Oximy $VERSION.dmg" "$DMG_NAME"
-        else
-            echo "Falling back to hdiutil..."
-            hdiutil create -volname "Oximy" -srcfolder "Oximy.app" -ov -format UDZO "$DMG_NAME"
-        fi
-    else
-        echo "create-dmg not found, using hdiutil..."
-        hdiutil create -volname "Oximy" -srcfolder "Oximy.app" -ov -format UDZO "$DMG_NAME"
+    # Create a read-write DMG, mount it, add contents + volume icon, then convert
+    echo "Creating read-write DMG..."
+    hdiutil create -size 300m -fs HFS+ -volname "$VOLUME_NAME" -ov "$DMG_TEMP"
+
+    echo "Mounting DMG..."
+    MOUNT_DIR=$(hdiutil attach "$DMG_TEMP" -readwrite -noverify | grep "/Volumes/$VOLUME_NAME" | awk '{print $NF}')
+    # Handle volume names with spaces in mount path
+    if [ -z "$MOUNT_DIR" ]; then
+        MOUNT_DIR="/Volumes/$VOLUME_NAME"
     fi
+    echo "    Mounted at: $MOUNT_DIR"
+
+    echo "Copying app bundle..."
+    cp -R "Oximy.app" "$MOUNT_DIR/"
+
+    echo "Creating Applications symlink..."
+    ln -s /Applications "$MOUNT_DIR/Applications"
+
+    # Set the volume icon
+    echo "Setting volume icon..."
+    if [ -f "$APP_ICNS" ]; then
+        # Use the app's .icns directly as the volume icon
+        cp "$APP_ICNS" "$MOUNT_DIR/.VolumeIcon.icns"
+        SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+        print_success "Volume icon set from AppIcon.icns"
+    elif [ -f "$VOLUME_ICON" ]; then
+        # Convert PNG to icns for volume icon
+        TEMP_ICONSET="$BUILD_DIR/VolumeIcon.iconset"
+        mkdir -p "$TEMP_ICONSET"
+        sips -z 512 512 "$VOLUME_ICON" --out "$TEMP_ICONSET/icon_256x256@2x.png" 2>/dev/null
+        sips -z 256 256 "$VOLUME_ICON" --out "$TEMP_ICONSET/icon_256x256.png" 2>/dev/null
+        sips -z 128 128 "$VOLUME_ICON" --out "$TEMP_ICONSET/icon_128x128.png" 2>/dev/null
+        iconutil -c icns "$TEMP_ICONSET" -o "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
+        rm -rf "$TEMP_ICONSET"
+        SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+        print_success "Volume icon set from Oximy-dmg.png"
+    else
+        print_warning "No icon source found, DMG will have default icon"
+    fi
+
+    # Set Finder window layout (icon size, background, positions)
+    echo "Configuring Finder layout..."
+    echo '
+        tell application "Finder"
+            tell disk "'$VOLUME_NAME'"
+                open
+                set current view of container window to icon view
+                set toolbar visible of container window to false
+                set statusbar visible of container window to false
+                set the bounds of container window to {100, 100, 640, 400}
+                set viewOptions to the icon view options of container window
+                set arrangement of viewOptions to not arranged
+                set icon size of viewOptions to 80
+                set position of item "Oximy.app" of container window to {150, 150}
+                set position of item "Applications" of container window to {390, 150}
+                close
+            end tell
+        end tell
+    ' | osascript 2>/dev/null || true
+
+    # Give Finder time to write .DS_Store
+    sync
+    sleep 1
+
+    echo "Detaching DMG..."
+    hdiutil detach "$MOUNT_DIR" -quiet 2>/dev/null || hdiutil detach "$MOUNT_DIR" -force 2>/dev/null || true
+
+    echo "Converting to compressed read-only DMG..."
+    hdiutil convert "$DMG_TEMP" -format UDZO -o "$DMG_NAME"
+    rm -f "$DMG_TEMP"
 
     print_success "DMG created: $DMG_NAME"
     ls -lh "$DMG_NAME"
@@ -323,6 +383,23 @@ build_windows() {
     fi
 
     cd "$SCRIPT_DIR/OximyWindows"
+
+    # Step 0: Create Secrets.cs (same pattern as macOS Secrets.swift)
+    print_header "Step 0: Creating Secrets.cs"
+    SECRETS_PATH="src/OximyWindows/Secrets.cs"
+    if [ -n "$SENTRY_DSN" ]; then
+        cat > "$SECRETS_PATH" << EOF
+namespace OximyWindows.Services;
+
+public static partial class Secrets
+{
+    public static string? SentryDsn => "$SENTRY_DSN";
+}
+EOF
+        print_success "Created Secrets.cs with Sentry DSN"
+    else
+        print_warning "No SENTRY_DSN set — Sentry will be disabled for Windows app"
+    fi
 
     # Update version in project files
     print_header "Step 1/3: Updating Version"

@@ -40,8 +40,8 @@ Every log event has a unique code: **`SVC.OPS.NNN`**
 
 | Level | When to Use | Console Tag | Sentry Action |
 |-------|-------------|-------------|---------------|
-| `debug` | Per-request decisions, file writes | `[DEBUG]` | Nothing |
-| `info` | Service start/stop, successful ops, state transitions | `[INFO] ` | Breadcrumb |
+| `debug` | Per-request decisions, transient expected conditions | `[DEBUG]` | Nothing |
+| `info` | Service start/stop, successful ops, state transitions | `[INFO] ` | Breadcrumb + Sentry event |
 | `warning` | Self-healed errors, retries, circuit breaker trips | `[WARN] ` | Breadcrumb + Sentry event |
 | `error` | Failed operation that could not self-heal | `[ERROR]` | Breadcrumb + Sentry event |
 | `fatal` | Unrecoverable failure requiring intervention | `[FATAL]` | Breadcrumb + Sentry event |
@@ -115,7 +115,7 @@ Each event code maps to an action category telling downstream systems what respo
 - **Extras** (detail): full `data` dict
 - **User context**: `device_id`, `workspace_name`, `workspace_id`, `tenant_id`
 - **Breadcrumbs**: auto-created for all `info`+ events
-- **Captured events**: created for all `warning`+ events
+- **Captured events**: created for all `info`+ events (rate-limited: max 10 per event code per minute)
 
 ---
 
@@ -266,7 +266,7 @@ Implement these in the desktop app (macOS: Swift, Windows: .NET).
 |------|-------|--------|---------|-----------|--------------|
 | `STATE.STATE.001` | info | none | Sensor state changed | `sensor_enabled`, `previous` | `sensorEnabled` changes in remote-state.json. Also set tag `sensor_enabled` |
 | `STATE.CMD.003` | warning | user_action | Force logout received | _(none)_ | `forceLogout` flag detected in remote state |
-| `STATE.FAIL.201` | warning | monitor | Failed to read remote state file | `error` | File read or JSON parse exception |
+| `STATE.FAIL.201` | **debug** | none | Failed to read remote state file | `error` | File read or JSON parse exception (transient at startup before addon creates the file) |
 
 #### Launch
 
@@ -319,6 +319,8 @@ These are implemented in the Python addon (`addon.py`, `collector.py`, `normaliz
 
 | Code | Level | Action | Message | Data Keys | Where to Fire |
 |------|-------|--------|---------|-----------|--------------|
+| `TRACE.CAPTURE.001` | info | none | Request matched whitelist | `host`, `method`, `app_type` | Request passes all filters and is marked for capture |
+| `TRACE.WRITE.001` | info | none | Trace written to buffer | `host`, `method`, `status` | Response captured and event written to memory buffer |
 | `TRACE.FAIL.201` | warning | monitor | Memory buffer full, disk fallback | `buffer_bytes` | Memory buffer exceeds `BUFFER_MAX_BYTES` |
 
 #### Collector (Local Session Upload)
@@ -354,14 +356,23 @@ These are lower-level diagnostic signals — added as Sentry breadcrumbs, not fu
 
 ### Infrastructure (create these files)
 
-- [ ] **`EventCodes.cs`** — Port the event code enum with `Level`, `Action`, `Service`, `Operation` properties
-- [ ] **`OximyLogger.cs`** — Singleton logger: Console + JSONL (`~/.oximy/logs/app.jsonl`) + Sentry
+- [x] **`EventCodes.cs`** — Port the event code enum with `Level`, `Action`, `Service`, `Operation` properties
+- [x] **`OximyLogger.cs`** — Singleton logger: Console + JSONL (`~/.oximy/logs/app.jsonl`) + Sentry
   - Thread-safe (use `lock` for seq counter and file operations)
   - `SessionId` = `Guid.NewGuid().ToString()` on app startup
   - Monotonic `seq` counter for gap detection
   - JSONL rotation at 50 MB, keep 5 rotated files
   - `Close()` method that flushes + closes file handle
-- [ ] **Sentry init** — Pass `OXIMY_SESSION_ID` env var to addon process, set `component=dotnet`
+  - **Rate limiting**: max 10 Sentry events per event code per 60-second window (prevents quota exhaustion during failure cascades)
+  - Send Sentry events for `info+` level (not just `warning+`)
+- [x] **Sentry init** — Follow this exact order:
+  1. `SetEnvironmentVariable("SENTRY_DSN", dsn)` — export DSN for Python addon
+  2. `SetEnvironmentVariable("OXIMY_ENV", isDebug ? "development" : "production")` — environment tag
+  3. `SetEnvironmentVariable("OXIMY_SESSION_ID", sessionId)` — cross-component correlation
+  4. `SentrySdk.Init(...)` — initialize Sentry AFTER env vars are set
+  - Set `component=dotnet` tag
+  - **Disable** network tracking / failed request capture (app proxies user traffic — would leak URLs to Sentry)
+  - Set `SendDefaultPii = false`
 
 ### Instrumentation (add log calls at these points)
 
@@ -394,7 +405,7 @@ These are lower-level diagnostic signals — added as Sentry breadcrumbs, not fu
 - [ ] `AUTH.FAIL.201` — Individual API request failure
 - [ ] `AUTH.AUTH.004` — Credentials cleared
 - [ ] `SYNC.FAIL.201` — Sync failure
-- [ ] `STATE.FAIL.201` — Remote state file read error
+- [ ] `STATE.FAIL.201` — Remote state file read error (debug level — transient at startup, not a real failure)
 - [ ] `SYS.HEALTH.001` — Periodic health snapshot (every 5 min)
 - [ ] `APP.STATE.101` — Phase transition
 - [ ] `MITM.FAIL.301` — No available port
@@ -405,39 +416,69 @@ These are lower-level diagnostic signals — added as Sentry breadcrumbs, not fu
 
 The addon is shared code. It already has all logging instrumented. Just ensure:
 
-- [ ] `SENTRY_DSN` env var is passed to the addon process (inherited from parent)
-- [ ] `OXIMY_SESSION_ID` env var is set before spawning the addon process
-- [ ] `sentry-sdk` is included in the embedded Python environment
+- [x] `SENTRY_DSN` env var is passed to the addon process (inherited from parent)
+- [x] `OXIMY_ENV` env var is passed (Python reads this for the Sentry `environment` tag)
+- [x] `OXIMY_SESSION_ID` env var is set before spawning the addon process
+- [x] `sentry-sdk` is included in the embedded Python environment (`build-python-embed.sh` / `package-python.ps1`)
+- [x] New addon files are synced: `oximy_logger.py` and `sentry_service.py` (add to sync script)
 
 ---
 
 ## Sentry SDK Initialization
 
+### DSN Flow
+
+The DSN originates from the desktop app and flows to the Python addon via environment:
+
+```
+Desktop App (Secrets file / config)
+  → setenv("SENTRY_DSN", dsn)      // export to process environment
+  → setenv("OXIMY_ENV", env)        // "development" or "production"
+  → setenv("OXIMY_SESSION_ID", id)  // cross-component correlation
+  → SentryService.initialize()      // desktop Sentry init
+  ...
+  → spawn mitmproxy                 // inherits env vars automatically
+      → Python reads os.environ["SENTRY_DSN"]
+      → Python reads os.environ["OXIMY_ENV"]
+```
+
+**CRITICAL**: `setenv()` calls MUST happen BEFORE `SentryService.initialize()` to avoid thread-safety issues (Sentry spawns background threads). Also BEFORE spawning the addon process.
+
+For **direct CLI runs** (no parent app), the developer sets `SENTRY_DSN` in their shell.
+
 ### Desktop App
 
 ```
 DSN source: Secrets file or SENTRY_DSN env var
-Environment: "production" (release) / "development" (debug)
+Environment: OXIMY_ENV env var — "production" (release) / "development" (debug)
 Sample rate: 1.0 (send ALL events)
-Traces sample rate: 0.1 (10% performance traces)
+Traces sample rate: platform-specific (see Constants)
 Auto breadcrumbs: enabled
 Session tracking: enabled
+Network tracking: DISABLED (app proxies traffic — would leak user request URLs)
+Failed request capture: DISABLED (same reason)
+File I/O tracing: DISABLED (same reason)
 Send PII: false
 Max breadcrumbs: 200
 Attach stacktrace: true
+Rate limiting: max 10 Sentry events per event code per 60-second window
 ```
 
 ### Python Addon
 
 ```
 DSN source: SENTRY_DSN env var (inherited from parent process)
-Environment: "production"
+Environment: OXIMY_ENV env var (inherited), defaults to "production" for CLI
 Default integrations: disabled (prevents mitmproxy interference)
 Auto-enabling integrations: disabled
+LoggingIntegration: enabled (breadcrumbs from INFO+, Sentry events from ERROR+)
+before_send filter: only allows oximy addon loggers (blocks mitmproxy framework noise)
 Sample rate: 1.0
 Traces sample rate: 0.0 (no performance tracing)
 Send PII: false
 Max breadcrumbs: 200
+Rate limiting (structured oximy_log): max 10 Sentry events per event code per 60-second window
+Rate limiting (auto-captured logger.error): max 5 per logger+message per 60-second window
 ```
 
 ---

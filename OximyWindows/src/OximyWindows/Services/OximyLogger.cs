@@ -6,16 +6,8 @@ using Sentry;
 
 namespace OximyWindows.Services;
 
-/// <summary>
-/// Central structured logger — wraps SentryService + Console + JSONL file output.
-/// Usage: OximyLogger.Log(EventCode.MITM_START_002, "mitmproxy listening", new() { ["port"] = 1030 });
-/// </summary>
 public static class OximyLogger
 {
-    /// <summary>
-    /// Session ID for cross-component correlation.
-    /// Generated once per app launch, passed to addon via OXIMY_SESSION_ID env var.
-    /// </summary>
     public static string SessionId { get; } = Guid.NewGuid().ToString();
 
     private static readonly object _logLock = new();
@@ -27,11 +19,38 @@ public static class OximyLogger
     private const int MaxRotatedFiles = 5;
     private static bool _initialized;
 
-    // MARK: - Initialization
+    private static readonly Dictionary<string, (int count, DateTime windowStart)> _rateLimiter = new();
+    private const int MaxEventsPerWindow = 10;
+    private static readonly TimeSpan RateWindow = TimeSpan.FromSeconds(60);
 
-    /// <summary>
-    /// Initialize the logger. Must be called after Constants.EnsureDirectoriesExist().
-    /// </summary>
+    // Level mappings (shared across console and Sentry)
+    private static readonly Dictionary<LogLevel, string> _levelTags = new()
+    {
+        [LogLevel.Debug] = "[DEBUG]",
+        [LogLevel.Info] = "[INFO] ",
+        [LogLevel.Warning] = "[WARN] ",
+        [LogLevel.Error] = "[ERROR]",
+        [LogLevel.Fatal] = "[FATAL]",
+    };
+
+    private static readonly Dictionary<LogLevel, SentryLevel> _sentryLevels = new()
+    {
+        [LogLevel.Debug] = SentryLevel.Debug,
+        [LogLevel.Info] = SentryLevel.Info,
+        [LogLevel.Warning] = SentryLevel.Warning,
+        [LogLevel.Error] = SentryLevel.Error,
+        [LogLevel.Fatal] = SentryLevel.Fatal,
+    };
+
+    private static readonly Dictionary<LogLevel, BreadcrumbLevel> _breadcrumbLevels = new()
+    {
+        [LogLevel.Debug] = BreadcrumbLevel.Debug,
+        [LogLevel.Info] = BreadcrumbLevel.Info,
+        [LogLevel.Warning] = BreadcrumbLevel.Warning,
+        [LogLevel.Error] = BreadcrumbLevel.Error,
+        [LogLevel.Fatal] = BreadcrumbLevel.Critical,
+    };
+
     public static void Initialize()
     {
         if (_initialized) return;
@@ -50,11 +69,6 @@ public static class OximyLogger
         }
     }
 
-    // MARK: - Public API
-
-    /// <summary>
-    /// Log a structured event to Console + JSONL + Sentry.
-    /// </summary>
     public static void Log(
         EventCode code,
         string message,
@@ -63,19 +77,11 @@ public static class OximyLogger
     {
         var now = DateTime.UtcNow;
 
-        // Console output (human-readable)
         PrintConsole(code, message, data, now);
-
-        // JSONL file output (AI-parseable) — seq assigned inside lock for ordering guarantee
         WriteJSONL(code, message, data, err, now);
-
-        // Sentry output (dashboards + alerts)
         SendToSentry(code, message, data, err);
     }
 
-    /// <summary>
-    /// Update a Sentry scope tag.
-    /// </summary>
     public static void SetTag(string key, string value)
     {
         if (!SentryService.IsInitialized) return;
@@ -86,9 +92,6 @@ public static class OximyLogger
         });
     }
 
-    /// <summary>
-    /// Flush and close the log file handle. Call before app exit.
-    /// </summary>
     public static void Close()
     {
         lock (_logLock)
@@ -110,21 +113,10 @@ public static class OximyLogger
         }
     }
 
-    // MARK: - Console Output
-
     private static void PrintConsole(
         EventCode code, string message, Dictionary<string, object>? data, DateTime timestamp)
     {
-        var levelTag = code.GetLevel() switch
-        {
-            LogLevel.Debug => "[DEBUG]",
-            LogLevel.Info => "[INFO] ",
-            LogLevel.Warning => "[WARN] ",
-            LogLevel.Error => "[ERROR]",
-            LogLevel.Fatal => "[FATAL]",
-            _ => "[INFO] "
-        };
-
+        var levelTag = _levelTags.GetValueOrDefault(code.GetLevel(), "[INFO] ");
         var line = $"{levelTag} {code.GetCode()} {message}";
 
         if (data is { Count: > 0 })
@@ -138,8 +130,6 @@ public static class OximyLogger
         Debug.WriteLine($"[Oximy] {line}");
     }
 
-    // MARK: - JSONL File Output
-
     private static void WriteJSONL(
         EventCode code,
         string message,
@@ -151,34 +141,26 @@ public static class OximyLogger
 
         try
         {
-            // Build entry outside lock (minimize lock hold time)
             var ctx = new Dictionary<string, object>
             {
                 ["component"] = "dotnet",
                 ["session_id"] = SessionId
             };
 
-            var deviceId = AppState.Instance.DeviceId;
-            if (!string.IsNullOrEmpty(deviceId))
-                ctx["device_id"] = deviceId;
+            AddIfPresent(ctx, "device_id", AppState.Instance.DeviceId);
+            AddIfPresent(ctx, "workspace_id", AppState.Instance.WorkspaceId);
+            AddIfPresent(ctx, "workspace_name", AppState.Instance.WorkspaceName);
 
-            var workspaceId = AppState.Instance.WorkspaceId;
-            if (!string.IsNullOrEmpty(workspaceId))
-                ctx["workspace_id"] = workspaceId;
-
-            var workspaceName = AppState.Instance.WorkspaceName;
-            if (!string.IsNullOrEmpty(workspaceName))
-                ctx["workspace_name"] = workspaceName;
+            var (service, operation) = code.GetServiceAndOperation();
 
             var entry = new Dictionary<string, object>
             {
                 ["v"] = 1,
-                // seq assigned below under lock
                 ["ts"] = timestamp.ToString("O"),
                 ["code"] = code.GetCode(),
                 ["level"] = code.GetLevel().ToString().ToLowerInvariant(),
-                ["svc"] = code.GetService(),
-                ["op"] = code.GetOperation(),
+                ["svc"] = service,
+                ["op"] = operation,
                 ["msg"] = message,
                 ["action"] = code.GetAction().GetActionString(),
                 ["ctx"] = ctx
@@ -199,7 +181,6 @@ public static class OximyLogger
 
             lock (_logLock)
             {
-                // Assign seq under same lock as write to guarantee ordering
                 _seq++;
                 entry["seq"] = _seq;
 
@@ -220,8 +201,6 @@ public static class OximyLogger
         WriteIndented = false
     };
 
-    // MARK: - Sentry Output
-
     private static void SendToSentry(
         EventCode code,
         string message,
@@ -232,43 +211,24 @@ public static class OximyLogger
 
         try
         {
-            var sentryLevel = code.GetLevel() switch
-            {
-                LogLevel.Debug => SentryLevel.Debug,
-                LogLevel.Info => SentryLevel.Info,
-                LogLevel.Warning => SentryLevel.Warning,
-                LogLevel.Error => SentryLevel.Error,
-                LogLevel.Fatal => SentryLevel.Fatal,
-                _ => SentryLevel.Info
-            };
+            var level = code.GetLevel();
+            if (level < LogLevel.Info) return;
 
-            var breadcrumbLevel = code.GetLevel() switch
-            {
-                LogLevel.Debug => BreadcrumbLevel.Debug,
-                LogLevel.Info => BreadcrumbLevel.Info,
-                LogLevel.Warning => BreadcrumbLevel.Warning,
-                LogLevel.Error => BreadcrumbLevel.Error,
-                LogLevel.Fatal => BreadcrumbLevel.Critical,
-                _ => BreadcrumbLevel.Info
-            };
+            var sentryLevel = _sentryLevels.GetValueOrDefault(level, SentryLevel.Info);
+            var breadcrumbLevel = _breadcrumbLevels.GetValueOrDefault(level, BreadcrumbLevel.Info);
 
-            // Always add breadcrumb for info+
-            if (code.GetLevel() >= LogLevel.Info)
-            {
-                var breadcrumbData = data?.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.ToString() ?? "");
+            var breadcrumbData = data?.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value?.ToString() ?? "");
 
-                SentrySdk.AddBreadcrumb(
-                    message: $"[{code.GetCode()}] {message}",
-                    category: code.GetService(),
-                    type: code.GetLevel() >= LogLevel.Warning ? "error" : "info",
-                    data: breadcrumbData,
-                    level: breadcrumbLevel);
-            }
+            SentrySdk.AddBreadcrumb(
+                message: $"[{code.GetCode()}] {message}",
+                category: code.GetService(),
+                type: level >= LogLevel.Warning ? "error" : "info",
+                data: breadcrumbData,
+                level: breadcrumbLevel);
 
-            // Capture Sentry event for warning+
-            if (code.GetLevel() >= LogLevel.Warning)
+            if (ShouldSendSentryEvent(code))
             {
                 SentrySdk.CaptureMessage($"[{code.GetCode()}] {message}", scope =>
                 {
@@ -297,7 +257,35 @@ public static class OximyLogger
         }
     }
 
-    // MARK: - File Management
+    private static bool ShouldSendSentryEvent(EventCode code)
+    {
+        var key = code.GetCode();
+        var now = DateTime.UtcNow;
+
+        lock (_rateLimiter)
+        {
+            if (_rateLimiter.TryGetValue(key, out var entry))
+            {
+                if (now - entry.windowStart < RateWindow)
+                {
+                    if (entry.count >= MaxEventsPerWindow)
+                        return false;
+
+                    _rateLimiter[key] = (entry.count + 1, entry.windowStart);
+                    return true;
+                }
+            }
+
+            _rateLimiter[key] = (1, now);
+            return true;
+        }
+    }
+
+    private static void AddIfPresent(Dictionary<string, object> dict, string key, string? value)
+    {
+        if (!string.IsNullOrEmpty(value))
+            dict[key] = value;
+    }
 
     private static void OpenLogFile()
     {
@@ -316,9 +304,6 @@ public static class OximyLogger
         }
     }
 
-    /// <summary>
-    /// Rotate if file exceeds max size. Must be called under _logLock.
-    /// </summary>
     private static void RotateIfNeeded()
     {
         try
@@ -327,22 +312,18 @@ public static class OximyLogger
 
             if (_fileStream.Length <= MaxLogFileSize) return;
 
-            // Close current file
             _writer?.Dispose();
             _writer = null;
             _fileStream?.Dispose();
             _fileStream = null;
 
-            // Move current to temp first — protects data if subsequent moves fail
             var tempPath = Path.Combine(Constants.LogsDir, "app.rotating.jsonl");
             File.Move(_logFilePath, tempPath, overwrite: true);
 
-            // Delete the oldest rotated file
             var oldest = Path.Combine(Constants.LogsDir, $"app.{MaxRotatedFiles}.jsonl");
             if (File.Exists(oldest))
                 File.Delete(oldest);
 
-            // Shift rotated files: app.4.jsonl -> app.5.jsonl, ..., app.1.jsonl -> app.2.jsonl
             for (int i = MaxRotatedFiles - 1; i >= 1; i--)
             {
                 var src = Path.Combine(Constants.LogsDir, $"app.{i}.jsonl");
@@ -352,16 +333,13 @@ public static class OximyLogger
                     File.Move(src, dst);
             }
 
-            // Temp -> app.1.jsonl
             File.Move(tempPath, Path.Combine(Constants.LogsDir, "app.1.jsonl"), overwrite: true);
 
-            // Reopen
             OpenLogFile();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[OximyLogger] Rotation error: {ex.Message}");
-            // Try to reopen the file even if rotation failed
             try { OpenLogFile(); } catch { /* best effort */ }
         }
     }

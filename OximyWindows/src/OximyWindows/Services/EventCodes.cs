@@ -1,7 +1,5 @@
 namespace OximyWindows.Services;
 
-// MARK: - Log Level
-
 public enum LogLevel
 {
     Debug = 0,
@@ -10,8 +8,6 @@ public enum LogLevel
     Error = 3,
     Fatal = 4
 }
-
-// MARK: - Action Category
 
 public enum ActionCategory
 {
@@ -24,14 +20,6 @@ public enum ActionCategory
     UserAction
 }
 
-// MARK: - Event Code
-
-/// <summary>
-/// Every log event gets a unique code: SVC.OPS.NNN
-/// - SVC = service (APP, AUTH, ENROLL, CERT, PROXY, MITM, HB, NET, SYNC, STATE, LAUNCH, SYS)
-/// - OPS = operation (INIT, START, STOP, FAIL, RETRY, STATE, CB, CMD, AUTH, CLEAN, FETCH, HEALTH, CHECK)
-/// - NNN = unique ID (0xx=lifecycle, 1xx=state, 2xx=warning, 3xx=error, 4xx=fatal)
-/// </summary>
 public enum EventCode
 {
     // App
@@ -108,29 +96,25 @@ public enum EventCode
     SYS_HEALTH_001,
 }
 
-// MARK: - Extension Methods
-
 public static class EventCodeExtensions
 {
-    /// <summary>
-    /// Returns the dot-separated code string, e.g. "APP.INIT.001".
-    /// </summary>
+    // Cache: GetCode() is called multiple times per log event
+    private static readonly Dictionary<EventCode, string> _codeCache = new();
+
     public static string GetCode(this EventCode code)
     {
-        var name = code.ToString(); // e.g. "APP_INIT_001"
-        var parts = name.Split('_');
-        return string.Join(".", parts);
+        if (_codeCache.TryGetValue(code, out var cached))
+            return cached;
+
+        var result = string.Join(".", code.ToString().Split('_'));
+        _codeCache[code] = result;
+        return result;
     }
 
-    /// <summary>
-    /// Returns the severity level for this event code.
-    /// </summary>
     public static LogLevel GetLevel(this EventCode code) => code switch
     {
-        // Fatal
         EventCode.MITM_RETRY_401 => LogLevel.Fatal,
 
-        // Error
         EventCode.APP_FAIL_301 or
         EventCode.AUTH_FAIL_301 or
         EventCode.ENROLL_FAIL_301 or
@@ -140,7 +124,6 @@ public static class EventCodeExtensions
         EventCode.NET_FAIL_301 or
         EventCode.LAUNCH_FAIL_301 => LogLevel.Error,
 
-        // Warning
         EventCode.AUTH_AUTH_004 or
         EventCode.AUTH_FAIL_201 or EventCode.AUTH_FAIL_302 or EventCode.AUTH_FAIL_303 or
         EventCode.CERT_WARN_201 or
@@ -148,15 +131,13 @@ public static class EventCodeExtensions
         EventCode.MITM_RETRY_001 or
         EventCode.HB_FAIL_201 or EventCode.HB_FAIL_202 or EventCode.HB_FAIL_203 or EventCode.HB_STATE_202 or
         EventCode.SYNC_FAIL_201 or
-        EventCode.STATE_CMD_003 or EventCode.STATE_FAIL_201 => LogLevel.Warning,
+        EventCode.STATE_CMD_003 => LogLevel.Warning,
 
-        // Info (default)
+        EventCode.STATE_FAIL_201 => LogLevel.Debug,
+
         _ => LogLevel.Info,
     };
 
-    /// <summary>
-    /// Returns the action category for this event code.
-    /// </summary>
     public static ActionCategory GetAction(this EventCode code) => code switch
     {
         EventCode.MITM_RETRY_401 => ActionCategory.AlertOps,
@@ -181,34 +162,25 @@ public static class EventCodeExtensions
 
         EventCode.HB_FAIL_201 or EventCode.HB_FAIL_203 or
         EventCode.SYNC_FAIL_201 or
-        EventCode.STATE_FAIL_201 or
         EventCode.NET_STATE_102 => ActionCategory.Monitor,
 
         _ => ActionCategory.None,
     };
 
-    /// <summary>
-    /// Returns the service segment (first part, lowercased).
-    /// </summary>
-    public static string GetService(this EventCode code)
+    /// Parse service and operation from cached code string in one pass.
+    public static (string service, string operation) GetServiceAndOperation(this EventCode code)
     {
         var dotCode = code.GetCode();
-        var idx = dotCode.IndexOf('.');
-        return idx > 0 ? dotCode[..idx].ToLowerInvariant() : "unknown";
+        var parts = dotCode.Split('.');
+        var service = parts.Length > 0 ? parts[0].ToLowerInvariant() : "unknown";
+        var operation = parts.Length > 1 ? parts[1].ToLowerInvariant() : "unknown";
+        return (service, operation);
     }
 
-    /// <summary>
-    /// Returns the operation segment (second part, lowercased).
-    /// </summary>
-    public static string GetOperation(this EventCode code)
-    {
-        var parts = code.GetCode().Split('.');
-        return parts.Length > 1 ? parts[1].ToLowerInvariant() : "unknown";
-    }
+    public static string GetService(this EventCode code) => code.GetServiceAndOperation().service;
 
-    /// <summary>
-    /// Returns the action category as a snake_case string for JSONL/Sentry.
-    /// </summary>
+    public static string GetOperation(this EventCode code) => code.GetServiceAndOperation().operation;
+
     public static string GetActionString(this ActionCategory action) => action switch
     {
         ActionCategory.None => "none",

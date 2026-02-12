@@ -48,7 +48,18 @@ public partial class App : Application
         // Set up file logging for Debug output
         SetupFileLogging();
 
-        // CRITICAL: Initialize Sentry SECOND, before any other code that might throw.
+        // Export env vars BEFORE Sentry init (thread safety)
+        var dsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? Secrets.SentryDsn;
+        if (!string.IsNullOrEmpty(dsn))
+            Environment.SetEnvironmentVariable("SENTRY_DSN", dsn);
+#if DEBUG
+        Environment.SetEnvironmentVariable("OXIMY_ENV", "development");
+#else
+        Environment.SetEnvironmentVariable("OXIMY_ENV", "production");
+#endif
+        Environment.SetEnvironmentVariable("OXIMY_SESSION_ID", OximyLogger.SessionId);
+
+        // CRITICAL: Initialize Sentry AFTER env vars are set, before any other code that might throw.
         // This ensures we capture any startup errors.
         SentryService.Initialize();
 
@@ -514,7 +525,7 @@ public partial class App : Application
         OximyLogger.Close();
 
         // Flush and close Sentry
-        SentryService.Flush(TimeSpan.FromSeconds(2));
+        SentryService.Flush();
         SentryService.Close();
 
         // Clean up file logging
@@ -595,7 +606,7 @@ public partial class App : Application
         if (e.ExceptionObject is Exception ex)
         {
             SentryService.CaptureException(ex, "crash");
-            SentryService.Flush(TimeSpan.FromSeconds(2));
+            SentryService.Flush();
         }
 
         // Try to clean up before crash

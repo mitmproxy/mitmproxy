@@ -309,6 +309,28 @@ class ProcessResolver:
                 ancestor_pid = ancestor_info.get("ppid")
                 depth += 1
 
+        # Step 5b (Windows): Walk parent tree to find a recognizable application.
+        # This resolves CLI processes (node, python, curl) spawned from browsers/editors
+        # by tracing: node → cmd.exe → Code.exe / chrome.exe.
+        if not bundle_id and self._is_windows and _HAS_PSUTIL:
+            ancestor_pid = proc_info.get("ppid")
+            depth = 0
+            while ancestor_pid and ancestor_pid > 1 and depth < 10:
+                ancestor_info = await self._get_process_info(ancestor_pid)
+                if not ancestor_info:
+                    break
+                ancestor_exe = self._extract_exe_name(ancestor_info.get("path"))
+                if ancestor_exe:
+                    # Found a recognizable exe in the parent tree
+                    logger.info(
+                        f"[PROCESS] Windows parent walk: {name} (PID {pid}) "
+                        f"-> {ancestor_exe} (PID {ancestor_pid}, depth={depth + 1})"
+                    )
+                    bundle_id = ancestor_exe
+                    break
+                ancestor_pid = ancestor_info.get("ppid")
+                depth += 1
+
         # On Windows, use exe name as bundle_id fallback
         if not bundle_id and self._is_windows:
             bundle_id = self._extract_exe_name(proc_info.get("path"))
@@ -360,12 +382,29 @@ class ProcessResolver:
         return None
 
     def _find_pid_for_port_sync(self, port: int) -> int | None:
-        """Synchronous PID lookup by iterating user-owned processes.
+        """Synchronous PID lookup using psutil.
 
-        This avoids psutil.net_connections() which requires root on macOS.
-        Instead, iterates each process's connections (~18ms total).
+        On Windows, uses system-wide net_connections() (doesn't require admin).
+        On macOS/Linux, iterates user-owned processes since net_connections()
+        requires root on those platforms.
         """
         import os
+
+        # Fast path for Windows: system-wide net_connections() works without admin
+        if self._is_windows:
+            try:
+                for conn in psutil.net_connections(kind="tcp"):
+                    if not conn.laddr or conn.laddr.port != port:
+                        continue
+                    if conn.raddr and conn.raddr.port == self._proxy_port and conn.pid:
+                        return conn.pid
+                    if conn.pid:
+                        # Fallback: match just by local port
+                        return conn.pid
+            except (psutil.AccessDenied, OSError) as e:
+                logger.debug(f"[PSUTIL] System-wide net_connections failed: {e}")
+                # Fall through to per-process iteration
+
         uid = os.getuid() if hasattr(os, "getuid") else None
         fallback_pid: int | None = None
 

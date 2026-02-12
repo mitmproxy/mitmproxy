@@ -7,7 +7,9 @@ when Sentry is not initialized (no SENTRY_DSN, no sentry_sdk package).
 from __future__ import annotations
 
 import importlib
+import logging
 import os
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -20,9 +22,36 @@ def reset_sentry_state():
     """Reset sentry_service module state between tests."""
     sentry_service._initialized = False
     sentry_service._sentry_sdk = None
+    sentry_service._auto_event_rate.clear()
     yield
     sentry_service._initialized = False
     sentry_service._sentry_sdk = None
+    sentry_service._auto_event_rate.clear()
+
+
+@pytest.fixture()
+def mock_sentry_modules():
+    """Inject mock sentry_sdk module hierarchy into sys.modules.
+
+    Required for tests that call initialize() since sentry_sdk may not be installed.
+    The LoggingIntegration mock is returned so tests can assert on it.
+    """
+    mock_logging_integration_cls = MagicMock()
+    mock_logging_mod = MagicMock()
+    mock_logging_mod.LoggingIntegration = mock_logging_integration_cls
+    mock_integrations = MagicMock()
+    mock_integrations.logging = mock_logging_mod
+    mock_sentry = MagicMock()
+    mock_sentry.integrations = mock_integrations
+    mock_sentry.integrations.logging = mock_logging_mod
+
+    modules = {
+        "sentry_sdk": mock_sentry,
+        "sentry_sdk.integrations": mock_integrations,
+        "sentry_sdk.integrations.logging": mock_logging_mod,
+    }
+    with patch.dict(sys.modules, modules):
+        yield mock_logging_integration_cls
 
 
 class TestInitialize:
@@ -45,7 +74,7 @@ class TestInitialize:
             with patch.object(sentry_service, "_get_sdk", return_value=None):
                 assert sentry_service.initialize() is False
 
-    def test_sdk_init_succeeds(self):
+    def test_sdk_init_succeeds(self, mock_sentry_modules):
         """Should return True when SDK initializes successfully."""
         mock_sdk = MagicMock()
         with patch.dict(os.environ, {"SENTRY_DSN": "https://key@sentry.io/123"}):
@@ -54,7 +83,7 @@ class TestInitialize:
                 assert sentry_service.is_initialized() is True
                 mock_sdk.init.assert_called_once()
 
-    def test_sdk_init_exception_returns_false(self):
+    def test_sdk_init_exception_returns_false(self, mock_sentry_modules):
         """Should return False when SDK init raises."""
         mock_sdk = MagicMock()
         mock_sdk.init.side_effect = Exception("init failed")
@@ -63,7 +92,7 @@ class TestInitialize:
                 assert sentry_service.initialize() is False
                 assert sentry_service.is_initialized() is False
 
-    def test_idempotent_init(self):
+    def test_idempotent_init(self, mock_sentry_modules):
         """Should return True on second call without re-initializing."""
         mock_sdk = MagicMock()
         with patch.dict(os.environ, {"SENTRY_DSN": "https://key@sentry.io/123"}):
@@ -98,7 +127,7 @@ class TestFailOpen:
         )
 
     def test_flush_noop(self):
-        sentry_service.flush(timeout=1.0)
+        sentry_service.flush()
 
 
 class TestSetUser:
@@ -201,22 +230,120 @@ class TestFlush:
         sentry_service._initialized = True
         sentry_service._sentry_sdk = mock_sdk
 
-        sentry_service.flush(timeout=3.0)
-        mock_sdk.flush.assert_called_once_with(timeout=3.0)
+        sentry_service.flush()
+        mock_sdk.flush.assert_called_once_with(timeout=2)
 
 
 class TestGetSdk:
-    def test_lazy_import_caches_sentinel_on_failure(self):
-        """Should set _sentry_sdk to False sentinel when import fails."""
+    def test_lazy_import_returns_none_on_failure(self):
         sentry_service._sentry_sdk = None
         with patch("builtins.__import__", side_effect=ImportError):
             result = sentry_service._get_sdk()
         assert result is None
-        assert sentry_service._sentry_sdk is False
 
-    def test_sentinel_prevents_retry(self):
-        """Should not retry import after sentinel is set."""
-        sentry_service._sentry_sdk = False
-        result = sentry_service._get_sdk()
-        # Returns False sentinel (falsy), not None — callers check truthiness
-        assert not result
+    def test_caches_sdk_after_successful_import(self):
+        sentry_service._sentry_sdk = None
+        mock_sdk = MagicMock()
+        with patch.dict("sys.modules", {"sentry_sdk": mock_sdk}):
+            result = sentry_service._get_sdk()
+        assert result is mock_sdk
+        assert sentry_service._sentry_sdk is mock_sdk
+
+
+class TestLoggingIntegration:
+    """Verify sdk.init() receives LoggingIntegration and before_send."""
+
+    def test_init_passes_integrations_and_before_send(self, mock_sentry_modules):
+        """sdk.init() should receive integrations list and before_send callback."""
+        mock_li_cls = mock_sentry_modules
+        mock_li_instance = MagicMock()
+        mock_li_cls.return_value = mock_li_instance
+
+        mock_sdk = MagicMock()
+        with patch.dict(os.environ, {"SENTRY_DSN": "https://key@sentry.io/123"}):
+            with patch.object(sentry_service, "_get_sdk", return_value=mock_sdk):
+                assert sentry_service.initialize() is True
+
+                call_kwargs = mock_sdk.init.call_args[1]
+                assert "integrations" in call_kwargs
+                assert mock_li_instance in call_kwargs["integrations"]
+                assert call_kwargs["before_send"] is sentry_service._before_send
+
+    def test_init_configures_logging_integration_levels(self, mock_sentry_modules):
+        """LoggingIntegration should use INFO for breadcrumbs, ERROR for events."""
+        mock_li_cls = mock_sentry_modules
+
+        mock_sdk = MagicMock()
+        with patch.dict(os.environ, {"SENTRY_DSN": "https://key@sentry.io/123"}):
+            with patch.object(sentry_service, "_get_sdk", return_value=mock_sdk):
+                sentry_service.initialize()
+                mock_li_cls.assert_called_once_with(
+                    level=logging.INFO,
+                    event_level=logging.ERROR,
+                )
+
+
+class TestBeforeSend:
+    """Verify before_send filter logic."""
+
+    def _make_log_record(self, name="mitmproxy.addons.oximy.addon", msg="test error"):
+        record = logging.LogRecord(
+            name=name, level=logging.ERROR, pathname="", lineno=0,
+            msg=msg, args=(), exc_info=None,
+        )
+        return record
+
+    def test_passes_oximy_addon_logger_events(self):
+        """Events from mitmproxy.addons.oximy.* loggers should pass through."""
+        record = self._make_log_record("mitmproxy.addons.oximy.addon")
+        event = {"tags": {}}
+        result = sentry_service._before_send(event, {"log_record": record})
+        assert result is not None
+        assert result["tags"]["capture_source"] == "logging_integration"
+
+    def test_passes_standalone_module_logger(self):
+        """Events from standalone module loggers (addon, collector) should pass."""
+        record = self._make_log_record("addon")
+        event = {"tags": {}}
+        result = sentry_service._before_send(event, {"log_record": record})
+        assert result is not None
+
+    def test_blocks_mitmproxy_framework_events(self):
+        """Events from mitmproxy core loggers should be dropped."""
+        for name in ["mitmproxy.proxy.server", "mitmproxy.connection", "mitmproxy.master"]:
+            record = self._make_log_record(name)
+            result = sentry_service._before_send({"tags": {}}, {"log_record": record})
+            assert result is None, f"Should block logger {name}"
+
+    def test_passes_explicit_capture_events(self):
+        """Events without log_record (explicit capture_message/exception) always pass."""
+        event = {"message": "explicit message"}
+        result = sentry_service._before_send(event, {})
+        assert result is event
+
+    def test_rate_limits_repeated_events(self):
+        """Should drop events after _RATE_LIMIT_MAX per logger+message per window."""
+        record = self._make_log_record(msg="repeated error")
+        for i in range(sentry_service._RATE_LIMIT_MAX):
+            result = sentry_service._before_send({"tags": {}}, {"log_record": record})
+            assert result is not None, f"Event {i+1} should pass"
+
+        # Next one should be dropped
+        result = sentry_service._before_send({"tags": {}}, {"log_record": record})
+        assert result is None, "Should be rate-limited after max events"
+
+    def test_rate_limit_resets_after_window(self):
+        """Rate limit should reset after the time window expires."""
+        record = self._make_log_record(msg="window reset test")
+        key = ("mitmproxy.addons.oximy.addon", "window reset test")
+
+        # Fill up the rate limit
+        for _ in range(sentry_service._RATE_LIMIT_MAX):
+            sentry_service._before_send({"tags": {}}, {"log_record": record})
+
+        # Simulate window expiry by backdating the window start
+        count, _ = sentry_service._auto_event_rate[key]
+        sentry_service._auto_event_rate[key] = (count, 0.0)  # epoch = expired
+
+        result = sentry_service._before_send({"tags": {}}, {"log_record": record})
+        assert result is not None, "Should pass after window reset"
