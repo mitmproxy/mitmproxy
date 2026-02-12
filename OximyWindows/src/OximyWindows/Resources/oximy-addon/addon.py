@@ -240,6 +240,45 @@ def _set_system_proxy(enable: bool) -> None:
         _set_windows_proxy(enable)
 
 
+def _notify_windows_proxy_change() -> None:
+    """Notify Windows and browsers of proxy settings change.
+
+    Mirrors ProxyService.NotifySettingsChange() in C#:
+    - InternetSetOption(INTERNET_OPTION_SETTINGS_CHANGED)
+    - InternetSetOption(INTERNET_OPTION_REFRESH)
+    - SendMessageTimeout(WM_SETTINGCHANGE, "Internet Settings")
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        INTERNET_OPTION_SETTINGS_CHANGED = 39
+        INTERNET_OPTION_REFRESH = 37
+
+        wininet = ctypes.windll.wininet  # type: ignore[attr-defined]
+        wininet.InternetSetOptionW(None, INTERNET_OPTION_SETTINGS_CHANGED, None, 0)
+        wininet.InternetSetOptionW(None, INTERNET_OPTION_REFRESH, None, 0)
+
+        # Broadcast WM_SETTINGCHANGE
+        HWND_BROADCAST = 0xFFFF
+        WM_SETTINGCHANGE = 0x001A
+        SMTO_ABORTIFHUNG = 0x0002
+        result = ctypes.c_long(0)
+        ctypes.windll.user32.SendMessageTimeoutW(  # type: ignore[attr-defined]
+            HWND_BROADCAST,
+            WM_SETTINGCHANGE,
+            0,
+            "Internet Settings",
+            SMTO_ABORTIFHUNG,
+            1000,
+            ctypes.byref(result),
+        )
+        logger.debug("Windows proxy change notification sent")
+    except Exception as e:
+        logger.warning(f"Failed to notify Windows of proxy change: {e}")
+
+
 def _set_windows_proxy(enable: bool) -> bool:
     """Enable or disable Windows system proxy via registry. Returns success status."""
     reg_path = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
@@ -262,6 +301,7 @@ def _set_windows_proxy(enable: bool) -> bool:
                                     capture_output=True, text=True)
             if "0x1" in result.stdout:
                 logger.info(f"Windows proxy enabled: {proxy_server}")
+                _notify_windows_proxy_change()
                 return True
             else:
                 logger.warning("Windows proxy registry set but verification failed")
@@ -271,6 +311,7 @@ def _set_windows_proxy(enable: bool) -> bool:
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "0", "/f"],
                            check=True, capture_output=True)
             logger.info("Windows proxy disabled")
+            _notify_windows_proxy_change()
             return True
     except subprocess.CalledProcessError as e:
         logger.warning(f"Failed to set Windows proxy: {e}")
@@ -989,11 +1030,13 @@ def _install_cert() -> bool:
         logger.error(f"Failed to install certificate: {result.stderr.decode()}")
         return False
 
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as e:
         logger.error("Certificate installation timed out")
+        sentry_service.capture_exception(e, tags={"operation": "cert_install"})
         return False
     except Exception as e:
         logger.error(f"Certificate installation failed: {e}")
+        sentry_service.capture_exception(e, tags={"operation": "cert_install"})
         return False
 
 
@@ -2697,6 +2740,10 @@ class DirectTraceUploader:
                     )
                     if response_data.get("success"):
                         logger.info(f"Uploaded {len(batch)} traces ({len(compressed)} bytes compressed)")
+                        oximy_log(OximyEventCode.UPLOAD_STATE_101, "Trace batch uploaded", data={
+                            "traces_count": len(batch),
+                            "compressed_bytes": len(compressed),
+                        })
                         self._record_upload_circuit_breaker_success()
                         return True
                     else:
@@ -2901,6 +2948,9 @@ class TraceUploader:
                     self._upload_state[file_key] = last_uploaded
                     self._save_state()
                     logger.info(f"Uploaded {uploaded_count} traces (batch {i // BATCH_SIZE + 1})")
+                    oximy_log(OximyEventCode.UPLOAD_STATE_101, "Trace batch uploaded", data={
+                        "traces_count": uploaded_count,
+                    })
                 else:
                     logger.warning(f"Upload failed: {response_data.get('error', 'Unknown error')}")
                     break
@@ -3453,7 +3503,8 @@ class OximyAddon:
         logger.info(f"Device ID: {self._device_id}")
 
         # Initialize Sentry and structured logging
-        sentry_service.initialize()
+        if not sentry_service.initialize():
+            logger.warning("Sentry disabled for addon — check SENTRY_DSN env var")
         sentry_service.set_user(device_id=self._device_id)
         sentry_service.set_initial_context()
         set_log_context(device_id=self._device_id)
@@ -3588,6 +3639,7 @@ class OximyAddon:
 
         except Exception as e:
             logger.error(f"[OXIMY] Fallback activation failed: {e}", exc_info=True)
+            sentry_service.capture_exception(e, tags={"operation": "fallback_activation"})
 
     async def client_connected(self, client: connection.Client) -> None:
         """Resolve client process at connection time when TCP is definitely active.
@@ -4051,6 +4103,11 @@ class OximyAddon:
         if flow.request.content:
             flow.metadata["oximy_request_body"] = flow.request.content
         logger.debug(f"[CAPTURE] {url[:80]} (app_type={app_type})")
+        oximy_log(OximyEventCode.TRACE_CAPTURE_001, "Request matched whitelist", data={
+            "host": flow.request.pretty_host,
+            "method": flow.request.method,
+            "app_type": app_type or "unknown",
+        })
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
         """Enable streaming for SSE responses to prevent client timeouts.
@@ -4205,6 +4262,11 @@ class OximyAddon:
             graphql_op = flow.metadata.get("oximy_graphql_op", "")
             op_suffix = f" op={graphql_op}" if graphql_op else ""
             logger.debug(f"<<< CAPTURED: {flow.request.method} {url[:80]} [{flow.response.status_code}]{op_suffix}")
+            oximy_log(OximyEventCode.TRACE_WRITE_001, "Trace written to buffer", data={
+                "host": flow.request.pretty_host,
+                "method": flow.request.method,
+                "status": flow.response.status_code,
+            })
 
             # Check if we should upload to API
             self._maybe_upload()
@@ -4927,6 +4989,7 @@ class OximyAddon:
                             logger.info(f"Emergency disk write complete")
                 except Exception as e:
                     logger.warning(f"Failed to upload buffered traces on shutdown: {e}")
+                    sentry_service.capture_exception(e, tags={"operation": "shutdown_upload"})
                     # Emergency fallback to disk
                     writer = self._ensure_writer()
                     if writer:
@@ -4951,6 +5014,7 @@ class OximyAddon:
                     logger.info(f"Uploaded {uploaded} traces from disk fallback files on shutdown")
             except Exception as e:
                 logger.warning(f"Failed to upload disk fallback traces on shutdown: {e}")
+                sentry_service.capture_exception(e, tags={"operation": "shutdown_upload"})
 
         self._enabled = False
         oximy_log(OximyEventCode.APP_STOP_001, "Addon shutdown")

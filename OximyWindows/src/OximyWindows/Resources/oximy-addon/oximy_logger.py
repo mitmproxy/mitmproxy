@@ -1,9 +1,3 @@
-"""Structured logger for the Python addon — dual output: console + JSONL file.
-
-Usage:
-    from oximy_logger import oximy_log, EventCode
-    oximy_log(EventCode.CFG_FAIL_201, "HTTP error on config fetch", data={"status": 500})
-"""
 from __future__ import annotations
 
 import json
@@ -16,96 +10,82 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from . import sentry_service
+try:
+    from . import sentry_service
+except ImportError:
+    try:
+        import sentry_service  # type: ignore[import]
+    except ImportError:
+        sentry_service = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
 
 # ─── Event Codes ────────────────────────────────────────────────────────
 
-class LogLevel(str, Enum):
-    DEBUG = "debug"
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    FATAL = "fatal"
-
-
-class ActionCategory(str, Enum):
-    NONE = "none"
-    MONITOR = "monitor"
-    AUTO_RETRY = "auto_retry"
-    SELF_HEALING = "self_healing"
-    INVESTIGATE = "investigate"
-    ALERT_OPS = "alert_ops"
-    USER_ACTION = "user_action"
-
-
 class EventCode(Enum):
-    """Python addon event codes: (code_str, level, action)"""
+    # (code_str, level, action)
     # Config
-    CFG_FETCH_002 = ("CFG.FETCH.002", LogLevel.INFO, ActionCategory.NONE)
-    CFG_FETCH_004 = ("CFG.FETCH.004", LogLevel.INFO, ActionCategory.NONE)
-    CFG_FAIL_201 = ("CFG.FAIL.201", LogLevel.WARNING, ActionCategory.SELF_HEALING)
-    CFG_FAIL_204 = ("CFG.FAIL.204", LogLevel.WARNING, ActionCategory.MONITOR)
-    CFG_FAIL_205 = ("CFG.FAIL.205", LogLevel.ERROR, ActionCategory.AUTO_RETRY)
-    CFG_CB_002 = ("CFG.CB.002", LogLevel.WARNING, ActionCategory.MONITOR)
-    CFG_CB_003 = ("CFG.CB.003", LogLevel.INFO, ActionCategory.NONE)
+    CFG_FAIL_201 = ("CFG.FAIL.201", "warning", "self_healing")
+    CFG_FAIL_205 = ("CFG.FAIL.205", "error", "auto_retry")
+    CFG_CB_002 = ("CFG.CB.002", "warning", "monitor")
+    CFG_CB_003 = ("CFG.CB.003", "info", "none")
 
     # Upload
-    UPLOAD_STATE_101 = ("UPLOAD.STATE.101", LogLevel.INFO, ActionCategory.NONE)
-    UPLOAD_FAIL_201 = ("UPLOAD.FAIL.201", LogLevel.ERROR, ActionCategory.ALERT_OPS)
-    UPLOAD_FAIL_203 = ("UPLOAD.FAIL.203", LogLevel.WARNING, ActionCategory.AUTO_RETRY)
-    UPLOAD_CB_002 = ("UPLOAD.CB.002", LogLevel.WARNING, ActionCategory.MONITOR)
-    UPLOAD_CB_003 = ("UPLOAD.CB.003", LogLevel.INFO, ActionCategory.NONE)
+    UPLOAD_STATE_101 = ("UPLOAD.STATE.101", "info", "none")
+    UPLOAD_FAIL_201 = ("UPLOAD.FAIL.201", "error", "alert_ops")
+    UPLOAD_FAIL_203 = ("UPLOAD.FAIL.203", "warning", "auto_retry")
+    UPLOAD_CB_002 = ("UPLOAD.CB.002", "warning", "monitor")
+    UPLOAD_CB_003 = ("UPLOAD.CB.003", "info", "none")
 
     # State
-    STATE_STATE_001 = ("STATE.STATE.001", LogLevel.INFO, ActionCategory.NONE)
-    STATE_CMD_003 = ("STATE.CMD.003", LogLevel.WARNING, ActionCategory.USER_ACTION)
+    STATE_STATE_001 = ("STATE.STATE.001", "info", "none")
+    STATE_CMD_003 = ("STATE.CMD.003", "warning", "user_action")
 
     # Trace
-    TRACE_FAIL_201 = ("TRACE.FAIL.201", LogLevel.WARNING, ActionCategory.MONITOR)
+    TRACE_CAPTURE_001 = ("TRACE.CAPTURE.001", "info", "none")
+    TRACE_WRITE_001 = ("TRACE.WRITE.001", "info", "none")
+    TRACE_FAIL_201 = ("TRACE.FAIL.201", "warning", "monitor")
 
     # Collector
-    COLLECT_FAIL_202 = ("COLLECT.FAIL.202", LogLevel.WARNING, ActionCategory.AUTO_RETRY)
-    COLLECT_FAIL_203 = ("COLLECT.FAIL.203", LogLevel.WARNING, ActionCategory.INVESTIGATE)
+    COLLECT_FAIL_202 = ("COLLECT.FAIL.202", "warning", "auto_retry")
+    COLLECT_FAIL_203 = ("COLLECT.FAIL.203", "warning", "investigate")
 
     # App lifecycle
-    APP_INIT_001 = ("APP.INIT.001", LogLevel.INFO, ActionCategory.NONE)
-    APP_STOP_001 = ("APP.STOP.001", LogLevel.INFO, ActionCategory.NONE)
+    APP_INIT_001 = ("APP.INIT.001", "info", "none")
+    APP_STOP_001 = ("APP.STOP.001", "info", "none")
 
-    # System health
-    SYS_HEALTH_001 = ("SYS.HEALTH.001", LogLevel.INFO, ActionCategory.NONE)
 
-    @property
-    def code(self) -> str:
-        return self.value[0]
+# ─── Module-level constants ─────────────────────────────────────────────
 
-    @property
-    def level(self) -> LogLevel:
-        return self.value[1]
+_LEVEL_TAGS = {
+    "debug": "[DEBUG]",
+    "info": "[INFO] ",
+    "warning": "[WARN] ",
+    "error": "[ERROR]",
+    "fatal": "[FATAL]",
+}
 
-    @property
-    def action(self) -> ActionCategory:
-        return self.value[2]
+_LOG_FNS = {
+    "debug": logger.debug,
+    "info": logger.info,
+    "warning": logger.warning,
+    "error": logger.error,
+    "fatal": logger.critical,
+}
 
-    @property
-    def service(self) -> str:
-        return self.code.split(".")[0].lower()
-
-    @property
-    def operation(self) -> str:
-        parts = self.code.split(".")
-        return parts[1].lower() if len(parts) > 1 else "unknown"
+_SENTRY_LEVELS = {"debug", "info", "warning", "error", "fatal"}
+_INFO_PLUS = {"info", "warning", "error", "fatal"}
 
 
 # ─── Logger Singleton ───────────────────────────────────────────────────
 
 class _OximyLogger:
-    """Thread-safe structured logger with console + JSONL + Sentry output."""
-
     _MAX_FILE_SIZE = 50_000_000  # 50MB
     _MAX_ROTATED = 5
+
+    _MAX_SENTRY_EVENTS_PER_CODE = 10
+    _SENTRY_RATE_WINDOW_S = 60
 
     def __init__(self) -> None:
         self._seq = 0
@@ -116,6 +96,7 @@ class _OximyLogger:
         self._workspace_id: str | None = None
         self._workspace_name: str | None = None
         self._session_id = os.environ.get("OXIMY_SESSION_ID", "")
+        self._sentry_counts: dict[str, tuple[int, float]] = {}
 
     def set_context(self, *, device_id: str | None = None,
                     workspace_id: str | None = None,
@@ -126,7 +107,6 @@ class _OximyLogger:
 
     def emit(self, code: EventCode, msg: str, data: dict[str, Any] | None = None,
              err: dict[str, str] | None = None) -> None:
-        """Emit a structured log event to console, JSONL, and Sentry."""
         with self._lock:
             self._seq += 1
             seq = self._seq
@@ -134,32 +114,20 @@ class _OximyLogger:
         now = datetime.now(timezone.utc)
         ts = now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}Z"
 
-        # Console output (human-readable)
-        level_tags = {
-            LogLevel.DEBUG: "[DEBUG]",
-            LogLevel.INFO: "[INFO] ",
-            LogLevel.WARNING: "[WARN] ",
-            LogLevel.ERROR: "[ERROR]",
-            LogLevel.FATAL: "[FATAL]",
-        }
-        level_tag = level_tags.get(code.level, "[INFO] ")
+        level = code.value[1]
+
+        # Console output
+        level_tag = _LEVEL_TAGS.get(level, "[INFO] ")
 
         data_str = ""
         if data:
             pairs = " ".join(f"{k}={v}" for k, v in sorted(data.items()))
             data_str = f" | {pairs}"
 
-        log_fn = {
-            LogLevel.DEBUG: logger.debug,
-            LogLevel.INFO: logger.info,
-            LogLevel.WARNING: logger.warning,
-            LogLevel.ERROR: logger.error,
-            LogLevel.FATAL: logger.critical,
-        }.get(code.level, logger.info)
+        log_fn = _LOG_FNS.get(level, logger.info)
+        log_fn(f"{level_tag} {code.value[0]} {msg}{data_str}")
 
-        log_fn(f"{level_tag} {code.code} {msg}{data_str}")
-
-        # JSONL file output (AI-parseable)
+        # JSONL file output
         self._write_jsonl(code, msg, data, err, ts, seq)
 
         # Sentry output
@@ -167,16 +135,19 @@ class _OximyLogger:
 
     def _write_jsonl(self, code: EventCode, msg: str, data: dict | None,
                      err: dict | None, ts: str, seq: int) -> None:
+        code_str, level, action = code.value
+        parts = code_str.split(".")
+
         entry: dict[str, Any] = {
             "v": 1,
             "seq": seq,
             "ts": ts,
-            "code": code.code,
-            "level": code.level.value,
-            "svc": code.service,
-            "op": code.operation,
+            "code": code_str,
+            "level": level,
+            "svc": parts[0].lower(),
+            "op": parts[1].lower() if len(parts) > 1 else "unknown",
             "msg": msg,
-            "action": code.action.value,
+            "action": action,
         }
 
         ctx: dict[str, Any] = {"component": "python"}
@@ -211,41 +182,57 @@ class _OximyLogger:
         if not sentry_service.is_initialized():
             return
 
-        level_map = {
-            LogLevel.DEBUG: "debug",
-            LogLevel.INFO: "info",
-            LogLevel.WARNING: "warning",
-            LogLevel.ERROR: "error",
-            LogLevel.FATAL: "fatal",
-        }
-        sentry_level = level_map.get(code.level, "info")
+        code_str, level, action = code.value
+        parts = code_str.split(".")
+        service = parts[0].lower()
+        operation = parts[1].lower() if len(parts) > 1 else "unknown"
+
+        if level not in _INFO_PLUS:
+            return
 
         # Always add breadcrumb for info+
-        if code.level in (LogLevel.INFO, LogLevel.WARNING, LogLevel.ERROR, LogLevel.FATAL):
-            sentry_service.add_breadcrumb(
-                category=code.service,
-                message=f"[{code.code}] {msg}",
-                level=sentry_level,
-                data=data,
-            )
+        sentry_service.add_breadcrumb(
+            category=service,
+            message=f"[{code_str}] {msg}",
+            level=level,
+            data=data,
+        )
 
-        # Capture event for warning+
-        if code.level in (LogLevel.WARNING, LogLevel.ERROR, LogLevel.FATAL):
-            tags = {
-                "event_code": code.code,
-                "service": code.service,
-                "operation": code.operation,
-                "action_category": code.action.value,
-            }
-            if err and "code" in err:
-                tags["error_code"] = err["code"]
+        # Capture event (rate-limited per event code)
+        if not self._should_send_sentry_event(code_str):
+            return
 
-            sentry_service.capture_message(
-                f"[{code.code}] {msg}",
-                level=sentry_level,
-                tags=tags,
-                extras=data,
-            )
+        tags = {
+            "event_code": code_str,
+            "service": service,
+            "operation": operation,
+            "action_category": action,
+        }
+        if err and "code" in err:
+            tags["error_code"] = err["code"]
+
+        sentry_service.capture_message(
+            f"[{code_str}] {msg}",
+            level=level,
+            tags=tags,
+            extras=data,
+        )
+
+    def _should_send_sentry_event(self, code: str) -> bool:
+        """Rate-limit Sentry events: max N per event code per minute window."""
+        now = time.monotonic()
+        entry = self._sentry_counts.get(code)
+        if entry is not None:
+            count, window_start = entry
+            if now - window_start > self._SENTRY_RATE_WINDOW_S:
+                self._sentry_counts[code] = (1, now)
+                return True
+            if count >= self._MAX_SENTRY_EVENTS_PER_CODE:
+                return False
+            self._sentry_counts[code] = (count + 1, window_start)
+            return True
+        self._sentry_counts[code] = (1, now)
+        return True
 
     def _ensure_file(self) -> None:
         if self._file is not None:
@@ -267,14 +254,12 @@ class _OximyLogger:
         except OSError:
             return
 
-        # Close current file
         if self._file:
             self._file.close()
             self._file = None
 
         logs_dir = self._file_path.parent
 
-        # Shift rotated files
         for i in range(self._MAX_ROTATED - 1, 0, -1):
             src = logs_dir / f"sensor.{i}.jsonl"
             dst = logs_dir / f"sensor.{i + 1}.jsonl"
@@ -286,7 +271,6 @@ class _OximyLogger:
             except OSError:
                 pass
 
-        # Current → sensor.1.jsonl
         try:
             rotated = logs_dir / "sensor.1.jsonl"
             if rotated.exists():
@@ -295,7 +279,6 @@ class _OximyLogger:
         except OSError:
             pass
 
-        # Reopen
         self._ensure_file()
 
     def close(self) -> None:
@@ -315,18 +298,15 @@ _logger = _OximyLogger()
 
 def oximy_log(code: EventCode, msg: str, data: dict[str, Any] | None = None,
               err: dict[str, str] | None = None) -> None:
-    """Emit a structured log event. Module-level convenience function."""
     _logger.emit(code, msg, data, err)
 
 
 def set_context(*, device_id: str | None = None,
                 workspace_id: str | None = None,
                 workspace_name: str | None = None) -> None:
-    """Update logger context (device/workspace info)."""
     _logger.set_context(device_id=device_id, workspace_id=workspace_id,
                         workspace_name=workspace_name)
 
 
 def close() -> None:
-    """Close the JSONL file handle."""
     _logger.close()
