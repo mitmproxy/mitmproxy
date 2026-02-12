@@ -61,7 +61,7 @@ class SentryService: ObservableObject {
             #else
             options.environment = "production"
             options.debug = false
-            options.tracesSampleRate = 1.0
+            options.sampleRate = 1.0  // Send ALL events in production
             options.tracesSampleRate = NSNumber(value: Constants.Sentry.productionSampleRate)
             #endif
 
@@ -121,6 +121,48 @@ class SentryService: ObservableObject {
         SentrySDK.setUser(user)
     }
 
+    /// Set full user context with all identity fields
+    func setFullUserContext(
+        workspaceName: String?,
+        deviceId: String?,
+        workspaceId: String?,
+        tenantId: String? = nil
+    ) {
+        guard isInitialized else { return }
+
+        let user = User()
+        user.username = workspaceName
+
+        if let deviceId = deviceId {
+            user.userId = deviceId
+        } else if let existingId = UserDefaults.standard.string(forKey: Constants.Sentry.deviceIdKey) {
+            user.userId = existingId
+        } else {
+            let newId = UUID().uuidString
+            UserDefaults.standard.set(newId, forKey: Constants.Sentry.deviceIdKey)
+            user.userId = newId
+        }
+
+        SentrySDK.setUser(user)
+
+        // Set identity tags on scope
+        SentrySDK.configureScope { scope in
+            if let deviceId = deviceId {
+                scope.setTag(value: deviceId, key: "device_id")
+            }
+            if let workspaceId = workspaceId {
+                scope.setTag(value: workspaceId, key: "workspace_id")
+            }
+            if let workspaceName = workspaceName {
+                scope.setTag(value: workspaceName, key: "workspace_name")
+            }
+            if let tenantId = tenantId {
+                scope.setTag(value: tenantId, key: "tenant_id")
+            }
+            scope.setTag(value: "swift", key: "component")
+        }
+    }
+
     /// Clear user context (on logout)
     func clearUser() {
         guard isInitialized else { return }
@@ -137,6 +179,12 @@ class SentryService: ObservableObject {
             // App context
             let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
             scope.setTag(value: appVersion, key: "app_version")
+
+            // Component
+            scope.setTag(value: "swift", key: "component")
+
+            // MDM managed
+            scope.setTag(value: MDMConfigService.shared.isManagedDevice ? "true" : "false", key: "is_mdm_managed")
 
             // Architecture
             #if arch(arm64)
@@ -188,6 +236,9 @@ class SentryService: ObservableObject {
             } else if let launchError = error as? LaunchServiceError {
                 scope.setTag(value: "launch", key: "error_category")
                 scope.setTag(value: launchError.errorCode, key: "error_code")
+            } else if let apiError = error as? APIError {
+                scope.setTag(value: "api", key: "error_category")
+                scope.setTag(value: apiError.errorCode, key: "error_code")
             }
         }
 
@@ -375,6 +426,33 @@ extension LaunchServiceError {
             return "LAUNCH_UNREG_FAILED"
         case .managedByMDM:
             return "LAUNCH_MDM_BLOCKED"
+        }
+    }
+}
+
+extension APIError {
+    var errorCode: String {
+        switch self {
+        case .networkUnavailable:
+            return "API_NETWORK_UNAVAILABLE"
+        case .invalidEnrollmentCode:
+            return "API_INVALID_CODE"
+        case .enrollmentExpired:
+            return "API_ENROLLMENT_EXPIRED"
+        case .unauthorized:
+            return "API_UNAUTHORIZED"
+        case .deviceNotFound:
+            return "API_DEVICE_NOT_FOUND"
+        case .conflict:
+            return "API_CONFLICT"
+        case .serverError:
+            return "API_SERVER_ERROR"
+        case .encodingError:
+            return "API_ENCODING_ERROR"
+        case .decodingError:
+            return "API_DECODING_ERROR"
+        case .rateLimited:
+            return "API_RATE_LIMITED"
         }
     }
 }
