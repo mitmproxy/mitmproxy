@@ -86,7 +86,23 @@ public class NetworkMonitorService : INotifyPropertyChanged, IDisposable
         {
             await Task.Delay(_debounceInterval, _debounceCts.Token);
 
+            var wasConnected = IsConnected;
             UpdateNetworkStatus();
+
+            // Log connectivity transitions
+            if (wasConnected && !IsConnected)
+            {
+                OximyLogger.Log(EventCode.NET_STATE_102, "Connectivity lost");
+                OximyLogger.SetTag("network_connected", "false");
+            }
+            else if (!wasConnected && IsConnected)
+            {
+                OximyLogger.Log(EventCode.NET_STATE_103, "Connectivity restored",
+                    new Dictionary<string, object> { ["network_type"] = NetworkDescription });
+                OximyLogger.SetTag("network_connected", "true");
+                OximyLogger.SetTag("network_type", NetworkDescription);
+            }
+
             NetworkChanged?.Invoke(this, EventArgs.Empty);
         }
         catch (TaskCanceledException)

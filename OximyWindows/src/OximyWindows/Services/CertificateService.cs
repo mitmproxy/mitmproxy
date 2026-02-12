@@ -149,11 +149,15 @@ public class CertificateService : INotifyPropertyChanged
 
             _lastCertStoreCheck = DateTime.MinValue; // Invalidate cache
             IsCAInstalled = true;
+            OximyLogger.Log(EventCode.CERT_STATE_102, "CA installed to cert store",
+                new Dictionary<string, object> { ["store_type"] = "LocalMachine" });
+            OximyLogger.SetTag("cert_installed", "true");
             Debug.WriteLine("CA installed to LocalMachine store");
             return;
         }
         catch (CryptographicException ex)
         {
+            OximyLogger.Log(EventCode.CERT_WARN_201, "LocalMachine store failed, falling back");
             Debug.WriteLine($"Cannot install to LocalMachine: {ex.Message}");
             // Fall through to try elevation
         }
@@ -163,6 +167,9 @@ public class CertificateService : INotifyPropertyChanged
         {
             await InstallWithCertUtilAsync();
             IsCAInstalled = true;
+            OximyLogger.Log(EventCode.CERT_STATE_102, "CA installed to cert store",
+                new Dictionary<string, object> { ["store_type"] = "certutil" });
+            OximyLogger.SetTag("cert_installed", "true");
             Debug.WriteLine("CA installed via certutil");
             return;
         }
@@ -181,10 +188,15 @@ public class CertificateService : INotifyPropertyChanged
 
             _lastCertStoreCheck = DateTime.MinValue; // Invalidate cache
             IsCAInstalled = true;
+            OximyLogger.Log(EventCode.CERT_STATE_102, "CA installed to cert store",
+                new Dictionary<string, object> { ["store_type"] = "CurrentUser" });
+            OximyLogger.SetTag("cert_installed", "true");
             Debug.WriteLine("CA installed to CurrentUser store");
         }
         catch (CryptographicException ex)
         {
+            OximyLogger.Log(EventCode.CERT_FAIL_303, "Certificate install failed",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             throw new CertificateException($"Failed to install certificate: {ex.Message}", ex);
         }
     }

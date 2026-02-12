@@ -317,6 +317,8 @@ public class SyncService : INotifyPropertyChanged, IDisposable
             LastError = "Network unavailable";
             Status = SyncStatus.Offline;
 
+            OximyLogger.Log(EventCode.SYNC_FAIL_201, "Sync failed",
+                new Dictionary<string, object> { ["error"] = "Network unavailable" });
             Debug.WriteLine($"[SyncService] Network error, retry in {GetRetryDelayMs()}ms");
         }
         catch (Exception ex)
@@ -325,6 +327,8 @@ public class SyncService : INotifyPropertyChanged, IDisposable
             LastError = ex.Message;
             Status = SyncStatus.Error;
 
+            OximyLogger.Log(EventCode.SYNC_FAIL_201, "Sync failed",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             Debug.WriteLine($"[SyncService] Sync error: {ex.Message}");
         }
         finally

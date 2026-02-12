@@ -258,8 +258,13 @@ public class APIClient
         _authRetryCount++;
         Debug.WriteLine($"[APIClient] Auth failure {_authRetryCount}/{Constants.MaxAuthRetries}");
 
+        OximyLogger.Log(EventCode.AUTH_FAIL_201, "API request failed",
+            new Dictionary<string, object> { ["method"] = "API", ["path"] = "unauthorized", ["error"] = $"Auth failure {_authRetryCount}/{Constants.MaxAuthRetries}" });
+
         if (_authRetryCount >= Constants.MaxAuthRetries)
         {
+            OximyLogger.Log(EventCode.AUTH_FAIL_301, "Max auth retries exceeded",
+                new Dictionary<string, object> { ["retries"] = _authRetryCount });
             Debug.WriteLine("[APIClient] Max auth retries exceeded, triggering logout");
             _authRetryCount = 0;
             AuthenticationFailed?.Invoke(this, EventArgs.Empty);

@@ -245,9 +245,21 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
             AppConfig = state.AppConfig;
             LastUpdate = DateTime.Now;
 
+            // Update tenant tag if available
+            if (!string.IsNullOrEmpty(state.TenantId))
+                OximyLogger.SetTag("tenant_id", state.TenantId);
+
             // Handle state changes
             if (previousEnabled != state.SensorEnabled)
             {
+                OximyLogger.Log(EventCode.STATE_STATE_001,
+                    state.SensorEnabled ? "Sensor enabled" : "Sensor disabled",
+                    new Dictionary<string, object>
+                    {
+                        ["sensor_enabled"] = state.SensorEnabled,
+                        ["previous"] = previousEnabled
+                    });
+                OximyLogger.SetTag("sensor_enabled", state.SensorEnabled.ToString().ToLowerInvariant());
                 Debug.WriteLine($"[RemoteStateService] SensorEnabled changed: {previousEnabled} -> {state.SensorEnabled}");
                 SensorEnabledChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -260,16 +272,19 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
         }
         catch (JsonException ex)
         {
-            // JSON parsing error - file may be corrupted or being written
+            OximyLogger.Log(EventCode.STATE_FAIL_201, "Failed to read remote state file",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             Debug.WriteLine($"[RemoteStateService] JSON parse error: {ex.Message}");
         }
         catch (IOException ex)
         {
-            // File may be locked or in process of being written
+            // File may be locked or in process of being written — don't log every time (too noisy)
             Debug.WriteLine($"[RemoteStateService] IO error: {ex.Message}");
         }
         catch (Exception ex)
         {
+            OximyLogger.Log(EventCode.STATE_FAIL_201, "Failed to read remote state file",
+                new Dictionary<string, object> { ["error"] = ex.Message });
             Debug.WriteLine($"[RemoteStateService] Unexpected error: {ex.Message}");
         }
     }
@@ -279,6 +294,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     /// </summary>
     private void HandleForceLogout()
     {
+        OximyLogger.Log(EventCode.STATE_CMD_003, "Force logout received");
         Debug.WriteLine("[RemoteStateService] Force logout command received");
 
         // Clear the force_logout flag by deleting the file

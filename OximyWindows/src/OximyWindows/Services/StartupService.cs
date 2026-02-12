@@ -46,6 +46,8 @@ public class StartupService : INotifyPropertyChanged
             }
             catch (Exception ex)
             {
+                OximyLogger.Log(EventCode.LAUNCH_FAIL_301, "Auto-start registration failed",
+                    new Dictionary<string, object> { ["error"] = ex.Message });
                 Debug.WriteLine($"[StartupService] Failed to auto-enable launch at login: {ex.Message}");
             }
         }
