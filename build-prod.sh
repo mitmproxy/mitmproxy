@@ -384,22 +384,11 @@ build_windows() {
 
     cd "$SCRIPT_DIR/OximyWindows"
 
-    # Step 0: Create Secrets.cs (same pattern as macOS Secrets.swift)
-    print_header "Step 0: Creating Secrets.cs"
-    SECRETS_PATH="src/OximyWindows/Secrets.cs"
-    if [ -n "$SENTRY_DSN" ]; then
-        cat > "$SECRETS_PATH" << EOF
-namespace OximyWindows.Services;
-
-public static partial class Secrets
-{
-    public static string? SentryDsn => "$SENTRY_DSN";
-}
-EOF
-        print_success "Created Secrets.cs with Sentry DSN"
-    else
-        print_warning "No SENTRY_DSN set — Sentry will be disabled for Windows app"
-    fi
+    # Step 0: Sentry DSN is hardcoded in SentryService.cs (Secrets partial class).
+    # The SENTRY_DSN env var can still override it at runtime via App.xaml.cs.
+    # No Secrets.cs generation needed — avoids duplicate property compilation error.
+    print_header "Step 0: Sentry DSN (hardcoded)"
+    print_success "Sentry DSN is hardcoded in SentryService.cs — no Secrets.cs needed"
 
     # Update version in project files
     print_header "Step 1/3: Updating Version"

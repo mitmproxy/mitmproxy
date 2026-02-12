@@ -312,5 +312,5 @@ public static class SentryService
 
 public static partial class Secrets
 {
-    public static string? SentryDsn => null;
+    public static string? SentryDsn => "https://e962156753c89553ea4e648edfbd7cba@o4510688285884416.ingest.us.sentry.io/4510688296828928";
 }
