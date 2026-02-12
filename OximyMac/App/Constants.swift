@@ -89,8 +89,8 @@ enum Constants {
     }
 
     // MARK: - URLs
-    static let signUpURL = URL(string: "https://staging.oximy.com")!
-    static let authURL = URL(string: "https://staging.oximy.com/auth/enroll")!
+    static let signUpURL = URL(string: "https://app.oximy.com")!
+    static let authURL = URL(string: "https://app.oximy.com/auth/enroll")!
     static let helpURL = URL(string: "https://docs.oximy.com")!
     static let termsURL = URL(string: "https://oximy.com/terms")!
     static let privacyURL = URL(string: "https://oximy.com/privacy")!
