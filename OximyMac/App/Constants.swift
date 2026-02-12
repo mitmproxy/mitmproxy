@@ -105,9 +105,6 @@ enum Constants {
         /// Environment variable name for DSN
         static let dsnEnvKey = "SENTRY_DSN"
 
-        /// Debug send override environment variable
-        static let debugSendEnvKey = "SENTRY_DEBUG_SEND"
-
         /// UserDefaults key for anonymous device ID
         static let deviceIdKey = "sentry_device_id"
 

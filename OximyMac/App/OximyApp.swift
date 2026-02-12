@@ -70,16 +70,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // CRITICAL: Initialize Sentry FIRST, before any other setup
-        // This ensures we capture any crashes during initialization
+        // CRITICAL: Export env vars BEFORE initializing Sentry
+        // setenv() is not thread-safe — must run before Sentry spawns background threads
+        if let dsn = Secrets.sentryDSN {
+            setenv("SENTRY_DSN", dsn, 1)
+        }
+        #if DEBUG
+        setenv("OXIMY_ENV", "development", 1)
+        #else
+        setenv("OXIMY_ENV", "production", 1)
+        #endif
+        setenv("OXIMY_SESSION_ID", OximyLogger.shared.sessionId, 1)
+
+        // Initialize Sentry (now env vars are already set)
         SentryService.shared.initialize()
 
         // CRITICAL: Clean up any orphaned proxy settings from a previous crash
         // This MUST run before any UI loads to restore internet connectivity
         ProxyService.shared.cleanupOrphanedProxy()
-
-        // Pass session ID to Python addon via environment (for cross-component correlation)
-        setenv("OXIMY_SESSION_ID", OximyLogger.shared.sessionId, 1)
 
         // Startup snapshot event
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
