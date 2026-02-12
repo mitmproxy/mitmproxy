@@ -75,6 +75,19 @@ class NetworkMonitor: ObservableObject {
 
         currentInterfaces = interfaces
 
+        // Log connectivity changes
+        if isConnected && !wasConnected {
+            OximyLogger.shared.log(.NET_STATE_103, "Connectivity restored", data: [
+                "network_type": networkDescription
+            ])
+        } else if !isConnected && wasConnected {
+            OximyLogger.shared.log(.NET_STATE_102, "Connectivity lost")
+        }
+
+        // Update scope tags
+        OximyLogger.shared.setTag("network_connected", value: isConnected ? "true" : "false")
+        OximyLogger.shared.setTag("network_type", value: networkDescription)
+
         // Determine if we need to reconfigure
         let needsReconfigure = interfacesChanged || (isConnected && !wasConnected)
 

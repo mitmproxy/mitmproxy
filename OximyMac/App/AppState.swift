@@ -221,6 +221,10 @@ final class AppState: ObservableObject {
 
     /// Called after successful enrollment (step 1 complete)
     func completeEnrollment() {
+        OximyLogger.shared.log(.ENROLL_STATE_101, "Enrollment complete", data: [
+            "workspace": workspaceName,
+            "device_id": deviceId
+        ])
         // Move to setup phase
         phase = .setup
     }
@@ -230,6 +234,7 @@ final class AppState: ObservableObject {
         UserDefaults.standard.set(true, forKey: Constants.Defaults.setupComplete)
         phase = .ready
         connectionStatus = .connected
+        OximyLogger.shared.log(.APP_STATE_101, "Setup complete, entering ready phase")
         startServices()
     }
 
@@ -268,6 +273,9 @@ final class AppState: ObservableObject {
                     NSLog("[AppState] MITMService started successfully")
                 } catch {
                     NSLog("[AppState] Failed to start MITMService: %@", String(describing: error))
+                    OximyLogger.shared.log(.MITM_FAIL_304, "MITM process start failed in startServices", data: [
+                        "error": error.localizedDescription
+                    ], err: (type: "MITMError", code: "MITM_START_FAILED", message: error.localizedDescription))
                 }
             }
         }
@@ -407,14 +415,17 @@ final class AppState: ObservableObject {
         self.workspaceName = workspaceName
         self.isLoggedIn = true
 
-        // Update Sentry user context
-        SentryService.shared.setUser(workspaceName: workspaceName)
-
-        SentryService.shared.addStateBreadcrumb(
-            category: "account",
-            message: "User logged in",
-            data: ["workspace": workspaceName]
+        // Update Sentry user context with full identity
+        SentryService.shared.setFullUserContext(
+            workspaceName: workspaceName,
+            deviceId: deviceId,
+            workspaceId: workspaceId
         )
+
+        OximyLogger.shared.log(.AUTH_AUTH_001, "User logged in", data: [
+            "workspace": workspaceName,
+            "has_device_id": deviceId != nil
+        ])
     }
 
     /// Check if logout is allowed (not blocked by MDM)
@@ -445,10 +456,7 @@ final class AppState: ObservableObject {
         // Clear Sentry user context
         SentryService.shared.clearUser()
 
-        SentryService.shared.addStateBreadcrumb(
-            category: "account",
-            message: "User logged out"
-        )
+        OximyLogger.shared.log(.AUTH_AUTH_002, "User logged out")
 
         workspaceName = ""
         deviceId = ""

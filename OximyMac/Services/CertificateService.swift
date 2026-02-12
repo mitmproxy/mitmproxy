@@ -69,6 +69,7 @@ class CertificateService: ObservableObject {
                 do {
                     try combined.write(to: keyPath, atomically: true, encoding: .utf8)
                     NSLog("[CertificateService] Repaired oximy-ca.pem by adding certificate")
+                    OximyLogger.shared.log(.CERT_STATE_105, "CA certificate repaired")
                     return true
                 } catch {
                     NSLog("[CertificateService] Failed to repair certificate: \(error)")
@@ -178,10 +179,8 @@ class CertificateService: ObservableObject {
             lastError = nil
             print("[CertificateService] CA generated successfully (combined PEM format)")
 
-            SentryService.shared.addStateBreadcrumb(
-                category: "certificate",
-                message: "CA certificate generated"
-            )
+            OximyLogger.shared.log(.CERT_STATE_101, "CA certificate generated")
+            OximyLogger.shared.setTag("cert_generated", value: "true")
 
         } catch {
             // Clean up temp files on error
@@ -246,10 +245,10 @@ class CertificateService: ObservableObject {
             lastError = nil
             print("[CertificateService] CA installed to Keychain")
 
-            SentryService.shared.addStateBreadcrumb(
-                category: "certificate",
-                message: "CA installed to Keychain"
-            )
+            OximyLogger.shared.log(.CERT_STATE_102, "CA installed to Keychain", data: [
+                "keychain_type": "system"
+            ])
+            OximyLogger.shared.setTag("cert_installed", value: "true")
         } catch {
             SentryService.shared.captureError(error, context: [
                 "operation": "ca_install"
@@ -281,6 +280,7 @@ class CertificateService: ObservableObject {
             // Status 0 = success, but non-zero might just mean it needs admin auth
             if process.terminationStatus != 0 {
                 // Try user keychain instead (doesn't require admin)
+                OximyLogger.shared.log(.CERT_WARN_201, "System keychain failed, falling back to user keychain")
                 try await addCertToUserKeychain()
             }
         } catch {

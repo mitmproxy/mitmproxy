@@ -75,6 +75,9 @@ final class SyncService: ObservableObject {
             syncStatus = pendingEventCount > 0 ? .idle : .synced
         } catch {
             syncStatus = .error("Sync failed")
+            OximyLogger.shared.log(.SYNC_FAIL_201, "Sync failed", data: [
+                "error": error.localizedDescription
+            ])
         }
 
         isSyncing = false

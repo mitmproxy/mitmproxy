@@ -203,6 +203,7 @@ class MITMService: ObservableObject {
         NSLog("[MITMService]  Found available port: \(port)")
         guard port > 0 else {
             NSLog("[MITMService]  ERROR: No available port found")
+            OximyLogger.shared.log(.MITM_FAIL_301, "No available port found")
             throw MITMError.noAvailablePort
         }
 
@@ -343,6 +344,7 @@ class MITMService: ObservableObject {
 
         NSLog("[MITMService]  Stopped (including any zombie processes)")
 
+        OximyLogger.shared.setTag("mitm_running", value: "false")
         SentryService.shared.addStateBreadcrumb(
             category: "mitm",
             message: "Process stopped"
@@ -366,11 +368,10 @@ class MITMService: ObservableObject {
             lastError = "mitmproxy crashed too many times. Please restart Oximy."
             NSLog("[MITMService] Max restart attempts (\(self.maxRestartAttempts)) exceeded")
 
-            // Capture critical error to Sentry
-            SentryService.shared.captureMessage(
-                "mitmproxy exceeded max restart attempts (\(maxRestartAttempts))",
-                level: .error
-            )
+            OximyLogger.shared.log(.MITM_RETRY_401, "Max restart attempts exceeded", data: [
+                "max_attempts": maxRestartAttempts,
+                "restart_count": restartCount
+            ])
 
             NotificationCenter.default.post(name: .mitmproxyFailed, object: nil)
             return
@@ -386,16 +387,11 @@ class MITMService: ObservableObject {
         let maxAttempts = self.maxRestartAttempts
         NSLog("[MITMService] FAIL-OPEN: Immediate restart attempt \(self.restartAttempts)/\(maxAttempts) in 100ms")
 
-        // Add breadcrumb for restart attempt
-        SentryService.shared.addStateBreadcrumb(
-            category: "mitm",
-            message: "Immediate restart scheduled (fail-open)",
-            data: [
-                "attempt": restartAttempts,
-                "max_attempts": maxRestartAttempts,
-                "delay_ms": 100
-            ]
-        )
+        OximyLogger.shared.log(.MITM_RETRY_001, "Restart scheduled", data: [
+            "attempt": restartAttempts,
+            "max_attempts": maxRestartAttempts,
+            "delay_ms": 100
+        ])
 
         restartTask?.cancel()
         restartTask = Task {
@@ -736,10 +732,24 @@ class MITMService: ObservableObject {
                     self.lastError = "mitmproxy crashed (exit code \(status))"
                     NSLog("[MITMService] Process crashed with exit code %d", status)
 
-                    SentryService.shared.addErrorBreadcrumb(
-                        service: "mitm",
-                        error: "Process crashed with exit code \(status)"
-                    )
+                    // Map exit code to signal name
+                    let signalName: String
+                    let interpretation: String
+                    switch Int(status) {
+                    case 9, 137: signalName = "SIGKILL"; interpretation = "oom_or_force_kill"
+                    case 11, 139: signalName = "SIGSEGV"; interpretation = "memory_corruption"
+                    case 15, 143: signalName = "SIGTERM"; interpretation = "normal_termination"
+                    case 6, 134: signalName = "SIGABRT"; interpretation = "abort"
+                    default: signalName = "SIG\(status)"; interpretation = "unknown"
+                    }
+
+                    OximyLogger.shared.log(.MITM_FAIL_306, "mitmproxy process crashed", data: [
+                        "exit_code": status,
+                        "signal_name": signalName,
+                        "interpretation": interpretation,
+                        "restart_attempt": self.restartAttempts,
+                        "pid": proc.processIdentifier
+                    ], err: (type: "MITMError", code: "MITM_CRASH", message: "Process exited with code \(status)"))
 
                     if self.autoRestartEnabled {
                         self.scheduleRestart()
@@ -761,11 +771,12 @@ class MITMService: ObservableObject {
 
         NSLog("[MITMService] Started on port %d, PID: %d", port, process.processIdentifier)
 
-        SentryService.shared.addStateBreadcrumb(
-            category: "mitm",
-            message: "Process started",
-            data: ["port": port]
-        )
+        OximyLogger.shared.log(.MITM_START_002, "mitmproxy listening", data: [
+            "port": port,
+            "pid": process.processIdentifier
+        ])
+        OximyLogger.shared.setTag("mitm_running", value: "true")
+        OximyLogger.shared.setTag("mitm_port", value: String(port))
     }
 }
 

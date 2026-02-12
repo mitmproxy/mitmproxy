@@ -122,6 +122,11 @@ final class RemoteStateService: ObservableObject {
 
             // Handle state changes
             if previousEnabled != state.sensorEnabled {
+                OximyLogger.shared.log(.STATE_STATE_001, "Sensor state changed", data: [
+                    "sensor_enabled": state.sensorEnabled,
+                    "previous": previousEnabled
+                ])
+                OximyLogger.shared.setTag("sensor_enabled", value: state.sensorEnabled ? "true" : "false")
                 NotificationCenter.default.post(
                     name: .sensorEnabledChanged,
                     object: state.sensorEnabled
@@ -136,11 +141,15 @@ final class RemoteStateService: ObservableObject {
         } catch {
             // Log but don't crash - file may be in process of being written
             print("[RemoteStateService] Failed to read state: \(error)")
+            OximyLogger.shared.log(.STATE_FAIL_201, "Failed to read remote state file", data: [
+                "error": error.localizedDescription
+            ])
         }
     }
 
     private func handleForceLogout() {
         print("[RemoteStateService] Force logout command received")
+        OximyLogger.shared.log(.STATE_CMD_003, "Force logout received")
 
         // Clear the force_logout flag by deleting the file
         // (addon will recreate it on next config fetch)

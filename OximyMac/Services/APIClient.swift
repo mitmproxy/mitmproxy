@@ -156,6 +156,9 @@ final class APIClient: ObservableObject {
             authFailureCount += 1
 
             if authFailureCount >= maxAuthRetries {
+                OximyLogger.shared.log(.AUTH_FAIL_301, "Max auth retries exceeded", data: [
+                    "retries": authFailureCount
+                ], err: (type: "APIError", code: "API_UNAUTHORIZED", message: "Max auth retries exceeded"))
                 await clearCredentialsAndNotify()
                 throw APIError.unauthorized
             }
@@ -230,6 +233,15 @@ final class APIClient: ObservableObject {
             let truncated = responseBody.count > 500 ? String(responseBody.prefix(500)) + "...[truncated]" : responseBody
             print("[APIClient] Response: \(truncated)")
         }
+
+        // Structured log for API failures
+        let path = request.url?.path ?? "unknown"
+        let method = request.httpMethod ?? "GET"
+        OximyLogger.shared.log(.AUTH_FAIL_201, "API request failed", data: [
+            "method": method,
+            "path": path,
+            "error": error
+        ])
     }
 
     // MARK: - Credentials Management
@@ -247,11 +259,10 @@ final class APIClient: ObservableObject {
         isAuthenticated = true
         authFailureCount = 0
 
-        SentryService.shared.addStateBreadcrumb(
-            category: "api",
-            message: "Device registered",
-            data: ["deviceId": data.deviceId, "workspaceId": data.workspaceId]
-        )
+        OximyLogger.shared.log(.ENROLL_STATE_101, "Device registered and credentials stored", data: [
+            "device_id": data.deviceId,
+            "workspace_id": data.workspaceId
+        ])
     }
 
     private func clearCredentialsAndNotify() async {
@@ -274,16 +285,9 @@ final class APIClient: ObservableObject {
 
         isAuthenticated = false
 
-        SentryService.shared.addStateBreadcrumb(
-            category: "api",
-            message: "Credentials cleared due to auth failure",
-            data: [
-                "deviceId": deviceId ?? "nil",
-                "workspaceId": workspaceId ?? "nil",
-                "workspaceName": workspaceName ?? "nil",
-                "authFailureCount": String(authFailureCount)
-            ]
-        )
+        OximyLogger.shared.log(.AUTH_AUTH_004, "Credentials cleared due to auth failure", data: [
+            "auth_failure_count": authFailureCount
+        ])
 
         NotificationCenter.default.post(name: .authenticationFailed, object: nil)
     }

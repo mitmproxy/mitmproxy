@@ -30,11 +30,10 @@ class ProxyService: ObservableObject {
                     NSLog("[ProxyService] FAIL-OPEN: Found orphaned proxy on %@ pointing to dead port %d - cleaning up", service, port)
                     disableProxySync()
 
-                    SentryService.shared.addStateBreadcrumb(
-                        category: "proxy",
-                        message: "FAIL-OPEN: Cleaned up orphaned proxy pointing to dead port",
-                        data: ["service": service, "dead_port": port]
-                    )
+                    OximyLogger.shared.log(.PROXY_CLEAN_001, "Orphaned proxy cleaned up", data: [
+                        "service": service,
+                        "dead_port": port
+                    ])
                     return  // Already cleaned up all services
                 } else {
                     // Port is listening - might be another proxy instance, log but don't clean
@@ -144,6 +143,8 @@ class ProxyService: ObservableObject {
             lastError = nil
             print("[ProxyService] Enabled proxy on port \(port)")
 
+            OximyLogger.shared.setTag("proxy_enabled", value: "true")
+            OximyLogger.shared.setTag("proxy_port", value: String(port))
             SentryService.shared.addStateBreadcrumb(
                 category: "proxy",
                 message: "Proxy enabled",
@@ -291,6 +292,7 @@ class ProxyService: ObservableObject {
             lastError = nil
             print("[ProxyService] Disabled proxy")
 
+            OximyLogger.shared.setTag("proxy_enabled", value: "false")
             SentryService.shared.addStateBreadcrumb(
                 category: "proxy",
                 message: "Proxy disabled"

@@ -78,12 +78,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // This MUST run before any UI loads to restore internet connectivity
         ProxyService.shared.cleanupOrphanedProxy()
 
-        // Add breadcrumb for app launch
-        SentryService.shared.addStateBreadcrumb(
-            category: "app.lifecycle",
-            message: "App launched",
-            data: ["phase": appState.phase.rawValue]
-        )
+        // Pass session ID to Python addon via environment (for cross-component correlation)
+        setenv("OXIMY_SESSION_ID", OximyLogger.shared.sessionId, 1)
+
+        // Startup snapshot event
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"
+        OximyLogger.shared.log(.APP_INIT_001, "Application launched", data: [
+            "app_version": appVersion,
+            "build_number": buildNumber,
+            "macos_version": ProcessInfo.processInfo.operatingSystemVersionString,
+            "architecture": {
+                #if arch(arm64)
+                return "arm64"
+                #else
+                return "x86_64"
+                #endif
+            }(),
+            "is_mdm_managed": MDMConfigService.shared.isManagedDevice,
+            "phase": appState.phase.rawValue,
+            "cert_generated": CertificateService.shared.isCAGenerated,
+            "cert_installed": CertificateService.shared.isCAInstalled,
+            "has_device_token": UserDefaults.standard.string(forKey: Constants.Defaults.deviceToken) != nil,
+            "network_connected": NetworkMonitor.shared.isConnected,
+            "session_id": OximyLogger.shared.sessionId
+        ])
 
         // Hide from dock - menu bar only app
         NSApp.setActivationPolicy(.accessory)
@@ -102,7 +121,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Set user context if logged in
         if appState.isLoggedIn {
-            SentryService.shared.setUser(workspaceName: appState.workspaceName)
+            SentryService.shared.setFullUserContext(
+                workspaceName: appState.workspaceName,
+                deviceId: UserDefaults.standard.string(forKey: Constants.Defaults.deviceId),
+                workspaceId: UserDefaults.standard.string(forKey: Constants.Defaults.workspaceId)
+            )
         }
 
         // Listen for quit notification
@@ -283,6 +306,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 print("[OximyApp] Proxy reconfigured successfully for new network on port \(port)")
             } catch {
                 print("[OximyApp] Failed to reconfigure proxy: \(error)")
+                OximyLogger.shared.log(.NET_FAIL_301, "Proxy reconfiguration failed after network change", data: [
+                    "error": error.localizedDescription
+                ])
                 // FAIL-OPEN: Log error but don't block user's internet
                 appState.connectionStatus = .error("Network change failed")
             }
@@ -291,6 +317,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleMitmproxyFailed() {
         print("[OximyApp] mitmproxy failed permanently")
+        OximyLogger.shared.log(.MITM_RETRY_401, "mitmproxy failed permanently, max restarts exceeded")
         appState.connectionStatus = .error("Proxy service failed")
     }
 
@@ -342,6 +369,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let storedState = UserDefaults.standard.string(forKey: Constants.Defaults.authState)
         guard state == storedState else {
             print("[OximyApp] State mismatch - stored: \(storedState ?? "nil"), received: \(state ?? "nil")")
+            OximyLogger.shared.log(.AUTH_FAIL_302, "Auth callback state mismatch")
             return
         }
 
@@ -351,6 +379,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Validate we have a token
         guard let token = token else {
             print("[OximyApp] No token in callback URL")
+            OximyLogger.shared.log(.AUTH_FAIL_303, "Auth callback missing token")
             return
         }
 
@@ -534,6 +563,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Stop API services
         HeartbeatService.shared.stop()
         SyncService.shared.flushSync()
+
+        // Log termination BEFORE Sentry flush
+        OximyLogger.shared.log(.APP_STOP_001, "App terminating")
+        OximyLogger.shared.close()
 
         // Notify Sentry of clean shutdown
         SentryService.shared.appWillTerminate()

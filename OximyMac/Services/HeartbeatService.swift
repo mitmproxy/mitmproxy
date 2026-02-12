@@ -108,10 +108,10 @@ final class HeartbeatService: ObservableObject {
                     } else if response.workspaceId != nil {
                         // WorkspaceId mismatch - critical error, do not update
                         print("[HeartbeatService] CRITICAL: WorkspaceId mismatch - local: '\(currentWorkspaceId ?? "nil")', server: '\(response.workspaceId ?? "nil")' - ignoring workspace name update")
-                        SentryService.shared.addErrorBreadcrumb(
-                            service: "heartbeat",
-                            error: "WorkspaceId mismatch - local: '\(currentWorkspaceId ?? "nil")', server: '\(response.workspaceId ?? "nil")'"
-                        )
+                        OximyLogger.shared.log(.HB_STATE_202, "Workspace ID mismatch", data: [
+                            "local_workspace_id": currentWorkspaceId ?? "nil",
+                            "server_workspace_id": response.workspaceId ?? "nil"
+                        ])
                     } else {
                         // No workspaceId in response
                         // Special case: If current name is "Loading..." (initial fetch failed),
@@ -139,10 +139,9 @@ final class HeartbeatService: ObservableObject {
         } catch {
             lastError = error.localizedDescription
 
-            SentryService.shared.addErrorBreadcrumb(
-                service: "heartbeat",
-                error: error.localizedDescription
-            )
+            OximyLogger.shared.log(.HB_FAIL_201, "Heartbeat send failed", data: [
+                "error": error.localizedDescription
+            ])
         }
     }
 
@@ -274,20 +273,23 @@ final class HeartbeatService: ObservableObject {
             case "sync_now":
                 // Trigger immediate event sync
                 await SyncService.shared.syncNow()
-                print("[HeartbeatService] Executed command: sync_now")
+                OximyLogger.shared.log(.HB_CMD_002, "Command executed", data: ["command": "sync_now"])
 
             case "restart_proxy":
                 // Restart the proxy service
                 await restartProxy()
-                print("[HeartbeatService] Executed command: restart_proxy")
+                OximyLogger.shared.log(.HB_CMD_002, "Command executed", data: ["command": "restart_proxy"])
 
             case "disable_proxy":
                 // Disable the system proxy
                 do {
                     try await ProxyService.shared.disableProxy()
-                    print("[HeartbeatService] Executed command: disable_proxy")
+                    OximyLogger.shared.log(.HB_CMD_002, "Command executed", data: ["command": "disable_proxy"])
                 } catch {
-                    print("[HeartbeatService] Failed to disable proxy: \(error)")
+                    OximyLogger.shared.log(.HB_FAIL_203, "Command failed", data: [
+                        "command": "disable_proxy",
+                        "error": error.localizedDescription
+                    ])
                 }
 
             case "logout":
@@ -298,10 +300,7 @@ final class HeartbeatService: ObservableObject {
             default:
                 // Unknown command - log it
                 print("[HeartbeatService] Unknown command received: \(command)")
-                SentryService.shared.addErrorBreadcrumb(
-                    service: "heartbeat",
-                    error: "Unknown command: \(command)"
-                )
+                OximyLogger.shared.log(.HB_FAIL_202, "Unknown command received", data: ["command": command])
             }
         }
     }
