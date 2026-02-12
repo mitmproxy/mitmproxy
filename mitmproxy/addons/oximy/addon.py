@@ -192,9 +192,7 @@ def _write_force_logout_state() -> None:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "appConfig": None,
         }
-        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state_data, f, indent=2)
+        _atomic_write(OXIMY_STATE_FILE, json.dumps(state_data, indent=2))
         logger.info("Force logout state written to remote-state.json")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write force logout state: {e}")
@@ -845,9 +843,7 @@ def _write_proxy_state() -> None:
         existing["proxy_port"] = _state.proxy_port
         existing["timestamp"] = datetime.now(timezone.utc).isoformat()
 
-        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=2)
+        _atomic_write(OXIMY_STATE_FILE, json.dumps(existing, indent=2))
         logger.debug(f"Proxy state written: active={_state.proxy_active}, port={_state.proxy_port}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write proxy state: {e}")
@@ -1537,9 +1533,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "appConfig": app_config,
         }
-        OXIMY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(OXIMY_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state_data, f, indent=2)
+        _atomic_write(OXIMY_STATE_FILE, json.dumps(state_data, indent=2))
         logger.debug(f"Remote state written to {OXIMY_STATE_FILE}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write remote state file: {e}")
@@ -1548,9 +1542,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     # Desktop apps read this file and include results in heartbeat payload
     if _command_results:
         try:
-            OXIMY_COMMAND_RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(OXIMY_COMMAND_RESULTS_FILE, "w", encoding="utf-8") as f:
-                json.dump(_command_results, f, indent=2)
+            _atomic_write(OXIMY_COMMAND_RESULTS_FILE, json.dumps(_command_results, indent=2))
             logger.debug(f"Command results written to {OXIMY_COMMAND_RESULTS_FILE}: {list(_command_results.keys())}")
 
             # Immediately POST results to API for faster feedback (best effort)
@@ -1751,6 +1743,12 @@ def _build_url_regex(pattern: str) -> str:
         else:
             regex += pattern_lower[i]
             i += 1
+
+    # If pattern ends with a word character, add a boundary to prevent prefix
+    # matching within a word (e.g., "conversation" matching "conversations")
+    # while still allowing path-segment matching (e.g., "chat" matching "chat/completions")
+    if regex and regex[-1].isalnum():
+        regex += '(?=[/?#]|$)'
 
     return f"^{regex}"
 
@@ -2538,26 +2536,100 @@ def _get_device_token() -> str | None:
 
 
 class DirectTraceUploader:
-    """Uploads traces directly from memory buffer to API with retry logic."""
+    """Uploads traces directly from memory buffer to API with retry logic.
+
+    FAIL-OPEN: Two-layer circuit breaker prevents blocking mitmproxy's event loop
+    when the API is down. Layer 1: cross-check the config fetch circuit breaker
+    (updated every 3s by the config refresh thread). Layer 2: upload-specific
+    circuit breaker that trips after repeated upload failures.
+    """
 
     BATCH_MAX_BYTES = 5 * 1024 * 1024  # 5 MB per upload batch
     MAX_RETRIES = 3
-    # Support env var override: OXIMY_UPLOAD_RETRY_DELAYS="0.5,1.0,2.0"
-    _retry_delays_str = os.environ.get("OXIMY_UPLOAD_RETRY_DELAYS", "0.5,1.0,2.0")
+    # Support env var override: OXIMY_UPLOAD_RETRY_DELAYS="0.2,0.5,1.0"
+    _retry_delays_str = os.environ.get("OXIMY_UPLOAD_RETRY_DELAYS", "0.2,0.5,1.0")
     try:
         RETRY_DELAYS = [float(x) for x in _retry_delays_str.split(",")]
     except ValueError:
-        RETRY_DELAYS = [0.5, 1.0, 2.0]  # Fallback to defaults
+        RETRY_DELAYS = [0.2, 0.5, 1.0]  # Fallback to defaults
 
     def __init__(self, buffer: MemoryTraceBuffer, api_url: str = INGEST_API_URL):
         self._buffer = buffer
         self._api_url = api_url
+        # FAIL-OPEN: Upload-specific circuit breaker
+        self._circuit_breaker_failures: int = 0
+        self._circuit_breaker_open_until: float = 0.0
+        self._circuit_breaker_half_open: bool = False
+        self._CIRCUIT_BREAKER_THRESHOLD: int = 3       # Open circuit after 3 consecutive failures
+        self._CIRCUIT_BREAKER_COOLDOWN: float = 300.0  # 5 minutes cooldown before retrying
 
-    def upload_batch(self) -> bool:
-        """Upload one batch from buffer. Returns True if successful or empty."""
+    def _check_upload_circuit_breaker(self) -> bool:
+        """Check if upload circuit breaker allows API calls.
+
+        Returns True if circuit is open (skip upload), False if closed (allow).
+        """
+        now = time.time()
+
+        if self._circuit_breaker_open_until > now:
+            return True  # Circuit open, skip upload
+
+        # Cooldown passed — enter half-open state for single probe
+        if self._circuit_breaker_failures >= self._CIRCUIT_BREAKER_THRESHOLD:
+            self._circuit_breaker_half_open = True
+            logger.info("FAIL-OPEN: Upload circuit breaker half-open — allowing probe request")
+
+        return False  # Allow upload
+
+    def _record_upload_circuit_breaker_success(self) -> None:
+        """Record successful upload — reset circuit breaker."""
+        if self._circuit_breaker_failures > 0:
+            logger.info("FAIL-OPEN: Upload circuit breaker CLOSED — API recovered")
+        self._circuit_breaker_failures = 0
+        self._circuit_breaker_open_until = 0.0
+        self._circuit_breaker_half_open = False
+
+    def _record_upload_circuit_breaker_failure(self) -> None:
+        """Record failed upload — potentially open circuit breaker."""
+        self._circuit_breaker_failures += 1
+
+        if self._circuit_breaker_failures >= self._CIRCUIT_BREAKER_THRESHOLD:
+            self._circuit_breaker_open_until = time.time() + self._CIRCUIT_BREAKER_COOLDOWN
+            self._circuit_breaker_half_open = False
+            logger.warning(
+                f"FAIL-OPEN: Upload circuit breaker OPEN after {self._circuit_breaker_failures} failures. "
+                f"Skipping uploads for {self._CIRCUIT_BREAKER_COOLDOWN}s. Traces buffered in memory."
+            )
+
+    @property
+    def circuit_breaker_open(self) -> bool:
+        """Whether the upload circuit breaker is currently open."""
+        return self._circuit_breaker_open_until > time.time()
+
+    def upload_batch(self, force: bool = False) -> bool:
+        """Upload one batch from buffer. Returns True if successful or empty.
+
+        FAIL-OPEN: Checks two circuit breakers before making HTTP requests.
+        When either is open, returns immediately without blocking the event loop.
+
+        Args:
+            force: If True, bypass circuit breakers (used for shutdown flush).
+        """
         batch = self._buffer.take_batch(self.BATCH_MAX_BYTES)
         if not batch:
             return True  # Nothing to upload
+
+        if not force:
+            # Layer 1: Cross-check config fetch circuit breaker (updated by config refresh thread)
+            if _check_circuit_breaker():
+                logger.debug(f"FAIL-OPEN: Config circuit breaker open — skipping upload, {len(batch)} traces returned to buffer")
+                self._buffer.prepend_batch(batch)
+                return False
+
+            # Layer 2: Upload-specific circuit breaker
+            if self._check_upload_circuit_breaker():
+                logger.debug(f"FAIL-OPEN: Upload circuit breaker open — skipping upload, {len(batch)} traces returned to buffer")
+                self._buffer.prepend_batch(batch)
+                return False
 
         for attempt in range(self.MAX_RETRIES):
             try:
@@ -2583,7 +2655,7 @@ class DirectTraceUploader:
                     method="POST",
                 )
 
-                with _no_proxy_opener.open(req, timeout=30) as resp:
+                with _no_proxy_opener.open(req, timeout=5) as resp:
                     response_body = resp.read().decode("utf-8")
                     response_data = json.loads(response_body)
                     # Log successful API call
@@ -2597,6 +2669,7 @@ class DirectTraceUploader:
                     )
                     if response_data.get("success"):
                         logger.info(f"Uploaded {len(batch)} traces ({len(compressed)} bytes compressed)")
+                        self._record_upload_circuit_breaker_success()
                         return True
                     else:
                         logger.warning(f"Upload rejected: {response_data.get('error', 'Unknown error')}")
@@ -2614,9 +2687,12 @@ class DirectTraceUploader:
                     error=f"HTTPError {e.code}",
                 )
                 if e.code == 401:
-                    logger.warning(f"Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
+                    # Auth issue, not API down — don't count toward circuit breaker, don't retry
+                    logger.warning("Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
+                    break
                 else:
                     logger.debug(f"Upload attempt {attempt + 1} HTTP error {e.code}: {error_body[:200]}")
+                    self._record_upload_circuit_breaker_failure()
             except (urllib.error.URLError, OSError) as e:
                 # Log network error
                 _log_api_call(
@@ -2629,21 +2705,31 @@ class DirectTraceUploader:
                     error=str(e),
                 )
                 logger.debug(f"Upload attempt {attempt + 1} failed: {e}")
+                self._record_upload_circuit_breaker_failure()
+
+            # FAIL-OPEN: If circuit breaker just tripped during retries, abort remaining attempts
+            if not force and self._check_upload_circuit_breaker():
+                logger.debug("FAIL-OPEN: Upload circuit breaker tripped during retries — aborting remaining attempts")
+                break
 
             if attempt < self.MAX_RETRIES - 1:
                 time.sleep(self.RETRY_DELAYS[attempt])
 
-        # All retries failed - put batch back at front of buffer
-        logger.warning(f"Upload failed after {self.MAX_RETRIES} attempts, returning {len(batch)} traces to buffer")
+        # All retries failed (or CB tripped) — put batch back at front of buffer
+        logger.warning(f"Upload failed after {attempt + 1} attempts, returning {len(batch)} traces to buffer")
         self._buffer.prepend_batch(batch)
         return False
 
-    def upload_all(self) -> int:
-        """Upload all buffered traces. Returns count of traces uploaded."""
+    def upload_all(self, force: bool = False) -> int:
+        """Upload all buffered traces. Returns count of traces uploaded.
+
+        Args:
+            force: If True, bypass circuit breakers (used for shutdown flush).
+        """
         total_uploaded = 0
         while self._buffer.size() > 0:
             size_before = self._buffer.size()
-            if not self.upload_batch():
+            if not self.upload_batch(force=force):
                 return total_uploaded  # Return partial count on failure
             total_uploaded += size_before - self._buffer.size()
         return total_uploaded
@@ -4775,7 +4861,7 @@ class OximyAddon:
             logger.info(f"Shutdown: {self._buffer.size()} traces in buffer, attempting final upload")
             if self._direct_uploader:
                 try:
-                    success = self._direct_uploader.upload_all()
+                    success = self._direct_uploader.upload_all(force=True)
                     if success:
                         logger.info("Successfully uploaded all buffered traces on shutdown")
                     else:

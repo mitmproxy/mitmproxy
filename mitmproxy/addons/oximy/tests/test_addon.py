@@ -19,7 +19,9 @@ import pytest
 import subprocess
 import sys
 
+import io
 import os
+import urllib.error
 
 from mitmproxy.addons.oximy.addon import (
     API_PATH_INGEST_TRACES,
@@ -28,6 +30,7 @@ from mitmproxy.addons.oximy.addon import (
     DISK_CLEANUP_INTERVAL,
     DISK_MAX_AGE_DAYS,
     DISK_MAX_TOTAL_BYTES,
+    DirectTraceUploader,
     OXIMY_CA_CERT,
     OXIMY_COMBINED_CA_BUNDLE,
     OXIMY_DEV_CONFIG,
@@ -37,6 +40,7 @@ from mitmproxy.addons.oximy.addon import (
     OximyAddon,
     TLSPassthrough,
     _build_url_regex,
+    _check_circuit_breaker,
     _cleanup_done,
     _emergency_cleanup,
     _LAUNCHCTL_ENV_VARS,
@@ -54,6 +58,11 @@ from mitmproxy.addons.oximy.addon import (
     matches_host_origin,
     matches_whitelist,
     _matches_url_pattern,
+    _atomic_write,
+    _write_force_logout_state,
+    _write_proxy_state,
+    OXIMY_STATE_FILE,
+    OXIMY_COMMAND_RESULTS_FILE,
 )
 
 
@@ -150,6 +159,52 @@ class TestMatchesUrlPattern:
         assert _matches_url_pattern("api.example.com/v1/chat?key=value", "api.example.com/v1/**") is True
         assert _matches_url_pattern("api.example.com/search?q=test", "api.example.com/**") is True
 
+    def test_no_prefix_match_within_word(self):
+        """Pattern should not match when URL continues with more word characters."""
+        # conversation should not match conversations
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/conversation",
+            "chatgpt.com/backend-api/**/conversation"
+        ) is True
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/conversations",
+            "chatgpt.com/backend-api/**/conversation"
+        ) is False
+
+        # me should not match messages
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/me",
+            "chatgpt.com/backend-api/me"
+        ) is True
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/messages",
+            "chatgpt.com/backend-api/me"
+        ) is False
+
+        # completion should not match completions
+        assert _matches_url_pattern(
+            "claude.ai/api/organizations/org1/completion",
+            "claude.ai/api/organizations/**/completion"
+        ) is True
+        assert _matches_url_pattern(
+            "claude.ai/api/organizations/org1/completions",
+            "claude.ai/api/organizations/**/completion"
+        ) is False
+
+    def test_boundary_allows_query_strings(self):
+        """Pattern ending in a word should still match URLs with query strings."""
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/conversation?stream=true",
+            "chatgpt.com/backend-api/**/conversation"
+        ) is True
+
+    def test_boundary_allows_subpaths(self):
+        """Pattern ending in a word should still match URLs with additional path segments."""
+        assert _matches_url_pattern(
+            "chatgpt.com/backend-api/me/settings",
+            "chatgpt.com/backend-api/me"
+        ) is True
+
 
 # =============================================================================
 # matches_whitelist Tests
@@ -196,6 +251,19 @@ class TestMatchesWhitelist:
         ]
         # First match
         assert matches_whitelist("api.anthropic.com", "/messages", patterns) == "*.anthropic.com"
+
+    def test_no_prefix_match_conversation(self):
+        """conversation pattern should not match conversations endpoint."""
+        patterns = ["chatgpt.com/backend-api/**/conversation"]
+        assert matches_whitelist("chatgpt.com", "/backend-api/conversation", patterns) == "chatgpt.com/backend-api/**/conversation"
+        assert matches_whitelist("chatgpt.com", "/backend-api/conversations", patterns) is None
+        assert matches_whitelist("chatgpt.com", "/backend-api/conversations?offset=0", patterns) is None
+
+    def test_no_prefix_match_me(self):
+        """me pattern should not match messages endpoint."""
+        patterns = ["chatgpt.com/backend-api/me"]
+        assert matches_whitelist("chatgpt.com", "/backend-api/me", patterns) == "chatgpt.com/backend-api/me"
+        assert matches_whitelist("chatgpt.com", "/backend-api/messages", patterns) is None
 
 
 # =============================================================================
@@ -387,6 +455,22 @@ class TestBuildUrlRegex:
         assert pattern.match("example.com/path")
         assert pattern.match("example.com/a/path")
         assert pattern.match("example.com/a/b/c/path")
+
+    def test_word_boundary_prevents_prefix_match(self):
+        """Patterns ending with a word character should not prefix-match."""
+        regex = _build_url_regex("example.com/conversation")
+        pattern = re.compile(regex, re.IGNORECASE)
+        assert pattern.match("example.com/conversation")
+        assert pattern.match("example.com/conversation/")
+        assert pattern.match("example.com/conversation?q=1")
+        assert pattern.match("example.com/conversations") is None
+
+    def test_no_boundary_for_wildcard_ending(self):
+        """Patterns ending with wildcard should not add boundary."""
+        regex = _build_url_regex("example.com/StreamGenerate*")
+        pattern = re.compile(regex, re.IGNORECASE)
+        assert pattern.match("example.com/StreamGenerateContent")
+        assert pattern.match("example.com/StreamGenerate")
 
 
 # =============================================================================
@@ -1158,3 +1242,234 @@ class TestLaunchctlShutdownPaths:
         _state.proxy_port = "8080"
         _apply_sensor_state(enabled=True)
         mock_set.assert_called_once()
+
+
+# =============================================================================
+# DirectTraceUploader Circuit Breaker Tests
+# =============================================================================
+
+def _make_uploader(buffer_max_bytes=1024 * 1024, buffer_max_count=100):
+    """Helper: create a DirectTraceUploader with a fresh MemoryTraceBuffer."""
+    buf = MemoryTraceBuffer(max_bytes=buffer_max_bytes, max_count=buffer_max_count)
+    uploader = DirectTraceUploader(buf, api_url="http://test-api/ingest")
+    return uploader, buf
+
+
+def _mock_success_response():
+    """Helper: create a mock HTTP response that returns success."""
+    resp = MagicMock()
+    resp.status = 200
+    resp.read.return_value = b'{"success": true}'
+    resp.__enter__ = MagicMock(return_value=resp)
+    resp.__exit__ = MagicMock(return_value=False)
+    return resp
+
+
+class TestDirectTraceUploaderCircuitBreaker:
+    """Tests for the fail-open upload circuit breaker."""
+
+    def test_circuit_breaker_closed_on_successful_upload(self):
+        """Circuit breaker stays closed when uploads succeed."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            mock_opener.open.return_value = _mock_success_response()
+            result = uploader.upload_batch()
+
+        assert result is True
+        assert uploader._circuit_breaker_failures == 0
+        assert not uploader.circuit_breaker_open
+
+    def test_circuit_breaker_opens_after_threshold_failures(self):
+        """Circuit breaker opens after 3 consecutive network failures."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            mock_opener.open.side_effect = urllib.error.URLError("Connection refused")
+            result = uploader.upload_batch()
+
+        assert result is False
+        assert uploader._circuit_breaker_failures >= uploader._CIRCUIT_BREAKER_THRESHOLD
+        assert uploader.circuit_breaker_open
+
+    def test_circuit_breaker_open_skips_upload_immediately(self):
+        """When circuit breaker is open, upload_batch returns immediately without HTTP calls."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        # Force circuit breaker open
+        uploader._circuit_breaker_open_until = time.time() + 300
+        uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            result = uploader.upload_batch()
+
+        assert result is False
+        mock_opener.open.assert_not_called()
+
+    def test_traces_preserved_when_circuit_breaker_open(self):
+        """Traces remain in buffer (not lost) when circuit breaker blocks uploads."""
+        uploader, buf = _make_uploader()
+        for i in range(5):
+            buf.append({"id": i})
+
+        uploader._circuit_breaker_open_until = time.time() + 300
+        uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener"):
+            uploader.upload_batch()
+
+        assert buf.size() == 5
+
+    def test_circuit_breaker_half_open_allows_probe_after_cooldown(self):
+        """After cooldown expires, one probe request is allowed."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        # Set circuit breaker to failed state with expired cooldown
+        uploader._circuit_breaker_failures = 3
+        uploader._circuit_breaker_open_until = time.time() - 1  # Cooldown already passed
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            mock_opener.open.return_value = _mock_success_response()
+            result = uploader.upload_batch()
+
+        assert result is True
+        mock_opener.open.assert_called_once()
+        # Circuit breaker should be reset after successful probe
+        assert uploader._circuit_breaker_failures == 0
+        assert not uploader.circuit_breaker_open
+
+    def test_401_does_not_trip_circuit_breaker(self):
+        """401 auth errors should not count toward circuit breaker failures."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            http_error = urllib.error.HTTPError(
+                "http://test", 401, "Unauthorized", {},
+                io.BytesIO(b"Unauthorized"),
+            )
+            mock_opener.open.side_effect = http_error
+            result = uploader.upload_batch()
+
+        assert result is False
+        assert uploader._circuit_breaker_failures == 0
+        assert not uploader.circuit_breaker_open
+
+    def test_force_bypasses_circuit_breaker(self):
+        """force=True (shutdown path) bypasses circuit breaker."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        # Force circuit breaker open
+        uploader._circuit_breaker_open_until = time.time() + 300
+        uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            mock_opener.open.return_value = _mock_success_response()
+            result = uploader.upload_batch(force=True)
+
+        assert result is True
+        mock_opener.open.assert_called_once()
+
+    def test_upload_all_respects_circuit_breaker(self):
+        """upload_all stops immediately when circuit breaker is open."""
+        uploader, buf = _make_uploader()
+        for i in range(10):
+            buf.append({"id": i})
+
+        uploader._circuit_breaker_open_until = time.time() + 300
+        uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener"):
+            result = uploader.upload_all()
+
+        assert result == 0
+        assert buf.size() == 10
+
+    def test_upload_all_force_bypasses_circuit_breaker(self):
+        """upload_all(force=True) bypasses circuit breaker for shutdown flush."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        uploader._circuit_breaker_open_until = time.time() + 300
+        uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            mock_opener.open.return_value = _mock_success_response()
+            result = uploader.upload_all(force=True)
+
+        assert result == 1
+        assert buf.size() == 0
+
+    @patch("mitmproxy.addons.oximy.addon._circuit_breaker_open_until", time.time() + 300)
+    @patch("mitmproxy.addons.oximy.addon._circuit_breaker_failures", 3)
+    def test_config_circuit_breaker_open_skips_upload(self):
+        """When config fetch circuit breaker is open, uploads skip immediately."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+            result = uploader.upload_batch()
+
+        assert result is False
+        mock_opener.open.assert_not_called()
+        assert buf.size() == 1
+
+    def test_config_circuit_breaker_closed_upload_circuit_breaker_open_still_skips(self):
+        """When config circuit breaker is closed but upload circuit breaker is open, uploads still skip."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        # Upload circuit breaker open, config circuit breaker closed (default state)
+        uploader._circuit_breaker_open_until = time.time() + 300
+        uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener, \
+             patch("mitmproxy.addons.oximy.addon._circuit_breaker_open_until", 0.0), \
+             patch("mitmproxy.addons.oximy.addon._circuit_breaker_failures", 0):
+            result = uploader.upload_batch()
+
+        assert result is False
+        mock_opener.open.assert_not_called()
+
+
+# =============================================================================
+# Atomic State File Writes Tests
+# =============================================================================
+
+class TestAtomicStateFileWrites:
+    """Verify that state file writes use _atomic_write to prevent corruption."""
+
+    @patch("mitmproxy.addons.oximy.addon._atomic_write")
+    def test_write_force_logout_state_uses_atomic_write(self, mock_atomic):
+        _write_force_logout_state()
+        mock_atomic.assert_called_once()
+        call_args = mock_atomic.call_args
+        assert call_args[0][0] == OXIMY_STATE_FILE
+        written_json = json.loads(call_args[0][1])
+        assert written_json["force_logout"] is True
+        assert written_json["sensor_enabled"] is False
+
+    @patch("mitmproxy.addons.oximy.addon._atomic_write")
+    def test_write_proxy_state_uses_atomic_write(self, mock_atomic):
+        with patch("mitmproxy.addons.oximy.addon.OXIMY_STATE_FILE") as mock_path:
+            mock_path.exists.return_value = False
+            _write_proxy_state()
+        mock_atomic.assert_called_once()
+        written_json = json.loads(mock_atomic.call_args[0][1])
+        assert "proxy_active" in written_json
+
+    @patch("mitmproxy.addons.oximy.addon._atomic_write")
+    def test_write_proxy_state_preserves_existing_fields(self, mock_atomic):
+        existing = json.dumps({"sensor_enabled": True, "tenantId": "t123"})
+        with patch("mitmproxy.addons.oximy.addon.OXIMY_STATE_FILE") as mock_path:
+            mock_path.exists.return_value = True
+            with patch("builtins.open", mock_open(read_data=existing)):
+                _write_proxy_state()
+        written_json = json.loads(mock_atomic.call_args[0][1])
+        assert written_json["sensor_enabled"] is True
+        assert written_json["tenantId"] == "t123"
