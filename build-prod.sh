@@ -284,8 +284,11 @@ EOF
     rm -f "$DMG_NAME" "$DMG_TEMP" 2>/dev/null || true
 
     # Create a read-write DMG, mount it, add contents + volume icon, then convert
-    echo "Creating read-write DMG..."
-    hdiutil create -size 300m -fs HFS+ -volname "$VOLUME_NAME" -ov "$DMG_TEMP"
+    # Calculate required size: app size + 50MB headroom for icons, symlinks, metadata
+    APP_SIZE_KB=$(du -sk "Oximy.app" | awk '{print $1}')
+    DMG_SIZE_MB=$(( (APP_SIZE_KB / 1024) + 50 ))
+    echo "Creating read-write DMG (${DMG_SIZE_MB}MB for ${APP_SIZE_KB}KB app)..."
+    hdiutil create -size "${DMG_SIZE_MB}m" -fs HFS+ -volname "$VOLUME_NAME" -ov "$DMG_TEMP"
 
     echo "Mounting DMG..."
     MOUNT_DIR=$(hdiutil attach "$DMG_TEMP" -readwrite -noverify | grep "/Volumes/$VOLUME_NAME" | awk '{print $NF}')
