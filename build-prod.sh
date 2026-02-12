@@ -12,6 +12,9 @@
 #   APPLE_APP_PASSWORD  - App-specific password for notarization
 #   TEAM_ID             - Your Apple Team ID
 #   SENTRY_DSN          - Sentry DSN for crash reporting (optional)
+#   SENTRY_AUTH_TOKEN   - Sentry auth token for dSYM upload (optional)
+#   SENTRY_ORG          - Sentry organization slug (optional)
+#   SENTRY_PROJECT      - Sentry project slug (optional)
 #
 # You can put these in a .env.local file and source it before running:
 #   source .env.local && ./build-prod.sh mac --version 1.0.0
@@ -251,6 +254,24 @@ EOF
     echo "Verifying staple..."
     xcrun stapler validate Oximy.app
     print_success "All verifications passed"
+
+    # Step 7.5: Upload dSYMs to Sentry (optional)
+    if [ -n "$SENTRY_AUTH_TOKEN" ] && [ -n "$SENTRY_ORG" ] && [ -n "$SENTRY_PROJECT" ]; then
+        print_header "Uploading dSYMs to Sentry"
+        if command -v sentry-cli &> /dev/null; then
+            DSYM_PATH="$SCRIPT_DIR/OximyMac/.build"
+            echo "Searching for dSYMs in: $DSYM_PATH"
+            sentry-cli debug-files upload --include-sources \
+                --org "$SENTRY_ORG" \
+                --project "$SENTRY_PROJECT" \
+                "$DSYM_PATH"
+            print_success "dSYMs uploaded to Sentry"
+        else
+            print_warning "sentry-cli not found — install with: brew install getsentry/tools/sentry-cli"
+        fi
+    else
+        print_warning "Skipping dSYM upload (SENTRY_AUTH_TOKEN, SENTRY_ORG, or SENTRY_PROJECT not set)"
+    fi
 
     # Step 8: Create DMG with volume icon + Applications symlink
     print_header "Step 8/8: Creating DMG"

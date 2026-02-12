@@ -11,6 +11,9 @@
 
 set -e
 
+# Bypass Oximy proxy for pip — the proxy isn't running during builds
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy no_proxy NO_PROXY
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OXIMY_MAC_DIR="$(dirname "$SCRIPT_DIR")"
 RESOURCES_DIR="$OXIMY_MAC_DIR/Resources"
