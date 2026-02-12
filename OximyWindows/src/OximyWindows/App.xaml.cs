@@ -220,7 +220,17 @@ public partial class App : Application
 
     private void OnSensorStateChanged(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() => _mainWindow?.UpdateTrayIcon(RemoteStateService.SensorEnabled));
+        Dispatcher.Invoke(() =>
+        {
+            _mainWindow?.UpdateTrayIcon(RemoteStateService.SensorEnabled);
+
+            // When sensor is disabled and the addon is dead, the C# app must
+            // disable the proxy directly — the addon can't do it itself.
+            if (!RemoteStateService.SensorEnabled && !MitmService.IsRunning)
+            {
+                ProxyService.DisableProxy();
+            }
+        });
     }
 
     /// <summary>
@@ -317,7 +327,9 @@ public partial class App : Application
 
     /// <summary>
     /// Handle authentication callback from browser redirect.
-    /// URL format: oximy://auth/callback?token=xxx&state=xxx&workspace_name=xxx&device_id=xxx
+    /// URL format: oximy://auth/callback?token=xxx&state=xxx&device_id=xxx
+    /// Note: workspace_name and workspace_id are NOT in the callback URL.
+    /// They are fetched from the API using the device token (GET /devices/me).
     /// </summary>
     private void HandleAuthCallback(string url)
     {
@@ -338,7 +350,6 @@ public partial class App : Application
         var query = HttpUtility.ParseQueryString(uri.Query);
         var token = query["token"];
         var state = query["state"];
-        var workspaceName = query["workspace_name"];
         var deviceId = query["device_id"];
 
         // Validate CSRF state
@@ -359,21 +370,54 @@ public partial class App : Application
             return;
         }
 
-        // Complete enrollment
-        var workspace = workspaceName ?? "Connected";
-        AppState.Instance.CompleteEnrollment(deviceId ?? "", token, workspace, "");
+        // Fetch workspace info from API, then complete enrollment
+        _ = CompleteAuthCallbackAsync(token, deviceId);
+    }
+
+    /// <summary>
+    /// Fetch device info from API and complete enrollment.
+    /// Mirrors the Mac app flow: auth callback → GET /devices/me → login with real workspace name.
+    /// </summary>
+    private async Task CompleteAuthCallbackAsync(string token, string? deviceId)
+    {
+        string workspace;
+        string workspaceId;
+        string finalDeviceId;
+
+        try
+        {
+            Debug.WriteLine("[App] Fetching device info from API...");
+            var deviceInfo = await APIClient.FetchDeviceInfoAsync(token);
+
+            workspace = deviceInfo.WorkspaceName;
+            workspaceId = deviceInfo.WorkspaceId;
+            finalDeviceId = deviceInfo.DeviceId;
+
+            Debug.WriteLine($"[App] Device info received: workspace={workspace}, workspaceId={workspaceId}, deviceId={finalDeviceId}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Failed to fetch device info: {ex.Message}");
+
+            // Fallback: enroll with minimal info, heartbeat will update workspace name later
+            workspace = "Loading...";
+            workspaceId = "";
+            finalDeviceId = deviceId ?? "";
+        }
+
+        AppState.Instance.CompleteEnrollment(finalDeviceId, token, workspace, workspaceId);
 
         OximyLogger.Log(EventCode.ENROLL_STATE_101, "Enrollment complete", new Dictionary<string, object>
         {
             ["workspace"] = workspace,
-            ["device_id"] = deviceId ?? "unknown"
+            ["device_id"] = finalDeviceId
         });
         OximyLogger.Log(EventCode.AUTH_AUTH_001, "User logged in", new Dictionary<string, object>
         {
             ["workspace"] = workspace,
-            ["has_device_id"] = (!string.IsNullOrEmpty(deviceId)).ToString().ToLowerInvariant()
+            ["has_device_id"] = (!string.IsNullOrEmpty(finalDeviceId)).ToString().ToLowerInvariant()
         });
-        SentryService.SetFullUserContext(workspace, deviceId, AppState.Instance.WorkspaceId);
+        SentryService.SetFullUserContext(workspace, finalDeviceId, workspaceId);
 
         Debug.WriteLine("[App] Auth callback processed successfully");
 
