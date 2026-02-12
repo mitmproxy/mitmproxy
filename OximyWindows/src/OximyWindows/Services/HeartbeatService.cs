@@ -146,25 +146,25 @@ public class HeartbeatService : IDisposable
             var commandResults = ReadCommandResults();
 
             var eventsQueued = SyncService.Instance.PendingEventCount;
-            var response = await APIClient.Instance.SendHeartbeatAsync(eventsQueued, commandResults);
+            var data = await APIClient.Instance.SendHeartbeatAsync(eventsQueued, commandResults);
 
             // Update config if provided
-            if (response.Config != null)
+            if (data.ConfigUpdate != null)
             {
-                if (response.Config.HeartbeatIntervalSeconds > 0)
+                if (data.ConfigUpdate.HeartbeatIntervalSeconds > 0)
                 {
-                    UpdateInterval(response.Config.HeartbeatIntervalSeconds);
+                    UpdateInterval(data.ConfigUpdate.HeartbeatIntervalSeconds);
                 }
 
-                SyncService.Instance.UpdateConfig(response.Config);
+                SyncService.Instance.UpdateConfig(data.ConfigUpdate);
             }
 
-            // Process server commands
-            if (response.Commands != null)
+            // Process server commands (API returns command type strings)
+            if (data.Commands != null)
             {
-                foreach (var command in response.Commands)
+                foreach (var commandType in data.Commands)
                 {
-                    ProcessCommand(command);
+                    ProcessCommand(commandType);
                 }
             }
 
@@ -207,40 +207,40 @@ public class HeartbeatService : IDisposable
         }
     }
 
-    private void ProcessCommand(ServerCommand command)
+    private void ProcessCommand(string commandType)
     {
-        Debug.WriteLine($"[HeartbeatService] Processing command: {command.Type}");
+        Debug.WriteLine($"[HeartbeatService] Processing command: {commandType}");
 
-        switch (command.Type.ToLowerInvariant())
+        switch (commandType.ToLowerInvariant())
         {
             case "sync_now":
                 OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
-                    new Dictionary<string, object> { ["command"] = command.Type });
+                    new Dictionary<string, object> { ["command"] = commandType });
                 SyncRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "restart_proxy":
                 OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
-                    new Dictionary<string, object> { ["command"] = command.Type });
+                    new Dictionary<string, object> { ["command"] = commandType });
                 RestartProxyRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "disable_proxy":
                 OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
-                    new Dictionary<string, object> { ["command"] = command.Type });
+                    new Dictionary<string, object> { ["command"] = commandType });
                 DisableProxyRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "logout":
                 OximyLogger.Log(EventCode.HB_CMD_002, "Command executed",
-                    new Dictionary<string, object> { ["command"] = command.Type });
+                    new Dictionary<string, object> { ["command"] = commandType });
                 LogoutRequested?.Invoke(this, EventArgs.Empty);
                 break;
 
             default:
                 OximyLogger.Log(EventCode.HB_FAIL_202, "Unknown command received",
-                    new Dictionary<string, object> { ["command"] = command.Type });
-                Debug.WriteLine($"[HeartbeatService] Unknown command: {command.Type}");
+                    new Dictionary<string, object> { ["command"] = commandType });
+                Debug.WriteLine($"[HeartbeatService] Unknown command: {commandType}");
                 break;
         }
     }
@@ -254,6 +254,11 @@ public class HeartbeatService : IDisposable
     private void OnWorkspaceNameUpdated(object? sender, string workspaceName)
     {
         AppState.Instance.WorkspaceName = workspaceName;
+
+        // Persist so it survives app restarts (auth callback may not include workspace_name)
+        var settings = OximyWindows.Properties.Settings.Default;
+        settings.WorkspaceName = workspaceName;
+        settings.Save();
     }
 
     public void Dispose()
