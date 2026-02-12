@@ -2,6 +2,7 @@
 export interface OptionsState {
     add_upstream_certs_to_client_chain: boolean;
     allow_hosts: string[];
+    allow_transparent_tunnel_inspection: boolean;
     anticache: boolean;
     anticomp: boolean;
     block_global: boolean;
@@ -109,6 +110,7 @@ export type Option = keyof OptionsState;
 export const defaultState: OptionsState = {
     add_upstream_certs_to_client_chain: false,
     allow_hosts: [],
+    allow_transparent_tunnel_inspection: false,
     anticache: false,
     anticomp: false,
     block_global: true,

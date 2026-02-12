@@ -78,11 +78,6 @@ def validate_request(
 ) -> str | None:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
-    if mode is HTTPMode.transparent and request.method == "CONNECT":
-        return (
-            f"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
-            f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
-        )
     if validate_inbound_headers:
         try:
             validate_headers(request)
@@ -771,6 +766,11 @@ class HttpStream(layer.Layer):
             return True
 
     def handle_connect(self) -> layer.CommandGenerator[None]:
+        # Handle CONNECT in transparent mode specially
+        if self.mode == HTTPMode.transparent:
+            yield from self.handle_connect_transparent()
+            return
+
         self.client_state = self.state_done
         yield HttpConnectHook(self.flow)
         if (yield from self.check_killed(False)):
@@ -782,6 +782,109 @@ class HttpStream(layer.Layer):
             yield from self.handle_connect_regular()
         else:
             yield from self.handle_connect_upstream()
+
+    def handle_connect_transparent(self) -> layer.CommandGenerator[None]:
+        """Establish HTTP tunnel through upstream proxy in transparent mode."""
+        yield HttpConnectHook(self.flow)
+        if (yield from self.check_killed(False)):
+            return
+
+        assert self.context.server.address is not None
+        connection, err = yield GetHttpConnection(
+            self.context.server.address,
+            False,  # no TLS to the proxy (it's HTTP proxy)
+            None,  # no via (we ARE talking to the proxy)
+            self.context.server.transport_protocol,
+        )
+
+        if err:
+            yield from self.handle_protocol_error(
+                ResponseProtocolError(self.stream_id, err, ErrorCode.CONNECT_FAILED)
+            )
+            return
+
+        self.context.server = self.flow.server_conn = connection
+
+        # Forward CONNECT request with no body (so end_stream=True)
+        yield SendHttp(
+            RequestHeaders(self.stream_id, self.flow.request, end_stream=True),
+            self.context.server,
+        )
+        yield SendHttp(RequestEndOfMessage(self.stream_id), connection)
+
+        # Create the tunnel child layer
+        if self.context.options.allow_transparent_tunnel_inspection:
+            # Inspection mode: Use NextLayer to auto-detect TLS and perform interception
+            self.child_layer = layer.NextLayer(self.context)
+        else:
+            # Passthrough mode: Use TCPLayer to forward encrypted traffic without inspection
+            self.child_layer = tcp.TCPLayer(self.context)
+
+        # Wait for response HTTP headers from the upstream proxy
+        self.server_state = self.state_wait_for_tunnel_connect_response_headers
+
+    @expect(ResponseHeaders)
+    def state_wait_for_tunnel_connect_response_headers(
+        self, event: ResponseHeaders
+    ) -> layer.CommandGenerator[None]:
+        self.flow.response = event.response
+
+        # Forward response headers to client
+        yield SendHttp(
+            ResponseHeaders(
+                self.stream_id, self.flow.response, end_stream=event.end_stream
+            ),
+            self.context.client,
+        )
+
+        if event.end_stream:
+            yield from self.handle_tunnel_response_complete()
+        else:
+            self.server_state = self.state_consume_tunnel_connect_response_body
+
+    @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
+    def state_consume_tunnel_connect_response_body(
+        self, event: ResponseData | ResponseTrailers | ResponseEndOfMessage
+    ) -> layer.CommandGenerator[None]:
+        """Forward CONNECT error response back to client."""
+        if isinstance(event, ResponseEndOfMessage):
+            # Capture the full response body before completing
+            assert self.flow.response
+            self.flow.response.data.content = bytes(self.response_body_buf)
+            self.response_body_buf.clear()
+
+            yield from self.handle_tunnel_response_complete()
+            return
+
+        # Capture response data to put on the flow object later
+        if isinstance(event, ResponseData):
+            self.response_body_buf += event.data
+
+        # Forward all events to client
+        yield SendHttp(event, self.context.client)
+
+    def handle_tunnel_response_complete(self) -> layer.CommandGenerator[None]:
+        """Handle completion of CONNECT response (with or without body)"""
+        assert self.flow.response is not None
+        tunnel_established = 200 <= self.flow.response.status_code < 300
+
+        # Trigger either http_connected or http_connect_error handlers in addons
+        if tunnel_established:
+            yield HttpConnectedHook(self.flow)
+            # Activate passthrough mode and start child layer
+            self._handle_event = self.passthrough
+            self.client_state = self.state_done
+            self.server_state = self.state_done
+            assert self.child_layer is not None
+            yield from self.child_layer.handle_event(events.Start())
+        else:
+            yield HttpConnectErrorHook(self.flow)
+            self.client_state = self.state_errored
+            self.server_state = self.state_errored
+            self.flow.live = False
+
+        # Send EndOfMessage to client to complete the response
+        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     def handle_connect_regular(self):
         if (
