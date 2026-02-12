@@ -129,11 +129,10 @@ public partial class App : Application
         // Auto-enable launch at startup on first run
         StartupService.CheckAndAutoEnableOnFirstLaunch();
 
-        // Start services if already connected
+        // Start services if already connected (e.g. app restart with saved credentials)
         if (AppState.Instance.Phase == Phase.Connected)
         {
-            HeartbeatService.Start();
-            SyncService.Start();
+            _ = StartServicesOnRelaunchAsync();
         }
 
         // Handle pending auth URL if launched via deep link
@@ -334,6 +333,33 @@ public partial class App : Application
 
         // Show the popup so user sees they're logged in
         _mainWindow?.ShowPopup();
+    }
+
+    /// <summary>
+    /// Start all services on app relaunch when already connected (saved credentials).
+    /// This ensures mitmproxy, heartbeat, and sync all start — not just heartbeat/sync.
+    /// </summary>
+    private async Task StartServicesOnRelaunchAsync()
+    {
+        Debug.WriteLine("[App] Starting services on relaunch (already connected)...");
+
+        // Start mitmproxy if not already running
+        if (!MitmService.IsRunning)
+        {
+            try
+            {
+                await MitmService.StartAsync();
+                Debug.WriteLine("[App] MitmService started on relaunch");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] MitmService start failed on relaunch: {ex.Message}");
+            }
+        }
+
+        HeartbeatService.Start();
+        SyncService.Start();
+        Debug.WriteLine("[App] All services started on relaunch");
     }
 
     /// <summary>

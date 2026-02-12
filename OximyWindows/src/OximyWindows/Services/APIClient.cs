@@ -26,6 +26,11 @@ public class APIClient
     // Cache hardware ID to avoid expensive WMI queries (100-500ms each)
     private static string? _cachedHardwareId;
 
+    // CPU usage tracking - requires two snapshots to compute percentage
+    private static DateTime _lastCpuCheckTime = DateTime.UtcNow;
+    private static TimeSpan _lastCpuUsed = TimeSpan.Zero;
+    private static double? _lastCpuPercent;
+
     public event EventHandler? AuthenticationFailed;
     public event EventHandler<string>? WorkspaceNameUpdated;
 
@@ -51,7 +56,8 @@ public class APIClient
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
+            WriteIndented = false,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         };
     }
 
@@ -341,14 +347,33 @@ public class APIClient
     }
 
     /// <summary>
-    /// Get current CPU usage percentage.
+    /// Get current CPU usage percentage (0-100) by comparing two snapshots.
+    /// Returns the process CPU usage as a percentage of total available CPU.
     /// </summary>
     private static double? GetCpuUsage()
     {
         try
         {
             using var process = Process.GetCurrentProcess();
-            return process.TotalProcessorTime.TotalMilliseconds / Environment.ProcessorCount / 10;
+            var now = DateTime.UtcNow;
+            var currentCpuUsed = process.TotalProcessorTime;
+
+            var elapsed = (now - _lastCpuCheckTime).TotalMilliseconds;
+            if (elapsed < 100) // Too soon for a meaningful measurement
+                return _lastCpuPercent;
+
+            var cpuDelta = (currentCpuUsed - _lastCpuUsed).TotalMilliseconds;
+            var cpuPercent = cpuDelta / (elapsed * Environment.ProcessorCount) * 100.0;
+
+            // Clamp to 0-100 range
+            cpuPercent = Math.Max(0, Math.Min(100, cpuPercent));
+
+            // Update snapshots
+            _lastCpuCheckTime = now;
+            _lastCpuUsed = currentCpuUsed;
+            _lastCpuPercent = Math.Round(cpuPercent, 1);
+
+            return _lastCpuPercent;
         }
         catch
         {

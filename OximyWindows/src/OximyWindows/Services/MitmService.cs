@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -70,6 +71,60 @@ public class MitmService : IDisposable
     }
 
     /// <summary>
+    /// Kill any process listening on the specified port.
+    /// Catches zombie python.exe or other processes that KillAllMitmProcesses misses
+    /// because they don't have "mitmdump" in their process name.
+    /// </summary>
+    private static void KillProcessOnPort(int port)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "netstat",
+                Arguments = "-ano",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null) return;
+
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit(5000);
+
+            foreach (var line in output.Split('\n'))
+            {
+                if (line.Contains($":{port}") && line.Contains("LISTENING"))
+                {
+                    var parts = line.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 5 && int.TryParse(parts[^1].Trim(), out var pid))
+                    {
+                        // Don't kill ourselves
+                        if (pid == Environment.ProcessId) continue;
+
+                        try
+                        {
+                            using var proc = Process.GetProcessById(pid);
+                            Debug.WriteLine($"[MitmService] Killing {proc.ProcessName} (PID {pid}) holding port {port}");
+                            proc.Kill(entireProcessTree: true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"[MitmService] Failed to kill PID {pid} on port {port}: {ex.Message}");
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MitmService] Port cleanup check failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Rotate mitmdump.log if it exceeds 10MB.
     /// </summary>
     private static void RotateLogIfNeeded()
@@ -108,6 +163,10 @@ public class MitmService : IDisposable
         // This ensures no zombie processes from previous runs interfere
         KillAllMitmProcesses();
 
+        // Also kill anything holding our preferred port (catches zombie python.exe etc.)
+        KillProcessOnPort(Constants.PreferredPort);
+        Thread.Sleep(300); // Give port time to be released
+
         // Rotate log file if too large
         RotateLogIfNeeded();
 
@@ -144,6 +203,10 @@ public class MitmService : IDisposable
         _mitmProcess = new Process { StartInfo = startInfo };
         _mitmProcess.EnableRaisingEvents = true;
         _mitmProcess.Exited += OnProcessExited;
+
+        // Buffer stderr/stdout so we can include them in error messages if process dies immediately
+        var stderrLines = new ConcurrentQueue<string>();
+
         _mitmProcess.OutputDataReceived += (s, e) =>
         {
             if (!string.IsNullOrEmpty(e.Data))
@@ -156,6 +219,7 @@ public class MitmService : IDisposable
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
+                stderrLines.Enqueue(e.Data);
                 Debug.WriteLine($"[mitmdump ERROR] {e.Data}");
                 ErrorReceived?.Invoke(this, e.Data);
             }
@@ -185,12 +249,20 @@ public class MitmService : IDisposable
 
             if (_mitmProcess.HasExited)
             {
-                throw new MitmException($"mitmproxy exited immediately with code {_mitmProcess.ExitCode}");
+                // Give async stderr a moment to flush
+                await Task.Delay(200);
+                var stderrOutput = stderrLines.Count > 0
+                    ? $"\nStderr:\n{string.Join("\n", stderrLines)}"
+                    : "\n(No stderr captured - process died before output)";
+                throw new MitmException($"mitmproxy exited immediately with code {_mitmProcess.ExitCode}{stderrOutput}");
             }
 
             if (!ready)
             {
-                throw new MitmException($"mitmproxy failed to start listening on port {port} within timeout");
+                var stderrOutput = stderrLines.Count > 0
+                    ? $"\nStderr:\n{string.Join("\n", stderrLines)}"
+                    : "";
+                throw new MitmException($"mitmproxy failed to start listening on port {port} within timeout{stderrOutput}");
             }
 
             Debug.WriteLine($"[MitmService] mitmproxy is ready and listening on port {port}");
