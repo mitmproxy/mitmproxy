@@ -18,6 +18,14 @@ except ImportError:
     psutil = None  # type: ignore
     _HAS_PSUTIL = False
 
+try:
+    from mitmproxy.addons.oximy import sentry_service
+except ImportError:
+    try:
+        import sentry_service  # type: ignore[import]
+    except ImportError:
+        sentry_service = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 # --- macOS Responsible Process API ---
@@ -169,6 +177,8 @@ class ProcessResolver:
             )
         except asyncio.TimeoutError:
             logger.debug(f"[PROCESS] Resolution timeout for port {port} - proceeding without attribution (fail-open)")
+            if sentry_service:
+                sentry_service.add_breadcrumb(category="process", message=f"Process resolution timeout for port {port}", level="warning", data={"port": port, "timeout_s": self._resolution_timeout})
             return ClientProcess(
                 pid=None,
                 name="Unknown (timeout)",

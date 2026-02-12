@@ -29,6 +29,18 @@ try:
 except ImportError:
     HAS_WATCHFILES = False
 
+try:
+    from mitmproxy.addons.oximy import sentry_service
+    from mitmproxy.addons.oximy.oximy_logger import oximy_log, EventCode
+except ImportError:
+    try:
+        import sentry_service  # type: ignore[import]
+        from oximy_logger import oximy_log, EventCode  # type: ignore[import]
+    except ImportError:
+        sentry_service = None  # type: ignore[assignment]
+        oximy_log = None  # type: ignore[assignment]
+        EventCode = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -724,6 +736,8 @@ class LocalDataCollector:
             conn = sqlite3.connect(uri, uri=True, timeout=5)
         except sqlite3.Error as e:
             logger.warning(f"Could not open SQLite DB {db_path}: {e}")
+            if oximy_log and EventCode:
+                oximy_log(EventCode.COLLECT_FAIL_203, "SQLite DB open failed", data={"db": os.path.basename(db_path), "error": str(e)})
             return
 
         try:
@@ -745,6 +759,8 @@ class LocalDataCollector:
                     )
                 except sqlite3.DatabaseError as e:
                     logger.warning(f"SQLite query error in {db_path}: {e}")
+                    if oximy_log and EventCode:
+                        oximy_log(EventCode.COLLECT_FAIL_203, "SQLite query error", data={"db": os.path.basename(db_path), "error": str(e)})
                     break
                 except Exception as e:
                     logger.warning(
@@ -1218,6 +1234,8 @@ class LocalDataCollector:
             except urllib.error.HTTPError as e:
                 if e.code == 401:
                     logger.warning("Local session upload auth failed (401)")
+                    if oximy_log and EventCode:
+                        oximy_log(EventCode.COLLECT_FAIL_202, "Local session upload auth failed", data={"status": 401})
                     break
                 logger.warning(f"Upload attempt {attempt + 1} failed: HTTP {e.code}")
             except (urllib.error.URLError, OSError) as e:
@@ -1242,6 +1260,12 @@ class LocalDataCollector:
             f"{buf_total} events buffered, next retry in {next_retry}s "
             f"(endpoint: {self._upload_endpoint})"
         )
+        if oximy_log and EventCode:
+            oximy_log(EventCode.COLLECT_FAIL_202, "Local session upload failed", data={
+                "consecutive_failures": self._consecutive_upload_failures,
+                "buffered_events": buf_total,
+                "next_retry_s": next_retry,
+            })
         return False
 
     @staticmethod

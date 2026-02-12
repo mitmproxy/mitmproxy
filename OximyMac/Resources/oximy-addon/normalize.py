@@ -10,6 +10,14 @@ import urllib.parse
 
 from mitmproxy.net.encoding import decode_gzip, decode_deflate, decode_zstd
 
+try:
+    from mitmproxy.addons.oximy import sentry_service
+except ImportError:
+    try:
+        import sentry_service  # type: ignore[import]
+    except ImportError:
+        sentry_service = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 # Magic bytes for format detection
@@ -134,6 +142,8 @@ def _decode_protobuf_with_timeout(data: bytes) -> tuple | None:
             return future.result(timeout=PROTOBUF_DECODE_TIMEOUT)
         except concurrent.futures.TimeoutError:
             logger.warning(f"FAIL-OPEN: Protobuf decode timed out after {PROTOBUF_DECODE_TIMEOUT}s")
+            if sentry_service:
+                sentry_service.add_breadcrumb(category="normalize", message=f"Protobuf decode timed out after {PROTOBUF_DECODE_TIMEOUT}s", level="warning")
             # shutdown(wait=False) returns immediately; the orphaned thread
             # is a daemon thread (ThreadPoolExecutor default) and won't
             # prevent process exit.
@@ -141,10 +151,14 @@ def _decode_protobuf_with_timeout(data: bytes) -> tuple | None:
             return None
         except Exception as e:
             logger.debug(f"Protobuf decode failed: {e}")
+            if sentry_service:
+                sentry_service.add_breadcrumb(category="normalize", message=f"Protobuf decode failed: {e}", level="warning")
             executor.shutdown(wait=False)
             return None
     except Exception as e:
         logger.debug(f"Protobuf decode setup failed: {e}")
+        if sentry_service:
+            sentry_service.add_breadcrumb(category="normalize", message=f"Protobuf decode setup failed: {e}", level="warning")
         return None
 
 
@@ -212,6 +226,8 @@ def normalize_grpc(content: bytes, content_type: str | None = None) -> str:
     except Exception as e:
         # Ultimate fallback: base64 encode entire content
         logger.debug(f"gRPC normalization failed: {e}")
+        if sentry_service:
+            sentry_service.add_breadcrumb(category="normalize", message=f"gRPC normalization failed: {e}", level="warning")
         return json.dumps({
             "_error": str(e),
             "_raw_base64": base64.b64encode(content).decode('ascii')
@@ -442,6 +458,8 @@ def _decode_msgpack(content: bytes) -> str | None:
         # More verbose logging to diagnose decode failures
         first_bytes = content[:16].hex() if len(content) >= 16 else content.hex()
         logger.info(f"[MSGPACK] Decode failed ({len(content)} bytes, first bytes: {first_bytes}): {type(e).__name__}: {e}")
+        if sentry_service:
+            sentry_service.add_breadcrumb(category="normalize", message=f"msgpack decode failed: {type(e).__name__}: {e}", level="warning", data={"size": len(content)})
         return None
 
 

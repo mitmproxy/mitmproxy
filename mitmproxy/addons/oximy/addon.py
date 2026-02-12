@@ -57,6 +57,14 @@ try:
 except ImportError:
     from collector import LocalDataCollector
 
+# Import structured logging - handle both package and script modes
+try:
+    from .oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
+    from . import sentry_service
+except ImportError:
+    from oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
+    import sentry_service
+
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(name)s: %(message)s",
@@ -1113,6 +1121,8 @@ def _check_circuit_breaker() -> bool:
 def _record_circuit_breaker_success() -> None:
     """Record successful API call - reset circuit breaker."""
     global _circuit_breaker_failures, _circuit_breaker_open_until, _CIRCUIT_BREAKER_HALF_OPEN
+    if _circuit_breaker_failures > 0:
+        oximy_log(OximyEventCode.CFG_CB_003, "Config circuit breaker CLOSED")
     _circuit_breaker_failures = 0
     _circuit_breaker_open_until = 0.0
     _CIRCUIT_BREAKER_HALF_OPEN = False
@@ -1131,6 +1141,10 @@ def _record_circuit_breaker_failure() -> None:
             f"FAIL-OPEN: Circuit breaker OPEN after {_circuit_breaker_failures} failures. "
             f"Skipping API calls for {_CIRCUIT_BREAKER_COOLDOWN}s. Using cached/passthrough config."
         )
+        oximy_log(OximyEventCode.CFG_CB_002, "Config circuit breaker OPEN", data={
+            "failures": _circuit_breaker_failures,
+            "cooldown_s": _CIRCUIT_BREAKER_COOLDOWN,
+        })
 
 
 def fetch_sensor_config(
@@ -1212,6 +1226,10 @@ def fetch_sensor_config(
             if _consecutive_401_count >= _MAX_401_RETRIES and not _force_logout_triggered:
                 _force_logout_triggered = True
                 logger.warning(f"Max 401 retries ({_MAX_401_RETRIES}) reached - triggering force_logout for re-enrollment")
+                oximy_log(OximyEventCode.CFG_FAIL_205, "API 401 - invalid token, triggering force logout", data={
+                    "consecutive_401_count": _consecutive_401_count,
+                })
+                oximy_log(OximyEventCode.STATE_CMD_003, "Force logout triggered from 401 errors")
                 _write_force_logout_state()
             elif _force_logout_triggered:
                 logger.debug("401 error but force_logout already triggered")
@@ -1223,6 +1241,9 @@ def fetch_sensor_config(
             # Non-401 HTTP errors: record failure and fall through to cache
             _record_circuit_breaker_failure()
             logger.warning(f"Failed to fetch sensor config: HTTP {e.code}")
+            oximy_log(OximyEventCode.CFG_FAIL_201, "Config fetch HTTP error", data={
+                "status_code": e.code,
+            })
             # Fall through to cache fallback below
 
         return _load_cached_config_or_passthrough(cache_file, addon_instance, default_config)
@@ -1275,6 +1296,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
     with _state.lock:
         if enabled:
             logger.info("===== SENSOR ENABLED - Resuming all interception =====")
+            oximy_log(OximyEventCode.STATE_STATE_001, "Sensor enabled", data={"sensor_enabled": True})
             _state.sensor_active = True
             # Only try to enable proxy if port is configured (running() will handle it otherwise)
             if _state.proxy_port:
@@ -1285,6 +1307,7 @@ def _apply_sensor_state(enabled: bool, addon_instance=None) -> None:
                 _write_proxy_state()
         else:
             logger.info("===== SENSOR DISABLED - Stopping all interception =====")
+            oximy_log(OximyEventCode.STATE_STATE_001, "Sensor disabled", data={"sensor_enabled": False})
             _state.sensor_active = False
             _set_system_proxy(enable=False)
             _unset_launchctl_env()
@@ -2581,6 +2604,7 @@ class DirectTraceUploader:
         """Record successful upload — reset circuit breaker."""
         if self._circuit_breaker_failures > 0:
             logger.info("FAIL-OPEN: Upload circuit breaker CLOSED — API recovered")
+            oximy_log(OximyEventCode.UPLOAD_CB_003, "Upload circuit breaker CLOSED")
         self._circuit_breaker_failures = 0
         self._circuit_breaker_open_until = 0.0
         self._circuit_breaker_half_open = False
@@ -2596,6 +2620,10 @@ class DirectTraceUploader:
                 f"FAIL-OPEN: Upload circuit breaker OPEN after {self._circuit_breaker_failures} failures. "
                 f"Skipping uploads for {self._CIRCUIT_BREAKER_COOLDOWN}s. Traces buffered in memory."
             )
+            oximy_log(OximyEventCode.UPLOAD_CB_002, "Upload circuit breaker OPEN", data={
+                "failures": self._circuit_breaker_failures,
+                "cooldown_s": self._CIRCUIT_BREAKER_COOLDOWN,
+            })
 
     @property
     def circuit_breaker_open(self) -> bool:
@@ -2686,6 +2714,9 @@ class DirectTraceUploader:
                 if e.code == 401:
                     # Auth issue, not API down — don't count toward circuit breaker, don't retry
                     logger.warning("Upload auth failed (401): device token missing or invalid. Check ~/.oximy/device-token")
+                    oximy_log(OximyEventCode.UPLOAD_FAIL_201, "Upload auth failure (401)", err={
+                        "type": "HTTPError", "code": "UPLOAD_AUTH_401", "message": "Device token invalid"
+                    })
                     break
                 else:
                     logger.debug(f"Upload attempt {attempt + 1} HTTP error {e.code}: {error_body[:200]}")
@@ -2714,6 +2745,10 @@ class DirectTraceUploader:
 
         # All retries failed (or CB tripped) — put batch back at front of buffer
         logger.warning(f"Upload failed after {attempt + 1} attempts, returning {len(batch)} traces to buffer")
+        oximy_log(OximyEventCode.UPLOAD_FAIL_203, "Upload retries exhausted", data={
+            "attempts": attempt + 1,
+            "traces_count": len(batch),
+        })
         self._buffer.prepend_batch(batch)
         return False
 
@@ -3060,6 +3095,9 @@ class OximyAddon:
         # Buffer full - emergency fallback to disk (only if not already written in debug mode)
         if not self._debug_ingestion:
             logger.warning(f"Memory buffer full ({self._buffer.bytes_used()} bytes), writing to disk")
+            oximy_log(OximyEventCode.TRACE_FAIL_201, "Memory buffer full, disk fallback", data={
+                "buffer_bytes": self._buffer.bytes_used(),
+            })
             writer = self._ensure_writer()
             if writer:
                 writer.write(event)
@@ -3410,6 +3448,20 @@ class OximyAddon:
         # Get device ID
         self._device_id = get_device_id()
         logger.info(f"Device ID: {self._device_id}")
+
+        # Initialize Sentry and structured logging
+        sentry_service.initialize()
+        sentry_service.set_user(device_id=self._device_id)
+        sentry_service.set_initial_context()
+        set_log_context(device_id=self._device_id)
+
+        oximy_log(OximyEventCode.APP_INIT_001, "Addon initialized", data={
+            "whitelist_count": len(self._whitelist),
+            "blacklist_count": len(self._blacklist),
+            "passthrough_count": len(passthrough_patterns),
+            "device_id": self._device_id or "unknown",
+            "fail_open_passthrough": self._fail_open_passthrough,
+        })
 
         logger.info(
             f"===== OXIMY READY: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
@@ -4892,6 +4944,9 @@ class OximyAddon:
                 logger.warning(f"Failed to upload disk fallback traces on shutdown: {e}")
 
         self._enabled = False
+        oximy_log(OximyEventCode.APP_STOP_001, "Addon shutdown")
+        close_logger()
+        sentry_service.flush()
         logger.info("Oximy addon disabled")
 
 
