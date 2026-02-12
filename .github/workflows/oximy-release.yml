@@ -148,14 +148,16 @@ jobs:
           echo "dmg-name=Oximy-$VERSION.dmg" >> $GITHUB_OUTPUT
 
       - name: Upload dSYMs to Sentry
-        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        if: env.SENTRY_AUTH_TOKEN != ''
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
           curl -sL https://sentry.io/get-cli/ | bash
           sentry-cli debug-files upload --include-sources \
-            --org "${{ secrets.SENTRY_ORG }}" \
-            --project "${{ secrets.SENTRY_PROJECT }}" \
+            --org "$SENTRY_ORG" \
+            --project "$SENTRY_PROJECT" \
             OximyMac/.build/
 
       - name: Upload macOS artifacts
