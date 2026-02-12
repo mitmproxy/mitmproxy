@@ -10,7 +10,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from mitmproxy.addons.oximy import sentry_service
+try:
+    from mitmproxy.addons.oximy import sentry_service
+except ImportError:
+    import sentry_service  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 

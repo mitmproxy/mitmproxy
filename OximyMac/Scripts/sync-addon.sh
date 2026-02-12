@@ -45,7 +45,9 @@ for file in "${FILES[@]}"; do
         echo "  Syncing: $file"
         # Convert absolute imports to relative imports
         # from mitmproxy.addons.oximy.module import X -> from module import X
-        sed 's/from mitmproxy\.addons\.oximy\.\([a-z_]*\)/from \1/g' "$src" > "$dst"
+        sed -e 's/from mitmproxy\.addons\.oximy\.\([a-z_]*\)/from \1/g' \
+            -e 's/from mitmproxy\.addons\.oximy import/import/g' \
+            "$src" > "$dst"
     else
         echo "  Skipping (not found): $file"
     fi
