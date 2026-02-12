@@ -1,10 +1,13 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Timers;
+using OximyWindows.Core;
+using OximyWindows.Models;
 
 namespace OximyWindows.Services;
 
@@ -99,6 +102,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     private DateTime? _lastUpdate;
     private bool _isRunning;
     private bool _disposed;
+    private bool _isFetchingConfig;
 
     /// <summary>
     /// Whether the sensor is enabled (admin-controlled).
@@ -217,6 +221,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
 
     /// <summary>
     /// Read the remote state from the JSON file.
+    /// Falls back to direct API fetch when the file is stale or missing.
     /// </summary>
     private void ReadState()
     {
@@ -224,8 +229,8 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
 
         if (!File.Exists(filePath))
         {
-            // File doesn't exist yet - addon may not have started
-            // Keep current state (default is enabled)
+            // File doesn't exist — addon may not have started, try direct fetch
+            _ = FetchSensorConfigDirectlyAsync();
             return;
         }
 
@@ -269,6 +274,17 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
             {
                 HandleForceLogout();
             }
+
+            // Check if addon's timestamp is stale — fall back to direct API fetch
+            if (state.Timestamp != null
+                && DateTime.TryParse(state.Timestamp, null, DateTimeStyles.RoundtripKind, out var addonTimestamp))
+            {
+                var age = DateTime.UtcNow - addonTimestamp;
+                if (age.TotalSeconds > Constants.RemoteStateStalenessSeconds)
+                {
+                    _ = FetchSensorConfigDirectlyAsync();
+                }
+            }
         }
         catch (JsonException ex)
         {
@@ -286,6 +302,96 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
             OximyLogger.Log(EventCode.STATE_FAIL_201, "Failed to read remote state file",
                 new Dictionary<string, object> { ["error"] = ex.Message });
             Debug.WriteLine($"[RemoteStateService] Unexpected error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Fetch sensor-config directly from the API when the addon is not updating remote-state.json.
+    /// This keeps appConfig, sensor_enabled, and force_logout current even when the addon is dead.
+    /// Also reports command results back to the API so the dashboard shows "executed".
+    /// </summary>
+    private async Task FetchSensorConfigDirectlyAsync()
+    {
+        if (_isFetchingConfig) return;
+        if (AppState.Instance.Phase != Phase.Connected) return;
+        _isFetchingConfig = true;
+
+        try
+        {
+            var data = await APIClient.Instance.FetchSensorConfigAsync();
+            if (data == null) return;
+
+            var previousEnabled = SensorEnabled;
+            var commandResults = new Dictionary<string, CommandResult>();
+            var now = DateTime.UtcNow.ToString("o");
+
+            if (data.Commands != null)
+            {
+                SensorEnabled = data.Commands.SensorEnabled;
+
+                // Report sensor_enabled result when state actually changed
+                if (previousEnabled != data.Commands.SensorEnabled)
+                {
+                    commandResults["sensor_enabled"] = new CommandResult
+                    {
+                        Success = true,
+                        ExecutedAt = now
+                    };
+                }
+
+                if (data.Commands.ForceLogout)
+                {
+                    HandleForceLogout();
+                    commandResults["force_logout"] = new CommandResult
+                    {
+                        Success = true,
+                        ExecutedAt = now
+                    };
+                }
+            }
+
+            if (data.AppConfig != null)
+                AppConfig = data.AppConfig;
+
+            if (!string.IsNullOrEmpty(data.TenantId))
+            {
+                TenantId = data.TenantId;
+                OximyLogger.SetTag("tenant_id", data.TenantId);
+            }
+
+            if (!string.IsNullOrEmpty(data.ItSupport))
+                ItSupport = data.ItSupport;
+
+            LastUpdate = DateTime.Now;
+
+            if (previousEnabled != SensorEnabled)
+            {
+                OximyLogger.Log(EventCode.STATE_STATE_001,
+                    SensorEnabled ? "Sensor enabled (direct fetch)" : "Sensor disabled (direct fetch)",
+                    new Dictionary<string, object>
+                    {
+                        ["sensor_enabled"] = SensorEnabled,
+                        ["previous"] = previousEnabled,
+                        ["source"] = "direct_api"
+                    });
+                OximyLogger.SetTag("sensor_enabled", SensorEnabled.ToString().ToLowerInvariant());
+                Debug.WriteLine($"[RemoteStateService] SensorEnabled changed via direct fetch: {previousEnabled} -> {SensorEnabled}");
+                SensorEnabledChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            // POST command results back to API so dashboard shows "executed"
+            if (commandResults.Count > 0)
+            {
+                _ = APIClient.Instance.PostCommandResultsAsync(commandResults);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[RemoteStateService] Direct sensor-config fetch failed: {ex.Message}");
+        }
+        finally
+        {
+            _isFetchingConfig = false;
         }
     }
 
