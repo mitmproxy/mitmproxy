@@ -36,8 +36,9 @@ ANTI_HIJACK_PREFIXES = (
 )
 
 MAX_DECODE_LAYERS = 3
-# MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB - FAIL-OPEN: Skip normalization for very large bodies
 MIN_BASE64_LENGTH = 20  # Reduce false positives
+PROTOBUF_DECODE_TIMEOUT = 2.0  # FAIL-OPEN: Max seconds to wait for protobuf decode
 
 
 # =============================================================================
@@ -109,22 +110,69 @@ def _convert_bytes_to_str(obj):
     return obj
 
 
+def _decode_protobuf_with_timeout(data: bytes) -> tuple | None:
+    """Decode protobuf with timeout to prevent hanging on malformed data.
+
+    FAIL-OPEN: Returns None if decode times out or fails, allowing
+    fallback to base64 encoding instead of blocking the response.
+
+    Uses a daemon thread so a hung decode won't block process exit
+    or the caller beyond the timeout.
+    """
+    import concurrent.futures
+
+    def do_decode():
+        import blackboxprotobuf
+        return blackboxprotobuf.decode_message(data)
+
+    try:
+        # Don't use context manager - its __exit__ calls shutdown(wait=True)
+        # which would block until the thread finishes, defeating the timeout.
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        try:
+            future = executor.submit(do_decode)
+            return future.result(timeout=PROTOBUF_DECODE_TIMEOUT)
+        except concurrent.futures.TimeoutError:
+            logger.warning(f"FAIL-OPEN: Protobuf decode timed out after {PROTOBUF_DECODE_TIMEOUT}s")
+            # shutdown(wait=False) returns immediately; the orphaned thread
+            # is a daemon thread (ThreadPoolExecutor default) and won't
+            # prevent process exit.
+            executor.shutdown(wait=False, cancel_futures=True)
+            return None
+        except Exception as e:
+            logger.debug(f"Protobuf decode failed: {e}")
+            executor.shutdown(wait=False)
+            return None
+    except Exception as e:
+        logger.debug(f"Protobuf decode setup failed: {e}")
+        return None
+
+
 def _decode_protobuf_schemaless(data: bytes) -> dict | None:
     """Decode protobuf without schema using BlackboxProtobuf.
 
-    Returns decoded dict or None if decoding fails.
+    FAIL-OPEN: Returns decoded dict or None if decoding fails or times out.
+    Large messages (>1MB) are skipped to prevent memory/CPU issues.
     """
+    # FAIL-OPEN: Skip very large protobuf messages to prevent CPU starvation
+    if len(data) > 1_000_000:  # 1MB limit for protobuf decode
+        logger.debug(f"FAIL-OPEN: Skipping protobuf decode for large message ({len(data)} bytes)")
+        return None
+
     try:
         import blackboxprotobuf
-        decoded, _ = blackboxprotobuf.decode_message(data)
-        # Convert any bytes values to strings for JSON serialization
-        return _convert_bytes_to_str(decoded)
     except ImportError:
         logger.debug("blackboxprotobuf not installed, falling back to base64")
         return None
-    except Exception as e:
-        logger.debug(f"protobuf decode failed: {e}")
+
+    # Use timeout wrapper for actual decode
+    result = _decode_protobuf_with_timeout(data)
+    if result is None:
         return None
+
+    decoded, _ = result
+    # Convert any bytes values to strings for JSON serialization
+    return _convert_bytes_to_str(decoded)
 
 
 def normalize_grpc(content: bytes, content_type: str | None = None) -> str:
@@ -175,12 +223,20 @@ def normalize_body(content: bytes | None, content_type: str | None = None) -> st
     Normalize body content by decoding various encodings.
     NEVER raises - always returns a string.
 
+    FAIL-OPEN: Large bodies (>10MB) are returned as-is without normalization
+    to prevent CPU starvation and memory issues.
+
     Args:
         content: Raw body bytes
         content_type: Optional Content-Type header for format hints
     """
     if not content:
         return ""
+
+    # FAIL-OPEN: Skip normalization for very large bodies to prevent blocking
+    if len(content) > MAX_BODY_SIZE:
+        logger.debug(f"FAIL-OPEN: Skipping normalization for large body ({len(content)} bytes)")
+        return _to_string(content[:1000]) + f"... [truncated, total {len(content)} bytes]"
 
     # Handle gRPC/protobuf content first (based on content-type)
     if _is_grpc_content(content_type):
@@ -317,18 +373,22 @@ def _normalize_anti_hijack_stream(content: bytes) -> str:
     return text
 
 
-def _normalize_sse(content: bytes) -> str:
+def _normalize_sse(content: bytes) -> tuple[str, str | None]:
     """
     Normalize SSE stream by extracting data payloads.
     Handles LLM streaming responses (ChatGPT, Claude, etc.)
+
+    Returns:
+        Tuple of (normalized_content, encoding_type)
     """
     try:
         text = content.decode('utf-8')
     except UnicodeDecodeError:
-        return _to_string(content)
+        return _to_string(content), None
 
     lines = text.split('\n')
     extracted: list[str] = []
+    encoding_type: str | None = None
 
     for line in lines:
         line = line.strip()
