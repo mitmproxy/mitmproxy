@@ -20,6 +20,7 @@ public class MitmService : IDisposable
     private CancellationTokenSource? _restartCts;
     private int _restartAttempts;
     private bool _disposed;
+    private bool _intentionalStop;
 
     public int? CurrentPort { get; private set; }
     public bool IsRunning => _mitmProcess is { HasExited: false };
@@ -253,6 +254,7 @@ public class MitmService : IDisposable
 
             CurrentPort = port;
             _restartAttempts = 0;
+            _intentionalStop = false;
 
             // Wait for mitmproxy to be ready (actually listening on the port)
             Debug.WriteLine($"[MitmService] Waiting for mitmproxy to start listening on port {port}...");
@@ -306,6 +308,7 @@ public class MitmService : IDisposable
     /// </summary>
     public void Stop()
     {
+        _intentionalStop = true;
         _restartCts?.Cancel();
 
         if (_mitmProcess != null)
@@ -490,72 +493,76 @@ public class MitmService : IDisposable
             Debug.WriteLine($"[MitmService] Failed to disable proxy on exit: {ex.Message}");
         }
 
-        // Check if this was a crash (not a clean exit or termination by us)
-        var isNormalExit = exitCode == 0 || exitCode == -1;
-        if (!isNormalExit && !_disposed)
-        {
-            var interpretation = exitCode switch
-            {
-                9 or 137 => "oom_or_force_kill",
-                11 or 139 => "memory_corruption",
-                15 or 143 => "normal_termination",
-                6 or 134 => "abort",
-                _ => "unknown"
-            };
-            OximyLogger.Log(EventCode.MITM_FAIL_306, "mitmproxy process crashed",
-                new Dictionary<string, object>
-                {
-                    ["exit_code"] = exitCode,
-                    ["interpretation"] = interpretation,
-                    ["restart_attempt"] = _restartAttempts,
-                    ["pid"] = _mitmProcess?.Id ?? -1
-                },
-                err: ("MitmException", "MITM_CRASH", $"Process exited with code {exitCode}"));
-            OximyLogger.SetTag("mitm_running", "false");
+        OximyLogger.SetTag("mitm_running", "false");
 
-            ScheduleRestart();
-        }
-        else
+        // Only skip restart if Stop() was called intentionally or we're disposing
+        if (_intentionalStop || _disposed)
         {
+            Debug.WriteLine("[MitmService] Intentional stop - not restarting");
             AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
             Stopped?.Invoke(this, EventArgs.Empty);
-        }
-    }
-
-    /// <summary>
-    /// Schedule an automatic restart - FAIL-OPEN: Restart immediately to minimize downtime.
-    /// Previous behavior used exponential backoff (2s, 4s, 8s) which left users without internet.
-    /// New behavior: Restart immediately (100ms delay just for cleanup) to minimize proxy downtime.
-    /// </summary>
-    private async void ScheduleRestart()
-    {
-        if (_restartAttempts >= Constants.MaxRestartAttempts)
-        {
-            OximyLogger.Log(EventCode.MITM_RETRY_401, "Max restart attempts exceeded",
-                new Dictionary<string, object>
-                {
-                    ["max_attempts"] = Constants.MaxRestartAttempts,
-                    ["restart_count"] = _restartAttempts
-                });
-            AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
-            AppState.Instance.ErrorMessage = "mitmproxy crashed too many times. Please restart Oximy.";
-            MaxRestartsExceeded?.Invoke(this, EventArgs.Empty);
             return;
         }
 
+        // Unintentional exit (any exit code) — always restart
+        var interpretation = exitCode switch
+        {
+            0 => "clean_exit",
+            -1 => "unknown_or_killed",
+            9 or 137 => "oom_or_force_kill",
+            11 or 139 => "memory_corruption",
+            15 or 143 => "normal_termination",
+            6 or 134 => "abort",
+            _ => "unknown"
+        };
+        OximyLogger.Log(EventCode.MITM_FAIL_306, "mitmproxy exited unexpectedly",
+            new Dictionary<string, object>
+            {
+                ["exit_code"] = exitCode,
+                ["interpretation"] = interpretation,
+                ["restart_attempt"] = _restartAttempts,
+                ["pid"] = _mitmProcess?.Id ?? -1
+            },
+            err: ("MitmException", "MITM_EXIT", $"Process exited with code {exitCode} ({interpretation})"));
+
+        ScheduleRestart();
+    }
+
+    /// <summary>
+    /// Schedule an automatic restart with exponential backoff.
+    /// First 3 attempts: immediate (100ms). After that: exponential backoff up to 60s.
+    /// Never gives up — keeps retrying until Stop() is called or app exits.
+    /// </summary>
+    private async void ScheduleRestart()
+    {
         _restartAttempts++;
+
+        // First 3 attempts: fast restart (100ms)
+        // After that: exponential backoff capped at 60 seconds
+        int delayMs;
+        if (_restartAttempts <= 3)
+        {
+            delayMs = 100;
+        }
+        else
+        {
+            delayMs = Math.Min(60_000, (int)Math.Pow(2, _restartAttempts - 3) * 1000);
+        }
+
+        // Notify UI after fast retries are exhausted (but don't stop trying)
+        if (_restartAttempts == Constants.MaxRestartAttempts + 1)
+        {
+            MaxRestartsExceeded?.Invoke(this, EventArgs.Empty);
+        }
 
         OximyLogger.Log(EventCode.MITM_RETRY_001, "Restart scheduled",
             new Dictionary<string, object>
             {
                 ["attempt"] = _restartAttempts,
-                ["max_attempts"] = Constants.MaxRestartAttempts,
-                ["delay_ms"] = 100
+                ["delay_ms"] = delayMs
             });
 
-        // FAIL-OPEN: Immediate restart with minimal delay (100ms) for cleanup
-        // Previously used exponential backoff (2s, 4s, 8s) which blocked internet
-        Debug.WriteLine($"[MitmService] FAIL-OPEN: Immediate restart attempt {_restartAttempts}/{Constants.MaxRestartAttempts} in 100ms");
+        Debug.WriteLine($"[MitmService] Restart attempt {_restartAttempts} in {delayMs}ms");
 
         AppState.Instance.ConnectionStatus = ConnectionStatus.Connecting;
 
@@ -564,20 +571,25 @@ public class MitmService : IDisposable
 
         try
         {
-            await Task.Delay(100, _restartCts.Token);
+            await Task.Delay(delayMs, _restartCts.Token);
             await StartAsync();
-            // Success - reset counter
+            // Success — reset counter
             _restartAttempts = 0;
-            Debug.WriteLine("[MitmService] FAIL-OPEN: Auto-restart successful");
+            Debug.WriteLine("[MitmService] Auto-restart successful");
         }
         catch (TaskCanceledException)
         {
-            // Restart was cancelled
+            // Restart was cancelled (intentional Stop)
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[MitmService] FAIL-OPEN: Auto-restart failed: {ex.Message}");
-            // Will trigger another restart attempt via OnProcessExited
+            Debug.WriteLine($"[MitmService] Auto-restart failed: {ex.Message}");
+            // Retry again with backoff — don't rely on OnProcessExited
+            // (StartAsync may throw before process creation)
+            if (!_intentionalStop && !_disposed)
+            {
+                ScheduleRestart();
+            }
         }
     }
 
