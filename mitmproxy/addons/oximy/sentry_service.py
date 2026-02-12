@@ -5,7 +5,6 @@ import os
 import platform
 import sys
 import threading
-import time
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -13,23 +12,6 @@ logger = logging.getLogger(__name__)
 _lock = threading.Lock()
 _initialized = False
 _sentry_sdk: Any = None
-
-# Oximy addon logger name prefixes — events from these loggers pass through.
-# Includes both package-style (mitmproxy.addons.oximy.*) and standalone (addon, collector, etc.)
-_OXIMY_LOGGER_PREFIXES = (
-    "mitmproxy.addons.oximy",
-    "addon",
-    "collector",
-    "normalize",
-    "process",
-    "oximy_logger",
-    "sentry_service",
-)
-
-# Rate-limit state for auto-captured logging events: {(logger, message): (count, window_start)}
-_auto_event_rate: dict[tuple[str, str], tuple[int, float]] = {}
-_RATE_LIMIT_MAX = 5
-_RATE_LIMIT_WINDOW = 60.0  # seconds
 
 
 def _get_sdk():
@@ -49,42 +31,6 @@ def _sdk_or_none():
     if not _initialized:
         return None
     return _get_sdk()
-
-
-def _before_send(event: dict, hint: dict) -> dict | None:
-    """Filter auto-captured logging events to only allow oximy addon logs.
-
-    Events from explicit capture_message/capture_exception calls always pass through.
-    Events auto-captured by LoggingIntegration are filtered by logger name and rate-limited.
-    """
-    log_record = hint.get("log_record")
-    if log_record is None:
-        # Explicit capture_message/capture_exception — always pass through
-        return event
-
-    # Filter by logger name — only allow oximy addon loggers
-    logger_name = getattr(log_record, "name", "") or ""
-    if not any(logger_name.startswith(prefix) for prefix in _OXIMY_LOGGER_PREFIXES):
-        return None
-
-    # Rate-limit: max _RATE_LIMIT_MAX events per logger+message per _RATE_LIMIT_WINDOW
-    msg = getattr(log_record, "message", "") or getattr(log_record, "msg", "") or ""
-    key = (logger_name, msg)
-    now = time.monotonic()
-    count, window_start = _auto_event_rate.get(key, (0, now))
-    if now - window_start >= _RATE_LIMIT_WINDOW:
-        # New window
-        _auto_event_rate[key] = (1, now)
-    elif count >= _RATE_LIMIT_MAX:
-        return None
-    else:
-        _auto_event_rate[key] = (count + 1, window_start)
-
-    # Tag auto-captured events for dashboard filtering
-    tags = event.setdefault("tags", {})
-    tags["capture_source"] = "logging_integration"
-
-    return event
 
 
 def initialize() -> bool:
@@ -108,21 +54,32 @@ def initialize() -> bool:
 
             logging_integration = LoggingIntegration(
                 level=logging.INFO,          # breadcrumbs from INFO+
-                event_level=logging.ERROR,   # Sentry events from ERROR+ only
+                event_level=None,            # no auto-capture — explicit capture_message() only
             )
+
+            # StdlibIntegration auto-captures urllib HTTP calls (ingestion uploads,
+            # config fetches) as HTTP breadcrumbs — matches Swift SDK's HTTP tracking
+            integrations = [logging_integration]
+            try:
+                from sentry_sdk.integrations.stdlib import StdlibIntegration
+                integrations.append(StdlibIntegration())
+            except (ImportError, Exception):
+                logger.debug("StdlibIntegration not available — urllib HTTP breadcrumbs disabled")
 
             env = os.environ.get("OXIMY_ENV", "production")
             sdk.init(
                 dsn=dsn,
                 environment=env,
-                default_integrations=False,
-                auto_enabling_integrations=False,
-                integrations=[logging_integration],
-                before_send=_before_send,
+                integrations=integrations,
                 sample_rate=1.0,
                 traces_sample_rate=0.0,
                 send_default_pii=False,
                 max_breadcrumbs=200,
+                # Bypass the Oximy proxy for Sentry's own HTTP calls —
+                # the addon runs inside mitmproxy, so system proxy points
+                # back to ourselves which breaks Sentry event delivery
+                http_proxy="",
+                https_proxy="",
             )
 
             _initialized = True

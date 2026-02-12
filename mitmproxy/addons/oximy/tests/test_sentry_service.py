@@ -6,7 +6,6 @@ when Sentry is not initialized (no SENTRY_DSN, no sentry_sdk package).
 
 from __future__ import annotations
 
-import importlib
 import logging
 import os
 import sys
@@ -22,11 +21,9 @@ def reset_sentry_state():
     """Reset sentry_service module state between tests."""
     sentry_service._initialized = False
     sentry_service._sentry_sdk = None
-    sentry_service._auto_event_rate.clear()
     yield
     sentry_service._initialized = False
     sentry_service._sentry_sdk = None
-    sentry_service._auto_event_rate.clear()
 
 
 @pytest.fixture()
@@ -39,16 +36,20 @@ def mock_sentry_modules():
     mock_logging_integration_cls = MagicMock()
     mock_logging_mod = MagicMock()
     mock_logging_mod.LoggingIntegration = mock_logging_integration_cls
+    mock_stdlib_mod = MagicMock()
     mock_integrations = MagicMock()
     mock_integrations.logging = mock_logging_mod
+    mock_integrations.stdlib = mock_stdlib_mod
     mock_sentry = MagicMock()
     mock_sentry.integrations = mock_integrations
     mock_sentry.integrations.logging = mock_logging_mod
+    mock_sentry.integrations.stdlib = mock_stdlib_mod
 
     modules = {
         "sentry_sdk": mock_sentry,
         "sentry_sdk.integrations": mock_integrations,
         "sentry_sdk.integrations.logging": mock_logging_mod,
+        "sentry_sdk.integrations.stdlib": mock_stdlib_mod,
     }
     with patch.dict(sys.modules, modules):
         yield mock_logging_integration_cls
@@ -251,10 +252,10 @@ class TestGetSdk:
 
 
 class TestLoggingIntegration:
-    """Verify sdk.init() receives LoggingIntegration and before_send."""
+    """Verify sdk.init() receives LoggingIntegration with breadcrumbs only."""
 
-    def test_init_passes_integrations_and_before_send(self, mock_sentry_modules):
-        """sdk.init() should receive integrations list and before_send callback."""
+    def test_init_passes_integrations_no_before_send(self, mock_sentry_modules):
+        """sdk.init() should receive integrations list and no before_send callback."""
         mock_li_cls = mock_sentry_modules
         mock_li_instance = MagicMock()
         mock_li_cls.return_value = mock_li_instance
@@ -267,10 +268,10 @@ class TestLoggingIntegration:
                 call_kwargs = mock_sdk.init.call_args[1]
                 assert "integrations" in call_kwargs
                 assert mock_li_instance in call_kwargs["integrations"]
-                assert call_kwargs["before_send"] is sentry_service._before_send
+                assert "before_send" not in call_kwargs
 
-    def test_init_configures_logging_integration_levels(self, mock_sentry_modules):
-        """LoggingIntegration should use INFO for breadcrumbs, ERROR for events."""
+    def test_init_configures_logging_integration_breadcrumbs_only(self, mock_sentry_modules):
+        """LoggingIntegration should use INFO for breadcrumbs, None for events."""
         mock_li_cls = mock_sentry_modules
 
         mock_sdk = MagicMock()
@@ -279,71 +280,5 @@ class TestLoggingIntegration:
                 sentry_service.initialize()
                 mock_li_cls.assert_called_once_with(
                     level=logging.INFO,
-                    event_level=logging.ERROR,
+                    event_level=None,
                 )
-
-
-class TestBeforeSend:
-    """Verify before_send filter logic."""
-
-    def _make_log_record(self, name="mitmproxy.addons.oximy.addon", msg="test error"):
-        record = logging.LogRecord(
-            name=name, level=logging.ERROR, pathname="", lineno=0,
-            msg=msg, args=(), exc_info=None,
-        )
-        return record
-
-    def test_passes_oximy_addon_logger_events(self):
-        """Events from mitmproxy.addons.oximy.* loggers should pass through."""
-        record = self._make_log_record("mitmproxy.addons.oximy.addon")
-        event = {"tags": {}}
-        result = sentry_service._before_send(event, {"log_record": record})
-        assert result is not None
-        assert result["tags"]["capture_source"] == "logging_integration"
-
-    def test_passes_standalone_module_logger(self):
-        """Events from standalone module loggers (addon, collector) should pass."""
-        record = self._make_log_record("addon")
-        event = {"tags": {}}
-        result = sentry_service._before_send(event, {"log_record": record})
-        assert result is not None
-
-    def test_blocks_mitmproxy_framework_events(self):
-        """Events from mitmproxy core loggers should be dropped."""
-        for name in ["mitmproxy.proxy.server", "mitmproxy.connection", "mitmproxy.master"]:
-            record = self._make_log_record(name)
-            result = sentry_service._before_send({"tags": {}}, {"log_record": record})
-            assert result is None, f"Should block logger {name}"
-
-    def test_passes_explicit_capture_events(self):
-        """Events without log_record (explicit capture_message/exception) always pass."""
-        event = {"message": "explicit message"}
-        result = sentry_service._before_send(event, {})
-        assert result is event
-
-    def test_rate_limits_repeated_events(self):
-        """Should drop events after _RATE_LIMIT_MAX per logger+message per window."""
-        record = self._make_log_record(msg="repeated error")
-        for i in range(sentry_service._RATE_LIMIT_MAX):
-            result = sentry_service._before_send({"tags": {}}, {"log_record": record})
-            assert result is not None, f"Event {i+1} should pass"
-
-        # Next one should be dropped
-        result = sentry_service._before_send({"tags": {}}, {"log_record": record})
-        assert result is None, "Should be rate-limited after max events"
-
-    def test_rate_limit_resets_after_window(self):
-        """Rate limit should reset after the time window expires."""
-        record = self._make_log_record(msg="window reset test")
-        key = ("mitmproxy.addons.oximy.addon", "window reset test")
-
-        # Fill up the rate limit
-        for _ in range(sentry_service._RATE_LIMIT_MAX):
-            sentry_service._before_send({"tags": {}}, {"log_record": record})
-
-        # Simulate window expiry by backdating the window start
-        count, _ = sentry_service._auto_event_rate[key]
-        sentry_service._auto_event_rate[key] = (count, 0.0)  # epoch = expired
-
-        result = sentry_service._before_send({"tags": {}}, {"log_record": record})
-        assert result is not None, "Should pass after window reset"
