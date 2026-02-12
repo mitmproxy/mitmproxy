@@ -308,19 +308,33 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Delete existing 'latest' release if it exists (tag-only, keeps the real versioned release)
+          # Copy assets with fixed names so the download URLs never change
+          mkdir -p release-assets/latest
+          cp release-assets/macos/Oximy-${{ inputs.version }}.dmg release-assets/latest/Oximy.dmg
+          # Copy Windows installer if it exists
+          if ls release-assets/windows/Output/*.exe 1>/dev/null 2>&1; then
+            cp release-assets/windows/Output/*.exe release-assets/latest/OximySetup.exe
+          fi
+
+          # Delete existing 'latest' release if it exists
           gh release delete latest --yes 2>/dev/null || true
           # Force-move the 'latest' git tag to this commit
           git tag -f latest
           git push origin latest --force
-          # Create a 'latest' release pointing to the same assets
+          # Create a 'latest' release with fixed-name assets
           gh release create latest \
             --title "Latest Stable — Oximy v${{ inputs.version }}" \
-            --notes "This always points to the most recent stable release. Current: **v${{ inputs.version }}**" \
+            --notes "This always points to the most recent stable release. Current: **v${{ inputs.version }}**
+
+          ## Download
+
+          | Platform | Link |
+          |----------|------|
+          | macOS | [Oximy.dmg](https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.dmg) |
+          | Windows | [OximySetup.exe](https://github.com/OximyHQ/sensor/releases/download/latest/OximySetup.exe) |" \
             --latest \
-            release-assets/macos/Oximy-${{ inputs.version }}.dmg \
-            release-assets/windows/releases/* \
-            release-assets/windows/Output/*.exe 2>/dev/null || true
+            release-assets/latest/Oximy.dmg \
+            release-assets/latest/OximySetup.exe 2>/dev/null || true
 
       - name: Summary
         run: |
