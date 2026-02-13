@@ -432,10 +432,10 @@ build_windows() {
     fi
 
     # Run build script
-    print_header "Step 2/3: Building with Velopack"
+    print_header "Step 2/3: Building with Inno Setup"
 
     cd scripts
-    $POWERSHELL -ExecutionPolicy Bypass -File build.ps1 -Release -Clean -CreateVelopack -Version "$VERSION"
+    $POWERSHELL -ExecutionPolicy Bypass -File build.ps1 -Release -Clean -CreateInstaller -Version "$VERSION"
 
     if [ $? -ne 0 ]; then
         print_error "Build failed!"

@@ -168,7 +168,7 @@ jobs:
           retention-days: 30
 
   # ===========================================
-  # Build Windows App with Velopack
+  # Build Windows App with Inno Setup Installer
   # ===========================================
   build-windows:
     name: Build Windows
@@ -185,9 +185,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-
-      - name: Install Velopack CLI
-        run: dotnet tool install -g vpk
 
       - name: Validate version format
         run: |
@@ -226,9 +223,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: |
-            OximyWindows/releases/*
-            OximyWindows/installer/Output/*.exe
+          path: OximyWindows/installer/Output/*.exe
           retention-days: 30
 
   # ===========================================
@@ -262,8 +257,6 @@ jobs:
           echo ""
           echo "=== Windows ==="
           ls -la release-assets/windows/ || echo "No Windows files"
-          ls -la release-assets/windows/releases/ 2>/dev/null || echo "No Velopack releases"
-          ls -la release-assets/windows/Output/ 2>/dev/null || echo "No Inno Setup output"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -274,8 +267,7 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/macos/Oximy-${{ inputs.version }}.dmg
-            release-assets/windows/releases/*
-            release-assets/windows/Output/*.exe
+            release-assets/windows/*.exe
           body: |
             ## Oximy v${{ inputs.version }}
 
@@ -295,10 +287,6 @@ jobs:
             - **Apple Silicon (M1/M2/M3/M4)**: Native ARM64 binary
             - **Intel Macs**: Native x86_64 binary (Universal Binary)
 
-            ### Auto-Updates
-
-            - **Windows**: Velopack checks for updates on app startup
-
             ---
 
             **Full Changelog**: https://github.com/OximyHQ/sensor/compare/...oximy-v${{ inputs.version }}
@@ -312,8 +300,8 @@ jobs:
           mkdir -p release-assets/latest
           cp release-assets/macos/Oximy-${{ inputs.version }}.dmg release-assets/latest/Oximy.dmg
           # Copy Windows installer if it exists
-          if ls release-assets/windows/Output/*.exe 1>/dev/null 2>&1; then
-            cp release-assets/windows/Output/*.exe release-assets/latest/OximySetup.exe
+          if ls release-assets/windows/*.exe 1>/dev/null 2>&1; then
+            cp release-assets/windows/*.exe release-assets/latest/OximySetup.exe
           fi
 
           # Delete existing 'latest' release if it exists
