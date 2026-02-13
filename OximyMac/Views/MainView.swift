@@ -59,14 +59,13 @@ struct SetupView: View {
 
                 Spacer()
 
-                // Invisible spacer to balance the back button
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
+                // Close button
+                Button(action: { NotificationCenter.default.post(name: .closePopover, object: nil) }) {
+                    Image(systemName: "xmark")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("Back")
-                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
-                .opacity(0)
+                .buttonStyle(.plain)
             }
             .padding(.top, 16)
             .padding(.horizontal, 20)

@@ -13,7 +13,10 @@ from typing import Any
 try:
     import sentry_service
 except ImportError:
-    import sentry_service  # type: ignore[import]
+    try:
+        import sentry_service  # type: ignore[import]
+    except ImportError:
+        sentry_service = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ import AppKit
 extension Notification.Name {
     static let quitApp = Notification.Name("quitApp")
     static let handleAuthURL = Notification.Name("handleAuthURL")
+    static let closePopover = Notification.Name("closePopover")
 }
 
 @main
@@ -176,6 +177,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        // Listen for explicit popover close requests (from SetupView X button)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleClosePopover),
+            name: .closePopover,
+            object: nil
+        )
+
         // Start remote state monitoring (reads Python addon's state file)
         RemoteStateService.shared.start()
 
@@ -260,6 +269,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Also activate the app to ensure keyboard focus works
         NSApp.activate(ignoringOtherApps: true)
         print("[OximyApp] showPopoverAndFocus: app activated")
+    }
+
+    @objc private func handleClosePopover() {
+        popover.performClose(nil)
     }
 
     @objc private func handleQuitApp() {
@@ -536,7 +549,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return .terminateNow
         }
         // CMD+Q pressed - close popover but don't quit
-        if popover.isShown {
+        if popover.isShown && appState.phase != .setup {
             popover.performClose(nil)
         }
         return .terminateCancel
@@ -549,6 +562,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self, name: .mitmproxyFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .authenticationFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .handleAuthURL, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .closePopover, object: nil)
 
         // Remove remote state observer
         if let observer = remoteStateObserver {
@@ -684,6 +698,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Set up event monitor to close popover when clicking outside
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self = self, self.popover.isShown else { return }
+            // Don't auto-close during setup — user must click Continue or X
+            if self.appState.phase == .setup { return }
             self.popover.performClose(nil)
         }
     }
@@ -694,6 +710,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button else { return }
 
         if popover.isShown {
+            // Don't close during setup — user must click Continue or X
+            if appState.phase == .setup { return }
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
