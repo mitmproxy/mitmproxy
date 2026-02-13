@@ -321,6 +321,12 @@ jobs:
           # Force-move the 'latest' git tag to this commit
           git tag -f latest
           git push origin latest --force
+          # Build the file list (only include assets that exist)
+          ASSETS="release-assets/latest/Oximy.dmg"
+          if [ -f release-assets/latest/OximySetup.exe ]; then
+            ASSETS="$ASSETS release-assets/latest/OximySetup.exe"
+          fi
+
           # Create a 'latest' release with fixed-name assets
           gh release create latest \
             --title "Latest Stable — Oximy v${{ inputs.version }}" \
@@ -333,8 +339,7 @@ jobs:
           | macOS | [Oximy.dmg](https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.dmg) |
           | Windows | [OximySetup.exe](https://github.com/OximyHQ/sensor/releases/download/latest/OximySetup.exe) |" \
             --latest \
-            release-assets/latest/Oximy.dmg \
-            release-assets/latest/OximySetup.exe 2>/dev/null || true
+            $ASSETS
 
       - name: Summary
         run: |
