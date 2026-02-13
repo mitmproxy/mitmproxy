@@ -12,16 +12,9 @@ struct OximyApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // Settings scene with empty content - this prevents SwiftUI from creating
-        // any default windows. The actual UI is managed via AppDelegate.
-        // Note: Settings windows are only shown when user clicks Preferences menu,
-        // which we don't expose in our menu bar app.
-        Settings {
-            Text("Settings are managed in the popover")
-                .frame(width: 200, height: 50)
-        }
         // Hidden WindowGroup for URL handling - catches oximy:// deep links
-        // and prevents SwiftUI from launching a new app instance
+        // and prevents SwiftUI from launching a new app instance.
+        // All other UI is managed via AppDelegate popover.
         WindowGroup("URLHandler") {
             Color.clear
                 .frame(width: 0, height: 0)
@@ -44,10 +37,10 @@ struct OximyApp: App {
     }
 
     init() {
-        // Close any windows that might be open on launch
+        // Close any windows that might be open on launch (URLHandler, etc.)
         DispatchQueue.main.async {
             for window in NSApplication.shared.windows {
-                if window.title.contains("Settings") || window.title.isEmpty || window.title == "URLHandler" {
+                if window.title.isEmpty || window.title == "URLHandler" {
                     window.close()
                 }
             }
