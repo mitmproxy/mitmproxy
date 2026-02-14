@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using OximyWindows.Services;
 
 namespace OximyWindows.Core;
 
@@ -199,6 +200,8 @@ public class AppState : INotifyPropertyChanged
     public void CompleteCertificateSetup()
     {
         IsSetupCertificateComplete = true;
+        OximyLogger.IsSetupComplete = true;
+        SentryService.UpdateSetupStatus(true);
         CheckSetupComplete();
     }
 
@@ -237,6 +240,8 @@ public class AppState : INotifyPropertyChanged
 
         IsSetupCertificateComplete = true;
         IsSetupProxyComplete = true;
+        OximyLogger.IsSetupComplete = true;
+        SentryService.UpdateSetupStatus(true);
         Phase = Phase.Connected;
     }
 
@@ -282,6 +287,8 @@ public class AppState : INotifyPropertyChanged
         WorkspaceId = string.Empty;
         IsSetupCertificateComplete = false;
         IsSetupProxyComplete = false;
+        OximyLogger.IsSetupComplete = false;
+        SentryService.UpdateSetupStatus(false);
         Phase = Phase.Enrollment;
 
         // Remove device token file

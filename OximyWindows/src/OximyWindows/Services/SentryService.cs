@@ -137,6 +137,16 @@ public static class SentryService
         });
     }
 
+    public static void UpdateSetupStatus(bool complete)
+    {
+        if (!_initialized) return;
+
+        SentrySdk.ConfigureScope(scope =>
+        {
+            scope.SetTag("setup_status", complete ? "complete" : "in_progress");
+        });
+    }
+
     public static void UpdatePhase(Phase phase)
     {
         if (!_initialized)

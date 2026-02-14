@@ -114,6 +114,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupPopover()
         setupMainMenu()
 
+        // Set initial setup status (before other Sentry context)
+        SentryService.shared.updateSetupStatus(complete: appState.phase == .ready)
+
         // Update Sentry context with initial state
         SentryService.shared.updateContext(
             phase: appState.phase.rawValue,

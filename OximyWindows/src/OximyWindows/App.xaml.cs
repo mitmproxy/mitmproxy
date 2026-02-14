@@ -124,6 +124,12 @@ public partial class App : Application
         ProxyService.CheckStatus();
         StartupService.CheckStatus();
 
+        // Set initial setup status based on phase and cert installation
+        var isSetupDone = AppState.Instance.Phase == Phase.Connected
+            && CertificateService.IsCAInstalled;
+        OximyLogger.IsSetupComplete = isSetupDone;
+        SentryService.UpdateSetupStatus(isSetupDone);
+
         // Update Sentry context with initial state
         SentryService.UpdatePhase(AppState.Instance.Phase);
         SentryService.UpdateProxyStatus(ProxyService.IsProxyEnabled, MitmService.CurrentPort);
@@ -406,6 +412,7 @@ public partial class App : Application
         }
 
         AppState.Instance.CompleteEnrollment(finalDeviceId, token, workspace, workspaceId);
+        SentryService.SetFullUserContext(workspace, finalDeviceId, workspaceId);
 
         OximyLogger.Log(EventCode.ENROLL_STATE_101, "Enrollment complete", new Dictionary<string, object>
         {
@@ -417,7 +424,6 @@ public partial class App : Application
             ["workspace"] = workspace,
             ["has_device_id"] = (!string.IsNullOrEmpty(finalDeviceId)).ToString().ToLowerInvariant()
         });
-        SentryService.SetFullUserContext(workspace, finalDeviceId, workspaceId);
 
         Debug.WriteLine("[App] Auth callback processed successfully");
 
@@ -480,6 +486,13 @@ public partial class App : Application
                 Debug.WriteLine($"[App] Certificate install failed (user can retry from settings): {ex.Message}");
                 // Don't block - user can install from settings later
             }
+        }
+
+        // Mark setup complete once cert is installed
+        if (CertificateService.IsCAInstalled)
+        {
+            OximyLogger.IsSetupComplete = true;
+            SentryService.UpdateSetupStatus(true);
         }
 
         // Start mitmproxy

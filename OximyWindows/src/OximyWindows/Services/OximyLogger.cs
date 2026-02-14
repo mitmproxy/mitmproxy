@@ -9,6 +9,7 @@ namespace OximyWindows.Services;
 public static class OximyLogger
 {
     public static string SessionId { get; } = Guid.NewGuid().ToString();
+    public static bool IsSetupComplete { get; set; } = false;
 
     private static readonly object _logLock = new();
     private static int _seq;
@@ -227,6 +228,10 @@ public static class OximyLogger
                 type: level >= LogLevel.Warning ? "error" : "info",
                 data: breadcrumbData,
                 level: breadcrumbLevel);
+
+            // During setup, only suppress operational warnings (let .info lifecycle events through)
+            if (!IsSetupComplete && level == LogLevel.Warning)
+                return;
 
             if (ShouldSendSentryEvent(code))
             {

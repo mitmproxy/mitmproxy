@@ -6,6 +6,7 @@ final class OximyLogger {
     static let shared = OximyLogger()
 
     let sessionId = UUID().uuidString
+    var isSetupComplete: Bool = false
     private var seq: Int = 0
     private var fileHandle: FileHandle?
     private let logFilePath: URL
@@ -117,6 +118,11 @@ final class OximyLogger {
             data: data.isEmpty ? nil : data.mapValues { "\($0)" },
             level: sentryLevel
         )
+
+        // During setup, only suppress operational warnings (let .info lifecycle events through)
+        if !isSetupComplete && code.level == .warning {
+            return
+        }
 
         // Capture Sentry event (rate-limited per event code)
         if shouldSendSentryEvent(code: code.rawValue) {
