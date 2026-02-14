@@ -67,7 +67,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // CRITICAL: Export env vars BEFORE initializing Sentry
         // setenv() is not thread-safe — must run before Sentry spawns background threads
         if let dsn = Secrets.sentryDSN {
-            setenv("SENTRY_DSN", dsn, 1)
+            setenv("BETTERSTACK_ERRORS_DSN", dsn, 1)
+            setenv("SENTRY_DSN", dsn, 1)  // Backwards compat during transition
+        }
+        if let logsToken = Secrets.betterStackLogsToken {
+            setenv("BETTERSTACK_LOGS_TOKEN", logsToken, 1)
+        }
+        if let logsHost = Secrets.betterStackLogsHost {
+            setenv("BETTERSTACK_LOGS_HOST", logsHost, 1)
         }
         #if DEBUG
         setenv("OXIMY_ENV", "development", 1)
@@ -78,6 +85,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Initialize Sentry (now env vars are already set)
         SentryService.shared.initialize()
+
+        // Initialize Better Stack Logs
+        BetterStackLogsService.shared.initialize()
 
         // CRITICAL: Clean up any orphaned proxy settings from a previous crash
         // This MUST run before any UI loads to restore internet connectivity
@@ -585,6 +595,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Log termination BEFORE Sentry flush
         OximyLogger.shared.log(.APP_STOP_001, "App terminating")
         OximyLogger.shared.close()
+
+        // Flush Better Stack Logs before shutdown
+        BetterStackLogsService.shared.close()
 
         // Notify Sentry of clean shutdown
         SentryService.shared.appWillTerminate()

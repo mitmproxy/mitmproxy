@@ -11,10 +11,9 @@
 #     - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
 #     - APPLE_ID: Apple ID email for notarization
 #     - APPLE_APP_PASSWORD: App-specific password for notarization
-#     - SENTRY_DSN: (Optional) Sentry DSN for crash reporting
-#     - SENTRY_AUTH_TOKEN: (Optional) Sentry auth token for dSYM upload
-#     - SENTRY_ORG: (Optional) Sentry organization slug
-#     - SENTRY_PROJECT: (Optional) Sentry project slug
+#     - BETTERSTACK_ERRORS_DSN: (Optional) Better Stack Errors Sentry-compatible DSN for crash reporting
+#     - BETTERSTACK_LOGS_TOKEN: (Optional) Better Stack Logs source token
+#     - BETTERSTACK_LOGS_HOST: (Optional) Better Stack Logs ingesting host
 #
 #   Windows:
 #     - (No secrets required for unsigned builds)
@@ -141,24 +140,16 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          BETTERSTACK_ERRORS_DSN: ${{ secrets.BETTERSTACK_ERRORS_DSN }}
+          BETTERSTACK_LOGS_TOKEN: ${{ secrets.BETTERSTACK_LOGS_TOKEN }}
+          BETTERSTACK_LOGS_HOST: ${{ secrets.BETTERSTACK_LOGS_HOST }}
         run: |
           chmod +x build-prod.sh
           ./build-prod.sh mac --version "$VERSION"
           echo "dmg-name=Oximy-$VERSION.dmg" >> $GITHUB_OUTPUT
 
-      - name: Upload dSYMs to Sentry
-        if: env.SENTRY_AUTH_TOKEN != ''
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        run: |
-          curl -sL https://sentry.io/get-cli/ | bash
-          sentry-cli debug-files upload --include-sources \
-            --org "$SENTRY_ORG" \
-            --project "$SENTRY_PROJECT" \
-            OximyMac/.build/
+      # Note: dSYM upload removed — Better Stack Errors doesn't support symbolication upload.
+      # Native crash stack traces will show unsymbolicated addresses.
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -200,6 +191,9 @@ jobs:
         id: build
         env:
           VERSION: ${{ inputs.version }}
+          BETTERSTACK_ERRORS_DSN: ${{ secrets.BETTERSTACK_ERRORS_DSN }}
+          BETTERSTACK_LOGS_TOKEN: ${{ secrets.BETTERSTACK_LOGS_TOKEN }}
+          BETTERSTACK_LOGS_HOST: ${{ secrets.BETTERSTACK_LOGS_HOST }}
         run: |
           # Use the unified build script via bash (Git Bash on Windows)
           bash -c "./build-prod.sh windows --version $env:VERSION"

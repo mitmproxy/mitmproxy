@@ -60,9 +60,11 @@ except ImportError:
 # Import structured logging - handle both package and script modes
 try:
     from .oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
+    from .oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST
     from . import sentry_service
 except ImportError:
     from oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
+    from oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST  # type: ignore[import]
     import sentry_service
 
 logging.basicConfig(
@@ -1631,6 +1633,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
         },
         "allowed_host_origins": data.get("allowed_host_origins", []),
         "localDataSources": data.get("localDataSources", {}),
+        "tenantId": data.get("tenantId"),
     }
 
 
@@ -3228,6 +3231,11 @@ class OximyAddon:
                         self._local_collector.stop()
                         self._local_collector = None
 
+                    # Update tenant_id in logger context
+                    tenant_id = config.get("tenantId")
+                    if tenant_id:
+                        set_log_context(device_id=self._device_id, tenant_id=tenant_id)
+
                 logger.debug(
                     f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
                     f"{len(self._allowed_app_hosts)} app_hosts, {len(self._allowed_host_origins)} host_origins"
@@ -3511,6 +3519,12 @@ class OximyAddon:
         sentry_service.set_user(device_id=self._device_id)
         sentry_service.set_initial_context()
         set_log_context(device_id=self._device_id)
+
+        # Log Better Stack Logs status
+        if _BETTERSTACK_LOGS_TOKEN and _BETTERSTACK_LOGS_HOST:
+            logger.info("Better Stack Logs enabled for Python addon")
+        else:
+            logger.debug("Better Stack Logs disabled — BETTERSTACK_LOGS_TOKEN/HOST not set")
 
         oximy_log(OximyEventCode.APP_INIT_001, "Addon initialized", data={
             "whitelist_count": len(self._whitelist),

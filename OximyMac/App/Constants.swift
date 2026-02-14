@@ -103,7 +103,7 @@ enum Constants {
     // MARK: - Sentry
     enum Sentry {
         /// Environment variable name for DSN
-        static let dsnEnvKey = "SENTRY_DSN"
+        static let dsnEnvKey = "BETTERSTACK_ERRORS_DSN"
 
         /// UserDefaults key for anonymous device ID
         static let deviceIdKey = "sentry_device_id"

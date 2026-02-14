@@ -34,6 +34,7 @@ final class OximyLogger {
         printConsole(code: code, message: message, data: data, timestamp: now)
         writeJSONL(code: code, message: message, data: data, err: err, timestamp: now, seq: seq)
         sendToSentry(code: code, message: message, data: data, err: err)
+        sendToBetterStackLogs(code: code, message: message, data: data, err: err, timestamp: now, seq: seq)
     }
 
     private func printConsole(code: EventCode, message: String, data: [String: Any], timestamp: Date) {
@@ -142,6 +143,49 @@ final class OximyLogger {
                 }
             }
         }
+    }
+
+    private func sendToBetterStackLogs(
+        code: EventCode,
+        message: String,
+        data: [String: Any],
+        err: (type: String, code: String, message: String)?,
+        timestamp: Date,
+        seq: Int
+    ) {
+        guard BetterStackLogsService.shared.isInitialized else { return }
+        guard code.level >= .info else { return }
+
+        var entry: [String: Any] = [
+            "dt": ISO8601DateFormatter.shared.string(from: timestamp),
+            "v": 1,
+            "seq": seq,
+            "code": code.rawValue,
+            "level": code.level.rawValue,
+            "svc": code.service,
+            "op": code.operation,
+            "msg": message,
+            "action": code.action.rawValue,
+        ]
+
+        var ctx: [String: Any] = ["component": "swift", "session_id": sessionId]
+        if let deviceId = UserDefaults.standard.string(forKey: Constants.Defaults.deviceId) {
+            ctx["device_id"] = deviceId
+        }
+        if let workspaceId = UserDefaults.standard.string(forKey: Constants.Defaults.workspaceId) {
+            ctx["workspace_id"] = workspaceId
+        }
+        if let workspaceName = UserDefaults.standard.string(forKey: Constants.Defaults.workspaceName) {
+            ctx["workspace_name"] = workspaceName
+        }
+        entry["ctx"] = ctx
+
+        if !data.isEmpty { entry["data"] = data }
+        if let err = err {
+            entry["err"] = ["type": err.type, "code": err.code, "message": err.message]
+        }
+
+        BetterStackLogsService.shared.enqueue(entry)
     }
 
     private func shouldSendSentryEvent(code: String) -> Bool {
