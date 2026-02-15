@@ -9,6 +9,7 @@ namespace OximyWindows.Services;
 public static class OximyLogger
 {
     public static string SessionId { get; } = Guid.NewGuid().ToString();
+    public static bool IsSetupComplete { get; set; } = false;
 
     private static readonly object _logLock = new();
     private static int _seq;
@@ -80,6 +81,7 @@ public static class OximyLogger
         PrintConsole(code, message, data, now);
         WriteJSONL(code, message, data, err, now);
         SendToSentry(code, message, data, err);
+        SendToBetterStackLogs(code, message, data, err, now);
     }
 
     public static void SetTag(string key, string value)
@@ -228,6 +230,10 @@ public static class OximyLogger
                 data: breadcrumbData,
                 level: breadcrumbLevel);
 
+            // During setup, only suppress operational warnings (let .info lifecycle events through)
+            if (!IsSetupComplete && level == LogLevel.Warning)
+                return;
+
             if (ShouldSendSentryEvent(code))
             {
                 SentrySdk.CaptureMessage($"[{code.GetCode()}] {message}", scope =>
@@ -285,6 +291,66 @@ public static class OximyLogger
     {
         if (!string.IsNullOrEmpty(value))
             dict[key] = value;
+    }
+
+    private static void SendToBetterStackLogs(
+        EventCode code,
+        string message,
+        Dictionary<string, object>? data,
+        (string type, string code, string message)? err,
+        DateTime timestamp)
+    {
+        if (!BetterStackLogsService.IsInitialized) return;
+
+        var level = code.GetLevel();
+        if (level < LogLevel.Info) return;
+
+        try
+        {
+            var (service, operation) = code.GetServiceAndOperation();
+
+            var ctx = new Dictionary<string, object>
+            {
+                ["component"] = "dotnet",
+                ["session_id"] = SessionId
+            };
+
+            AddIfPresent(ctx, "device_id", AppState.Instance.DeviceId);
+            AddIfPresent(ctx, "workspace_id", AppState.Instance.WorkspaceId);
+            AddIfPresent(ctx, "workspace_name", AppState.Instance.WorkspaceName);
+
+            var entry = new Dictionary<string, object>
+            {
+                ["dt"] = timestamp.ToString("O"),
+                ["v"] = 1,
+                ["code"] = code.GetCode(),
+                ["level"] = level.ToString().ToLowerInvariant(),
+                ["svc"] = service,
+                ["op"] = operation,
+                ["msg"] = message,
+                ["action"] = code.GetAction().GetActionString(),
+                ["ctx"] = ctx
+            };
+
+            if (data is { Count: > 0 })
+                entry["data"] = data;
+
+            if (err.HasValue)
+            {
+                entry["err"] = new Dictionary<string, object>
+                {
+                    ["type"] = err.Value.type,
+                    ["code"] = err.Value.code,
+                    ["message"] = err.Value.message
+                };
+            }
+
+            BetterStackLogsService.Enqueue(entry);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OximyLogger] BetterStack error: {ex.Message}");
+        }
     }
 
     private static void OpenLogFile()

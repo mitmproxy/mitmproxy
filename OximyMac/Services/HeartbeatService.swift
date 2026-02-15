@@ -89,47 +89,21 @@ final class HeartbeatService: ObservableObject {
                 data: ["status": response.status]
             )
 
-            // Validate workspace name from server - don't blindly trust it
-            if let serverWorkspaceName = response.workspaceName, !serverWorkspaceName.isEmpty {
-                let defaults = UserDefaults.standard
-                let currentName = defaults.string(forKey: Constants.Defaults.workspaceName)
-                let currentWorkspaceId = defaults.string(forKey: Constants.Defaults.workspaceId)
+            // Sync workspace info from server — the authenticated heartbeat
+            // response is the source of truth for this device's workspace.
+            let defaults = UserDefaults.standard
 
-                // Log for diagnostics
-                print("[HeartbeatService] Workspace check - stored: '\(currentName ?? "nil")', server: '\(serverWorkspaceName)'")
+            if let serverName = response.workspaceName, !serverName.isEmpty,
+               serverName != defaults.string(forKey: Constants.Defaults.workspaceName) {
+                defaults.set(serverName, forKey: Constants.Defaults.workspaceName)
+                NotificationCenter.default.post(name: .workspaceNameUpdated, object: serverName)
+                print("[HeartbeatService] Workspace name updated to '\(serverName)'")
+            }
 
-                if currentName != serverWorkspaceName {
-                    // Server returned different workspace name - validate before accepting
-                    if let serverWorkspaceId = response.workspaceId, serverWorkspaceId == currentWorkspaceId {
-                        // WorkspaceId matches - safe to update the display name
-                        defaults.set(serverWorkspaceName, forKey: Constants.Defaults.workspaceName)
-                        NotificationCenter.default.post(name: .workspaceNameUpdated, object: serverWorkspaceName)
-                        print("[HeartbeatService] Workspace name updated from '\(currentName ?? "nil")' to '\(serverWorkspaceName)' (workspaceId validated)")
-                    } else if response.workspaceId != nil {
-                        // WorkspaceId mismatch - critical error, do not update
-                        print("[HeartbeatService] CRITICAL: WorkspaceId mismatch - local: '\(currentWorkspaceId ?? "nil")', server: '\(response.workspaceId ?? "nil")' - ignoring workspace name update")
-                        OximyLogger.shared.log(.HB_STATE_202, "Workspace ID mismatch", data: [
-                            "local_workspace_id": currentWorkspaceId ?? "nil",
-                            "server_workspace_id": response.workspaceId ?? "nil"
-                        ])
-                    } else {
-                        // No workspaceId in response
-                        // Special case: If current name is "Loading..." (initial fetch failed),
-                        // allow the update since we're recovering from a failed state
-                        if currentName == "Loading..." {
-                            defaults.set(serverWorkspaceName, forKey: Constants.Defaults.workspaceName)
-                            NotificationCenter.default.post(name: .workspaceNameUpdated, object: serverWorkspaceName)
-                            print("[HeartbeatService] Workspace name recovered from 'Loading...' to '\(serverWorkspaceName)'")
-                        } else {
-                            // Don't update - can't validate without workspaceId
-                            print("[HeartbeatService] WARNING: Server returned different workspace name '\(serverWorkspaceName)' vs stored '\(currentName ?? "nil")' - ignoring (no workspaceId to validate)")
-                            SentryService.shared.addErrorBreadcrumb(
-                                service: "heartbeat",
-                                error: "Workspace name mismatch - stored: '\(currentName ?? "nil")', server: '\(serverWorkspaceName)'"
-                            )
-                        }
-                    }
-                }
+            if let serverId = response.workspaceId, !serverId.isEmpty,
+               serverId != defaults.string(forKey: Constants.Defaults.workspaceId) {
+                defaults.set(serverId, forKey: Constants.Defaults.workspaceId)
+                print("[HeartbeatService] Workspace ID updated to '\(serverId)'")
             }
 
             // Process any commands from the server

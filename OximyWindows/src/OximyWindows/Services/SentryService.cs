@@ -23,7 +23,9 @@ public static class SentryService
         if (_initialized)
             return;
 
-        var dsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? Secrets.SentryDsn;
+        var dsn = Environment.GetEnvironmentVariable("BETTERSTACK_ERRORS_DSN")
+                ?? Environment.GetEnvironmentVariable("SENTRY_DSN")
+                ?? Secrets.SentryDsn;
         if (string.IsNullOrEmpty(dsn))
         {
             Debug.WriteLine("[SentryService] No DSN configured, Sentry disabled");
@@ -134,6 +136,16 @@ public static class SentryService
         SentrySdk.ConfigureScope(scope =>
         {
             scope.User = new SentryUser { Id = GetAnonymousDeviceId() };
+        });
+    }
+
+    public static void UpdateSetupStatus(bool complete)
+    {
+        if (!_initialized) return;
+
+        SentrySdk.ConfigureScope(scope =>
+        {
+            scope.SetTag("setup_status", complete ? "complete" : "in_progress");
         });
     }
 
@@ -308,9 +320,4 @@ public static class SentryService
 
         return _anonymousDeviceId;
     }
-}
-
-public static partial class Secrets
-{
-    public static string? SentryDsn => "https://e962156753c89553ea4e648edfbd7cba@o4510688285884416.ingest.us.sentry.io/4510688296828928";
 }

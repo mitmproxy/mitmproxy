@@ -49,9 +49,20 @@ public partial class App : Application
         SetupFileLogging();
 
         // Export env vars BEFORE Sentry init (thread safety)
-        var dsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? Secrets.SentryDsn;
+        var dsn = Environment.GetEnvironmentVariable("BETTERSTACK_ERRORS_DSN")
+                ?? Environment.GetEnvironmentVariable("SENTRY_DSN")
+                ?? Secrets.SentryDsn;
         if (!string.IsNullOrEmpty(dsn))
+        {
             Environment.SetEnvironmentVariable("SENTRY_DSN", dsn);
+            Environment.SetEnvironmentVariable("BETTERSTACK_ERRORS_DSN", dsn);
+        }
+
+        // Better Stack Logs env vars for Python addon
+        if (!string.IsNullOrEmpty(Secrets.BetterStackLogsToken))
+            Environment.SetEnvironmentVariable("BETTERSTACK_LOGS_TOKEN", Secrets.BetterStackLogsToken);
+        if (!string.IsNullOrEmpty(Secrets.BetterStackLogsHost))
+            Environment.SetEnvironmentVariable("BETTERSTACK_LOGS_HOST", Secrets.BetterStackLogsHost);
 #if DEBUG
         Environment.SetEnvironmentVariable("OXIMY_ENV", "development");
 #else
@@ -62,6 +73,7 @@ public partial class App : Application
         // CRITICAL: Initialize Sentry AFTER env vars are set, before any other code that might throw.
         // This ensures we capture any startup errors.
         SentryService.Initialize();
+        BetterStackLogsService.Initialize();
 
         // CRITICAL: Clean up any orphaned proxy settings from a previous crash.
         // FAIL-OPEN: This MUST run before any UI loads to restore internet connectivity.
@@ -123,6 +135,12 @@ public partial class App : Application
         CertificateService.CheckStatus();
         ProxyService.CheckStatus();
         StartupService.CheckStatus();
+
+        // Set initial setup status based on phase and cert installation
+        var isSetupDone = AppState.Instance.Phase == Phase.Connected
+            && CertificateService.IsCAInstalled;
+        OximyLogger.IsSetupComplete = isSetupDone;
+        SentryService.UpdateSetupStatus(isSetupDone);
 
         // Update Sentry context with initial state
         SentryService.UpdatePhase(AppState.Instance.Phase);
@@ -406,6 +424,7 @@ public partial class App : Application
         }
 
         AppState.Instance.CompleteEnrollment(finalDeviceId, token, workspace, workspaceId);
+        SentryService.SetFullUserContext(workspace, finalDeviceId, workspaceId);
 
         OximyLogger.Log(EventCode.ENROLL_STATE_101, "Enrollment complete", new Dictionary<string, object>
         {
@@ -417,7 +436,6 @@ public partial class App : Application
             ["workspace"] = workspace,
             ["has_device_id"] = (!string.IsNullOrEmpty(finalDeviceId)).ToString().ToLowerInvariant()
         });
-        SentryService.SetFullUserContext(workspace, finalDeviceId, workspaceId);
 
         Debug.WriteLine("[App] Auth callback processed successfully");
 
@@ -480,6 +498,13 @@ public partial class App : Application
                 Debug.WriteLine($"[App] Certificate install failed (user can retry from settings): {ex.Message}");
                 // Don't block - user can install from settings later
             }
+        }
+
+        // Mark setup complete once cert is installed
+        if (CertificateService.IsCAInstalled)
+        {
+            OximyLogger.IsSetupComplete = true;
+            SentryService.UpdateSetupStatus(true);
         }
 
         // Start mitmproxy
@@ -567,6 +592,10 @@ public partial class App : Application
         // Log shutdown and close structured logger
         OximyLogger.Log(EventCode.APP_STOP_001, "App terminating");
         OximyLogger.Close();
+
+        // Flush and close Better Stack Logs
+        BetterStackLogsService.Flush();
+        BetterStackLogsService.Close();
 
         // Flush and close Sentry
         SentryService.Flush();

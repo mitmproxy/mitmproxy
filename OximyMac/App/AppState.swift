@@ -173,6 +173,8 @@ final class AppState: ObservableObject {
                 // MDM says skip everything - go directly to ready
                 print("[AppState] MDM: Skipping all setup, going to ready phase")
                 phase = .ready
+                OximyLogger.shared.isSetupComplete = true
+                SentryService.shared.updateSetupStatus(complete: true)
                 startServices()
                 return
             } else if mdmConfig.shouldSkipEnrollment {
@@ -207,6 +209,8 @@ final class AppState: ObservableObject {
         if hasDeviceToken && setupComplete {
             // Both enrollment and setup done
             phase = .ready
+            OximyLogger.shared.isSetupComplete = true
+            SentryService.shared.updateSetupStatus(complete: true)
             startServices()
         } else if hasDeviceToken {
             // Enrolled but setup not complete
@@ -234,6 +238,8 @@ final class AppState: ObservableObject {
         UserDefaults.standard.set(true, forKey: Constants.Defaults.setupComplete)
         phase = .ready
         connectionStatus = .connected
+        OximyLogger.shared.isSetupComplete = true
+        SentryService.shared.updateSetupStatus(complete: true)
         OximyLogger.shared.log(.APP_STATE_101, "Setup complete, entering ready phase")
         startServices()
     }
@@ -305,6 +311,10 @@ final class AppState: ObservableObject {
 
         // Delete device token file
         deleteDeviceTokenFile()
+
+        // Reset setup status for re-enrollment tracking
+        OximyLogger.shared.isSetupComplete = false
+        SentryService.shared.updateSetupStatus(complete: false)
 
         phase = .enrollment
         connectionStatus = .disconnected
@@ -453,10 +463,14 @@ final class AppState: ObservableObject {
         // Delete device token file
         deleteDeviceTokenFile()
 
-        // Clear Sentry user context
+        OximyLogger.shared.log(.AUTH_AUTH_002, "User logged out")
+
+        // Clear Sentry user context (after log so the event retains user attribution)
         SentryService.shared.clearUser()
 
-        OximyLogger.shared.log(.AUTH_AUTH_002, "User logged out")
+        // Reset setup status AFTER logging logout (so the event isn't suppressed)
+        OximyLogger.shared.isSetupComplete = false
+        SentryService.shared.updateSetupStatus(complete: false)
 
         workspaceName = ""
         deviceId = ""

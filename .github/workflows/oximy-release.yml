@@ -11,10 +11,9 @@
 #     - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
 #     - APPLE_ID: Apple ID email for notarization
 #     - APPLE_APP_PASSWORD: App-specific password for notarization
-#     - SENTRY_DSN: (Optional) Sentry DSN for crash reporting
-#     - SENTRY_AUTH_TOKEN: (Optional) Sentry auth token for dSYM upload
-#     - SENTRY_ORG: (Optional) Sentry organization slug
-#     - SENTRY_PROJECT: (Optional) Sentry project slug
+#     - BETTERSTACK_ERRORS_DSN: (Optional) Better Stack Errors Sentry-compatible DSN for crash reporting
+#     - BETTERSTACK_LOGS_TOKEN: (Optional) Better Stack Logs source token
+#     - BETTERSTACK_LOGS_HOST: (Optional) Better Stack Logs ingesting host
 #
 #   Windows:
 #     - (No secrets required for unsigned builds)
@@ -141,22 +140,16 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          BETTERSTACK_ERRORS_DSN: ${{ secrets.BETTERSTACK_ERRORS_DSN }}
+          BETTERSTACK_LOGS_TOKEN: ${{ secrets.BETTERSTACK_LOGS_TOKEN }}
+          BETTERSTACK_LOGS_HOST: ${{ secrets.BETTERSTACK_LOGS_HOST }}
         run: |
           chmod +x build-prod.sh
           ./build-prod.sh mac --version "$VERSION"
           echo "dmg-name=Oximy-$VERSION.dmg" >> $GITHUB_OUTPUT
 
-      - name: Upload dSYMs to Sentry
-        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: |
-          curl -sL https://sentry.io/get-cli/ | bash
-          sentry-cli debug-files upload --include-sources \
-            --org "${{ secrets.SENTRY_ORG }}" \
-            --project "${{ secrets.SENTRY_PROJECT }}" \
-            OximyMac/.build/
+      # Note: dSYM upload removed — Better Stack Errors doesn't support symbolication upload.
+      # Native crash stack traces will show unsymbolicated addresses.
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -166,7 +159,7 @@ jobs:
           retention-days: 30
 
   # ===========================================
-  # Build Windows App with Velopack
+  # Build Windows App with Inno Setup Installer
   # ===========================================
   build-windows:
     name: Build Windows
@@ -184,9 +177,6 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install Velopack CLI
-        run: dotnet tool install -g vpk
-
       - name: Validate version format
         run: |
           $version = "${{ inputs.version }}"
@@ -201,6 +191,9 @@ jobs:
         id: build
         env:
           VERSION: ${{ inputs.version }}
+          BETTERSTACK_ERRORS_DSN: ${{ secrets.BETTERSTACK_ERRORS_DSN }}
+          BETTERSTACK_LOGS_TOKEN: ${{ secrets.BETTERSTACK_LOGS_TOKEN }}
+          BETTERSTACK_LOGS_HOST: ${{ secrets.BETTERSTACK_LOGS_HOST }}
         run: |
           # Use the unified build script via bash (Git Bash on Windows)
           bash -c "./build-prod.sh windows --version $env:VERSION"
@@ -224,9 +217,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: |
-            OximyWindows/releases/*
-            OximyWindows/installer/Output/*.exe
+          path: OximyWindows/installer/Output/*.exe
           retention-days: 30
 
   # ===========================================
@@ -260,8 +251,6 @@ jobs:
           echo ""
           echo "=== Windows ==="
           ls -la release-assets/windows/ || echo "No Windows files"
-          ls -la release-assets/windows/releases/ 2>/dev/null || echo "No Velopack releases"
-          ls -la release-assets/windows/Output/ 2>/dev/null || echo "No Inno Setup output"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -272,8 +261,7 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/macos/Oximy-${{ inputs.version }}.dmg
-            release-assets/windows/releases/*
-            release-assets/windows/Output/*.exe
+            release-assets/windows/*.exe
           body: |
             ## Oximy v${{ inputs.version }}
 
@@ -293,10 +281,6 @@ jobs:
             - **Apple Silicon (M1/M2/M3/M4)**: Native ARM64 binary
             - **Intel Macs**: Native x86_64 binary (Universal Binary)
 
-            ### Auto-Updates
-
-            - **Windows**: Velopack checks for updates on app startup
-
             ---
 
             **Full Changelog**: https://github.com/OximyHQ/sensor/compare/...oximy-v${{ inputs.version }}
@@ -306,19 +290,38 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Delete existing 'latest' release if it exists (tag-only, keeps the real versioned release)
+          # Copy assets with fixed names so the download URLs never change
+          mkdir -p release-assets/latest
+          cp release-assets/macos/Oximy-${{ inputs.version }}.dmg release-assets/latest/Oximy.dmg
+          # Copy Windows installer if it exists
+          if ls release-assets/windows/*.exe 1>/dev/null 2>&1; then
+            cp release-assets/windows/*.exe release-assets/latest/OximySetup.exe
+          fi
+
+          # Delete existing 'latest' release if it exists
           gh release delete latest --yes 2>/dev/null || true
           # Force-move the 'latest' git tag to this commit
           git tag -f latest
           git push origin latest --force
-          # Create a 'latest' release pointing to the same assets
+          # Build the file list (only include assets that exist)
+          ASSETS="release-assets/latest/Oximy.dmg"
+          if [ -f release-assets/latest/OximySetup.exe ]; then
+            ASSETS="$ASSETS release-assets/latest/OximySetup.exe"
+          fi
+
+          # Create a 'latest' release with fixed-name assets
           gh release create latest \
             --title "Latest Stable — Oximy v${{ inputs.version }}" \
-            --notes "This always points to the most recent stable release. Current: **v${{ inputs.version }}**" \
+            --notes "This always points to the most recent stable release. Current: **v${{ inputs.version }}**
+
+          ## Download
+
+          | Platform | Link |
+          |----------|------|
+          | macOS | [Oximy.dmg](https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.dmg) |
+          | Windows | [OximySetup.exe](https://github.com/OximyHQ/sensor/releases/download/latest/OximySetup.exe) |" \
             --latest \
-            release-assets/macos/Oximy-${{ inputs.version }}.dmg \
-            release-assets/windows/releases/* \
-            release-assets/windows/Output/*.exe 2>/dev/null || true
+            $ASSETS
 
       - name: Summary
         run: |

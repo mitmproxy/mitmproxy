@@ -4,6 +4,7 @@ import AppKit
 extension Notification.Name {
     static let quitApp = Notification.Name("quitApp")
     static let handleAuthURL = Notification.Name("handleAuthURL")
+    static let closePopover = Notification.Name("closePopover")
 }
 
 @main
@@ -11,16 +12,9 @@ struct OximyApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // Settings scene with empty content - this prevents SwiftUI from creating
-        // any default windows. The actual UI is managed via AppDelegate.
-        // Note: Settings windows are only shown when user clicks Preferences menu,
-        // which we don't expose in our menu bar app.
-        Settings {
-            Text("Settings are managed in the popover")
-                .frame(width: 200, height: 50)
-        }
         // Hidden WindowGroup for URL handling - catches oximy:// deep links
-        // and prevents SwiftUI from launching a new app instance
+        // and prevents SwiftUI from launching a new app instance.
+        // All other UI is managed via AppDelegate popover.
         WindowGroup("URLHandler") {
             Color.clear
                 .frame(width: 0, height: 0)
@@ -43,10 +37,10 @@ struct OximyApp: App {
     }
 
     init() {
-        // Close any windows that might be open on launch
+        // Close any windows that might be open on launch (URLHandler, etc.)
         DispatchQueue.main.async {
             for window in NSApplication.shared.windows {
-                if window.title.contains("Settings") || window.title.isEmpty || window.title == "URLHandler" {
+                if window.title.isEmpty || window.title == "URLHandler" {
                     window.close()
                 }
             }
@@ -73,7 +67,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // CRITICAL: Export env vars BEFORE initializing Sentry
         // setenv() is not thread-safe — must run before Sentry spawns background threads
         if let dsn = Secrets.sentryDSN {
-            setenv("SENTRY_DSN", dsn, 1)
+            setenv("BETTERSTACK_ERRORS_DSN", dsn, 1)
+            setenv("SENTRY_DSN", dsn, 1)  // Backwards compat during transition
+        }
+        if let logsToken = Secrets.betterStackLogsToken {
+            setenv("BETTERSTACK_LOGS_TOKEN", logsToken, 1)
+        }
+        if let logsHost = Secrets.betterStackLogsHost {
+            setenv("BETTERSTACK_LOGS_HOST", logsHost, 1)
         }
         #if DEBUG
         setenv("OXIMY_ENV", "development", 1)
@@ -84,6 +85,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Initialize Sentry (now env vars are already set)
         SentryService.shared.initialize()
+
+        // Initialize Better Stack Logs
+        BetterStackLogsService.shared.initialize()
 
         // CRITICAL: Clean up any orphaned proxy settings from a previous crash
         // This MUST run before any UI loads to restore internet connectivity
@@ -119,6 +123,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupPopover()
         setupMainMenu()
+
+        // Set initial setup status (before other Sentry context)
+        SentryService.shared.updateSetupStatus(complete: appState.phase == .ready)
 
         // Update Sentry context with initial state
         SentryService.shared.updateContext(
@@ -173,6 +180,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self,
             selector: #selector(handleAuthURLNotification(_:)),
             name: .handleAuthURL,
+            object: nil
+        )
+
+        // Listen for explicit popover close requests (from SetupView X button)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleClosePopover),
+            name: .closePopover,
             object: nil
         )
 
@@ -260,6 +275,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Also activate the app to ensure keyboard focus works
         NSApp.activate(ignoringOtherApps: true)
         print("[OximyApp] showPopoverAndFocus: app activated")
+    }
+
+    @objc private func handleClosePopover() {
+        popover.performClose(nil)
     }
 
     @objc private func handleQuitApp() {
@@ -536,7 +555,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return .terminateNow
         }
         // CMD+Q pressed - close popover but don't quit
-        if popover.isShown {
+        if popover.isShown && appState.phase != .setup {
             popover.performClose(nil)
         }
         return .terminateCancel
@@ -549,6 +568,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self, name: .mitmproxyFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .authenticationFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .handleAuthURL, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .closePopover, object: nil)
 
         // Remove remote state observer
         if let observer = remoteStateObserver {
@@ -575,6 +595,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Log termination BEFORE Sentry flush
         OximyLogger.shared.log(.APP_STOP_001, "App terminating")
         OximyLogger.shared.close()
+
+        // Flush Better Stack Logs before shutdown
+        BetterStackLogsService.shared.close()
 
         // Notify Sentry of clean shutdown
         SentryService.shared.appWillTerminate()
@@ -684,6 +707,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Set up event monitor to close popover when clicking outside
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self = self, self.popover.isShown else { return }
+            // Don't auto-close during setup — user must click Continue or X
+            if self.appState.phase == .setup { return }
             self.popover.performClose(nil)
         }
     }
@@ -694,6 +719,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button else { return }
 
         if popover.isShown {
+            // Don't close during setup — user must click Continue or X
+            if appState.phase == .setup { return }
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)

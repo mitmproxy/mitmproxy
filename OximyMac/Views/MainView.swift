@@ -59,14 +59,13 @@ struct SetupView: View {
 
                 Spacer()
 
-                // Invisible spacer to balance the back button
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
+                // Close button
+                Button(action: { NotificationCenter.default.post(name: .closePopover, object: nil) }) {
+                    Image(systemName: "xmark")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("Back")
-                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
-                .opacity(0)
+                .buttonStyle(.plain)
             }
             .padding(.top, 16)
             .padding(.horizontal, 20)
@@ -122,39 +121,22 @@ struct SetupView: View {
 
             Spacer()
 
-            // Continue Button
-            VStack(spacing: 12) {
-                Button(action: startMonitoring) {
-                    HStack {
-                        if allComplete {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                        Text(allComplete ? "Continue" : "Complete Setup Above")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!allComplete)
-
-                // Skip for now option
-                if !allComplete {
-                    Button(action: { appState.skipSetup() }) {
-                        Text("Set Up Later")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
+            // Skip for now option
+            Button(action: { appState.skipSetup() }) {
+                Text("Set Up Later")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 24)
+            .buttonStyle(.plain)
             .padding(.bottom, 24)
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
-            // Only check cert status on appear - it rarely changes
-            // DO NOT call proxyService.checkStatus() here - it overwrites the known state
-            // and can cause flickering when moving screens
             certService.checkStatus()
+            // If cert is already installed, skip this page entirely
+            if certService.isCAInstalled {
+                appState.completeSetup()
+            }
         }
     }
 
@@ -167,15 +149,13 @@ struct SetupView: View {
                 try await certService.generateCA()
                 try await certService.installCA()
                 appState.isCertificateInstalled = true
+                // Auto-transition to ready — no Continue button needed
+                appState.completeSetup()
             } catch {
                 errorMessage = error.localizedDescription
             }
             isProcessingCert = false
         }
-    }
-
-    private func startMonitoring() {
-        appState.completeSetup()
     }
 }
 

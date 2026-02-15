@@ -57,17 +57,39 @@ def mock_sentry_modules():
 
 class TestInitialize:
     def test_no_dsn_returns_false(self):
-        """Should return False when SENTRY_DSN is not set."""
+        """Should return False when neither BETTERSTACK_ERRORS_DSN nor SENTRY_DSN is set."""
         with patch.dict(os.environ, {}, clear=True):
-            # Remove SENTRY_DSN if present
             os.environ.pop("SENTRY_DSN", None)
+            os.environ.pop("BETTERSTACK_ERRORS_DSN", None)
             assert sentry_service.initialize() is False
             assert sentry_service.is_initialized() is False
 
     def test_empty_dsn_returns_false(self):
-        """Should return False when SENTRY_DSN is empty."""
-        with patch.dict(os.environ, {"SENTRY_DSN": ""}):
+        """Should return False when SENTRY_DSN is empty and BETTERSTACK_ERRORS_DSN not set."""
+        with patch.dict(os.environ, {"SENTRY_DSN": ""}, clear=True):
             assert sentry_service.initialize() is False
+
+    def test_betterstack_errors_dsn_takes_priority(self, mock_sentry_modules):
+        """BETTERSTACK_ERRORS_DSN should take priority over SENTRY_DSN."""
+        mock_sdk = MagicMock()
+        env = {
+            "BETTERSTACK_ERRORS_DSN": "https://bs-key@errors.betterstack.com/1",
+            "SENTRY_DSN": "https://sentry-key@sentry.io/123",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with patch.object(sentry_service, "_get_sdk", return_value=mock_sdk):
+                assert sentry_service.initialize() is True
+                call_kwargs = mock_sdk.init.call_args[1]
+                assert call_kwargs["dsn"] == "https://bs-key@errors.betterstack.com/1"
+
+    def test_sentry_dsn_fallback(self, mock_sentry_modules):
+        """SENTRY_DSN should be used when BETTERSTACK_ERRORS_DSN is not set."""
+        mock_sdk = MagicMock()
+        with patch.dict(os.environ, {"SENTRY_DSN": "https://sentry-key@sentry.io/123"}, clear=True):
+            with patch.object(sentry_service, "_get_sdk", return_value=mock_sdk):
+                assert sentry_service.initialize() is True
+                call_kwargs = mock_sdk.init.call_args[1]
+                assert call_kwargs["dsn"] == "https://sentry-key@sentry.io/123"
 
     def test_sdk_not_installed_returns_false(self):
         """Should return False when sentry_sdk is not importable."""

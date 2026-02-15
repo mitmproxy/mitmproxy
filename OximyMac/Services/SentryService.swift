@@ -132,6 +132,13 @@ class SentryService: ObservableObject {
         }
     }
 
+    func updateSetupStatus(complete: Bool) {
+        guard isInitialized else { return }
+        SentrySDK.configureScope { scope in
+            scope.setTag(value: complete ? "complete" : "in_progress", key: "setup_status")
+        }
+    }
+
     func updateContext(phase: String, proxyEnabled: Bool, port: Int?) {
         guard isInitialized else { return }
 
