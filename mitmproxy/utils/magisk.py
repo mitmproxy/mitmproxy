@@ -100,6 +100,9 @@ def write_magisk_module(path: str):
     with ZipFile(path, "w") as zipp:
         # Main cert file, name is always the old subject hash with a '.0' added
         zipp.writestr(f"system/etc/security/cacerts/{subject_hash_old(ca)}.0", der_cert)
+        zipp.writestr(
+            f"system/etc/security/cacerts_google/{subject_hash_old(ca)}.0", der_cert
+        )
         zipp.writestr("module.prop", MODULE_PROP_TEXT)
         zipp.writestr("config.sh", CONFIG_SH_TEXT)
         zipp.writestr("META-INF/com/google/android/updater-script", "#MAGISK")

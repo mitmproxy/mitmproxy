@@ -7,6 +7,11 @@
 
 ## Unreleased: mitmproxy next
 
+- Make the Android Magisk module also install the certificate to
+  `/system/etc/security/cacerts_google/`, which helps with compatibility
+  on Pixel 3a devices running Android 11 and Magisk 23.0, and may
+  potentially help with other Android devices as well.
+  ([#8028](https://github.com/mitmproxy/mitmproxy/pull/8028), @gucci-on-fleek)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
