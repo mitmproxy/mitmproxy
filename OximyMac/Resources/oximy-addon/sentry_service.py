@@ -39,9 +39,9 @@ def initialize() -> bool:
         if _initialized:
             return True
 
-        dsn = os.environ.get("SENTRY_DSN", "")
+        dsn = os.environ.get("BETTERSTACK_ERRORS_DSN") or os.environ.get("SENTRY_DSN", "")
         if not dsn:
-            logger.debug("No SENTRY_DSN env var — Sentry disabled for Python addon")
+            logger.debug("No BETTERSTACK_ERRORS_DSN or SENTRY_DSN env var — error tracking disabled for Python addon")
             return False
 
         sdk = _get_sdk()
@@ -135,7 +135,8 @@ def capture_exception(exc: BaseException | None = None,
                     for k, v in tags.items():
                         scope.set_tag(k, v)
                 if extras:
-                    scope.set_extras(extras)
+                    for k, v in extras.items():
+                        scope.set_extra(k, v)
                 sdk.capture_exception(exc)
         except Exception:
             pass
@@ -152,7 +153,8 @@ def capture_message(message: str, level: str = "info",
                     for k, v in tags.items():
                         scope.set_tag(k, v)
                 if extras:
-                    scope.set_extras(extras)
+                    for k, v in extras.items():
+                        scope.set_extra(k, v)
                 sdk.capture_message(message)
         except Exception:
             pass
