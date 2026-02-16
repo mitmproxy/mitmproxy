@@ -207,7 +207,7 @@ class TestCaptureMessage:
 
         mock_scope.set_level.assert_called_once_with("warning")
         mock_scope.set_tag.assert_called_once_with("event_code", "CFG.FAIL.201")
-        mock_scope.set_extras.assert_called_once_with({"status": 500})
+        mock_scope.set_extra.assert_called_once_with("status", 500)
         mock_sdk.capture_message.assert_called_once_with("test message")
 
 
