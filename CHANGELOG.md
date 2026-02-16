@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- content encoding inference from meta tag, especially for various unusual format
+  ([#8031](https://github.com/mitmproxy/mitmproxy/pull/8031), @edenw97)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
