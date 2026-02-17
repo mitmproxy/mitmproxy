@@ -60,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var remoteStateObserver: NSObjectProtocol?
     private var mainMenuQuitItem: NSMenuItem?
     private var isShowingQuitBlockedAlert = false
+    private var violationObserver: NSObjectProtocol?
 
     // MARK: - App Lifecycle
 
@@ -194,6 +195,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start remote state monitoring (reads Python addon's state file)
         RemoteStateService.shared.start()
 
+        // Start violation monitoring (reads Python addon's violations file)
+        ViolationService.shared.start()
+
+        // Observe violation notifications for popover display
+        violationObserver = NotificationCenter.default.addObserver(
+            forName: .violationDetected,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                if let violation = notification.object as? ViolationEntry {
+                    self?.showViolationPopover(violation)
+                }
+            }
+        }
+
         // Observe sensor state changes for menu bar icon
         remoteStateObserver = NotificationCenter.default.addObserver(
             forName: .sensorEnabledChanged,
@@ -275,6 +292,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Also activate the app to ensure keyboard focus works
         NSApp.activate(ignoringOtherApps: true)
         print("[OximyApp] showPopoverAndFocus: app activated")
+    }
+
+    private func showViolationPopover(_ violation: ViolationEntry) {
+        ViolationPanelController.shared.show(violation: violation)
     }
 
     @objc private func handleClosePopover() {
@@ -587,6 +608,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Stop remote state monitoring
         RemoteStateService.shared.stop()
+
+        // Stop violation monitoring
+        ViolationService.shared.stop()
+        if let observer = violationObserver {
+            NotificationCenter.default.removeObserver(observer)
+            violationObserver = nil
+        }
 
         // Stop API services
         HeartbeatService.shared.stop()

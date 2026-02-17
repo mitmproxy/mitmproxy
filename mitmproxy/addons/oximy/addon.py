@@ -67,6 +67,12 @@ except ImportError:
     from oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST  # type: ignore[import]
     import sentry_service
 
+# Import enforcement engine - handle both package and script modes
+try:
+    from .enforcement import EnforcementEngine, Violation
+except ImportError:
+    from enforcement import EnforcementEngine, Violation
+
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(name)s: %(message)s",
@@ -95,6 +101,7 @@ OXIMY_COMBINED_CA_BUNDLE = OXIMY_DIR / "combined-ca-bundle.pem"
 OXIMY_CA_CERT = OXIMY_DIR / "oximy-ca-cert.pem"
 OXIMY_NO_PARSER_APPS_CACHE = OXIMY_DIR / "no-parser-apps.json"
 OXIMY_NO_PARSER_DOMAINS_CACHE = OXIMY_DIR / "no-parser-domains.json"
+OXIMY_VIOLATIONS_FILE = OXIMY_DIR / "violations.json"
 
 # Shell profile markers for idempotent injection/removal
 _SHELL_MARKER = "# --- Oximy (do not edit this block) ---"
@@ -3100,6 +3107,8 @@ class OximyAddon:
         self._upload_threshold_count: int = DEFAULT_UPLOAD_THRESHOLD_COUNT
         self._port_configured: bool = False  # Guard against configure() recursion when setting listen_port
         self._local_collector: LocalDataCollector | None = None
+        # Enforcement engine for PII detection and blocking
+        self._enforcement: EnforcementEngine = EnforcementEngine()
 
     def _get_config_snapshot(self) -> dict:
         """Get a consistent snapshot of all filtering config.
@@ -3172,6 +3181,7 @@ class OximyAddon:
         loader.add_option("oximy_debug_traces", bool, False, "Log all requests to all_traces file (unfiltered)")
         loader.add_option("oximy_debug_ingestion", bool, False, "Write traces to disk AND send via memory buffer (for debugging)")
         loader.add_option("oximy_manage_proxy", bool, True, "Manage system proxy (disable when host app handles this)")
+        loader.add_option("oximy_enforcement", bool, True, "Enable request enforcement (PII blocking)")
 
     def _refresh_config(self, max_retries: int = 3) -> bool:
         """Fetch and apply updated config from API with retries.
@@ -3235,6 +3245,11 @@ class OximyAddon:
                     tenant_id = config.get("tenantId")
                     if tenant_id:
                         set_log_context(device_id=self._device_id, tenant_id=tenant_id)
+
+                    # Update enforcement policies if present in config
+                    enforcement_policies = config.get("enforcementPolicies")
+                    if enforcement_policies is not None:
+                        self._enforcement.update_policies(enforcement_policies)
 
                 logger.debug(
                     f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
@@ -4126,6 +4141,184 @@ class OximyAddon:
             "path": flow.request.path[:120],
             "app_type": app_type or "unknown",
         })
+
+        # =====================================================================
+        # STEP 7: Enforcement — PII detection and blocking
+        # Only runs on captured requests (passed all filters above)
+        # =====================================================================
+        try:
+            enforcement_enabled = ctx.options.oximy_enforcement
+        except AttributeError:
+            enforcement_enabled = False
+        if enforcement_enabled:
+            self._enforce_request(flow)
+
+    # Path segments that indicate analytics/telemetry (skip enforcement)
+    _ANALYTICS_PATH_KEYWORDS = frozenset({
+        "analytics", "telemetry", "tracking", "events", "metrics",
+        "diagnostics", "heartbeat", "ping", "health", "autosuggest",
+    })
+
+    def _enforce_request(self, flow: http.HTTPFlow) -> None:
+        """Check request body for PII and redact it in-flight.
+
+        Runs after STEP 6 (capture marking). Only checks text-based content types.
+        PII is replaced with [REDACTED] placeholders in the request body before
+        it reaches the AI provider. The request always goes through — never 403.
+
+        Safety guarantees:
+          - Fail-open: any exception → request goes through unchanged.
+          - JSON-safe: if the original body was valid JSON and redaction breaks it,
+            we revert to the original body (fail-open).
+          - Only processes text content types (json, text/*, x-www-form-urlencoded).
+          - Skips analytics/telemetry paths to avoid false positives.
+          - Skips bodies > 1MB.
+        """
+        try:
+            content_type = flow.request.headers.get("content-type", "")
+            if not any(ct in content_type for ct in ("json", "text/", "x-www-form-urlencoded")):
+                return
+
+            body = flow.request.get_text(strict=False)
+            if not body or len(body) > 1_000_000:
+                return
+
+            # Skip analytics/telemetry endpoints (high false-positive rate)
+            path_lower = flow.request.path.lower()
+            if any(kw in path_lower for kw in self._ANALYTICS_PATH_KEYWORDS):
+                return
+
+            host = flow.request.pretty_host
+            path = flow.request.path
+            method = flow.request.method
+            bundle_id = flow.metadata.get("oximy_bundle_id", "")
+
+            # Redact PII from the request body
+            redacted_body, detected_types = self._enforcement.redact_pii(body)
+
+            if not detected_types:
+                return  # Clean — no PII found
+
+            # SAFETY: Verify JSON integrity after redaction.
+            # If the original was valid JSON and redaction broke it, revert.
+            is_json = "json" in content_type
+            if is_json:
+                try:
+                    json.loads(redacted_body)
+                except (json.JSONDecodeError, ValueError):
+                    logger.warning(
+                        "[ENFORCEMENT] Redaction broke JSON structure — "
+                        "reverting to original body (fail-open)"
+                    )
+                    return  # Don't modify — fail-open
+
+            # Replace the request body with the redacted version
+            flow.request.set_text(redacted_body)
+
+            logger.warning(
+                "[ENFORCEMENT] REDACTED %s in %s %s%s",
+                detected_types, method, host, path[:60],
+            )
+
+            # Build violation for notification
+            import time as _time
+            import uuid as _uuid
+            now = _time.time()
+            violation = Violation(
+                id=f"v_{int(now)}_{_uuid.uuid4().hex[:8]}",
+                timestamp=datetime.fromtimestamp(
+                    now, tz=timezone.utc
+                ).isoformat(),
+                action="redacted",
+                policy_id="default_pii",
+                policy_name="PII Protection (Built-in)",
+                rule_id="pii_all",
+                rule_name="PII Detection",
+                severity="high",
+                detected_type=", ".join(detected_types),
+                host=host,
+                path=path,
+                method=method,
+                bundle_id=bundle_id,
+                retry_allowed=False,
+                message=(
+                    f"Redacted {', '.join(detected_types)} from "
+                    f"{method} {host}{path[:60]}"
+                ),
+            )
+
+            self._write_violation_file(violation)
+            self._write_enforcement_audit(violation, flow)
+
+        except Exception:
+            logger.debug("Enforcement check failed (fail-open)", exc_info=True)
+
+    def _write_violation_file(self, violation: Violation) -> None:
+        """Write violation to ~/.oximy/violations.json for desktop app notifications."""
+        try:
+            existing_violations = []
+            if OXIMY_VIOLATIONS_FILE.exists():
+                try:
+                    with open(OXIMY_VIOLATIONS_FILE, encoding="utf-8") as f:
+                        data = json.load(f)
+                        existing_violations = data.get("violations", [])
+                except (json.JSONDecodeError, IOError):
+                    existing_violations = []
+
+            violation_entry = {
+                "id": violation.id,
+                "timestamp": violation.timestamp,
+                "action": violation.action,
+                "policy_name": violation.policy_name,
+                "rule_name": violation.rule_name,
+                "severity": violation.severity,
+                "detected_type": violation.detected_type,
+                "host": violation.host,
+                "bundle_id": violation.bundle_id,
+                "retry_allowed": violation.retry_allowed,
+                "message": violation.message,
+            }
+            existing_violations.append(violation_entry)
+            existing_violations = existing_violations[-10:]
+
+            violations_data = {
+                "violations": existing_violations,
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+            }
+
+            _atomic_write(OXIMY_VIOLATIONS_FILE, json.dumps(violations_data, indent=2))
+
+        except Exception:
+            logger.debug("Failed to write violation file", exc_info=True)
+
+    def _write_enforcement_audit(self, violation: Violation, flow: http.HTTPFlow) -> None:
+        """Queue an enforcement audit event through the existing trace buffer."""
+        try:
+            import uuid as _uuid
+            audit_event = {
+                "event_id": str(_uuid.uuid4()),
+                "timestamp": violation.timestamp,
+                "type": "enforcement",
+                "device_id": self._device_id,
+                "enforcement": {
+                    "action": violation.action,
+                    "policy_id": violation.policy_id,
+                    "policy_name": violation.policy_name,
+                    "rule_id": violation.rule_id,
+                    "rule_name": violation.rule_name,
+                    "severity": violation.severity,
+                    "detected_type": violation.detected_type,
+                    "retry_allowed": violation.retry_allowed,
+                },
+                "request": {
+                    "method": flow.request.method,
+                    "host": flow.request.pretty_host,
+                    "path": flow.request.path[:200],
+                },
+            }
+            self._write_to_buffer(audit_event)
+        except Exception:
+            logger.debug("Failed to write enforcement audit event", exc_info=True)
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
         """Enable streaming for SSE responses to prevent client timeouts.
