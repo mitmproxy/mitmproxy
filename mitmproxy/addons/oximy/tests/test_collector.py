@@ -1486,6 +1486,243 @@ class TestExecuteSqliteQuery:
         # Max of "100", "200", "300" (string comparison) = "300"
         assert st["incremental"]["items_q"]["last_value"] == "300"
 
+    def test_corrupted_incremental_value_resets(self):
+        """A saved incremental value that is a JSON object should be treated as
+        corrupted and reset, allowing the query to re-scan."""
+        db_path = str(self.db_dir / "corrupt.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300"), ("c", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "corrupt.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # Inject a corrupted last_value (JSON object string, like what Cursor stored)
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", '{"composerId":"abc","createdAt":100}'
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # All 3 rows should be captured (corruption was reset, query scanned from 0)
+        assert len(collector._buffer) == 3
+        # The last_value should now be a valid value ("300"), not the JSON blob
+        st = collector._scan_state.get_sqlite_state("cursor", db_key)
+        assert st["incremental"]["items_q"]["last_value"] == "300"
+
+    def test_corrupted_incremental_value_json_array_resets(self):
+        """A saved incremental value that is a JSON array also triggers reset."""
+        db_path = str(self.db_dir / "corrupt_arr.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "corrupt_arr.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", '[{"row":"data"}]'
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        assert len(collector._buffer) == 2
+        st = collector._scan_state.get_sqlite_state("cursor", db_key)
+        assert st["incremental"]["items_q"]["last_value"] == "200"
+
+    def test_legitimate_string_incremental_value_preserved(self):
+        """A legitimate string incremental value (not JSON object/array) is kept."""
+        db_path = str(self.db_dir / "legit.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300"), ("c", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "legit.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # Set a legitimate incremental value — should NOT be reset
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", "200"
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # Only row with ts > "200" should be captured (ts="300")
+        assert len(collector._buffer) == 1
+        assert collector._buffer[0]["raw"]["ts"] == "300"
+
+    def test_json_scalar_string_not_treated_as_corrupted(self):
+        """A JSON scalar string like '"hello"' parses to str, not dict/list — preserved."""
+        db_path = str(self.db_dir / "scalar.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "scalar.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # '"hello"' is valid JSON → parses to str "hello", NOT dict/list
+        # So it should be preserved (not reset), proving the guard only catches
+        # dict/list corruption, not arbitrary JSON scalars.
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", '"hello"'
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # The value was preserved (not reset to None), so the query used
+        # the preserved value. Both rows match since '"' < '1' in ASCII.
+        assert len(collector._buffer) == 2
+        # Verify the saved value was updated to "300" (max of returned rows)
+        st = collector._scan_state.get_sqlite_state("cursor", db_key)
+        assert st["incremental"]["items_q"]["last_value"] == "300"
+
+    def test_numeric_string_incremental_value_not_affected_by_guard(self):
+        """Numeric string values like '200' are NOT JSON objects — guard skips them."""
+        db_path = str(self.db_dir / "numval.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300"), ("c", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "numval.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # "200" is valid JSON (parses to int 200), but it's NOT dict/list
+        # so the guard should leave it alone
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", "200"
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # Only ts > "200" → "300" passes
+        assert len(collector._buffer) == 1
+        assert collector._buffer[0]["raw"]["ts"] == "300"
+
+    def test_none_incremental_value_scans_from_beginning(self):
+        """None saved value (fresh state) uses fallback 0 — scans everything."""
+        db_path = str(self.db_dir / "fresh.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "fresh.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # Don't set any incremental value — saved_inc_value is None
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # All rows should be captured (WHERE ts > 0 matches all strings)
+        assert len(collector._buffer) == 2
+
     def test_multiple_rows_buffered(self):
         _create_test_db(
             self.db_path, "test_table", ["key", "value"],

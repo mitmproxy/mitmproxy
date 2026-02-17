@@ -801,6 +801,21 @@ class LocalDataCollector:
                 .get(file_type, {})
                 .get("last_value")
             )
+            # Guard: if saved value is a JSON object/array string (e.g. a
+            # full row value stored instead of the scalar tracking field),
+            # reset to None so the query re-scans from the beginning.
+            if isinstance(saved_inc_value, str):
+                try:
+                    parsed = json.loads(saved_inc_value)
+                    if isinstance(parsed, (dict, list)):
+                        logger.warning(
+                            "[COLLECT] Corrupted incremental value for %s in %s — "
+                            "resetting (was %d-byte JSON object/array)",
+                            file_type, os.path.basename(db_path), len(saved_inc_value),
+                        )
+                        saved_inc_value = None
+                except (json.JSONDecodeError, ValueError):
+                    pass  # Not JSON — leave as-is (legitimate string value)
             if "?" in sql:
                 params = (saved_inc_value or 0,)
 
