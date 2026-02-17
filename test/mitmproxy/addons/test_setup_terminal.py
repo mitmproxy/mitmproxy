@@ -125,3 +125,66 @@ class TestSetupTerminal:
         f = tflow.tflow()
         f.request.path = "/other"
         assert not addon.should_serve(f)
+
+    async def test_request_enabled(self, tdata):
+        """Test request method when setup_terminal is enabled."""
+        from mitmproxy.test import tflow
+
+        addon = setup_terminal.SetupTerminal()
+        with taddons.context(addon) as tctx:
+            tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"), setup_terminal=True)
+            f = tflow.tflow()
+            f.request.path = "/setup"
+            # Just verify it doesn't raise an error
+            await addon.request(f)
+
+    async def test_request_disabled(self, tdata):
+        """Test request method when setup_terminal is disabled."""
+        from mitmproxy.test import tflow
+
+        addon = setup_terminal.SetupTerminal()
+        with taddons.context(addon) as tctx:
+            tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"), setup_terminal=False)
+            f = tflow.tflow()
+            f.request.path = "/setup"
+            # Should not call super().request() when disabled
+            await addon.request(f)
+
+    def test_configure_with_proxyserver(self, tdata):
+        """Test configure with proxyserver available."""
+        from unittest.mock import MagicMock
+        from unittest.mock import patch
+
+        addon = setup_terminal.SetupTerminal()
+        with taddons.context(addon) as tctx:
+            # Mock proxyserver addon with servers
+            mock_proxyserver = MagicMock()
+            mock_server = MagicMock()
+            mock_server.listen_addrs = [("127.0.0.1", 9999)]
+            mock_proxyserver.servers = [mock_server]
+
+            with patch.object(tctx.master.addons, 'get', return_value=mock_proxyserver):
+                tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"))
+
+                # Verify proxy config was set from proxyserver
+                assert setup_terminal.app.config.get("PROXY_HOST") == "127.0.0.1"
+                assert setup_terminal.app.config.get("PROXY_PORT") == 9999
+
+    def test_configure_with_empty_listen_addrs(self, tdata):
+        """Test configure with proxyserver but empty listen_addrs."""
+        from unittest.mock import MagicMock
+        from unittest.mock import patch
+
+        addon = setup_terminal.SetupTerminal()
+        with taddons.context(addon) as tctx:
+            # Mock proxyserver with server but no listen_addrs
+            mock_proxyserver = MagicMock()
+            mock_server = MagicMock()
+            mock_server.listen_addrs = []
+            mock_proxyserver.servers = [mock_server]
+
+            with patch.object(tctx.master.addons, 'get', return_value=mock_proxyserver):
+                tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"))
+
+                # Should fall back to options
+                assert setup_terminal.app.config.get("PROXY_HOST") is not None
