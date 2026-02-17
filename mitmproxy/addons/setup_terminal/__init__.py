@@ -36,25 +36,27 @@ def setup():
     confdir = app.config.get("CONFDIR")
 
     base_url = f"http://{proxy_host}:{proxy_port}"
-    return jsonify({
-        "proxy_url": f"{proxy_host}:{proxy_port}",
-        "proxy_host": proxy_host,
-        "proxy_port": proxy_port,
-        "certificates": {
-            "pem": f"{confdir}/mitmproxy-ca-cert.pem",
-            "p12": f"{confdir}/mitmproxy-ca-cert.p12",
-            "cer": f"{confdir}/mitmproxy-ca-cert.cer",
-        },
-        "setup_scripts": {
-            "sh": f"{base_url}/setup.sh",
-            "bash": f"{base_url}/setup.sh",
-            "zsh": f"{base_url}/setup.sh",
-            "ksh": f"{base_url}/setup.sh",
-            "fish": f"{base_url}/setup.fish",
-            "powershell": f"{base_url}/setup.ps1",
-            "pwsh": f"{base_url}/setup.ps1",
-        },
-    })
+    return jsonify(
+        {
+            "proxy_url": f"{proxy_host}:{proxy_port}",
+            "proxy_host": proxy_host,
+            "proxy_port": proxy_port,
+            "certificates": {
+                "pem": f"{confdir}/mitmproxy-ca-cert.pem",
+                "p12": f"{confdir}/mitmproxy-ca-cert.p12",
+                "cer": f"{confdir}/mitmproxy-ca-cert.cer",
+            },
+            "setup_scripts": {
+                "sh": f"{base_url}/setup.sh",
+                "bash": f"{base_url}/setup.sh",
+                "zsh": f"{base_url}/setup.sh",
+                "ksh": f"{base_url}/setup.sh",
+                "fish": f"{base_url}/setup.fish",
+                "powershell": f"{base_url}/setup.ps1",
+                "pwsh": f"{base_url}/setup.ps1",
+            },
+        }
+    )
 
 
 @app.route("/setup.sh")
@@ -99,17 +101,11 @@ class SetupTerminal(asgiapp.WSGIApp):
     def should_serve(self, flow: http.HTTPFlow) -> bool:
         """Serve setup endpoints on any host."""
         setup_paths = {"/setup", "/setup.sh", "/setup.fish", "/setup.ps1"}
-        return (
-            flow.request.path in setup_paths
-            and flow.live
-        )
+        return flow.request.path in setup_paths and flow.live
 
     def load(self, loader):
         loader.add_option(
-            "setup_terminal",
-            bool,
-            True,
-            "Toggle the mitmproxy terminal setup app."
+            "setup_terminal", bool, True, "Toggle the mitmproxy terminal setup app."
         )
 
     def configure(self, updated):
