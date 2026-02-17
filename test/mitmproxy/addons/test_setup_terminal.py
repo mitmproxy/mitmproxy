@@ -109,3 +109,19 @@ class TestSetupTerminal:
             tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"))
             # Verify Flask app config was updated
             assert setup_terminal.app.config.get("CONFDIR") is not None
+
+    def test_should_serve(self):
+        """Test should_serve method correctly identifies setup paths."""
+        addon = setup_terminal.SetupTerminal()
+        from mitmproxy.test import tflow
+
+        # Test setup paths are served
+        for path in ["/setup", "/setup.sh", "/setup.fish", "/setup.ps1"]:
+            f = tflow.tflow()
+            f.request.path = path
+            assert addon.should_serve(f)
+
+        # Test other paths are not served
+        f = tflow.tflow()
+        f.request.path = "/other"
+        assert not addon.should_serve(f)

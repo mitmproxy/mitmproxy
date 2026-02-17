@@ -16,7 +16,7 @@ def get_setup_vars():
     """Get proxy and certificate variables for setup scripts."""
     proxy_host = app.config.get("PROXY_HOST", "127.0.0.1")
     proxy_port = app.config.get("PROXY_PORT", 8080)
-    confdir = app.config.get("CONFDIR")
+    confdir = app.config.get("CONFDIR", "~/.mitmproxy")
 
     confdir = os.path.expanduser(confdir)
     proxy_url = f"http://{proxy_host}:{proxy_port}"
@@ -96,7 +96,7 @@ class SetupTerminal(asgiapp.WSGIApp):
     name = "setup_terminal"
 
     def __init__(self):
-        super().__init__(app, None, None)
+        super().__init__(app, "", None)
 
     def should_serve(self, flow: http.HTTPFlow) -> bool:
         """Serve setup endpoints on any host."""
