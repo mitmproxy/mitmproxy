@@ -132,7 +132,9 @@ class TestSetupTerminal:
 
         addon = setup_terminal.SetupTerminal()
         with taddons.context(addon) as tctx:
-            tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"), setup_terminal=True)
+            tctx.configure(
+                addon, confdir=tdata.path("mitmproxy/data/confdir"), setup_terminal=True
+            )
             f = tflow.tflow()
             f.request.path = "/setup"
             # Just verify it doesn't raise an error
@@ -144,7 +146,11 @@ class TestSetupTerminal:
 
         addon = setup_terminal.SetupTerminal()
         with taddons.context(addon) as tctx:
-            tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"), setup_terminal=False)
+            tctx.configure(
+                addon,
+                confdir=tdata.path("mitmproxy/data/confdir"),
+                setup_terminal=False,
+            )
             f = tflow.tflow()
             f.request.path = "/setup"
             # Should not call super().request() when disabled
@@ -163,7 +169,7 @@ class TestSetupTerminal:
             mock_server.listen_addrs = [("127.0.0.1", 9999)]
             mock_proxyserver.servers = [mock_server]
 
-            with patch.object(tctx.master.addons, 'get', return_value=mock_proxyserver):
+            with patch.object(tctx.master.addons, "get", return_value=mock_proxyserver):
                 tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"))
 
                 # Verify proxy config was set from proxyserver
@@ -183,7 +189,7 @@ class TestSetupTerminal:
             mock_server.listen_addrs = []
             mock_proxyserver.servers = [mock_server]
 
-            with patch.object(tctx.master.addons, 'get', return_value=mock_proxyserver):
+            with patch.object(tctx.master.addons, "get", return_value=mock_proxyserver):
                 tctx.configure(addon, confdir=tdata.path("mitmproxy/data/confdir"))
 
                 # Should fall back to options
