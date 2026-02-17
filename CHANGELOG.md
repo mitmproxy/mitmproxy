@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Add `setup_terminal` addon for automatic shell environment configuration.
+  Provides endpoints to generate shell setup scripts for bash, fish, and PowerShell.
+  Users can run `eval "$(curl -sS http://proxy:port/setup.sh)"` to configure proxy settings.
+  ([#8086](https://github.com/mitmproxy/mitmproxy/pull/8086), @mtxr)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
