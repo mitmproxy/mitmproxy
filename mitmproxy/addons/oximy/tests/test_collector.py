@@ -1896,6 +1896,82 @@ class TestScanSourceWithSqlite:
         assert len(collector._buffer) == 0
 
 
+class TestExtractMetadataAntigravity:
+    """Path metadata extraction for antigravity (Gemini desktop IDE)."""
+
+    def test_brain_artifact_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/550e8400-e29b-41d4-a716-446655440000/notes.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "550e8400-e29b-41d4-a716-446655440000"
+
+    def test_brain_metadata_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/abc-def-123/notes.metadata.json"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "abc-def-123"
+
+    def test_conversation_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/conversations/conv-uuid-456.pb"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "conv-uuid-456"
+
+    def test_annotation_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/annotations/anno-uuid-789.pbtxt"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "anno-uuid-789"
+
+    def test_no_session_id_for_unknown_subdir(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/other/something.txt"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta
+
+    def test_no_session_id_for_dotfile(self):
+        """Dotfile names like '.' or '..' should not be used as session_id."""
+        home = str(Path.home())
+        # brain with a very short/invalid directory name
+        path = f"{home}/.gemini/antigravity/brain/ab/file.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta  # "ab" is < 3 chars
+
+    def test_brain_is_last_segment_no_child(self):
+        """If 'brain' is the last path segment, no session_id is extracted."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta
+
+    def test_conversation_multi_dot_filename(self):
+        """Conversation file with multiple dots uses stem (everything before last dot)."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/conversations/sess.backup.pb"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "sess.backup"
+
+    def test_conversation_hidden_file_rejected(self):
+        """Hidden file (.pb) in conversations/ has stem '.pb' which starts with dot."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/conversations/.pb"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta
+
+    def test_brain_appears_twice_in_path(self):
+        """If 'brain' appears multiple times, first occurrence is used."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/uuid-abc-123/brain/nested.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "uuid-abc-123"
+
+    def test_source_file_tilde_collapsed(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/uuid123/file.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["source_file"] == "~/.gemini/antigravity/brain/uuid123/file.md"
+
+
 class TestContentType:
     """Tests for content_type support in _read_full_file."""
 

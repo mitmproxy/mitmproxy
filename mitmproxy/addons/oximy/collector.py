@@ -209,6 +209,28 @@ def _extract_metadata_from_path(filepath: str, source_name: str) -> dict:
         except ValueError:
             pass
 
+    elif source_name == "antigravity":
+        # ~/.gemini/antigravity/brain/<uuid>/*.md
+        # ~/.gemini/antigravity/conversations/<uuid>.pb
+        # ~/.gemini/antigravity/annotations/<uuid>.pbtxt
+        try:
+            session_id = None
+            if "brain" in parts:
+                brain_idx = parts.index("brain")
+                if brain_idx + 1 < len(parts):
+                    session_id = parts[brain_idx + 1]
+            elif "conversations" in parts:
+                session_id = Path(filepath).stem
+            elif "annotations" in parts:
+                session_id = Path(filepath).stem
+            # Only set if non-empty, not a dotfile/special name
+            if (session_id
+                    and not session_id.startswith(".")
+                    and len(session_id) >= 3):
+                result["session_id"] = session_id
+        except ValueError:
+            pass
+
     return result
 
 
