@@ -1896,6 +1896,310 @@ class TestScanSourceWithSqlite:
         assert len(collector._buffer) == 0
 
 
+class TestContentType:
+    """Tests for content_type support in _read_full_file."""
+
+    @pytest.fixture(autouse=True)
+    def setup_collector(self, tmp_path):
+        self.tmp_path = tmp_path
+        self.data_dir = tmp_path / "data"
+        self.data_dir.mkdir(parents=True)
+
+        config = {
+            "enabled": True,
+            "scan_interval_seconds": 60,
+            "upload_endpoint": "https://api.oximy.com/api/v1/ingest/local-sessions",
+            "max_events_per_batch": 200,
+            "backfill_max_age_days": 7,
+            "sources": [],
+            "redact_patterns": [],
+            "skip_files": [],
+        }
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", tmp_path / "s.json"):
+            self.collector = LocalDataCollector(config=config, device_id="dev")
+
+    def test_content_type_json_default(self):
+        """Default content_type='json' works like before — raw JSON passed through."""
+        fp = str(self.data_dir / "data.json")
+        with open(fp, "w") as f:
+            json.dump({"key": "value"}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"key": "value"}
+
+    def test_content_type_json_explicit(self):
+        """Explicit content_type='json' behaves the same as default."""
+        fp = str(self.data_dir / "data2.json")
+        with open(fp, "w") as f:
+            json.dump({"hello": "world"}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="json")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"hello": "world"}
+
+    def test_content_type_text(self):
+        """content_type='text' wraps file content as {"content": text}."""
+        fp = str(self.data_dir / "notes.md")
+        with open(fp, "w") as f:
+            f.write("# Hello\n\nThis is markdown content.")
+
+        self.collector._read_full_file("test_src", fp, "brain_artifact", content_type="text")
+        assert len(self.collector._buffer) == 1
+        raw = self.collector._buffer[0]["raw"]
+        assert raw["content"] == "# Hello\n\nThis is markdown content."
+
+    def test_content_type_text_preserves_whitespace(self):
+        """Text content preserves internal whitespace and newlines."""
+        fp = str(self.data_dir / "doc.txt")
+        with open(fp, "w") as f:
+            f.write("line1\n  indented\n\nline4\n")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 1
+        raw = self.collector._buffer[0]["raw"]
+        assert "line1\n  indented\n\nline4\n" == raw["content"]
+
+    def test_content_type_binary(self):
+        """content_type='binary' wraps file content as {"content_base64": ...}."""
+        import base64
+        fp = str(self.data_dir / "conv.pb")
+        binary_data = b"\x08\x01\x12\x05hello\x1a\x03\x00\xff\xfe"
+        with open(fp, "wb") as f:
+            f.write(binary_data)
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 1
+        raw = self.collector._buffer[0]["raw"]
+        assert "content_base64" in raw
+        decoded = base64.b64decode(raw["content_base64"])
+        assert decoded == binary_data
+
+    def test_content_type_binary_empty_file(self):
+        """Empty binary file is skipped."""
+        fp = str(self.data_dir / "empty.pb")
+        with open(fp, "wb") as f:
+            pass  # empty
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+
+    def test_content_type_text_empty_file(self):
+        """Empty text file is skipped."""
+        fp = str(self.data_dir / "empty.md")
+        with open(fp, "w") as f:
+            f.write("   ")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+
+    def test_content_type_text_envelope_fields(self):
+        """Text content envelope has correct source, file_type, and type."""
+        fp = str(self.data_dir / "note.md")
+        with open(fp, "w") as f:
+            f.write("content here")
+
+        self.collector._read_full_file("antigravity", fp, "brain_artifact", content_type="text")
+        assert len(self.collector._buffer) == 1
+        env = self.collector._buffer[0]
+        assert env["source"] == "antigravity"
+        assert env["file_type"] == "brain_artifact"
+        assert env["type"] == "local_session"
+
+    def test_scan_glob_passes_content_type(self):
+        """_scan_glob passes content_type from config to _read_full_file."""
+        md_file = self.data_dir / "test.md"
+        md_file.write_text("# Test markdown")
+
+        glob_config = {
+            "pattern": str(self.data_dir / "*.md"),
+            "file_type": "brain_artifact",
+            "read_mode": "full",
+            "content_type": "text",
+        }
+        self.collector._startup_done = True
+        self.collector._scan_glob("antigravity", glob_config, is_startup=False)
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"]["content"] == "# Test markdown"
+
+    def test_scan_glob_default_content_type_is_json(self):
+        """_scan_glob defaults to content_type='json' when not specified."""
+        json_file = self.data_dir / "meta.json"
+        json_file.write_text(json.dumps({"meta": True}))
+
+        glob_config = {
+            "pattern": str(self.data_dir / "*.json"),
+            "file_type": "brain_metadata",
+            "read_mode": "full",
+            # no content_type — should default to "json"
+        }
+        self.collector._startup_done = True
+        self.collector._scan_glob("antigravity", glob_config, is_startup=False)
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"meta": True}
+
+    def test_invalid_content_type_falls_back_to_json(self):
+        """An invalid content_type falls back to 'json' with a warning."""
+        fp = str(self.data_dir / "data.json")
+        with open(fp, "w") as f:
+            json.dump({"ok": True}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="xml")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"ok": True}
+
+    def test_oversized_binary_file_skipped(self):
+        """Binary files exceeding max_event_size are skipped before reading."""
+        fp = str(self.data_dir / "huge.pb")
+        with open(fp, "wb") as f:
+            f.write(b"\x00" * (1_048_576 + 1))
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+
+    def test_oversized_text_file_skipped(self):
+        """Text files exceeding max_event_size are skipped before reading."""
+        fp = str(self.data_dir / "huge.md")
+        with open(fp, "w") as f:
+            f.write("x" * (1_048_576 + 1))
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+
+    def test_oversized_file_records_mtime(self):
+        """Oversized files record mtime so they aren't re-checked every cycle."""
+        fp = str(self.data_dir / "big.pb")
+        with open(fp, "wb") as f:
+            f.write(b"\x00" * (1_048_576 + 1))
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+
+        # Call again — should be skipped by mtime check, not re-read
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+        # Verify state was recorded
+        state = self.collector._scan_state.get_file_state("test_src", fp)
+        assert state["mtime"] == os.stat(fp).st_mtime
+
+    def test_empty_binary_file_records_mtime(self):
+        """Empty binary files record mtime to avoid re-checking every cycle."""
+        fp = str(self.data_dir / "zero.pb")
+        with open(fp, "wb") as f:
+            pass
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+        state = self.collector._scan_state.get_file_state("test_src", fp)
+        assert state["mtime"] == os.stat(fp).st_mtime
+
+    def test_empty_text_file_records_mtime(self):
+        """Empty/whitespace text files record mtime to avoid re-checking every cycle."""
+        fp = str(self.data_dir / "blank.md")
+        with open(fp, "w") as f:
+            f.write("   \n\n  ")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+        state = self.collector._scan_state.get_file_state("test_src", fp)
+        assert state["mtime"] == os.stat(fp).st_mtime
+
+    def test_same_mtime_skips_reread(self):
+        """File with unchanged mtime is not re-read (dedup)."""
+        fp = str(self.data_dir / "stable.json")
+        with open(fp, "w") as f:
+            json.dump({"v": 1}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1
+
+        # Second call — same mtime → skipped
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1  # still 1, not 2
+
+    def test_updated_mtime_triggers_reread(self):
+        """File with changed mtime is re-read."""
+        fp = str(self.data_dir / "changing.json")
+        with open(fp, "w") as f:
+            json.dump({"v": 1}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1
+
+        # Touch the file to update mtime
+        import time
+        time.sleep(0.05)
+        with open(fp, "w") as f:
+            json.dump({"v": 2}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 2
+        assert self.collector._buffer[1]["raw"] == {"v": 2}
+
+    def test_invalid_json_with_json_content_type_skipped(self):
+        """Invalid JSON files are gracefully skipped (no crash)."""
+        fp = str(self.data_dir / "bad.json")
+        with open(fp, "w") as f:
+            f.write("{invalid json content")
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="json")
+        assert len(self.collector._buffer) == 0
+
+    def test_text_with_unicode_and_special_chars(self):
+        """Text with unicode, newlines, quotes, and backslashes is properly wrapped."""
+        fp = str(self.data_dir / "unicode.md")
+        content = 'Line with "quotes" and \\backslash\nUnicode: \u00e9\u00e8\u00ea \U0001f600\nTab:\there'
+        with open(fp, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"]["content"] == content
+
+    def test_text_only_newlines_is_empty(self):
+        """File containing only newlines is treated as empty."""
+        fp = str(self.data_dir / "newlines.md")
+        with open(fp, "w") as f:
+            f.write("\n\n\n")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+
+    def test_binary_with_null_bytes(self):
+        """Binary files with null bytes are correctly base64-encoded."""
+        import base64
+        fp = str(self.data_dir / "nulls.pb")
+        data = b"\x00" * 100 + b"\xff" * 100
+        with open(fp, "wb") as f:
+            f.write(data)
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 1
+        decoded = base64.b64decode(self.collector._buffer[0]["raw"]["content_base64"])
+        assert decoded == data
+
+    def test_content_type_empty_string_falls_back(self):
+        """Empty string content_type falls back to json."""
+        fp = str(self.data_dir / "fallback.json")
+        with open(fp, "w") as f:
+            json.dump({"ok": True}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"ok": True}
+
+    def test_text_preserves_leading_trailing_whitespace(self):
+        """Text mode preserves leading/trailing whitespace (no stripping)."""
+        fp = str(self.data_dir / "padded.md")
+        content = "  leading and trailing spaces  "
+        with open(fp, "w") as f:
+            f.write(content)
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"]["content"] == content
+
+
 class TestWatcherSqlite:
     """Test watcher integration for SQLite database files."""
 
