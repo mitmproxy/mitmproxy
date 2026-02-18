@@ -169,9 +169,7 @@ describe("LLMRequest", () => {
         await act(async () => {
             render(<LLMRequest />);
         });
-        expect(
-            screen.getByText("Failed to load LLM data."),
-        ).toBeTruthy();
+        expect(screen.getByText("Failed to load LLM data.")).toBeTruthy();
         warnSpy.mockRestore();
     });
 
@@ -181,9 +179,7 @@ describe("LLMRequest", () => {
             render(<LLMRequest />);
         });
         expect(screen.getByText("anthropic")).toBeTruthy();
-        expect(
-            screen.getByText("claude-sonnet-4-20250514"),
-        ).toBeTruthy();
+        expect(screen.getByText("claude-sonnet-4-20250514")).toBeTruthy();
     });
 
     it("should render openai request", async () => {
@@ -229,9 +225,7 @@ describe("LLMResponse", () => {
         await act(async () => {
             render(<LLMResponse />);
         });
-        expect(
-            screen.getByText("Failed to load LLM data."),
-        ).toBeTruthy();
+        expect(screen.getByText("Failed to load LLM data.")).toBeTruthy();
         warnSpy.mockRestore();
     });
 
@@ -242,9 +236,7 @@ describe("LLMResponse", () => {
         await act(async () => {
             render(<LLMResponse />);
         });
-        expect(
-            screen.getByText("No LLM response data."),
-        ).toBeTruthy();
+        expect(screen.getByText("No LLM response data.")).toBeTruthy();
     });
 
     it("should render anthropic response with blocks", async () => {
@@ -285,9 +277,7 @@ describe("LLMRequestJSON", () => {
         await act(async () => {
             render(<LLMRequestJSON />);
         });
-        expect(
-            screen.getByText("No LLM request JSON."),
-        ).toBeTruthy();
+        expect(screen.getByText("No LLM request JSON.")).toBeTruthy();
     });
 
     it("should render request JSON", async () => {
@@ -364,9 +354,7 @@ describe("LLMResponseJSON", () => {
         await act(async () => {
             render(<LLMResponseJSON />);
         });
-        expect(
-            screen.getByText("No LLM response JSON."),
-        ).toBeTruthy();
+        expect(screen.getByText("No LLM response JSON.")).toBeTruthy();
     });
 
     it("should render response JSON", async () => {
