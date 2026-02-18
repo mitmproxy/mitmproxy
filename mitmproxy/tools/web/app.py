@@ -36,6 +36,8 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.contentviews._view_llm import get_llm_data
+from mitmproxy.contentviews._view_llm import is_llm_api_path
 from mitmproxy.dns import DNSFlow
 from mitmproxy.http import HTTPFlow
 from mitmproxy.tcp import TCPFlow
@@ -157,6 +159,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "timestamp_end": flow.request.timestamp_end,
             "pretty_host": flow.request.pretty_host,
         }
+        f["is_llm"] = is_llm_api_path(flow.request.path)
         if flow.response:
             if flow.response.raw_content is not None:
                 content_length = len(flow.response.raw_content)
@@ -753,6 +756,17 @@ class FlowContentView(RequestHandler):
             self.write(self.message_to_json(content_view, message, flow, max_lines))
 
 
+class FlowLLMData(RequestHandler):
+    def get(self, flow_id) -> None:
+        flow = self.flow
+        if not isinstance(flow, HTTPFlow):
+            raise APIError(400, "Not an HTTP flow.")
+        data = get_llm_data(flow)
+        if data is None:
+            raise APIError(400, "Not an LLM API flow.")
+        self.write(data)
+
+
 class Commands(RequestHandler):
     def get(self) -> None:
         commands = {}
@@ -903,6 +917,7 @@ handlers = [
     (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
     (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content.data", FlowContent),
     (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response|messages)/content/(?P<content_view>[0-9a-zA-Z\-\_%]+)(?:\.json)?", FlowContentView),
+    (r"/flows/(?P<flow_id>[0-9a-f\-]+)/llm(?:\.json)?", FlowLLMData),
     (r"/clear", ClearAll),
     (r"/options(?:\.json)?", Options),
     (r"/options/save", SaveOptions),

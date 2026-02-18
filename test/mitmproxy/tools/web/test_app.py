@@ -383,6 +383,40 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             },
         ]
 
+    def test_flow_llm_data(self):
+        # Non-LLM flow should return 400
+        resp = self.fetch("/flows/42/llm.json")
+        assert resp.code == 400
+
+        # Add an LLM flow
+        f = tflow.tflow(resp=True)
+        f.id = "aabb"
+        f.request.path = "/v1/messages"
+        f.request.content = json.dumps(
+            {
+                "model": "claude-3",
+                "messages": [{"role": "user", "content": "Hi"}],
+            }
+        ).encode()
+        f.response.headers["content-type"] = "application/json"
+        f.response.content = json.dumps(
+            {
+                "type": "message",
+                "model": "claude-3",
+                "role": "assistant",
+                "content": [{"type": "text", "text": "Hello"}],
+                "stop_reason": "end_turn",
+            }
+        ).encode()
+        self.view.add([f])
+
+        resp = self.fetch("/flows/aabb/llm.json")
+        assert resp.code == 200
+        data = get_json(resp)
+        assert data["provider"] == "anthropic"
+        assert data["request"] is not None
+        assert data["response"] is not None
+
     def test_commands(self):
         resp = self.fetch("/commands")
         assert resp.code == 200
