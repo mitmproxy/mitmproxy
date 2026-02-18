@@ -104,6 +104,13 @@ enum EventCode: String {
     // Launch
     case LAUNCH_FAIL_301 = "LAUNCH.FAIL.301"
 
+    // App Blocking / Enforcement
+    case BLOCK_APP_001 = "BLOCK.APP.001"     // App blocked and terminated
+    case BLOCK_APP_002 = "BLOCK.APP.002"     // App block failed (couldn't terminate)
+    case BLOCK_WARN_001 = "BLOCK.WARN.001"   // App warn shown
+    case BLOCK_FLAG_001 = "BLOCK.FLAG.001"   // App flagged notification shown
+    case BLOCK_REQ_001 = "BLOCK.REQ.001"     // Access request submitted
+
     // System Health
     case SYS_HEALTH_001 = "SYS.HEALTH.001"
 
@@ -118,7 +125,8 @@ enum EventCode: String {
              .PROXY_FAIL_301,
              .MITM_FAIL_301, .MITM_FAIL_304, .MITM_FAIL_306,
              .NET_FAIL_301,
-             .LAUNCH_FAIL_301:
+             .LAUNCH_FAIL_301,
+             .BLOCK_APP_002:
             return .error
         case .AUTH_AUTH_004,
              .AUTH_FAIL_201, .AUTH_FAIL_302, .AUTH_FAIL_303,
@@ -127,7 +135,8 @@ enum EventCode: String {
              .MITM_RETRY_001,
              .HB_FAIL_201, .HB_FAIL_202, .HB_FAIL_203, .HB_STATE_202,
              .SYNC_FAIL_201,
-             .STATE_CMD_003:
+             .STATE_CMD_003,
+             .BLOCK_WARN_001:
             return .warning
         case .STATE_FAIL_201:
             return .debug
@@ -140,13 +149,15 @@ enum EventCode: String {
         switch self {
         case .MITM_RETRY_401:
             return .alertOps
-        case .AUTH_AUTH_004, .AUTH_FAIL_301, .CERT_FAIL_303, .ENROLL_FAIL_301, .STATE_CMD_003:
+        case .AUTH_AUTH_004, .AUTH_FAIL_301, .CERT_FAIL_303, .ENROLL_FAIL_301, .STATE_CMD_003,
+             .BLOCK_REQ_001:
             return .userAction
         case .APP_FAIL_301, .AUTH_FAIL_302, .AUTH_FAIL_303,
              .CERT_FAIL_301, .PROXY_FAIL_301,
              .MITM_FAIL_301,
              .HB_FAIL_202, .HB_STATE_202,
-             .LAUNCH_FAIL_301:
+             .LAUNCH_FAIL_301,
+             .BLOCK_APP_002:
             return .investigate
         case .MITM_FAIL_304, .MITM_FAIL_306, .MITM_RETRY_001, .AUTH_FAIL_201:
             return .autoRetry

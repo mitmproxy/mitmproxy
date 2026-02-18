@@ -39,9 +39,9 @@ def initialize() -> bool:
         if _initialized:
             return True
 
-        dsn = os.environ.get("SENTRY_DSN", "")
+        dsn = os.environ.get("BETTERSTACK_ERRORS_DSN") or os.environ.get("SENTRY_DSN", "")
         if not dsn:
-            logger.debug("No SENTRY_DSN env var — Sentry disabled for Python addon")
+            logger.debug("No BETTERSTACK_ERRORS_DSN or SENTRY_DSN env var — error tracking disabled for Python addon")
             return False
 
         sdk = _get_sdk()

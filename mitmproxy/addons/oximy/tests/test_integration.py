@@ -161,6 +161,12 @@ def _make_addon(
     # Local data collector (disabled for tests)
     addon._local_collector = None
 
+    # Enforcement rules (empty by default for tests)
+    addon._enforcement_rules = []
+    addon._blocked_domains = {}
+    addon._warned_domains = {}
+    addon._warned_web_sessions = set()
+
     return addon
 
 
