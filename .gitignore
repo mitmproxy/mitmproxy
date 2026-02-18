@@ -64,3 +64,4 @@ OximyWindows/src/OximyWindows/Secrets.cs
 # Temporary debug/capture scripts
 ws_capture.py
 ws_capture.jsonl
+/.claude
