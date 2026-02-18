@@ -63,6 +63,7 @@
             "timestamp_end": 1680151159.0514019,
             "pretty_host": "mitm.it"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,

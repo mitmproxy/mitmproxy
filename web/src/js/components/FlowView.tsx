@@ -10,6 +10,12 @@ import Error from "./FlowView/Error";
 import Timing from "./FlowView/Timing";
 import WebSocket from "./FlowView/WebSocket";
 import Comment from "./FlowView/Comment";
+import {
+    LLMRequest,
+    LLMRequestJSON,
+    LLMResponse,
+    LLMResponseJSON,
+} from "./FlowView/LLM";
 import { selectTab } from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
 import type { Flow } from "../flow";
@@ -36,13 +42,24 @@ export const allTabs: {
     dnsrequest: DnsRequest,
     dnsresponse: DnsResponse,
     comment: Comment,
+    llmrequest: LLMRequest,
+    llmrequestjson: LLMRequestJSON,
+    llmresponse: LLMResponse,
+    llmresponsejson: LLMResponseJSON,
 };
 
 export function tabsForFlow(flow: Flow): string[] {
     let tabs;
     switch (flow.type) {
         case "http":
-            tabs = ["request", "response", "websocket"].filter((k) => flow[k]);
+            tabs = ["request"].filter((k) => flow[k]);
+            if (flow.is_llm) {
+                tabs.push("llmrequestjson", "llmrequest");
+            }
+            tabs.push(...["response", "websocket"].filter((k) => flow[k]));
+            if (flow.is_llm) {
+                tabs.push("llmresponsejson", "llmresponse");
+            }
             break;
         case "tcp":
             tabs = ["tcpmessages"];

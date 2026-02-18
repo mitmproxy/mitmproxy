@@ -150,6 +150,7 @@
             "timestamp_end": 1680134454.264666,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/2",
             "status_code": 304,
@@ -322,6 +323,7 @@
             "timestamp_end": 1689251552.680119,
             "pretty_host": "www.google.com"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 0,
@@ -508,6 +510,7 @@
             "timestamp_end": 1690289926.2402048,
             "pretty_host": "www.google.com"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
