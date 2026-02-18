@@ -532,18 +532,18 @@ class LocalDataCollector:
         if not resolved:
             return
 
-        source_name, file_type, read_mode = resolved
+        source_name, file_type, read_mode, content_type = resolved
 
         try:
             if read_mode == "full":
-                self._read_full_file(source_name, filepath, file_type)
+                self._read_full_file(source_name, filepath, file_type, content_type=content_type)
             else:
                 self._read_incremental(source_name, filepath, file_type)
         except (IOError, OSError) as e:
             logger.debug(f"Could not read changed file {filepath}: {e}")
 
-    def _resolve_change_to_source(self, filepath: str) -> tuple[str, str, str] | None:
-        """Map a changed file path to its source name, file_type, and read_mode."""
+    def _resolve_change_to_source(self, filepath: str) -> tuple[str, str, str, str] | None:
+        """Map a changed file path to its source name, file_type, read_mode, and content_type."""
         with self._config_lock:
             sources = self._config.get("sources", [])
 
@@ -566,6 +566,7 @@ class LocalDataCollector:
                         source_name,
                         glob_config["file_type"],
                         glob_config.get("read_mode", "incremental"),
+                        glob_config.get("content_type", "json"),
                     )
         return None
 

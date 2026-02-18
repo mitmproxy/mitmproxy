@@ -7,6 +7,7 @@ All parsing/normalization happens server-side.
 
 from __future__ import annotations
 
+import base64
 import fnmatch
 import glob as glob_module
 import gzip
@@ -205,6 +206,28 @@ def _extract_metadata_from_path(filepath: str, source_name: str) -> dict:
                 stem = Path(parts[sess_idx + 1]).stem
                 if stem != "sessions":
                     result["session_id"] = stem
+        except ValueError:
+            pass
+
+    elif source_name == "antigravity":
+        # ~/.gemini/antigravity/brain/<uuid>/*.md
+        # ~/.gemini/antigravity/conversations/<uuid>.pb
+        # ~/.gemini/antigravity/annotations/<uuid>.pbtxt
+        try:
+            session_id = None
+            if "brain" in parts:
+                brain_idx = parts.index("brain")
+                if brain_idx + 1 < len(parts):
+                    session_id = parts[brain_idx + 1]
+            elif "conversations" in parts:
+                session_id = Path(filepath).stem
+            elif "annotations" in parts:
+                session_id = Path(filepath).stem
+            # Only set if non-empty, not a dotfile/special name
+            if (session_id
+                    and not session_id.startswith(".")
+                    and len(session_id) >= 3):
+                result["session_id"] = session_id
         except ValueError:
             pass
 
@@ -509,18 +532,18 @@ class LocalDataCollector:
         if not resolved:
             return
 
-        source_name, file_type, read_mode = resolved
+        source_name, file_type, read_mode, content_type = resolved
 
         try:
             if read_mode == "full":
-                self._read_full_file(source_name, filepath, file_type)
+                self._read_full_file(source_name, filepath, file_type, content_type=content_type)
             else:
                 self._read_incremental(source_name, filepath, file_type)
         except (IOError, OSError) as e:
             logger.debug(f"Could not read changed file {filepath}: {e}")
 
-    def _resolve_change_to_source(self, filepath: str) -> tuple[str, str, str] | None:
-        """Map a changed file path to its source name, file_type, and read_mode."""
+    def _resolve_change_to_source(self, filepath: str) -> tuple[str, str, str, str] | None:
+        """Map a changed file path to its source name, file_type, read_mode, and content_type."""
         with self._config_lock:
             sources = self._config.get("sources", [])
 
@@ -543,6 +566,7 @@ class LocalDataCollector:
                         source_name,
                         glob_config["file_type"],
                         glob_config.get("read_mode", "incremental"),
+                        glob_config.get("content_type", "json"),
                     )
         return None
 
@@ -639,6 +663,7 @@ class LocalDataCollector:
         pattern = glob_config["pattern"].replace("~", str(Path.home()))
         file_type = glob_config["file_type"]
         read_mode = glob_config.get("read_mode", "incremental")
+        content_type = glob_config.get("content_type", "json")
         skip_patterns = glob_config.get("skip_patterns", [])
 
         matched_files = glob_module.glob(pattern, recursive=True)
@@ -673,7 +698,7 @@ class LocalDataCollector:
 
             try:
                 if read_mode == "full":
-                    self._read_full_file(source_name, filepath, file_type)
+                    self._read_full_file(source_name, filepath, file_type, content_type=content_type)
                 else:
                     self._read_incremental(source_name, filepath, file_type)
             except (IOError, OSError) as e:
@@ -801,6 +826,21 @@ class LocalDataCollector:
                 .get(file_type, {})
                 .get("last_value")
             )
+            # Guard: if saved value is a JSON object/array string (e.g. a
+            # full row value stored instead of the scalar tracking field),
+            # reset to None so the query re-scans from the beginning.
+            if isinstance(saved_inc_value, str):
+                try:
+                    parsed = json.loads(saved_inc_value)
+                    if isinstance(parsed, (dict, list)):
+                        logger.warning(
+                            "[COLLECT] Corrupted incremental value for %s in %s — "
+                            "resetting (was %d-byte JSON object/array)",
+                            file_type, os.path.basename(db_path), len(saved_inc_value),
+                        )
+                        saved_inc_value = None
+                except (json.JSONDecodeError, ValueError):
+                    pass  # Not JSON — leave as-is (legitimate string value)
             if "?" in sql:
                 params = (saved_inc_value or 0,)
 
@@ -1004,8 +1044,25 @@ class LocalDataCollector:
 
         self._scan_state.set_file_state(source_name, filepath, new_offset, current_mtime)
 
-    def _read_full_file(self, source_name: str, filepath: str, file_type: str) -> None:
-        """Read entire file (for JSON files like sessions-index.json)."""
+    _VALID_CONTENT_TYPES = frozenset(("json", "text", "binary"))
+
+    def _read_full_file(
+        self, source_name: str, filepath: str, file_type: str, content_type: str = "json"
+    ) -> None:
+        """Read entire file and process it.
+
+        content_type controls how file contents are wrapped before processing:
+        - "json" (default): pass raw text to _process_line (expects valid JSON)
+        - "text": read as UTF-8, wrap as {"content": text}
+        - "binary": read as bytes, wrap as {"content_base64": base64-encoded}
+        """
+        if content_type not in self._VALID_CONTENT_TYPES:
+            logger.warning(
+                f"[COLLECT] Unknown content_type '{content_type}' for {filepath}, "
+                f"falling back to 'json'"
+            )
+            content_type = "json"
+
         try:
             stat_result = os.stat(filepath)
         except OSError:
@@ -1019,21 +1076,59 @@ class LocalDataCollector:
         if current_mtime == saved_mtime:
             return
 
-        try:
-            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-                content = f.read()
-        except (IOError, OSError) as e:
-            logger.debug(f"Could not read {filepath}: {e}")
+        # Pre-read size guard: for binary, base64 inflates ~33% + JSON wrapper;
+        # for text, JSON wrapper adds a few bytes. Skip files that would
+        # certainly exceed the event size limit after encoding.
+        if content_type == "binary":
+            # base64 output ≈ 4/3 of input + ~30 bytes JSON wrapper
+            estimated_size = int(stat_result.st_size * 1.34) + 30
+        else:
+            estimated_size = stat_result.st_size + 20  # JSON wrapper overhead
+        if estimated_size > self._max_event_size:
+            logger.debug(
+                f"Skipping oversized file {filepath} "
+                f"({stat_result.st_size} bytes, content_type={content_type})"
+            )
+            self._scan_state.set_file_state(source_name, filepath, 0, current_mtime)
             return
 
-        if not content.strip():
-            return
+        if content_type == "binary":
+            try:
+                with open(filepath, "rb") as f:
+                    data = f.read()
+            except (IOError, OSError) as e:
+                logger.debug(f"Could not read {filepath}: {e}")
+                return
+
+            if not data:
+                # Record mtime so we don't re-check this empty file every cycle
+                self._scan_state.set_file_state(source_name, filepath, 0, current_mtime)
+                return
+
+            raw_line = json.dumps({"content_base64": base64.b64encode(data).decode("ascii")})
+        else:
+            try:
+                with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+            except (IOError, OSError) as e:
+                logger.debug(f"Could not read {filepath}: {e}")
+                return
+
+            if not content.strip():
+                # Record mtime so we don't re-check this empty file every cycle
+                self._scan_state.set_file_state(source_name, filepath, 0, current_mtime)
+                return
+
+            if content_type == "text":
+                raw_line = json.dumps({"content": content})
+            else:
+                raw_line = content.strip()
 
         self._process_line(
             source_name=source_name,
             filepath=filepath,
             file_type=file_type,
-            raw_line=content.strip(),
+            raw_line=raw_line,
             line_number=0,
         )
 

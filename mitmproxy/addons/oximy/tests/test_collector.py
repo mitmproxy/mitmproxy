@@ -912,10 +912,11 @@ class TestWatcherIntegration:
         fp = str(projects_dir / "session.jsonl")
         result = self.collector._resolve_change_to_source(fp)
         assert result is not None
-        source_name, file_type, read_mode = result
+        source_name, file_type, read_mode, content_type = result
         assert source_name == "claude_code"
         assert file_type == "session_transcript"
         assert read_mode == "incremental"
+        assert content_type == "json"
 
     def test_resolve_no_match(self):
         result = self.collector._resolve_change_to_source("/some/random/file.txt")
