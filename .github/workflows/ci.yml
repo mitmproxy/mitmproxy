@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff==0.14.10
-      - run: ruff check .
+      - run: ruff check . --exclude "OximyMac/"
 
   typecheck:
     runs-on: ubuntu-latest
@@ -26,8 +26,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev]"
-      - run: mypy
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --group dev
+      - run: uv run mypy
 
   test:
     runs-on: ubuntu-latest
@@ -36,5 +37,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -e ".[dev]"
-      - run: pytest mitmproxy/addons/oximy/tests/ -v --tb=short
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --group dev
+      - run: uv run pytest mitmproxy/addons/oximy/tests/ -v --tb=short
