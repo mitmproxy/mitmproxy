@@ -12,6 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  UV_PYTHON: "3.12"
   UV_PYTHON_PREFERENCE: only-system
   UV_PYTHON_DOWNLOADS: never
 
@@ -34,7 +35,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync --python 3.12 --group dev
+      - run: uv sync --group dev
       - run: uv run mypy
 
   test:
@@ -45,5 +46,5 @@ jobs:
         with:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync --python 3.12 --group dev
+      - run: uv sync --group dev
       - run: uv run pytest mitmproxy/addons/oximy/tests/ -v --tb=short
