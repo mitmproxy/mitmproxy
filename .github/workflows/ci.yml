@@ -17,26 +17,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff==0.14.10
-      - run: ruff check . --exclude "OximyMac/"
+      - run: ruff check . --exclude "OximyMac/" --exclude "OximyWindows/"
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync --group dev
+      - run: uv sync --python 3.12 --group dev
       - run: uv run mypy
 
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
-      - run: uv sync --group dev
+      - run: uv sync --python 3.12 --group dev
       - run: uv run pytest mitmproxy/addons/oximy/tests/ -v --tb=short
