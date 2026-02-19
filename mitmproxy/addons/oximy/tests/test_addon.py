@@ -7,64 +7,51 @@ are mocked appropriately.
 
 from __future__ import annotations
 
+import io
 import json
+import os
 import re
-import time
-from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
-
-import pytest
 
 # Import the functions under test
 import subprocess
 import sys
-
-import io
-import os
+import time
 import urllib.error
+from pathlib import Path
+from unittest.mock import MagicMock
+from unittest.mock import mock_open
+from unittest.mock import patch
 
-from mitmproxy.addons.oximy.addon import (
-    API_PATH_INGEST_TRACES,
-    API_PATH_SENSOR_CONFIG,
-    DEFAULT_API_BASE_URL,
-    DISK_CLEANUP_INTERVAL,
-    DISK_MAX_AGE_DAYS,
-    DISK_MAX_TOTAL_BYTES,
-    DirectTraceUploader,
-    OXIMY_CA_CERT,
-    OXIMY_COMBINED_CA_BUNDLE,
-    OXIMY_DEV_CONFIG,
-    PROXY_HOST,
-    WINDOWS_BROWSERS,
-    MemoryTraceBuffer,
-    OximyAddon,
-    TLSPassthrough,
-    _build_url_regex,
-    _check_circuit_breaker,
-    _cleanup_done,
-    _emergency_cleanup,
-    _LAUNCHCTL_ENV_VARS,
-    _resolve_api_base_url,
-    _set_launchctl_env,
-    _state,
-    _teardown_terminal_env,
-    _unset_launchctl_env,
-    contains_blacklist_word,
-    extract_graphql_operation,
-    generate_event_id,
-    load_output_config,
-    matches_app_origin,
-    matches_domain,
-    matches_host_origin,
-    matches_whitelist,
-    _matches_url_pattern,
-    _atomic_write,
-    _write_force_logout_state,
-    _write_proxy_state,
-    OXIMY_STATE_FILE,
-    OXIMY_COMMAND_RESULTS_FILE,
-)
+import pytest
 
+from mitmproxy.addons.oximy.addon import _build_url_regex
+from mitmproxy.addons.oximy.addon import _emergency_cleanup
+from mitmproxy.addons.oximy.addon import _LAUNCHCTL_ENV_VARS
+from mitmproxy.addons.oximy.addon import _matches_url_pattern
+from mitmproxy.addons.oximy.addon import _resolve_api_base_url
+from mitmproxy.addons.oximy.addon import _set_launchctl_env
+from mitmproxy.addons.oximy.addon import _state
+from mitmproxy.addons.oximy.addon import _teardown_terminal_env
+from mitmproxy.addons.oximy.addon import _unset_launchctl_env
+from mitmproxy.addons.oximy.addon import _write_force_logout_state
+from mitmproxy.addons.oximy.addon import _write_proxy_state
+from mitmproxy.addons.oximy.addon import contains_blacklist_word
+from mitmproxy.addons.oximy.addon import DEFAULT_API_BASE_URL
+from mitmproxy.addons.oximy.addon import DirectTraceUploader
+from mitmproxy.addons.oximy.addon import extract_graphql_operation
+from mitmproxy.addons.oximy.addon import generate_event_id
+from mitmproxy.addons.oximy.addon import load_output_config
+from mitmproxy.addons.oximy.addon import matches_app_origin
+from mitmproxy.addons.oximy.addon import matches_domain
+from mitmproxy.addons.oximy.addon import matches_host_origin
+from mitmproxy.addons.oximy.addon import matches_whitelist
+from mitmproxy.addons.oximy.addon import MemoryTraceBuffer
+from mitmproxy.addons.oximy.addon import OXIMY_CA_CERT
+from mitmproxy.addons.oximy.addon import OXIMY_COMBINED_CA_BUNDLE
+from mitmproxy.addons.oximy.addon import OXIMY_STATE_FILE
+from mitmproxy.addons.oximy.addon import OximyAddon
+from mitmproxy.addons.oximy.addon import PROXY_HOST
+from mitmproxy.addons.oximy.addon import TLSPassthrough
 
 # =============================================================================
 # matches_domain Tests
@@ -909,7 +896,6 @@ class TestEdgeCases:
 # =============================================================================
 
 
-import os
 
 
 def _make_addon_with_output_dir(tmp_path: Path) -> OximyAddon:

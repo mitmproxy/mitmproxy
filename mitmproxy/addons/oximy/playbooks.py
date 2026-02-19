@@ -6,7 +6,8 @@ to ~/.oximy/suggestions.json for the Mac app to display.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 
 logger = logging.getLogger(__name__)

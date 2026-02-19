@@ -8,18 +8,17 @@ from __future__ import annotations
 
 import asyncio
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
-# Import the module under test
-from mitmproxy.addons.oximy.process import (
-    ClientProcess,
-    ProcessResolver,
-    _get_responsible_pid,
-    _proc_pidpath,
-)
+from mitmproxy.addons.oximy.process import _get_responsible_pid
+from mitmproxy.addons.oximy.process import _proc_pidpath
 
+# Import the module under test
+from mitmproxy.addons.oximy.process import ClientProcess
+from mitmproxy.addons.oximy.process import ProcessResolver
 
 # =============================================================================
 # _get_responsible_pid Tests

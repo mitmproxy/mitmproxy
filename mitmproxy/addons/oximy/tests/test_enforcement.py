@@ -3,28 +3,21 @@
 from __future__ import annotations
 
 import re
-import time
 import threading
-from unittest.mock import patch
-
-import pytest
+import time
 
 try:
-    from mitmproxy.addons.oximy.enforcement import (
-        FALLBACK_PII_PATTERNS,
-        EnforcementRule,
-        EnforcementPolicy,
-        Violation,
-        EnforcementEngine,
-    )
+    from mitmproxy.addons.oximy.enforcement import EnforcementEngine
+    from mitmproxy.addons.oximy.enforcement import EnforcementPolicy
+    from mitmproxy.addons.oximy.enforcement import EnforcementRule
+    from mitmproxy.addons.oximy.enforcement import FALLBACK_PII_PATTERNS
+    from mitmproxy.addons.oximy.enforcement import Violation
 except ImportError:
-    from enforcement import (
-        FALLBACK_PII_PATTERNS,
-        EnforcementRule,
-        EnforcementPolicy,
-        Violation,
-        EnforcementEngine,
-    )
+    from enforcement import EnforcementEngine
+    from enforcement import EnforcementPolicy
+    from enforcement import EnforcementRule
+    from enforcement import FALLBACK_PII_PATTERNS
+    from enforcement import Violation  # noqa: F401
 
 # Backward-compatible alias for tests
 PII_PATTERNS = FALLBACK_PII_PATTERNS

@@ -17,21 +17,26 @@ import logging
 import os
 import re
 import signal
-import stat
 import subprocess
 import sys
 import tempfile
 import threading
 import time
-from datetime import date, datetime, timezone
-from pathlib import Path
-from typing import IO
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import OrderedDict
+from datetime import date
+from datetime import datetime
+from datetime import timezone
+from pathlib import Path
+from typing import IO
 from urllib.parse import urlparse
 
-from mitmproxy import connection, ctx, http, tls
+from mitmproxy import connection
+from mitmproxy import ctx
+from mitmproxy import http
+from mitmproxy import tls
 from mitmproxy.net.encoding import decode as decode_content_encoding
 
 # Create urllib opener that bypasses system proxy settings.
@@ -41,9 +46,11 @@ _no_proxy_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 # Import ProcessResolver - handle both package and script modes
 try:
-    from .process import ClientProcess, ProcessResolver
+    from .process import ClientProcess
+    from .process import ProcessResolver
 except ImportError:
-    from process import ClientProcess, ProcessResolver
+    from process import ClientProcess
+    from process import ProcessResolver
 
 # Import normalize - handle both package and script modes
 try:
@@ -59,19 +66,29 @@ except ImportError:
 
 # Import structured logging - handle both package and script modes
 try:
-    from .oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
-    from .oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST
     from . import sentry_service
+    from .oximy_logger import _BETTERSTACK_LOGS_HOST
+    from .oximy_logger import _BETTERSTACK_LOGS_TOKEN
+    from .oximy_logger import close as close_logger
+    from .oximy_logger import EventCode as OximyEventCode
+    from .oximy_logger import oximy_log
+    from .oximy_logger import set_context as set_log_context
 except ImportError:
-    from oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
-    from oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST  # type: ignore[import]
     import sentry_service
+    from oximy_logger import _BETTERSTACK_LOGS_HOST  # type: ignore[import]
+    from oximy_logger import _BETTERSTACK_LOGS_TOKEN  # type: ignore[import]
+    from oximy_logger import close as close_logger
+    from oximy_logger import EventCode as OximyEventCode
+    from oximy_logger import oximy_log
+    from oximy_logger import set_context as set_log_context
 
 # Import enforcement engine - handle both package and script modes
 try:
-    from .enforcement import EnforcementEngine, Violation
+    from .enforcement import EnforcementEngine
+    from .enforcement import Violation
 except ImportError:
-    from enforcement import EnforcementEngine, Violation
+    from enforcement import EnforcementEngine
+    from enforcement import Violation
 
 logging.basicConfig(
     level=logging.INFO,
@@ -1816,7 +1833,6 @@ def get_device_id() -> str | None:
 
 # Cache for compiled URL pattern regexes (pattern -> compiled regex)
 # Use OrderedDict for LRU eviction
-from collections import OrderedDict
 _url_pattern_cache: OrderedDict[str, re.Pattern] = OrderedDict()
 _URL_PATTERN_CACHE_MAX_SIZE = 1000
 
@@ -1994,7 +2010,6 @@ def matches_whitelist(host: str, path: str, patterns: list[str]) -> str | None:
     for pattern in patterns:
         # Check if pattern contains a path component
         # Look for / that's not part of *.domain pattern
-        pattern_lower = pattern.lower()
 
         # Find first / that indicates a path
         first_slash = pattern.find('/')
@@ -2370,7 +2385,6 @@ class TLSPassthrough:
         if not self._learned_patterns or not whitelist:
             return
 
-        original_count = len(self._learned_patterns)
         cleaned = []
         removed = []
         for p in self._learned_patterns:

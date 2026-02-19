@@ -8,7 +8,9 @@ import logging
 import re
 import urllib.parse
 
-from mitmproxy.net.encoding import decode_gzip, decode_deflate, decode_zstd
+from mitmproxy.net.encoding import decode_deflate
+from mitmproxy.net.encoding import decode_gzip
+from mitmproxy.net.encoding import decode_zstd
 
 try:
     from mitmproxy.addons.oximy import sentry_service
@@ -174,7 +176,7 @@ def _decode_protobuf_schemaless(data: bytes) -> dict | None:
         return None
 
     try:
-        import blackboxprotobuf
+        import blackboxprotobuf  # noqa: F401
     except ImportError:
         logger.debug("blackboxprotobuf not installed, falling back to base64")
         return None
@@ -420,7 +422,7 @@ def _normalize_sse(content: bytes) -> tuple[str, str | None]:
             data = line[5:].strip()
             if data:
                 try:
-                    obj = json.loads(data)
+                    json.loads(data)
                 except (json.JSONDecodeError, KeyError, IndexError, TypeError):
                     pass
                 extracted.append(data)
