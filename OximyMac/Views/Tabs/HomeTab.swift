@@ -6,9 +6,28 @@ struct HomeTab: View {
     @StateObject private var certService = CertificateService.shared
     @StateObject private var syncService = SyncService.shared
     @StateObject private var remoteStateService = RemoteStateService.shared
+    @StateObject private var violationService = ViolationService.shared
 
     var body: some View {
         VStack(spacing: 0) {
+            // Violation Banner (if recent violations exist)
+            if !violationService.violations.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "shield.lefthalf.filled.trianglebadge.exclamationmark")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+
+                    Text("\(violationService.violations.count) policy violation\(violationService.violations.count == 1 ? "" : "s") detected")
+                        .font(.caption)
+                        .fontWeight(.medium)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.orange.opacity(0.1))
+            }
+
             // Main content area - centered
             VStack(spacing: 20) {
                 // Connection Status Card
