@@ -211,6 +211,8 @@ public class MitmService : IDisposable
         startInfo.Environment["OXIMY_SESSION_ID"] = OximyLogger.SessionId;
         var oximyEnv = Environment.GetEnvironmentVariable("OXIMY_ENV") ?? "production";
         startInfo.Environment["OXIMY_ENV"] = oximyEnv;
+        // Pass app version so addon can send X-Sensor-Version header
+        startInfo.Environment["OXIMY_APP_VERSION"] = Constants.Version;
 
         _mitmProcess = new Process { StartInfo = startInfo };
         _mitmProcess.EnableRaisingEvents = true;

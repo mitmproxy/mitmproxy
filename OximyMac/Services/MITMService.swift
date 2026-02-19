@@ -244,6 +244,10 @@ class MITMService: ObservableObject {
                 "--ssl-insecure",
                 "-q"
             ]
+            // Pass app version so addon can send X-Sensor-Version header
+            var fallbackEnv = ProcessInfo.processInfo.environment
+            fallbackEnv["OXIMY_APP_VERSION"] = Bundle.main.appVersion
+            process.environment = fallbackEnv
             self.process = process
             try runProcess(process, port: port, addonPath: addonPath)
 
@@ -280,6 +284,8 @@ class MITMService: ObservableObject {
         env.removeValue(forKey: "PYTHONHOME")
         env.removeValue(forKey: "PYTHONSTARTUP")
         env.removeValue(forKey: "VIRTUAL_ENV")
+        // Pass app version so addon can send X-Sensor-Version header
+        env["OXIMY_APP_VERSION"] = Bundle.main.appVersion
         process.environment = env
 
         // Run via bash wrapper script
