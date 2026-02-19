@@ -121,6 +121,16 @@ struct SettingsTab: View {
                 SettingsSection(title: "Advanced", icon: "wrench.and.screwdriver.fill") {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
+                            Text("Version")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+
+                        HStack {
                             Text("Port")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
