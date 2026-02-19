@@ -11,22 +11,50 @@ import pytest
 
 try:
     from mitmproxy.addons.oximy.enforcement import (
-        PII_PATTERNS,
+        FALLBACK_PII_PATTERNS,
         EnforcementRule,
         EnforcementPolicy,
         Violation,
         EnforcementEngine,
-        DEFAULT_ENFORCEMENT_POLICY,
     )
 except ImportError:
     from enforcement import (
-        PII_PATTERNS,
+        FALLBACK_PII_PATTERNS,
         EnforcementRule,
         EnforcementPolicy,
         Violation,
         EnforcementEngine,
-        DEFAULT_ENFORCEMENT_POLICY,
     )
+
+# Backward-compatible alias for tests
+PII_PATTERNS = FALLBACK_PII_PATTERNS
+
+# Standard test policy — replaces the removed DEFAULT_ENFORCEMENT_POLICY
+_TEST_POLICY = {
+    "id": "test_pii",
+    "name": "Test PII Policy",
+    "mode": "warn",
+    "rules": [
+        {
+            "id": "pii_all",
+            "type": "data_type",
+            "name": "PII Detection",
+            "severity": "high",
+            "data_types": [
+                "email", "ssn", "credit_card", "api_key",
+                "aws_key", "github_token", "private_key", "phone",
+            ],
+        }
+    ],
+}
+
+
+def _engine_with_policy(**overrides) -> EnforcementEngine:
+    """Create an EnforcementEngine loaded with the standard test policy."""
+    engine = EnforcementEngine()
+    policy = {**_TEST_POLICY, **overrides}
+    engine.update_policies([policy])
+    return engine
 
 
 # =============================================================================
@@ -224,22 +252,22 @@ def test_check_request_no_violation():
 
 def test_check_request_detects_email():
     """Email in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         '{"messages":[{"content":"Send email to john@example.com"}]}',
         "api.openai.com",
         "/v1/chat/completions",
         "POST",
     )
-    assert action == "warn"  # Default policy is warn mode
+    assert action == "warn"  # Test policy is warn mode
     assert violation is not None
     assert violation.detected_type == "email"
-    assert violation.policy_name == "PII Protection (Built-in)"
+    assert violation.policy_name == "Test PII Policy"
 
 
 def test_check_request_detects_credit_card():
     """Credit card number in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "My card number is 4111-1111-1111-1111",
         "api.openai.com",
@@ -252,7 +280,7 @@ def test_check_request_detects_credit_card():
 
 def test_check_request_detects_ssn():
     """SSN in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "My SSN is 123-45-6789",
         "api.openai.com",
@@ -265,7 +293,7 @@ def test_check_request_detects_ssn():
 
 def test_check_request_detects_api_key():
     """API key in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "Use this key: sk-abc1234567890abcdef",
         "api.openai.com",
@@ -278,7 +306,7 @@ def test_check_request_detects_api_key():
 
 def test_check_request_detects_aws_key():
     """AWS access key in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "My AWS key is AKIAIOSFODNN7EXAMPLE",
         "api.openai.com",
@@ -291,7 +319,7 @@ def test_check_request_detects_aws_key():
 
 def test_check_request_detects_private_key():
     """Private key header in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "Here is my key: -----BEGIN RSA PRIVATE KEY-----",
         "api.openai.com",
@@ -304,7 +332,7 @@ def test_check_request_detects_private_key():
 
 def test_check_request_detects_github_token():
     """GitHub token in request body should trigger violation."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "Token: ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn",
         "api.openai.com",
@@ -322,7 +350,7 @@ def test_check_request_detects_github_token():
 
 def test_warn_then_allow_first_request_blocked():
     """First request with PII should be blocked (warn mode)."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "Email: test@example.com",
         "api.openai.com",
@@ -334,7 +362,7 @@ def test_warn_then_allow_first_request_blocked():
 
 def test_warn_then_allow_retry_within_ttl():
     """Second request to same host+path+rule within TTL should pass."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     # First request - blocked
     action1, _ = engine.check_request(
         "Email: test@example.com",
@@ -357,7 +385,7 @@ def test_warn_then_allow_retry_within_ttl():
 
 def test_warn_cache_expires_after_ttl():
     """After TTL expires, request should be blocked again."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     engine.WARN_RETRY_TTL = 0.1  # 100ms for testing
 
     # First request - blocked
@@ -384,7 +412,7 @@ def test_warn_cache_expires_after_ttl():
 
 def test_warn_cache_different_hosts_separate():
     """Different hosts should have separate warn cache entries."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
 
     # Block on host1
     action1, _ = engine.check_request(
@@ -401,7 +429,7 @@ def test_warn_cache_different_hosts_separate():
 
 def test_warn_cache_different_paths_separate():
     """Different paths on the same host should have separate cache entries."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
 
     # Block on path1
     action1, _ = engine.check_request(
@@ -779,8 +807,8 @@ def test_update_policies_multiple_policies():
     assert action == "warn"
 
 
-def test_update_policies_empty_list_restores_default():
-    """Passing an empty list should restore the default policy."""
+def test_update_policies_empty_list_clears_enforcement():
+    """Passing an empty list should clear all enforcement (no policies = allow all)."""
     engine = EnforcementEngine()
 
     # Override with custom
@@ -807,19 +835,21 @@ def test_update_policies_empty_list_restores_default():
     )
     assert action == "block"
 
-    # Restore default
+    # Clear all policies
     engine.update_policies([])
 
-    # Default policy should be back (warn mode)
-    action, _ = engine.check_request(
+    # No policies means no enforcement — PII is allowed through
+    assert len(engine._policies) == 0
+    action, violation = engine.check_request(
         "Email: a@b.com", "api.openai.com", "/v1/chat", "POST"
     )
-    assert action == "warn"
+    assert action == "allow"
+    assert violation is None
 
 
 def test_update_policies_clears_warn_cache():
     """Updating policies should clear the warn cache."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
 
     # First request - warn
     action1, _ = engine.check_request(
@@ -895,19 +925,20 @@ def test_fail_open_on_exception():
     engine._policies = original  # restore
 
 
-def test_default_policy_active():
-    """Default policy should be active without any server config."""
+def test_no_policies_on_init():
+    """Engine should start with no policies — sensor is dumb until server configures it."""
     engine = EnforcementEngine()
-    assert len(engine._policies) == 1
-    assert engine._policies[0].id == "default_pii"
+    assert len(engine._policies) == 0
 
 
-def test_default_policy_matches_constant():
-    """Default policy from engine should match DEFAULT_ENFORCEMENT_POLICY."""
+def test_no_policies_allows_all():
+    """Without server-provided policies, all requests should be allowed."""
     engine = EnforcementEngine()
-    assert engine._policies[0].id == DEFAULT_ENFORCEMENT_POLICY.id
-    assert engine._policies[0].name == DEFAULT_ENFORCEMENT_POLICY.name
-    assert engine._policies[0].mode == DEFAULT_ENFORCEMENT_POLICY.mode
+    action, violation = engine.check_request(
+        "My email is john@example.com", "api.openai.com", "/v1/chat", "POST"
+    )
+    assert action == "allow"
+    assert violation is None
 
 
 def test_none_body_allows():
@@ -935,7 +966,7 @@ def test_whitespace_only_body_allows():
 
 def test_pii_in_url_encoded_body():
     """PII in a URL-encoded body should still be detected."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "email=john%40example.com&name=test",
         "api.openai.com",
@@ -949,7 +980,7 @@ def test_pii_in_url_encoded_body():
 
 def test_multiple_pii_types_in_body():
     """Body with multiple PII types should detect at least one."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     action, violation = engine.check_request(
         "Email: a@b.com, SSN: 123-45-6789, Card: 4111-1111-1111-1111",
         "api.openai.com",
@@ -968,7 +999,7 @@ def test_multiple_pii_types_in_body():
 
 def test_concurrent_check_requests():
     """Multiple threads calling check_request should not crash."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     results = []
     errors = []
 
@@ -1041,7 +1072,7 @@ def test_concurrent_update_and_check():
 
 def test_concurrent_warn_cache_access():
     """Concurrent warn-then-allow cache reads/writes should not crash."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     errors = []
 
     def warn_and_retry(i: int):
@@ -1074,7 +1105,7 @@ def test_concurrent_warn_cache_access():
 
 def test_violation_has_correct_fields():
     """Violation should contain all expected metadata fields."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     _, violation = engine.check_request(
         "Card: 4111-1111-1111-1111",
         "api.openai.com",
@@ -1094,7 +1125,7 @@ def test_violation_has_correct_fields():
 
 def test_violation_without_bundle_id():
     """Violation should work without a bundle_id argument."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
     _, violation = engine.check_request(
         "Card: 4111-1111-1111-1111",
         "api.openai.com",
@@ -1108,7 +1139,7 @@ def test_violation_without_bundle_id():
 
 def test_violation_detected_type_matches_pattern():
     """Violation detected_type should match the PII type that triggered it."""
-    engine = EnforcementEngine()
+    engine = _engine_with_policy()
 
     test_cases = [
         ("Email: john@example.com", "email"),
@@ -1127,7 +1158,7 @@ def test_violation_detected_type_matches_pattern():
             f"Expected {expected_type}, got {violation.detected_type} for body: {body}"
         )
         # Reset warn cache for next iteration by using different host
-        engine = EnforcementEngine()
+        engine = _engine_with_policy()
 
 
 def test_violation_policy_name_from_custom_policy():
@@ -1212,13 +1243,16 @@ def test_enforcement_policy_construction():
     assert len(policy.rules) == 1
 
 
-def test_default_enforcement_policy_structure():
-    """DEFAULT_ENFORCEMENT_POLICY should have required fields."""
-    assert hasattr(DEFAULT_ENFORCEMENT_POLICY, "id")
-    assert hasattr(DEFAULT_ENFORCEMENT_POLICY, "name")
-    assert hasattr(DEFAULT_ENFORCEMENT_POLICY, "mode")
-    assert hasattr(DEFAULT_ENFORCEMENT_POLICY, "rules")
-    assert DEFAULT_ENFORCEMENT_POLICY.mode == "warn"
+def test_empty_policies_after_empty_update():
+    """Updating with empty list should leave engine with no policies (server says no enforcement)."""
+    engine = EnforcementEngine()
+    engine.update_policies([])
+    assert len(engine._policies) == 0
+    action, violation = engine.check_request(
+        "My SSN is 123-45-6789", "api.openai.com", "/v1/chat", "POST"
+    )
+    assert action == "allow"
+    assert violation is None
 
 
 # =============================================================================
@@ -1326,7 +1360,7 @@ class TestRedactPii:
     """Tests for EnforcementEngine.redact_pii()."""
 
     def setup_method(self):
-        self.engine = EnforcementEngine()
+        self.engine = _engine_with_policy()
 
     def test_no_pii_returns_unchanged(self):
         body = "Hello, how are you today?"

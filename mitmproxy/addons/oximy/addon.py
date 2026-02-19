@@ -3109,6 +3109,11 @@ class OximyAddon:
         self._local_collector: LocalDataCollector | None = None
         # Enforcement engine for PII detection and blocking
         self._enforcement: EnforcementEngine = EnforcementEngine()
+        # Pending enforcement violations to report back to API
+        self._pending_violations: list[dict] = []
+        self._violation_report_lock: threading.Lock = threading.Lock()
+        self._violation_report_thread: threading.Thread | None = None
+        self._violation_report_stop: threading.Event = threading.Event()
 
     def _get_config_snapshot(self) -> dict:
         """Get a consistent snapshot of all filtering config.
@@ -3489,6 +3494,12 @@ class OximyAddon:
 
         # Start background trigger file monitor
         self._start_force_sync_monitor()
+
+        # Start background violation reporting to API (only if not already running)
+        if self._violation_report_thread is None or not self._violation_report_thread.is_alive():
+            with self._thread_start_lock:
+                if self._violation_report_thread is None or not self._violation_report_thread.is_alive():
+                    self._start_violation_report_task()
 
         # Initialize trace uploader for disk-based fallback files (only if enabled)
         # When running under a host app (e.g., OximyMac), the host handles sync
@@ -4193,11 +4204,26 @@ class OximyAddon:
             method = flow.request.method
             bundle_id = flow.metadata.get("oximy_bundle_id", "")
 
-            # Redact PII from the request body
+            # First, check if any policy matches (returns real policy/rule context)
+            action, violation = self._enforcement.check_request(
+                body, host, path, method, bundle_id
+            )
+
+            if violation is None:
+                return  # Clean — no PII found
+
+            if action == "allow" and violation is not None:
+                # Monitor mode — log violation but don't redact
+                self._write_violation_file(violation)
+                self._write_enforcement_audit(violation, flow)
+                self._queue_violation_for_api(violation, [violation.detected_type])
+                return
+
+            # PII found with warn/block mode — redact the body
             redacted_body, detected_types = self._enforcement.redact_pii(body)
 
             if not detected_types:
-                return  # Clean — no PII found
+                return  # redact_pii found nothing (edge case — fail-open)
 
             # SAFETY: Verify JSON integrity after redaction.
             # If the original was valid JSON and redaction broke it, revert.
@@ -4220,35 +4246,20 @@ class OximyAddon:
                 detected_types, method, host, path[:60],
             )
 
-            # Build violation for notification
-            import time as _time
-            import uuid as _uuid
-            now = _time.time()
-            violation = Violation(
-                id=f"v_{int(now)}_{_uuid.uuid4().hex[:8]}",
-                timestamp=datetime.fromtimestamp(
-                    now, tz=timezone.utc
-                ).isoformat(),
-                action="redacted",
-                policy_id="default_pii",
-                policy_name="PII Protection (Built-in)",
-                rule_id="pii_all",
-                rule_name="PII Detection",
-                severity="high",
-                detected_type=", ".join(detected_types),
-                host=host,
-                path=path,
-                method=method,
-                bundle_id=bundle_id,
-                retry_allowed=False,
-                message=(
-                    f"Redacted {', '.join(detected_types)} from "
-                    f"{method} {host}{path[:60]}"
-                ),
+            # Update violation action to reflect actual redaction
+            violation.action = "redacted"
+            violation.detected_type = ", ".join(detected_types)
+            violation.message = (
+                f"Redacted {', '.join(detected_types)} from "
+                f"{method} {host}{path[:60]}"
             )
+
+            # Mark the flow so the trace payload includes enforced=True
+            flow.metadata["oximy_enforced"] = True
 
             self._write_violation_file(violation)
             self._write_enforcement_audit(violation, flow)
+            self._queue_violation_for_api(violation, detected_types)
 
         except Exception:
             logger.debug("Enforcement check failed (fail-open)", exc_info=True)
@@ -4319,6 +4330,97 @@ class OximyAddon:
             self._write_to_buffer(audit_event)
         except Exception:
             logger.debug("Failed to write enforcement audit event", exc_info=True)
+
+    def _queue_violation_for_api(self, violation: Violation, detected_types: list[str]) -> None:
+        """Queue a violation for batch reporting to the API."""
+        try:
+            entry = {
+                "id": violation.id,
+                "timestamp": violation.timestamp,
+                "action": violation.action,
+                "policy_id": violation.policy_id,
+                "policy_name": violation.policy_name,
+                "rule_id": violation.rule_id,
+                "rule_name": violation.rule_name,
+                "rule_type": violation.rule_type,
+                "severity": violation.severity,
+                "detected_types": detected_types,
+                "host": violation.host,
+                "path": violation.path[:200],
+                "method": violation.method,
+                "bundle_id": violation.bundle_id,
+            }
+            with self._violation_report_lock:
+                self._pending_violations.append(entry)
+        except Exception:
+            logger.debug("Failed to queue violation for API", exc_info=True)
+
+    def _flush_violations_to_api(self) -> None:
+        """Send pending violations to the API ingestion endpoint."""
+        with self._violation_report_lock:
+            if not self._pending_violations:
+                return
+            batch = self._pending_violations[:]
+            self._pending_violations.clear()
+
+        if not batch:
+            return
+
+        token = _get_device_token()
+        if not token:
+            return
+
+        try:
+            url = f"{_resolved_api_base}/api/v1/ingest/enforcement-violations"
+            payload = json.dumps({"violations": batch}).encode("utf-8")
+
+            req = urllib.request.Request(
+                url,
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {token}",
+                },
+                method="POST",
+            )
+            with _no_proxy_opener.open(req, timeout=10) as resp:
+                if resp.status in (200, 202):
+                    logger.info(f"Reported {len(batch)} enforcement violations to API")
+                else:
+                    logger.warning(f"Violation report got status {resp.status}")
+        except Exception:
+            logger.debug(f"Failed to report {len(batch)} violations to API (will retry)", exc_info=True)
+            # Re-queue on failure (don't lose violations)
+            with self._violation_report_lock:
+                self._pending_violations = batch + self._pending_violations
+                # Cap at 200 to avoid unbounded growth
+                self._pending_violations = self._pending_violations[:200]
+
+    def _start_violation_report_task(self) -> None:
+        """Start background thread to periodically flush violations to API."""
+        self._violation_report_stop.clear()
+
+        def report_loop():
+            while not self._violation_report_stop.is_set():
+                if self._violation_report_stop.wait(timeout=10):
+                    break
+                self._flush_violations_to_api()
+
+        self._violation_report_thread = threading.Thread(
+            target=report_loop,
+            daemon=True,
+            name="oximy-violation-report",
+        )
+        self._violation_report_thread.start()
+        logger.info("Violation report task started (interval: 10s)")
+
+    def _stop_violation_report_task(self) -> None:
+        """Stop the violation reporting thread and flush remaining."""
+        self._violation_report_stop.set()
+        if self._violation_report_thread:
+            self._violation_report_thread.join(timeout=5)
+        # Final flush
+        self._flush_violations_to_api()
 
     def responseheaders(self, flow: http.HTTPFlow) -> None:
         """Enable streaming for SSE responses to prevent client timeouts.
@@ -4754,6 +4856,10 @@ class OximyAddon:
         }
         event["timing"] = {"duration_ms": duration_ms, "ttfb_ms": ttfb_ms}
 
+        # Mark traces where PII was redacted so the server skips data_type rules
+        if flow.metadata.get("oximy_enforced"):
+            event["enforced"] = True
+
         return event
 
     # =========================================================================
@@ -5160,6 +5266,9 @@ class OximyAddon:
         self._force_sync_stop.set()
         if self._force_sync_thread and self._force_sync_thread.is_alive():
             self._force_sync_thread.join(timeout=1)
+
+        # Stop violation reporting thread (flushes remaining violations)
+        self._stop_violation_report_task()
 
         # Stop local data collector
         if self._local_collector:

@@ -2,9 +2,12 @@
 Enforcement engine for Oximy MITM proxy.
 
 Detects PII and sensitive data in request bodies and enforces
-redaction/warn/block policies. Ported from the TypeScript sensor SDK.
+redaction/warn/block policies. Uses Microsoft Presidio for high-accuracy
+PII detection with built-in Luhn validation, NER-based entity recognition,
+and confidence scoring. Falls back to regex patterns when Presidio is not
+available.
 
-Primary mechanism: **in-flight PII redaction** — PII is replaced with
+Primary mechanism: **in-flight PII redaction** -- PII is replaced with
 [REDACTED] placeholders in the request body before it reaches the
 AI provider. The request goes through normally with clean content;
 the user gets a notification about what was redacted.
@@ -17,7 +20,7 @@ Modes:
 Design principles:
   - Fail-open: Any exception during matching returns ("allow", None).
   - Thread-safe: All public methods are guarded by a lock.
-  - Never return 403 — always redact and forward.
+  - Never return 403 -- always redact and forward.
 """
 
 from __future__ import annotations
@@ -33,10 +36,10 @@ from datetime import datetime, timezone
 logger = logging.getLogger(__name__)
 
 # =============================================================================
-# PII PATTERNS — ported from TypeScript sensor SDK
+# FALLBACK PII PATTERNS -- used when Presidio is not available
 # =============================================================================
 
-PII_PATTERNS: dict[str, re.Pattern] = {
+FALLBACK_PII_PATTERNS: dict[str, re.Pattern] = {
     "email": re.compile(
         r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     ),
@@ -74,6 +77,183 @@ PII_PATTERNS: dict[str, re.Pattern] = {
     ),
 }
 
+
+# =============================================================================
+# PRESIDIO CONFIGURATION
+# =============================================================================
+
+# Map Presidio entity types to Oximy data type names
+PRESIDIO_TO_OXIMY: dict[str, str] = {
+    "CREDIT_CARD": "credit_card",
+    "EMAIL_ADDRESS": "email",
+    "PHONE_NUMBER": "phone",
+    "US_SSN": "ssn",
+    "IP_ADDRESS": "ip_address",
+    "PERSON": "person_name",
+    "LOCATION": "location",
+    "API_KEY": "api_key",
+    "AWS_KEY": "aws_key",
+    "GITHUB_TOKEN": "github_token",
+    "PRIVATE_KEY": "private_key",
+}
+
+# Reverse mapping: Oximy name -> Presidio entity type
+OXIMY_TO_PRESIDIO: dict[str, str] = {v: k for k, v in PRESIDIO_TO_OXIMY.items()}
+
+# Confidence thresholds per detection method
+NER_ENTITY_TYPES = {"PERSON", "LOCATION"}
+CUSTOM_ENTITY_TYPES = {"API_KEY", "AWS_KEY", "GITHUB_TOKEN", "PRIVATE_KEY"}
+
+CONFIDENCE_THRESHOLDS: dict[str, float] = {}
+# Pattern-based (built-in Presidio recognizers)
+for _etype in ("CREDIT_CARD", "EMAIL_ADDRESS", "PHONE_NUMBER", "US_SSN", "IP_ADDRESS"):
+    CONFIDENCE_THRESHOLDS[_etype] = 0.5
+# NER-based
+for _etype in NER_ENTITY_TYPES:
+    CONFIDENCE_THRESHOLDS[_etype] = 0.6
+# Custom patterns
+for _etype in CUSTOM_ENTITY_TYPES:
+    CONFIDENCE_THRESHOLDS[_etype] = 0.7
+
+# Body size threshold above which NER is skipped for performance
+NER_SKIP_BODY_SIZE = 100_000  # 100 KB
+
+# =============================================================================
+# LAZY-LOADED PRESIDIO ENGINES
+# =============================================================================
+
+_analyzer_engine = None
+_anonymizer_engine = None
+_presidio_available: bool | None = None  # None = not yet checked
+
+
+def _add_custom_recognizers(analyzer) -> None:
+    """Register custom pattern recognizers for types Presidio lacks."""
+    try:
+        from presidio_analyzer import Pattern, PatternRecognizer
+    except ImportError:
+        return
+
+    custom_recognizers = [
+        PatternRecognizer(
+            supported_entity="API_KEY",
+            name="api_key_recognizer",
+            patterns=[
+                Pattern(
+                    name="api_key_pattern",
+                    regex=r"\b(?:sk[-_]|api[-_]?key[-_]?|bearer\s+|token[-_]?)[a-zA-Z0-9]{16,}\b",
+                    score=0.8,
+                ),
+            ],
+            supported_language="en",
+        ),
+        PatternRecognizer(
+            supported_entity="AWS_KEY",
+            name="aws_key_recognizer",
+            patterns=[
+                Pattern(
+                    name="aws_key_pattern",
+                    regex=r"\bAKIA[0-9A-Z]{16}\b",
+                    score=0.95,
+                ),
+            ],
+            supported_language="en",
+        ),
+        PatternRecognizer(
+            supported_entity="GITHUB_TOKEN",
+            name="github_token_recognizer",
+            patterns=[
+                Pattern(
+                    name="github_token_pattern",
+                    regex=r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,}\b",
+                    score=0.95,
+                ),
+            ],
+            supported_language="en",
+        ),
+        PatternRecognizer(
+            supported_entity="PRIVATE_KEY",
+            name="private_key_recognizer",
+            patterns=[
+                Pattern(
+                    name="private_key_pattern",
+                    regex=r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----",
+                    score=0.95,
+                ),
+            ],
+            supported_language="en",
+        ),
+    ]
+
+    for recognizer in custom_recognizers:
+        analyzer.registry.add_recognizer(recognizer)
+
+
+def _get_analyzer():
+    """Lazy-load and return the Presidio AnalyzerEngine, or None if unavailable."""
+    global _analyzer_engine, _presidio_available
+    if _presidio_available is False:
+        return None
+    if _analyzer_engine is not None:
+        return _analyzer_engine
+    try:
+        from presidio_analyzer import AnalyzerEngine
+        _analyzer_engine = AnalyzerEngine()
+        _add_custom_recognizers(_analyzer_engine)
+        _presidio_available = True
+        logger.info("Presidio AnalyzerEngine initialized successfully")
+        return _analyzer_engine
+    except ImportError:
+        logger.warning("Presidio not available, falling back to regex patterns")
+        _presidio_available = False
+        return None
+    except Exception:
+        logger.warning("Failed to initialize Presidio, falling back to regex patterns", exc_info=True)
+        _presidio_available = False
+        return None
+
+
+def _get_anonymizer():
+    """Lazy-load and return the Presidio AnonymizerEngine, or None if unavailable."""
+    global _anonymizer_engine
+    if _presidio_available is False:
+        return None
+    if _anonymizer_engine is not None:
+        return _anonymizer_engine
+    try:
+        from presidio_anonymizer import AnonymizerEngine
+        _anonymizer_engine = AnonymizerEngine()
+        return _anonymizer_engine
+    except ImportError:
+        return None
+    except Exception:
+        logger.warning("Failed to initialize Presidio AnonymizerEngine", exc_info=True)
+        return None
+
+
+def _get_redaction_operators() -> dict | None:
+    """Build the operator config dict for Presidio anonymization."""
+    try:
+        from presidio_anonymizer.entities import OperatorConfig
+    except ImportError:
+        return None
+
+    return {
+        "CREDIT_CARD": OperatorConfig("replace", {"new_value": "[CREDIT_CARD_REDACTED]"}),
+        "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": "[EMAIL_REDACTED]"}),
+        "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "[PHONE_REDACTED]"}),
+        "US_SSN": OperatorConfig("replace", {"new_value": "[SSN_REDACTED]"}),
+        "IP_ADDRESS": OperatorConfig("replace", {"new_value": "[IP_ADDRESS_REDACTED]"}),
+        "PERSON": OperatorConfig("replace", {"new_value": "[PERSON_REDACTED]"}),
+        "LOCATION": OperatorConfig("replace", {"new_value": "[LOCATION_REDACTED]"}),
+        "API_KEY": OperatorConfig("replace", {"new_value": "[API_KEY_REDACTED]"}),
+        "AWS_KEY": OperatorConfig("replace", {"new_value": "[AWS_KEY_REDACTED]"}),
+        "GITHUB_TOKEN": OperatorConfig("replace", {"new_value": "[GITHUB_TOKEN_REDACTED]"}),
+        "PRIVATE_KEY": OperatorConfig("replace", {"new_value": "[PRIVATE_KEY_REDACTED]"}),
+        "DEFAULT": OperatorConfig("replace", {"new_value": "[PII_REDACTED]"}),
+    }
+
+
 # =============================================================================
 # DATA MODELS
 # =============================================================================
@@ -85,11 +265,11 @@ class EnforcementRule:
 
     Attributes:
         id:         Unique rule identifier.
-        type:       "data_type" (uses PII_PATTERNS) or "regex" (custom patterns).
+        type:       "data_type" (uses Presidio/regex) or "regex" (custom patterns).
         name:       Human-readable rule name.
         severity:   "low", "medium", "high", or "critical".
         patterns:   Pre-compiled custom regex patterns (for type="regex").
-        data_types: Keys into PII_PATTERNS to check (for type="data_type").
+        data_types: PII type keys to check (for type="data_type").
     """
 
     id: str
@@ -107,7 +287,7 @@ class EnforcementPolicy:
     Attributes:
         id:    Unique policy identifier.
         name:  Human-readable policy name.
-        mode:  Enforcement mode — "warn", "block", or "monitor".
+        mode:  Enforcement mode -- "warn", "block", or "monitor".
         rules: Ordered list of rules evaluated top-to-bottom.
     """
 
@@ -124,11 +304,12 @@ class Violation:
     Attributes:
         id:             Unique violation identifier (v_{timestamp}_{hex}).
         timestamp:      ISO 8601 UTC timestamp of detection.
-        action:         Action taken — "blocked" or "warned".
+        action:         Action taken -- "blocked", "warned", or "redacted".
         policy_id:      ID of the policy that triggered.
         policy_name:    Name of the policy that triggered.
         rule_id:        ID of the rule that matched.
         rule_name:      Name of the rule that matched.
+        rule_type:      Type of the matching rule ("data_type", "regex", "keyword").
         severity:       Severity level from the matching rule.
         detected_type:  PII type or pattern name that matched.
         host:           Request target host.
@@ -146,6 +327,7 @@ class Violation:
     policy_name: str
     rule_id: str
     rule_name: str
+    rule_type: str
     severity: str
     detected_type: str
     host: str
@@ -157,34 +339,6 @@ class Violation:
 
 
 # =============================================================================
-# DEFAULT POLICY — works without server configuration
-# =============================================================================
-
-DEFAULT_ENFORCEMENT_POLICY = EnforcementPolicy(
-    id="default_pii",
-    name="PII Protection (Built-in)",
-    mode="warn",
-    rules=[
-        EnforcementRule(
-            id="pii_all",
-            type="data_type",
-            name="PII Detection",
-            severity="high",
-            data_types=[
-                "email",
-                "ssn",
-                "credit_card",
-                "api_key",
-                "aws_key",
-                "github_token",
-                "private_key",
-                "phone",
-            ],
-        )
-    ],
-)
-
-# =============================================================================
 # ENFORCEMENT ENGINE
 # =============================================================================
 
@@ -193,10 +347,15 @@ class EnforcementEngine:
     """PII detection and enforcement engine.
 
     Scans request bodies against configured policies and returns an action:
-      - ("allow", None)      — no violation found, or fail-open on error
-      - ("allow", Violation)  — violation found but policy mode is "monitor"
-      - ("warn", Violation)   — first occurrence blocked; retry allowed within TTL
-      - ("block", Violation)  — always blocked
+      - ("allow", None)      -- no violation found, or fail-open on error
+      - ("allow", Violation)  -- violation found but policy mode is "monitor"
+      - ("warn", Violation)   -- first occurrence blocked; retry allowed within TTL
+      - ("block", Violation)  -- always blocked
+
+    Uses Microsoft Presidio for PII detection when available, with automatic
+    fallback to regex patterns. Presidio provides built-in Luhn validation
+    for credit cards, NER-based detection for names/locations, and confidence
+    scoring.
 
     Thread-safe. All public methods acquire ``self._lock``.
 
@@ -207,11 +366,11 @@ class EnforcementEngine:
         action, violation = engine.check_request(body, host, path, method, bundle_id)
     """
 
-    MAX_BODY_SIZE: int = 1_048_576  # 1 MB — skip scanning oversized bodies
-    WARN_RETRY_TTL: int = 120       # 2 minutes — warn cache time-to-live
+    MAX_BODY_SIZE: int = 1_048_576  # 1 MB -- skip scanning oversized bodies
+    WARN_RETRY_TTL: int = 120       # 2 minutes -- warn cache time-to-live
 
     def __init__(self) -> None:
-        self._policies: list[EnforcementPolicy] = [DEFAULT_ENFORCEMENT_POLICY]
+        self._policies: list[EnforcementPolicy] = []  # Empty until server provides policies
         # Warn cache: (host, path_prefix, rule_id) -> timestamp of first warn
         self._warn_cache: dict[tuple[str, str, str], float] = {}
         self._lock = threading.Lock()
@@ -260,7 +419,7 @@ class EnforcementEngine:
                         name=rule_dict.get("name", ""),
                         severity=rule_dict.get("severity", "medium"),
                         patterns=compiled_patterns,
-                        data_types=rule_dict.get("data_types", []),
+                        data_types=rule_dict.get("dataTypes") or rule_dict.get("data_types", []),
                     )
                 )
 
@@ -274,7 +433,7 @@ class EnforcementEngine:
             )
 
         with self._lock:
-            self._policies = parsed if parsed else [DEFAULT_ENFORCEMENT_POLICY]
+            self._policies = parsed
 
         logger.info(
             "Enforcement policies updated: %d policy(ies) loaded",
@@ -299,11 +458,11 @@ class EnforcementEngine:
 
         Returns:
             A tuple of (action, violation):
-              - ("allow", None)       — clean, no match
-              - ("allow", Violation)  — match but mode is "monitor"
-              - ("allow", None)       — match but warn cache allows retry
-              - ("warn", Violation)   — first warn, request blocked
-              - ("block", Violation)  — always blocked
+              - ("allow", None)       -- clean, no match
+              - ("allow", Violation)  -- match but mode is "monitor"
+              - ("allow", None)       -- match but warn cache allows retry
+              - ("warn", Violation)   -- first warn, request blocked
+              - ("block", Violation)  -- always blocked
 
         Fail-open: returns ("allow", None) on any internal exception.
         """
@@ -328,7 +487,7 @@ class EnforcementEngine:
         method: str,
         bundle_id: str,
     ) -> tuple[str, Violation | None]:
-        """Core matching logic — called inside the fail-open wrapper."""
+        """Core matching logic -- called inside the fail-open wrapper."""
         # Skip oversized bodies
         if len(body_text) > self.MAX_BODY_SIZE:
             return ("allow", None)
@@ -357,6 +516,7 @@ class EnforcementEngine:
                     policy_name=policy.name,
                     rule_id=rule.id,
                     rule_name=rule.name,
+                    rule_type=rule.type,
                     severity=rule.severity,
                     detected_type=detected_type,
                     host=host,
@@ -386,9 +546,9 @@ class EnforcementEngine:
                     if cached_ts is not None:
                         elapsed = now - cached_ts
                         if elapsed < self.WARN_RETRY_TTL:
-                            # Within TTL — allow the retry
+                            # Within TTL -- allow the retry
                             return ("allow", None)
-                        # TTL expired — treat as new first occurrence
+                        # TTL expired -- treat as new first occurrence
                     # Record first occurrence
                     self._warn_cache[cache_key] = now
 
@@ -404,18 +564,85 @@ class EnforcementEngine:
     def _match_rule(rule: EnforcementRule, body: str) -> str | None:
         """Check body against a single rule.
 
+        Uses Presidio when available for data_type rules, falling back to
+        regex patterns. For custom regex rules, always uses direct matching.
+
         Returns the name of the first matched PII type / pattern,
         or None if nothing matched.
         """
         if rule.type == "data_type":
-            for dt in rule.data_types:
-                pattern = PII_PATTERNS.get(dt)
-                if pattern and pattern.search(body):
-                    return dt
+            return EnforcementEngine._match_data_types(rule.data_types, body)
         elif rule.type == "regex":
             for idx, pattern in enumerate(rule.patterns):
                 if pattern.search(body):
                     return f"custom_pattern_{idx}"
+        return None
+
+    @staticmethod
+    def _match_data_types(data_types: list[str], body: str) -> str | None:
+        """Match data types using Presidio or fallback regex.
+
+        For large bodies (>100KB), skips NER-based detection (PERSON, LOCATION)
+        to keep latency under 50ms.
+        """
+        analyzer = _get_analyzer()
+        if analyzer is None:
+            # Fallback: use regex patterns
+            return EnforcementEngine._match_data_types_regex(data_types, body)
+
+        try:
+            return EnforcementEngine._match_data_types_presidio(
+                analyzer, data_types, body
+            )
+        except Exception:
+            logger.debug(
+                "Presidio analysis failed, falling back to regex", exc_info=True
+            )
+            return EnforcementEngine._match_data_types_regex(data_types, body)
+
+    @staticmethod
+    def _match_data_types_presidio(
+        analyzer, data_types: list[str], body: str
+    ) -> str | None:
+        """Use Presidio to detect PII types in body text."""
+        # Determine which Presidio entity types to request
+        requested_entities: list[str] = []
+        skip_ner = len(body) > NER_SKIP_BODY_SIZE
+
+        for dt in data_types:
+            presidio_type = OXIMY_TO_PRESIDIO.get(dt)
+            if presidio_type is None:
+                continue
+            if skip_ner and presidio_type in NER_ENTITY_TYPES:
+                continue
+            requested_entities.append(presidio_type)
+
+        if not requested_entities:
+            return None
+
+        results = analyzer.analyze(
+            text=body,
+            entities=requested_entities,
+            language="en",
+        )
+
+        # Check results against confidence thresholds
+        for result in results:
+            threshold = CONFIDENCE_THRESHOLDS.get(result.entity_type, 0.5)
+            if result.score >= threshold:
+                oximy_type = PRESIDIO_TO_OXIMY.get(result.entity_type)
+                if oximy_type and oximy_type in data_types:
+                    return oximy_type
+
+        return None
+
+    @staticmethod
+    def _match_data_types_regex(data_types: list[str], body: str) -> str | None:
+        """Fallback regex-based PII matching."""
+        for dt in data_types:
+            pattern = FALLBACK_PII_PATTERNS.get(dt)
+            if pattern and pattern.search(body):
+                return dt
         return None
 
     # ------------------------------------------------------------------
@@ -468,10 +695,16 @@ class EnforcementEngine:
         "github_token": "GITHUB_TOKEN",
         "ip_address": "IP_ADDRESS",
         "private_key": "PRIVATE_KEY",
+        "person_name": "PERSON",
+        "location": "LOCATION",
     }
 
     def redact_pii(self, body_text: str) -> tuple[str, list[str]]:
         """Replace all detected PII in *body_text* with [REDACTED] placeholders.
+
+        Uses Presidio AnonymizerEngine when available for accurate redaction
+        with entity-specific replacement labels. Falls back to regex-based
+        substitution.
 
         Returns:
             (redacted_body, list_of_detected_types)
@@ -487,9 +720,6 @@ class EnforcementEngine:
         if len(body_text) > self.MAX_BODY_SIZE:
             return (body_text, [])
 
-        detected: list[str] = []
-        redacted = body_text
-
         with self._lock:
             policies = list(self._policies)
 
@@ -502,8 +732,92 @@ class EnforcementEngine:
                 if rule.type == "data_type":
                     data_types_to_check.update(rule.data_types)
 
+        if not data_types_to_check:
+            return (body_text, [])
+
+        # Try Presidio-based redaction first
+        analyzer = _get_analyzer()
+        anonymizer = _get_anonymizer()
+
+        if analyzer is not None and anonymizer is not None:
+            try:
+                return self._redact_pii_presidio(
+                    analyzer, anonymizer, body_text, data_types_to_check
+                )
+            except Exception:
+                logger.debug(
+                    "Presidio redaction failed, falling back to regex",
+                    exc_info=True,
+                )
+
+        # Fallback: regex-based redaction
+        return self._redact_pii_regex(body_text, data_types_to_check)
+
+    def _redact_pii_presidio(
+        self,
+        analyzer,
+        anonymizer,
+        body_text: str,
+        data_types_to_check: set[str],
+    ) -> tuple[str, list[str]]:
+        """Use Presidio to analyze and anonymize PII in body text."""
+        # Build list of Presidio entity types to request
+        requested_entities: list[str] = []
+        skip_ner = len(body_text) > NER_SKIP_BODY_SIZE
+
         for dt in data_types_to_check:
-            pattern = PII_PATTERNS.get(dt)
+            presidio_type = OXIMY_TO_PRESIDIO.get(dt)
+            if presidio_type is None:
+                continue
+            if skip_ner and presidio_type in NER_ENTITY_TYPES:
+                continue
+            requested_entities.append(presidio_type)
+
+        if not requested_entities:
+            return (body_text, [])
+
+        # Analyze
+        results = analyzer.analyze(
+            text=body_text,
+            entities=requested_entities,
+            language="en",
+        )
+
+        # Filter by confidence threshold and only keep types we care about
+        filtered_results = []
+        detected_oximy_types: set[str] = set()
+
+        for result in results:
+            threshold = CONFIDENCE_THRESHOLDS.get(result.entity_type, 0.5)
+            if result.score < threshold:
+                continue
+            oximy_type = PRESIDIO_TO_OXIMY.get(result.entity_type)
+            if oximy_type and oximy_type in data_types_to_check:
+                filtered_results.append(result)
+                detected_oximy_types.add(oximy_type)
+
+        if not filtered_results:
+            return (body_text, [])
+
+        # Anonymize using operator configs
+        operators = _get_redaction_operators()
+        anonymized = anonymizer.anonymize(
+            text=body_text,
+            analyzer_results=filtered_results,
+            operators=operators,
+        )
+
+        return (anonymized.text, sorted(detected_oximy_types))
+
+    def _redact_pii_regex(
+        self, body_text: str, data_types_to_check: set[str]
+    ) -> tuple[str, list[str]]:
+        """Fallback regex-based PII redaction."""
+        detected: list[str] = []
+        redacted = body_text
+
+        for dt in data_types_to_check:
+            pattern = FALLBACK_PII_PATTERNS.get(dt)
             if not pattern:
                 continue
             if pattern.search(redacted):
