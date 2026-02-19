@@ -157,7 +157,7 @@ build_mac() {
     cd "$SCRIPT_DIR/OximyMac"
 
     # Step 1: Create Secrets.swift
-    print_header "Step 1/8: Creating Secrets.swift"
+    print_header "Step 1/9: Creating Secrets.swift"
     if [ -n "$SENTRY_DSN" ]; then
         cat > App/Secrets.swift << EOF
 import Foundation
@@ -173,7 +173,7 @@ EOF
     fi
 
     # Step 2: Build Python embed
-    print_header "Step 2/8: Building Python Embed"
+    print_header "Step 2/9: Building Python Embed"
     if [ "$SKIP_PYTHON_BUILD" = true ] && [ -d "Resources/python-embed" ]; then
         print_warning "Skipping Python build (using existing)"
     else
@@ -184,18 +184,18 @@ EOF
     fi
 
     # Step 3: Sync addon
-    print_header "Step 3/8: Syncing Addon"
+    print_header "Step 3/9: Syncing Addon"
     make sync
     print_success "Addon synced"
 
     # Step 4: Fetch Swift dependencies
-    print_header "Step 4/8: Fetching Swift Dependencies"
+    print_header "Step 4/9: Fetching Swift Dependencies"
     swift package resolve
     swift build --target OximyMac 2>/dev/null || true
     print_success "Dependencies fetched"
 
     # Step 5: Build release
-    print_header "Step 5/8: Building Release"
+    print_header "Step 5/9: Building Release"
     export VERSION
     export DEVELOPER_ID
     chmod +x Scripts/build-release.sh
@@ -203,7 +203,7 @@ EOF
     print_success "App bundle built and signed"
 
     # Step 6: Notarize
-    print_header "Step 6/8: Notarizing App"
+    print_header "Step 6/9: Notarizing App"
     cd build
 
     echo "Creating zip for notarization..."
@@ -244,7 +244,7 @@ EOF
     rm -f "Oximy.zip"
 
     # Step 7: Verify
-    print_header "Step 7/8: Verifying Notarization"
+    print_header "Step 7/9: Verifying Notarization"
     echo "Verifying code signature..."
     codesign -dvv Oximy.app
     echo ""
@@ -274,7 +274,7 @@ EOF
     fi
 
     # Step 8: Create DMG with volume icon + Applications symlink
-    print_header "Step 8/8: Creating DMG"
+    print_header "Step 8/9: Creating DMG"
     DMG_NAME="Oximy-$VERSION.dmg"
     DMG_TEMP="Oximy-temp.dmg"
     VOLUME_NAME="Oximy"
@@ -360,18 +360,127 @@ EOF
     print_success "DMG created: $DMG_NAME"
     ls -lh "$DMG_NAME"
 
+    # Step 9: Create PKG installer (for in-app updates — no drag-to-install)
+    print_header "Step 9/9: Creating PKG Installer"
+    PKG_NAME="Oximy-$VERSION.pkg"
+    PKG_STAGING="pkg-staging"
+    PKG_ROOT="$PKG_STAGING/root"
+    PKG_SCRIPTS_DIR="$PKG_STAGING/scripts"
+    BUNDLE_ID="com.oximy.mac"
+    INSTALLER_DIR="$SCRIPT_DIR/OximyMac/Installer"
+
+    rm -rf "$PKG_STAGING"
+    mkdir -p "$PKG_ROOT/Applications"
+    mkdir -p "$PKG_SCRIPTS_DIR"
+
+    echo "Copying notarized app to PKG staging..."
+    cp -R "Oximy.app" "$PKG_ROOT/Applications/"
+
+    echo "Copying installer scripts..."
+    cp "$INSTALLER_DIR/Scripts/preinstall" "$PKG_SCRIPTS_DIR/"
+    cp "$INSTALLER_DIR/Scripts/postinstall" "$PKG_SCRIPTS_DIR/"
+    chmod +x "$PKG_SCRIPTS_DIR/"*
+
+    echo "Building component package..."
+    pkgbuild \
+        --root "$PKG_ROOT" \
+        --install-location "/" \
+        --scripts "$PKG_SCRIPTS_DIR" \
+        --identifier "$BUNDLE_ID" \
+        --version "$VERSION" \
+        --ownership recommended \
+        "OximyComponent.pkg"
+
+    echo "Building distribution package..."
+    cat > "distribution.xml" << DISTEOF
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>Oximy</title>
+    <organization>com.oximy</organization>
+    <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <installation-check script="InstallationCheck()"/>
+    <script>
+    function InstallationCheck() {
+        if(system.compareVersions(system.version.ProductVersion, '13.0') >= 0) {
+            return true;
+        }
+        my.result.title = 'macOS 13.0 Required';
+        my.result.message = 'Oximy requires macOS 13.0 (Ventura) or later.';
+        my.result.type = 'Fatal';
+        return false;
+    }
+    </script>
+    <choices-outline>
+        <line choice="default"/>
+    </choices-outline>
+    <choice id="default" title="Oximy">
+        <pkg-ref id="$BUNDLE_ID"/>
+    </choice>
+    <pkg-ref id="$BUNDLE_ID" version="$VERSION">OximyComponent.pkg</pkg-ref>
+</installer-gui-script>
+DISTEOF
+
+    UNSIGNED_PKG="Oximy-$VERSION-unsigned.pkg"
+    productbuild \
+        --distribution "distribution.xml" \
+        --package-path "." \
+        --version "$VERSION" \
+        "$UNSIGNED_PKG"
+
+    # Sign the PKG (requires Developer ID Installer certificate)
+    if [ -n "$INSTALLER_CERT" ]; then
+        echo "Signing PKG with: $INSTALLER_CERT"
+        productsign \
+            --sign "$INSTALLER_CERT" \
+            "$UNSIGNED_PKG" \
+            "$PKG_NAME"
+        rm "$UNSIGNED_PKG"
+        print_success "PKG signed"
+    else
+        mv "$UNSIGNED_PKG" "$PKG_NAME"
+        print_warning "PKG unsigned (no INSTALLER_CERT set)"
+    fi
+
+    # Notarize the PKG itself (separate from app notarization)
+    if [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_PASSWORD" ] && [ -n "$TEAM_ID" ]; then
+        echo "Submitting PKG for notarization..."
+        PKG_SUBMIT=$(xcrun notarytool submit "$PKG_NAME" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$TEAM_ID" \
+            --wait 2>&1) || true
+
+        echo "$PKG_SUBMIT"
+
+        if echo "$PKG_SUBMIT" | grep -q "status: Accepted"; then
+            xcrun stapler staple "$PKG_NAME"
+            print_success "PKG notarized and stapled"
+        else
+            print_warning "PKG notarization failed — PKG may trigger Gatekeeper warnings"
+        fi
+    else
+        print_warning "Skipping PKG notarization (credentials not set)"
+    fi
+
+    # Cleanup staging
+    rm -rf "$PKG_STAGING" "OximyComponent.pkg" "distribution.xml"
+
+    print_success "PKG created: $PKG_NAME"
+    ls -lh "$PKG_NAME"
+
     # Done!
     print_header "macOS Build Complete!"
     echo ""
     echo "Output files in: $SCRIPT_DIR/OximyMac/build/"
     echo ""
-    ls -lh "$SCRIPT_DIR/OximyMac/build/"*.dmg 2>/dev/null || true
+    ls -lh "$SCRIPT_DIR/OximyMac/build/"*.dmg "$SCRIPT_DIR/OximyMac/build/"*.pkg 2>/dev/null || true
     echo ""
     echo "To test: open $SCRIPT_DIR/OximyMac/build/Oximy.app"
     echo ""
     echo "To release:"
     echo "  1. Create GitHub release tagged 'oximy-v$VERSION'"
-    echo "  2. Upload: Oximy-$VERSION.dmg"
+    echo "  2. Upload: Oximy-$VERSION.dmg + Oximy-$VERSION.pkg"
 }
 
 # =============================================================================

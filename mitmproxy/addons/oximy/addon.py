@@ -39,6 +39,9 @@ from mitmproxy.net.encoding import decode as decode_content_encoding
 # the addon's own API calls would loop through itself without this bypass.
 _no_proxy_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
+# App version for X-Sensor-Version header (set by native app via environment)
+OXIMY_APP_VERSION = os.environ.get("OXIMY_APP_VERSION", "0.0.0")
+
 # Import ProcessResolver - handle both package and script modes
 try:
     from .process import ClientProcess, ProcessResolver
@@ -1248,7 +1251,11 @@ def fetch_sensor_config(
 
     try:
         logger.debug(f"Fetching sensor config from {url}")
-        headers = {"User-Agent": "Oximy-Sensor/1.0", "Accept": "application/json"}
+        headers = {
+            "User-Agent": f"Oximy-Sensor/{OXIMY_APP_VERSION}",
+            "Accept": "application/json",
+            "X-Sensor-Version": OXIMY_APP_VERSION,
+        }
         if token:
             headers["Authorization"] = f"Bearer {token}"
         req = urllib.request.Request(url, headers=headers)

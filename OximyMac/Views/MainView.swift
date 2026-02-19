@@ -239,9 +239,19 @@ struct SetupStep: View {
 struct DashboardView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var mitmService = MITMService.shared
+    @StateObject private var updateService = UpdateCheckService.shared
 
     var body: some View {
         VStack(spacing: 0) {
+            // Update Banner
+            if updateService.updateAvailable {
+                UpdateBanner(
+                    version: updateService.latestVersion ?? "",
+                    isCritical: updateService.unsupported,
+                    downloadURL: updateService.downloadURL
+                )
+            }
+
             // Tab Content
             Group {
                 switch appState.selectedTab {
@@ -277,6 +287,9 @@ struct DashboardView: View {
                     }
                 }
             }
+
+            // Check for updates once on launch
+            updateService.checkOnce()
         }
     }
 }
@@ -301,6 +314,46 @@ struct TabBarButton: View {
             .foregroundColor(selected == tab ? .accentColor : .secondary)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Update Banner
+
+struct UpdateBanner: View {
+    let version: String
+    let isCritical: Bool
+    let downloadURL: URL?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: isCritical ? "exclamationmark.triangle.fill" : "arrow.up.circle.fill")
+                .font(.system(size: 12))
+                .foregroundColor(.white)
+
+            Text(isCritical ? "Update required" : "v\(version) available")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white)
+
+            Spacer()
+
+            Button(action: {
+                if let url = downloadURL {
+                    NSWorkspace.shared.open(url)
+                }
+            }) {
+                Text("Update")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(isCritical ? .red : .accentColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.white)
+                    .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(isCritical ? Color.red : Color.accentColor)
     }
 }
 
