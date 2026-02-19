@@ -11,6 +11,9 @@
 #     - APPLE_CERTIFICATE_PASSWORD: Password for the certificate
 #     - APPLE_ID: Apple ID email for notarization
 #     - APPLE_APP_PASSWORD: App-specific password for notarization
+#     - INSTALLER_CERTIFICATE: Base64-encoded Developer ID Installer certificate (.p12)
+#     - INSTALLER_CERTIFICATE_PASSWORD: Password for the installer certificate
+#     - INSTALLER_CERT: Developer ID Installer certificate name for PKG signing
 #     - BETTERSTACK_ERRORS_DSN: (Optional) Better Stack Errors Sentry-compatible DSN for crash reporting
 #     - BETTERSTACK_LOGS_TOKEN: (Optional) Better Stack Logs source token
 #     - BETTERSTACK_LOGS_HOST: (Optional) Better Stack Logs ingesting host
@@ -26,6 +29,11 @@ on:
       version:
         description: 'Version number (e.g., 1.2.0)'
         required: true
+        type: string
+      min_supported:
+        description: 'Minimum supported version (bump on breaking changes)'
+        required: false
+        default: '0.0.3'
         type: string
       prerelease:
         description: 'Mark as pre-release'
@@ -108,6 +116,7 @@ jobs:
     runs-on: macos-14
     outputs:
       dmg-name: ${{ steps.build.outputs.dmg-name }}
+      pkg-name: ${{ steps.build.outputs.pkg-name }}
 
     steps:
       - name: Checkout repository
@@ -123,6 +132,13 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Import installer signing certificate
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.INSTALLER_CERTIFICATE }}
+          p12-password: ${{ secrets.INSTALLER_CERTIFICATE_PASSWORD }}
+          create-keychain: false
 
       - name: Setup Node.js (for create-dmg)
         uses: actions/setup-node@v4
@@ -140,6 +156,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           TEAM_ID: "K6H6LCASRA"
+          INSTALLER_CERT: ${{ secrets.INSTALLER_CERT }}
           BETTERSTACK_ERRORS_DSN: ${{ secrets.BETTERSTACK_ERRORS_DSN }}
           BETTERSTACK_LOGS_TOKEN: ${{ secrets.BETTERSTACK_LOGS_TOKEN }}
           BETTERSTACK_LOGS_HOST: ${{ secrets.BETTERSTACK_LOGS_HOST }}
@@ -147,6 +164,7 @@ jobs:
           chmod +x build-prod.sh
           ./build-prod.sh mac --version "$VERSION"
           echo "dmg-name=Oximy-$VERSION.dmg" >> $GITHUB_OUTPUT
+          echo "pkg-name=Oximy-$VERSION.pkg" >> $GITHUB_OUTPUT
 
       # Note: dSYM upload removed — Better Stack Errors doesn't support symbolication upload.
       # Native crash stack traces will show unsymbolicated addresses.
@@ -155,7 +173,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-release
-          path: OximyMac/build/Oximy-${{ inputs.version }}.dmg
+          path: |
+            OximyMac/build/Oximy-${{ inputs.version }}.dmg
+            OximyMac/build/Oximy-${{ inputs.version }}.pkg
           retention-days: 30
 
   # ===========================================
@@ -261,16 +281,18 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/macos/Oximy-${{ inputs.version }}.dmg
+            release-assets/macos/Oximy-${{ inputs.version }}.pkg
             release-assets/windows/*.exe
           body: |
             ## Oximy v${{ inputs.version }}
 
             ### Downloads
 
-            | Platform | Download |
-            |----------|----------|
-            | macOS (Apple Silicon & Intel) | [Oximy-${{ inputs.version }}.dmg](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg) |
-            | Windows (64-bit) | [OximySetup-${{ inputs.version }}.exe](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe) |
+            | Platform | Download | Use |
+            |----------|----------|-----|
+            | macOS (Apple Silicon & Intel) | [Oximy-${{ inputs.version }}.dmg](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg) | First install |
+            | macOS (PKG Installer) | [Oximy-${{ inputs.version }}.pkg](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.pkg) | Updates & MDM |
+            | Windows (64-bit) | [OximySetup-${{ inputs.version }}.exe](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe) | Install & Update |
 
             ### What's Changed
 
@@ -293,10 +315,23 @@ jobs:
           # Copy assets with fixed names so the download URLs never change
           mkdir -p release-assets/latest
           cp release-assets/macos/Oximy-${{ inputs.version }}.dmg release-assets/latest/Oximy.dmg
+          cp release-assets/macos/Oximy-${{ inputs.version }}.pkg release-assets/latest/Oximy.pkg
           # Copy Windows installer if it exists
           if ls release-assets/windows/*.exe 1>/dev/null 2>&1; then
             cp release-assets/windows/*.exe release-assets/latest/OximySetup.exe
           fi
+
+          # Generate version.json for in-app update checks
+          cat > release-assets/latest/version.json << VJEOF
+          {
+            "latest": "${{ inputs.version }}",
+            "min_supported": "${{ inputs.min_supported }}",
+            "download": {
+              "macos": "https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.pkg",
+              "windows": "https://github.com/OximyHQ/sensor/releases/download/latest/OximySetup.exe"
+            }
+          }
+          VJEOF
 
           # Delete existing 'latest' release if it exists
           gh release delete latest --yes 2>/dev/null || true
@@ -304,7 +339,7 @@ jobs:
           git tag -f latest
           git push origin latest --force
           # Build the file list (only include assets that exist)
-          ASSETS="release-assets/latest/Oximy.dmg"
+          ASSETS="release-assets/latest/Oximy.dmg release-assets/latest/Oximy.pkg release-assets/latest/version.json"
           if [ -f release-assets/latest/OximySetup.exe ]; then
             ASSETS="$ASSETS release-assets/latest/OximySetup.exe"
           fi
@@ -316,10 +351,15 @@ jobs:
 
           ## Download
 
-          | Platform | Link |
-          |----------|------|
-          | macOS | [Oximy.dmg](https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.dmg) |
-          | Windows | [OximySetup.exe](https://github.com/OximyHQ/sensor/releases/download/latest/OximySetup.exe) |" \
+          | Platform | Link | Use |
+          |----------|------|-----|
+          | macOS | [Oximy.dmg](https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.dmg) | First install |
+          | macOS | [Oximy.pkg](https://github.com/OximyHQ/sensor/releases/download/latest/Oximy.pkg) | Updates & MDM |
+          | Windows | [OximySetup.exe](https://github.com/OximyHQ/sensor/releases/download/latest/OximySetup.exe) | Install & Update |
+
+          ## Auto-Update
+
+          Apps check [version.json](https://github.com/OximyHQ/sensor/releases/download/latest/version.json) on startup." \
             --latest \
             $ASSETS
 
@@ -333,6 +373,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Download Links" >> $GITHUB_STEP_SUMMARY
           echo "- [macOS DMG](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.dmg)" >> $GITHUB_STEP_SUMMARY
+          echo "- [macOS PKG](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/Oximy-${{ inputs.version }}.pkg)" >> $GITHUB_STEP_SUMMARY
           echo "- [Windows Installer](https://github.com/OximyHQ/sensor/releases/download/oximy-v${{ inputs.version }}/OximySetup-${{ inputs.version }}.exe)" >> $GITHUB_STEP_SUMMARY
 
       - name: Notify Slack
@@ -349,15 +390,20 @@ jobs:
             COLOR="#22c55e"
             TITLE=":white_check_mark: Sensor release v${{ inputs.version }} succeeded"
             LINKS=":package: <${RELEASE_URL}|View release> · <https://github.com/${REPO}/releases/tag/latest|latest tag>"
+            AUTO_UPDATE="\n:arrows_counterclockwise: *Auto-update:* \`version.json\` updated — running apps will see this on next launch"
+            ARTIFACTS="\n:apple: DMG + PKG (signed, notarized) · :window: EXE installer"
           else
             COLOR="#ef4444"
             TITLE=":x: Sensor release v${{ inputs.version }} failed"
             LINKS=":warning: <${RUN_URL}|View build logs>"
+            AUTO_UPDATE=""
+            ARTIFACTS=""
           fi
 
           PRERELEASE_TAG=""
           if [ "${{ inputs.prerelease }}" = "true" ]; then
-            PRERELEASE_TAG="\n:test_tube: *Pre-release* — not tagged as latest"
+            PRERELEASE_TAG="\n:test_tube: *Pre-release* — not tagged as latest, no auto-update notification"
+            AUTO_UPDATE=""
           fi
 
           curl -sf "$SLACK_WEBHOOK_URL" \
@@ -372,7 +418,7 @@ jobs:
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
-                      "text": "*${TITLE}*\n\n:package: *Repo:* \`${REPO}\`\n:label: *Version:* \`v${{ inputs.version }}\`\n:bust_in_silhouette: *Triggered by:* ${TRIGGERED_BY}\n${LINKS}${PRERELEASE_TAG}"
+                      "text": "*${TITLE}*\n\n:package: *Repo:* \`${REPO}\`\n:label: *Version:* \`v${{ inputs.version }}\`\n:bust_in_silhouette: *Triggered by:* ${TRIGGERED_BY}\n${LINKS}${ARTIFACTS}${AUTO_UPDATE}${PRERELEASE_TAG}"
                     }
                   }
                 ]

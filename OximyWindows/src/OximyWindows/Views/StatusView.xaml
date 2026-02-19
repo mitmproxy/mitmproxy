@@ -8,12 +8,57 @@
 
     <Grid Background="{DynamicResource BackgroundBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Update Banner -->
+        <Border x:Name="UpdateBanner"
+                Grid.Row="0"
+                Background="{DynamicResource AccentBrush}"
+                Padding="12,8"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="UpdateIcon"
+                           Grid.Column="0"
+                           Text="&#xE74A;"
+                           FontFamily="Segoe MDL2 Assets"
+                           FontSize="12"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0"/>
+
+                <TextBlock x:Name="UpdateText"
+                           Grid.Column="1"
+                           Text="Update available"
+                           FontSize="12"
+                           FontWeight="Medium"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+
+                <Button x:Name="UpdateButton"
+                        Grid.Column="2"
+                        Content="Update"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Padding="10,4"
+                        Background="White"
+                        Foreground="{DynamicResource AccentBrush}"
+                        BorderThickness="0"
+                        Click="UpdateButton_Click"
+                        Cursor="Hand"/>
+            </Grid>
+        </Border>
+
         <!-- Main Content -->
-        <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="24,20,24,0">
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="24,20,24,0">
 
             <!-- Status Icon (80x80 circle like Mac) -->
             <Grid Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,16">
@@ -114,7 +159,7 @@
         </StackPanel>
 
         <!-- Bottom Info Card -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="2"
                 Background="{DynamicResource SurfaceBrush}"
                 CornerRadius="10"
                 Margin="16,0,16,16"

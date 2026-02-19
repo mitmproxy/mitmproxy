@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using OximyWindows.Core;
+using OximyWindows.Services;
 
 namespace OximyWindows.Views;
 
@@ -54,17 +56,23 @@ public partial class StatusView : UserControl
     private void OnMitmStopped(object? sender, EventArgs e) => ScheduleUIUpdate();
     private void OnRefreshTimerTick(object? sender, EventArgs e) => AppState.Instance.RefreshEventsCount();
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         SubscribeToEvents();
         UpdateUI(); // Immediate update on load
         _refreshTimer.Start();
+
+        // Check for updates once on launch
+        await UpdateCheckService.Instance.CheckOnceAsync();
+        UpdateUpdateBanner();
+        UpdateCheckService.Instance.UpdateStatusChanged += OnUpdateStatusChanged;
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         _refreshTimer.Stop();
         UnsubscribeFromEvents();
+        UpdateCheckService.Instance.UpdateStatusChanged -= OnUpdateStatusChanged;
     }
 
     private void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -241,6 +249,46 @@ public partial class StatusView : UserControl
         {
             AppState.Instance.ConnectionStatus = ConnectionStatus.Error;
             AppState.Instance.ErrorMessage = ex.Message;
+        }
+    }
+
+    private void OnUpdateStatusChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke(UpdateUpdateBanner);
+    }
+
+    private void UpdateUpdateBanner()
+    {
+        var svc = UpdateCheckService.Instance;
+        if (!svc.UpdateAvailable)
+        {
+            UpdateBanner.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        UpdateBanner.Visibility = Visibility.Visible;
+
+        if (svc.Unsupported)
+        {
+            UpdateText.Text = "Update required";
+            UpdateIcon.Text = "\uE7BA"; // Warning triangle
+            var errorBrush = TryFindResource("ErrorBrush") as SolidColorBrush ?? Brushes.Red;
+            UpdateBanner.Background = errorBrush;
+            UpdateButton.Foreground = errorBrush;
+        }
+        else
+        {
+            UpdateText.Text = $"v{svc.LatestVersion} available";
+            UpdateIcon.Text = "\uE74A"; // Up arrow
+        }
+    }
+
+    private void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        var url = UpdateCheckService.Instance.DownloadUrl;
+        if (!string.IsNullOrEmpty(url))
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }
 }
