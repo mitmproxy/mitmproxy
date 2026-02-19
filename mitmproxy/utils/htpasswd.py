@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import logging
 from pathlib import Path
 
 import bcrypt
+
+logger = logging.getLogger(__name__)
 
 
 class HtpasswdFile:
@@ -74,7 +77,12 @@ class HtpasswdFile:
         if pwhash.startswith("{SHA}"):
             # Apache's {SHA} is base64-encoded SHA-1.
             # https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
-            digest = hashlib.sha1(password.encode("utf-8")).digest()
+            # SHA1 is insecure for password hashing but required for Apache htpasswd compatibility.
+            logger.warning(
+                f"User {username!r} uses insecure {{SHA}} password hash. "
+                "Consider migrating to bcrypt."
+            )
+            digest = hashlib.sha1(password.encode("utf-8"), usedforsecurity=False).digest()  # noqa: S324
             expected = base64.b64encode(digest).decode("ascii")
             return pwhash[5:] == expected
         else:  # pwhash.startswith(("$2y$", "$2b$", "$2a$")):

@@ -73,12 +73,14 @@ DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 
 @cache
 def is_supported_version(version: Version):
-    client_ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)
+    # Intentionally probes insecure TLS versions to determine system capabilities.
+    # As a proxy tool, mitmproxy needs to know which protocol versions are available.
+    client_ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)  # lgtm[py/insecure-protocol]
     # Without SECLEVEL, recent OpenSSL versions forbid old TLS versions.
     # https://github.com/pyca/cryptography/issues/9523
     client_ctx.set_cipher_list(b"@SECLEVEL=0:ALL")
-    client_ctx.set_min_proto_version(version.value)
-    client_ctx.set_max_proto_version(version.value)
+    client_ctx.set_min_proto_version(version.value)  # lgtm[py/insecure-protocol]
+    client_ctx.set_max_proto_version(version.value)  # lgtm[py/insecure-protocol]
     client_conn = SSL.Connection(client_ctx)
     client_conn.set_connect_state()
 
