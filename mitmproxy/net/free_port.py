@@ -12,9 +12,9 @@ def get_free_port() -> int:
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         try:
-            tcp.bind(("", 0))
+            tcp.bind(("127.0.0.1", 0))
             port: int = tcp.getsockname()[1]
-            udp.bind(("", port))
+            udp.bind(("127.0.0.1", port))
             udp.close()
             return port
         except OSError:
