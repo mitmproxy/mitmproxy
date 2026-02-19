@@ -67,8 +67,8 @@ final class UpdateCheckService: ObservableObject {
 
     /// Semantic version comparison
     private func compareVersions(_ a: String, _ b: String) -> ComparisonResult {
-        let aParts = a.split(separator: ".").compactMap { Int($0) }
-        let bParts = b.split(separator: ".").compactMap { Int($0) }
+        let aParts = a.split(separator: ".").map { Int($0) ?? 0 }
+        let bParts = b.split(separator: ".").map { Int($0) ?? 0 }
         let maxLen = max(aParts.count, bParts.count)
 
         for i in 0..<maxLen {
