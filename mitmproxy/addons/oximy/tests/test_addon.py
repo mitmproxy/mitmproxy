@@ -1075,8 +1075,10 @@ class TestLaunchctlEnv:
         _set_launchctl_env()
         mock_run.assert_not_called()
 
+    @patch("mitmproxy.addons.oximy.addon.sys")
     @patch("mitmproxy.addons.oximy.addon.subprocess.run")
-    def test_set_calls_setenv_for_each_var(self, mock_run):
+    def test_set_calls_setenv_for_each_var(self, mock_run, mock_sys):
+        mock_sys.platform = "darwin"
         _state.proxy_port = "8080"
         _set_launchctl_env()
         assert mock_run.call_count == len(_LAUNCHCTL_ENV_VARS)
@@ -1084,8 +1086,10 @@ class TestLaunchctlEnv:
         assert first_call_args[0] == "launchctl"
         assert first_call_args[1] == "setenv"
 
+    @patch("mitmproxy.addons.oximy.addon.sys")
     @patch("mitmproxy.addons.oximy.addon.subprocess.run")
-    def test_set_correct_proxy_values(self, mock_run):
+    def test_set_correct_proxy_values(self, mock_run, mock_sys):
+        mock_sys.platform = "darwin"
         _state.proxy_port = "9090"
         _set_launchctl_env()
         calls = {c[0][0][2]: c[0][0][3] for c in mock_run.call_args_list}
@@ -1101,8 +1105,10 @@ class TestLaunchctlEnv:
         _state.proxy_port = "8080"
         _set_launchctl_env()  # Should not raise
 
+    @patch("mitmproxy.addons.oximy.addon.sys")
     @patch("mitmproxy.addons.oximy.addon.subprocess.run")
-    def test_unset_calls_unsetenv_for_each_var(self, mock_run):
+    def test_unset_calls_unsetenv_for_each_var(self, mock_run, mock_sys):
+        mock_sys.platform = "darwin"
         _unset_launchctl_env()
         assert mock_run.call_count == len(_LAUNCHCTL_ENV_VARS)
         first_call_args = mock_run.call_args_list[0][0][0]
@@ -1186,10 +1192,12 @@ class TestLaunchctlEnvIntegration:
 class TestLaunchctlShutdownPaths:
     """Verify _unset_launchctl_env is called in every shutdown path."""
 
+    @patch("mitmproxy.addons.oximy.addon.sys")
     @patch("mitmproxy.addons.oximy.addon._unset_launchctl_env")
     @patch("mitmproxy.addons.oximy.addon._remove_shell_profile_injections")
-    def test_teardown_terminal_env_calls_unset(self, mock_remove, mock_unset):
+    def test_teardown_terminal_env_calls_unset(self, mock_remove, mock_unset, mock_sys):
         """Normal shutdown path: _teardown_terminal_env must call _unset_launchctl_env."""
+        mock_sys.platform = "darwin"
         _teardown_terminal_env()
         mock_unset.assert_called_once()
 

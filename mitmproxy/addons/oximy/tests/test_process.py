@@ -333,8 +333,9 @@ class TestFindPidForPort:
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                result = await resolver._find_pid_for_port(54321)
-                assert result == 1234
+                with patch('os.getuid', return_value=501):
+                    result = await resolver._find_pid_for_port(54321)
+                    assert result == 1234
 
     @pytest.mark.asyncio
     async def test_fallback_match(self):
@@ -354,8 +355,9 @@ class TestFindPidForPort:
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                result = await resolver._find_pid_for_port(54321)
-                assert result == 9999
+                with patch('os.getuid', return_value=501):
+                    result = await resolver._find_pid_for_port(54321)
+                    assert result == 9999
 
     @pytest.mark.asyncio
     async def test_no_match_returns_none(self):
@@ -407,8 +409,9 @@ class TestFindPidForPort:
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                result = await resolver._find_pid_for_port(54321)
-                assert result == 1234
+                with patch('os.getuid', return_value=501):
+                    result = await resolver._find_pid_for_port(54321)
+                    assert result == 1234
 
 
 # =============================================================================
