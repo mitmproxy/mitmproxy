@@ -628,7 +628,9 @@ if __name__ == "__main__":  # pragma: no cover
 
         def tls_start_client(tls_start: tls.TlsData):
             ssl_context = SSL.Context(SSL.TLS_SERVER_METHOD)
-            ssl_context.set_min_proto_version(SSL.TLS1_2_VERSION)
+            ssl_context.set_options(
+                SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1
+            )
             ssl_context.use_privatekey_file(
                 pkg_data.path(
                     "../test/mitmproxy/data/verificationcerts/trusted-leaf.key"
@@ -644,7 +646,9 @@ if __name__ == "__main__":  # pragma: no cover
 
         def tls_start_server(tls_start: tls.TlsData):
             ssl_context = SSL.Context(SSL.TLS_CLIENT_METHOD)
-            ssl_context.set_min_proto_version(SSL.TLS1_2_VERSION)
+            ssl_context.set_options(
+                SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1
+            )
             tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_connect_state()
             if tls_start.context.client.sni is not None:
