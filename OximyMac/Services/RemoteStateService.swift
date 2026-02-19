@@ -3,6 +3,7 @@ import Foundation
 /// Notification posted when sensor_enabled state changes
 extension Notification.Name {
     static let sensorEnabledChanged = Notification.Name("sensorEnabledChanged")
+    static let enforcementRulesChanged = Notification.Name("enforcementRulesChanged")
 }
 
 /// App-level feature flags from sensor-config API
@@ -21,6 +22,20 @@ struct AppConfigFlags: Codable {
     let heartbeatInterval: Int?
 }
 
+/// Enforcement rule from the admin dashboard (via sensor-config → remote-state.json)
+struct EnforcementRule: Codable, Equatable {
+    let toolId: String
+    let toolType: String         // "app" | "website"
+    let displayName: String
+    let mode: String             // "blocked" | "warn" | "flagged"
+    let message: String?
+    let conditions: String?
+    let macBundleId: String?
+    let windowsAppId: String?
+    let domain: String?
+    let exemptDeviceIds: [String]?  // Hardware IDs exempt from enforcement (approved access requests)
+}
+
 /// Remote state from Python addon (written to ~/.oximy/remote-state.json)
 struct RemoteState: Codable {
     let sensorEnabled: Bool
@@ -30,6 +45,7 @@ struct RemoteState: Codable {
     let itSupport: String?
     let timestamp: String
     let appConfig: AppConfigFlags?
+    let enforcementRules: [EnforcementRule]?
 
     enum CodingKeys: String, CodingKey {
         case sensorEnabled = "sensor_enabled"
@@ -39,6 +55,7 @@ struct RemoteState: Codable {
         case itSupport
         case timestamp
         case appConfig
+        case enforcementRules
     }
 }
 
@@ -57,6 +74,7 @@ final class RemoteStateService: ObservableObject {
     @Published var lastUpdate: Date?
     @Published var isRunning = false
     @Published var appConfig: AppConfigFlags?
+    @Published var enforcementRules: [EnforcementRule] = []
 
     // MARK: - Private
 
@@ -119,6 +137,16 @@ final class RemoteStateService: ObservableObject {
             itSupport = state.itSupport
             appConfig = state.appConfig
             lastUpdate = Date()
+
+            // Update enforcement rules and notify if changed
+            let newRules = state.enforcementRules ?? []
+            if newRules != enforcementRules {
+                enforcementRules = newRules
+                NotificationCenter.default.post(
+                    name: .enforcementRulesChanged,
+                    object: newRules
+                )
+            }
 
             // Handle state changes
             if previousEnabled != state.sensorEnabled {

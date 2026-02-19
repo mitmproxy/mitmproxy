@@ -138,6 +138,24 @@ final class APIClient: ObservableObject {
         return data
     }
 
+    // MARK: - Access Requests
+
+    func requestAccess(toolId: String, toolType: String, displayName: String, reason: String) async throws {
+        var request = URLRequest(url: baseURL.appendingPathComponent("access-requests"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = AccessRequestBody(
+            requestType: toolType,
+            toolId: toolId,
+            displayName: displayName,
+            reason: reason
+        )
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let _: AccessRequestResponse = try await performAuthenticatedRequest(request)
+    }
+
     // MARK: - Request Helpers
 
     private func performAuthenticatedRequest<T: Decodable>(_ request: URLRequest) async throws -> T {

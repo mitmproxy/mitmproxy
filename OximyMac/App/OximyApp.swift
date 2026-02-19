@@ -194,6 +194,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start remote state monitoring (reads Python addon's state file)
         RemoteStateService.shared.start()
 
+        // Start app blocking enforcement (watches enforcement rules + app launches)
+        AppBlockingService.shared.start()
+
         // Observe sensor state changes for menu bar icon
         remoteStateObserver = NotificationCenter.default.addObserver(
             forName: .sensorEnabledChanged,
@@ -584,6 +587,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Stop network monitoring
         NetworkMonitor.shared.stopMonitoring()
+
+        // Stop app blocking enforcement
+        AppBlockingService.shared.stop()
 
         // Stop remote state monitoring
         RemoteStateService.shared.stop()
