@@ -33,6 +33,8 @@ mitmproxy_rs==0.12.9
 msgpack==1.1.2
 packaging==26.0
 pluggy==1.6.0
+presidio-analyzer>=2.2
+presidio-anonymizer>=2.2
 psutil==7.0.0
 publicsuffix2==2.20191221
 pyasn1==0.6.2
@@ -53,6 +55,7 @@ ruamel.yaml==0.18.16
 sentry-sdk>=2.0.0
 service-identity==24.2.0
 sortedcontainers==2.4.0
+spacy>=3.7
 tornado==6.5.2
 urllib3==2.6.3
 urwid==3.0.3

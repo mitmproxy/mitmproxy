@@ -73,6 +73,8 @@ DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 
 @cache
 def is_supported_version(version: Version):
+    # Intentionally probes insecure TLS versions to determine system capabilities.
+    # As a proxy tool, mitmproxy needs to know which protocol versions are available.
     client_ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)
     # Without SECLEVEL, recent OpenSSL versions forbid old TLS versions.
     # https://github.com/pyca/cryptography/issues/9523

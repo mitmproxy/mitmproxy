@@ -627,8 +627,10 @@ if __name__ == "__main__":  # pragma: no cover
                 flow.request.host = "httpbin.org"
 
         def tls_start_client(tls_start: tls.TlsData):
-            # INSECURE
-            ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+            ssl_context = SSL.Context(SSL.TLS_SERVER_METHOD)
+            ssl_context.set_options(
+                SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1
+            )
             ssl_context.use_privatekey_file(
                 pkg_data.path(
                     "../test/mitmproxy/data/verificationcerts/trusted-leaf.key"
@@ -643,8 +645,10 @@ if __name__ == "__main__":  # pragma: no cover
             tls_start.ssl_conn.set_accept_state()
 
         def tls_start_server(tls_start: tls.TlsData):
-            # INSECURE
-            ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+            ssl_context = SSL.Context(SSL.TLS_CLIENT_METHOD)
+            ssl_context.set_options(
+                SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1
+            )
             tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_connect_state()
             if tls_start.context.client.sni is not None:
