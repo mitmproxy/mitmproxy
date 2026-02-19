@@ -60,9 +60,11 @@ except ImportError:
 # Import structured logging - handle both package and script modes
 try:
     from .oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
+    from .oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST
     from . import sentry_service
 except ImportError:
     from oximy_logger import EventCode as OximyEventCode, oximy_log, set_context as set_log_context, close as close_logger
+    from oximy_logger import _BETTERSTACK_LOGS_TOKEN, _BETTERSTACK_LOGS_HOST  # type: ignore[import]
     import sentry_service
 
 logging.basicConfig(
@@ -1598,11 +1600,40 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "proxy_port": _state.proxy_port,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "appConfig": app_config,
+            "enforcementRules": data.get("enforcementRules", []),
         }
         _atomic_write(OXIMY_STATE_FILE, json.dumps(state_data, indent=2))
         logger.debug(f"Remote state written to {OXIMY_STATE_FILE}")
     except (IOError, OSError) as e:
         logger.warning(f"Failed to write remote state file: {e}")
+
+    # --- STORE ENFORCEMENT RULES FOR REQUEST HOOK ---
+    # Cache domain-based enforcement rules so request() can check for website blocking
+    if addon_instance is not None:
+        enforcement_rules = data.get("enforcementRules", [])
+        addon_instance._enforcement_rules = enforcement_rules
+        addon_instance._blocked_domains = {}
+        addon_instance._warned_domains = {}
+        addon_instance._warned_web_sessions = set()  # Reset on rule change
+        for rule in enforcement_rules:
+            domain = rule.get("domain")
+            if not domain:
+                continue
+            mode = rule.get("mode")
+            if mode == "blocked":
+                addon_instance._blocked_domains[domain] = rule
+            elif mode == "warn":
+                addon_instance._warned_domains[domain] = rule
+
+    # --- PROACTIVE SUGGESTION DELIVERY ---
+    # Write server-provided suggestion to disk for the Mac app
+    pending_suggestion = data.get("pendingSuggestion")
+    if pending_suggestion:
+        try:
+            from playbooks import write_suggestion_from_server
+            write_suggestion_from_server(pending_suggestion)
+        except Exception as e:
+            logger.warning(f"Failed to write proactive suggestion: {e}")
 
     # --- WRITE COMMAND RESULTS FILE FOR HEARTBEAT REPORTING ---
     # Desktop apps read this file and include results in heartbeat payload
@@ -1631,6 +1662,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
         },
         "allowed_host_origins": data.get("allowed_host_origins", []),
         "localDataSources": data.get("localDataSources", {}),
+        "tenantId": data.get("tenantId"),
     }
 
 
@@ -3097,6 +3129,11 @@ class OximyAddon:
         self._upload_threshold_count: int = DEFAULT_UPLOAD_THRESHOLD_COUNT
         self._port_configured: bool = False  # Guard against configure() recursion when setting listen_port
         self._local_collector: LocalDataCollector | None = None
+        # Enforcement rules from sensor-config API (populated by _parse_sensor_config)
+        self._enforcement_rules: list = []
+        self._blocked_domains: dict = {}
+        self._warned_domains: dict = {}
+        self._warned_web_sessions: set = set()  # (client_ip, domain) tuples that have been warned
 
     def _get_config_snapshot(self) -> dict:
         """Get a consistent snapshot of all filtering config.
@@ -3227,6 +3264,11 @@ class OximyAddon:
                     elif self._local_collector:
                         self._local_collector.stop()
                         self._local_collector = None
+
+                    # Update tenant_id in logger context
+                    tenant_id = config.get("tenantId")
+                    if tenant_id:
+                        set_log_context(device_id=self._device_id, tenant_id=tenant_id)
 
                 logger.debug(
                     f"Config refreshed: {len(self._whitelist)} whitelist, {len(self._blacklist)} blacklist, "
@@ -3511,6 +3553,12 @@ class OximyAddon:
         sentry_service.set_user(device_id=self._device_id)
         sentry_service.set_initial_context()
         set_log_context(device_id=self._device_id)
+
+        # Log Better Stack Logs status
+        if _BETTERSTACK_LOGS_TOKEN and _BETTERSTACK_LOGS_HOST:
+            logger.info("Better Stack Logs enabled for Python addon")
+        else:
+            logger.debug("Better Stack Logs disabled — BETTERSTACK_LOGS_TOKEN/HOST not set")
 
         oximy_log(OximyEventCode.APP_INIT_001, "Addon initialized", data={
             "whitelist_count": len(self._whitelist),
@@ -3881,6 +3929,31 @@ class OximyAddon:
             self._tls.record_tls_failure(host, error, self._whitelist)
 
     # =========================================================================
+    # Enforcement helpers
+    # =========================================================================
+
+    def _check_domain_enforcement(self, host: str) -> dict | None:
+        """Check a hostname against cached enforcement rules.
+
+        Returns the matching rule dict or None.
+        Checks exact match first, then wildcard patterns (*.example.com).
+        """
+        # Exact match — fast path
+        rule = self._blocked_domains.get(host) or self._warned_domains.get(host)
+        if rule is not None:
+            return rule
+
+        # Wildcard match — iterate all rules looking for *.example.com patterns
+        for domain, rule in self._blocked_domains.items():
+            if "*" in domain and fnmatch.fnmatch(host, domain):
+                return rule
+        for domain, rule in self._warned_domains.items():
+            if "*" in domain and fnmatch.fnmatch(host, domain):
+                return rule
+
+        return None
+
+    # =========================================================================
     # HTTP Hooks
     # =========================================================================
 
@@ -3898,6 +3971,55 @@ class OximyAddon:
         if not _state.sensor_active:
             return  # Sensor disabled - passthrough all traffic
 
+        # =====================================================================
+        # ENFORCEMENT: Website blocking/warning (before whitelist)
+        # =====================================================================
+        host = flow.request.pretty_host
+        enforcement = self._check_domain_enforcement(host)
+        if enforcement:
+            # Check if this device is exempt (approved access request)
+            exempt_ids = enforcement.get("exemptDeviceIds") or []
+            if exempt_ids:
+                device_id = get_device_id()
+                if device_id and device_id in exempt_ids:
+                    enforcement = None  # Device is exempt — skip enforcement
+
+        if enforcement:
+            mode = enforcement.get("mode")
+            message = enforcement.get("message") or "This website has been restricted by your organization."
+            name = enforcement.get("displayName") or host
+
+            if mode == "blocked":
+                # Hard block — redirect to block page
+                redirect_params = {
+                    "domain": host, "reason": message, "name": name, "mode": "blocked"
+                }
+                # Include device_id so the blocked page can submit access requests
+                device_id = get_device_id()
+                if device_id:
+                    redirect_params["device_id"] = device_id
+                params = urllib.parse.urlencode(redirect_params)
+                flow.response = http.Response.make(302, b"", {"Location": f"https://app.oximy.com/blocked?{params}"})
+                return
+            elif mode == "warn":
+                # Warning — redirect once per client+domain, then allow through
+                client_ip = flow.client_conn.peername[0] if flow.client_conn.peername else "unknown"
+                session_key = (client_ip, host)
+                if session_key not in self._warned_web_sessions:
+                    self._warned_web_sessions.add(session_key)
+                    redirect_params = {
+                        "domain": host, "reason": message, "name": name, "mode": "warn",
+                        "continue_url": flow.request.pretty_url
+                    }
+                    device_id = get_device_id()
+                    if device_id:
+                        redirect_params["device_id"] = device_id
+                    params = urllib.parse.urlencode(redirect_params)
+                    flow.response = http.Response.make(302, b"", {"Location": f"https://app.oximy.com/blocked?{params}"})
+                    return
+                # Already warned for this session — allow through
+            # "flagged" mode: no action in proxy, handled by dashboard alerts
+
         # Get config snapshot for thread-safe filtering
         config = self._get_config_snapshot()
 
@@ -3906,7 +4028,6 @@ class OximyAddon:
         if config.get("fail_open_passthrough", False):
             return  # Passthrough - traffic flows, no capture
 
-        host = flow.request.pretty_host
         logger.debug(f"[REQUEST] {flow.request.method} {host}{flow.request.path[:50]}")
         path = flow.request.path
         url = f"{host}{path}"

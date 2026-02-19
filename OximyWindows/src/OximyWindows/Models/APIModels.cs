@@ -353,6 +353,9 @@ public class SensorConfigCommands
 
     [JsonPropertyName("force_sync")]
     public bool ForceSync { get; set; }
+
+    [JsonPropertyName("clear_cache")]
+    public bool ClearCache { get; set; }
 }
 
 #endregion

@@ -1486,6 +1486,243 @@ class TestExecuteSqliteQuery:
         # Max of "100", "200", "300" (string comparison) = "300"
         assert st["incremental"]["items_q"]["last_value"] == "300"
 
+    def test_corrupted_incremental_value_resets(self):
+        """A saved incremental value that is a JSON object should be treated as
+        corrupted and reset, allowing the query to re-scan."""
+        db_path = str(self.db_dir / "corrupt.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300"), ("c", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "corrupt.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # Inject a corrupted last_value (JSON object string, like what Cursor stored)
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", '{"composerId":"abc","createdAt":100}'
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # All 3 rows should be captured (corruption was reset, query scanned from 0)
+        assert len(collector._buffer) == 3
+        # The last_value should now be a valid value ("300"), not the JSON blob
+        st = collector._scan_state.get_sqlite_state("cursor", db_key)
+        assert st["incremental"]["items_q"]["last_value"] == "300"
+
+    def test_corrupted_incremental_value_json_array_resets(self):
+        """A saved incremental value that is a JSON array also triggers reset."""
+        db_path = str(self.db_dir / "corrupt_arr.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "corrupt_arr.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", '[{"row":"data"}]'
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        assert len(collector._buffer) == 2
+        st = collector._scan_state.get_sqlite_state("cursor", db_key)
+        assert st["incremental"]["items_q"]["last_value"] == "200"
+
+    def test_legitimate_string_incremental_value_preserved(self):
+        """A legitimate string incremental value (not JSON object/array) is kept."""
+        db_path = str(self.db_dir / "legit.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300"), ("c", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "legit.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # Set a legitimate incremental value — should NOT be reset
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", "200"
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # Only row with ts > "200" should be captured (ts="300")
+        assert len(collector._buffer) == 1
+        assert collector._buffer[0]["raw"]["ts"] == "300"
+
+    def test_json_scalar_string_not_treated_as_corrupted(self):
+        """A JSON scalar string like '"hello"' parses to str, not dict/list — preserved."""
+        db_path = str(self.db_dir / "scalar.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "scalar.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # '"hello"' is valid JSON → parses to str "hello", NOT dict/list
+        # So it should be preserved (not reset), proving the guard only catches
+        # dict/list corruption, not arbitrary JSON scalars.
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", '"hello"'
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # The value was preserved (not reset to None), so the query used
+        # the preserved value. Both rows match since '"' < '1' in ASCII.
+        assert len(collector._buffer) == 2
+        # Verify the saved value was updated to "300" (max of returned rows)
+        st = collector._scan_state.get_sqlite_state("cursor", db_key)
+        assert st["incremental"]["items_q"]["last_value"] == "300"
+
+    def test_numeric_string_incremental_value_not_affected_by_guard(self):
+        """Numeric string values like '200' are NOT JSON objects — guard skips them."""
+        db_path = str(self.db_dir / "numval.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "300"), ("c", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "numval.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # "200" is valid JSON (parses to int 200), but it's NOT dict/list
+        # so the guard should leave it alone
+        db_key = os.path.basename(db_path)
+        collector._scan_state.set_sqlite_incremental(
+            "cursor", db_key, "items_q", "200"
+        )
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # Only ts > "200" → "300" passes
+        assert len(collector._buffer) == 1
+        assert collector._buffer[0]["raw"]["ts"] == "300"
+
+    def test_none_incremental_value_scans_from_beginning(self):
+        """None saved value (fresh state) uses fallback 0 — scans everything."""
+        db_path = str(self.db_dir / "fresh.db")
+        _create_test_db(
+            db_path, "items", ["id", "ts"],
+            [("a", "100"), ("b", "200")]
+        )
+
+        config = self.collector._config.copy()
+        config["sources"] = [{
+            "name": "cursor",
+            "enabled": True,
+            "globs": [],
+            "sqlite": [{
+                "db_path": db_path,
+                "queries": [{
+                    "file_type": "items_q",
+                    "sql": "SELECT id, ts FROM items WHERE ts > ?",
+                    "incremental_field": "ts",
+                }]
+            }],
+            "detect_path": str(self.db_dir),
+        }]
+
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", self.tmp_path / "fresh.json"):
+            collector = LocalDataCollector(config=config, device_id="dev")
+
+        # Don't set any incremental value — saved_inc_value is None
+        collector._startup_done = True
+        collector._run_full_scan()
+
+        # All rows should be captured (WHERE ts > 0 matches all strings)
+        assert len(collector._buffer) == 2
+
     def test_multiple_rows_buffered(self):
         _create_test_db(
             self.db_path, "test_table", ["key", "value"],
@@ -1657,6 +1894,386 @@ class TestScanSourceWithSqlite:
         collector._startup_done = True
         collector._run_full_scan()
         assert len(collector._buffer) == 0
+
+
+class TestExtractMetadataAntigravity:
+    """Path metadata extraction for antigravity (Gemini desktop IDE)."""
+
+    def test_brain_artifact_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/550e8400-e29b-41d4-a716-446655440000/notes.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "550e8400-e29b-41d4-a716-446655440000"
+
+    def test_brain_metadata_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/abc-def-123/notes.metadata.json"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "abc-def-123"
+
+    def test_conversation_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/conversations/conv-uuid-456.pb"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "conv-uuid-456"
+
+    def test_annotation_session_id(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/annotations/anno-uuid-789.pbtxt"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "anno-uuid-789"
+
+    def test_no_session_id_for_unknown_subdir(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/other/something.txt"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta
+
+    def test_no_session_id_for_dotfile(self):
+        """Dotfile names like '.' or '..' should not be used as session_id."""
+        home = str(Path.home())
+        # brain with a very short/invalid directory name
+        path = f"{home}/.gemini/antigravity/brain/ab/file.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta  # "ab" is < 3 chars
+
+    def test_brain_is_last_segment_no_child(self):
+        """If 'brain' is the last path segment, no session_id is extracted."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta
+
+    def test_conversation_multi_dot_filename(self):
+        """Conversation file with multiple dots uses stem (everything before last dot)."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/conversations/sess.backup.pb"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "sess.backup"
+
+    def test_conversation_hidden_file_rejected(self):
+        """Hidden file (.pb) in conversations/ has stem '.pb' which starts with dot."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/conversations/.pb"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert "session_id" not in meta
+
+    def test_brain_appears_twice_in_path(self):
+        """If 'brain' appears multiple times, first occurrence is used."""
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/uuid-abc-123/brain/nested.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["session_id"] == "uuid-abc-123"
+
+    def test_source_file_tilde_collapsed(self):
+        home = str(Path.home())
+        path = f"{home}/.gemini/antigravity/brain/uuid123/file.md"
+        meta = _extract_metadata_from_path(path, "antigravity")
+        assert meta["source_file"] == "~/.gemini/antigravity/brain/uuid123/file.md"
+
+
+class TestContentType:
+    """Tests for content_type support in _read_full_file."""
+
+    @pytest.fixture(autouse=True)
+    def setup_collector(self, tmp_path):
+        self.tmp_path = tmp_path
+        self.data_dir = tmp_path / "data"
+        self.data_dir.mkdir(parents=True)
+
+        config = {
+            "enabled": True,
+            "scan_interval_seconds": 60,
+            "upload_endpoint": "https://api.oximy.com/api/v1/ingest/local-sessions",
+            "max_events_per_batch": 200,
+            "backfill_max_age_days": 7,
+            "sources": [],
+            "redact_patterns": [],
+            "skip_files": [],
+        }
+        with patch("mitmproxy.addons.oximy.collector.SCAN_STATE_FILE", tmp_path / "s.json"):
+            self.collector = LocalDataCollector(config=config, device_id="dev")
+
+    def test_content_type_json_default(self):
+        """Default content_type='json' works like before — raw JSON passed through."""
+        fp = str(self.data_dir / "data.json")
+        with open(fp, "w") as f:
+            json.dump({"key": "value"}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"key": "value"}
+
+    def test_content_type_json_explicit(self):
+        """Explicit content_type='json' behaves the same as default."""
+        fp = str(self.data_dir / "data2.json")
+        with open(fp, "w") as f:
+            json.dump({"hello": "world"}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="json")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"hello": "world"}
+
+    def test_content_type_text(self):
+        """content_type='text' wraps file content as {"content": text}."""
+        fp = str(self.data_dir / "notes.md")
+        with open(fp, "w") as f:
+            f.write("# Hello\n\nThis is markdown content.")
+
+        self.collector._read_full_file("test_src", fp, "brain_artifact", content_type="text")
+        assert len(self.collector._buffer) == 1
+        raw = self.collector._buffer[0]["raw"]
+        assert raw["content"] == "# Hello\n\nThis is markdown content."
+
+    def test_content_type_text_preserves_whitespace(self):
+        """Text content preserves internal whitespace and newlines."""
+        fp = str(self.data_dir / "doc.txt")
+        with open(fp, "w") as f:
+            f.write("line1\n  indented\n\nline4\n")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 1
+        raw = self.collector._buffer[0]["raw"]
+        assert "line1\n  indented\n\nline4\n" == raw["content"]
+
+    def test_content_type_binary(self):
+        """content_type='binary' wraps file content as {"content_base64": ...}."""
+        import base64
+        fp = str(self.data_dir / "conv.pb")
+        binary_data = b"\x08\x01\x12\x05hello\x1a\x03\x00\xff\xfe"
+        with open(fp, "wb") as f:
+            f.write(binary_data)
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 1
+        raw = self.collector._buffer[0]["raw"]
+        assert "content_base64" in raw
+        decoded = base64.b64decode(raw["content_base64"])
+        assert decoded == binary_data
+
+    def test_content_type_binary_empty_file(self):
+        """Empty binary file is skipped."""
+        fp = str(self.data_dir / "empty.pb")
+        with open(fp, "wb") as f:
+            pass  # empty
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+
+    def test_content_type_text_empty_file(self):
+        """Empty text file is skipped."""
+        fp = str(self.data_dir / "empty.md")
+        with open(fp, "w") as f:
+            f.write("   ")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+
+    def test_content_type_text_envelope_fields(self):
+        """Text content envelope has correct source, file_type, and type."""
+        fp = str(self.data_dir / "note.md")
+        with open(fp, "w") as f:
+            f.write("content here")
+
+        self.collector._read_full_file("antigravity", fp, "brain_artifact", content_type="text")
+        assert len(self.collector._buffer) == 1
+        env = self.collector._buffer[0]
+        assert env["source"] == "antigravity"
+        assert env["file_type"] == "brain_artifact"
+        assert env["type"] == "local_session"
+
+    def test_scan_glob_passes_content_type(self):
+        """_scan_glob passes content_type from config to _read_full_file."""
+        md_file = self.data_dir / "test.md"
+        md_file.write_text("# Test markdown")
+
+        glob_config = {
+            "pattern": str(self.data_dir / "*.md"),
+            "file_type": "brain_artifact",
+            "read_mode": "full",
+            "content_type": "text",
+        }
+        self.collector._startup_done = True
+        self.collector._scan_glob("antigravity", glob_config, is_startup=False)
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"]["content"] == "# Test markdown"
+
+    def test_scan_glob_default_content_type_is_json(self):
+        """_scan_glob defaults to content_type='json' when not specified."""
+        json_file = self.data_dir / "meta.json"
+        json_file.write_text(json.dumps({"meta": True}))
+
+        glob_config = {
+            "pattern": str(self.data_dir / "*.json"),
+            "file_type": "brain_metadata",
+            "read_mode": "full",
+            # no content_type — should default to "json"
+        }
+        self.collector._startup_done = True
+        self.collector._scan_glob("antigravity", glob_config, is_startup=False)
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"meta": True}
+
+    def test_invalid_content_type_falls_back_to_json(self):
+        """An invalid content_type falls back to 'json' with a warning."""
+        fp = str(self.data_dir / "data.json")
+        with open(fp, "w") as f:
+            json.dump({"ok": True}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="xml")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"ok": True}
+
+    def test_oversized_binary_file_skipped(self):
+        """Binary files exceeding max_event_size are skipped before reading."""
+        fp = str(self.data_dir / "huge.pb")
+        with open(fp, "wb") as f:
+            f.write(b"\x00" * (1_048_576 + 1))
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+
+    def test_oversized_text_file_skipped(self):
+        """Text files exceeding max_event_size are skipped before reading."""
+        fp = str(self.data_dir / "huge.md")
+        with open(fp, "w") as f:
+            f.write("x" * (1_048_576 + 1))
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+
+    def test_oversized_file_records_mtime(self):
+        """Oversized files record mtime so they aren't re-checked every cycle."""
+        fp = str(self.data_dir / "big.pb")
+        with open(fp, "wb") as f:
+            f.write(b"\x00" * (1_048_576 + 1))
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+
+        # Call again — should be skipped by mtime check, not re-read
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+        # Verify state was recorded
+        state = self.collector._scan_state.get_file_state("test_src", fp)
+        assert state["mtime"] == os.stat(fp).st_mtime
+
+    def test_empty_binary_file_records_mtime(self):
+        """Empty binary files record mtime to avoid re-checking every cycle."""
+        fp = str(self.data_dir / "zero.pb")
+        with open(fp, "wb") as f:
+            pass
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 0
+        state = self.collector._scan_state.get_file_state("test_src", fp)
+        assert state["mtime"] == os.stat(fp).st_mtime
+
+    def test_empty_text_file_records_mtime(self):
+        """Empty/whitespace text files record mtime to avoid re-checking every cycle."""
+        fp = str(self.data_dir / "blank.md")
+        with open(fp, "w") as f:
+            f.write("   \n\n  ")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+        state = self.collector._scan_state.get_file_state("test_src", fp)
+        assert state["mtime"] == os.stat(fp).st_mtime
+
+    def test_same_mtime_skips_reread(self):
+        """File with unchanged mtime is not re-read (dedup)."""
+        fp = str(self.data_dir / "stable.json")
+        with open(fp, "w") as f:
+            json.dump({"v": 1}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1
+
+        # Second call — same mtime → skipped
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1  # still 1, not 2
+
+    def test_updated_mtime_triggers_reread(self):
+        """File with changed mtime is re-read."""
+        fp = str(self.data_dir / "changing.json")
+        with open(fp, "w") as f:
+            json.dump({"v": 1}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 1
+
+        # Touch the file to update mtime
+        import time
+        time.sleep(0.05)
+        with open(fp, "w") as f:
+            json.dump({"v": 2}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type")
+        assert len(self.collector._buffer) == 2
+        assert self.collector._buffer[1]["raw"] == {"v": 2}
+
+    def test_invalid_json_with_json_content_type_skipped(self):
+        """Invalid JSON files are gracefully skipped (no crash)."""
+        fp = str(self.data_dir / "bad.json")
+        with open(fp, "w") as f:
+            f.write("{invalid json content")
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="json")
+        assert len(self.collector._buffer) == 0
+
+    def test_text_with_unicode_and_special_chars(self):
+        """Text with unicode, newlines, quotes, and backslashes is properly wrapped."""
+        fp = str(self.data_dir / "unicode.md")
+        content = 'Line with "quotes" and \\backslash\nUnicode: \u00e9\u00e8\u00ea \U0001f600\nTab:\there'
+        with open(fp, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"]["content"] == content
+
+    def test_text_only_newlines_is_empty(self):
+        """File containing only newlines is treated as empty."""
+        fp = str(self.data_dir / "newlines.md")
+        with open(fp, "w") as f:
+            f.write("\n\n\n")
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 0
+
+    def test_binary_with_null_bytes(self):
+        """Binary files with null bytes are correctly base64-encoded."""
+        import base64
+        fp = str(self.data_dir / "nulls.pb")
+        data = b"\x00" * 100 + b"\xff" * 100
+        with open(fp, "wb") as f:
+            f.write(data)
+
+        self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
+        assert len(self.collector._buffer) == 1
+        decoded = base64.b64decode(self.collector._buffer[0]["raw"]["content_base64"])
+        assert decoded == data
+
+    def test_content_type_empty_string_falls_back(self):
+        """Empty string content_type falls back to json."""
+        fp = str(self.data_dir / "fallback.json")
+        with open(fp, "w") as f:
+            json.dump({"ok": True}, f)
+
+        self.collector._read_full_file("test_src", fp, "test_type", content_type="")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"] == {"ok": True}
+
+    def test_text_preserves_leading_trailing_whitespace(self):
+        """Text mode preserves leading/trailing whitespace (no stripping)."""
+        fp = str(self.data_dir / "padded.md")
+        content = "  leading and trailing spaces  "
+        with open(fp, "w") as f:
+            f.write(content)
+
+        self.collector._read_full_file("test_src", fp, "doc", content_type="text")
+        assert len(self.collector._buffer) == 1
+        assert self.collector._buffer[0]["raw"]["content"] == content
 
 
 class TestWatcherSqlite:

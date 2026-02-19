@@ -60,3 +60,7 @@ OximyWindows/src/OximyWindows/Secrets.cs
 /psutil-7.2.2.dist-info
 /psutil
 /hars
+
+# Temporary debug/capture scripts
+ws_capture.py
+ws_capture.jsonl

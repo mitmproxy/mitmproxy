@@ -66,7 +66,7 @@ struct DeviceConfig: Codable {
             heartbeatIntervalSeconds: defaults.integer(forKey: Constants.Defaults.heartbeatInterval).nonZero ?? 60,
             eventBatchSize: defaults.integer(forKey: Constants.Defaults.eventBatchSize).nonZero ?? 100,
             eventFlushIntervalSeconds: defaults.integer(forKey: Constants.Defaults.eventFlushInterval).nonZero ?? 5,
-            apiEndpoint: Constants.defaultAPIEndpoint  // Always use Constants, ignore backend value
+            apiEndpoint: Constants.apiEndpoint  // Uses dev.json in dev mode, otherwise default
         )
     }
 }
@@ -140,6 +140,26 @@ struct EventBatchResponse: Decodable {
         let accepted: Int
         let rejected: Int
         let deviceId: String
+    }
+}
+
+// MARK: - Access Request
+
+struct AccessRequestBody: Encodable {
+    let requestType: String
+    let toolId: String
+    let displayName: String
+    let reason: String
+}
+
+struct AccessRequestResponse: Decodable {
+    let success: Bool
+    let data: AccessRequestData?
+    let error: APIErrorData?
+    let meta: ResponseMeta?
+
+    struct AccessRequestData: Decodable {
+        let requestId: String?
     }
 }
 

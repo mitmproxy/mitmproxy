@@ -103,6 +103,9 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     private bool _isRunning;
     private bool _disposed;
     private bool _isFetchingConfig;
+    // Deduplication for one-shot commands (prevents re-execution on every poll)
+    private bool _lastSeenForceSync;
+    private bool _lastSeenClearCache;
 
     /// <summary>
     /// Whether the sensor is enabled (admin-controlled).
@@ -348,6 +351,56 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
                         ExecutedAt = now
                     };
                 }
+
+                // Handle force_sync (one-shot: only execute on false→true transition)
+                if (data.Commands.ForceSync && !_lastSeenForceSync)
+                {
+                    Debug.WriteLine("[RemoteStateService] Executing force_sync via direct fetch");
+                    try
+                    {
+                        await SyncService.Instance.SyncNowAsync();
+                        commandResults["force_sync"] = new CommandResult
+                        {
+                            Success = true,
+                            ExecutedAt = now
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        commandResults["force_sync"] = new CommandResult
+                        {
+                            Success = false,
+                            ExecutedAt = now,
+                            Error = ex.Message
+                        };
+                    }
+                }
+                _lastSeenForceSync = data.Commands.ForceSync;
+
+                // Handle clear_cache (one-shot: only execute on false→true transition)
+                if (data.Commands.ClearCache && !_lastSeenClearCache)
+                {
+                    Debug.WriteLine("[RemoteStateService] Executing clear_cache via direct fetch");
+                    try
+                    {
+                        SyncService.Instance.ClearLocalData();
+                        commandResults["clear_cache"] = new CommandResult
+                        {
+                            Success = true,
+                            ExecutedAt = now
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        commandResults["clear_cache"] = new CommandResult
+                        {
+                            Success = false,
+                            ExecutedAt = now,
+                            Error = ex.Message
+                        };
+                    }
+                }
+                _lastSeenClearCache = data.Commands.ClearCache;
             }
 
             if (data.AppConfig != null)

@@ -135,7 +135,8 @@ def capture_exception(exc: BaseException | None = None,
                     for k, v in tags.items():
                         scope.set_tag(k, v)
                 if extras:
-                    scope.set_extras(extras)
+                    for k, v in extras.items():
+                        scope.set_extra(k, v)
                 sdk.capture_exception(exc)
         except Exception:
             pass
@@ -152,7 +153,8 @@ def capture_message(message: str, level: str = "info",
                     for k, v in tags.items():
                         scope.set_tag(k, v)
                 if extras:
-                    scope.set_extras(extras)
+                    for k, v in extras.items():
+                        scope.set_extra(k, v)
                 sdk.capture_message(message)
         except Exception:
             pass
