@@ -434,6 +434,8 @@ class EnforcementEngine:
 
         with self._lock:
             self._policies = parsed
+            self._warn_cache.clear()
+
 
         logger.info(
             "Enforcement policies updated: %d policy(ies) loaded",
