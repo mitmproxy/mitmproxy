@@ -11,6 +11,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  UV_PYTHON_PREFERENCE: only-system
+  UV_PYTHON_DOWNLOADS: never
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -31,8 +35,6 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --python 3.12 --group dev
-        env:
-          UV_PYTHON_PREFERENCE: only-system
       - run: uv run mypy
 
   test:
@@ -44,6 +46,4 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --python 3.12 --group dev
-        env:
-          UV_PYTHON_PREFERENCE: only-system
       - run: uv run pytest mitmproxy/addons/oximy/tests/ -v --tb=short
