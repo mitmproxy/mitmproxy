@@ -16,7 +16,9 @@ try:
         EnforcementPolicy,
         Violation,
         EnforcementEngine,
+        _FILE_PATH_RE,
     )
+    _ENFORCEMENT_MODULE = "mitmproxy.addons.oximy.enforcement"
 except ImportError:
     from enforcement import (
         FALLBACK_PII_PATTERNS,
@@ -24,7 +26,9 @@ except ImportError:
         EnforcementPolicy,
         Violation,
         EnforcementEngine,
+        _FILE_PATH_RE,
     )
+    _ENFORCEMENT_MODULE = "enforcement"
 
 # Backward-compatible alias for tests
 PII_PATTERNS = FALLBACK_PII_PATTERNS
@@ -1534,3 +1538,243 @@ class TestPhoneRegexTightened:
         """The specific Perplexity payload that was causing false positives."""
         payload = '{"type":"autosuggest","count":42,"offset":0,"limit":10}'
         assert not re.search(PII_PATTERNS["phone"], payload)
+
+
+# =============================================================================
+# File Path False Positive Tests (OXI-172)
+# =============================================================================
+
+
+class TestFilePathRegex:
+    """Tests for the _FILE_PATH_RE regex pattern."""
+
+    def test_unix_path(self):
+        assert _FILE_PATH_RE.search("/Users/hirak/Desktop/project/file.ts")
+
+    def test_unix_path_trailing_slash(self):
+        assert _FILE_PATH_RE.search("/Users/alice/Documents/")
+
+    def test_windows_path(self):
+        assert _FILE_PATH_RE.search(r"C:\Users\Alice\Documents\file.txt")
+
+    def test_windows_path_forward_slash(self):
+        assert _FILE_PATH_RE.search("C:/Users/Bob/Desktop/project/")
+
+    def test_deep_nested_path(self):
+        assert _FILE_PATH_RE.search("/home/user/.config/app/settings.json")
+
+    def test_no_path(self):
+        assert not _FILE_PATH_RE.search("Hello John Smith, how are you?")
+
+    def test_single_segment_no_match(self):
+        """A bare /filename without subdirectories should not match."""
+        assert not _FILE_PATH_RE.search("/singlefile")
+
+
+class TestIsInsideFilePath:
+    """Tests for EnforcementEngine._is_inside_file_path()."""
+
+    class _FakeResult:
+        """Minimal mock for a Presidio RecognizerResult."""
+        def __init__(self, start: int, end: int):
+            self.start = start
+            self.end = end
+
+    def test_name_inside_unix_path(self):
+        body = "File at /Users/hirak/Desktop/project/file.ts was modified"
+        # "hirak" starts at index 14, ends at 19
+        idx = body.index("hirak")
+        result = self._FakeResult(idx, idx + len("hirak"))
+        assert EnforcementEngine._is_inside_file_path(result, body)
+
+    def test_name_outside_path(self):
+        body = "John Smith edited /Users/admin/file.ts"
+        idx = body.index("John")
+        result = self._FakeResult(idx, idx + len("John Smith"))
+        assert not EnforcementEngine._is_inside_file_path(result, body)
+
+    def test_name_inside_windows_path(self):
+        body = r"Open C:\Users\Alice\Documents\report.docx"
+        idx = body.index("Alice")
+        result = self._FakeResult(idx, idx + len("Alice"))
+        assert EnforcementEngine._is_inside_file_path(result, body)
+
+    def test_no_paths_in_body(self):
+        body = "Hello Alice, welcome!"
+        idx = body.index("Alice")
+        result = self._FakeResult(idx, idx + len("Alice"))
+        assert not EnforcementEngine._is_inside_file_path(result, body)
+
+
+class TestFilePathNERFiltering:
+    """Integration tests: NER PERSON/LOCATION detections inside file paths should be skipped.
+
+    These tests mock Presidio to simulate NER results and verify the filtering logic.
+    """
+
+    @staticmethod
+    def _make_engine_with_person_name():
+        """Create an engine with a policy that checks for person_name."""
+        engine = EnforcementEngine()
+        engine.update_policies([{
+            "id": "p1",
+            "name": "PII Policy",
+            "mode": "warn",
+            "rules": [{
+                "id": "r1",
+                "type": "data_type",
+                "name": "Detect Names",
+                "severity": "high",
+                "data_types": ["person_name"],
+            }],
+        }])
+        return engine
+
+    @staticmethod
+    def _make_engine_with_person_and_email():
+        """Create an engine that checks for both person_name and email."""
+        engine = EnforcementEngine()
+        engine.update_policies([{
+            "id": "p1",
+            "name": "PII Policy",
+            "mode": "warn",
+            "rules": [{
+                "id": "r1",
+                "type": "data_type",
+                "name": "Detect PII",
+                "severity": "high",
+                "data_types": ["person_name", "email"],
+            }],
+        }])
+        return engine
+
+    def test_unix_path_username_not_detected_as_person(self):
+        """Username in /Users/hirak/... should NOT trigger person_name."""
+        body = "Editing file /Users/hirak/Desktop/project/file.ts"
+
+        class FakeResult:
+            def __init__(self):
+                idx = body.index("hirak")
+                self.entity_type = "PERSON"
+                self.start = idx
+                self.end = idx + len("hirak")
+                self.score = 0.85
+
+        fake_analyzer = type("FakeAnalyzer", (), {
+            "analyze": lambda self, text, entities, language: [FakeResult()]
+        })()
+
+        with patch(f"{_ENFORCEMENT_MODULE}._get_analyzer", return_value=fake_analyzer):
+            engine = self._make_engine_with_person_name()
+            action, violation = engine.check_request(
+                body, "api.openai.com", "/v1/chat", "POST"
+            )
+            assert action == "allow"
+            assert violation is None
+
+    def test_real_person_name_still_detected(self):
+        """An actual person name (not in a path) should still trigger."""
+        body = "Please contact John Smith for details"
+
+        class FakeResult:
+            def __init__(self):
+                idx = body.index("John Smith")
+                self.entity_type = "PERSON"
+                self.start = idx
+                self.end = idx + len("John Smith")
+                self.score = 0.85
+
+        fake_analyzer = type("FakeAnalyzer", (), {
+            "analyze": lambda self, text, entities, language: [FakeResult()]
+        })()
+
+        with patch(f"{_ENFORCEMENT_MODULE}._get_analyzer", return_value=fake_analyzer):
+            engine = self._make_engine_with_person_name()
+            action, violation = engine.check_request(
+                body, "api.openai.com", "/v1/chat", "POST"
+            )
+            assert action == "warn"
+            assert violation is not None
+            assert violation.detected_type == "person_name"
+
+    def test_path_name_ignored_but_real_name_detected(self):
+        """When body has both a path username and a real name, only the real name triggers."""
+        body = "John Smith opened /Users/hirak/Desktop/project/file.ts"
+
+        class PathResult:
+            entity_type = "PERSON"
+            start = body.index("hirak")
+            end = start + len("hirak")
+            score = 0.75
+
+        class RealNameResult:
+            entity_type = "PERSON"
+            start = body.index("John Smith")
+            end = start + len("John Smith")
+            score = 0.90
+
+        fake_analyzer = type("FakeAnalyzer", (), {
+            "analyze": lambda self, text, entities, language: [PathResult(), RealNameResult()]
+        })()
+
+        with patch(f"{_ENFORCEMENT_MODULE}._get_analyzer", return_value=fake_analyzer):
+            engine = self._make_engine_with_person_name()
+            action, violation = engine.check_request(
+                body, "api.openai.com", "/v1/chat", "POST"
+            )
+            assert action == "warn"
+            assert violation is not None
+            assert violation.detected_type == "person_name"
+
+    def test_windows_path_username_not_detected(self):
+        r"""Username in C:\Users\Alice\... should NOT trigger person_name."""
+        body = r"File at C:\Users\Alice\Documents\report.docx was saved"
+
+        class FakeResult:
+            def __init__(self):
+                idx = body.index("Alice")
+                self.entity_type = "PERSON"
+                self.start = idx
+                self.end = idx + len("Alice")
+                self.score = 0.80
+
+        fake_analyzer = type("FakeAnalyzer", (), {
+            "analyze": lambda self, text, entities, language: [FakeResult()]
+        })()
+
+        with patch(f"{_ENFORCEMENT_MODULE}._get_analyzer", return_value=fake_analyzer):
+            engine = self._make_engine_with_person_name()
+            action, violation = engine.check_request(
+                body, "api.openai.com", "/v1/chat", "POST"
+            )
+            assert action == "allow"
+            assert violation is None
+
+    def test_redaction_skips_path_names(self):
+        """PII redaction should not redact names inside file paths."""
+        body = "Editing /Users/hirak/Desktop/project/file.ts today"
+
+        class FakeResult:
+            def __init__(self):
+                idx = body.index("hirak")
+                self.entity_type = "PERSON"
+                self.start = idx
+                self.end = idx + len("hirak")
+                self.score = 0.85
+
+        fake_analyzer = type("FakeAnalyzer", (), {
+            "analyze": lambda self, text, entities, language: [FakeResult()]
+        })()
+        fake_anonymizer = type("FakeAnonymizer", (), {})()
+
+        with patch(f"{_ENFORCEMENT_MODULE}._get_analyzer", return_value=fake_analyzer), \
+             patch(f"{_ENFORCEMENT_MODULE}._get_anonymizer", return_value=fake_anonymizer):
+            engine = EnforcementEngine()
+            engine.update_policies([{
+                "id": "p1", "name": "PII", "mode": "warn",
+                "rules": [{"id": "r1", "type": "data_type", "name": "Names",
+                           "severity": "high", "data_types": ["person_name"]}],
+            }])
+            redacted, detected = engine.redact_pii(body)
+            assert redacted == body  # unchanged — no PII to redact
+            assert detected == []
