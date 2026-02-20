@@ -9,37 +9,33 @@ from __future__ import annotations
 import base64
 import gzip
 import json
-from unittest.mock import patch
 
 import pytest
 
-# Import the module under test
-from mitmproxy.addons.oximy.normalize import (
-    ANTI_HIJACK_PREFIXES,
-    BASE64_PATTERN,
-    MAX_BODY_SIZE,
-    MAX_DECODE_LAYERS,
-    MSGPACK_MARKERS,
-    ZLIB_PREFIXES,
-    ZSTD_MAGIC,
-    _apply_decoder,
-    _convert_bytes_to_str,
-    _decode_grpc_frames,
-    _decode_layers,
-    _decode_msgpack,
-    _decode_protobuf_schemaless,
-    _detect_encoding,
-    _get_anti_hijack_prefix,
-    _has_anti_hijack_prefix,
-    _is_grpc_content,
-    _is_msgpack,
-    _normalize_anti_hijack_stream,
-    _normalize_sse,
-    _to_string,
-    normalize_body,
-    normalize_grpc,
-)
+from mitmproxy.addons.oximy.normalize import _apply_decoder
+from mitmproxy.addons.oximy.normalize import _convert_bytes_to_str
+from mitmproxy.addons.oximy.normalize import _decode_grpc_frames
+from mitmproxy.addons.oximy.normalize import _decode_layers
+from mitmproxy.addons.oximy.normalize import _decode_msgpack
+from mitmproxy.addons.oximy.normalize import _decode_protobuf_schemaless
+from mitmproxy.addons.oximy.normalize import _detect_encoding
+from mitmproxy.addons.oximy.normalize import _get_anti_hijack_prefix
+from mitmproxy.addons.oximy.normalize import _has_anti_hijack_prefix
+from mitmproxy.addons.oximy.normalize import _is_grpc_content
+from mitmproxy.addons.oximy.normalize import _is_msgpack
+from mitmproxy.addons.oximy.normalize import _normalize_anti_hijack_stream
+from mitmproxy.addons.oximy.normalize import _normalize_sse
+from mitmproxy.addons.oximy.normalize import _to_string
 
+# Import the module under test
+from mitmproxy.addons.oximy.normalize import ANTI_HIJACK_PREFIXES
+from mitmproxy.addons.oximy.normalize import MAX_BODY_SIZE
+from mitmproxy.addons.oximy.normalize import MAX_DECODE_LAYERS
+from mitmproxy.addons.oximy.normalize import MSGPACK_MARKERS
+from mitmproxy.addons.oximy.normalize import normalize_body
+from mitmproxy.addons.oximy.normalize import normalize_grpc
+from mitmproxy.addons.oximy.normalize import ZLIB_PREFIXES
+from mitmproxy.addons.oximy.normalize import ZSTD_MAGIC
 
 # =============================================================================
 # _is_grpc_content Tests
@@ -600,8 +596,8 @@ class TestZstdDecoding:
     def test_zstd_content_decoded(self):
         """Zstd-compressed content should be detected and decoded."""
         try:
-            from mitmproxy.net.encoding import decode_zstd
             import zstandard
+
             cctx = zstandard.ZstdCompressor()
             compressed = cctx.compress(b"hello zstd world")
             assert _detect_encoding(compressed) == "zstd"

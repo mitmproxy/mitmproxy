@@ -7,7 +7,8 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any
