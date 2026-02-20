@@ -456,12 +456,37 @@ def _delete_proxy_port_file() -> None:
 # TERMINAL ENVIRONMENT SETUP
 # =============================================================================
 
-def _setup_terminal_env() -> None:
+def _setup_terminal_env(enabled: bool = True) -> None:
     """Write env script, generate combined CA bundle, and inject shell profiles.
 
     Idempotent — safe to call on every startup. Shell profile injection is
     skipped if the marker block already exists.
+
+    Args:
+        enabled: If False, removes any existing terminal proxy injections.
     """
+    if not enabled:
+        logger.info("Terminal proxy tracking disabled (oximy_terminal_proxy=False)")
+        # Clean up any existing injections from previous runs
+        try:
+            if sys.platform == "darwin":
+                _unset_launchctl_env()
+                _remove_shell_profile_injections([
+                    Path.home() / ".zshrc",
+                    Path.home() / ".bashrc",
+                ])
+            elif sys.platform == "win32":
+                docs = Path.home() / "Documents"
+                _remove_shell_profile_injections([
+                    docs / "WindowsPowerShell" / "Microsoft.PowerShell_profile.ps1",
+                    docs / "PowerShell" / "Microsoft.PowerShell_profile.ps1",
+                ])
+                _remove_cmd_autorun()
+            logger.info("Cleaned up existing terminal proxy injections")
+        except Exception as e:
+            logger.warning(f"Terminal proxy cleanup failed (non-fatal): {e}")
+        return
+
     try:
         _write_env_script()
         _generate_combined_ca_bundle()
@@ -3295,6 +3320,7 @@ class OximyAddon:
         loader.add_option("oximy_debug_traces", bool, False, "Log all requests to all_traces file (unfiltered)")
         loader.add_option("oximy_debug_ingestion", bool, False, "Write traces to disk AND send via memory buffer (for debugging)")
         loader.add_option("oximy_manage_proxy", bool, True, "Manage system proxy (disable when host app handles this)")
+        loader.add_option("oximy_terminal_proxy", bool, False, "Enable terminal proxy tracking (shell profile injection)")
         loader.add_option("oximy_enforcement", bool, True, "Enable request enforcement (PII blocking)")
 
     def _refresh_config(self, max_retries: int = 3) -> bool:
@@ -3725,7 +3751,7 @@ class OximyAddon:
 
         # Set up terminal env (shell profile injection, env scripts, CA bundle).
         # Runs outside the lock — idempotent and non-fatal.
-        _setup_terminal_env()
+        _setup_terminal_env(enabled=ctx.options.oximy_terminal_proxy)
 
     def _delayed_proxy_activation(self):
         """Fallback activation if running() hook isn't called.
@@ -3787,7 +3813,7 @@ class OximyAddon:
                     _write_proxy_state()
 
             # Set up terminal env
-            _setup_terminal_env()
+            _setup_terminal_env(enabled=ctx.options.oximy_terminal_proxy)
 
         except Exception as e:
             logger.error(f"[OXIMY] Fallback activation failed: {e}", exc_info=True)

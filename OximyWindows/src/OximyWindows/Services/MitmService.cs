@@ -466,6 +466,7 @@ public class MitmService : IDisposable
             // Use mitmproxy's default confdir (~/.mitmproxy) for certificates
             // This avoids certificate format/installation issues
             "--set oximy_manage_proxy=true",   // Python addon manages proxy based on sensor_enabled
+            "--set oximy_terminal_proxy=false",  // Disable terminal proxy tracking
             $"--mode regular@{port}",
             "--listen-host 127.0.0.1",
             "--ssl-insecure"
