@@ -1449,6 +1449,43 @@ def _post_command_results_immediate(command_results: dict) -> None:
         logger.debug(f"Failed to immediately POST command results (will retry via heartbeat): {e}")
 
 
+def _post_suggestion_feedback(suggestion_id: str, action: str) -> None:
+    """Post suggestion feedback (used/dismissed) to API.
+
+    Best-effort — failures are logged but don't affect sensor operation.
+    """
+    try:
+        if not OXIMY_TOKEN_FILE.exists():
+            logger.debug("No device token found - skipping suggestion feedback POST")
+            return
+
+        with open(OXIMY_TOKEN_FILE, encoding="utf-8") as f:
+            device_token = f.read().strip()
+
+        if not device_token:
+            return
+
+        api_endpoint = os.getenv("OXIMY_API_ENDPOINT", _resolved_api_base)
+        url = f"{api_endpoint}/proactive-policy/suggestions/{suggestion_id}/feedback"
+
+        headers = {
+            "Authorization": f"Bearer {device_token}",
+            "Content-Type": "application/json",
+        }
+
+        payload = json.dumps({"action": action})
+
+        req = urllib.request.Request(url, data=payload.encode(), headers=headers, method="POST")
+        with _no_proxy_opener.open(req, timeout=5) as response:
+            if response.status in (200, 202):
+                logger.info(f"[PLAYBOOK] Feedback sent: suggestion={suggestion_id} action={action}")
+            else:
+                logger.debug(f"[PLAYBOOK] Feedback POST returned status {response.status}")
+
+    except Exception as e:
+        logger.debug(f"[PLAYBOOK] Failed to POST suggestion feedback: {e}")
+
+
 def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     """Parse API response into normalized config format.
 
@@ -1656,12 +1693,29 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             elif mode == "warn":
                 addon_instance._warned_domains[domain] = rule
 
+    # --- PROACTIVE SUGGESTION FEEDBACK ---
+    # Check if the Mac app has responded to a suggestion (used/dismissed)
+    # and send feedback to the server before writing any new suggestion
+    try:
+        from mitmproxy.addons.oximy.playbooks import clear_suggestion
+        from mitmproxy.addons.oximy.playbooks import read_suggestion_feedback
+        feedback = read_suggestion_feedback()
+        if feedback:
+            feedback_id = feedback.get("id", "")
+            feedback_status = feedback.get("status", "")
+            if feedback_id and feedback_status in ("used", "dismissed"):
+                _post_suggestion_feedback(feedback_id, feedback_status)
+                clear_suggestion()
+    except Exception as e:
+        logger.debug(f"[PLAYBOOK] Feedback check error: {e}")
+
     # --- PROACTIVE SUGGESTION DELIVERY ---
     # Write server-provided suggestion to disk for the Mac app
     pending_suggestion = data.get("pendingSuggestion")
     if pending_suggestion:
         try:
-            from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server
+            from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server  # noqa: I001
+
             write_suggestion_from_server(pending_suggestion)
         except Exception as e:
             logger.warning(f"Failed to write proactive suggestion: {e}")
