@@ -14,6 +14,10 @@ class FirstClickHostingView<Content: View>: NSHostingView<Content> {
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
+        // Remove old tracking areas to prevent accumulation
+        for existing in trackingAreas {
+            removeTrackingArea(existing)
+        }
         // Ensure cursor updates work even when the window isn't key
         let area = NSTrackingArea(
             rect: bounds,
@@ -23,6 +27,7 @@ class FirstClickHostingView<Content: View>: NSHostingView<Content> {
         )
         addTrackingArea(area)
     }
+
 }
 
 /// A floating panel that appears on screen when a playbook suggestion is detected.
