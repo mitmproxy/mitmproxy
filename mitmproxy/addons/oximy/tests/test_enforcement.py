@@ -5,24 +5,23 @@ from __future__ import annotations
 import re
 import threading
 import time
-
 from unittest.mock import patch
 
 try:
+    from mitmproxy.addons.oximy.enforcement import _FILE_PATH_RE
     from mitmproxy.addons.oximy.enforcement import EnforcementEngine
     from mitmproxy.addons.oximy.enforcement import EnforcementPolicy
     from mitmproxy.addons.oximy.enforcement import EnforcementRule
     from mitmproxy.addons.oximy.enforcement import FALLBACK_PII_PATTERNS
     from mitmproxy.addons.oximy.enforcement import Violation
-    from mitmproxy.addons.oximy.enforcement import _FILE_PATH_RE
     _ENFORCEMENT_MODULE = "mitmproxy.addons.oximy.enforcement"
 except ImportError:
+    from enforcement import _FILE_PATH_RE
     from enforcement import EnforcementEngine
     from enforcement import EnforcementPolicy
     from enforcement import EnforcementRule
     from enforcement import FALLBACK_PII_PATTERNS
     from enforcement import Violation  # noqa: F401
-    from enforcement import _FILE_PATH_RE
     _ENFORCEMENT_MODULE = "enforcement"
 
 # Backward-compatible alias for tests
