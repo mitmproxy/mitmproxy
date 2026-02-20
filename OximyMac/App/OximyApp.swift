@@ -195,6 +195,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Start remote state monitoring (reads Python addon's state file)
         RemoteStateService.shared.start()
 
+        // Start suggestion monitoring (reads Python addon's playbook suggestions)
+        SuggestionService.shared.start()
+
+        // Auto-show popover when a playbook suggestion is detected
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleNewSuggestion),
+            name: .newSuggestionAvailable,
+            object: nil
+        )
+
         // Start violation monitoring (reads Python addon's violations file)
         ViolationService.shared.start()
 
@@ -303,6 +314,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleClosePopover() {
         popover.performClose(nil)
+    }
+
+    @objc private func handleNewSuggestion() {
+        // Show floating panel when a playbook suggestion is detected
+        guard let suggestion = SuggestionService.shared.currentSuggestion else { return }
+        SuggestionPanelController.shared.show(suggestion: suggestion)
     }
 
     @objc private func handleQuitApp() {
@@ -593,6 +610,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self, name: .authenticationFailed, object: nil)
         NotificationCenter.default.removeObserver(self, name: .handleAuthURL, object: nil)
         NotificationCenter.default.removeObserver(self, name: .closePopover, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .newSuggestionAvailable, object: nil)
 
         // Remove remote state observer
         if let observer = remoteStateObserver {
@@ -621,6 +639,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NotificationCenter.default.removeObserver(observer)
             violationObserver = nil
         }
+
+        // Stop suggestion monitoring
+        SuggestionService.shared.stop()
 
         // Stop API services
         HeartbeatService.shared.stop()

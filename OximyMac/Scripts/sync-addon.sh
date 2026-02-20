@@ -34,6 +34,7 @@ FILES=(
     "oximy_logger.py"
     "sentry_service.py"
     "enforcement.py"
+    "playbooks.py"
     "__init__.py"
 )
 
