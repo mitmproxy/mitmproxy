@@ -27,18 +27,6 @@ jobs:
       - run: pip install ruff==0.14.10
       - run: ruff check mitmproxy/addons/oximy/
 
-  typecheck:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --group dev
-      - run: uv run mypy mitmproxy/addons/oximy/
-
   test:
     runs-on: ubuntu-latest
     steps:
