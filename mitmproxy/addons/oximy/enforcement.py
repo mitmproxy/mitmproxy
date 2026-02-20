@@ -591,7 +591,7 @@ class EnforcementEngine:
         """
         if rule.type == "data_type":
             return EnforcementEngine._match_data_types(rule.data_types, body)
-        elif rule.type == "regex":
+        elif rule.type in ("regex", "keyword"):
             for idx, pattern in enumerate(rule.patterns):
                 if pattern.search(body):
                     return f"custom_pattern_{idx}"
@@ -746,35 +746,63 @@ class EnforcementEngine:
         with self._lock:
             policies = list(self._policies)
 
-        # Gather all data_types to check from active rules
+        # Gather data_types and custom regex/keyword patterns from active rules
         data_types_to_check: set[str] = set()
+        custom_patterns: list[tuple[re.Pattern, str]] = []  # (pattern, label)
         for policy in policies:
             if policy.mode == "monitor":
                 continue
             for rule in policy.rules:
                 if rule.type == "data_type":
                     data_types_to_check.update(rule.data_types)
+                elif rule.type in ("regex", "keyword"):
+                    for idx, pattern in enumerate(rule.patterns):
+                        label = rule.name or f"custom_pattern_{idx}"
+                        custom_patterns.append((pattern, label))
 
-        if not data_types_to_check:
+        if not data_types_to_check and not custom_patterns:
             return (body_text, [])
 
-        # Try Presidio-based redaction first
-        analyzer = _get_analyzer()
-        anonymizer = _get_anonymizer()
+        redacted_text = body_text
+        detected_types: list[str] = []
 
-        if analyzer is not None and anonymizer is not None:
-            try:
-                return self._redact_pii_presidio(
-                    analyzer, anonymizer, body_text, data_types_to_check
-                )
-            except Exception:
-                logger.debug(
-                    "Presidio redaction failed, falling back to regex",
-                    exc_info=True,
-                )
+        # Redact custom regex/keyword patterns first
+        for pattern, label in custom_patterns:
+            new_text, count = pattern.subn("[CUSTOM_REDACTED]", redacted_text)
+            if count > 0:
+                redacted_text = new_text
+                detected_types.append(label)
 
-        # Fallback: regex-based redaction
-        return self._redact_pii_regex(body_text, data_types_to_check)
+        # Redact data_type rules via Presidio (or regex fallback)
+        if data_types_to_check:
+            analyzer = _get_analyzer()
+            anonymizer = _get_anonymizer()
+
+            if analyzer is not None and anonymizer is not None:
+                try:
+                    presidio_text, presidio_types = self._redact_pii_presidio(
+                        analyzer, anonymizer, redacted_text, data_types_to_check
+                    )
+                    redacted_text = presidio_text
+                    detected_types.extend(presidio_types)
+                except Exception:
+                    logger.debug(
+                        "Presidio redaction failed, falling back to regex",
+                        exc_info=True,
+                    )
+                    regex_text, regex_types = self._redact_pii_regex(
+                        redacted_text, data_types_to_check
+                    )
+                    redacted_text = regex_text
+                    detected_types.extend(regex_types)
+            else:
+                regex_text, regex_types = self._redact_pii_regex(
+                    redacted_text, data_types_to_check
+                )
+                redacted_text = regex_text
+                detected_types.extend(regex_types)
+
+        return (redacted_text, detected_types)
 
     def _redact_pii_presidio(
         self,

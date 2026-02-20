@@ -10,22 +10,57 @@ struct HomeTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Violation Banner (if recent violations exist)
+            // Recent Violations (if any)
             if !violationService.violations.isEmpty {
-                HStack(spacing: 8) {
-                    Image(systemName: "shield.lefthalf.filled.trianglebadge.exclamationmark")
-                        .font(.caption)
-                        .foregroundColor(.orange)
+                VStack(spacing: 0) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "shield.lefthalf.filled.trianglebadge.exclamationmark")
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                        Text("Recent Violations")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.orange)
+                        Spacer()
+                        Text("\(violationService.violations.count)")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Color.orange)
+                            .cornerRadius(6)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
 
-                    Text("\(violationService.violations.count) policy violation\(violationService.violations.count == 1 ? "" : "s") detected")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                    ForEach(Array(violationService.violations.suffix(3).reversed()), id: \.id) { v in
+                        HStack(spacing: 6) {
+                            Image(systemName: v.piiIcon)
+                                .font(.system(size: 10))
+                                .foregroundColor(.orange)
+                                .frame(width: 14)
+                            Text(v.piiLabel)
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(v.host)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                            Text(v.relativeTime)
+                                .font(.caption2)
+                                .foregroundColor(.tertiary)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 3)
+                    }
 
-                    Spacer()
+                    Spacer().frame(height: 6)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.orange.opacity(0.1))
+                .background(Color.orange.opacity(0.07))
             }
 
             // Main content area - centered

@@ -156,11 +156,11 @@ struct ViolationPanelView: View {
 
             // What was detected + where
             HStack(spacing: 8) {
-                Image(systemName: piiIcon)
+                Image(systemName: violation.piiIcon)
                     .foregroundColor(.orange)
                     .font(.system(size: 14))
 
-                Text(piiLabel)
+                Text(violation.piiLabel)
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
 
@@ -177,7 +177,7 @@ struct ViolationPanelView: View {
             }
 
             // Description
-            Text("Replaced with [\(redactLabel)_REDACTED] before reaching the AI provider.")
+            Text("Replaced with \(violation.redactPlaceholder) before reaching the AI provider.")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
                 .lineLimit(2)
@@ -204,30 +204,4 @@ struct ViolationPanelView: View {
         )
     }
 
-    // MARK: - PII type styling
-
-    private var piiLabel: String {
-        violation.detectedType
-            .replacingOccurrences(of: "_", with: " ")
-            .capitalized
-    }
-
-    private var redactLabel: String {
-        // First type only for the placeholder label
-        let first = violation.detectedType
-            .components(separatedBy: ",")
-            .first?
-            .trimmingCharacters(in: .whitespaces) ?? violation.detectedType
-        return first.uppercased()
-    }
-
-    private var piiIcon: String {
-        let type = violation.detectedType.lowercased()
-        if type.contains("email") { return "envelope.fill" }
-        if type.contains("credit") || type.contains("card") { return "creditcard.fill" }
-        if type.contains("ssn") { return "person.text.rectangle.fill" }
-        if type.contains("phone") { return "phone.fill" }
-        if type.contains("api_key") || type.contains("token") { return "key.fill" }
-        return "shield.lefthalf.filled.trianglebadge.exclamationmark"
-    }
 }
