@@ -1001,14 +1001,14 @@ class LocalDataCollector:
         saved_offset = state.get("offset", 0)
         saved_mtime = state.get("mtime", 0)
 
-        # Skip if unchanged
-        if current_mtime == saved_mtime and saved_offset >= current_size:
-            return
-
-        # File shrank — reset offset
+        # File shrank — reset offset (check before skip to handle same-second rewrites)
         if saved_offset > current_size:
             logger.info(f"File shrank, resetting offset: {filepath}")
             saved_offset = 0
+
+        # Skip if unchanged
+        if current_mtime == saved_mtime and saved_offset >= current_size:
+            return
 
         new_offset = saved_offset
         line_number = 0
