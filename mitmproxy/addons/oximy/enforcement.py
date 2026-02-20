@@ -30,8 +30,10 @@ import re
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from dataclasses import field
+from datetime import datetime
+from datetime import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +132,8 @@ _presidio_available: bool | None = None  # None = not yet checked
 def _add_custom_recognizers(analyzer) -> None:
     """Register custom pattern recognizers for types Presidio lacks."""
     try:
-        from presidio_analyzer import Pattern, PatternRecognizer
+        from presidio_analyzer import Pattern
+        from presidio_analyzer import PatternRecognizer
     except ImportError:
         return
 

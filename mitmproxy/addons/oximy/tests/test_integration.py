@@ -12,19 +12,18 @@ import threading
 import time
 from datetime import date
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock
+from unittest.mock import mock_open
+from unittest.mock import patch
 
 import pytest
 
-from mitmproxy.addons.oximy.addon import (
-    OximyAddon,
-    TLSPassthrough,
-    MemoryTraceBuffer,
-    _parse_sensor_config,
-    _state,
-)
+from mitmproxy.addons.oximy.addon import _parse_sensor_config
+from mitmproxy.addons.oximy.addon import _state
+from mitmproxy.addons.oximy.addon import MemoryTraceBuffer
+from mitmproxy.addons.oximy.addon import OximyAddon
+from mitmproxy.addons.oximy.addon import TLSPassthrough
 from mitmproxy.addons.oximy.process import ClientProcess
-
 
 # =============================================================================
 # Test Helpers

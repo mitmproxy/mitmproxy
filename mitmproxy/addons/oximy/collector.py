@@ -20,23 +20,27 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 from typing import Any
 
 try:
-    from watchfiles import watch, Change
+    from watchfiles import Change
+    from watchfiles import watch
     HAS_WATCHFILES = True
 except ImportError:
     HAS_WATCHFILES = False
 
 try:
     from mitmproxy.addons.oximy import sentry_service
-    from mitmproxy.addons.oximy.oximy_logger import oximy_log, EventCode
+    from mitmproxy.addons.oximy.oximy_logger import EventCode
+    from mitmproxy.addons.oximy.oximy_logger import oximy_log
 except ImportError:
     try:
         import sentry_service  # type: ignore[import]
-        from oximy_logger import oximy_log, EventCode  # type: ignore[import]
+        from oximy_logger import EventCode  # type: ignore[import]
+        from oximy_logger import oximy_log  # type: ignore[import]
     except ImportError:
         sentry_service = None  # type: ignore[assignment]
         oximy_log = None  # type: ignore[assignment]
@@ -997,14 +1001,14 @@ class LocalDataCollector:
         saved_offset = state.get("offset", 0)
         saved_mtime = state.get("mtime", 0)
 
-        # Skip if unchanged
-        if current_mtime == saved_mtime and saved_offset >= current_size:
-            return
-
-        # File shrank — reset offset
+        # File shrank — reset offset (check before skip to handle same-second rewrites)
         if saved_offset > current_size:
             logger.info(f"File shrank, resetting offset: {filepath}")
             saved_offset = 0
+
+        # Skip if unchanged
+        if current_mtime == saved_mtime and saved_offset >= current_size:
+            return
 
         new_offset = saved_offset
         line_number = 0

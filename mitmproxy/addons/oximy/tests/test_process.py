@@ -8,18 +8,17 @@ from __future__ import annotations
 
 import asyncio
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
-# Import the module under test
-from mitmproxy.addons.oximy.process import (
-    ClientProcess,
-    ProcessResolver,
-    _get_responsible_pid,
-    _proc_pidpath,
-)
+from mitmproxy.addons.oximy.process import _get_responsible_pid
+from mitmproxy.addons.oximy.process import _proc_pidpath
 
+# Import the module under test
+from mitmproxy.addons.oximy.process import ClientProcess
+from mitmproxy.addons.oximy.process import ProcessResolver
 
 # =============================================================================
 # _get_responsible_pid Tests
@@ -334,8 +333,9 @@ class TestFindPidForPort:
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                result = await resolver._find_pid_for_port(54321)
-                assert result == 1234
+                with patch('os.getuid', return_value=501):
+                    result = await resolver._find_pid_for_port(54321)
+                    assert result == 1234
 
     @pytest.mark.asyncio
     async def test_fallback_match(self):
@@ -355,8 +355,9 @@ class TestFindPidForPort:
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                result = await resolver._find_pid_for_port(54321)
-                assert result == 9999
+                with patch('os.getuid', return_value=501):
+                    result = await resolver._find_pid_for_port(54321)
+                    assert result == 9999
 
     @pytest.mark.asyncio
     async def test_no_match_returns_none(self):
@@ -408,8 +409,9 @@ class TestFindPidForPort:
 
         with patch('mitmproxy.addons.oximy.process._HAS_PSUTIL', True):
             with patch('mitmproxy.addons.oximy.process.psutil', mock_psutil):
-                result = await resolver._find_pid_for_port(54321)
-                assert result == 1234
+                with patch('os.getuid', return_value=501):
+                    result = await resolver._find_pid_for_port(54321)
+                    assert result == 1234
 
 
 # =============================================================================

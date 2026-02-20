@@ -9,21 +9,19 @@ import sqlite3
 import time
 import urllib.error
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
-from mitmproxy.addons.oximy.collector import (
-    LocalDataCollector,
-    ScanState,
-    redact_sensitive,
-    _compile_redact_patterns,
-    _should_skip_file,
-    _extract_metadata_from_path,
-    _resolve_query_order,
-    DEFAULT_MAX_EVENT_SIZE,
-)
-
+from mitmproxy.addons.oximy.collector import _compile_redact_patterns
+from mitmproxy.addons.oximy.collector import _extract_metadata_from_path
+from mitmproxy.addons.oximy.collector import _resolve_query_order
+from mitmproxy.addons.oximy.collector import _should_skip_file
+from mitmproxy.addons.oximy.collector import DEFAULT_MAX_EVENT_SIZE
+from mitmproxy.addons.oximy.collector import LocalDataCollector
+from mitmproxy.addons.oximy.collector import redact_sensitive
+from mitmproxy.addons.oximy.collector import ScanState
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -2055,7 +2053,7 @@ class TestContentType:
     def test_content_type_binary_empty_file(self):
         """Empty binary file is skipped."""
         fp = str(self.data_dir / "empty.pb")
-        with open(fp, "wb") as f:
+        with open(fp, "wb"):
             pass  # empty
 
         self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")
@@ -2162,7 +2160,7 @@ class TestContentType:
     def test_empty_binary_file_records_mtime(self):
         """Empty binary files record mtime to avoid re-checking every cycle."""
         fp = str(self.data_dir / "zero.pb")
-        with open(fp, "wb") as f:
+        with open(fp, "wb"):
             pass
 
         self.collector._read_full_file("test_src", fp, "conversation", content_type="binary")

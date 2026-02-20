@@ -8,12 +8,9 @@ from unittest.mock import patch
 
 import pytest
 
-from mitmproxy.addons.oximy.playbooks import (
-    clear_suggestion,
-    read_suggestion_feedback,
-    write_suggestion_from_server,
-)
-
+from mitmproxy.addons.oximy.playbooks import clear_suggestion
+from mitmproxy.addons.oximy.playbooks import read_suggestion_feedback
+from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server
 
 # =============================================================================
 # Fixtures

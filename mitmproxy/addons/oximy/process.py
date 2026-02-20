@@ -158,7 +158,12 @@ class ProcessResolver:
         # Lazily trigger bundle cache prepopulation (non-blocking background task)
         if self._is_macos and not self._bundle_cache_prepopulated:
             self._bundle_cache_prepopulated = True
-            self._bundle_cache_task = asyncio.create_task(self._prepopulate_bundle_cache())
+            from mitmproxy.utils import asyncio_utils
+            self._bundle_cache_task = asyncio_utils.create_task(
+                self._prepopulate_bundle_cache(),
+                name="oximy_bundle_cache_prepopulate",
+                keep_ref=True,
+            )
 
         # Check port cache first (avoids expensive lsof/netstat calls)
         if port in self._port_cache:
