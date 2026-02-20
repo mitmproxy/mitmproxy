@@ -120,6 +120,12 @@ for _etype in CUSTOM_ENTITY_TYPES:
 # Body size threshold above which NER is skipped for performance
 NER_SKIP_BODY_SIZE = 100_000  # 100 KB
 
+# Pattern to detect file/directory paths in text
+# Matches Unix paths (/Users/john/...) and Windows paths (C:\Users\john\...)
+_FILE_PATH_RE = re.compile(
+    r'(?:[A-Za-z]:)?[/\\](?:[\w.@:~+-]+[/\\])+[\w.@:~+-]*'
+)
+
 # =============================================================================
 # LAZY-LOADED PRESIDIO ENGINES
 # =============================================================================
@@ -566,6 +572,14 @@ class EnforcementEngine:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _is_inside_file_path(result, body: str) -> bool:
+        """Return True if a Presidio NER result overlaps with a file/directory path."""
+        for m in _FILE_PATH_RE.finditer(body):
+            if m.start() <= result.start and result.end <= m.end():
+                return True
+        return False
+
+    @staticmethod
     def _match_rule(rule: EnforcementRule, body: str) -> str | None:
         """Check body against a single rule.
 
@@ -635,6 +649,10 @@ class EnforcementEngine:
         for result in results:
             threshold = CONFIDENCE_THRESHOLDS.get(result.entity_type, 0.5)
             if result.score >= threshold:
+                # Skip NER entities (PERSON, LOCATION) inside file paths
+                if (result.entity_type in NER_ENTITY_TYPES
+                        and EnforcementEngine._is_inside_file_path(result, body)):
+                    continue
                 oximy_type = PRESIDIO_TO_OXIMY.get(result.entity_type)
                 if oximy_type and oximy_type in data_types:
                     return oximy_type
@@ -795,6 +813,10 @@ class EnforcementEngine:
         for result in results:
             threshold = CONFIDENCE_THRESHOLDS.get(result.entity_type, 0.5)
             if result.score < threshold:
+                continue
+            # Skip NER entities (PERSON, LOCATION) inside file paths
+            if (result.entity_type in NER_ENTITY_TYPES
+                    and EnforcementEngine._is_inside_file_path(result, body_text)):
                 continue
             oximy_type = PRESIDIO_TO_OXIMY.get(result.entity_type)
             if oximy_type and oximy_type in data_types_to_check:
