@@ -1697,7 +1697,8 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     # Check if the Mac app has responded to a suggestion (used/dismissed)
     # and send feedback to the server before writing any new suggestion
     try:
-        from mitmproxy.addons.oximy.playbooks import read_suggestion_feedback, clear_suggestion, write_suggestion_from_server
+        from mitmproxy.addons.oximy.playbooks import clear_suggestion
+        from mitmproxy.addons.oximy.playbooks import read_suggestion_feedback
         feedback = read_suggestion_feedback()
         if feedback:
             feedback_id = feedback.get("id", "")
@@ -1713,8 +1714,9 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     pending_suggestion = data.get("pendingSuggestion")
     if pending_suggestion:
         try:
-            from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server as _write_suggestion
-            _write_suggestion(pending_suggestion)
+            from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server  # noqa: I001
+
+            write_suggestion_from_server(pending_suggestion)
         except Exception as e:
             logger.warning(f"Failed to write proactive suggestion: {e}")
 
