@@ -39,10 +39,14 @@ final class SuggestionPanelController {
 
     private var panel: NSPanel?
     private var hostingView: NSHostingView<AnyView>?
+    private var autoDismissWorkItem: DispatchWorkItem?
 
     private init() {}
 
     func show(suggestion: PlaybookSuggestion) {
+        // Cancel any pending auto-dismiss from a previous panel
+        autoDismissWorkItem?.cancel()
+
         // Dismiss any existing panel
         dismiss()
 
@@ -108,12 +112,14 @@ final class SuggestionPanelController {
         self.hostingView = hostingView
 
         // Auto-dismiss after 30 seconds if not interacted with
-        DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
-            if self?.panel != nil {
-                SuggestionService.shared.dismissSuggestion()
-                self?.dismiss()
-            }
+        let currentPanel = panel
+        let workItem = DispatchWorkItem { [weak self] in
+            guard self?.panel === currentPanel else { return }
+            SuggestionService.shared.dismissSuggestion()
+            self?.dismiss()
         }
+        autoDismissWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30, execute: workItem)
     }
 
     func dismiss() {
