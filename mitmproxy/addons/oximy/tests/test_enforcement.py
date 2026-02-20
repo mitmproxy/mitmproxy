@@ -1498,6 +1498,76 @@ class TestRedactPii:
         # Outer JSON must still be valid
         json.loads(redacted)
 
+    def test_regex_rule_triggers_redaction(self):
+        """Policy with a regex-only rule should redact matching content."""
+        engine = EnforcementEngine()
+        engine.update_policies([{
+            "id": "p1", "name": "Internal Tokens", "mode": "warn",
+            "rules": [{
+                "id": "r1", "type": "regex", "name": "Internal Token",
+                "severity": "high", "patterns": [r"INT-[A-Z0-9]{8}"],
+            }],
+        }])
+        body = "Request token: INT-ABC12345 please process"
+        redacted, detected = engine.redact_pii(body)
+        assert "INT-ABC12345" not in redacted
+        assert "[CUSTOM_REDACTED]" in redacted
+        assert "Internal Token" in detected
+
+    def test_keyword_rule_triggers_redaction(self):
+        """Policy with a keyword rule should redact matching content."""
+        engine = EnforcementEngine()
+        engine.update_policies([{
+            "id": "p1", "name": "Confidential Keyword", "mode": "warn",
+            "rules": [{
+                "id": "r1", "type": "keyword", "name": "Project Codename",
+                "severity": "medium", "patterns": [r"OPERATION_NIGHTHAWK"],
+            }],
+        }])
+        body = "The plan is OPERATION_NIGHTHAWK begins at dawn"
+        redacted, detected = engine.redact_pii(body)
+        assert "OPERATION_NIGHTHAWK" not in redacted
+        assert "[CUSTOM_REDACTED]" in redacted
+        assert "Project Codename" in detected
+
+    def test_regex_rule_monitor_mode_does_not_redact(self):
+        """Monitor-mode regex-only policy should not trigger redaction."""
+        engine = EnforcementEngine()
+        engine.update_policies([{
+            "id": "p1", "name": "Monitor Regex", "mode": "monitor",
+            "rules": [{
+                "id": "r1", "type": "regex", "name": "Token",
+                "severity": "medium", "patterns": [r"INT-[A-Z0-9]{8}"],
+            }],
+        }])
+        body = "Token: INT-ABC12345"
+        redacted, detected = engine.redact_pii(body)
+        assert redacted == body
+        assert detected == []
+
+    def test_mixed_rules_redact_both(self):
+        """Policy with both data_type and regex rules should redact all matches."""
+        engine = EnforcementEngine()
+        engine.update_policies([{
+            "id": "p1", "name": "Mixed Policy", "mode": "warn",
+            "rules": [
+                {
+                    "id": "r1", "type": "data_type", "name": "Email Rule",
+                    "severity": "high", "data_types": ["email"],
+                },
+                {
+                    "id": "r2", "type": "regex", "name": "Internal Token",
+                    "severity": "high", "patterns": [r"INT-[A-Z0-9]{8}"],
+                },
+            ],
+        }])
+        body = "Email: user@example.com token: INT-ABC12345"
+        redacted, detected = engine.redact_pii(body)
+        assert "user@example.com" not in redacted
+        assert "INT-ABC12345" not in redacted
+        assert "[CUSTOM_REDACTED]" in redacted
+        assert "Internal Token" in detected
+
 
 class TestPhoneRegexTightened:
     """Verify the phone regex doesn't false-positive on random digit sequences."""
