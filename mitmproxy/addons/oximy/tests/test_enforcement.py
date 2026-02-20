@@ -727,6 +727,56 @@ def test_update_policies_with_custom_regex():
     assert action == "block"
 
 
+def test_update_policies_with_keyword_rule():
+    """Keyword rules should match against the body via check_request."""
+    engine = EnforcementEngine()
+    engine.update_policies([
+        {
+            "id": "kw",
+            "name": "Keyword Policy",
+            "mode": "warn",
+            "rules": [
+                {
+                    "id": "r1",
+                    "type": "keyword",
+                    "name": "Confidential",
+                    "severity": "high",
+                    "patterns": [r"CONFIDENTIAL"],
+                }
+            ],
+        }
+    ])
+    action, _ = engine.check_request(
+        "This document is CONFIDENTIAL", "api.openai.com", "/v1/chat", "POST"
+    )
+    assert action == "warn"
+
+
+def test_update_policies_keyword_no_match():
+    """Keyword rules should not fire when text does not match."""
+    engine = EnforcementEngine()
+    engine.update_policies([
+        {
+            "id": "kw",
+            "name": "Keyword Policy",
+            "mode": "warn",
+            "rules": [
+                {
+                    "id": "r1",
+                    "type": "keyword",
+                    "name": "Confidential",
+                    "severity": "high",
+                    "patterns": [r"CONFIDENTIAL"],
+                }
+            ],
+        }
+    ])
+    action, _ = engine.check_request(
+        "Nothing sensitive here", "api.openai.com", "/v1/chat", "POST"
+    )
+    assert action == "allow"
+
+
 def test_update_policies_custom_regex_no_match():
     """Custom regex rules should not match unrelated text."""
     engine = EnforcementEngine()

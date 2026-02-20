@@ -577,7 +577,7 @@ class EnforcementEngine:
         """
         if rule.type == "data_type":
             return EnforcementEngine._match_data_types(rule.data_types, body)
-        elif rule.type == "regex":
+        elif rule.type in ("regex", "keyword"):
             for idx, pattern in enumerate(rule.patterns):
                 if pattern.search(body):
                     return f"custom_pattern_{idx}"
