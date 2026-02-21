@@ -64,20 +64,32 @@ class ActionBar(urwid.WidgetWrap):
         signals.window_refresh.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
         master.view.sig_view_update.connect(self.sig_update)
+        master.options.subscribe(self.sig_options_update, ["console_quickhelp"])
 
         self.prompting: Callable[[str], None] | None = None
 
         self.onekey: set[str] | None = None
 
+    def ensure_bottom_bar_is_visible(self) -> None:
+        pile: urwid.Pile = self._w  # type: ignore[has-type]
+        current_widgets = [w for w, _ in pile.contents]
+        if current_widgets != [self.top, self.bottom]:
+            self._w = urwid.Pile([self.top, self.bottom])
+
     def sig_update(self, flow=None) -> None:
         if not self.prompting and flow is None or flow == self.master.view.focus.flow:
             self.show_quickhelp()
+
+    def sig_options_update(self, options, updated) -> None:
+        self.show_quickhelp()
 
     def sig_message(
         self, message: tuple[str, str] | str, expire: int | None = 1
     ) -> None:
         if self.prompting:
             return
+        # Ensure widgets are visible for messages
+        self.ensure_bottom_bar_is_visible()
         cols, _ = self.master.ui.get_cols_rows()
         w = urwid.Text(shorten_message(message, cols))
         self.top._w = w
@@ -93,12 +105,14 @@ class ActionBar(urwid.WidgetWrap):
     def sig_prompt(
         self, prompt: str, text: str | None, callback: Callable[[str], None]
     ) -> None:
+        self.ensure_bottom_bar_is_visible()
         signals.focus.send(section="footer")
         self.top._w = urwid.Edit(f"{prompt.strip()}: ", text or "")
         self.bottom._w = urwid.Text("")
         self.prompting = callback
 
     def sig_prompt_command(self, partial: str = "", cursor: int | None = None) -> None:
+        self.ensure_bottom_bar_is_visible()
         signals.focus.send(section="footer")
         self.top._w = commander.CommandEdit(
             self.master,
@@ -122,6 +136,7 @@ class ActionBar(urwid.WidgetWrap):
         Keys are a set of (word, key) tuples. The appropriate key in the
         word is highlighted.
         """
+        self.ensure_bottom_bar_is_visible()
         signals.focus.send(section="footer")
         parts = [prompt, " ("]
         mkup = []
@@ -158,6 +173,10 @@ class ActionBar(urwid.WidgetWrap):
                     return k
 
     def show_quickhelp(self) -> None:
+        if not self.master.options.console_quickhelp:
+            self._w = urwid.Pile([])
+            return
+        self.ensure_bottom_bar_is_visible()
         if w := self.master.window:
             s = w.focus_stack()
             focused_widget = type(s.top_widget())

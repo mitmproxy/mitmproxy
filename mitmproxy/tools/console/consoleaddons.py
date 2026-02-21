@@ -117,6 +117,12 @@ class ConsoleAddon:
             False,
             "Strip trailing newlines from edited request/response bodies.",
         )
+        loader.add_option(
+            "console_quickhelp",
+            bool,
+            True,
+            "Show the quick help bar at the bottom of the console.",
+        )
 
     @command.command("console.layout.options")
     def layout_options(self) -> Sequence[str]:
