@@ -129,6 +129,7 @@ async def test_console_quickhelp_hotkey(console):
 async def test_console_quickhelp_prompts_visible_when_disabled(console, monkeypatch):
     """Test that prompts and messages are visible even when quickhelp is disabled."""
     import urwid
+
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
 
     # Disable quickhelp
