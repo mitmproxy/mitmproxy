@@ -64,7 +64,7 @@ public partial class ViolationNotificationWindow : Window
 
         // Slide + fade in
         var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.3));
-        var slideIn = new DoubleAnimation(-20, 0, TimeSpan.FromSeconds(0.3))
+        var slideIn = new DoubleAnimation(20, 0, TimeSpan.FromSeconds(0.3))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
@@ -80,7 +80,7 @@ public partial class ViolationNotificationWindow : Window
         _dismissTimer.Stop();
 
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.25));
-        var slideOut = new DoubleAnimation(0, -20, TimeSpan.FromSeconds(0.25));
+        var slideOut = new DoubleAnimation(0, 20, TimeSpan.FromSeconds(0.25));
         slideOut.Completed += (_, _) => Close();
 
         BeginAnimation(OpacityProperty, fadeOut);

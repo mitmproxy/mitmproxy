@@ -19,7 +19,7 @@ except ImportError:
     _HAS_PSUTIL = False
 
 try:
-    import sentry_service
+    from . import sentry_service
 except ImportError:
     try:
         import sentry_service  # type: ignore[import]

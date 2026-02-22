@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-import sentry_service
+from mitmproxy.addons.oximy import sentry_service
 
 
 @pytest.fixture(autouse=True)
