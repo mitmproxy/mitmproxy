@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_DIR/build"
 APP_NAME="Oximy"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-dev}"
 BUILD_CONFIG="${BUILD_CONFIG:-release}"  # Can be 'release' or 'debug'
 
 # Build Universal Binary by default (supports both Apple Silicon and Intel Macs)

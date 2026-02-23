@@ -24,7 +24,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="1.0.0"
+VERSION="dev"
 PLATFORM=""
 SKIP_PYTHON_BUILD=false
 
@@ -63,7 +63,7 @@ usage() {
     echo "  windows   Build Windows app (Velopack release)"
     echo ""
     echo "Options:"
-    echo "  --version <ver>     Version number (default: 1.0.0)"
+    echo "  --version <ver>     Version number (required for release)"
     echo "  --skip-python       Skip Python embed build (use existing)"
     echo "  --help              Show this help"
     echo ""

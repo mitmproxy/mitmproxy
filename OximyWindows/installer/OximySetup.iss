@@ -2,7 +2,7 @@
 ; Inno Setup script for Oximy Windows installer
 
 #define MyAppName "Oximy"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "dev"
 #define MyAppPublisher "Oximy Inc"
 #define MyAppURL "https://oximy.com"
 #define MyAppExeName "Oximy.exe"

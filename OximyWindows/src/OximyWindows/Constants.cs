@@ -8,7 +8,7 @@ namespace OximyWindows;
 public static class Constants
 {
     // Version
-    public const string Version = "1.0.0";
+    public const string Version = "dev";
 
     // Port configuration (1030 is the founding date)
     public const int PreferredPort = 1030;

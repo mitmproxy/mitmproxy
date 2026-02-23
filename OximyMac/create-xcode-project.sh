@@ -29,8 +29,8 @@ options:
 settings:
   base:
     PRODUCT_NAME: Oximy
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "dev"
+    CURRENT_PROJECT_VERSION: "0"
     INFOPLIST_FILE: Info.plist
     CODE_SIGN_ENTITLEMENTS: OximyMac.entitlements
     ENABLE_HARDENED_RUNTIME: YES

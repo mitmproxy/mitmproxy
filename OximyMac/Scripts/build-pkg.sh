@@ -12,7 +12,7 @@
 #   INSTALLER_CERT - Developer ID Installer certificate (for PKG signing)
 #
 # Optional environment variables:
-#   VERSION - Version number (default: 1.0.0)
+#   VERSION - Version number (default: dev)
 #   APPLE_ID - Apple ID for notarization
 #   APPLE_APP_PASSWORD - App-specific password for notarization
 #   TEAM_ID - Apple Developer Team ID
@@ -24,7 +24,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_DIR/build"
 INSTALLER_DIR="$PROJECT_DIR/Installer"
 APP_NAME="Oximy"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-dev}"
 BUNDLE_ID="com.oximy.mac"
 
 echo "=== Oximy PKG Build for MDM ==="
