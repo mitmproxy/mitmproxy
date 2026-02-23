@@ -26,6 +26,7 @@ public partial class ViolationNotificationWindow : Window
     private static extern int SetWindowLong(IntPtr hwnd, int index, int value);
 
     private readonly DispatcherTimer _dismissTimer;
+    private bool _hiding;
 
     public ViolationNotificationWindow(ViolationEntry violation)
     {
@@ -77,6 +78,8 @@ public partial class ViolationNotificationWindow : Window
 
     private void HideWindow()
     {
+        if (_hiding) return;
+        _hiding = true;
         _dismissTimer.Stop();
 
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.25));
