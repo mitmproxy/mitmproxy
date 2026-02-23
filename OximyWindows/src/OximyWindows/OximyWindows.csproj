@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Assets\oximy.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>0.0.0-dev</Version>
     <Company>Oximy Inc</Company>
     <Product>Oximy</Product>
     <Description>AI Traffic Monitor for Windows</Description>

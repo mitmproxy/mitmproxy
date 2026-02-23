@@ -342,7 +342,7 @@ private struct APIErrorResponse: Decodable {
 
 extension Bundle {
     var appVersion: String {
-        infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
     }
 
     var buildNumber: String {

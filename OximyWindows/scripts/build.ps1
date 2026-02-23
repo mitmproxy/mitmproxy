@@ -6,7 +6,7 @@ param(
     [switch]$Clean,
     [switch]$CreateInstaller,
     [switch]$Install,
-    [string]$Version = "1.0.0"
+    [string]$Version = "dev"
 )
 
 $ErrorActionPreference = "Stop"

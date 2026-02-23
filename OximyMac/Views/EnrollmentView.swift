@@ -216,7 +216,7 @@ struct EnrollmentView: View {
             .replacingOccurrences(of: "\u{2018}", with: "'")
             .replacingOccurrences(of: "\u{2019}", with: "'")
         let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
-        let sensorVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let sensorVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
         let hardwareId = APIClient.getHardwareUUID() ?? UUID().uuidString
 
         let info: [String: Any] = [
