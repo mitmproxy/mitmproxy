@@ -1247,6 +1247,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     try:
         from mitmproxy.addons.oximy.playbooks import clear_suggestion
         from mitmproxy.addons.oximy.playbooks import read_suggestion_feedback
+        from mitmproxy.addons.oximy.playbooks import record_suggestion_feedback
         feedback = read_suggestion_feedback()
         if feedback:
             feedback_id = feedback.get("id", "")
@@ -1254,17 +1255,27 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             if feedback_id and feedback_status in ("used", "dismissed"):
                 _post_suggestion_feedback(feedback_id, feedback_status)
                 clear_suggestion()
+                # Start cooldown after successful feedback POST
+                suggestion_config = data.get("suggestionConfig", {})
+                record_suggestion_feedback(
+                    action=feedback_status,
+                    cooldown_minutes=suggestion_config.get("cooldownMinutes"),
+                    dismissal_cooldown_hours=suggestion_config.get("dismissalCooldownHours"),
+                )
     except Exception as e:
         logger.debug(f"[PLAYBOOK] Feedback check error: {e}")
 
     # --- PROACTIVE SUGGESTION DELIVERY ---
-    # Write server-provided suggestion to disk for the Mac app
+    # Write server-provided suggestion to disk for the Mac app (with cooldown + dedup gating)
     pending_suggestion = data.get("pendingSuggestion")
     if pending_suggestion:
         try:
-            from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server  # noqa: I001
+            from mitmproxy.addons.oximy.playbooks import should_write_suggestion  # noqa: I001
+            from mitmproxy.addons.oximy.playbooks import write_suggestion_from_server
 
-            write_suggestion_from_server(pending_suggestion)
+            suggestion_id = pending_suggestion.get("id", "")
+            if should_write_suggestion(suggestion_id):
+                write_suggestion_from_server(pending_suggestion)
         except Exception as e:
             logger.warning(f"Failed to write proactive suggestion: {e}")
 
