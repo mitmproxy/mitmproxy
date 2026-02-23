@@ -529,7 +529,9 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
         for (int i = 0; i < a.Count; i++)
         {
             if (a[i].ToolId != b[i].ToolId
+                || a[i].ToolType != b[i].ToolType
                 || a[i].Mode != b[i].Mode
+                || a[i].DisplayName != b[i].DisplayName
                 || a[i].WindowsAppId != b[i].WindowsAppId
                 || a[i].Domain != b[i].Domain
                 || a[i].Message != b[i].Message
