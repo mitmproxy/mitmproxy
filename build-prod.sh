@@ -24,7 +24,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="dev"
+VERSION="0.0.0-dev"
 PLATFORM=""
 SKIP_PYTHON_BUILD=false
 
