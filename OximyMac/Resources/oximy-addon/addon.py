@@ -2904,6 +2904,11 @@ class OximyAddon:
                         self._local_collector.stop()
                         self._local_collector = None
 
+                    # Handle backtrack config
+                    backtrack_cfg = local_ds.get("backtrack")
+                    if backtrack_cfg and backtrack_cfg.get("enabled") and self._local_collector:
+                        self._local_collector.handle_backtrack_config(backtrack_cfg)
+
                     # Update tenant_id in logger context
                     tenant_id = config.get("tenantId")
                     if tenant_id:
