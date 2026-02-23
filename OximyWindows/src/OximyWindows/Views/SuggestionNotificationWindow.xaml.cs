@@ -26,6 +26,7 @@ public partial class SuggestionNotificationWindow : Window
     private readonly PlaybookSuggestion _suggestion;
     private readonly DispatcherTimer _dismissTimer;
     private bool _actioned;
+    private bool _hiding;
 
     public SuggestionNotificationWindow(PlaybookSuggestion suggestion)
     {
@@ -87,6 +88,8 @@ public partial class SuggestionNotificationWindow : Window
 
     private void HideWindow()
     {
+        if (_hiding) return;
+        _hiding = true;
         _dismissTimer.Stop();
         var fadeOut  = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.25));
         var slideOut = new DoubleAnimation(0, 20, TimeSpan.FromSeconds(0.25));

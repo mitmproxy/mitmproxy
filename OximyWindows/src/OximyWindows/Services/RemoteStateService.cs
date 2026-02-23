@@ -475,6 +475,18 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
             if (!string.IsNullOrEmpty(data.ItSupport))
                 ItSupport = data.ItSupport;
 
+            // Update enforcement rules from direct API fetch
+            if (data.EnforcementRules != null)
+            {
+                var newRules = data.EnforcementRules;
+                if (!RulesEqual(_enforcementRules, newRules))
+                {
+                    EnforcementRules = newRules;
+                    EnforcementRulesChanged?.Invoke(this, EventArgs.Empty);
+                    Debug.WriteLine($"[RemoteStateService] Enforcement rules updated via direct fetch ({newRules.Count} rules)");
+                }
+            }
+
             LastUpdate = DateTime.Now;
 
             if (previousEnabled != SensorEnabled)
@@ -516,8 +528,25 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
         if (a.Count != b.Count) return false;
         for (int i = 0; i < a.Count; i++)
         {
-            if (a[i].ToolId != b[i].ToolId || a[i].Mode != b[i].Mode)
+            if (a[i].ToolId != b[i].ToolId
+                || a[i].Mode != b[i].Mode
+                || a[i].WindowsAppId != b[i].WindowsAppId
+                || a[i].Domain != b[i].Domain
+                || a[i].Message != b[i].Message
+                || !ExemptionsEqual(a[i].ExemptDeviceIds, b[i].ExemptDeviceIds))
                 return false;
+        }
+        return true;
+    }
+
+    private static bool ExemptionsEqual(string[]? a, string[]? b)
+    {
+        if (a is null && b is null) return true;
+        if (a is null || b is null) return false;
+        if (a.Length != b.Length) return false;
+        for (int i = 0; i < a.Length; i++)
+        {
+            if (a[i] != b[i]) return false;
         }
         return true;
     }

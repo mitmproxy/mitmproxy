@@ -338,6 +338,9 @@ public class SensorConfigData
 
     [JsonPropertyName("itSupport")]
     public string? ItSupport { get; set; }
+
+    [JsonPropertyName("enforcementRules")]
+    public List<OximyWindows.Services.EnforcementRule>? EnforcementRules { get; set; }
 }
 
 /// <summary>

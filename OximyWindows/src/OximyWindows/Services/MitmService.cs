@@ -161,12 +161,15 @@ public class MitmService : IDisposable
             return;
 
         // CRITICAL: Kill any existing mitmproxy processes first
-        // This ensures no zombie processes from previous runs interfere
-        KillAllMitmProcesses();
-
-        // Also kill anything holding our preferred port (catches zombie python.exe etc.)
-        KillProcessOnPort(Constants.PreferredPort);
-        Thread.Sleep(300); // Give port time to be released
+        // This ensures no zombie processes from previous runs interfere.
+        // Run on threadpool to avoid blocking the UI thread.
+        await Task.Run(() =>
+        {
+            KillAllMitmProcesses();
+            // Also kill anything holding our preferred port (catches zombie python.exe etc.)
+            KillProcessOnPort(Constants.PreferredPort);
+            Thread.Sleep(300); // Give port time to be released (OK on threadpool thread)
+        });
 
         // Rotate log file if too large
         RotateLogIfNeeded();
@@ -306,7 +309,51 @@ public class MitmService : IDisposable
     }
 
     /// <summary>
-    /// Stop the mitmproxy process.
+    /// Stop the mitmproxy process asynchronously.
+    /// Use this from UI-triggered code paths to avoid blocking the UI thread.
+    /// For synchronous shutdown paths (OnExit, OnSessionEnding, Dispose), use Stop().
+    /// </summary>
+    public async Task StopAsync()
+    {
+        _intentionalStop = true;
+        _restartCts?.Cancel();
+
+        if (_mitmProcess != null)
+        {
+            try
+            {
+                if (!_mitmProcess.HasExited)
+                {
+                    _mitmProcess.Kill(entireProcessTree: true);
+                    // Give addon time to complete final upload (typically 1-2s, max 3s)
+                    // Uses Task.Delay instead of Thread.Sleep to keep the UI thread free
+                    await Task.Delay(3000);
+                }
+            }
+            catch
+            {
+                // Process may have already exited
+            }
+            finally
+            {
+                _mitmProcess.Dispose();
+                _mitmProcess = null;
+            }
+        }
+
+        // Kill ALL mitmproxy processes to catch any orphans/zombies
+        await Task.Run(() => KillAllMitmProcesses());
+
+        CurrentPort = null;
+        AppState.Instance.ConnectionStatus = ConnectionStatus.Disconnected;
+        OximyLogger.Log(EventCode.MITM_STOP_001, "mitmproxy stopped normally");
+        OximyLogger.SetTag("mitm_running", "false");
+        Stopped?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Stop the mitmproxy process synchronously.
+    /// Only use for shutdown/crash paths where async is not viable.
     /// </summary>
     public void Stop()
     {
@@ -350,7 +397,7 @@ public class MitmService : IDisposable
     /// </summary>
     public async Task RestartAsync()
     {
-        Stop();
+        await StopAsync();
         await Task.Delay(500);
         await StartAsync();
     }

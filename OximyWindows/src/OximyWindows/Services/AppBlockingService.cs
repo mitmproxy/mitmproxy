@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Management;
 using System.Windows;
-using System.Windows.Threading;
 using OximyWindows.Core;
 using OximyWindows.Views;
 
@@ -17,7 +16,7 @@ public class AppBlockingService
     public static AppBlockingService Instance => _instance ??= new AppBlockingService();
 
     private ManagementEventWatcher? _wmiWatcher;
-    private DispatcherTimer? _fallbackTimer;
+    private System.Threading.Timer? _fallbackTimer;
     private List<EnforcementRule> _rules = new();
 
     // Per-session dedup: tools already warned/flagged this session
@@ -46,7 +45,7 @@ public class AppBlockingService
         _wmiWatcher?.Stop();
         _wmiWatcher?.Dispose();
         _wmiWatcher = null;
-        _fallbackTimer?.Stop();
+        _fallbackTimer?.Dispose();
         _fallbackTimer = null;
     }
 
@@ -108,15 +107,15 @@ public class AppBlockingService
             using (p) _knownPids.Add(p.Id);
         }
 
-        _fallbackTimer = new DispatcherTimer(DispatcherPriority.Background)
-        {
-            Interval = TimeSpan.FromSeconds(5)
-        };
-        _fallbackTimer.Tick += OnFallbackTick;
-        _fallbackTimer.Start();
+        // One-shot timer — re-armed in OnFallbackTick to prevent concurrent execution.
+        // (DispatcherTimer was single-threaded; System.Threading.Timer is not.)
+        _fallbackTimer = new System.Threading.Timer(
+            OnFallbackTick, null,
+            TimeSpan.FromSeconds(5),
+            Timeout.InfiniteTimeSpan);
     }
 
-    private void OnFallbackTick(object? sender, EventArgs e)
+    private void OnFallbackTick(object? state)
     {
         try
         {
@@ -141,6 +140,12 @@ public class AppBlockingService
         {
             Debug.WriteLine($"[AppBlockingService] Fallback poll error: {ex.Message}");
         }
+        finally
+        {
+            // Re-arm for next tick (one-shot pattern prevents concurrent execution)
+            try { _fallbackTimer?.Change(TimeSpan.FromSeconds(5), Timeout.InfiniteTimeSpan); }
+            catch (ObjectDisposedException) { }
+        }
     }
 
     // ─── Enforcement logic ────────────────────────────────────────────────────
@@ -162,7 +167,7 @@ public class AppBlockingService
                 .Replace(".exe", "", StringComparison.OrdinalIgnoreCase)
                 .ToLowerInvariant();
 
-            if (normalised != ruleTarget) continue;
+            if (!MatchesProcessName(normalised, ruleTarget)) continue;
 
             // Check device exemption
             var deviceId = AppState.Instance.DeviceId;
@@ -175,6 +180,30 @@ public class AppBlockingService
 
             EnforceRule(rule, processName, processId);
         }
+    }
+
+    /// <summary>
+    /// Match a normalised process name against a rule target.
+    /// Handles winget-style IDs (e.g., "Figma.Figma") by also checking the
+    /// last dot-segment against the process name.
+    /// </summary>
+    private static bool MatchesProcessName(string normalised, string ruleTarget)
+    {
+        // Exact match (e.g., "figma" == "figma")
+        if (normalised == ruleTarget)
+            return true;
+
+        // Winget-style ID: "publisher.appname" — try matching last segment
+        // e.g., "Figma.Figma" → "figma", "Microsoft.Edge" → "edge"
+        var lastDot = ruleTarget.LastIndexOf('.');
+        if (lastDot >= 0 && lastDot < ruleTarget.Length - 1)
+        {
+            var lastSegment = ruleTarget[(lastDot + 1)..];
+            if (normalised == lastSegment)
+                return true;
+        }
+
+        return false;
     }
 
     private void EnforceRule(EnforcementRule rule, string processName, int processId)
