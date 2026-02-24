@@ -256,14 +256,24 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         assert port is not None
         try:
             self._servers = await self.listen(host, port)
-        except OSError as e:
-            message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
-            if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
+        except Exception as e:
+            # `mitmproxy_rs` exceptions don't always inherit from OSError.
+            # In particular, port conflicts may bubble up as a generic exception
+            # with the familiar "Address already in use" message.
+            if isinstance(e, OSError):
+                err: OSError = e
+            elif "Address already in use" in str(e):
+                err = OSError(errno.EADDRINUSE, str(e))
+            else:
+                raise
+
+            message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {err}"
+            if err.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
                 assert (
                     self.mode.custom_listen_host is None
                 )  # since [@ [listen_addr:]listen_port]
                 message += f"\nTry specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
-            raise OSError(e.errno, message, e.filename) from e
+            raise OSError(err.errno, message, err.filename) from e
 
     async def _stop(self) -> None:
         assert self._servers
