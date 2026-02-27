@@ -125,7 +125,8 @@ export class PureFlowTable extends React.Component<
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flowView, selectedIds, highlightedIds, displayColumnNames } = this.props;
+        const { flowView, selectedIds, highlightedIds, displayColumnNames } =
+            this.props;
 
         return (
             <div
