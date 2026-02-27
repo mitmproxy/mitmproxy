@@ -822,7 +822,7 @@ class ASWBXML:
 		if (self.xmlDoc != None):
 			try:
 				return self.xmlDoc.toprettyxml(indent="    ", newl="\n")
-			except:
+			except Exception:
 				return self.xmlDoc.toxml()
 	
 	def loadBytes(self, byteWBXML):
