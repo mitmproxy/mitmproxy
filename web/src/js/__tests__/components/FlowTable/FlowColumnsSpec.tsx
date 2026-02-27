@@ -11,7 +11,7 @@ test("should render columns", async () => {
             <table>
                 <tbody>
                     <tr>
-                        <Col flow={tflow} />
+                        <Col flow={tflow} flowIndex={0} />
                     </tr>
                 </tbody>
             </table>,
