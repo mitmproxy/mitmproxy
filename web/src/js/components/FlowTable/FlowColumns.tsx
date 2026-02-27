@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import React, { type JSX } from "react";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import { useAppDispatch } from "../../ducks";
 import classnames from "classnames";
 import type { sortFunctions } from "../../flow/utils";
 import {
@@ -20,6 +20,7 @@ import type { Flow } from "../../flow";
 
 type FlowColumnProps = {
     flow: Flow;
+    flowIndex?: number;
 };
 
 interface FlowColumn {
@@ -42,11 +43,12 @@ export const tls: FlowColumn = ({ flow }) => {
 };
 tls.headerName = "";
 
-export const index: FlowColumn = ({ flow }) => {
-    const index = useAppSelector(
-        (state) => state.flows._listIndex.get(flow.id)!,
-    );
-    return <td className="col-index">{index + 1}</td>;
+export const index: FlowColumn = ({ flow, flowIndex }) => {
+    // Use the index passed from the parent when available, avoiding a
+    // per-cell Redux subscription that would otherwise fire on every
+    // state change.
+    const displayIndex = flowIndex !== undefined ? flowIndex + 1 : flow.id;
+    return <td className="col-index">{displayIndex}</td>;
 };
 index.headerName = "#";
 

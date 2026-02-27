@@ -3,6 +3,8 @@ import FlowRow from "../../../components/FlowTable/FlowRow";
 import { fireEvent, render, screen } from "../../test-utils";
 import { TStore } from "../../ducks/tutils";
 
+const defaultColumns = ["tls", "icon", "path", "method", "status", "size", "time"];
+
 test("FlowRow", async () => {
     const store = TStore();
     const tflow0 = store.getState().flows.list[0];
@@ -10,8 +12,8 @@ test("FlowRow", async () => {
     const { asFragment } = render(
         <table>
             <tbody>
-                <FlowRow flow={tflow0} selected={false} highlighted={false} />
-                <FlowRow flow={tflow3} selected={false} highlighted={false} />
+                <FlowRow flow={tflow0} selected={false} highlighted={false} displayColumnNames={defaultColumns} flowIndex={0} />
+                <FlowRow flow={tflow3} selected={false} highlighted={false} displayColumnNames={defaultColumns} flowIndex={3} />
             </tbody>
         </table>,
         { store },

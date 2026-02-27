@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import classnames from "classnames";
 import type { Flow } from "../../flow";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import { useAppDispatch } from "../../ducks";
 import { select, selectRange, selectToggle } from "../../ducks/flows";
 import * as columns from "./FlowColumns";
 
@@ -9,17 +9,18 @@ type FlowRowProps = {
     flow: Flow;
     selected: boolean;
     highlighted: boolean;
+    displayColumnNames: string[];
+    flowIndex: number;
 };
 
 export default React.memo(function FlowRow({
     flow,
     selected,
     highlighted,
+    displayColumnNames,
+    flowIndex,
 }: FlowRowProps) {
     const dispatch = useAppDispatch();
-    const displayColumnNames = useAppSelector(
-        (state) => state.options.web_columns,
-    );
     const className = classnames({
         selected,
         highlighted,
@@ -56,7 +57,7 @@ export default React.memo(function FlowRow({
     return (
         <tr className={className} onClick={onClick}>
             {displayColumns.map((Column) => (
-                <Column key={Column.name} flow={flow} />
+                <Column key={Column.name} flow={flow} flowIndex={flowIndex} />
             ))}
         </tr>
     );
