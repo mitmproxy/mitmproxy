@@ -106,20 +106,23 @@ final class SyncService: ObservableObject {
     // MARK: - Pending Count (reads addon's upload state)
 
     private func updatePendingCount() {
-        var count = 0
-        let addonState = AddonUploadState.load()
+        // Buffer count from addon (via remote-state.json)
+        let bufferCount = RemoteStateService.shared.eventsPending
 
+        // Disk trace files not yet uploaded
+        var diskCount = 0
+        let addonState = AddonUploadState.load()
         if let files = try? getTraceFiles() {
             for file in files {
-                // Addon uses full path as key
                 let syncedLine = addonState.lastSyncedLine(for: file.path)
                 if let content = try? String(contentsOf: file, encoding: .utf8) {
                     let totalLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }.count
-                    count += max(0, totalLines - syncedLine)
+                    diskCount += max(0, totalLines - syncedLine)
                 }
             }
         }
 
+        let count = bufferCount + diskCount
         let previousCount = pendingEventCount
         pendingEventCount = count
 

@@ -1207,6 +1207,9 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     # --- WRITE STATE FILE FOR SWIFT UI DISPLAY ---
     # Swift reads this for display purposes and handles force_logout + appConfig
     try:
+        buffer_count = 0
+        if addon_instance is not None and addon_instance._buffer is not None:
+            buffer_count = addon_instance._buffer.size()
         state_data = {
             "sensor_enabled": sensor_enabled,
             "force_logout": commands.get("force_logout", False),
@@ -1217,6 +1220,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "appConfig": app_config,
             "enforcementRules": data.get("enforcementRules", []),
+            "events_pending": buffer_count,
         }
         _atomic_write(OXIMY_STATE_FILE, json.dumps(state_data, indent=2))
         logger.debug(f"Remote state written to {OXIMY_STATE_FILE}")
@@ -1247,6 +1251,7 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
     try:
         from playbooks import clear_suggestion
         from playbooks import read_suggestion_feedback
+        from playbooks import record_suggestion_feedback
         feedback = read_suggestion_feedback()
         if feedback:
             feedback_id = feedback.get("id", "")
@@ -1254,17 +1259,27 @@ def _parse_sensor_config(raw: dict, addon_instance=None) -> dict:
             if feedback_id and feedback_status in ("used", "dismissed"):
                 _post_suggestion_feedback(feedback_id, feedback_status)
                 clear_suggestion()
+                # Start cooldown after successful feedback POST
+                suggestion_config = data.get("suggestionConfig", {})
+                record_suggestion_feedback(
+                    action=feedback_status,
+                    cooldown_minutes=suggestion_config.get("cooldownMinutes"),
+                    dismissal_cooldown_hours=suggestion_config.get("dismissalCooldownHours"),
+                )
     except Exception as e:
         logger.debug(f"[PLAYBOOK] Feedback check error: {e}")
 
     # --- PROACTIVE SUGGESTION DELIVERY ---
-    # Write server-provided suggestion to disk for the Mac app
+    # Write server-provided suggestion to disk for the Mac app (with cooldown + dedup gating)
     pending_suggestion = data.get("pendingSuggestion")
     if pending_suggestion:
         try:
-            from playbooks import write_suggestion_from_server  # noqa: I001
+            from playbooks import should_write_suggestion  # noqa: I001
+            from playbooks import write_suggestion_from_server
 
-            write_suggestion_from_server(pending_suggestion)
+            suggestion_id = pending_suggestion.get("id", "")
+            if should_write_suggestion(suggestion_id):
+                write_suggestion_from_server(pending_suggestion)
         except Exception as e:
             logger.warning(f"Failed to write proactive suggestion: {e}")
 
@@ -2353,13 +2368,7 @@ class DirectTraceUploader:
             return True  # Nothing to upload
 
         if not force:
-            # Layer 1: Cross-check config fetch circuit breaker (updated by config refresh thread)
-            if _check_circuit_breaker():
-                logger.debug(f"FAIL-OPEN: Config circuit breaker open — skipping upload, {len(batch)} traces returned to buffer")
-                self._buffer.prepend_batch(batch)
-                return False
-
-            # Layer 2: Upload-specific circuit breaker
+            # Upload-specific circuit breaker (independent of config fetch CB)
             if self._check_upload_circuit_breaker():
                 logger.debug(f"FAIL-OPEN: Upload circuit breaker open — skipping upload, {len(batch)} traces returned to buffer")
                 self._buffer.prepend_batch(batch)
@@ -2753,6 +2762,11 @@ class OximyAddon:
         self._thread_start_lock: threading.Lock = threading.Lock()  # Protects thread startup
         self._force_sync_thread: threading.Thread | None = None
         self._force_sync_stop: threading.Event = threading.Event()
+        # Upload worker thread — moves all upload I/O off the event loop
+        self._upload_thread: threading.Thread | None = None
+        self._upload_stop: threading.Event = threading.Event()
+        self._upload_trigger: threading.Event = threading.Event()
+        self._upload_lock: threading.Lock = threading.Lock()  # Prevents concurrent upload_batch from upload thread + force sync + remote commands
         self._debug_ingestion: bool = False  # Debug mode: write to disk AND memory buffer
         self._last_cleanup_time: float = 0.0  # Throttle for _cleanup_stale_traces()
         # Configurable upload settings (read from config.json)
@@ -2801,10 +2815,12 @@ class OximyAddon:
         return self._writer
 
     def _write_to_buffer(self, event: dict) -> bool:
-        """Write event to memory buffer. Falls back to disk if buffer full.
+        """Write event to memory buffer. Drops trace if buffer full (fail-open).
 
         In debug ingestion mode, also writes to disk for inspection.
-        Returns True if written successfully (to buffer or disk), False otherwise.
+        Returns True if trace was accepted or buffer needs draining, False if no buffer.
+        When buffer is full, the trace is dropped and the upload worker is signalled
+        to drain the buffer ASAP — this keeps the event loop non-blocking.
         """
         if self._buffer is None:
             return False
@@ -2823,15 +2839,12 @@ class OximyAddon:
             self._traces_since_upload += 1
             return True
 
-        # Buffer full - emergency fallback to disk (only if not already written in debug mode)
-        if not self._debug_ingestion:
-            logger.warning(f"Memory buffer full ({self._buffer.bytes_used()} bytes), writing to disk")
-            oximy_log(OximyEventCode.TRACE_FAIL_201, "Memory buffer full, disk fallback", data={
-                "buffer_bytes": self._buffer.bytes_used(),
-            })
-            writer = self._ensure_writer()
-            if writer:
-                writer.write(event)
+        # Buffer full — drop trace (fail-open) and signal upload worker to drain ASAP
+        logger.warning(f"Memory buffer full ({self._buffer.bytes_used()} bytes), trace dropped (fail-open)")
+        oximy_log(OximyEventCode.TRACE_FAIL_201, "Memory buffer full, trace dropped", data={
+            "buffer_bytes": self._buffer.bytes_used(),
+        })
+        self._signal_upload()
         return True
 
     def load(self, loader) -> None:
@@ -2984,29 +2997,31 @@ class OximyAddon:
                         logger.debug(f"Could not delete force sync trigger: {e}")
 
                     # Cloud-first: upload from memory buffer first
-                    buffer_uploaded = 0
-                    if self._direct_uploader and self._buffer and self._buffer.size() > 0:
-                        try:
-                            buffer_uploaded = self._direct_uploader.upload_all()
-                            if buffer_uploaded > 0:
-                                logger.info(f"Force sync: uploaded {buffer_uploaded} traces from memory buffer")
-                        except Exception as e:
-                            logger.warning(f"Force sync from buffer failed: {e}")
+                    # Acquire _upload_lock to prevent overlap with upload worker thread
+                    with self._upload_lock:
+                        buffer_uploaded = 0
+                        if self._direct_uploader and self._buffer and self._buffer.size() > 0:
+                            try:
+                                buffer_uploaded = self._direct_uploader.upload_all(force=True)
+                                if buffer_uploaded > 0:
+                                    logger.info(f"Force sync: uploaded {buffer_uploaded} traces from memory buffer")
+                            except Exception as e:
+                                logger.warning(f"Force sync from buffer failed: {e}")
 
-                    # Then upload any disk fallback files
-                    if self._uploader and self._output_dir:
-                        try:
-                            if self._writer and self._writer._fo:
-                                self._writer._fo.flush()
-                            # Pass active file to avoid deleting file currently being written
-                            active_file = self._writer._current_file if self._writer else None
-                            uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
-                            if uploaded > 0:
-                                logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
-                            elif buffer_uploaded == 0:
-                                logger.info("Force sync: no pending traces to upload")
-                        except Exception as e:
-                            logger.warning(f"Force sync from disk failed: {e}")
+                        # Then upload any disk fallback files
+                        if self._uploader and self._output_dir:
+                            try:
+                                if self._writer and self._writer._fo:
+                                    self._writer._fo.flush()
+                                # Pass active file to avoid deleting file currently being written
+                                active_file = self._writer._current_file if self._writer else None
+                                uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
+                                if uploaded > 0:
+                                    logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
+                                elif buffer_uploaded == 0:
+                                    logger.info("Force sync: no pending traces to upload")
+                            except Exception as e:
+                                logger.warning(f"Force sync from disk failed: {e}")
 
         self._force_sync_thread = threading.Thread(
             target=monitor_loop,
@@ -3174,6 +3189,12 @@ class OximyAddon:
 
         # Start background trigger file monitor
         self._start_force_sync_monitor()
+
+        # Start background upload worker thread (only if not already running)
+        if self._upload_thread is None or not self._upload_thread.is_alive():
+            with self._thread_start_lock:
+                if self._upload_thread is None or not self._upload_thread.is_alive():
+                    self._start_upload_worker()
 
         # Start background violation reporting to API (only if not already running)
         if self._violation_report_thread is None or not self._violation_report_thread.is_alive():
@@ -4830,14 +4851,18 @@ class OximyAddon:
     # Upload Trigger
     # =========================================================================
 
+    def _signal_upload(self) -> None:
+        """Non-blocking signal to wake the upload worker thread (~microseconds).
+
+        Safe to call from the event loop — only sets an Event flag.
+        """
+        self._upload_trigger.set()
+
     def _maybe_upload(self) -> None:
-        """Upload traces from memory buffer if threshold reached.
+        """Non-blocking upload signal — runs on the event loop (~microseconds).
 
-        Cloud-first: uploads directly from memory buffer to API.
-        Falls back to disk only if buffer is full and API is unreachable.
-
-        Designed for scalability: with longer intervals (e.g., 30s), uploads
-        ALL available batches when the interval fires, not just one.
+        Checks threshold guards, then signals the background upload worker
+        thread to do the actual I/O. Never calls upload_batch() directly.
         """
         if not self._direct_uploader or not self._buffer:
             return
@@ -4852,43 +4877,92 @@ class OximyAddon:
         count_reached = self._traces_since_upload >= self._upload_threshold_count
 
         if (time_elapsed or count_reached) and self._buffer.size() > 0:
-            try:
-                # Upload ALL available batches (important for longer intervals like 30s)
-                upload_failed = False
-                batches_uploaded = 0
-                traces_before = self._buffer.size()
-                while self._buffer.size() > 0:
-                    success = self._direct_uploader.upload_batch()
-                    if success:
-                        batches_uploaded += 1
-                    else:
-                        upload_failed = True
-                        break
+            self._signal_upload()
 
-                if batches_uploaded > 0:
-                    self._last_upload_time = now
-                    self._traces_since_upload = 0
-                    # Log multi-batch uploads (useful for monitoring at longer intervals)
-                    if batches_uploaded > 1:
-                        logger.debug(f"Multi-batch upload: {batches_uploaded} batches, {traces_before} traces")
+    def _upload_tick(self) -> None:
+        """One upload cycle — runs ONLY on the upload worker thread.
 
-                if upload_failed:
-                    # Upload failed - check if we need emergency disk fallback
-                    # Only write to disk if buffer is getting dangerously full (>80% capacity)
-                    buffer_capacity = self._buffer.max_bytes
-                    if self._buffer.bytes_used() > (buffer_capacity * 0.8):
-                        logger.warning(f"Buffer >80% full ({self._buffer.bytes_used()}/{buffer_capacity} bytes) and upload failing, emergency disk write")
-                        writer = self._ensure_writer()
-                        if writer:
-                            # Write oldest traces to disk to free buffer space
-                            for event in self._buffer.take_batch(5 * 1024 * 1024):  # 5MB batch
-                                writer.write(event)
+        Drains all available batches from the buffer via upload_batch().
+        Falls back to disk if buffer >80% full and uploads are failing.
+        Guarded by _upload_lock to prevent overlap with force sync / remote commands.
+        """
+        # Non-blocking lock: if another thread holds it, skip this tick
+        if not self._upload_lock.acquire(blocking=False):
+            logger.debug("Upload tick skipped — lock held by another thread")
+            return
 
-            except Exception as e:
-                logger.warning(f"Failed to upload traces: {e}")
+        try:
+            if not self._direct_uploader or not self._buffer:
+                return
+            if self._buffer.size() == 0:
+                return
+
+            # Drain ALL available batches
+            upload_failed = False
+            batches_uploaded = 0
+            traces_before = self._buffer.size()
+            while self._buffer.size() > 0:
+                success = self._direct_uploader.upload_batch()
+                if success:
+                    batches_uploaded += 1
+                else:
+                    upload_failed = True
+                    break
+
+            if batches_uploaded > 0:
+                self._last_upload_time = time.time()
+                self._traces_since_upload = 0
+                if batches_uploaded > 1:
+                    logger.debug(f"Multi-batch upload: {batches_uploaded} batches, {traces_before} traces")
+
+            if upload_failed:
+                # Emergency disk fallback when buffer >80% full and upload failing
+                buffer_capacity = self._buffer.max_bytes
+                if self._buffer.bytes_used() > (buffer_capacity * 0.8):
+                    logger.warning(f"Buffer >80% full ({self._buffer.bytes_used()}/{buffer_capacity} bytes) and upload failing, emergency disk write")
+                    writer = self._ensure_writer()
+                    if writer:
+                        for event in self._buffer.take_batch(5 * 1024 * 1024):  # 5MB batch
+                            writer.write(event)
+
+        except Exception as e:
+            logger.warning(f"Upload tick failed: {e}")
+        finally:
+            self._upload_lock.release()
 
         # Periodic disk cleanup (throttled to once per hour)
         self._cleanup_stale_traces()
+
+    def _start_upload_worker(self) -> None:
+        """Start background daemon thread for uploading traces.
+
+        The worker sleeps on _upload_trigger (interruptible by _signal_upload)
+        or wakes on timeout (upload_interval_seconds). Follows the same pattern
+        as _start_config_refresh_task and _start_force_sync_monitor.
+        """
+        self._upload_stop.clear()
+        self._upload_trigger.clear()
+
+        def upload_loop():
+            logger.info("Upload worker thread started")
+            while not self._upload_stop.is_set():
+                # Wait for signal or timeout — interruptible sleep
+                self._upload_trigger.wait(timeout=self._upload_interval_seconds)
+                self._upload_trigger.clear()
+
+                if self._upload_stop.is_set():
+                    break
+
+                self._upload_tick()
+
+            logger.info("Upload worker thread stopped")
+
+        self._upload_thread = threading.Thread(
+            target=upload_loop,
+            daemon=True,
+            name="oximy-upload-worker"
+        )
+        self._upload_thread.start()
 
     def _cleanup_stale_traces(self) -> None:
         """Prune old/excess trace files from disk. Fail-open: errors logged, never raised.
@@ -5008,31 +5082,33 @@ class OximyAddon:
         total_uploaded = 0
         total_bytes = 0
 
-        try:
-            # Upload from memory buffer first
-            if self._direct_uploader and self._buffer and self._buffer.size() > 0:
-                uploaded_count = self._direct_uploader.upload_all()
-                if uploaded_count > 0:
-                    total_uploaded += uploaded_count
-                    # Estimate bytes (rough approximation)
-                    total_bytes += uploaded_count * 500  # ~500 bytes per trace avg
-                    logger.info(f"Force sync: uploaded {uploaded_count} traces from memory buffer")
+        # Acquire _upload_lock to prevent overlap with upload worker thread
+        with self._upload_lock:
+            try:
+                # Upload from memory buffer first
+                if self._direct_uploader and self._buffer and self._buffer.size() > 0:
+                    uploaded_count = self._direct_uploader.upload_all()
+                    if uploaded_count > 0:
+                        total_uploaded += uploaded_count
+                        # Estimate bytes (rough approximation)
+                        total_bytes += uploaded_count * 500  # ~500 bytes per trace avg
+                        logger.info(f"Force sync: uploaded {uploaded_count} traces from memory buffer")
 
-            # Upload from disk fallback files
-            if self._uploader and self._output_dir:
-                # Flush writer first if active
-                if self._writer and self._writer._fo:
-                    self._writer._fo.flush()
-                # Pass active file to avoid deleting file currently being written
-                active_file = self._writer._current_file if self._writer else None
-                uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
-                if uploaded > 0:
-                    total_uploaded += uploaded
-                    # Estimate bytes (rough approximation)
-                    total_bytes += uploaded * 500  # ~500 bytes per trace avg
-                    logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
-        except Exception as e:
-            logger.warning(f"upload_all_traces failed: {e}")
+                # Upload from disk fallback files
+                if self._uploader and self._output_dir:
+                    # Flush writer first if active
+                    if self._writer and self._writer._fo:
+                        self._writer._fo.flush()
+                    # Pass active file to avoid deleting file currently being written
+                    active_file = self._writer._current_file if self._writer else None
+                    uploaded = self._uploader.upload_all_pending(self._output_dir, active_file=active_file)
+                    if uploaded > 0:
+                        total_uploaded += uploaded
+                        # Estimate bytes (rough approximation)
+                        total_bytes += uploaded * 500  # ~500 bytes per trace avg
+                        logger.info(f"Force sync: uploaded {uploaded} traces from disk fallback")
+            except Exception as e:
+                logger.warning(f"upload_all_traces failed: {e}")
 
         return {"eventsUploaded": total_uploaded, "bytesUploaded": total_bytes}
 
@@ -5061,6 +5137,12 @@ class OximyAddon:
         if self._force_sync_thread and self._force_sync_thread.is_alive():
             self._force_sync_thread.join(timeout=1)
 
+        # Stop upload worker thread before final flush
+        self._upload_stop.set()
+        self._upload_trigger.set()  # Wake thread so it sees stop flag
+        if self._upload_thread and self._upload_thread.is_alive():
+            self._upload_thread.join(timeout=6)  # >5s to outlast a single HTTP timeout
+
         # Stop violation reporting thread (flushes remaining violations)
         self._stop_violation_report_task()
 
@@ -5082,31 +5164,33 @@ class OximyAddon:
                 _write_proxy_state()
 
         # Cloud-first: try to upload remaining traces from memory buffer
+        # Wrapped in _upload_lock to prevent overlap with upload worker (already stopped above)
         if self._buffer and self._buffer.size() > 0:
             logger.info(f"Shutdown: {self._buffer.size()} traces in buffer, attempting final upload")
             if self._direct_uploader:
-                try:
-                    success = self._direct_uploader.upload_all(force=True)
-                    if success:
-                        logger.info("Successfully uploaded all buffered traces on shutdown")
-                    else:
-                        # Upload failed - emergency write to disk
-                        logger.warning("Final upload failed, writing remaining traces to disk")
+                with self._upload_lock:
+                    try:
+                        success = self._direct_uploader.upload_all(force=True)
+                        if success:
+                            logger.info("Successfully uploaded all buffered traces on shutdown")
+                        else:
+                            # Upload failed - emergency write to disk
+                            logger.warning("Final upload failed, writing remaining traces to disk")
+                            writer = self._ensure_writer()
+                            if writer:
+                                for event in self._buffer.peek_all():
+                                    writer.write(event)
+                                self._buffer.clear()
+                                logger.info(f"Emergency disk write complete")
+                    except Exception as e:
+                        logger.warning(f"Failed to upload buffered traces on shutdown: {e}")
+                        sentry_service.capture_exception(e, tags={"operation": "shutdown_upload"})
+                        # Emergency fallback to disk
                         writer = self._ensure_writer()
                         if writer:
                             for event in self._buffer.peek_all():
                                 writer.write(event)
                             self._buffer.clear()
-                            logger.info(f"Emergency disk write complete")
-                except Exception as e:
-                    logger.warning(f"Failed to upload buffered traces on shutdown: {e}")
-                    sentry_service.capture_exception(e, tags={"operation": "shutdown_upload"})
-                    # Emergency fallback to disk
-                    writer = self._ensure_writer()
-                    if writer:
-                        for event in self._buffer.peek_all():
-                            writer.write(event)
-                        self._buffer.clear()
 
         # Close writers to flush pending writes
         if self._writer:
