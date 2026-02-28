@@ -114,6 +114,9 @@ public class RemoteState
 
     [JsonPropertyName("enforcementRules")]
     public List<EnforcementRule>? EnforcementRules { get; set; }
+
+    [JsonPropertyName("events_pending")]
+    public int? EventsPending { get; set; }
 }
 
 /// <summary>
@@ -134,6 +137,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     private string? _itSupport;
     private AppConfigFlags? _appConfig;
     private List<EnforcementRule> _enforcementRules = new();
+    private int _eventsPending;
     private DateTime? _lastUpdate;
     private bool _isRunning;
     private bool _disposed;
@@ -196,6 +200,16 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
     {
         get => _enforcementRules;
         private set => SetProperty(ref _enforcementRules, value);
+    }
+
+    /// <summary>
+    /// Number of events pending in the addon's in-memory buffer.
+    /// Read from events_pending in remote-state.json.
+    /// </summary>
+    public int EventsPending
+    {
+        get => _eventsPending;
+        private set => SetProperty(ref _eventsPending, value);
     }
 
     /// <summary>
@@ -299,6 +313,7 @@ public class RemoteStateService : INotifyPropertyChanged, IDisposable
             ProxyActive = state.ProxyActive;
             TenantId = state.TenantId;
             ItSupport = state.ItSupport;
+            EventsPending = state.EventsPending ?? 0;
             AppConfig = state.AppConfig;
             LastUpdate = DateTime.Now;
 
