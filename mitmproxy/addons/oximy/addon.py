@@ -4933,6 +4933,7 @@ class OximyAddon:
         # Periodic disk cleanup (throttled to once per hour)
         self._cleanup_stale_traces()
 
+
     def _start_upload_worker(self) -> None:
         """Start background daemon thread for uploading traces.
 
