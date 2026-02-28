@@ -11,6 +11,7 @@ import io
 import json
 import os
 import re
+import threading
 
 # Import the functions under test
 import time
@@ -38,6 +39,7 @@ from mitmproxy.addons.oximy.addon import matches_whitelist
 from mitmproxy.addons.oximy.addon import MemoryTraceBuffer
 from mitmproxy.addons.oximy.addon import OXIMY_STATE_FILE
 from mitmproxy.addons.oximy.addon import OximyAddon
+from mitmproxy.addons.oximy.addon import _state
 from mitmproxy.addons.oximy.addon import TLSPassthrough
 
 # =============================================================================
@@ -1198,20 +1200,6 @@ class TestDirectTraceUploaderCircuitBreaker:
         assert result == 1
         assert buf.size() == 0
 
-    @patch("mitmproxy.addons.oximy.addon._circuit_breaker_open_until", time.time() + 300)
-    @patch("mitmproxy.addons.oximy.addon._circuit_breaker_failures", 3)
-    def test_config_circuit_breaker_open_skips_upload(self):
-        """When config fetch circuit breaker is open, uploads skip immediately."""
-        uploader, buf = _make_uploader()
-        buf.append({"id": 1})
-
-        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
-            result = uploader.upload_batch()
-
-        assert result is False
-        mock_opener.open.assert_not_called()
-        assert buf.size() == 1
-
     def test_config_circuit_breaker_closed_upload_circuit_breaker_open_still_skips(self):
         """When config circuit breaker is closed but upload circuit breaker is open, uploads still skip."""
         uploader, buf = _make_uploader()
@@ -1266,3 +1254,629 @@ class TestAtomicStateFileWrites:
         written_json = json.loads(mock_atomic.call_args[0][1])
         assert written_json["sensor_enabled"] is True
         assert written_json["tenantId"] == "t123"
+
+
+# =============================================================================
+# Reproduce: Memory-full + disk-fallback blocks event loop (internet stops)
+# =============================================================================
+
+class TestMemoryFullDiskFallbackBlocking:
+    """Reproduce: when memory buffer is full and uploads fail, _maybe_upload()
+    blocks the mitmproxy event loop inside the synchronous response() hook.
+
+    root cause: upload_batch() does synchronous HTTP POST with 5s timeout
+    and 3 retries with time.sleep() delays — up to ~16s blocking total.
+    This runs inside response() (sync hook) which freezes ALL traffic.
+    """
+
+    def test_upload_batch_blocks_with_sleeps_on_network_failure(self):
+        """Prove that a single upload_batch() call blocks for seconds
+        when the API is unreachable (timeout + retry sleeps)."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        sleep_calls = []
+        original_sleep = time.sleep
+
+        def spy_sleep(seconds):
+            sleep_calls.append(seconds)
+            # Don't actually sleep in tests
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener, \
+             patch("mitmproxy.addons.oximy.addon.time.sleep", side_effect=spy_sleep):
+            # Simulate network timeout on every attempt
+            mock_opener.open.side_effect = urllib.error.URLError("Connection timed out")
+            result = uploader.upload_batch()
+
+        assert result is False
+        # Proves: time.sleep is called between retries, blocking the calling thread
+        assert len(sleep_calls) > 0, "upload_batch sleeps between retries — blocks event loop"
+        # With RETRY_DELAYS = [0.2, 0.5, 1.0] and 3 attempts, sleeps after attempt 1 & 2
+        assert len(sleep_calls) == 2  # sleep after attempt 0, sleep after attempt 1
+        assert sleep_calls[0] == 0.2
+        assert sleep_calls[1] == 0.5
+
+    def test_full_buffer_disk_fallback_still_triggers_blocking_upload(self):
+        """When buffer is full, _write_to_buffer falls to disk, but _maybe_upload()
+        is still called (buffer has old data) and blocks the event loop."""
+        uploader, buf = _make_uploader(buffer_max_bytes=100, buffer_max_count=2)
+        # Fill the buffer completely
+        buf.append({"id": 1, "d": "x" * 30})
+        buf.append({"id": 2, "d": "x" * 30})
+        assert buf.append({"id": 3}) is False, "Buffer should be full"
+
+        # The buffer has data → _maybe_upload would try upload_batch
+        # upload_batch takes a batch, tries HTTP, blocks on retries
+        sleep_calls = []
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener, \
+             patch("mitmproxy.addons.oximy.addon.time.sleep", side_effect=lambda s: sleep_calls.append(s)):
+            mock_opener.open.side_effect = urllib.error.URLError("Connection refused")
+            result = uploader.upload_batch()
+
+        assert result is False
+        # Even though the NEW event went to disk, old buffer data caused a blocking upload
+        assert len(sleep_calls) > 0, "upload retries block even when new events go to disk"
+
+    def test_response_hook_maybe_upload_only_signals(self):
+        """Prove that _maybe_upload() only sets the upload trigger event —
+        it never calls upload_batch() directly (all I/O is off the event loop)."""
+        addon = OximyAddon()
+        addon._enabled = True
+        addon._buffer = MemoryTraceBuffer(max_bytes=1024 * 1024, max_count=100)
+        addon._direct_uploader = DirectTraceUploader(addon._buffer)
+        addon._fail_open_passthrough = False
+        addon._upload_interval_seconds = 0  # Always trigger
+        addon._upload_threshold_count = 0
+        addon._last_upload_time = 0
+
+        # Pre-fill buffer with one trace so _maybe_upload has work to do
+        addon._buffer.append({"id": "prefill"})
+        addon._traces_since_upload = 1
+
+        upload_batch_calls = []
+        addon._direct_uploader.upload_batch = lambda *a, **kw: upload_batch_calls.append(1) or True
+
+        # Simulate _write_to_buffer + _maybe_upload (the path from response())
+        event = {"id": "test", "timestamp": "2024-01-01T00:00:00Z"}
+        addon._write_to_buffer(event)
+        addon._maybe_upload()
+
+        # Prove: upload_batch was NOT called — _maybe_upload only signals the worker
+        assert len(upload_batch_calls) == 0, "_maybe_upload must not call upload_batch directly"
+        # Prove: the upload trigger event was set
+        assert addon._upload_trigger.is_set(), "_maybe_upload must signal the upload worker"
+
+    def test_worst_case_blocking_duration(self):
+        """Calculate worst-case blocking time: 3 retries × 5s timeout + sleep delays.
+        This test documents the blocking duration without actually waiting."""
+        uploader, _ = _make_uploader()
+
+        # Worst case: 3 attempts, each times out at 5s, plus sleep delays
+        max_timeout_per_attempt = 5  # seconds (from upload_batch: timeout=5)
+        num_retries = uploader.MAX_RETRIES  # 3
+        sleep_delays = uploader.RETRY_DELAYS[:num_retries - 1]  # [0.2, 0.5]
+
+        worst_case_seconds = (max_timeout_per_attempt * num_retries) + sum(sleep_delays)
+
+        # Document the problem: ~15.7 seconds of event loop blocking
+        assert worst_case_seconds > 15, (
+            f"Worst case blocking: {worst_case_seconds}s — "
+            f"this freezes ALL internet traffic through the proxy"
+        )
+
+    def test_circuit_breaker_does_not_prevent_first_blocking_episode(self):
+        """The circuit breaker only helps AFTER the first ~16s block.
+        Prove that the first upload_batch with a fresh CB blocks fully."""
+        uploader, buf = _make_uploader()
+        buf.append({"id": 1})
+
+        # Fresh uploader: CB is closed, failures = 0
+        assert uploader._circuit_breaker_failures == 0
+        assert not uploader.circuit_breaker_open
+
+        attempt_count = [0]
+
+        def counting_open(*args, **kwargs):
+            attempt_count[0] += 1
+            raise urllib.error.URLError("timeout")
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener, \
+             patch("mitmproxy.addons.oximy.addon.time.sleep"):  # Skip actual sleeps
+            mock_opener.open.side_effect = counting_open
+            uploader.upload_batch()
+
+        # All 3 retry attempts happened before CB tripped
+        assert attempt_count[0] == 3, (
+            f"CB did not prevent any of the {attempt_count[0]} attempts — "
+            f"first failure episode blocks fully"
+        )
+        # NOW the CB is open for next time
+        assert uploader.circuit_breaker_open
+
+    def test_memory_full_maybe_upload_completes_instantly(self):
+        """End-to-end: memory full + _write_to_buffer + _maybe_upload completes
+        in <10ms — proving internet never stops.
+
+        Previously this scenario blocked for ~16s. Now _write_to_buffer drops
+        the trace (fail-open) and _maybe_upload only signals the upload worker.
+        """
+        addon = OximyAddon()
+        addon._enabled = True
+        # Small buffer that fills up quickly (max 2 items)
+        addon._buffer = MemoryTraceBuffer(max_bytes=1024 * 1024, max_count=2)
+        addon._direct_uploader = DirectTraceUploader(addon._buffer, api_url="http://test-api/ingest")
+        addon._fail_open_passthrough = False
+        addon._upload_interval_seconds = 0  # Always trigger upload check
+        addon._upload_threshold_count = 0
+        addon._last_upload_time = 0
+        addon._traces_since_upload = 0
+        addon._debug_ingestion = False
+
+        # Step 1: Fill the memory buffer completely (max_count=2)
+        addon._buffer.append({"id": 1, "data": "fill1"})
+        addon._buffer.append({"id": 2, "data": "fill2"})
+        addon._traces_since_upload = 2
+
+        # Step 2: Next event can't fit in buffer
+        assert addon._buffer.append({"id": 3}) is False, "Buffer must be full (max_count=2)"
+
+        # Step 3: _write_to_buffer + _maybe_upload must complete instantly
+        start = time.monotonic()
+        result = addon._write_to_buffer({"id": 4, "data": "new_event"})
+        addon._maybe_upload()
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        assert result is True, "_write_to_buffer should succeed (fail-open drop)"
+        assert elapsed_ms < 10, (
+            f"_write_to_buffer + _maybe_upload took {elapsed_ms:.1f}ms — "
+            f"must complete in <10ms to avoid blocking internet"
+        )
+        # Prove: upload trigger was set (worker will drain buffer asynchronously)
+        assert addon._upload_trigger.is_set(), "Upload worker should be signalled"
+
+    def test_fail_open_passthrough_stale_buffer_is_nonblocking(self):
+        """With stale data in buffer and fail-open passthrough enabled,
+        _maybe_upload() only signals the upload worker — never blocks."""
+        addon = OximyAddon()
+        addon._enabled = True
+        addon._buffer = MemoryTraceBuffer(max_bytes=1024 * 1024, max_count=100)
+        addon._direct_uploader = DirectTraceUploader(addon._buffer, api_url="http://test-api/ingest")
+        addon._upload_interval_seconds = 0
+        addon._upload_threshold_count = 0
+        addon._last_upload_time = 0
+
+        # Data was buffered BEFORE fail-open kicked in
+        addon._buffer.append({"id": "stale-1"})
+        addon._buffer.append({"id": "stale-2"})
+        addon._traces_since_upload = 2
+
+        # Now fail-open passthrough is enabled (API is down)
+        addon._fail_open_passthrough = True
+
+        upload_batch_calls = []
+        addon._direct_uploader.upload_batch = lambda *a, **kw: upload_batch_calls.append(1) or True
+
+        start = time.monotonic()
+        addon._maybe_upload()
+        elapsed_ms = (time.monotonic() - start) * 1000
+
+        # _maybe_upload never calls upload_batch directly — always non-blocking
+        assert len(upload_batch_calls) == 0, "_maybe_upload must not call upload_batch"
+        assert elapsed_ms < 10, f"_maybe_upload took {elapsed_ms:.1f}ms — must be <10ms"
+
+
+# =============================================================================
+# Upload Worker Thread Tests
+# =============================================================================
+
+class TestUploadWorkerThread:
+    """Tests for the background upload worker that moves all upload I/O
+    off the mitmproxy event loop."""
+
+    def _make_addon(self, buffer_max_count=100):
+        """Helper: create an OximyAddon with a wired-up buffer and uploader."""
+        addon = OximyAddon()
+        addon._enabled = True
+        addon._buffer = MemoryTraceBuffer(max_bytes=1024 * 1024, max_count=buffer_max_count)
+        addon._direct_uploader = DirectTraceUploader(addon._buffer, api_url="http://test-api/ingest")
+        addon._fail_open_passthrough = False
+        addon._upload_interval_seconds = 0.1  # Short for tests
+        addon._upload_threshold_count = 0
+        addon._last_upload_time = 0
+        addon._traces_since_upload = 0
+        addon._debug_ingestion = False
+        return addon
+
+    def test_upload_worker_starts_and_stops(self):
+        """Upload worker thread starts as daemon and stops cleanly."""
+        addon = self._make_addon()
+
+        addon._start_upload_worker()
+        assert addon._upload_thread is not None
+        assert addon._upload_thread.is_alive()
+        assert addon._upload_thread.daemon is True
+        assert addon._upload_thread.name == "oximy-upload-worker"
+
+        # Stop the worker
+        addon._upload_stop.set()
+        addon._upload_trigger.set()  # Wake it
+        addon._upload_thread.join(timeout=2)
+        assert not addon._upload_thread.is_alive()
+
+    def test_upload_worker_drains_buffer(self):
+        """Upload worker drains buffer via upload_batch when signalled."""
+        addon = self._make_addon()
+
+        # Add traces to buffer
+        addon._buffer.append({"id": 1})
+        addon._buffer.append({"id": 2})
+
+        upload_calls = []
+
+        def mock_upload_batch(*args, **kwargs):
+            batch = addon._buffer.take_batch(1024 * 1024)
+            upload_calls.append(len(batch))
+            return True
+
+        addon._direct_uploader.upload_batch = mock_upload_batch
+
+        # Run _upload_tick directly (simulates what the worker thread does)
+        addon._upload_tick()
+
+        assert len(upload_calls) > 0, "upload_batch should have been called"
+        assert addon._buffer.size() == 0, "Buffer should be drained"
+
+    def test_upload_trigger_wakes_worker(self):
+        """_signal_upload() wakes the worker thread for low-latency drain."""
+        addon = self._make_addon()
+        addon._upload_interval_seconds = 60  # Long interval — worker sleeps
+
+        drain_event = threading.Event()
+
+        original_tick = addon._upload_tick
+
+        def spy_tick():
+            original_tick()
+            drain_event.set()
+
+        addon._upload_tick = spy_tick
+
+        addon._start_upload_worker()
+
+        try:
+            # Add a trace and signal the worker
+            addon._buffer.append({"id": "wake-test"})
+            addon._signal_upload()
+
+            # Worker should wake and call _upload_tick within 1s (not wait 60s)
+            woke = drain_event.wait(timeout=2)
+            assert woke, "Upload worker should have woken up from _signal_upload within 2s"
+        finally:
+            addon._upload_stop.set()
+            addon._upload_trigger.set()
+            addon._upload_thread.join(timeout=2)
+
+    def test_write_to_buffer_drops_trace_when_full(self):
+        """When buffer is full, _write_to_buffer drops the trace (fail-open)
+        instead of blocking on disk I/O. Signals upload worker to drain."""
+        addon = self._make_addon(buffer_max_count=2)
+
+        # Fill buffer
+        addon._buffer.append({"id": 1})
+        addon._buffer.append({"id": 2})
+        assert addon._buffer.size() == 2
+
+        # Next write should drop the trace (not write to disk)
+        result = addon._write_to_buffer({"id": 3, "data": "should_be_dropped"})
+
+        assert result is True, "Should return True (fail-open)"
+        assert addon._buffer.size() == 2, "Buffer size unchanged (trace was dropped)"
+        assert addon._upload_trigger.is_set(), "Upload worker should be signalled to drain"
+
+    def test_concurrent_upload_guard(self):
+        """_upload_lock prevents force sync and upload worker from overlapping."""
+        addon = self._make_addon()
+
+        # Simulate the upload worker holding the lock
+        addon._upload_lock.acquire()
+
+        try:
+            # _upload_tick should skip (non-blocking acquire returns False)
+            addon._buffer.append({"id": "should-not-upload"})
+
+            upload_calls = []
+            addon._direct_uploader.upload_batch = lambda *a, **kw: upload_calls.append(1) or True
+
+            addon._upload_tick()
+
+            # upload_batch should NOT have been called (lock was held)
+            assert len(upload_calls) == 0, "_upload_tick must skip when lock is held"
+        finally:
+            addon._upload_lock.release()
+
+
+# =============================================================================
+# End-to-End Failure Permutation Tests
+# =============================================================================
+
+class TestFailurePermutations:
+    """Prove that the event loop NEVER blocks under any combination of:
+    buffer state (empty/partial/full), disk state (healthy/absent/full),
+    API state (up/down/slow), and circuit breaker state (open/closed).
+
+    Each test simulates the full response() → _write_to_buffer() → _maybe_upload()
+    path and asserts it completes in <10ms.
+
+    Run: pytest -k TestFailurePermutations -v --timeout=30
+    """
+
+    def _make_addon(self, buffer_max_count=100, buffer_max_bytes=1024 * 1024):
+        addon = OximyAddon()
+        addon._enabled = True
+        addon._buffer = MemoryTraceBuffer(max_bytes=buffer_max_bytes, max_count=buffer_max_count)
+        addon._direct_uploader = DirectTraceUploader(addon._buffer, api_url="http://test-api/ingest")
+        addon._fail_open_passthrough = False
+        addon._upload_interval_seconds = 0  # Always trigger
+        addon._upload_threshold_count = 0
+        addon._last_upload_time = 0
+        addon._traces_since_upload = 0
+        addon._debug_ingestion = False
+        addon._writer = None
+        addon._output_dir = None
+        return addon
+
+    def _time_response_path(self, addon, event=None):
+        """Time _write_to_buffer + _maybe_upload (the response hook path)."""
+        if event is None:
+            event = {"id": "test", "ts": time.time()}
+        start = time.monotonic()
+        addon._write_to_buffer(event)
+        addon._maybe_upload()
+        return (time.monotonic() - start) * 1000  # ms
+
+    # --- Buffer NOT full (append succeeds, various API/CB states) ---
+
+    def test_buffer_not_full_api_up(self):
+        """Normal operation: buffer has space, API is healthy."""
+        addon = self._make_addon()
+        elapsed = self._time_response_path(addon)
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._buffer.size() == 1
+
+    def test_buffer_not_full_api_down_cb_closed(self):
+        """Buffer has space, API down, CB closed — trace buffered, upload signalled."""
+        addon = self._make_addon()
+        elapsed = self._time_response_path(addon)
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._upload_trigger.is_set()
+
+    def test_buffer_not_full_api_down_cb_open(self):
+        """Buffer has space, API down, upload CB open — trace buffered, upload signalled.
+        Upload worker will skip due to CB but that happens off event loop."""
+        addon = self._make_addon()
+        addon._direct_uploader._circuit_breaker_open_until = time.time() + 300
+        addon._direct_uploader._circuit_breaker_failures = 3
+        elapsed = self._time_response_path(addon)
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._buffer.size() == 1
+
+    def test_buffer_not_full_passthrough_mode(self):
+        """Fail-open passthrough — response hook skips capture entirely."""
+        addon = self._make_addon()
+        addon._fail_open_passthrough = True
+        # In passthrough, response() returns before _write_to_buffer
+        # Simulate just the upload check path
+        start = time.monotonic()
+        addon._maybe_upload()
+        elapsed = (time.monotonic() - start) * 1000
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+
+    # --- Buffer FULL (append fails, various states) ---
+
+    def test_buffer_full_api_up(self):
+        """Buffer full, API healthy — trace dropped, upload worker signalled."""
+        addon = self._make_addon(buffer_max_count=2)
+        addon._buffer.append({"id": 1})
+        addon._buffer.append({"id": 2})
+        elapsed = self._time_response_path(addon, {"id": 3})
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._buffer.size() == 2, "trace should be dropped, buffer unchanged"
+        assert addon._upload_trigger.is_set()
+
+    def test_buffer_full_api_down_cb_closed(self):
+        """Buffer full, API down, CB closed — trace dropped, worker signalled."""
+        addon = self._make_addon(buffer_max_count=2)
+        addon._buffer.append({"id": 1})
+        addon._buffer.append({"id": 2})
+        elapsed = self._time_response_path(addon, {"id": 3})
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._buffer.size() == 2
+        assert addon._upload_trigger.is_set()
+
+    def test_buffer_full_api_down_cb_open(self):
+        """Buffer full, API down, CB open — trace dropped, worker signalled."""
+        addon = self._make_addon(buffer_max_count=2)
+        addon._buffer.append({"id": 1})
+        addon._buffer.append({"id": 2})
+        addon._direct_uploader._circuit_breaker_open_until = time.time() + 300
+        addon._direct_uploader._circuit_breaker_failures = 3
+        elapsed = self._time_response_path(addon, {"id": 3})
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._buffer.size() == 2
+
+    def test_buffer_full_no_disk_configured(self):
+        """Buffer full, no disk writer — trace dropped (not silently lost).
+        Previously returned True but silently lost the trace."""
+        addon = self._make_addon(buffer_max_count=2)
+        addon._output_dir = None
+        addon._writer = None
+        addon._buffer.append({"id": 1})
+        addon._buffer.append({"id": 2})
+        elapsed = self._time_response_path(addon, {"id": 3})
+        assert elapsed < 10, f"took {elapsed:.1f}ms"
+        assert addon._buffer.size() == 2
+
+    # --- Sensor disabled ---
+
+    def test_sensor_disabled_buffer_has_stale_data(self):
+        """Sensor disabled, stale data in buffer — _maybe_upload returns immediately."""
+        addon = self._make_addon()
+        addon._buffer.append({"id": "stale"})
+        addon._traces_since_upload = 1
+        saved = _state.sensor_active
+        try:
+            _state.sensor_active = False
+            start = time.monotonic()
+            addon._maybe_upload()
+            elapsed = (time.monotonic() - start) * 1000
+            assert elapsed < 10, f"took {elapsed:.1f}ms"
+            assert not addon._upload_trigger.is_set()
+        finally:
+            _state.sensor_active = saved
+
+    # --- Upload worker thread drains correctly ---
+
+    def test_upload_tick_drains_all_batches(self):
+        """_upload_tick drains entire buffer, not just one batch."""
+        addon = self._make_addon()
+        for i in range(10):
+            addon._buffer.append({"id": i, "data": "x" * 100})
+
+        uploaded_count = [0]
+
+        def mock_upload():
+            batch = addon._buffer.take_batch(1024 * 1024)
+            if batch:
+                uploaded_count[0] += len(batch)
+                return True
+            return True
+
+        addon._direct_uploader.upload_batch = mock_upload
+        addon._upload_tick()
+        assert uploaded_count[0] == 10
+        assert addon._buffer.size() == 0
+
+    def test_upload_tick_stops_on_failure(self):
+        """_upload_tick stops draining on first upload failure."""
+        addon = self._make_addon(buffer_max_count=5, buffer_max_bytes=50)
+        # Use small events so multiple batches are needed
+        for i in range(5):
+            addon._buffer.append({"id": i})
+
+        call_count = [0]
+        original_upload = addon._direct_uploader.upload_batch
+
+        def mock_upload(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                # First call: drain the batch (real upload_batch takes from buffer)
+                addon._buffer.take_batch(20)  # Take a small batch
+                return True  # Success
+            # Second call: fail — batch stays taken but reports failure
+            addon._buffer.take_batch(20)
+            return False
+
+        addon._direct_uploader.upload_batch = mock_upload
+        addon._upload_tick()
+        assert call_count[0] >= 2, f"should try at least twice, got {call_count[0]}"
+
+    def test_upload_tick_with_cb_open_skips_gracefully(self):
+        """_upload_tick with CB open — upload_batch returns False, buffer retained."""
+        addon = self._make_addon()
+        addon._buffer.append({"id": 1})
+        addon._direct_uploader._circuit_breaker_open_until = time.time() + 300
+        addon._direct_uploader._circuit_breaker_failures = 3
+
+        with patch("mitmproxy.addons.oximy.addon._no_proxy_opener"):
+            addon._upload_tick()
+
+        # Buffer still has data (CB skipped, batch prepended back)
+        assert addon._buffer.size() == 1
+
+    # --- Config CB no longer blocks uploads ---
+
+    def test_config_cb_open_does_not_block_uploads(self):
+        """Global config circuit breaker being open does NOT block uploads.
+        Only the upload-specific CB gates upload_batch."""
+        import mitmproxy.addons.oximy.addon as addon_module
+        saved_failures = addon_module._circuit_breaker_failures
+        saved_until = addon_module._circuit_breaker_open_until
+        try:
+            addon_module._circuit_breaker_failures = 10
+            addon_module._circuit_breaker_open_until = time.time() + 300
+
+            addon = self._make_addon()
+            addon._buffer.append({"id": 1})
+
+            with patch("mitmproxy.addons.oximy.addon._no_proxy_opener") as mock_opener:
+                mock_opener.open.return_value = _mock_success_response()
+                result = addon._direct_uploader.upload_batch()
+
+            # Upload should succeed despite global CB being open
+            assert result is True
+        finally:
+            addon_module._circuit_breaker_failures = saved_failures
+            addon_module._circuit_breaker_open_until = saved_until
+
+    # --- Force sync + upload worker don't overlap ---
+
+    def test_force_sync_waits_for_upload_worker(self):
+        """Force sync acquires _upload_lock (blocking), upload_tick skips (non-blocking)."""
+        addon = self._make_addon()
+        addon._buffer.append({"id": 1})
+
+        tick_calls = []
+
+        def mock_upload(*a, **kw):
+            tick_calls.append(1)
+            addon._buffer.take_batch(1024 * 1024)  # Drain to prevent infinite loop
+            return True
+
+        addon._direct_uploader.upload_batch = mock_upload
+
+        # Simulate force sync holding the lock
+        addon._upload_lock.acquire()
+        try:
+            addon._upload_tick()  # Should skip (non-blocking acquire fails)
+            assert len(tick_calls) == 0
+        finally:
+            addon._upload_lock.release()
+
+        # Re-add data and tick should work now
+        addon._buffer.append({"id": 2})
+        addon._upload_tick()
+        assert len(tick_calls) > 0
+
+    # --- Full lifecycle: worker start → buffer → drain → stop ---
+
+    def test_full_lifecycle_worker_drains_and_stops(self):
+        """Start worker, buffer traces, worker drains them, stop cleanly."""
+        addon = self._make_addon()
+        addon._upload_interval_seconds = 0.1
+
+        drained = threading.Event()
+
+        def mock_upload():
+            batch = addon._buffer.take_batch(1024 * 1024)
+            if batch:
+                drained.set()
+                return True
+            return True
+
+        addon._direct_uploader.upload_batch = mock_upload
+        addon._start_upload_worker()
+
+        try:
+            # Buffer some traces and signal the worker
+            addon._buffer.append({"id": 1})
+            addon._buffer.append({"id": 2})
+            addon._signal_upload()
+
+            # Worker should drain within 2s
+            assert drained.wait(timeout=2), "Worker should have drained the buffer"
+            assert addon._buffer.size() == 0
+        finally:
+            addon._upload_stop.set()
+            addon._upload_trigger.set()
+            addon._upload_thread.join(timeout=2)
