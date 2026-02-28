@@ -48,6 +48,7 @@ struct RemoteState: Codable {
     let timestamp: String
     let appConfig: AppConfigFlags?
     let enforcementRules: [EnforcementRule]?
+    let eventsPending: Int?
 
     enum CodingKeys: String, CodingKey {
         case sensorEnabled = "sensor_enabled"
@@ -58,6 +59,7 @@ struct RemoteState: Codable {
         case timestamp
         case appConfig
         case enforcementRules
+        case eventsPending = "events_pending"
     }
 }
 
@@ -77,6 +79,7 @@ final class RemoteStateService: ObservableObject {
     @Published var isRunning = false
     @Published var appConfig: AppConfigFlags?
     @Published var enforcementRules: [EnforcementRule] = []
+    @Published var eventsPending: Int = 0
     /// Tracks the last uninstallCertificate value read from the FILE only.
     /// Heartbeat updates do NOT modify this — preventing stale file data from
     /// generating spurious change notifications after a heartbeat override.
@@ -148,6 +151,7 @@ final class RemoteStateService: ObservableObject {
             proxyActive = state.proxyActive
             tenantId = state.tenantId
             itSupport = state.itSupport
+            eventsPending = state.eventsPending ?? 0
             lastUpdate = Date()
 
             // Only update appConfig from file when the file has new data.
