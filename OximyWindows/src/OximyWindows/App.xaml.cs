@@ -214,19 +214,30 @@ public partial class App : Application
         // Note: Auto-update disabled for MDM deployment
     }
 
-    private void OnLogoutRequested(object? sender, EventArgs e)
+    private async void OnLogoutRequested(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() =>
+        Debug.WriteLine("[App] Logout requested by server");
+        OximyLogger.Log(EventCode.AUTH_AUTH_002, "User logged out");
+        SentryService.ClearUser();
+
+        // Run heavy blocking work off the UI thread to keep tray icon responsive
+        try
         {
-            Debug.WriteLine("[App] Logout requested by server");
-            OximyLogger.Log(EventCode.AUTH_AUTH_002, "User logged out");
-            SentryService.ClearUser();
-            ProxyService.DisableProxy();
-            MitmService.Stop();
-            HeartbeatService.Stop();
-            SyncService.Stop();
-            AppState.Instance.Logout();
-        });
+            await Task.Run(async () =>
+            {
+                ProxyService.DisableProxy();
+                await MitmService.StopAsync();
+                HeartbeatService.Stop();
+                SyncService.Stop();
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Error during logout cleanup: {ex.Message}");
+        }
+
+        // Always logout even if cleanup fails — UI state must update
+        _ = Dispatcher.BeginInvoke(() => AppState.Instance.Logout());
     }
 
     private async void OnRestartProxyRequested(object? sender, EventArgs e)
@@ -235,31 +246,44 @@ public partial class App : Application
         await MitmService.RestartAsync();
     }
 
-    private void OnDisableProxyRequested(object? sender, EventArgs e)
+    private async void OnDisableProxyRequested(object? sender, EventArgs e)
     {
         Debug.WriteLine("[App] Disable proxy requested by server");
-        ProxyService.DisableProxy();
-        MitmService.Stop();
+        try
+        {
+            await Task.Run(async () =>
+            {
+                ProxyService.DisableProxy();
+                await MitmService.StopAsync();
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[App] Error during disable proxy: {ex.Message}");
+        }
     }
 
     private void OnForceLogoutRequested(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() => OnLogoutRequested(sender, e));
+        // OnLogoutRequested is async void and handles its own dispatching
+        OnLogoutRequested(sender, e);
     }
 
     private void OnSensorStateChanged(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() =>
+        // Quick UI update — non-blocking
+        Dispatcher.BeginInvoke(() =>
         {
             _mainWindow?.UpdateTrayIcon(RemoteStateService.SensorEnabled);
-
-            // When sensor is disabled and the addon is dead, the C# app must
-            // disable the proxy directly — the addon can't do it itself.
-            if (!RemoteStateService.SensorEnabled && !MitmService.IsRunning)
-            {
-                ProxyService.DisableProxy();
-            }
         });
+
+        // When sensor is disabled and the addon is dead, the C# app must
+        // disable the proxy directly — the addon can't do it itself.
+        // Run off UI thread to avoid blocking tray interactions.
+        if (!RemoteStateService.SensorEnabled && !MitmService.IsRunning)
+        {
+            Task.Run(() => ProxyService.DisableProxy());
+        }
     }
 
     private void OnViolationDetected(object? sender, ViolationEntry v)

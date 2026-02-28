@@ -26,6 +26,7 @@ public partial class ViolationNotificationWindow : Window
     private static extern int SetWindowLong(IntPtr hwnd, int index, int value);
 
     private readonly DispatcherTimer _dismissTimer;
+    private bool _hiding;
 
     public ViolationNotificationWindow(ViolationEntry violation)
     {
@@ -64,7 +65,7 @@ public partial class ViolationNotificationWindow : Window
 
         // Slide + fade in
         var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.3));
-        var slideIn = new DoubleAnimation(-20, 0, TimeSpan.FromSeconds(0.3))
+        var slideIn = new DoubleAnimation(20, 0, TimeSpan.FromSeconds(0.3))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
@@ -77,10 +78,12 @@ public partial class ViolationNotificationWindow : Window
 
     private void HideWindow()
     {
+        if (_hiding) return;
+        _hiding = true;
         _dismissTimer.Stop();
 
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.25));
-        var slideOut = new DoubleAnimation(0, -20, TimeSpan.FromSeconds(0.25));
+        var slideOut = new DoubleAnimation(0, 20, TimeSpan.FromSeconds(0.25));
         slideOut.Completed += (_, _) => Close();
 
         BeginAnimation(OpacityProperty, fadeOut);

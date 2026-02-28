@@ -137,11 +137,11 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(AppState.ConnectionStatus))
         {
-            Dispatcher.Invoke(UpdateTrayTooltip);
+            Dispatcher.BeginInvoke(UpdateTrayTooltip);
         }
         else if (e.PropertyName == nameof(AppState.Phase))
         {
-            Dispatcher.Invoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 // Refresh the popup to show the new phase's view
                 if (_popup != null)
@@ -173,7 +173,7 @@ public partial class MainWindow : Window
 
     private void OnMitmMaxRestartsExceeded(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.BeginInvoke(() =>
         {
             TrayIcon.ShowBalloonTip(
                 "Oximy Error",

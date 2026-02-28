@@ -13,12 +13,12 @@ from unittest.mock import patch
 
 import pytest
 
-from process import _get_responsible_pid
-from process import _proc_pidpath
+from mitmproxy.addons.oximy.process import _get_responsible_pid
+from mitmproxy.addons.oximy.process import _proc_pidpath
 
 # Import the module under test
-from process import ClientProcess
-from process import ProcessResolver
+from mitmproxy.addons.oximy.process import ClientProcess
+from mitmproxy.addons.oximy.process import ProcessResolver
 
 # =============================================================================
 # _get_responsible_pid Tests

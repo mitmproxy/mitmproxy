@@ -11,14 +11,13 @@
         Width="320" Height="220"
         Opacity="0">
 
-    <Window.RenderTransform>
-        <TranslateTransform x:Name="SlideTransform" Y="-20"/>
-    </Window.RenderTransform>
-
-    <Border Background="{DynamicResource BackgroundBrush}"
+    <Border x:Name="RootBorder" Background="{DynamicResource BackgroundBrush}"
             CornerRadius="10"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1">
+        <Border.RenderTransform>
+            <TranslateTransform x:Name="SlideTransform" Y="20"/>
+        </Border.RenderTransform>
         <Border.Effect>
             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.25" Direction="270"/>
         </Border.Effect>

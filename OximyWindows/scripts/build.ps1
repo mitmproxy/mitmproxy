@@ -72,6 +72,21 @@ Write-Host "Restoring NuGet packages..." -ForegroundColor Yellow
 dotnet restore (Join-Path $ProjectDir "OximyWindows.csproj")
 Write-Host "  Restore complete" -ForegroundColor Green
 
+# Step 4b: Stop any running Oximy instance to avoid file locks
+$RunningProcess = Get-Process -Name "Oximy" -ErrorAction SilentlyContinue
+if ($RunningProcess) {
+    $pids = ($RunningProcess | ForEach-Object { $_.Id }) -join ", "
+    Write-Host "Stopping running Oximy instance(s) (PID: $pids)..." -ForegroundColor Yellow
+    try {
+        $RunningProcess | Stop-Process -Force -ErrorAction Stop
+        Start-Sleep -Seconds 2
+        Write-Host "  Stopped" -ForegroundColor Green
+    } catch {
+        Write-Warning "Could not stop Oximy process: $_"
+        Write-Warning "Build may fail if the process holds file locks."
+    }
+}
+
 # Step 5: Build
 Write-Host "Building OximyWindows ($Configuration)..." -ForegroundColor Yellow
 dotnet publish (Join-Path $ProjectDir "OximyWindows.csproj") `

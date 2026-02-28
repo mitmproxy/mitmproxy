@@ -13,7 +13,7 @@ from mitmproxy.net.encoding import decode_gzip
 from mitmproxy.net.encoding import decode_zstd
 
 try:
-    import sentry_service
+    from . import sentry_service
 except ImportError:
     try:
         import sentry_service  # type: ignore[import]

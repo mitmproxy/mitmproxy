@@ -2,9 +2,51 @@
 
 from __future__ import annotations
 
+import sys
 from unittest.mock import MagicMock
 
 import pytest
+
+# =============================================================================
+# Pydantic V1 / Python 3.14 Compatibility Patch
+# =============================================================================
+# spacy 3.x uses pydantic v1 BaseModel classes (via pydantic.v1) which break
+# on Python 3.14+ because ModelField.infer() can't resolve StrictStr type
+# annotations from the new typing module. This monkey-patch catches the error
+# and falls back to Any, allowing spacy (and thus Presidio) to load.
+
+if sys.version_info >= (3, 14):
+    try:
+        import pydantic.v1.fields as _pv1_fields
+
+        _orig_infer = _pv1_fields.ModelField.infer
+
+        @staticmethod
+        def _patched_infer(**kwargs):
+            try:
+                return _orig_infer(**kwargs)
+            except Exception:
+                from typing import Any
+                kwargs["value"] = _pv1_fields.Undefined
+                kwargs["annotation"] = Any
+                return _orig_infer(**kwargs)
+
+        _pv1_fields.ModelField.infer = _patched_infer
+    except ImportError:
+        pass
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _reset_presidio_state():
+    """Reset enforcement module state so Presidio gets a fresh initialization
+    attempt with the monkey-patch in place."""
+    try:
+        from mitmproxy.addons.oximy import enforcement
+    except ImportError:
+        import enforcement  # type: ignore[no-redef]
+    enforcement._presidio_available = None
+    enforcement._analyzer_engine = None
+    enforcement._anonymizer_engine = None
 
 # =============================================================================
 # gRPC/Protobuf Fixtures

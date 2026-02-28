@@ -14,14 +14,14 @@ from unittest.mock import patch
 
 import pytest
 
-from collector import _compile_redact_patterns
-from collector import _extract_metadata_from_path
-from collector import _resolve_query_order
-from collector import _should_skip_file
-from collector import DEFAULT_MAX_EVENT_SIZE
-from collector import LocalDataCollector
-from collector import redact_sensitive
-from collector import ScanState
+from mitmproxy.addons.oximy.collector import _compile_redact_patterns
+from mitmproxy.addons.oximy.collector import _extract_metadata_from_path
+from mitmproxy.addons.oximy.collector import _resolve_query_order
+from mitmproxy.addons.oximy.collector import _should_skip_file
+from mitmproxy.addons.oximy.collector import DEFAULT_MAX_EVENT_SIZE
+from mitmproxy.addons.oximy.collector import LocalDataCollector
+from mitmproxy.addons.oximy.collector import redact_sensitive
+from mitmproxy.addons.oximy.collector import ScanState
 
 # ---------------------------------------------------------------------------
 # Fixtures

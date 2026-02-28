@@ -33,7 +33,7 @@ except ImportError:
     HAS_WATCHFILES = False
 
 try:
-    import sentry_service
+    from . import sentry_service
     from oximy_logger import EventCode
     from oximy_logger import oximy_log
 except ImportError:
@@ -373,8 +373,20 @@ class LocalDataCollector:
         # Apply config
         self._apply_config(config)
 
-        # Build proxy-bypassing opener
-        self._opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        # Build proxy-bypassing opener with certifi CA bundle for SSL verification.
+        # The bundled Python does not use the macOS system keychain, so the default
+        # SSL context falls back to /private/etc/ssl/cert.pem which may be missing
+        # root CAs needed to verify api.oximy.com (hosted on Railway).
+        import ssl
+        try:
+            import certifi
+            _ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+        except ImportError:
+            _ssl_ctx = ssl.create_default_context()
+        self._opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}),
+            urllib.request.HTTPSHandler(context=_ssl_ctx),
+        )
 
         logger.info(
             f"LocalDataCollector initialized: "

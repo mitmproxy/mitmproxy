@@ -12,30 +12,30 @@ import json
 
 import pytest
 
-from normalize import _apply_decoder
-from normalize import _convert_bytes_to_str
-from normalize import _decode_grpc_frames
-from normalize import _decode_layers
-from normalize import _decode_msgpack
-from normalize import _decode_protobuf_schemaless
-from normalize import _detect_encoding
-from normalize import _get_anti_hijack_prefix
-from normalize import _has_anti_hijack_prefix
-from normalize import _is_grpc_content
-from normalize import _is_msgpack
-from normalize import _normalize_anti_hijack_stream
-from normalize import _normalize_sse
-from normalize import _to_string
+from mitmproxy.addons.oximy.normalize import _apply_decoder
+from mitmproxy.addons.oximy.normalize import _convert_bytes_to_str
+from mitmproxy.addons.oximy.normalize import _decode_grpc_frames
+from mitmproxy.addons.oximy.normalize import _decode_layers
+from mitmproxy.addons.oximy.normalize import _decode_msgpack
+from mitmproxy.addons.oximy.normalize import _decode_protobuf_schemaless
+from mitmproxy.addons.oximy.normalize import _detect_encoding
+from mitmproxy.addons.oximy.normalize import _get_anti_hijack_prefix
+from mitmproxy.addons.oximy.normalize import _has_anti_hijack_prefix
+from mitmproxy.addons.oximy.normalize import _is_grpc_content
+from mitmproxy.addons.oximy.normalize import _is_msgpack
+from mitmproxy.addons.oximy.normalize import _normalize_anti_hijack_stream
+from mitmproxy.addons.oximy.normalize import _normalize_sse
+from mitmproxy.addons.oximy.normalize import _to_string
 
 # Import the module under test
-from normalize import ANTI_HIJACK_PREFIXES
-from normalize import MAX_BODY_SIZE
-from normalize import MAX_DECODE_LAYERS
-from normalize import MSGPACK_MARKERS
-from normalize import normalize_body
-from normalize import normalize_grpc
-from normalize import ZLIB_PREFIXES
-from normalize import ZSTD_MAGIC
+from mitmproxy.addons.oximy.normalize import ANTI_HIJACK_PREFIXES
+from mitmproxy.addons.oximy.normalize import MAX_BODY_SIZE
+from mitmproxy.addons.oximy.normalize import MAX_DECODE_LAYERS
+from mitmproxy.addons.oximy.normalize import MSGPACK_MARKERS
+from mitmproxy.addons.oximy.normalize import normalize_body
+from mitmproxy.addons.oximy.normalize import normalize_grpc
+from mitmproxy.addons.oximy.normalize import ZLIB_PREFIXES
+from mitmproxy.addons.oximy.normalize import ZSTD_MAGIC
 
 # =============================================================================
 # _is_grpc_content Tests
@@ -389,7 +389,7 @@ class TestDetectEncoding:
 
     def test_short_base64_not_detected(self):
         """Base64 shorter than MIN_BASE64_LENGTH should not be detected."""
-        from normalize import MIN_BASE64_LENGTH
+        from mitmproxy.addons.oximy.normalize import MIN_BASE64_LENGTH
         short = base64.b64encode(b"hi")
         if len(short) < MIN_BASE64_LENGTH:
             assert _detect_encoding(short) is None

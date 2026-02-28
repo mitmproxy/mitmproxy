@@ -26,6 +26,7 @@ public partial class SuggestionNotificationWindow : Window
     private readonly PlaybookSuggestion _suggestion;
     private readonly DispatcherTimer _dismissTimer;
     private bool _actioned;
+    private bool _hiding;
 
     public SuggestionNotificationWindow(PlaybookSuggestion suggestion)
     {
@@ -75,7 +76,7 @@ public partial class SuggestionNotificationWindow : Window
         SetWindowLong(hwnd, GWL_EXSTYLE, style | WS_EX_NOACTIVATE);
 
         var fadeIn  = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.3));
-        var slideIn = new DoubleAnimation(-20, 0, TimeSpan.FromSeconds(0.3))
+        var slideIn = new DoubleAnimation(20, 0, TimeSpan.FromSeconds(0.3))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
@@ -87,9 +88,11 @@ public partial class SuggestionNotificationWindow : Window
 
     private void HideWindow()
     {
+        if (_hiding) return;
+        _hiding = true;
         _dismissTimer.Stop();
         var fadeOut  = new DoubleAnimation(1, 0, TimeSpan.FromSeconds(0.25));
-        var slideOut = new DoubleAnimation(0, -20, TimeSpan.FromSeconds(0.25));
+        var slideOut = new DoubleAnimation(0, 20, TimeSpan.FromSeconds(0.25));
         slideOut.Completed += (_, _) => Close();
         BeginAnimation(OpacityProperty, fadeOut);
         SlideTransform.BeginAnimation(TranslateTransform.YProperty, slideOut);

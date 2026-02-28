@@ -18,12 +18,13 @@ from unittest.mock import patch
 
 import pytest
 
-from addon import _parse_sensor_config
-from addon import _state
-from addon import MemoryTraceBuffer
-from addon import OximyAddon
-from addon import TLSPassthrough
-from process import ClientProcess
+from mitmproxy.addons.oximy.addon import _load_cached_config_or_passthrough
+from mitmproxy.addons.oximy.addon import _parse_sensor_config
+from mitmproxy.addons.oximy.addon import _state
+from mitmproxy.addons.oximy.addon import MemoryTraceBuffer
+from mitmproxy.addons.oximy.addon import OximyAddon
+from mitmproxy.addons.oximy.addon import TLSPassthrough
+from mitmproxy.addons.oximy.process import ClientProcess
 
 # =============================================================================
 # Test Helpers
@@ -601,6 +602,70 @@ class TestConfigParsing:
         assert result["allowed_host_origins"] == []
 
 
+class TestFailOpenEnforcementDisabled:
+    """Fail-open mode should disable enforcement policies when using cached config."""
+
+    @pytest.fixture(autouse=True)
+    def reset_state(self):
+        """Reset global state between tests."""
+        original_prev = _state.previous_sensor_enabled
+        original_active = _state.sensor_active
+        _state.previous_sensor_enabled = None
+        yield
+        _state.previous_sensor_enabled = original_prev
+        _state.sensor_active = original_active
+
+    @patch("mitmproxy.addons.oximy.addon._apply_sensor_state")
+    @patch("mitmproxy.addons.oximy.addon._post_command_results_immediate")
+    def test_cached_config_preserves_enforcement_policies(self, mock_post, mock_apply, tmp_path):
+        """When loading cached config in fail-open, enforcementPolicies are preserved (not cleared)."""
+        cached_config = {
+            "data": {
+                "whitelistedDomains": ["api.openai.com"],
+                "blacklistedWords": ["secret"],
+                "enforcementPolicies": [
+                    {"policyId": "p1", "policyName": "PII Redaction", "rules": []}
+                ],
+            }
+        }
+        cache_file = tmp_path / "sensor-config.json"
+        cache_file.write_text(json.dumps(cached_config))
+
+        result = _load_cached_config_or_passthrough(cache_file, None, {})
+
+        # Cached enforcement policies should be preserved so PII redaction keeps working
+        assert result["enforcementPolicies"] == [
+            {"policyId": "p1", "policyName": "PII Redaction", "rules": []}
+        ]
+        assert result["whitelist"] == ["api.openai.com"]
+        assert result["blacklist"] == ["secret"]
+
+    @patch("mitmproxy.addons.oximy.addon._apply_sensor_state")
+    @patch("mitmproxy.addons.oximy.addon._post_command_results_immediate")
+    def test_cached_config_without_enforcement_returns_none(self, mock_post, mock_apply, tmp_path):
+        """If cached config has no enforcementPolicies key, result has None (no-op in caller)."""
+        cached_config = {
+            "data": {
+                "whitelistedDomains": ["api.openai.com"],
+            }
+        }
+        cache_file = tmp_path / "sensor-config.json"
+        cache_file.write_text(json.dumps(cached_config))
+
+        result = _load_cached_config_or_passthrough(cache_file, None, {})
+
+        assert result["enforcementPolicies"] is None
+
+    def test_no_cache_returns_default_config(self, tmp_path):
+        """When no cache file exists, return default passthrough config."""
+        cache_file = tmp_path / "nonexistent.json"
+        default = {"passthrough": True}
+
+        result = _load_cached_config_or_passthrough(cache_file, None, default)
+
+        assert result == {"passthrough": True}
+
+
 # =============================================================================
 # TLS Passthrough Tests
 # =============================================================================
@@ -674,6 +739,56 @@ class TestTLSPassthroughIntegration:
         addon.tls_clienthello(data)
 
         assert data.ignore_connection is True
+
+    def test_tls_exception_failopen_passthrough(self):
+        """Exception in tls_clienthello → fail-open passthrough (don't break HTTPS)."""
+        addon = _make_addon(
+            whitelist=["api.openai.com"],
+            passthrough_patterns=[],
+        )
+        data = self._make_client_hello("api.openai.com")
+
+        # Force matches_domain to throw
+        with patch(
+            "mitmproxy.addons.oximy.addon.matches_domain",
+            side_effect=RuntimeError("corrupted whitelist"),
+        ):
+            addon.tls_clienthello(data)
+
+        # Should fail-open: passthrough, not crash
+        assert data.ignore_connection is True
+
+
+class TestConfigRefreshResilience:
+    """Tests that the config refresh thread survives exceptions."""
+
+    def test_refresh_loop_survives_exception(self):
+        """_refresh_config() exception doesn't kill the refresh thread."""
+        addon = object.__new__(OximyAddon)
+        addon._enabled = True
+        addon._config_refresh_stop = threading.Event()
+        addon._config_refresh_interval = 0.05  # 50ms for fast test
+
+        # Track calls with a thread-safe list; signal when second call arrives
+        calls = []
+        second_call = threading.Event()
+
+        def counting_refresh():
+            calls.append(1)
+            if len(calls) == 1:
+                raise RuntimeError("transient failure")
+            second_call.set()
+
+        addon._refresh_config = counting_refresh
+
+        addon._start_config_refresh_task()
+        try:
+            assert second_call.wait(timeout=5), "refresh thread died after exception"
+        finally:
+            addon._config_refresh_stop.set()
+            addon._config_refresh_thread.join(timeout=1)
+
+        assert len(calls) >= 2
 
 
 # =============================================================================
