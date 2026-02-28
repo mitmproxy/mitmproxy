@@ -5087,7 +5087,7 @@ class OximyAddon:
             try:
                 # Upload from memory buffer first
                 if self._direct_uploader and self._buffer and self._buffer.size() > 0:
-                    uploaded_count = self._direct_uploader.upload_all()
+                    uploaded_count = self._direct_uploader.upload_all(force=True)
                     if uploaded_count > 0:
                         total_uploaded += uploaded_count
                         # Estimate bytes (rough approximation)
