@@ -12,8 +12,6 @@ import json
 import os
 import re
 import threading
-
-# Import the functions under test
 import time
 import urllib.error
 from pathlib import Path
@@ -24,6 +22,7 @@ from unittest.mock import patch
 from mitmproxy.addons.oximy.addon import _build_url_regex
 from mitmproxy.addons.oximy.addon import _matches_url_pattern
 from mitmproxy.addons.oximy.addon import _resolve_api_base_url
+from mitmproxy.addons.oximy.addon import _state
 from mitmproxy.addons.oximy.addon import _write_force_logout_state
 from mitmproxy.addons.oximy.addon import _write_proxy_state
 from mitmproxy.addons.oximy.addon import contains_blacklist_word
@@ -39,7 +38,6 @@ from mitmproxy.addons.oximy.addon import matches_whitelist
 from mitmproxy.addons.oximy.addon import MemoryTraceBuffer
 from mitmproxy.addons.oximy.addon import OXIMY_STATE_FILE
 from mitmproxy.addons.oximy.addon import OximyAddon
-from mitmproxy.addons.oximy.addon import _state
 from mitmproxy.addons.oximy.addon import TLSPassthrough
 
 # =============================================================================
@@ -1276,7 +1274,6 @@ class TestMemoryFullDiskFallbackBlocking:
         buf.append({"id": 1})
 
         sleep_calls = []
-        original_sleep = time.sleep
 
         def spy_sleep(seconds):
             sleep_calls.append(seconds)
@@ -1765,7 +1762,6 @@ class TestFailurePermutations:
             addon._buffer.append({"id": i})
 
         call_count = [0]
-        original_upload = addon._direct_uploader.upload_batch
 
         def mock_upload(*args, **kwargs):
             call_count[0] += 1
