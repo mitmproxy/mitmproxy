@@ -53,6 +53,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 OXIMY_DIR = Path(os.environ.get("OXIMY_HOME", "~/.oximy")).expanduser()
 SCAN_STATE_FILE = OXIMY_DIR / "local-scan-state.json"
+BACKTRACK_STATE_FILE = OXIMY_DIR / "backtrack-state.json"
 OXIMY_TOKEN_FILE = OXIMY_DIR / "device-token"
 
 # API base URL resolution — same logic as addon.py to avoid circular import.
@@ -287,7 +288,30 @@ class ScanState:
             sources = self._data.setdefault("sources", {})
             src = sources.setdefault(source, {})
             files = src.setdefault("files", {})
-            files[filepath] = {"offset": offset, "mtime": mtime}
+            existing = files.get(filepath, {})
+            entry = {"offset": offset, "mtime": mtime}
+            # Preserve seeded_offset: the very first fast-forward offset.
+            # Backtrack uses this to know the true boundary of historical data.
+            if "seeded_offset" in existing:
+                entry["seeded_offset"] = existing["seeded_offset"]
+            files[filepath] = entry
+
+    def set_seeded_offset(self, source: str, filepath: str, offset: int) -> None:
+        """Record the first-ever fast-forward offset for a file.
+
+        Only writes if seeded_offset is not already set — it must never change
+        once recorded, so backtrack knows the true historical boundary.
+        """
+        with self._lock:
+            entry = (
+                self._data
+                .setdefault("sources", {})
+                .setdefault(source, {})
+                .setdefault("files", {})
+                .setdefault(filepath, {})
+            )
+            if "seeded_offset" not in entry:
+                entry["seeded_offset"] = offset
 
     def get_sqlite_state(self, source: str, db_key: str) -> dict:
         """Get state for a SQLite database.
@@ -323,7 +347,33 @@ class ScanState:
             sqlite = src.setdefault("sqlite", {})
             db = sqlite.setdefault(db_key, {})
             incremental = db.setdefault("incremental", {})
-            incremental[file_type] = {"last_value": last_value}
+            existing = incremental.get(file_type, {})
+            entry = {"last_value": last_value}
+            # Preserve seeded_last_value if already recorded
+            if "seeded_last_value" in existing:
+                entry["seeded_last_value"] = existing["seeded_last_value"]
+            incremental[file_type] = entry
+
+    def set_seeded_sqlite_incremental(
+        self, source: str, db_key: str, file_type: str, seeded_value: Any
+    ) -> None:
+        """Record the first-ever seeded incremental value for a query.
+
+        Only writes if seeded_last_value is not already set — it must never
+        change, so backtrack knows the true historical boundary.
+        """
+        with self._lock:
+            entry = (
+                self._data
+                .setdefault("sources", {})
+                .setdefault(source, {})
+                .setdefault("sqlite", {})
+                .setdefault(db_key, {})
+                .setdefault("incremental", {})
+                .setdefault(file_type, {})
+            )
+            if "seeded_last_value" not in entry:
+                entry["seeded_last_value"] = seeded_value
 
     def is_first_run(self) -> bool:
         """True if no state file existed on disk when we loaded."""
@@ -332,6 +382,172 @@ class ScanState:
                 src.get("files") or src.get("sqlite")
                 for src in self._data.get("sources", {}).values()
             )
+
+
+# ---------------------------------------------------------------------------
+# BacktrackState — persistent state for historical backtrack scanning
+# ---------------------------------------------------------------------------
+
+class BacktrackState:
+    """Persists backtrack scanning progress to disk.
+
+    Tracks which files and SQLite queries have been processed during
+    a historical backtrack scan, allowing resume after restart.
+    """
+
+    def __init__(self, state_file: Path | None = None):
+        self._state_file = state_file or BACKTRACK_STATE_FILE
+        self._lock = threading.Lock()
+        self._data: dict = {
+            "version": 1,
+            "config_updated_at": None,
+            "start_date": None,
+            "end_date": None,
+            "status": "pending",
+            "sources": {},
+            "stats": {
+                "files_total": 0,
+                "files_completed": 0,
+                "dbs_completed": 0,
+                "events_uploaded": 0,
+            },
+        }
+        self._load()
+
+    def _load(self) -> None:
+        if self._state_file.exists():
+            try:
+                with open(self._state_file, encoding="utf-8") as f:
+                    loaded = json.load(f)
+                if loaded.get("version") == 1:
+                    self._data = loaded
+            except (json.JSONDecodeError, IOError) as e:
+                logger.warning(f"Could not load backtrack state: {e}")
+
+    def save(self) -> None:
+        with self._lock:
+            try:
+                self._state_file.parent.mkdir(parents=True, exist_ok=True)
+                tmp = self._state_file.with_suffix(".tmp")
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump(self._data, f, indent=2)
+                tmp.replace(self._state_file)
+            except IOError as e:
+                logger.warning(f"Failed to save backtrack state: {e}")
+
+    @property
+    def config_updated_at(self) -> str | None:
+        with self._lock:
+            return self._data.get("config_updated_at")
+
+    @config_updated_at.setter
+    def config_updated_at(self, value: str | None) -> None:
+        with self._lock:
+            self._data["config_updated_at"] = value
+
+    @property
+    def status(self) -> str:
+        with self._lock:
+            return self._data.get("status", "pending")
+
+    @status.setter
+    def status(self, value: str) -> None:
+        with self._lock:
+            self._data["status"] = value
+
+    @property
+    def start_date(self) -> str | None:
+        with self._lock:
+            return self._data.get("start_date")
+
+    @start_date.setter
+    def start_date(self, value: str | None) -> None:
+        with self._lock:
+            self._data["start_date"] = value
+
+    @property
+    def end_date(self) -> str | None:
+        with self._lock:
+            return self._data.get("end_date")
+
+    @end_date.setter
+    def end_date(self, value: str | None) -> None:
+        with self._lock:
+            self._data["end_date"] = value
+
+    def get_file_status(self, source: str, filepath: str) -> dict:
+        with self._lock:
+            return (
+                self._data
+                .get("sources", {})
+                .get(source, {})
+                .get("files", {})
+                .get(filepath, {})
+            )
+
+    def set_file_status(
+        self, source: str, filepath: str, status: str,
+        bytes_read: int = 0, max_offset: int = 0,
+    ) -> None:
+        with self._lock:
+            sources = self._data.setdefault("sources", {})
+            src = sources.setdefault(source, {})
+            files = src.setdefault("files", {})
+            files[filepath] = {
+                "status": status,
+                "bytes_read": bytes_read,
+                "max_offset": max_offset,
+            }
+
+    def get_sqlite_query_status(self, source: str, db_key: str, file_type: str) -> dict:
+        with self._lock:
+            return (
+                self._data
+                .get("sources", {})
+                .get(source, {})
+                .get("sqlite", {})
+                .get(db_key, {})
+                .get("queries", {})
+                .get(file_type, {})
+            )
+
+    def set_sqlite_query_status(
+        self, source: str, db_key: str, file_type: str,
+        status: str, rows_uploaded: int = 0,
+    ) -> None:
+        with self._lock:
+            sources = self._data.setdefault("sources", {})
+            src = sources.setdefault(source, {})
+            sqlite = src.setdefault("sqlite", {})
+            db = sqlite.setdefault(db_key, {})
+            queries = db.setdefault("queries", {})
+            queries[file_type] = {
+                "status": status,
+                "rows_uploaded": rows_uploaded,
+            }
+
+    def increment_stat(self, key: str, amount: int = 1) -> None:
+        with self._lock:
+            stats = self._data.setdefault("stats", {})
+            stats[key] = stats.get(key, 0) + amount
+
+    def reset_for_new_config(self, config_updated_at: str, start_date: str, end_date: str) -> None:
+        """Reset state for a new backtrack config."""
+        with self._lock:
+            self._data = {
+                "version": 1,
+                "config_updated_at": config_updated_at,
+                "start_date": start_date,
+                "end_date": end_date,
+                "status": "pending",
+                "sources": {},
+                "stats": {
+                    "files_total": 0,
+                    "files_completed": 0,
+                    "dbs_completed": 0,
+                    "events_uploaded": 0,
+                },
+            }
 
 
 # ---------------------------------------------------------------------------
@@ -358,6 +574,7 @@ class LocalDataCollector:
         self._stop_event = threading.Event()
         self._watcher_thread: threading.Thread | None = None
         self._scan_thread: threading.Thread | None = None
+        self._backtrack_thread: threading.Thread | None = None
         self._config_lock = threading.Lock()
 
         # Internal event buffer
@@ -458,6 +675,8 @@ class LocalDataCollector:
             self._watcher_thread.join(timeout=5)
         if self._scan_thread and self._scan_thread.is_alive():
             self._scan_thread.join(timeout=5)
+        if self._backtrack_thread and self._backtrack_thread.is_alive():
+            self._backtrack_thread.join(timeout=10)
         # Final flush
         self._upload_buffer()
         self._scan_state.save()
@@ -702,12 +921,25 @@ class LocalDataCollector:
                 continue
 
             if is_startup:
-                # Fast-forward: record current EOF, don't read anything
+                # Fast-forward: record current EOF, don't read anything.
+                # Also stamp seeded_offset on first-ever fast-forward so
+                # backtrack knows the true historical boundary.
+                # IMPORTANT: only stamp seeded_offset for genuinely NEW files
+                # (not already in scan state). Files already tracked by a
+                # previous sensor run have had their data uploaded live —
+                # setting seeded_offset on them would cause backtrack to
+                # re-upload that data.
                 try:
                     st = os.stat(filepath)
+                    existing = self._scan_state.get_file_state(source_name, filepath)
+                    is_new_file = existing.get("offset") is None
                     self._scan_state.set_file_state(
                         source_name, filepath, st.st_size, st.st_mtime
                     )
+                    if is_new_file:
+                        self._scan_state.set_seeded_offset(
+                            source_name, filepath, st.st_size
+                        )
                 except OSError:
                     pass
                 continue
@@ -928,9 +1160,24 @@ class LocalDataCollector:
                 self._upload_buffer()
 
         if incremental_field and max_incremental_value is not None:
+            # Check if this query was already tracked before updating —
+            # needed to decide whether seeded_last_value should be stamped.
+            existing_inc = self._scan_state.get_sqlite_state(
+                source_name, db_key
+            ).get("incremental", {}).get(file_type, {})
+            was_new_query = existing_inc.get("last_value") is None
+
             self._scan_state.set_sqlite_incremental(
                 source_name, db_key, file_type, max_incremental_value
             )
+            # On first-ever seed of a genuinely NEW query, stamp
+            # seeded_last_value so backtrack knows the true historical
+            # boundary. Do NOT stamp for queries already tracked by a
+            # previous sensor run — their data was already uploaded live.
+            if seed_only and was_new_query:
+                self._scan_state.set_seeded_sqlite_incremental(
+                    source_name, db_key, file_type, max_incremental_value
+                )
 
         if row_count > 0:
             db_name = os.path.basename(db_path)
@@ -1409,3 +1656,626 @@ class LocalDataCollector:
             else:
                 result[name] = False
         return result
+
+    # ------------------------------------------------------------------
+    # Backtrack scanning
+    # ------------------------------------------------------------------
+
+    def handle_backtrack_config(self, backtrack_config: dict) -> None:
+        """Handle backtrack config from sensor-config API response.
+
+        Called from addon.py config refresh loop. Launches backtrack worker
+        if config changed or scan not yet started.
+        """
+        updated_at = backtrack_config.get("updatedAt", "")
+        if not updated_at:
+            return
+
+        # Load current backtrack state
+        bt_state = BacktrackState()
+
+        # Same config + completed → no-op
+        if bt_state.config_updated_at == updated_at and bt_state.status == "completed":
+            return
+
+        # Same config + thread still running → no-op
+        if bt_state.config_updated_at == updated_at and self._backtrack_thread and self._backtrack_thread.is_alive():
+            return
+
+        # Launch worker thread
+        logger.info("[BACKTRACK] Starting backtrack worker (updatedAt=%s)", updated_at)
+        self._backtrack_thread = threading.Thread(
+            target=self._backtrack_worker,
+            args=(backtrack_config,),
+            daemon=True,
+            name="oximy-backtrack-worker",
+        )
+        self._backtrack_thread.start()
+
+    def _backtrack_worker(self, backtrack_config: dict) -> None:
+        """One-shot historical scan of coding session files and databases.
+
+        Reads data that the live collector skipped during fast-forward:
+        - JSONL files: bytes [0, fast-forward offset]
+        - Full files: entire file if mtime in date range and not in live ScanState
+        - SQLite incremental: rows <= seeded last_value
+        - SQLite non-incremental: full dump if not already captured
+        """
+        try:
+            start_date_str = backtrack_config.get("startDate", "")
+            end_date_str = backtrack_config.get("endDate", "")
+            updated_at = backtrack_config.get("updatedAt", "")
+
+            if not start_date_str or not end_date_str:
+                logger.warning("[BACKTRACK] Missing startDate or endDate, skipping")
+                return
+
+            start_ts = datetime.fromisoformat(start_date_str.replace("Z", "+00:00")).timestamp()
+            end_ts = datetime.fromisoformat(end_date_str.replace("Z", "+00:00")).timestamp()
+
+            # Load/reset backtrack state
+            bt_state = BacktrackState()
+            if bt_state.config_updated_at != updated_at:
+                bt_state.reset_for_new_config(updated_at, start_date_str, end_date_str)
+                bt_state.save()
+
+            bt_state.status = "in_progress"
+            bt_state.save()
+
+            with self._config_lock:
+                config = self._config
+
+            sources = config.get("sources", [])
+
+            # Phase A: Glob files
+            for source_config in sources:
+                if self._stop_event.is_set():
+                    return
+                if not source_config.get("enabled", True):
+                    continue
+
+                source_name = source_config["name"]
+                detect_path = source_config.get("detect_path", "")
+                if detect_path:
+                    expanded = Path(detect_path.replace("~", str(Path.home())))
+                    if not expanded.exists():
+                        continue
+
+                for glob_config in source_config.get("globs", []):
+                    if self._stop_event.is_set():
+                        return
+                    try:
+                        self._backtrack_scan_glob(
+                            source_name, glob_config, start_ts, end_ts, bt_state,
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            "[BACKTRACK] Error scanning glob '%s': %s",
+                            glob_config.get("pattern"), e,
+                        )
+
+            # Phase B: SQLite databases
+            for source_config in sources:
+                if self._stop_event.is_set():
+                    return
+                if not source_config.get("enabled", True):
+                    continue
+
+                source_name = source_config["name"]
+                sqlite_configs = source_config.get("sqlite", [])
+                if not sqlite_configs:
+                    continue
+
+                detect_path = source_config.get("detect_path", "")
+                if detect_path:
+                    expanded = Path(detect_path.replace("~", str(Path.home())))
+                    if not expanded.exists():
+                        continue
+
+                for db_config in sqlite_configs:
+                    if self._stop_event.is_set():
+                        return
+                    try:
+                        self._backtrack_scan_sqlite(
+                            source_name, db_config, start_ts, end_ts, bt_state,
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            "[BACKTRACK] Error scanning SQLite '%s': %s",
+                            db_config.get("db_path"), e,
+                        )
+
+            # Done
+            bt_state.status = "completed"
+            bt_state.save()
+
+            stats = bt_state._data.get("stats", {})
+            logger.info(
+                "[BACKTRACK] Completed: %d files, %d DBs, %d events uploaded",
+                stats.get("files_completed", 0),
+                stats.get("dbs_completed", 0),
+                stats.get("events_uploaded", 0),
+            )
+
+        except Exception as e:
+            logger.error("[BACKTRACK] Worker failed: %s", e, exc_info=True)
+
+    def _backtrack_scan_glob(
+        self,
+        source_name: str,
+        glob_config: dict,
+        start_ts: float,
+        end_ts: float,
+        bt_state: BacktrackState,
+    ) -> None:
+        """Backtrack scan files matching a glob pattern."""
+        pattern = glob_config["pattern"].replace("~", str(Path.home()))
+        file_type = glob_config["file_type"]
+        read_mode = glob_config.get("read_mode", "incremental")
+        content_type = glob_config.get("content_type", "json")
+        skip_patterns = glob_config.get("skip_patterns", [])
+
+        matched_files = glob_module.glob(pattern, recursive=True)
+
+        for filepath in matched_files:
+            if self._stop_event.is_set():
+                return
+
+            filename = os.path.basename(filepath)
+            if _should_skip_file(filename, self._skip_files):
+                continue
+            if skip_patterns and any(
+                fnmatch.fnmatch(filepath, sp.replace("~", str(Path.home())))
+                for sp in skip_patterns
+            ):
+                continue
+
+            # Check if already completed in backtrack state
+            file_bt = bt_state.get_file_status(source_name, filepath)
+            if file_bt.get("status") == "completed":
+                continue
+
+            # Check mtime is within date range
+            try:
+                stat_result = os.stat(filepath)
+            except OSError:
+                bt_state.set_file_status(source_name, filepath, "skipped")
+                continue
+
+            if stat_result.st_mtime < start_ts or stat_result.st_mtime > end_ts:
+                continue
+
+            bt_state.increment_stat("files_total")
+
+            try:
+                if read_mode == "incremental":
+                    events = self._backtrack_read_incremental(
+                        source_name, filepath, file_type, bt_state,
+                    )
+                else:
+                    events = self._backtrack_read_full_file(
+                        source_name, filepath, file_type, content_type,
+                    )
+
+                if events:
+                    with self._buffer_lock:
+                        self._buffer.extend(events)
+                    bt_state.increment_stat("events_uploaded", len(events))
+                    self._upload_buffer()
+
+                bt_state.set_file_status(
+                    source_name, filepath, "completed",
+                    bytes_read=stat_result.st_size,
+                    max_offset=stat_result.st_size,
+                )
+                bt_state.increment_stat("files_completed")
+                bt_state.save()
+
+            except Exception as e:
+                logger.warning("[BACKTRACK] Error reading %s: %s", filepath, e)
+                bt_state.set_file_status(source_name, filepath, "failed")
+
+            # Pace between files
+            time.sleep(0.5)
+
+    def _backtrack_read_incremental(
+        self,
+        source_name: str,
+        filepath: str,
+        file_type: str,
+        bt_state: BacktrackState,
+    ) -> list[dict]:
+        """Read historical portion of a JSONL file (bytes 0 to seeded offset).
+
+        Uses seeded_offset (the first-ever fast-forward position) — NOT the
+        live offset, which includes bytes already captured by the live collector.
+        """
+        live_state = self._scan_state.get_file_state(source_name, filepath)
+        max_offset = live_state.get("seeded_offset", 0)
+
+        if max_offset <= 0:
+            # No seeded_offset — file was first seen by a live collector run
+            # (not fast-forwarded), so all its data was already captured live.
+            return []
+
+        # Resume from previous backtrack progress
+        file_bt = bt_state.get_file_status(source_name, filepath)
+        resume_offset = file_bt.get("bytes_read", 0)
+        if resume_offset >= max_offset:
+            return []
+
+        events: list[dict] = []
+        line_number = 0
+
+        try:
+            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                f.seek(resume_offset)
+                while f.tell() < max_offset:
+                    line = f.readline()
+                    if not line:
+                        break
+                    if f.tell() > max_offset:
+                        break
+
+                    line_number += 1
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+
+                    if len(stripped.encode("utf-8")) > self._max_event_size:
+                        continue
+
+                    stripped = redact_sensitive(stripped, self._redact_patterns)
+                    try:
+                        raw_obj = json.loads(stripped)
+                    except json.JSONDecodeError:
+                        continue
+
+                    timestamp = self._extract_timestamp(raw_obj, filepath)
+                    path_meta = _extract_metadata_from_path(filepath, source_name)
+
+                    envelope: dict[str, Any] = {
+                        "event_id": generate_event_id(),
+                        "timestamp": timestamp,
+                        "type": "local_session",
+                        "device_id": self._device_id,
+                        "source": source_name,
+                        "source_file": path_meta["source_file"],
+                        "file_type": file_type,
+                        "raw": raw_obj,
+                    }
+                    if "project_key" in path_meta:
+                        envelope["project_key"] = path_meta["project_key"]
+                    if "session_id" in path_meta:
+                        envelope["session_id"] = path_meta["session_id"]
+                    if line_number > 0:
+                        envelope["line_number"] = line_number
+
+                    events.append(envelope)
+
+        except (IOError, OSError) as e:
+            logger.debug("[BACKTRACK] Could not read %s: %s", filepath, e)
+
+        if events:
+            logger.info(
+                "[BACKTRACK] %s: %d historical event(s) from %s",
+                source_name, len(events), os.path.basename(filepath),
+            )
+
+        return events
+
+    def _backtrack_read_full_file(
+        self,
+        source_name: str,
+        filepath: str,
+        file_type: str,
+        content_type: str,
+    ) -> list[dict]:
+        """Read entire file for backtrack (full-read files only)."""
+        # Only read if the file has a seeded_offset — meaning it was first
+        # discovered during startup fast-forward and never read by the live
+        # collector. Files without seeded_offset were previously tracked and
+        # likely already captured by a live scan cycle.
+        live_state = self._scan_state.get_file_state(source_name, filepath)
+        if not live_state.get("seeded_offset"):
+            return []
+
+        try:
+            stat_result = os.stat(filepath)
+        except OSError:
+            return []
+
+        if content_type == "binary":
+            estimated_size = int(stat_result.st_size * 1.34) + 30
+        else:
+            estimated_size = stat_result.st_size + 20
+        if estimated_size > self._max_event_size:
+            return []
+
+        if content_type == "binary":
+            try:
+                with open(filepath, "rb") as f:
+                    data = f.read()
+            except (IOError, OSError):
+                return []
+            if not data:
+                return []
+            raw_line = json.dumps({"content_base64": base64.b64encode(data).decode("ascii")})
+        else:
+            try:
+                with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+            except (IOError, OSError):
+                return []
+            if not content.strip():
+                return []
+            if content_type == "text":
+                raw_line = json.dumps({"content": content})
+            else:
+                raw_line = content.strip()
+
+        raw_line = redact_sensitive(raw_line, self._redact_patterns)
+        try:
+            raw_obj = json.loads(raw_line)
+        except json.JSONDecodeError:
+            return []
+
+        timestamp = self._extract_timestamp(raw_obj, filepath)
+        path_meta = _extract_metadata_from_path(filepath, source_name)
+
+        envelope: dict[str, Any] = {
+            "event_id": generate_event_id(),
+            "timestamp": timestamp,
+            "type": "local_session",
+            "device_id": self._device_id,
+            "source": source_name,
+            "source_file": path_meta["source_file"],
+            "file_type": file_type,
+            "raw": raw_obj,
+        }
+        if "project_key" in path_meta:
+            envelope["project_key"] = path_meta["project_key"]
+        if "session_id" in path_meta:
+            envelope["session_id"] = path_meta["session_id"]
+
+        logger.info(
+            "[BACKTRACK] %s: read full file %s",
+            source_name, os.path.basename(filepath),
+        )
+        return [envelope]
+
+    def _backtrack_scan_sqlite(
+        self,
+        source_name: str,
+        db_config: dict,
+        start_ts: float,
+        end_ts: float,
+        bt_state: BacktrackState,
+    ) -> None:
+        """Backtrack scan a SQLite database."""
+        raw_path = db_config["db_path"].replace("~", str(Path.home()))
+        db_path = os.path.expandvars(raw_path)
+
+        if not os.path.isfile(db_path):
+            return
+
+        # Check mtime in range
+        try:
+            current_mtime = os.stat(db_path).st_mtime
+        except OSError:
+            return
+
+        wal_path = db_path + "-wal"
+        try:
+            wal_mtime = os.stat(wal_path).st_mtime
+            current_mtime = max(current_mtime, wal_mtime)
+        except OSError:
+            pass
+
+        if current_mtime < start_ts or current_mtime > end_ts:
+            return
+
+        db_key = os.path.basename(db_path)
+        queries = db_config.get("queries", [])
+
+        try:
+            ordered_queries = _resolve_query_order(queries)
+        except ValueError as e:
+            logger.warning("[BACKTRACK] Query ordering error for %s: %s", db_path, e)
+            return
+
+        uri = f"file:{db_path}?mode=ro"
+        try:
+            conn = sqlite3.connect(uri, uri=True, timeout=5)
+        except sqlite3.Error as e:
+            logger.warning("[BACKTRACK] Could not open SQLite DB %s: %s", db_path, e)
+            return
+
+        try:
+            for query_config in ordered_queries:
+                if self._stop_event.is_set():
+                    return
+
+                file_type = query_config["file_type"]
+
+                # Check if already completed
+                q_bt = bt_state.get_sqlite_query_status(source_name, db_key, file_type)
+                if q_bt.get("status") == "completed":
+                    continue
+
+                try:
+                    rows_uploaded = self._backtrack_execute_sqlite_query(
+                        conn, source_name, db_path, db_key,
+                        query_config, bt_state,
+                    )
+                    bt_state.set_sqlite_query_status(
+                        source_name, db_key, file_type,
+                        "completed", rows_uploaded,
+                    )
+                    bt_state.save()
+                except sqlite3.DatabaseError as e:
+                    logger.warning("[BACKTRACK] SQLite query error in %s: %s", db_path, e)
+                    bt_state.set_sqlite_query_status(
+                        source_name, db_key, file_type, "failed",
+                    )
+                    break
+        finally:
+            conn.close()
+
+        bt_state.increment_stat("dbs_completed")
+        bt_state.save()
+
+    def _backtrack_execute_sqlite_query(
+        self,
+        conn: sqlite3.Connection,
+        source_name: str,
+        db_path: str,
+        db_key: str,
+        query_config: dict,
+        bt_state: BacktrackState,
+    ) -> int:
+        """Execute one SQLite query for backtrack, returning rows uploaded.
+
+        For incremental queries: reads rows <= seeded last_value from live ScanState.
+        For non-incremental: full dump if not already captured by live collector.
+        """
+        file_type = query_config["file_type"]
+        sql = query_config["sql"]
+        incremental_field = query_config.get("incremental_field")
+        backtrack_sql = query_config.get("backtrack_sql")
+
+        home = str(Path.home())
+        if db_path.startswith(home):
+            source_file = "~" + db_path[len(home):]
+        else:
+            source_file = db_path
+
+        row_count = 0
+
+        if incremental_field:
+            # Get the seeded last_value from live ScanState — this is the ceiling
+            live_db_state = self._scan_state.get_sqlite_state(source_name, db_key)
+            seeded_last_value = (
+                live_db_state
+                .get("incremental", {})
+                .get(file_type, {})
+                .get("seeded_last_value")
+            )
+
+            if seeded_last_value is None:
+                # No seeded value — nothing to backtrack
+                return 0
+
+            # Two-tier query strategy:
+            # 1. Use backtrack_sql if available (clean SELECT, no WHERE)
+            # 2. Fallback: use live sql with params=(0,) to get all rows
+            if backtrack_sql:
+                cursor = conn.execute(backtrack_sql)
+            elif "?" in sql:
+                cursor = conn.execute(sql, (0,))
+            else:
+                cursor = conn.execute(sql)
+
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+
+            for row in cursor:
+                if self._stop_event.is_set():
+                    break
+
+                row_dict = dict(zip(columns, row))
+
+                # Client-side filter: KEEP only rows where inc_val <= seeded_last_value
+                inc_val = self._get_incremental_value(row_dict, incremental_field)
+                if inc_val is None:
+                    continue
+                if inc_val > seeded_last_value:
+                    continue
+
+                raw_line = json.dumps(row_dict, separators=(",", ":"), default=str)
+                if len(raw_line.encode("utf-8")) > self._max_event_size:
+                    continue
+
+                raw_line = redact_sensitive(raw_line, self._redact_patterns)
+                try:
+                    raw_obj = json.loads(raw_line)
+                except json.JSONDecodeError:
+                    continue
+
+                timestamp = self._extract_timestamp(raw_obj, db_path)
+
+                envelope: dict[str, Any] = {
+                    "event_id": generate_event_id(),
+                    "timestamp": timestamp,
+                    "type": "local_session",
+                    "device_id": self._device_id,
+                    "source": source_name,
+                    "source_file": source_file,
+                    "file_type": file_type,
+                    "raw": raw_obj,
+                }
+
+                with self._buffer_lock:
+                    self._buffer.append(envelope)
+                row_count += 1
+
+                with self._buffer_lock:
+                    buf_size = len(self._buffer)
+                if buf_size >= self._max_events_per_batch:
+                    self._upload_buffer()
+
+        else:
+            # Non-incremental: full dump if live ScanState hasn't captured it
+            live_db_state = self._scan_state.get_sqlite_state(source_name, db_key)
+            if live_db_state.get("mtime"):
+                return 0  # Already captured by live collector
+
+            cursor = conn.execute(sql)
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+
+            for row in cursor:
+                if self._stop_event.is_set():
+                    break
+
+                row_dict = dict(zip(columns, row))
+
+                raw_line = json.dumps(row_dict, separators=(",", ":"), default=str)
+                if len(raw_line.encode("utf-8")) > self._max_event_size:
+                    continue
+
+                raw_line = redact_sensitive(raw_line, self._redact_patterns)
+                try:
+                    raw_obj = json.loads(raw_line)
+                except json.JSONDecodeError:
+                    continue
+
+                timestamp = self._extract_timestamp(raw_obj, db_path)
+
+                envelope: dict[str, Any] = {
+                    "event_id": generate_event_id(),
+                    "timestamp": timestamp,
+                    "type": "local_session",
+                    "device_id": self._device_id,
+                    "source": source_name,
+                    "source_file": source_file,
+                    "file_type": file_type,
+                    "raw": raw_obj,
+                }
+
+                with self._buffer_lock:
+                    self._buffer.append(envelope)
+                row_count += 1
+
+                with self._buffer_lock:
+                    buf_size = len(self._buffer)
+                if buf_size >= self._max_events_per_batch:
+                    self._upload_buffer()
+
+        if row_count > 0:
+            bt_state.increment_stat("events_uploaded", row_count)
+            self._upload_buffer()
+            logger.info(
+                "[BACKTRACK] %s: %d historical row(s) from %s:%s",
+                source_name, row_count, os.path.basename(db_path), file_type,
+            )
+
+        return row_count
