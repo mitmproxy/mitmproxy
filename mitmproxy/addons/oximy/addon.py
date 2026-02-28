@@ -4947,7 +4947,6 @@ class OximyAddon:
         def upload_loop():
             logger.info("Upload worker thread started")
             while not self._upload_stop.is_set():
-                # Wait for signal or timeout — interruptible sleep
                 self._upload_trigger.wait(timeout=self._upload_interval_seconds)
                 self._upload_trigger.clear()
 
@@ -4955,6 +4954,12 @@ class OximyAddon:
                     break
 
                 self._upload_tick()
+
+                # If buffer still has data after tick, re-signal to drain
+                # immediately. Covers the race where a signal arrived between
+                # wait() returning and clear() swallowing it.
+                if self._buffer and self._buffer.size() > 0:
+                    self._upload_trigger.set()
 
             logger.info("Upload worker thread stopped")
 
