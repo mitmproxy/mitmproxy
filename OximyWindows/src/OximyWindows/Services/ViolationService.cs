@@ -134,8 +134,42 @@ public class ViolationService
     public void Start()
     {
         if (_pollTimer.IsEnabled) return;
+
+        // Seed _seenIds with all existing violations so we don't re-show stale popups on restart
+        SeedExistingViolations();
+
         _pollTimer.Start();
         Debug.WriteLine("[ViolationService] Started polling");
+    }
+
+    /// <summary>
+    /// Pre-populate _seenIds with all violations already in the file.
+    /// These were shown in a previous session — only violations appearing after Start() are new.
+    /// </summary>
+    private void SeedExistingViolations()
+    {
+        var path = Path.Combine(Constants.OximyDir, "violations.json");
+        if (!File.Exists(path)) return;
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            var wrapper = JsonSerializer.Deserialize<ViolationsFile>(json);
+            var entries = wrapper?.Violations;
+            if (entries == null) return;
+
+            foreach (var entry in entries)
+            {
+                if (!string.IsNullOrEmpty(entry.Id))
+                    _seenIds.Add(entry.Id);
+            }
+
+            Debug.WriteLine($"[ViolationService] Seeded {_seenIds.Count} existing violation IDs");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ViolationService] Failed to seed existing violations: {ex.Message}");
+        }
     }
 
     public void Stop()

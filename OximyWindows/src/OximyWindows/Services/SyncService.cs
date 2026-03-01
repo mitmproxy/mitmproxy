@@ -413,7 +413,11 @@ public class SyncService : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            var count = 0;
+            // Buffer count from addon (via remote-state.json)
+            var bufferCount = RemoteStateService.Instance.EventsPending;
+
+            // Disk trace files not yet uploaded
+            var diskCount = 0;
             var files = GetTraceFiles();
 
             foreach (var file in files)
@@ -423,10 +427,10 @@ public class SyncService : INotifyPropertyChanged, IDisposable
                 var syncedLines = state?.LastSyncedLine ?? 0;
                 var totalLines = await CountLinesAsync(file);
 
-                count += Math.Max(0, totalLines - syncedLines);
+                diskCount += Math.Max(0, totalLines - syncedLines);
             }
 
-            PendingEventCount = count;
+            PendingEventCount = bufferCount + diskCount;
         }
         catch
         {

@@ -64,15 +64,14 @@ public static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntP
     Write-Warning "Failed to disable proxy: $_"
 }
 
-# 4. Remove Scheduled Task (MDM auto-start)
-Write-Log "Removing Scheduled Task..."
+# 4. Remove Scheduled Tasks
+Write-Log "Removing Scheduled Tasks..."
 try {
     schtasks.exe /Delete /TN "Oximy\OximyAutoStart" /F 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Log "Scheduled Task removed"
-    }
+    schtasks.exe /Delete /TN "Oximy\OximyProxyCleanup" /F 2>$null
+    Write-Log "Scheduled Tasks removed"
 } catch {
-    # Task might not exist - that's OK
+    # Tasks might not exist - that's OK
 }
 
 # 5. Remove HKCU Run key

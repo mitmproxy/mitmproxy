@@ -74,40 +74,84 @@ public class CertificateService : INotifyPropertyChanged
 
     /// <summary>
     /// Check if Oximy's CA is installed in the Windows certificate store.
+    /// Verifies the thumbprint matches the cert on disk to detect stale/regenerated certs.
     /// </summary>
     private bool IsCAInCertStore()
     {
-        // Try LocalMachine first (system-wide)
-        try
+        var diskThumbprint = GetDiskCertThumbprint();
+        if (diskThumbprint == null)
+            return false;
+
+        foreach (var location in new[] { StoreLocation.LocalMachine, StoreLocation.CurrentUser })
         {
-            using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
-            store.Open(OpenFlags.ReadOnly);
-            var certs = store.Certificates.Find(
-                X509FindType.FindBySubjectName,
-                OximyCACommonName,
-                validOnly: false);
-            if (certs.Count > 0)
-                return true;
-        }
-        catch (CryptographicException)
-        {
-            // No access to LocalMachine store
+            try
+            {
+                using var store = new X509Store(StoreName.Root, location);
+                store.Open(OpenFlags.ReadOnly);
+                var certs = store.Certificates.Find(
+                    X509FindType.FindByThumbprint,
+                    diskThumbprint,
+                    validOnly: false);
+                if (certs.Count > 0)
+                    return true;
+            }
+            catch (CryptographicException)
+            {
+                // No access to this store
+            }
         }
 
-        // Try CurrentUser as fallback
+        return false;
+    }
+
+    /// <summary>
+    /// Get the thumbprint of the CA certificate file on disk.
+    /// </summary>
+    private static string? GetDiskCertThumbprint()
+    {
         try
         {
-            using var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
-            store.Open(OpenFlags.ReadOnly);
-            var certs = store.Certificates.Find(
-                X509FindType.FindBySubjectName,
-                OximyCACommonName,
-                validOnly: false);
-            return certs.Count > 0;
+            if (!File.Exists(Constants.CACertPath))
+                return null;
+            var certPem = File.ReadAllText(Constants.CACertPath);
+            var certBytes = ConvertPemToDer(certPem);
+            using var cert = new X509Certificate2(certBytes);
+            return cert.Thumbprint;
         }
-        catch (CryptographicException)
+        catch
         {
-            return false;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Remove oximy CA certs from stores that don't match the expected thumbprint.
+    /// </summary>
+    private static void RemoveStaleCerts(string expectedThumbprint)
+    {
+        foreach (var location in new[] { StoreLocation.CurrentUser, StoreLocation.LocalMachine })
+        {
+            try
+            {
+                using var store = new X509Store(StoreName.Root, location);
+                store.Open(OpenFlags.ReadWrite);
+                var certs = store.Certificates.Find(
+                    X509FindType.FindBySubjectName,
+                    OximyCACommonName,
+                    validOnly: false);
+                foreach (var cert in certs)
+                {
+                    if (!string.Equals(cert.Thumbprint, expectedThumbprint, StringComparison.OrdinalIgnoreCase))
+                    {
+                        store.Remove(cert);
+                        Debug.WriteLine($"[CertificateService] Removed stale cert {cert.Thumbprint} from {location}");
+                    }
+                }
+            }
+            catch (CryptographicException)
+            {
+                // No write access to this store, skip
+            }
         }
     }
 
@@ -138,6 +182,9 @@ public class CertificateService : INotifyPropertyChanged
         var certPem = await File.ReadAllTextAsync(Constants.CACertPath);
         var certBytes = ConvertPemToDer(certPem);
         using var cert = new X509Certificate2(certBytes);
+
+        // Remove any stale oximy certs with mismatched thumbprints before installing
+        RemoveStaleCerts(cert.Thumbprint);
 
         // Try LocalMachine first (system-wide, requires admin)
         try
@@ -234,6 +281,11 @@ public class CertificateService : INotifyPropertyChanged
     {
         if (!IsCAGenerated)
             await GenerateCAAsync();
+
+        // Remove any stale oximy certs with mismatched thumbprints
+        var diskThumbprint = GetDiskCertThumbprint();
+        if (diskThumbprint != null)
+            RemoveStaleCerts(diskThumbprint);
 
         // Use certutil with elevation to install to LocalMachine\Root (system-wide)
         // This will show UAC prompt

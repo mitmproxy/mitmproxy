@@ -232,6 +232,25 @@ def _add_custom_recognizers(analyzer) -> None:
         analyzer.registry.add_recognizer(recognizer)
 
 
+def _ensure_spacy_model(model_name: str) -> None:
+    """Download the spaCy model if it's not already installed.
+
+    Must run before the proxy is active, otherwise the download goes through
+    the proxy and fails on SSL verification.
+    """
+    try:
+        import spacy
+        spacy.load(model_name)
+    except OSError:
+        logger.info("Model %s is not installed. Downloading...", model_name)
+        import subprocess
+        import sys
+        subprocess.check_call(
+            [sys.executable, "-m", "spacy", "download", model_name],
+            stdout=subprocess.DEVNULL,
+        )
+
+
 def _get_analyzer():
     """Lazy-load and return the Presidio AnalyzerEngine, or None if unavailable."""
     global _analyzer_engine, _presidio_available
@@ -246,6 +265,7 @@ def _get_analyzer():
         # Use en_core_web_md (~40MB) for NER (person, location, org, phone, etc.).
         # The md model includes word vectors for good accuracy at a fraction of
         # the size of en_core_web_lg (~560MB).
+        _ensure_spacy_model("en_core_web_md")
         nlp_config = {
             "nlp_engine_name": "spacy",
             "models": [{"lang_code": "en", "model_name": "en_core_web_md"}],

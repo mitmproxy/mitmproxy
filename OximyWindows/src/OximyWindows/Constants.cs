@@ -25,10 +25,9 @@ public static class Constants
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".oximy");
 
-    // mitmproxy uses its own directory for certificates
-    public static string MitmproxyDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".mitmproxy");
+    // Certs live in ~/.oximy/ alongside traces, config, etc. (unified confdir)
+    // mitmproxy is launched with --set confdir=~/.oximy so certs are generated here
+    public static string MitmproxyDir => OximyDir;
 
     public static string TracesDir => Path.Combine(OximyDir, "traces");
     public static string LogsDir => Path.Combine(OximyDir, "logs");
@@ -37,8 +36,8 @@ public static class Constants
 
     // Certificate file paths - use oximy naming (matches CONF_BASENAME in mitmproxy/options.py)
     // mitmproxy auto-generates these when it starts with CN=oximy
-    public static string CACertPath => Path.Combine(MitmproxyDir, "oximy-ca-cert.pem");
-    public static string CAKeyPath => Path.Combine(MitmproxyDir, "oximy-ca.pem");
+    public static string CACertPath => Path.Combine(OximyDir, "oximy-ca-cert.pem");
+    public static string CAKeyPath => Path.Combine(OximyDir, "oximy-ca.pem");
 
     // Python paths (relative to app directory)
     public static string PythonEmbedDir => Path.Combine(AppContext.BaseDirectory, "Resources", "python-embed");

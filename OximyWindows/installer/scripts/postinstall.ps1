@@ -85,6 +85,26 @@ if ($mdmToken) {
     }
 }
 
+# Install proxy cleanup Scheduled Task (all installs, not just MDM)
+# Runs at every logon with no delay to disable orphaned proxy from abrupt shutdowns.
+Write-Log "Installing proxy cleanup Scheduled Task..."
+$cleanupScript = Join-Path $InstallPath "scripts\oximy-proxy-cleanup.ps1"
+$cleanupTaskName = "Oximy\OximyProxyCleanup"
+
+schtasks.exe /Delete /TN "$cleanupTaskName" /F 2>$null
+
+$cleanupResult = schtasks.exe /Create /F `
+    /TN "$cleanupTaskName" `
+    /TR "powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File `"$cleanupScript`"" `
+    /SC ONLOGON `
+    /RL LIMITED
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Log "Proxy cleanup Scheduled Task created successfully"
+} else {
+    Write-Warning "Failed to create proxy cleanup Scheduled Task (exit code: $LASTEXITCODE)"
+}
+
 # Install system-level Scheduled Task for ForceAutoStart
 if ($forceAutoStart) {
     Write-Log "MDM: Installing system Scheduled Task for forced auto-start..."

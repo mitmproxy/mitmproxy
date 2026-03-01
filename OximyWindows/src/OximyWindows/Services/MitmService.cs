@@ -21,6 +21,7 @@ public class MitmService : IDisposable
     private int _restartAttempts;
     private bool _disposed;
     private bool _intentionalStop;
+    private readonly SemaphoreSlim _startLock = new(1, 1);
 
     public int? CurrentPort { get; private set; }
     public bool IsRunning => _mitmProcess is { HasExited: false };
@@ -47,8 +48,18 @@ public class MitmService : IDisposable
                 {
                     try
                     {
+                        var pid = proc.Id;
                         proc.Kill(entireProcessTree: true);
-                        Debug.WriteLine($"[MitmService] Killed {name} process (PID {proc.Id})");
+                        // Wait for the process to actually exit — Kill() is async on Windows
+                        // and the process may still hold TCP sockets briefly after the call.
+                        if (!proc.WaitForExit(5000))
+                        {
+                            Debug.WriteLine($"[MitmService] WARNING: {name} PID {pid} did not exit within 5s after Kill()");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[MitmService] Killed {name} process (PID {pid}), exit confirmed");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -66,8 +77,7 @@ public class MitmService : IDisposable
             }
         }
 
-        // Give processes time to fully terminate
-        Thread.Sleep(200);
+        // No fixed sleep needed — WaitForExit above ensures processes are fully terminated
         Debug.WriteLine("[MitmService] Cleanup complete");
     }
 
@@ -110,6 +120,7 @@ public class MitmService : IDisposable
                             using var proc = Process.GetProcessById(pid);
                             Debug.WriteLine($"[MitmService] Killing {proc.ProcessName} (PID {pid}) holding port {port}");
                             proc.Kill(entireProcessTree: true);
+                            proc.WaitForExit(5000);
                         }
                         catch (Exception ex)
                         {
@@ -157,6 +168,23 @@ public class MitmService : IDisposable
     /// </summary>
     public async Task StartAsync()
     {
+        // Prevent concurrent starts — multiple callers (relaunch, MainWindow, ScheduleRestart)
+        // can race, causing two mitmdump processes to fight for the same port.
+        // The second process logs an Errno 10048 error, which mitmproxy's ErrorCheck
+        // addon treats as fatal and calls sys.exit(1).
+        await _startLock.WaitAsync();
+        try
+        {
+            await StartAsyncCore();
+        }
+        finally
+        {
+            _startLock.Release();
+        }
+    }
+
+    private async Task StartAsyncCore()
+    {
         if (IsRunning)
             return;
 
@@ -168,8 +196,11 @@ public class MitmService : IDisposable
             KillAllMitmProcesses();
             // Also kill anything holding our preferred port (catches zombie python.exe etc.)
             KillProcessOnPort(Constants.PreferredPort);
-            Thread.Sleep(300); // Give port time to be released (OK on threadpool thread)
         });
+
+        // Wait for the port to be fully released by the OS.
+        // Even after process termination, Windows TCP sockets may linger in TIME_WAIT.
+        await WaitForPortFreeAsync(Constants.PreferredPort);
 
         // Rotate log file if too large
         RotateLogIfNeeded();
@@ -277,6 +308,24 @@ public class MitmService : IDisposable
 
             if (!ready)
             {
+                // Kill the process that failed to bind — prevents zombie overlap
+                // with the next restart attempt causing duplicate logs.
+                // Detach Exited handler first to avoid triggering a concurrent ScheduleRestart.
+                try
+                {
+                    if (_mitmProcess is { HasExited: false })
+                    {
+                        Debug.WriteLine("[MitmService] Killing mitmproxy process that failed to bind port");
+                        _mitmProcess.Exited -= OnProcessExited;
+                        _mitmProcess.Kill(entireProcessTree: true);
+                        _mitmProcess.WaitForExit(5000);
+                    }
+                }
+                catch (Exception killEx)
+                {
+                    Debug.WriteLine($"[MitmService] Failed to kill non-listening process: {killEx.Message}");
+                }
+
                 var stderrOutput = stderrLines.Count > 0
                     ? $"\nStderr:\n{string.Join("\n", stderrLines)}"
                     : "";
@@ -503,6 +552,31 @@ public class MitmService : IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Wait until a port is fully released and available for binding.
+    /// Critical after killing a process — Windows TCP sockets can linger
+    /// in TIME_WAIT for several seconds after process termination.
+    /// </summary>
+    private async Task<bool> WaitForPortFreeAsync(int port, int timeoutSeconds = 10)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            if (IsPortAvailable(port))
+            {
+                Debug.WriteLine($"[MitmService] Port {port} is now free (took {stopwatch.ElapsedMilliseconds}ms)");
+                return true;
+            }
+
+            await Task.Delay(250);
+        }
+
+        Debug.WriteLine($"[MitmService] Timeout waiting for port {port} to become free");
+        return false;
+    }
+
     private static string BuildArguments(int port)
     {
         var args = new List<string>
@@ -510,8 +584,7 @@ public class MitmService : IDisposable
             $"-s \"{Constants.AddonPath}\"",
             "--set oximy_enabled=true",
             $"--set \"oximy_output_dir={Constants.TracesDir}\"",
-            // Use mitmproxy's default confdir (~/.mitmproxy) for certificates
-            // This avoids certificate format/installation issues
+            $"--set \"confdir={Constants.OximyDir}\"",  // Unified confdir — certs + config in ~/.oximy
             "--set oximy_manage_proxy=true",   // Python addon manages proxy based on sensor_enabled
             $"--mode regular@{port}",
             "--listen-host 127.0.0.1",
@@ -579,19 +652,22 @@ public class MitmService : IDisposable
 
     /// <summary>
     /// Schedule an automatic restart with exponential backoff.
-    /// First 3 attempts: immediate (100ms). After that: exponential backoff up to 60s.
+    /// First 3 attempts: 2s delay. After that: exponential backoff up to 60s.
     /// Never gives up — keeps retrying until Stop() is called or app exits.
     /// </summary>
     private async void ScheduleRestart()
     {
+        if (_disposed || _intentionalStop)
+            return;
+
         _restartAttempts++;
 
-        // First 3 attempts: fast restart (100ms)
+        // First 3 attempts: 2s delay (allows Windows TCP TIME_WAIT cleanup)
         // After that: exponential backoff capped at 60 seconds
         int delayMs;
         if (_restartAttempts <= 3)
         {
-            delayMs = 100;
+            delayMs = 2000;
         }
         else
         {
@@ -744,6 +820,8 @@ public class MitmService : IDisposable
         _disposed = true;
         _restartCts?.Cancel();
         _restartCts?.Dispose();
+        _restartCts = null;
+        _startLock.Dispose();
 
         Stop();
 

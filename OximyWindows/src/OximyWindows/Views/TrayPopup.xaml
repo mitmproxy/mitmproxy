@@ -23,8 +23,18 @@
         </Border.Effect>
 
         <Grid>
-            <!-- Content based on current phase -->
-            <ContentControl x:Name="ContentHost"/>
+            <!-- Invisible rounded mask for clipping child content to the border's rounded corners.
+                 Without this, child views with their own Background paint a rectangle that
+                 bleeds over the top corners of the 12 px rounded window. -->
+            <Border x:Name="ClipMask" CornerRadius="11" Background="White"/>
+
+            <!-- Content clipped to rounded shape -->
+            <Grid>
+                <Grid.OpacityMask>
+                    <VisualBrush Visual="{Binding ElementName=ClipMask}"/>
+                </Grid.OpacityMask>
+                <ContentControl x:Name="ContentHost"/>
+            </Grid>
         </Grid>
     </Border>
 </Window>
