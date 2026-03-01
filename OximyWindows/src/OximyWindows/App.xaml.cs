@@ -79,6 +79,10 @@ public partial class App : Application
         // FAIL-OPEN: This MUST run before any UI loads to restore internet connectivity.
         ProxyService.CleanupOrphanedProxy();
 
+        // Ensure the logon-time proxy cleanup scheduled task exists (covers dev installs
+        // that bypass postinstall.ps1). Fails silently if no admin rights.
+        EnsureProxyCleanupTask();
+
         // Single instance check
         const string mutexName = "OximyWindowsSingleInstance";
         _mutex = new Mutex(true, mutexName, out var createdNew);
@@ -747,6 +751,65 @@ public partial class App : Application
         {
             // Ignore errors during shutdown
         }
+    }
+
+    /// <summary>
+    /// Ensure the OximyProxyCleanup scheduled task exists so that orphaned proxy
+    /// settings are cleaned up at logon even before the app starts.
+    /// This covers dev installs that bypass postinstall.ps1 (Inno Setup).
+    /// Fails silently if the task already exists or if we lack permissions.
+    /// </summary>
+    private static void EnsureProxyCleanupTask()
+    {
+        try
+        {
+            var queryResult = RunSchtasks("/Query /TN \"Oximy\\OximyProxyCleanup\"");
+            if (queryResult == 0)
+            {
+                Debug.WriteLine("[App] OximyProxyCleanup task already exists");
+                return;
+            }
+
+            // Task doesn't exist — find the cleanup script relative to the running exe
+            var exeDir = AppContext.BaseDirectory;
+            var scriptPath = Path.Combine(exeDir, "scripts", "oximy-proxy-cleanup.ps1");
+            if (!File.Exists(scriptPath))
+            {
+                Debug.WriteLine($"[App] Cleanup script not found at: {scriptPath}");
+                return;
+            }
+
+            var createArgs = $"/Create /F /TN \"Oximy\\OximyProxyCleanup\" " +
+                $"/TR \"powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File \\\"{scriptPath}\\\"\" " +
+                $"/SC ONLOGON /RL LIMITED";
+
+            var createResult = RunSchtasks(createArgs);
+            Debug.WriteLine(createResult == 0
+                ? "[App] OximyProxyCleanup task created"
+                : $"[App] Failed to create OximyProxyCleanup task (exit code: {createResult})");
+        }
+        catch (Exception ex)
+        {
+            // Non-critical — the app's own CleanupOrphanedProxy() is the fallback
+            Debug.WriteLine($"[App] EnsureProxyCleanupTask failed: {ex.Message}");
+        }
+    }
+
+    private static int RunSchtasks(string arguments)
+    {
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo
+        {
+            FileName = "schtasks.exe",
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        process.Start();
+        process.WaitForExit(5000);
+        return process.ExitCode;
     }
 
     private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)

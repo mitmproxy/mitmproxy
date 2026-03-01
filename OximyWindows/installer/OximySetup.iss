@@ -54,6 +54,7 @@ Source: "..\publish\win-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesu
 Source: "scripts\preinstall.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "scripts\postinstall.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 Source: "scripts\uninstall.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
+Source: "scripts\oximy-proxy-cleanup.ps1"; DestDir: "{app}\scripts"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "{#MyAppDescription}"

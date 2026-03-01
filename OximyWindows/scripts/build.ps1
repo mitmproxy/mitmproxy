@@ -211,6 +211,16 @@ if ($Install) {
     $Shortcut.Save()
 
     Write-Host "  Created Start Menu shortcut" -ForegroundColor Green
+
+    # Copy proxy cleanup script so EnsureProxyCleanupTask() can find it
+    $ScriptsDir = Join-Path $InstallDir "scripts"
+    New-Item -Path $ScriptsDir -ItemType Directory -Force | Out-Null
+    $CleanupScriptSrc = Join-Path $PSScriptRoot "..\installer\scripts\oximy-proxy-cleanup.ps1"
+    if (Test-Path $CleanupScriptSrc) {
+        Copy-Item $CleanupScriptSrc -Destination $ScriptsDir -Force
+        Write-Host "  Copied proxy cleanup script" -ForegroundColor Green
+    }
+
     Write-Host ""
     Write-Host "Installation complete!" -ForegroundColor Cyan
     Write-Host "Run 'Oximy' from Start Menu or: $ExePath" -ForegroundColor Cyan
