@@ -265,7 +265,10 @@ def _get_analyzer():
         # Use en_core_web_md (~40MB) for NER (person, location, org, phone, etc.).
         # The md model includes word vectors for good accuracy at a fraction of
         # the size of en_core_web_lg (~560MB).
-        _ensure_spacy_model("en_core_web_md")
+        # Note: _ensure_spacy_model is NOT called here because the proxy may already
+        # be active. The model must be pre-downloaded in addon.configure() before
+        # proxy activation. If it's missing here, NlpEngineProvider will raise and
+        # we fall back to regex patterns.
         nlp_config = {
             "nlp_engine_name": "spacy",
             "models": [{"lang_code": "en", "model_name": "en_core_web_md"}],
