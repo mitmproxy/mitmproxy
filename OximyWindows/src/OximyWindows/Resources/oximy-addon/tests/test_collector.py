@@ -18,6 +18,7 @@ from mitmproxy.addons.oximy.collector import _compile_redact_patterns
 from mitmproxy.addons.oximy.collector import _extract_metadata_from_path
 from mitmproxy.addons.oximy.collector import _resolve_query_order
 from mitmproxy.addons.oximy.collector import _should_skip_file
+from mitmproxy.addons.oximy.collector import BacktrackState
 from mitmproxy.addons.oximy.collector import DEFAULT_MAX_EVENT_SIZE
 from mitmproxy.addons.oximy.collector import LocalDataCollector
 from mitmproxy.addons.oximy.collector import redact_sensitive
@@ -2323,3 +2324,330 @@ class TestWatcherSqlite:
         paths = self.collector._get_watch_paths()
         # Should include detect_path AND sqlite db parent dir
         assert str(self.db_dir) in paths
+
+
+# ============================================================================
+# Backtrack Tests
+# ============================================================================
+
+class TestBacktrackState:
+    """Tests for BacktrackState persistence and state management."""
+
+    def test_save_load(self, tmp_path):
+        """BacktrackState persists and reloads correctly."""
+        state_file = tmp_path / "backtrack-state.json"
+        state = BacktrackState(state_file)
+
+        state.config_updated_at = "2026-02-20T10:00:00Z"
+        state.start_date = "2026-02-12T08:00:00Z"
+        state.end_date = "2026-02-20T10:00:00Z"
+        state.status = "in_progress"
+        state.set_file_status("claude_code", "/path/to/file.jsonl", "completed", 1000, 1000)
+        state.set_sqlite_query_status("cursor", "state.vscdb", "sqlite_composer", "completed", 50)
+        state.increment_stat("files_completed")
+        state.increment_stat("events_uploaded", 100)
+        state.save()
+
+        # Reload from disk
+        state2 = BacktrackState(state_file)
+        assert state2.config_updated_at == "2026-02-20T10:00:00Z"
+        assert state2.status == "in_progress"
+        assert state2.get_file_status("claude_code", "/path/to/file.jsonl")["status"] == "completed"
+        assert state2.get_sqlite_query_status("cursor", "state.vscdb", "sqlite_composer")["rows_uploaded"] == 50
+
+    def test_reset_for_new_config(self, tmp_path):
+        """reset_for_new_config clears all progress."""
+        state_file = tmp_path / "backtrack-state.json"
+        state = BacktrackState(state_file)
+
+        state.set_file_status("claude_code", "/path/file.jsonl", "completed", 500, 500)
+        state.status = "completed"
+        state.save()
+
+        state.reset_for_new_config("2026-02-21T10:00:00Z", "2026-02-10T00:00:00Z", "2026-02-21T10:00:00Z")
+        state.save()
+
+        assert state.status == "pending"
+        assert state.config_updated_at == "2026-02-21T10:00:00Z"
+        assert state.get_file_status("claude_code", "/path/file.jsonl") == {}
+
+    def test_missing_file_returns_defaults(self, tmp_path):
+        """Loading from nonexistent file gives clean defaults."""
+        state_file = tmp_path / "nonexistent.json"
+        state = BacktrackState(state_file)
+        assert state.status == "pending"
+        assert state.config_updated_at is None
+
+
+class TestBacktrackWorker:
+    """Tests for the backtrack worker thread."""
+
+    @pytest.fixture
+    def collector_with_data(self, tmp_path, monkeypatch):
+        """Create a collector with JSONL files pre-seeded in ScanState."""
+        # Create a session file with 5 lines
+        session_dir = tmp_path / ".claude" / "projects" / "proj1"
+        session_dir.mkdir(parents=True)
+        session_file = session_dir / "session.jsonl"
+
+        lines = []
+        for i in range(5):
+            lines.append(json.dumps({"message": f"msg_{i}", "timestamp": f"2026-02-15T0{i}:00:00"}))
+        session_file.write_text("\n".join(lines) + "\n")
+
+        # Config
+        config = {
+            "enabled": True,
+            "sources": [{
+                "name": "claude_code",
+                "enabled": True,
+                "globs": [{
+                    "pattern": str(session_dir / "*.jsonl"),
+                    "file_type": "session_jsonl",
+                    "read_mode": "incremental",
+                    "content_type": "json",
+                }],
+                "detect_path": str(tmp_path / ".claude"),
+            }],
+        }
+
+        # Mock upload
+        uploaded = []
+        monkeypatch.setattr(
+            "mitmproxy.addons.oximy.collector.LocalDataCollector._upload_buffer",
+            lambda self: uploaded.append(list(self._buffer)) or True,
+        )
+
+        collector = LocalDataCollector(config, device_id="test-device")
+        # Override state files to use tmp_path
+        collector._scan_state = ScanState(tmp_path / "scan-state.json")
+
+        # Simulate startup fast-forward: record the file at its current EOF
+        stat = os.stat(str(session_file))
+        collector._scan_state.set_file_state(
+            "claude_code", str(session_file), stat.st_size, stat.st_mtime,
+        )
+        # Stamp seeded_offset — backtrack uses this as the true historical boundary
+        collector._scan_state.set_seeded_offset(
+            "claude_code", str(session_file), stat.st_size,
+        )
+        collector._scan_state.save()
+
+        return collector, session_file, uploaded, tmp_path
+
+    def test_backtrack_reads_historical_jsonl(self, collector_with_data):
+        """Backtrack worker reads bytes [0, fast-forward offset] from JSONL files."""
+        collector, session_file, uploaded, tmp_path = collector_with_data
+
+        # Backtrack config — endDate must be in the future so the file's
+        # mtime (set at creation time) falls within the date range.
+        backtrack_config = {
+            "enabled": True,
+            "startDate": "2026-01-01T00:00:00Z",
+            "endDate": "2030-01-01T00:00:00Z",
+            "updatedAt": "2026-02-20T10:00:00Z",
+        }
+
+        # Override backtrack state file path
+        import mitmproxy.addons.oximy.collector as col_mod
+        original_file = col_mod.BACKTRACK_STATE_FILE
+        col_mod.BACKTRACK_STATE_FILE = tmp_path / "backtrack-state.json"
+        try:
+            collector._backtrack_worker(backtrack_config)
+        finally:
+            col_mod.BACKTRACK_STATE_FILE = original_file
+
+        # Verify backtrack state is completed
+        bt_state = BacktrackState(tmp_path / "backtrack-state.json")
+        assert bt_state.status == "completed"
+
+        # Should have read the historical lines
+        file_status = bt_state.get_file_status("claude_code", str(session_file))
+        assert file_status.get("status") == "completed"
+
+    def test_backtrack_skips_files_outside_date_range(self, collector_with_data, monkeypatch):
+        """Files outside the date range are not scanned."""
+        collector, session_file, uploaded, tmp_path = collector_with_data
+
+        # Set a narrow date range that excludes the file's mtime
+        backtrack_config = {
+            "enabled": True,
+            "startDate": "2020-01-01T00:00:00Z",
+            "endDate": "2020-01-02T00:00:00Z",
+            "updatedAt": "2026-02-20T10:00:00Z",
+        }
+
+        import mitmproxy.addons.oximy.collector as col_mod
+        original_file = col_mod.BACKTRACK_STATE_FILE
+        col_mod.BACKTRACK_STATE_FILE = tmp_path / "backtrack-state.json"
+        try:
+            collector._backtrack_worker(backtrack_config)
+        finally:
+            col_mod.BACKTRACK_STATE_FILE = original_file
+
+        bt_state = BacktrackState(tmp_path / "backtrack-state.json")
+        assert bt_state.status == "completed"
+        # File should not be in the state (outside date range)
+        file_status = bt_state.get_file_status("claude_code", str(session_file))
+        assert file_status == {}
+
+    def test_backtrack_config_change_resets_state(self, tmp_path):
+        """Changing updatedAt resets backtrack state for fresh scan."""
+        state_file = tmp_path / "backtrack-state.json"
+        state = BacktrackState(state_file)
+        state.config_updated_at = "old-timestamp"
+        state.status = "completed"
+        state.set_file_status("src", "/file", "completed", 100, 100)
+        state.save()
+
+        # Simulate handle_backtrack_config detecting a change
+        state2 = BacktrackState(state_file)
+        assert state2.config_updated_at == "old-timestamp"
+        state2.reset_for_new_config("new-timestamp", "2026-01-01T00:00:00Z", "2026-02-01T00:00:00Z")
+        state2.save()
+
+        state3 = BacktrackState(state_file)
+        assert state3.config_updated_at == "new-timestamp"
+        assert state3.status == "pending"
+        assert state3.get_file_status("src", "/file") == {}
+
+
+class TestBacktrackSqlite:
+    """Tests for backtrack SQLite scanning."""
+
+    def test_backtrack_incremental_reads_historical_rows(self, tmp_path, monkeypatch):
+        """Backtrack reads rows <= seeded last_value for incremental queries."""
+        # Create test SQLite DB
+        db_path = tmp_path / "test.db"
+        conn = sqlite3.connect(str(db_path))
+        conn.execute("CREATE TABLE data (id INTEGER PRIMARY KEY, value TEXT, createdAt INTEGER)")
+        for i in range(10):
+            conn.execute("INSERT INTO data VALUES (?, ?, ?)", (i, f"val_{i}", i * 100))
+        conn.commit()
+        conn.close()
+
+        config = {
+            "enabled": True,
+            "sources": [{
+                "name": "cursor",
+                "enabled": True,
+                "globs": [],
+                "sqlite": [{
+                    "db_path": str(db_path),
+                    "queries": [{
+                        "file_type": "test_data",
+                        "sql": "SELECT id, value, createdAt FROM data WHERE createdAt > ?",
+                        "incremental_field": "createdAt",
+                    }],
+                }],
+                "detect_path": str(tmp_path),
+            }],
+        }
+
+        uploaded_events = []
+        def mock_upload(self_):
+            with self_._buffer_lock:
+                uploaded_events.extend(self_._buffer)
+                self_._buffer.clear()
+            return True
+
+        monkeypatch.setattr(
+            "mitmproxy.addons.oximy.collector.LocalDataCollector._upload_buffer",
+            mock_upload,
+        )
+
+        collector = LocalDataCollector(config, device_id="test-device")
+        collector._scan_state = ScanState(tmp_path / "scan-state.json")
+
+        # Simulate seeded last_value of 500 (rows 0-5 are historical)
+        collector._scan_state.set_sqlite_incremental("cursor", "test.db", "test_data", 500)
+        collector._scan_state.set_seeded_sqlite_incremental("cursor", "test.db", "test_data", 500)
+        collector._scan_state.save()
+
+        import mitmproxy.addons.oximy.collector as col_mod
+        original_file = col_mod.BACKTRACK_STATE_FILE
+        col_mod.BACKTRACK_STATE_FILE = tmp_path / "backtrack-state.json"
+        try:
+            backtrack_config = {
+                "enabled": True,
+                "startDate": "2020-01-01T00:00:00Z",
+                "endDate": "2030-01-01T00:00:00Z",
+                "updatedAt": "2026-02-20T10:00:00Z",
+            }
+            collector._backtrack_worker(backtrack_config)
+        finally:
+            col_mod.BACKTRACK_STATE_FILE = original_file
+
+        # Should have uploaded 5 rows (createdAt 100, 200, 300, 400, 500).
+        # createdAt=0 is excluded by the SQL fallback WHERE createdAt > 0.
+        assert len(uploaded_events) == 5
+
+        bt_state = BacktrackState(tmp_path / "backtrack-state.json")
+        assert bt_state.status == "completed"
+        q_status = bt_state.get_sqlite_query_status("cursor", "test.db", "test_data")
+        assert q_status["status"] == "completed"
+        assert q_status["rows_uploaded"] == 5
+
+    def test_backtrack_uses_backtrack_sql_when_available(self, tmp_path, monkeypatch):
+        """When backtrack_sql is configured, it's used instead of live sql."""
+        db_path = tmp_path / "test.db"
+        conn = sqlite3.connect(str(db_path))
+        conn.execute("CREATE TABLE data (id INTEGER PRIMARY KEY, value TEXT, ts INTEGER)")
+        for i in range(5):
+            conn.execute("INSERT INTO data VALUES (?, ?, ?)", (i, f"val_{i}", i * 100))
+        conn.commit()
+        conn.close()
+
+        config = {
+            "enabled": True,
+            "sources": [{
+                "name": "cursor",
+                "enabled": True,
+                "globs": [],
+                "sqlite": [{
+                    "db_path": str(db_path),
+                    "queries": [{
+                        "file_type": "test_data",
+                        "sql": "SELECT id, value, ts FROM data WHERE ts > ?",
+                        "backtrack_sql": "SELECT id, value, ts FROM data",
+                        "incremental_field": "ts",
+                    }],
+                }],
+                "detect_path": str(tmp_path),
+            }],
+        }
+
+        uploaded_events = []
+        def mock_upload(self_):
+            with self_._buffer_lock:
+                uploaded_events.extend(self_._buffer)
+                self_._buffer.clear()
+            return True
+
+        monkeypatch.setattr(
+            "mitmproxy.addons.oximy.collector.LocalDataCollector._upload_buffer",
+            mock_upload,
+        )
+
+        collector = LocalDataCollector(config, device_id="test-device")
+        collector._scan_state = ScanState(tmp_path / "scan-state.json")
+        collector._scan_state.set_sqlite_incremental("cursor", "test.db", "test_data", 200)
+        collector._scan_state.set_seeded_sqlite_incremental("cursor", "test.db", "test_data", 200)
+        collector._scan_state.save()
+
+        import mitmproxy.addons.oximy.collector as col_mod
+        original_file = col_mod.BACKTRACK_STATE_FILE
+        col_mod.BACKTRACK_STATE_FILE = tmp_path / "backtrack-state.json"
+        try:
+            backtrack_config = {
+                "enabled": True,
+                "startDate": "2020-01-01T00:00:00Z",
+                "endDate": "2030-01-01T00:00:00Z",
+                "updatedAt": "2026-02-20T10:00:00Z",
+            }
+            collector._backtrack_worker(backtrack_config)
+        finally:
+            col_mod.BACKTRACK_STATE_FILE = original_file
+
+        # With seeded_last_value=200, should get rows with ts 0, 100, 200 (3 rows)
+        assert len(uploaded_events) == 3

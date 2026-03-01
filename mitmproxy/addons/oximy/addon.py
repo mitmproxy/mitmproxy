@@ -105,9 +105,11 @@ except ImportError:
 try:
     from .enforcement import EnforcementEngine
     from .enforcement import Violation
+    from .enforcement import _ensure_spacy_model
 except ImportError:
     from enforcement import EnforcementEngine
     from enforcement import Violation
+    from enforcement import _ensure_spacy_model
 
 logging.basicConfig(
     level=logging.INFO,
@@ -321,10 +323,13 @@ def _set_windows_proxy(enable: bool) -> bool:
                 return False
             proxy_server = f"{PROXY_HOST}:{_state.proxy_port}"
 
-            # Set both values
+            # Set proxy values (must match C# ProxyService.EnableProxy for consistency)
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"],
                            check=True, capture_output=True)
             subprocess.run(["reg", "add", reg_path, "/v", "ProxyServer", "/t", "REG_SZ", "/d", proxy_server, "/f"],
+                           check=True, capture_output=True)
+            # Set bypass list so localhost/internal traffic doesn't loop through the proxy
+            subprocess.run(["reg", "add", reg_path, "/v", "ProxyOverride", "/t", "REG_SZ", "/d", "localhost;127.0.0.1;<local>", "/f"],
                            check=True, capture_output=True)
 
             # Verify the setting was applied
@@ -3160,6 +3165,14 @@ class OximyAddon:
         self._allowed_host_origins = tuple(sensor_config.get("allowed_host_origins", []))
         # Convert parsers to lowercase set for O(1) case-insensitive lookup
         self._apps_with_parsers = {p.lower() for p in app_origins.get("apps_with_parsers", [])}
+
+        # Ensure spaCy model is downloaded before the proxy activates.
+        # If missing, the download must happen now (over direct internet),
+        # not later when preload/enforcement runs (traffic goes through proxy → SSL fail).
+        try:
+            _ensure_spacy_model("en_core_web_md")
+        except Exception:
+            logger.warning("Failed to ensure spaCy model (Presidio will fall back to regex)", exc_info=True)
 
         # Load enforcement policies from startup config
         enforcement_policies = sensor_config.get("enforcementPolicies")
