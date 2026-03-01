@@ -55,6 +55,22 @@ This repository is fully open source so you can verify exactly what runs on your
 | [`mitmproxy/addons/`](mitmproxy/addons/) | Network interception addons |
 | [`registry/`](registry/) | AI apps, websites, and model definitions |
 
+## Running the sensor locally
+
+```bash
+mitmdump \
+  -s ./mitmproxy/addons/oximy/addon.py \
+  --set oximy_enabled=true \
+  --set oximy_output_dir=~/.oximy/traces \
+  --set confdir=~/.oximy \
+  --set oximy_manage_proxy=true \
+  --set oximy_verbose=false \
+  --set oximy_debug_traces=true \
+  --set oximy_debug_ingestion=true \
+  --listen-host 127.0.0.1 \
+  --ssl-insecure
+```
+
 ## Resources
 
 - [Documentation](https://docs.oximy.com)
