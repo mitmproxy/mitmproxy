@@ -243,7 +243,8 @@ def _ensure_spacy_model(model_name: str) -> None:
         spacy.load(model_name)
     except OSError:
         logger.info("Model %s is not installed. Downloading...", model_name)
-        import subprocess, sys
+        import subprocess
+        import sys
         subprocess.check_call(
             [sys.executable, "-m", "spacy", "download", model_name],
             stdout=subprocess.DEVNULL,

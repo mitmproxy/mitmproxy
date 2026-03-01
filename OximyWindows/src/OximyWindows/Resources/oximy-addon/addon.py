@@ -104,12 +104,12 @@ except ImportError:
 # Import enforcement engine - handle both package and script modes
 try:
     from .enforcement import EnforcementEngine
-    from .enforcement import Violation
     from .enforcement import _ensure_spacy_model
+    from .enforcement import Violation
 except ImportError:
     from enforcement import EnforcementEngine
-    from enforcement import Violation
     from enforcement import _ensure_spacy_model
+    from enforcement import Violation
 
 logging.basicConfig(
     level=logging.INFO,
