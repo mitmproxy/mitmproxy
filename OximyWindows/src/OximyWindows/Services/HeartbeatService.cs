@@ -175,6 +175,10 @@ public class HeartbeatService : IDisposable
             _healthCheckCounter++;
             if (_healthCheckCounter % 5 == 0)
             {
+                // Refresh proxy status from registry — the Python addon may have
+                // enabled it via `reg add` without the C# ProxyService knowing.
+                App.ProxyService.CheckStatus();
+
                 OximyLogger.Log(EventCode.SYS_HEALTH_001, "System health snapshot",
                     new Dictionary<string, object>
                     {
