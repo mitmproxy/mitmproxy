@@ -86,11 +86,11 @@ New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
 try {
     # Step 1: Download Python embeddable package
-    Write-Host "Step 1/7: Downloading Python $PythonVersion embeddable..." -ForegroundColor Yellow
+    Write-Host "Step 1/12: Downloading Python $PythonVersion embeddable..." -ForegroundColor Yellow
     Invoke-DownloadWithRetry -Uri $PythonUrl -OutFile $ZipPath
 
     # Step 2: Extract Python
-    Write-Host "Step 2/7: Extracting Python..." -ForegroundColor Yellow
+    Write-Host "Step 2/12: Extracting Python..." -ForegroundColor Yellow
     if (Test-Path $OutputDir) {
         Remove-Item $OutputDir -Recurse -Force
     }
@@ -99,7 +99,7 @@ try {
 
     # Step 3: Enable pip and configure paths in python*._pth file
     # IMPORTANT: The ._pth file overrides PYTHONPATH, so we must add paths here
-    Write-Host "Step 3/7: Enabling pip support and configuring paths..." -ForegroundColor Yellow
+    Write-Host "Step 3/12: Enabling pip support and configuring paths..." -ForegroundColor Yellow
     $PthFile = Get-ChildItem $OutputDir -Filter "python*._pth" | Select-Object -First 1
     if ($PthFile) {
         # Build new ._pth content with all required paths
@@ -122,7 +122,7 @@ try {
     }
 
     # Step 4: Install pip and build tools
-    Write-Host "Step 4/7: Installing pip and build tools..." -ForegroundColor Yellow
+    Write-Host "Step 4/12: Installing pip and build tools..." -ForegroundColor Yellow
     Invoke-DownloadWithRetry -Uri $GetPipUrl -OutFile $GetPipPath
     $PythonExe = Join-Path $OutputDir "python.exe"
     & $PythonExe $GetPipPath --no-warn-script-location 2>&1 | Out-Null
@@ -134,7 +134,7 @@ try {
 
     # Step 5: Pre-install ruamel.yaml without C extension
     # The C extension (ruamel.yaml.clibz) requires Python.h headers which aren't in embeddable Python
-    Write-Host "Step 5/7: Installing ruamel.yaml (pure Python)..." -ForegroundColor Yellow
+    Write-Host "Step 5/12: Installing ruamel.yaml (pure Python)..." -ForegroundColor Yellow
     & $PythonExe -m pip install "ruamel.yaml>=0.18.10,<=0.19.0" --no-deps --no-warn-script-location 2>&1 | Out-Null
     Write-Host "  ruamel.yaml installed (pure Python, no C extension)" -ForegroundColor Green
 
@@ -144,7 +144,7 @@ try {
     # - Certificates are generated with CN=oximy, O=oximy in ~/.mitmproxy/
     # - Fixed keepserving.py for Oximy fork compatibility
     # - ScriptLoader addon for -s flag support
-    Write-Host "Step 6/7: Installing mitmproxy from local source..." -ForegroundColor Yellow
+    Write-Host "Step 6/12: Installing mitmproxy from local source..." -ForegroundColor Yellow
     # Path: scripts/ -> OximyWindows/ -> repo root (mitmproxy)
     $MitmproxySource = Resolve-Path (Join-Path $PSScriptRoot "..\..") # Root of mitmproxy repo
     Write-Host "  Source: $MitmproxySource" -ForegroundColor Cyan
@@ -176,7 +176,7 @@ try {
     $deps = @(
         "aioquic", "argon2-cffi", "asgiref", "bcrypt", "Brotli", "certifi",
         "cryptography", "flask", "h11", "h2", "hyperframe", "kaitaistruct",
-        "ldap3", "mitmproxy_rs", "msgpack", "pydivert", "pyOpenSSL",
+        "ldap3", "mitmproxy_rs", "msgpack", "psutil", "pydivert", "pyOpenSSL",
         "pyparsing", "pyperclip", "sortedcontainers", "tornado",
         "typing-extensions<=4.14", "urwid", "wsproto", "publicsuffix2", "zstandard"
     )
@@ -196,7 +196,7 @@ try {
     }
 
     # Step 7: Install jsonata-python for configurable parsers
-    Write-Host "Step 7/9: Installing jsonata-python..." -ForegroundColor Yellow
+    Write-Host "Step 7/12: Installing jsonata-python..." -ForegroundColor Yellow
     & $PythonExe -m pip install jsonata-python --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
@@ -204,7 +204,7 @@ try {
     }
 
     # Step 8: Install watchfiles for local data collection file watching
-    Write-Host "Step 8/9: Installing watchfiles..." -ForegroundColor Yellow
+    Write-Host "Step 8/12: Installing watchfiles..." -ForegroundColor Yellow
     & $PythonExe -m pip install watchfiles --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
@@ -212,8 +212,34 @@ try {
     }
 
     # Step 9: Install sentry-sdk for addon error tracking and event reporting
-    Write-Host "Step 9/9: Installing sentry-sdk..." -ForegroundColor Yellow
+    Write-Host "Step 9/12: Installing sentry-sdk..." -ForegroundColor Yellow
     & $PythonExe -m pip install sentry-sdk --no-warn-script-location 2>&1 | ForEach-Object {
+        if ($_ -match "Successfully installed") {
+            Write-Host "  $_" -ForegroundColor Green
+        }
+    }
+
+    # Step 10: Install spaCy for NER-based PII detection
+    Write-Host "Step 10/12: Installing spaCy..." -ForegroundColor Yellow
+    & $PythonExe -m pip install "spacy>=3.7" --no-warn-script-location 2>&1 | ForEach-Object {
+        if ($_ -match "Successfully installed") {
+            Write-Host "  $_" -ForegroundColor Green
+        }
+    }
+
+    # Step 11: Download spaCy en_core_web_md model (~40MB)
+    # MUST be pre-bundled: the model is needed by Presidio for NER-based PII detection,
+    # and downloading it at runtime fails because the proxy is already active (SSL error).
+    Write-Host "Step 11/12: Downloading spaCy en_core_web_md model..." -ForegroundColor Yellow
+    & $PythonExe -m spacy download en_core_web_md --no-warn-script-location 2>&1 | ForEach-Object {
+        if ($_ -match "Successfully installed" -or $_ -match "Download and installation successful") {
+            Write-Host "  $_" -ForegroundColor Green
+        }
+    }
+
+    # Step 12: Install Presidio for high-accuracy PII detection and redaction
+    Write-Host "Step 12/12: Installing Presidio (analyzer + anonymizer)..." -ForegroundColor Yellow
+    & $PythonExe -m pip install "presidio-analyzer>=2.2" "presidio-anonymizer>=2.2" --no-warn-script-location 2>&1 | ForEach-Object {
         if ($_ -match "Successfully installed") {
             Write-Host "  $_" -ForegroundColor Green
         }
