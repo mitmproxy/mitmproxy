@@ -1146,6 +1146,7 @@ class LocalDataCollector:
                 "device_id": self._device_id,
                 "source": source_name,
                 "source_file": source_file,
+                "is_backtracked": False,
                 "file_type": file_type,
                 "raw": raw_obj,
             }
@@ -1439,6 +1440,7 @@ class LocalDataCollector:
             "device_id": self._device_id,
             "source": source_name,
             "source_file": path_meta["source_file"],
+            "is_backtracked": False,
             "file_type": file_type,
             "raw": raw_obj,
         }
@@ -1941,6 +1943,7 @@ class LocalDataCollector:
                         "device_id": self._device_id,
                         "source": source_name,
                         "source_file": path_meta["source_file"],
+                        "is_backtracked": True,
                         "file_type": file_type,
                         "raw": raw_obj,
                     }
@@ -2030,6 +2033,7 @@ class LocalDataCollector:
             "device_id": self._device_id,
             "source": source_name,
             "source_file": path_meta["source_file"],
+            "is_backtracked": True,
             "file_type": file_type,
             "raw": raw_obj,
         }
@@ -2210,6 +2214,7 @@ class LocalDataCollector:
                     "device_id": self._device_id,
                     "source": source_name,
                     "source_file": source_file,
+                    "is_backtracked": True,
                     "file_type": file_type,
                     "raw": raw_obj,
                 }
@@ -2257,6 +2262,7 @@ class LocalDataCollector:
                     "device_id": self._device_id,
                     "source": source_name,
                     "source_file": source_file,
+                    "is_backtracked": True,
                     "file_type": file_type,
                     "raw": raw_obj,
                 }
