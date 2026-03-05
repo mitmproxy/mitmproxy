@@ -78,11 +78,15 @@ function HighlightInput() {
 export function ClearScreen() {
     const dispatch = useAppDispatch();
     return (
-        <Button className="btn-sm" title="clear the front-end flow cache"
-                icon="iconfont icon-edit-clear-svgrepo-com text-danger" onClick={() => dispatch(flowsActions.clear())}>
+        <Button
+            className="btn-sm"
+            title="clear the front-end flow cache"
+            icon="iconfont icon-edit-clear-svgrepo-com text-danger"
+            onClick={() => dispatch(flowsActions.clear())}
+        >
             Clear Screen
         </Button>
-    )
+    );
 }
 
 export function ResumeAll() {
