@@ -1,4 +1,5 @@
 import pytest
+import urwid
 
 from mitmproxy.tools.console import statusbar
 
@@ -65,12 +66,10 @@ def test_shorten_message_narrow():
 
 async def test_console_quickhelp_option(console, monkeypatch):
     """Test that console_quickhelp option controls the display of quick help bar."""
-    import urwid
-
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
 
     # quickhelp enabled (default)
-    console.options.console_quickhelp = True
+    console.options.console_quickhelp_visible = True
     bar = statusbar.StatusBar(console)
     assert isinstance(bar.ab._w, urwid.Pile)
     assert len(bar.ab._w.contents) == 2
@@ -78,7 +77,7 @@ async def test_console_quickhelp_option(console, monkeypatch):
     assert isinstance(bar.ab.bottom._w, urwid.Columns)
 
     # quickhelp disabled
-    console.options.console_quickhelp = False
+    console.options.console_quickhelp_visible = False
     bar2 = statusbar.StatusBar(console)
     assert isinstance(bar2.ab._w, urwid.Pile)
     assert len(bar2.ab._w.contents) == 0
@@ -86,14 +85,12 @@ async def test_console_quickhelp_option(console, monkeypatch):
 
 async def test_console_quickhelp_toggle(console, monkeypatch):
     """Test that toggling console_quickhelp option updates the display."""
-    import urwid
-
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
 
     bar = statusbar.StatusBar(console)
 
     # quickhelp enabled (default)
-    assert console.options.console_quickhelp is True
+    assert console.options.console_quickhelp_visible is True
     bar.ab.show_quickhelp()
     assert isinstance(bar.ab._w, urwid.Pile)
     assert len(bar.ab._w.contents) == 2
@@ -101,13 +98,13 @@ async def test_console_quickhelp_toggle(console, monkeypatch):
     assert isinstance(bar.ab.bottom._w, urwid.Columns)
 
     # quickhelp disabled
-    console.options.console_quickhelp = False
+    console.options.console_quickhelp_visible = False
     bar.ab.show_quickhelp()
     assert isinstance(bar.ab._w, urwid.Pile)
     assert len(bar.ab._w.contents) == 0
 
     # quickhelp toggling
-    console.options.console_quickhelp = True
+    console.options.console_quickhelp_visible = True
     bar.ab.show_quickhelp()
     assert isinstance(bar.ab._w, urwid.Pile)
     assert len(bar.ab._w.contents) == 2
@@ -117,23 +114,21 @@ async def test_console_quickhelp_toggle(console, monkeypatch):
 
 async def test_console_quickhelp_hotkey(console):
     """Test that the 'H' hotkey toggles the console_quickhelp option."""
-    assert console.options.console_quickhelp is True
+    assert console.options.console_quickhelp_visible is True
 
     console.type("H")
-    assert console.options.console_quickhelp is False
+    assert console.options.console_quickhelp_visible is False
 
     console.type("H")
-    assert console.options.console_quickhelp is True
+    assert console.options.console_quickhelp_visible is True
 
 
 async def test_console_quickhelp_prompts_visible_when_disabled(console, monkeypatch):
     """Test that prompts and messages are visible even when quickhelp is disabled."""
-    import urwid
-
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
 
     # Disable quickhelp
-    console.options.console_quickhelp = False
+    console.options.console_quickhelp_visible = False
     bar = statusbar.StatusBar(console)
 
     # Initially, Pile should be empty (quickhelp disabled)

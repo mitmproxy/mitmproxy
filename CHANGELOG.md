@@ -22,7 +22,7 @@
   ([#8046](https://github.com/mitmproxy/mitmproxy/pull/8046), @HueCodes)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
-- Be able to hide quickhelp UI
+- Allow hiding the Quick Help UI in the mitmproxy console with the 'H' key.
   ([#8095](https://github.com/mitmproxy/mitmproxy/pull/8095), @seroperson)
 
 ## 24 November 2025: mitmproxy 12.2.1

@@ -64,7 +64,7 @@ class ActionBar(urwid.WidgetWrap):
         signals.window_refresh.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
         master.view.sig_view_update.connect(self.sig_update)
-        master.options.subscribe(self.sig_options_update, ["console_quickhelp"])
+        master.options.subscribe(self.sig_options_update, ["console_quickhelp_visible"])
 
         self.prompting: Callable[[str], None] | None = None
 
@@ -173,7 +173,7 @@ class ActionBar(urwid.WidgetWrap):
                     return k
 
     def show_quickhelp(self) -> None:
-        if not self.master.options.console_quickhelp:
+        if not self.master.options.console_quickhelp_visible:
             self._w = urwid.Pile([])
             return
         self.ensure_bottom_bar_is_visible()
