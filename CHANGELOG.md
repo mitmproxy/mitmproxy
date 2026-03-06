@@ -22,6 +22,8 @@
   ([#8046](https://github.com/mitmproxy/mitmproxy/pull/8046), @HueCodes)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
+- Allow hiding the Quick Help UI in the mitmproxy console with the 'H' key.
+  ([#8095](https://github.com/mitmproxy/mitmproxy/pull/8095), @seroperson)
 - Add a Clear Screen button to mitmweb for easier access.
   ([#8121](https://github.com/mitmproxy/mitmproxy/pull/8121), @iBug)
 

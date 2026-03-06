@@ -18,6 +18,12 @@ def map(km: Keymap) -> None:
     km.add("Q", "console.exit", ["global"], "Exit immediately")
     km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current view")
     km.add("esc", "console.view.pop", ["commonkey", "global"], "Exit the current view")
+    km.add(
+        "H",
+        "set console_quickhelp_visible toggle",
+        ["global"],
+        "Toggle quick help bar visibility",
+    )
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl left", "console.panes.prev", ["global"], "Focus previous layout pane")
