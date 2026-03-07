@@ -23,7 +23,7 @@ export default function FlowListMenu() {
                 <div className="menu-content">
                     <InterceptInput />
                     <ResumeAll />
-                    <ClearScreen />
+                    <ClearAll />
                 </div>
                 <div className="menu-legend">Intercept</div>
             </div>
@@ -75,7 +75,7 @@ function HighlightInput() {
     );
 }
 
-export function ClearScreen() {
+export function ClearAll() {
     const dispatch = useAppDispatch();
     return (
         <Button
@@ -84,7 +84,7 @@ export function ClearScreen() {
             icon="iconfont icon-edit-clear-svgrepo-com text-danger"
             onClick={() => dispatch(flowsActions.clear())}
         >
-            Clear Screen
+            Clear All
         </Button>
     );
 }

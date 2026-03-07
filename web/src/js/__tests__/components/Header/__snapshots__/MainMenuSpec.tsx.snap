@@ -94,7 +94,7 @@ exports[`MainMenu 1`] = `
           <i
             class="fa iconfont icon-edit-clear-svgrepo-com text-danger"
           />
-           Clear Screen
+           Clear All
         </button>
       </div>
       <div
