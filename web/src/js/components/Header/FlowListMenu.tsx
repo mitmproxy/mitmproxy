@@ -81,7 +81,7 @@ export function ClearAll() {
         <Button
             className="btn-sm"
             title="clear the front-end flow cache"
-            icon="iconfont icon-edit-clear-svgrepo-com text-danger"
+            icon="fa-trash text-danger"
             onClick={() => dispatch(flowsActions.clear())}
         >
             Clear All
