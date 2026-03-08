@@ -1036,7 +1036,7 @@ requires-dist = [
     { name = "brotli", specifier = ">=1.0,<=1.2.0" },
     { name = "certifi", specifier = ">=2019.9.11" },
     { name = "cryptography", specifier = ">=42.0,<=46.1" },
-    { name = "flask", specifier = ">=3.0,<=3.1.2" },
+    { name = "flask", specifier = ">=3.0,<=3.1.3" },
     { name = "h11", specifier = "<=0.16.0,>=0.16.0" },
     { name = "h2", specifier = "<=4.3.0,>=4.3.0" },
     { name = "hyperframe", specifier = ">=6.0,<=6.1.0" },
