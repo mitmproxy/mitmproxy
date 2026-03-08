@@ -23,6 +23,7 @@ export default function FlowListMenu() {
                 <div className="menu-content">
                     <InterceptInput />
                     <ResumeAll />
+                    <ClearAll />
                 </div>
                 <div className="menu-legend">Intercept</div>
             </div>
@@ -71,6 +72,20 @@ function HighlightInput() {
             color="hsl(48, 100%, 50%)"
             onChange={(expr) => dispatch(setHighlight(expr))}
         />
+    );
+}
+
+export function ClearAll() {
+    const dispatch = useAppDispatch();
+    return (
+        <Button
+            className="btn-sm"
+            title="clear the front-end flow cache"
+            icon="fa-trash text-danger"
+            onClick={() => dispatch(flowsActions.clear())}
+        >
+            Clear All
+        </Button>
     );
 }
 

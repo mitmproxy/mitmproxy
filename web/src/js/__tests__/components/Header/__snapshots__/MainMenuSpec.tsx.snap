@@ -87,6 +87,15 @@ exports[`MainMenu 1`] = `
           />
            Resume All
         </button>
+        <button
+          class="btn-sm btn btn-default"
+          title="clear the front-end flow cache"
+        >
+          <i
+            class="fa fa-trash text-danger"
+          />
+           Clear All
+        </button>
       </div>
       <div
         class="menu-legend"
