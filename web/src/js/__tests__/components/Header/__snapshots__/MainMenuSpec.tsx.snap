@@ -92,7 +92,7 @@ exports[`MainMenu 1`] = `
           title="clear the front-end flow cache"
         >
           <i
-            class="fa iconfont icon-edit-clear-svgrepo-com text-danger"
+            class="fa fa-trash text-danger"
           />
            Clear All
         </button>
