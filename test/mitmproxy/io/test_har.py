@@ -4,11 +4,23 @@ from pathlib import Path
 import pytest
 
 from mitmproxy import exceptions
+from mitmproxy.io.har import encode_response_text_content
 from mitmproxy.io.har import fix_headers
 from mitmproxy.io.har import request_to_flow
 from mitmproxy.tools.web.app import flow_to_json
 
 data_dir = Path(__file__).parent.parent / "data"
+
+
+@pytest.mark.parametrize(
+    "text,expected_content",
+    [
+        ("ü€", b"\xc3\xbc\xe2\x82\xac"),
+        ("\udcff", b"\xff"),  # not utf8-encodable with surrogate escape
+    ],
+)
+def test_encode_response_text_content(text: str, expected_content: bytes) -> None:
+    assert encode_response_text_content(text, "utf8") == expected_content
 
 
 def hardcode_variable_fields_for_tests(flow: dict) -> None:
