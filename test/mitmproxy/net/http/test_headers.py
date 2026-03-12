@@ -30,13 +30,16 @@ def test_assemble_content_type():
     )
 
 
+DEFAULT_ENCODING = "utf8"
+
+
 @pytest.mark.parametrize(
     "content_type,content,expected",
     [
-        ("", b"", "latin-1"),
-        ("", b"foo", "latin-1"),
-        ("", b"\xfc", "latin-1"),
-        ("", b"\xf0\xe2", "latin-1"),
+        ("", b"", DEFAULT_ENCODING),
+        ("", b"foo", DEFAULT_ENCODING),
+        ("", b"\xfc", DEFAULT_ENCODING),
+        ("", b"\xf0\xe2", DEFAULT_ENCODING),
         # bom
         ("", b"\xef\xbb\xbffoo", "utf-8-sig"),
         ("", b"\xff\xfef\x00o\x00o\x00", "utf-16le"),

@@ -40,7 +40,7 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
     """
     Infer the encoding of content from the content-type header.
     """
-    enc = None
+    enc: str | None = None
 
     # BOM has the highest priority
     if content.startswith(b"\x00\x00\xfe\xff"):
@@ -102,9 +102,9 @@ def infer_content_encoding(content_type: str, content: bytes = b"") -> str:
             # > 4. Otherwise, return utf-8
             enc = "utf8"
 
-    # Fallback to latin-1
+    # Fallback to utf8
     if not enc:
-        enc = "latin-1"
+        enc = "utf8"
 
     # Use GB 18030 as the superset of GB2312 and GBK to fix common encoding problems on Chinese websites.
     if enc.lower() in ("gb2312", "gbk"):

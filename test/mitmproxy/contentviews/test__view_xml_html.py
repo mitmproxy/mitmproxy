@@ -27,8 +27,8 @@ def test_use_text():
             content=b"\xf8",
         )
     )
-    assert xml_html.prettify(b"\xf8", meta1) != "ø\n"
-    assert xml_html.prettify(b"\xf8", meta2) == "ø\n"
+    assert xml_html.prettify(b"\xf8", meta1) == "\\xf8\n"
+    assert xml_html.prettify(b"\xf8", meta2) == "\udcf8\n"
 
 
 @pytest.mark.parametrize(
