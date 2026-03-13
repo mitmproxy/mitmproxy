@@ -27,7 +27,6 @@ def dump_system_info():
         f"Python:    {platform.python_version()}",
         f"OpenSSL:   {openssl_version}",
         f"Platform:  {platform.platform()}",
-        f"Just a check that I am running mitmproxy on edit mode (will remove before push):  true",
     ]
     return "\n".join(data)
 
