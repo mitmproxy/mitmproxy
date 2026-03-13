@@ -26,6 +26,7 @@ from mitmproxy.proxy.layers.http import ErrorCode
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http._http2 import Http2Client
 from mitmproxy.proxy.layers.http._http2 import split_pseudo_headers
+from mitmproxy.proxy.mode_specs import ProxyMode
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy.tutils import Placeholder
 from test.mitmproxy.proxy.tutils import Playbook
@@ -1423,3 +1424,295 @@ def test_forward_empty_data_frame(tctx):
         >> DataReceived(server, cff.build_data_frame(b"").serialize())
         << SendData(tctx.client, cff.build_data_frame(b"").serialize())
     )
+
+
+def _h2c_setup(
+    tctx,
+    http_mode: HTTPMode,
+    mode_spec: str | None = None,
+    server_address: tuple[str, int] = ("example.com", 80),
+) -> tuple[Playbook, FrameFactory]:
+    """Set up an h2c client handshake and return (playbook, client_frame_factory)."""
+    tctx.client.alpn = b"h2c"
+    if mode_spec is not None:
+        tctx.client.proxy_mode = ProxyMode.parse(mode_spec)
+    tctx.server.address = server_address
+    tctx.options.http2_ping_keepalive = 0
+    cff = FrameFactory()
+    playbook = Playbook(http.HttpLayer(tctx, http_mode))
+    assert (
+        playbook
+        << SendData(tctx.client, Placeholder())
+        >> DataReceived(tctx.client, cff.preamble())
+        >> DataReceived(
+            tctx.client,
+            cff.build_settings_frame({}, ack=True).serialize(),
+        )
+    )
+    return playbook, cff
+
+
+def _h2c_send_request(
+    playbook: Playbook, tctx, cff: FrameFactory
+) -> tuple[Placeholder, Placeholder, Placeholder]:
+    """Send a standard h2c request, return (flow, server, initial_data) placeholders."""
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, initial)
+    )
+    return flow, server, initial
+
+
+def test_h2c_prior_knowledge(tctx):
+    """Test h2c (cleartext HTTP/2) via prior knowledge works end-to-end.
+
+    Verifies both client-side (client->proxy) and server-side (proxy->upstream)
+    use HTTP/2 over cleartext when the client initiates with the h2c preface.
+    """
+    playbook, cff = _h2c_setup(tctx, HTTPMode.transparent, mode_spec="transparent")
+    flow, server, initial = _h2c_send_request(playbook, tctx, cff)
+
+    assert flow().request.url == "http://example.com/"
+
+    # Server-side should use h2c: data starts with the HTTP/2 connection preface.
+    frames = decode_frames(initial())
+    assert isinstance(frames[0], hyperframe.frame.SettingsFrame)
+
+    # Complete the round-trip: server responds over h2c.
+    sff = FrameFactory()
+    assert (
+        playbook
+        >> DataReceived(
+            server, sff.build_headers_frame(example_response_headers).serialize()
+        )
+        << http.HttpResponseHeadersHook(flow)
+        >> reply()
+        >> DataReceived(
+            server,
+            sff.build_data_frame(b"h2c works", flags=["END_STREAM"]).serialize(),
+        )
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(
+            tctx.client,
+            cff.build_headers_frame(example_response_headers).serialize()
+            + cff.build_data_frame(b"h2c works").serialize()
+            + cff.build_data_frame(b"", flags=["END_STREAM"]).serialize(),
+        )
+    )
+    assert flow().response.text == "h2c works"
+
+
+def test_h2c_early_server_data(tctx):
+    """Test the 'server speaks first' code path with h2c (pre-connected server sends settings)."""
+    playbook, cff = _h2c_setup(tctx, HTTPMode.transparent, mode_spec="transparent")
+    sff = FrameFactory()
+
+    tctx.server.state = ConnectionState.OPEN
+
+    flow = Placeholder(HTTPFlow)
+    server1 = Placeholder(bytes)
+    server2 = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << (h := http.HttpRequestHook(flow))
+        >> DataReceived(tctx.server, sff.build_settings_frame({}).serialize())
+        << SendData(tctx.server, server1)
+        >> reply(to=h)
+        << SendData(tctx.server, server2)
+    )
+    assert [type(x) for x in decode_frames(server1())] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
+        hyperframe.frame.SettingsFrame,
+    ]
+    assert [type(x) for x in decode_frames(server2())] == [
+        hyperframe.frame.HeadersFrame,
+    ]
+
+
+@pytest.mark.parametrize("mode", ["wireguard", "local:myapp", "tun", "socks5"])
+def test_h2c_prior_knowledge_transparent_modes(tctx, mode):
+    """h2c upstream should work for all transparent-like proxy modes, not just TransparentMode."""
+    playbook, cff = _h2c_setup(tctx, HTTPMode.transparent, mode_spec=mode)
+    _, _, initial = _h2c_send_request(playbook, tctx, cff)
+
+    frames = decode_frames(initial())
+    assert isinstance(frames[0], hyperframe.frame.SettingsFrame)
+
+
+def test_h2c_explicit_proxy(tctx):
+    """h2c through an explicit HTTP proxy should use h2c upstream (e.g. for gRPC)."""
+    playbook, cff = _h2c_setup(tctx, HTTPMode.regular)
+    _, _, initial = _h2c_send_request(playbook, tctx, cff)
+
+    frames = decode_frames(initial())
+    assert isinstance(frames[0], hyperframe.frame.SettingsFrame)
+
+
+def test_h2c_to_h1(tctx):
+    """Test h2c client -> HTTP/1 server: proxy translates and doesn't reuse the connection."""
+    playbook, cff = _h2c_setup(
+        tctx,
+        HTTPMode.transparent,
+        mode_spec="transparent",
+        server_address=("example.com", 80),
+    )
+
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+
+    def make_h1_tls(open_connection):
+        open_connection.connection.alpn = b"http/1.1"
+        open_connection.connection.timestamp_tls_setup = time.time()
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"]
+            ).serialize(),
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None, side_effect=make_h1_tls)
+        << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+    )
+
+    assert (
+        playbook
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK")
+        << http.HttpResponseHeadersHook(flow)
+        << CloseConnection(server)
+        >> reply(to=-2)
+        << http.HttpResponseHook(flow)
+        >> reply()
+        << SendData(tctx.client, Placeholder())
+    )
+    assert flow().response.text == "OK"
+
+
+def test_h2c_multiplexing(tctx):
+    """Test that h2c reuses the upstream connection for concurrent streams."""
+    playbook, cff = _h2c_setup(tctx, HTTPMode.transparent, mode_spec="transparent")
+    playbook.hooks = False
+
+    server = Placeholder(Server)
+    data = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=1
+            ).serialize(),
+        )
+        << (o := OpenConnection(server))
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=3
+            ).serialize(),
+        )
+        >> reply(None, to=o)
+        << SendData(server, data)
+    )
+    # Both requests should be sent over the same connection as h2 frames.
+    frames = decode_frames(data())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.WindowUpdateFrame,
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
+
+
+@pytest.mark.parametrize(
+    "mode_spec, http_mode, server_address",
+    [
+        ("upstream:http://proxy:8080", HTTPMode.upstream, ("example.com", 80)),
+        ("reverse:http://backend:8080", HTTPMode.transparent, ("backend", 8080)),
+        ("reverse:https://backend:443", HTTPMode.transparent, ("backend", 443)),
+    ],
+    ids=["upstream_proxy", "reverse_proxy_http", "reverse_proxy_https"],
+)
+def test_h2c_proxy_uses_h1_upstream(tctx, mode_spec, http_mode, server_address):
+    """Upstream and reverse proxy modes must not forward h2c to the upstream server."""
+    playbook, cff = _h2c_setup(
+        tctx, http_mode, mode_spec=mode_spec, server_address=server_address
+    )
+    _, _, initial = _h2c_send_request(playbook, tctx, cff)
+
+    assert not initial().startswith(b"PRI"), (
+        f"Expected HTTP/1.1 upstream, got h2c preface: {initial()[:80]!r}"
+    )
+    assert b"HTTP/1.1" in initial(), (
+        f"Expected HTTP/1.1 upstream but got: {initial()[:80]!r}"
+    )
+
+
+def test_h2c_to_h1_no_connection_reuse(tctx):
+    """h2c client with concurrent streams to an h1 backend must not reuse the connection.
+
+    This is the h2c variant of the "tricky multiplexing edge case": when the
+    client speaks HTTP/2 but the server speaks HTTP/1.1, each stream needs its
+    own server connection because HTTP/1.1 can't multiplex.
+    """
+    playbook, cff = _h2c_setup(
+        tctx,
+        HTTPMode.transparent,
+        mode_spec="reverse:http://backend:8080",
+        server_address=("backend", 8080),
+    )
+    playbook.hooks = False
+
+    server1 = Placeholder(Server)
+    server2 = Placeholder(Server)
+    data1 = Placeholder(bytes)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=1
+            ).serialize(),
+        )
+        << (o := OpenConnection(server1))
+        >> DataReceived(
+            tctx.client,
+            cff.build_headers_frame(
+                example_request_headers, flags=["END_STREAM"], stream_id=3
+            ).serialize(),
+        )
+        >> reply(None, to=o)
+        << SendData(server1, data1)
+        << OpenConnection(server2)
+    )
+    assert data1().startswith(b"GET / HTTP/1.1\r\n")

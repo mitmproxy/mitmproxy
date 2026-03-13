@@ -59,6 +59,33 @@ else:
 
 logger = logging.getLogger(__name__)
 
+# https://datatracker.ietf.org/doc/html/rfc7540#section-3.5
+HTTP2_CLIENT_CONNECTION_PREFACE = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+
+
+def _starts_like_h2_preface(data_client: bytes) -> bool:
+    """
+    Check if data_client looks like an HTTP/2 connection preface.
+
+    Returns:
+        True, if data_client starts with the full HTTP/2 client connection preface.
+        False, otherwise.
+
+    Raises:
+        NeedsMoreData, if the data is a valid prefix of the preface but incomplete.
+    """
+    if not ctx.options.http2:
+        return False
+    if data_client.startswith(HTTP2_CLIENT_CONNECTION_PREFACE):
+        return True
+    if data_client and HTTP2_CLIENT_CONNECTION_PREFACE.startswith(data_client):
+        raise NeedsMoreData
+    return False
+
+
+def _mark_h2c(context: Context) -> None:
+    context.client.alpn = b"h2c"
+
 
 def stack_match(
     context: Context, layers: Sequence[type[Layer] | tuple[type[Layer], ...]]
@@ -177,7 +204,11 @@ class NextLayer:
         # 5c) We have no other specialized layers for UDP, so we fall back to raw forwarding.
         if udp_based:
             return layers.UDPLayer(context)
-        # 5d) Check for raw tcp mode.
+        # 5d) Check for h2c prior knowledge (cleartext HTTP/2).
+        if tcp_based and _starts_like_h2_preface(data_client):
+            _mark_h2c(context)
+            return layers.HttpLayer(context, HTTPMode.transparent)
+        # 5e) Check for raw tcp mode.
         probably_no_http = (
             # the first three bytes should be the HTTP verb, so A-Za-z is expected.
             len(data_client) < 3
@@ -192,7 +223,7 @@ class NextLayer:
         )
         if ctx.options.rawtcp and probably_no_http:
             return layers.TCPLayer(context)
-        # 5c) Assume HTTP by default.
+        # 5f) Assume HTTP by default.
         return layers.HttpLayer(context, HTTPMode.transparent)
 
     def _ignore_connection(
@@ -346,6 +377,8 @@ class NextLayer:
             case "http":
                 if starts_like_tls_record(data_client):
                     stack /= ClientTLSLayer(context)
+                elif _starts_like_h2_preface(data_client):
+                    _mark_h2c(context)
                 stack /= HttpLayer(context, HTTPMode.transparent)
             case "https":
                 if context.client.transport_protocol == "udp":
@@ -356,6 +389,8 @@ class NextLayer:
                     stack /= ServerTLSLayer(context)
                     if starts_like_tls_record(data_client):
                         stack /= ClientTLSLayer(context)
+                    elif _starts_like_h2_preface(data_client):
+                        _mark_h2c(context)
                     stack /= HttpLayer(context, HTTPMode.transparent)
 
             case "tcp":
@@ -411,6 +446,8 @@ class NextLayer:
             stack /= layers.ClientQuicLayer(context)
         elif starts_like_tls_record(data_client):
             stack /= layers.ClientTLSLayer(context)
+        elif _starts_like_h2_preface(data_client):
+            _mark_h2c(context)
 
         if isinstance(context.layers[0], modes.HttpUpstreamProxy):
             stack /= layers.HttpLayer(context, HTTPMode.upstream)

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from mitmproxy.addons.next_layer import _starts_like_h2_preface
 from mitmproxy.addons.next_layer import _starts_like_quic
 from mitmproxy.addons.next_layer import NeedsMoreData
 from mitmproxy.addons.next_layer import NextLayer
@@ -105,6 +106,7 @@ dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d00000
 # https://github.com/mitmproxy/mitmproxy/pull/7087
 custom_base64_proto = b"AAAAAAAAAAAAAAAAAAAAAA==\n"
 
+h2c_preface = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 http_get = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
 http_get_absolute = b"GET http://example.com/ HTTP/1.1\r\n\r\n"
 
@@ -169,6 +171,15 @@ class TestNextLayer:
                 http_get.replace(b"Host", b"X-Host"),
                 False,
                 id="http host header missing",
+            ),
+            pytest.param(
+                ["192.0.2.1"],
+                [],
+                "tcp",
+                "192.0.2.1",
+                h2c_preface,
+                True,
+                id="h2c preface ignored by ip",
             ),
             pytest.param(
                 ["example.com"],
@@ -582,6 +593,14 @@ explicit_proxy_configs = [
         ),
         id=f"explicit proxy: TCP over regular proxy",
     ),
+    pytest.param(
+        TConf(
+            before=[modes.HttpProxy],
+            after=[modes.HttpProxy, HttpLayer],
+            data_client=h2c_preface,
+        ),
+        id="explicit proxy: h2c prior knowledge",
+    ),
 ]
 
 reverse_proxy_configs = []
@@ -690,6 +709,24 @@ reverse_proxy_configs.extend(
             ),
             id="reverse proxy: ignore_hosts",
         ),
+        pytest.param(
+            TConf(
+                before=[modes.ReverseProxy],
+                after=[modes.ReverseProxy, HttpLayer],
+                proxy_mode="reverse:http://example.com:80",
+                data_client=h2c_preface,
+            ),
+            id="reverse proxy: h2c prior knowledge over http",
+        ),
+        pytest.param(
+            TConf(
+                before=[modes.ReverseProxy],
+                after=[modes.ReverseProxy, ServerTLSLayer, HttpLayer],
+                proxy_mode="reverse:https://example.com:443",
+                data_client=h2c_preface,
+            ),
+            id="reverse proxy: h2c prior knowledge over https",
+        ),
     ]
 )
 
@@ -744,6 +781,25 @@ transparent_proxy_configs = [
             data_client=http_get,
         ),
         id="transparent proxy: http",
+    ),
+    pytest.param(
+        TConf(
+            before=[modes.TransparentProxy],
+            after=[modes.TransparentProxy, HttpLayer],
+            server_address=("192.0.2.1", 80),
+            data_client=h2c_preface,
+        ),
+        id="transparent proxy: h2c prior knowledge",
+    ),
+    pytest.param(
+        TConf(
+            before=[modes.Socks5Proxy],
+            after=[modes.Socks5Proxy, HttpLayer],
+            server_address=("192.0.2.1", 80),
+            proxy_mode="socks5",
+            data_client=h2c_preface,
+        ),
+        id="socks5 proxy: h2c prior knowledge",
     ),
     pytest.param(
         TConf(
@@ -895,6 +951,76 @@ def test_next_layer(
         last_layer = ctx.layers[-1]
         if isinstance(last_layer, (UDPLayer, TCPLayer)):
             assert bool(last_layer.flow) ^ test_conf.ignore_conn
+
+
+def test_h2c_prior_knowledge_sets_alpn():
+    nl = NextLayer()
+    with taddons.context(nl) as tctx:
+        ctx = Context(
+            Client(
+                peername=("192.168.0.42", 51234),
+                sockname=("0.0.0.0", 8080),
+            ),
+            tctx.options,
+        )
+        ctx.server.address = ("192.0.2.1", 80)
+        ctx.client.proxy_mode = ProxyMode.parse("transparent")
+        ctx.layers = [modes.TransparentProxy(ctx)]
+        nl._next_layer(ctx, data_client=h2c_preface, data_server=b"")
+        assert ctx.client.alpn == b"h2c"
+
+
+def test_h2c_partial_preface_needs_more_data():
+    nl = NextLayer()
+    with taddons.context(nl) as tctx:
+        ctx = Context(
+            Client(
+                peername=("192.168.0.42", 51234),
+                sockname=("0.0.0.0", 8080),
+            ),
+            tctx.options,
+        )
+        ctx.server.address = ("192.0.2.1", 80)
+        ctx.client.proxy_mode = ProxyMode.parse("transparent")
+        ctx.layers = [modes.TransparentProxy(ctx)]
+
+        with pytest.raises(NeedsMoreData):
+            nl._next_layer(ctx, data_client=h2c_preface[:12], data_server=b"")
+
+        layer = nl._next_layer(ctx, data_client=h2c_preface, data_server=b"")
+        assert isinstance(layer, HttpLayer)
+        assert ctx.client.alpn == b"h2c"
+
+
+def test_h2c_ignored_when_http2_disabled():
+    nl = NextLayer()
+    with taddons.context(nl) as tctx:
+        tctx.options.http2 = False
+        ctx = Context(
+            Client(
+                peername=("192.168.0.42", 51234),
+                sockname=("0.0.0.0", 8080),
+            ),
+            tctx.options,
+        )
+        ctx.server.address = ("192.0.2.1", 80)
+        ctx.client.proxy_mode = ProxyMode.parse("transparent")
+        ctx.layers = [modes.TransparentProxy(ctx)]
+        nl._next_layer(ctx, data_client=h2c_preface, data_server=b"")
+        assert ctx.client.alpn is None
+
+
+def test_starts_like_h2_preface():
+    with taddons.context() as tctx:
+        tctx.options.http2 = True
+        assert not _starts_like_h2_preface(b"")
+        assert not _starts_like_h2_preface(b"GET / HTTP/1.1")
+        with pytest.raises(NeedsMoreData):
+            _starts_like_h2_preface(b"PRI")
+        assert _starts_like_h2_preface(h2c_preface)
+
+        tctx.options.http2 = False
+        assert not _starts_like_h2_preface(h2c_preface)
 
 
 def test_starts_like_quic():
