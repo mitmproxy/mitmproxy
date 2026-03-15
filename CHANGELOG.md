@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Add individual exit codes for different error conditions instead of always exiting with 1.
+  ([#8129](https://github.com/mitmproxy/mitmproxy/pull/8129), @kovan)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
