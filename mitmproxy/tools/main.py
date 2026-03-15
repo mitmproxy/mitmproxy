@@ -18,6 +18,7 @@ from mitmproxy import optmanager
 from mitmproxy.tools import cmdline
 from mitmproxy.utils import arg_check
 from mitmproxy.utils import debug
+from mitmproxy.utils import exit_codes
 
 
 def process_options(parser, opts, args):
@@ -79,7 +80,7 @@ def run(
             args = parser.parse_args(arguments)
         except SystemExit:
             arg_check.check()
-            sys.exit(1)
+            sys.exit(exit_codes.INVALID_ARGS)
 
         try:
             opts.set(*args.setoptions, defer=True)
@@ -105,7 +106,7 @@ def run(
 
         except exceptions.OptionsError as e:
             print(f"{sys.argv[0]}: {e}", file=sys.stderr)
-            sys.exit(1)
+            sys.exit(exit_codes.INVALID_OPTIONS)
 
         loop = asyncio.get_running_loop()
 
