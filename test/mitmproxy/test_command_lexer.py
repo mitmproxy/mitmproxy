@@ -5,6 +5,7 @@ from hypothesis import given
 from hypothesis.strategies import text
 
 from mitmproxy import command_lexer
+from mitmproxy.utils import pyparsing_utils
 
 
 @pytest.mark.parametrize(
@@ -23,14 +24,16 @@ from mitmproxy import command_lexer
 def test_partial_quoted_string(test_input, valid):
     if valid:
         assert (
-            command_lexer.PartialQuotedString.parse_string(test_input, parse_all=True)[
-                0
-            ]
+            pyparsing_utils.parse_string(
+                command_lexer.PartialQuotedString, test_input, parse_all=True
+            )[0]
             == test_input
         )
     else:
         with pytest.raises(pyparsing.ParseException):
-            command_lexer.PartialQuotedString.parse_string(test_input, parse_all=True)
+            pyparsing_utils.parse_string(
+                command_lexer.PartialQuotedString, test_input, parse_all=True
+            )
 
 
 @pytest.mark.parametrize(
@@ -46,7 +49,12 @@ def test_partial_quoted_string(test_input, valid):
     ],
 )
 def test_expr(test_input, expected):
-    assert list(command_lexer.expr.parse_string(test_input, parse_all=True)) == expected
+    assert (
+        list(
+            pyparsing_utils.parse_string(command_lexer.expr, test_input, parse_all=True)
+        )
+        == expected
+    )
 
 
 @given(text())

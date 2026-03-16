@@ -20,6 +20,7 @@ import mitmproxy.types
 from mitmproxy import command_lexer
 from mitmproxy import exceptions
 from mitmproxy.command_lexer import unquote
+from mitmproxy.utils import pyparsing_utils
 
 
 def verify_arg_signature(f: Callable, args: Iterable[Any], kwargs: dict) -> None:
@@ -200,8 +201,8 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: pyparsing.ParseResults = command_lexer.expr.parse_string(
-            cmdstr, parse_all=True
+        parts: pyparsing.ParseResults = pyparsing_utils.parse_string(
+            command_lexer.expr, cmdstr, parse_all=True
         )
 
         parsed: list[ParseResult] = []

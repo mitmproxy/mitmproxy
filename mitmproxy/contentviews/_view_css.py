@@ -51,9 +51,7 @@ def beautify(data: str, indent: str = "    "):
 
 
 class ViewCSS(Contentview):
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        return "css"
+    syntax_highlight: SyntaxHighlight = "css"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         data_str = data.decode("utf8", "surrogateescape").replace("\r\n", "\n")

@@ -17,9 +17,7 @@ imghdr.tests.append(test_ico)
 
 
 class ImageContentview(Contentview):
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        return "yaml"
+    syntax_highlight: SyntaxHighlight = "yaml"
 
     def prettify(
         self,

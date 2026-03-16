@@ -6,9 +6,7 @@ from mitmproxy.contentviews._api import SyntaxHighlight
 
 
 class JSONContentview(Contentview):
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        return "yaml"
+    syntax_highlight: SyntaxHighlight = "yaml"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         data = json.loads(data)

@@ -12,9 +12,7 @@ def _is_dns_tcp(metadata: Metadata) -> bool:
 
 
 class DNSContentview(InteractiveContentview):
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        return "yaml"
+    syntax_highlight: SyntaxHighlight = "yaml"
 
     def prettify(
         self,

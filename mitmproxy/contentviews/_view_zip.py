@@ -10,9 +10,7 @@ from mitmproxy.contentviews._utils import yaml_dumps
 class ZipContentview(Contentview):
     name = "ZIP Archive"
 
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        return "yaml"
+    syntax_highlight: SyntaxHighlight = "yaml"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         with zipfile.ZipFile(io.BytesIO(data), "r") as zip_file:

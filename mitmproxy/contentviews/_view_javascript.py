@@ -43,9 +43,7 @@ def beautify(data):
 
 
 class JavaScriptContentview(Contentview):
-    @property
-    def syntax_highlight(self) -> SyntaxHighlight:
-        return "javascript"
+    syntax_highlight: SyntaxHighlight = "javascript"
 
     __content_types = (
         "application/x-javascript",

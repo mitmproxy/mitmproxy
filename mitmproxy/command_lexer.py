@@ -2,6 +2,8 @@ import re
 
 import pyparsing
 
+from mitmproxy.utils import pyparsing_utils
+
 # TODO: There is a lot of work to be done here.
 # The current implementation is written in a way that _any_ input is valid,
 # which does not make sense once things get more complex.
@@ -17,11 +19,13 @@ PartialQuotedString = pyparsing.Regex(
     )
 )
 
-expr = pyparsing.ZeroOrMore(
-    PartialQuotedString
-    | pyparsing.Word(" \r\n\t")
-    | pyparsing.CharsNotIn("""'" \r\n\t""")
-).leave_whitespace()
+expr = pyparsing_utils.leave_whitespace(
+    pyparsing.ZeroOrMore(
+        PartialQuotedString
+        | pyparsing.Word(" \r\n\t")
+        | pyparsing.CharsNotIn("""'" \r\n\t""")
+    )
+)
 
 
 def quote(val: str) -> str:
