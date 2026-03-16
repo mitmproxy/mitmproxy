@@ -3,6 +3,11 @@ import { enableFetchMocks } from "jest-fetch-mock";
 
 enableFetchMocks();
 
+// @ts-expect-error: ClipboardItem is not defined in JSDOM
+global.ClipboardItem = class ClipboardItem {
+    constructor(_data: any) {}
+};
+
 describe("formatSize", () => {
     it("should return 0 when 0 byte", () => {
         expect(utils.formatSize(0)).toEqual("0");
@@ -83,5 +88,78 @@ describe("getDiff", () => {
         const obj1 = { a: 1, b: { foo: 1 }, c: [3] };
         const obj2 = { a: 1, b: { foo: 2 }, c: [4] };
         expect(utils.getDiff(obj1, obj2)).toEqual({ b: { foo: 2 }, c: [4] });
+    });
+});
+
+describe("clipboard", () => {
+    beforeEach(() => {
+        jest.spyOn(console, "warn").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        // @ts-expect-error: jest.spyOn
+        console.warn.mockRestore();
+        // @ts-expect-error: jest.spyOn
+        console.error.mockRestore();
+    });
+
+    it("should copy to clipboard", async () => {
+        const writeMock = jest.fn().mockResolvedValue(undefined);
+        Object.assign(navigator, {
+            clipboard: {
+                write: writeMock,
+            },
+        });
+        await utils.copyToClipboard(Promise.resolve("foo"));
+        expect(writeMock).toHaveBeenCalled();
+    });
+
+    it("should fallback if write fails", async () => {
+        const writeMock = jest.fn().mockRejectedValue(new Error("fail"));
+        const writeTextMock = jest.fn().mockResolvedValue(undefined);
+        Object.assign(navigator, {
+            clipboard: {
+                write: writeMock,
+                writeText: writeTextMock,
+            },
+        });
+        await utils.copyToClipboard(Promise.resolve("foo"));
+        expect(writeTextMock).toHaveBeenCalledWith("foo");
+    });
+
+    it("should use textarea fallback", async () => {
+        Object.assign(navigator, {
+            clipboard: {
+                write: jest.fn().mockRejectedValue(new Error("fail")),
+                writeText: jest.fn().mockRejectedValue(new Error("fail")),
+            },
+        });
+        document.execCommand = jest.fn().mockReturnValue(true);
+        await utils.copyToClipboard(Promise.resolve("foo"));
+        expect(document.execCommand).toHaveBeenCalledWith("copy");
+    });
+
+    it("should copy view content data", async () => {
+        const writeMock = jest.fn().mockResolvedValue(undefined);
+        Object.assign(navigator, {
+            clipboard: {
+                write: writeMock,
+            },
+        });
+        await utils.copyViewContentDataToClipboard({ text: "foo", description: "foo", view_name: "Raw", syntax_highlight: "none" });
+        expect(writeMock).toHaveBeenCalled();
+    });
+});
+
+describe("string utils", () => {
+    it("should partition", () => {
+        expect(utils.partition("a:b:c", ":")).toEqual(["a", "b:c"]);
+        expect(utils.partition("abc", ":")).toEqual(["abc", ""]);
+    });
+
+    it("should rpartition", () => {
+        expect(utils.rpartition("a:b:c", ":")).toEqual(["a:b", "c"]);
+        expect(utils.rpartition("abc", ":")).toEqual(["", "abc"]);
     });
 });

@@ -7,7 +7,7 @@ import { TStore } from "./ducks/tutils";
 import { ThemeHandler } from "../components/ThemeHandler";
 
 // re-export everything
-export { waitFor, fireEvent, act, screen } from "@testing-library/react";
+export { waitFor, fireEvent, act, screen, render as rtlRender } from "@testing-library/react";
 export { userEvent };
 
 export function render(ui, { store = TStore(), ...renderOptions } = {}) {

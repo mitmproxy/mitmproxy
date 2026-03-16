@@ -6,7 +6,7 @@ import initialize, {
 import reduceFlows, * as flowActions from "../ducks/flows";
 import reduceUI from "../ducks/ui/index";
 import reduceEventLog, * as eventLogActions from "../ducks/eventLog";
-import reduceCommandBar from "../ducks/commandBar";
+import reduceCommandBar, * as commandBarActions from "../ducks/commandBar";
 
 import configureStore from "redux-mock-store";
 import { testState } from "./ducks/tutils";
@@ -72,6 +72,18 @@ describe("updateStoreFromUrl", () => {
         updateStoreFromUrl(store as RootStore);
         expect(store.getActions()).toEqual([setCurrent(Tab.Capture)]);
     });
+
+    it("should handle show command bar", () => {
+        window.location.hash = "#/flows?c=true";
+        const initialState = {
+            commandBar: { visible: false },
+        };
+        const store = mockStore(initialState);
+        updateStoreFromUrl(store as RootStore);
+        expect(store.getActions()).toEqual([
+            commandBarActions.toggleVisibility(),
+        ]);
+    });
 });
 
 describe("updateUrlFromStore", () => {
@@ -96,6 +108,35 @@ describe("updateUrlFromStore", () => {
             "",
             "/#/capture?s=~u%20%2Fsecond%20%7C%20~tcp%20%7C%20~dns%20%7C%20~udp&h=~u%20%2Fpath&e=true",
         );
+    });
+
+    it("should update url with selected flow", () => {
+        const tflow0 = testState.flows.list[0];
+        const state = {
+            ...testState,
+            ui: { ...testState.ui, flow: { ...testState.ui.flow, tab: "request" }, tabs: { ...testState.ui.tabs, current: Tab.Flow } },
+            flows: { ...testState.flows, selected: [tflow0] },
+        };
+        const store = mockStore(state);
+        updateUrlFromStore(store as RootStore);
+        expect(history.replaceState).toBeCalledWith(
+            undefined,
+            "",
+            `/#/flows/${tflow0.id}/request?s=~u%20%2Fsecond%20%7C%20~tcp%20%7C%20~dns%20%7C%20~udp&h=~u%20%2Fpath&e=true`,
+        );
+    });
+
+    it("should handle blank pathname", () => {
+        const store = mockStore(initialState);
+        const originalLocation = window.location;
+        // @ts-expect-error: window.location is read-only
+        delete window.location;
+        // @ts-expect-error: window.location is read-only
+        window.location = { ...originalLocation, hash: "#/flows", pathname: "blank" };
+        updateUrlFromStore(store as RootStore);
+        expect(history.replaceState).toBeCalledWith(undefined, "", "/#/flows");
+        // @ts-expect-error: window.location is read-only
+        window.location = originalLocation;
     });
 });
 
