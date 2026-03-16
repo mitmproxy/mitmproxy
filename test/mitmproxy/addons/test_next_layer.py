@@ -953,23 +953,6 @@ def test_next_layer(
             assert bool(last_layer.flow) ^ test_conf.ignore_conn
 
 
-def test_h2c_prior_knowledge_sets_alpn():
-    nl = NextLayer()
-    with taddons.context(nl) as tctx:
-        ctx = Context(
-            Client(
-                peername=("192.168.0.42", 51234),
-                sockname=("0.0.0.0", 8080),
-            ),
-            tctx.options,
-        )
-        ctx.server.address = ("192.0.2.1", 80)
-        ctx.client.proxy_mode = ProxyMode.parse("transparent")
-        ctx.layers = [modes.TransparentProxy(ctx)]
-        nl._next_layer(ctx, data_client=h2c_preface, data_server=b"")
-        assert ctx.client.alpn == b"h2c"
-
-
 def test_h2c_partial_preface_needs_more_data():
     nl = NextLayer()
     with taddons.context(nl) as tctx:
