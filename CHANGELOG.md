@@ -8,7 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Add support for cleartext HTTP/2 (h2c) via prior knowledge.
-  ([#8096](https://github.com/mitmproxy/mitmproxy/pull/8127), @hytromo)
+  ([#8127](https://github.com/mitmproxy/mitmproxy/pull/8127), @hytromo)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
