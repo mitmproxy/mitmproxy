@@ -248,6 +248,7 @@ def format_xml(tokens: Iterable[Token]) -> str:
 class XmlHtmlContentview(Contentview):
     __content_types = ("text/xml", "text/html")
     name = "XML/HTML"
+
     @property
     def syntax_highlight(self) -> SyntaxHighlight:
         return "xml"

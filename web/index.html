@@ -6,14 +6,22 @@
         <link rel="icon" href="static/favicon.ico" type="image/x-icon" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script>
-            (function() {
+            (function () {
                 try {
-                    var theme = localStorage.getItem('mitmproxy-theme') || 'system';
+                    var theme =
+                        localStorage.getItem("mitmproxy-theme") || "system";
                     var activeTheme = theme;
-                    if (theme === 'system') {
-                        activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    if (theme === "system") {
+                        activeTheme = window.matchMedia(
+                            "(prefers-color-scheme: dark)",
+                        ).matches
+                            ? "dark"
+                            : "light";
                     }
-                    document.documentElement.setAttribute('data-theme', activeTheme);
+                    document.documentElement.setAttribute(
+                        "data-theme",
+                        activeTheme,
+                    );
                 } catch (e) {}
             })();
         </script>

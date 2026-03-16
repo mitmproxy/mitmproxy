@@ -55,7 +55,9 @@ async def test_eager_task_factory():
 
     # assert that override works...
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*")
+        warnings.filterwarnings(
+            "ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*"
+        )
         policy_cls: typing.Any = getattr(asyncio, "DefaultEventLoopPolicy", object)
         assert type(asyncio.get_event_loop_policy()) is policy_cls
 
@@ -70,6 +72,8 @@ async def test_eager_task_factory():
 def event_loop_policy(request):
     # override EagerTaskCreationEventLoopPolicy from top-level conftest
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*")
+        warnings.filterwarnings(
+            "ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*"
+        )
         policy_cls: typing.Any = getattr(asyncio, "DefaultEventLoopPolicy", object)
         return policy_cls()

@@ -11,6 +11,7 @@ from mitmproxy.contentviews._api import SyntaxHighlight
 
 class URLEncodedContentview(Contentview):
     name = "URL-encoded"
+
     @property
     def syntax_highlight(self) -> SyntaxHighlight:
         return "yaml"

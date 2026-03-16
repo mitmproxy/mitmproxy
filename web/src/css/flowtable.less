@@ -73,7 +73,10 @@
         &.selected {
             background-color: var(--table-selected-bg) !important;
             &:nth-child(even) {
-                background-color: darken(#373737, 5%) !important; // Quick hack for even selected rows in dark mode, ideally use more variables
+                background-color: darken(
+                    #373737,
+                    5%
+                ) !important; // Quick hack for even selected rows in dark mode, ideally use more variables
             }
         }
 

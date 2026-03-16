@@ -18,7 +18,7 @@
     --input-border: #d0d7de;
 }
 
-html[data-theme='dark'] {
+html[data-theme="dark"] {
     /* Professional Dark Mode Palette (GitHub-inspired) */
     --bg-primary: #0d1117;
     --bg-secondary: #161b22;
@@ -38,13 +38,25 @@ html[data-theme='dark'] {
     --input-border: #30363d;
 
     /* Semantic Helpers for Dark Mode */
-    .text-primary { color: #58a6ff !important; }
-    .text-success { color: #3fb950 !important; }
-    .text-info    { color: #388bfd !important; }
-    .text-warning { color: #d29922 !important; }
-    .text-danger  { color: #f85149 !important; }
+    .text-primary {
+        color: #58a6ff !important;
+    }
+    .text-success {
+        color: #3fb950 !important;
+    }
+    .text-info {
+        color: #388bfd !important;
+    }
+    .text-warning {
+        color: #d29922 !important;
+    }
+    .text-danger {
+        color: #f85149 !important;
+    }
 
-    .help-block { color: var(--fg-secondary); }
+    .help-block {
+        color: var(--fg-secondary);
+    }
 }
 
 body {
@@ -58,7 +70,9 @@ body {
     color: var(--fg-primary);
     border-color: var(--border-primary);
 
-    &:hover, &:focus, &:active {
+    &:hover,
+    &:focus,
+    &:active {
         background-color: var(--menu-entry-hover) !important;
         color: var(--fg-primary) !important;
         border-color: var(--accent-primary) !important;
@@ -78,11 +92,14 @@ body {
 
     &:focus {
         border-color: var(--accent-primary);
-        box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(31, 111, 235, 0.6);
+        box-shadow:
+            inset 0 1px 1px rgba(0, 0, 0, 0.075),
+            0 0 8px rgba(31, 111, 235, 0.6);
     }
 }
 
-pre, code {
+pre,
+code {
     background-color: var(--bg-secondary) !important;
     color: var(--fg-primary) !important;
     border: 1px solid var(--border-primary) !important;
@@ -93,7 +110,7 @@ pre, code {
     background-color: var(--bg-primary);
     color: var(--fg-primary);
     border: 1px solid var(--border-primary);
-    box-shadow: 0 5px 15px rgba(0,0,0,.5);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 .modal-header {

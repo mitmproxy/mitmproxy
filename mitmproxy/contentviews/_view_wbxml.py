@@ -6,6 +6,7 @@ from mitmproxy.contrib.wbxml import ASCommandResponse
 
 class WBXMLContentview(Contentview):
     __content_types = ("application/vnd.wap.wbxml", "application/vnd.ms-sync.wbxml")
+
     @property
     def syntax_highlight(self) -> SyntaxHighlight:
         return "xml"
