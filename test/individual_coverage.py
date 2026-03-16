@@ -54,7 +54,7 @@ async def main():
                     "-qq",
                     "--disable-pytest-warnings",
                     "--cov",
-                    str(f.with_suffix("")).replace("/", "."),
+                    str(f.with_suffix("")).replace(os.sep, "."),
                     "--cov-fail-under",
                     "100",
                     "--cov-report",
