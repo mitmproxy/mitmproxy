@@ -30,7 +30,9 @@ describe("ThemeHandler", () => {
         fireEvent.click(screen.getByText("Set Dark"));
         expect(screen.getByTestId("theme")).toHaveTextContent("dark");
         expect(localStorage.getItem("mitmproxy-theme")).toBe("dark");
-        expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+        expect(document.documentElement.getAttribute("data-theme")).toBe(
+            "dark",
+        );
     });
 
     it("should persist theme to localStorage", () => {
@@ -52,30 +54,44 @@ describe("ThemeHandler", () => {
 
         render(<TestComponent />);
         fireEvent.click(screen.getByText("Set System"));
-        
-        expect(mediaQueryMock.addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
-        expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+
+        expect(mediaQueryMock.addEventListener).toHaveBeenCalledWith(
+            "change",
+            expect.any(Function),
+        );
+        expect(document.documentElement.getAttribute("data-theme")).toBe(
+            "light",
+        );
 
         // Simulate media query change
         act(() => {
             mediaQueryMock.matches = true;
             changeListener();
         });
-        expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+        expect(document.documentElement.getAttribute("data-theme")).toBe(
+            "dark",
+        );
 
         // Test cleanup
         const { unmount } = render(<TestComponent />);
         unmount();
-        expect(mediaQueryMock.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+        expect(mediaQueryMock.removeEventListener).toHaveBeenCalledWith(
+            "change",
+            expect.any(Function),
+        );
     });
 
     it("should throw error if used outside ThemeHandler", () => {
-        const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+        const consoleSpy = jest
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
         const BuggyComponent = () => {
             useTheme();
             return null;
         };
-        expect(() => rtlRender(<BuggyComponent />)).toThrow("useTheme must be used within a ThemeHandler");
+        expect(() => rtlRender(<BuggyComponent />)).toThrow(
+            "useTheme must be used within a ThemeHandler",
+        );
         consoleSpy.mockRestore();
     });
 });

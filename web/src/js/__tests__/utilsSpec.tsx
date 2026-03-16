@@ -147,7 +147,12 @@ describe("clipboard", () => {
                 write: writeMock,
             },
         });
-        await utils.copyViewContentDataToClipboard({ text: "foo", description: "foo", view_name: "Raw", syntax_highlight: "none" });
+        await utils.copyViewContentDataToClipboard({
+            text: "foo",
+            description: "foo",
+            view_name: "Raw",
+            syntax_highlight: "none",
+        });
         expect(writeMock).toHaveBeenCalled();
     });
 });

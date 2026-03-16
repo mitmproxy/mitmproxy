@@ -114,7 +114,11 @@ describe("updateUrlFromStore", () => {
         const tflow0 = testState.flows.list[0];
         const state = {
             ...testState,
-            ui: { ...testState.ui, flow: { ...testState.ui.flow, tab: "request" }, tabs: { ...testState.ui.tabs, current: Tab.Flow } },
+            ui: {
+                ...testState.ui,
+                flow: { ...testState.ui.flow, tab: "request" },
+                tabs: { ...testState.ui.tabs, current: Tab.Flow },
+            },
             flows: { ...testState.flows, selected: [tflow0] },
         };
         const store = mockStore(state);
@@ -132,7 +136,11 @@ describe("updateUrlFromStore", () => {
         // @ts-expect-error: window.location is read-only
         delete window.location;
         // @ts-expect-error: window.location is read-only
-        window.location = { ...originalLocation, hash: "#/flows", pathname: "blank" };
+        window.location = {
+            ...originalLocation,
+            hash: "#/flows",
+            pathname: "blank",
+        };
         updateUrlFromStore(store as RootStore);
         expect(history.replaceState).toBeCalledWith(undefined, "", "/#/flows");
         // @ts-expect-error: window.location is read-only
