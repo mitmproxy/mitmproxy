@@ -37,7 +37,7 @@
     }
 
     .mode-description {
-        color: #b2b2b2;
+        color: var(--fg-secondary);
         margin-top: -10px;
     }
 
@@ -89,8 +89,10 @@
             display: flex;
             flex-direction: row;
             gap: 5px;
-            background-color: #e0e0e0;
+            background-color: var(--bg-secondary);
+            color: var(--fg-primary);
             padding: 5px;
+            border: 1px solid var(--border-primary);
             border-radius: 4px;
             height: 30px;
             font-size: 12px;
@@ -100,6 +102,7 @@
 
             > i {
                 font-size: 15px;
+                color: var(--fg-secondary);
             }
         }
 
@@ -115,7 +118,8 @@
 
             .dropdown-header {
                 padding: 5px;
-                border: 1px solid #ccc;
+                border: 1px solid var(--border-primary);
+                background-color: var(--bg-primary);
                 border-radius: 4px;
                 cursor: pointer;
                 display: flex;
@@ -129,7 +133,8 @@
                 border: none;
                 flex: 1;
                 outline: none;
-                color: black;
+                background: transparent;
+                color: var(--fg-primary);
             }
 
             .dropdown-list {
@@ -155,11 +160,11 @@
             }
 
             .dropdown-item.selected {
-                background-color: #e0e0e0;
+                background-color: var(--table-selected-bg);
             }
 
             .dropdown-item:hover {
-                background-color: #f0f0f0;
+                background-color: var(--menu-entry-hover);
             }
 
             .process-details {
@@ -178,7 +183,7 @@
 
             .process-name {
                 font-weight: 500;
-                color: #333;
+                color: var(--fg-primary);
             }
 
             .process-separator {
@@ -214,8 +219,12 @@
         }
     }
 
-    .mode-input {
-        border: 1px solid #ccc;
+    .mode-input,
+    .mode-reverse-input,
+    .mode-upstream-input {
+        border: 1px solid var(--border-primary);
+        background-color: var(--input-bg);
+        color: var(--input-fg);
         margin-left: 10px;
         border-radius: 4px;
         min-width: 120px;
@@ -223,26 +232,20 @@
     }
 
     .mode-reverse-input {
-        border: 1px solid #ccc;
-        margin-left: 10px;
-        margin-right: 10px;
-        border-radius: 4px;
         min-width: 70px;
-        height: 25px;
+        margin-right: 10px;
     }
 
     .mode-upstream-input {
-        border: 1px solid #ccc;
-        margin-left: 10px;
-        margin-right: 5px;
-        border-radius: 4px;
         min-width: 70px;
-        height: 25px;
+        margin-right: 5px;
     }
 
     .mode-reverse-dropdown {
         margin: 0 5px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--border-primary);
+        background-color: var(--input-bg);
+        color: var(--input-fg);
         border-radius: 4px;
         height: 25px;
     }
@@ -290,11 +293,11 @@
         }
 
         > div {
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-primary);
             border-radius: 4px;
             padding: 10px 15px;
-            background-color: #f9f9f9;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: var(--bg-secondary);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 
             &:popover-open {
                 display: grid;
@@ -310,7 +313,7 @@
             }
             > .mode-input {
                 text-align: right;
-                background-color: white;
+                background-color: var(--input-bg);
                 margin: 0;
             }
         }

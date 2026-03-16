@@ -3,6 +3,7 @@ import * as eventLogActions from "../../ducks/eventLog";
 import * as commandBarActions from "../../ducks/commandBar";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as optionsActions from "../../ducks/options";
+import { useTheme } from "../ThemeHandler";
 
 type MenuToggleProps = {
     value: boolean;
@@ -69,66 +70,23 @@ export function CommandBarToggle() {
 }
 
 export function ThemeToggle() {
-    const [theme, setTheme] = React.useState<"light" | "dark" | "system">(
-        () => {
-            return (
-                (localStorage.getItem("mitmproxy-theme") as
-                    | "light"
-                    | "dark"
-                    | "system") || "system"
-            );
-        },
-    );
-
-    React.useEffect(() => {
-        localStorage.setItem("mitmproxy-theme", theme);
-
-        const applyTheme = (t: "light" | "dark" | "system") => {
-            let activeTheme = t;
-            if (activeTheme === "system") {
-                activeTheme =
-                    window.matchMedia &&
-                    window.matchMedia("(prefers-color-scheme: dark)").matches
-                        ? "dark"
-                        : "light";
-            }
-            document.documentElement.setAttribute("data-theme", activeTheme);
-        };
-
-        applyTheme(theme);
-
-        if (theme === "system" && window.matchMedia) {
-            const mediaQuery = window.matchMedia(
-                "(prefers-color-scheme: dark)",
-            );
-            const handleChange = () => applyTheme("system");
-            mediaQuery.addEventListener("change", handleChange);
-            return () => mediaQuery.removeEventListener("change", handleChange);
-        }
-    }, [theme]);
+    const { theme, setTheme } = useTheme();
 
     return (
         <div className="menu-entry">
-            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <div className="theme-switcher">
                 Theme:
                 <select
                     value={theme}
                     onChange={(e) =>
                         setTheme(e.target.value as "light" | "dark" | "system")
                     }
-                    style={{
-                        padding: "2px 4px",
-                        background: "inherit",
-                        color: "inherit",
-                        border: "1px solid currentColor",
-                        borderRadius: "3px",
-                    }}
                 >
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                     <option value="system">System</option>
                 </select>
-            </label>
+            </div>
         </div>
     );
 }

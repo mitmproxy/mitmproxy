@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 
 import ProxyApp from "./components/ProxyApp";
+import { ThemeHandler } from "./components/ThemeHandler";
 import { add as addLog } from "./ducks/eventLog";
 import useUrlState from "./urlState";
 import WebSocketBackend from "./backends/websocket";
@@ -35,7 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const root = createRoot(container!);
     root.render(
         <Provider store={store}>
-            <ProxyApp />
+            <ThemeHandler>
+                <ProxyApp />
+            </ThemeHandler>
         </Provider>,
     );
 });

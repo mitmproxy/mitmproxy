@@ -5,10 +5,22 @@
         <title>mitmproxy</title>
         <link rel="icon" href="static/favicon.ico" type="image/x-icon" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <script type="module" crossorigin src="./static/index-Bt--WL1e.js"></script>
-      <link rel="modulepreload" crossorigin href="./static/vendor-BS4xPthR.js">
-      <link rel="stylesheet" crossorigin href="./static/vendor-Cg3S-P9H.css">
-      <link rel="stylesheet" crossorigin href="./static/index-DhPPoJ7G.css">
+        <script>
+            (function() {
+                try {
+                    var theme = localStorage.getItem('mitmproxy-theme') || 'system';
+                    var activeTheme = theme;
+                    if (theme === 'system') {
+                        activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    }
+                    document.documentElement.setAttribute('data-theme', activeTheme);
+                } catch (e) {}
+            })();
+        </script>
+      <script type="module" crossorigin src="./static/index-DYx-sxYd.js"></script>
+      <link rel="modulepreload" crossorigin href="./static/vendor-KHWOs4Qv.js">
+      <link rel="stylesheet" crossorigin href="./static/vendor-BYrVIFfQ.css">
+      <link rel="stylesheet" crossorigin href="./static/index-tXfsdXtE.css">
     </head>
     <body>
         <div id="mitmproxy"></div>

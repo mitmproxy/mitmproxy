@@ -7,13 +7,12 @@
 
 header {
     padding-top: 6px;
-    background-color: white;
-    @separator-color: lighten(grey, 15%);
+    background-color: var(--header-bg);
     > div:not(:empty) {
         display: block;
         margin: 0;
         padding: 0;
-        border-bottom: solid @separator-color 1px;
+        border-bottom: solid var(--header-border) 1px;
         height: @menu-height;
         overflow: visible; // search help context laps over.
     }
@@ -75,10 +74,33 @@ header {
         margin: 0 2px;
         vertical-align: middle;
     }
+
+    .theme-switcher {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.2rem;
+
+        select {
+            padding: 2px 6px;
+            background: var(--bg-primary);
+            color: var(--fg-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 4px;
+            font-size: 1.2rem;
+            height: 24px;
+            cursor: pointer;
+
+            &:focus {
+                outline: none;
+                border-color: #337ab7;
+            }
+        }
+    }
 }
 
 .menu-legend {
-    color: #777;
+    color: var(--fg-secondary);
     height: @menu-legend-height;
     text-align: center;
     font-size: 12px;
@@ -89,7 +111,7 @@ header {
     @space: 10px;
     margin-left: -(@menu-group-hmargin + 1px);
     content: " ";
-    border-left: solid 1px lighten(grey, 40%);
+    border-left: solid 1px var(--border-primary);
     margin-top: @space;
     height: @menu-height - @space*2;
     position: absolute;
@@ -108,29 +130,34 @@ header {
 
 .filter-input {
     margin: 4px 0;
+
+
+
+    .input-group-addon {
+        background-color: var(--bg-secondary);
+        color: var(--fg-secondary);
+        border-color: var(--border-primary);
+    }
 }
 
 .filter-input .popover {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
     top: 27px;
     left: 43px;
     display: block;
     max-width: none;
-    opacity: 0.9;
-
-    @media (max-width: @screen-xs-max) {
-        top: 16px;
-        left: 29px;
-        right: 2px;
-    }
+    opacity: 0.95;
 
     .popover-content {
+        color: var(--fg-primary);
         max-height: 500px;
         overflow-y: auto;
 
         tr {
             cursor: pointer;
             &:hover {
-                background-color: hsla(209, 52%, 84%, 0.5) !important;
+                background-color: var(--menu-entry-hover) !important;
             }
         }
     }

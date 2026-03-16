@@ -5,7 +5,7 @@
     flex-direction: column;
 
     nav {
-        background-color: #f2f2f2;
+        background-color: var(--bg-secondary);
     }
 
     section {
@@ -25,9 +25,10 @@
         margin-top: 2px;
         padding-left: 10px;
         padding-right: 7px;
-        color: grey;
+        color: var(--fg-secondary);
         font-size: 15px;
         border: none;
+        background: transparent;
     }
 
     .close-button:hover {
@@ -124,7 +125,7 @@
 
     tr {
         &:not(:first-child) {
-            border-top: 1px solid #f7f7f7;
+            border-top: 1px solid var(--border-primary);
         }
     }
 
@@ -160,7 +161,8 @@
     }
 
     .inline-input {
-        background-color: white;
+        background-color: var(--input-bg);
+        color: var(--input-fg);
     }
 
     .kv-add-row {

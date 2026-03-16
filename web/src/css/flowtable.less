@@ -18,8 +18,8 @@
     }
 
     thead tr {
-        background-color: #f2f2f2;
-        border-bottom: solid #bebebe 1px;
+        background-color: var(--table-header-bg);
+        border-bottom: solid var(--border-primary) 1px;
         line-height: 23px;
     }
 
@@ -31,7 +31,7 @@
 
         &.sort-asc,
         &.sort-desc {
-            background-color: lighten(#f2f2f2, 3%);
+            background-color: var(--table-header-bg);
         }
 
         &.sort-asc:after,
@@ -41,7 +41,7 @@
             right: 3px;
             top: 3px;
             padding: 2px;
-            background-color: fadeout(lighten(#f2f2f2, 3%), 20%);
+            background-color: var(--table-header-bg);
         }
 
         &.sort-asc:after {
@@ -57,9 +57,9 @@
         cursor: pointer;
 
         & {
-            background-color: hsl(0, 0%, 100%);
+            background-color: var(--table-odd-bg);
             &:nth-child(even) {
-                background-color: hsl(0, 0%, 95%);
+                background-color: var(--table-even-bg);
             }
         }
 
@@ -71,9 +71,9 @@
         }
 
         &.selected {
-            background-color: hsl(209, 51%, 92%) !important;
+            background-color: var(--table-selected-bg) !important;
             &:nth-child(even) {
-                background-color: hsl(209, 51%, 86%) !important;
+                background-color: darken(#373737, 5%) !important; // Quick hack for even selected rows in dark mode, ideally use more variables
             }
         }
 
@@ -130,9 +130,6 @@
     }
 
     .col-path {
-        .marker {
-        }
-
         .fa {
             margin-left: 0;
             font-size: 16px;

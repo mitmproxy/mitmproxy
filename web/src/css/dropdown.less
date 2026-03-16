@@ -1,9 +1,19 @@
 .dropdown-menu {
     // setting a margin is not compatible with popper.
     margin: 0 !important;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    color: var(--fg-primary);
 
     > li > a {
         padding: 3px 10px;
+        color: var(--fg-primary);
+
+        &:hover {
+            background-color: var(--menu-entry-hover);
+            color: var(--fg-primary);
+            text-decoration: none;
+        }
     }
 
     max-height: 250px;

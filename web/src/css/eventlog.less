@@ -6,10 +6,10 @@
     flex-direction: column;
 
     > div {
-        background-color: #f2f2f2;
+        background-color: var(--bg-secondary);
         padding: 0 5px;
         flex: 0 0 auto;
-        border-top: 1px solid #aaa;
+        border-top: 1px solid var(--border-primary);
         cursor: row-resize;
     }
 
@@ -20,17 +20,18 @@
         border-radius: 0;
         overflow-x: auto;
         overflow-y: scroll;
-        background-color: #fcfcfc;
+        background-color: var(--bg-primary);
+        color: var(--fg-primary);
     }
 
     .fa-close {
         cursor: pointer;
         float: right;
-        color: grey;
+        color: var(--fg-secondary);
         padding: 3px 0;
         padding-left: 10px;
         &:hover {
-            color: black;
+            color: var(--fg-primary);
         }
     }
 
