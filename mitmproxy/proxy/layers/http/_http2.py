@@ -330,6 +330,8 @@ class Http2Connection(HttpConnection):
                 )
             )
         self.streams.clear()
+        self.h2_conn.stream_buffers.clear()
+        self.h2_conn._buffered_bytes = 0
         self._handle_event = self.done  # type: ignore
 
     @expect(DataReceived, HttpEvent, ConnectionClosed, Wakeup)
