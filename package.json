@@ -1,0 +1,11 @@
+{
+  "name": "mitmproxy-root",
+  "private": true,
+  "scripts": {
+    "test": "uv run tox && npm test --prefix web",
+    "test-python": "uv run tox",
+    "test-web": "npm test --prefix web",
+    "start": "npm start --prefix web",
+    "lint": "uv run tox -e lint && npm run eslint --prefix web"
+  }
+}
