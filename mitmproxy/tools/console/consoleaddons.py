@@ -34,12 +34,6 @@ console_palettes = [
     "solarized_light",
     "solarized_dark",
 ]
-view_orders = [
-    "time",
-    "method",
-    "url",
-    "size",
-]
 console_layouts = [
     "single",
     "vertical",
