@@ -9,6 +9,7 @@ from mitmproxy.net.http.multipart import decode_multipart
 
 class MultipartContentview(Contentview):
     name = "Multipart Form"
+
     @property
     def syntax_highlight(self) -> SyntaxHighlight:
         return "yaml"

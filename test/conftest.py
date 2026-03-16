@@ -34,7 +34,9 @@ skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 
 
 # asyncio.DefaultEventLoopPolicy is deprecated in 3.14.
-warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*")
+warnings.filterwarnings(
+    "ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*"
+)
 
 DefaultEventLoopPolicy: typing.Any = getattr(asyncio, "DefaultEventLoopPolicy", object)
 

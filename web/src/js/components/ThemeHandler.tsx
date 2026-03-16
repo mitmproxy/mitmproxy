@@ -7,7 +7,9 @@ interface ThemeContextType {
     setTheme: (theme: Theme) => void;
 }
 
-const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = React.createContext<ThemeContextType | undefined>(
+    undefined,
+);
 
 export function ThemeHandler({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = React.useState<Theme>(() => {
@@ -32,7 +34,9 @@ export function ThemeHandler({ children }: { children: React.ReactNode }) {
         applyTheme(theme);
 
         if (theme === "system" && window.matchMedia) {
-            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const mediaQuery = window.matchMedia(
+                "(prefers-color-scheme: dark)",
+            );
             const handleChange = () => applyTheme("system");
             mediaQuery.addEventListener("change", handleChange);
             return () => mediaQuery.removeEventListener("change", handleChange);

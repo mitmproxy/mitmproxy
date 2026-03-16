@@ -46,6 +46,7 @@ class JavaScriptContentview(Contentview):
     @property
     def syntax_highlight(self) -> SyntaxHighlight:
         return "javascript"
+
     __content_types = (
         "application/x-javascript",
         "application/javascript",
