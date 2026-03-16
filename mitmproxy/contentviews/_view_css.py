@@ -3,6 +3,7 @@ import time
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.utils import strutils
 
 """
@@ -50,10 +51,12 @@ def beautify(data: str, indent: str = "    "):
 
 
 class ViewCSS(Contentview):
-    syntax_highlight = "css"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "css"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
-        data_str = data.decode("utf8", "surrogateescape")
+        data_str = data.decode("utf8", "surrogateescape").replace("\r\n", "\n")
         return beautify(data_str)
 
     def render_priority(

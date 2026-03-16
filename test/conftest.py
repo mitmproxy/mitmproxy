@@ -4,6 +4,8 @@ import asyncio
 import os
 import platform
 import socket
+import typing
+import warnings
 
 import pytest
 
@@ -31,7 +33,13 @@ else:
 skip_no_ipv6 = pytest.mark.skipif(no_ipv6, reason="Host has no IPv6 support")
 
 
-class EagerTaskCreationEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+# asyncio.DefaultEventLoopPolicy is deprecated in 3.14.
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*DefaultEventLoopPolicy.*")
+
+DefaultEventLoopPolicy: typing.Any = getattr(asyncio, "DefaultEventLoopPolicy", object)
+
+
+class EagerTaskCreationEventLoopPolicy(DefaultEventLoopPolicy):
     def new_event_loop(self):
         loop = super().new_event_loop()
         loop.set_task_factory(asyncio.eager_task_factory)

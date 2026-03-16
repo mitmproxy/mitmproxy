@@ -3,6 +3,7 @@ from .._utils import yaml_dumps
 from . import image_parser
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.contrib import imghdr
 
 
@@ -16,7 +17,9 @@ imghdr.tests.append(test_ico)
 
 
 class ImageContentview(Contentview):
-    syntax_highlight = "yaml"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "yaml"
 
     def prettify(
         self,

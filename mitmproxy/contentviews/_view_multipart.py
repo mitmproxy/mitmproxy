@@ -3,12 +3,15 @@ from ._utils import merge_repeated_keys
 from ._utils import yaml_dumps
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.net.http.multipart import decode_multipart
 
 
 class MultipartContentview(Contentview):
     name = "Multipart Form"
-    syntax_highlight = "yaml"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "yaml"
 
     def prettify(
         self,

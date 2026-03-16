@@ -1,5 +1,6 @@
 from mitmproxy.contentviews._api import InteractiveContentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.contentviews._utils import yaml_dumps
 from mitmproxy.contentviews._utils import yaml_loads
 from mitmproxy.dns import DNSMessage as DNSMessage
@@ -11,7 +12,9 @@ def _is_dns_tcp(metadata: Metadata) -> bool:
 
 
 class DNSContentview(InteractiveContentview):
-    syntax_highlight = "yaml"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "yaml"
 
     def prettify(
         self,

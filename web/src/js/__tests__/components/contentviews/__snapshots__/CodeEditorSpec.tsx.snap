@@ -275,7 +275,19 @@ exports[`CodeEditor highlights HTML 1`] = `
             <div
               class="cm-activeLine cm-line"
             >
-              &lt;p&gt;yay&lt;/p&gt;
+              &lt;
+              <span
+                class="ͼi"
+              >
+                p
+              </span>
+              &gt;yay&lt;/
+              <span
+                class="ͼi"
+              >
+                p
+              </span>
+              &gt;
             </div>
           </div>
           <div

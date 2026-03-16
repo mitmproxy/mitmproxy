@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.utils import sliding_window
 from mitmproxy.utils import strutils
 
@@ -247,7 +248,9 @@ def format_xml(tokens: Iterable[Token]) -> str:
 class XmlHtmlContentview(Contentview):
     __content_types = ("text/xml", "text/html")
     name = "XML/HTML"
-    syntax_highlight = "xml"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "xml"
 
     def prettify(
         self,
@@ -258,6 +261,7 @@ class XmlHtmlContentview(Contentview):
             data_str = metadata.http_message.get_text(strict=False) or ""
         else:
             data_str = data.decode("utf8", "backslashreplace")
+        data_str = data_str.replace("\r\n", "\n")
         tokens = tokenize(data_str)
         return format_xml(tokens)
 

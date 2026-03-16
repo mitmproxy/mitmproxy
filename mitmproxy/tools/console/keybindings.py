@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import textwrap
+import typing
 
 import urwid
 
@@ -67,17 +70,17 @@ class KeyListWalker(urwid.ListWalker):
         self.keybinding_focus_change.send(binding.help or "")
         self._modified()
 
-    def get_next(self, pos):
-        if pos >= len(self.bindings) - 1:
+    def get_next(self, position):
+        if position >= len(self.bindings) - 1:
             return None, None
-        pos = pos + 1
-        return self._get(pos), pos
+        position = position + 1
+        return self._get(position), position
 
-    def get_prev(self, pos):
-        pos = pos - 1
-        if pos < 0:
+    def get_prev(self, position):
+        position = position - 1
+        if position < 0:
             return None, None
-        return self._get(pos), pos
+        return self._get(position), position
 
     def positions(self, reverse=False):
         if reverse:
@@ -145,19 +148,22 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
     def get_focused_binding(self):
         if self.focus_position != 0:
             return None
-        f = self.contents[0][0]
+        # Pile.contents[i] returns (widget, options)
+        f = typing.cast(typing.Any, self.contents[0])[0]
         return f.walker.get_focus()[0].binding
 
     def keypress(self, size, key):
         if key == "m_next":
             self.focus_position = (self.focus_position + 1) % len(self.widget_list)
-            self.contents[1][0].set_active(self.focus_position == 1)
+            # Pile.contents[i] returns (widget, options)
+            oh = typing.cast(typing.Any, self.contents[1])[0]
+            oh.set_active(self.focus_position == 1)
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus=True)
-        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
-        return self.focus.keypress(tsize, key)
+        tsizes = self.get_rows_sizes(size, focus=True)
+        tsize = tsizes[self.focus_position]
+        if self.focus is not None:
+            return self.focus.keypress(tsize, key)
+        return key

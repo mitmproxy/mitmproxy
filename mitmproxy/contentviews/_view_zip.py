@@ -3,12 +3,15 @@ import zipfile
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.contentviews._utils import yaml_dumps
 
 
 class ZipContentview(Contentview):
     name = "ZIP Archive"
-    syntax_highlight = "yaml"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "yaml"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         with zipfile.ZipFile(io.BytesIO(data), "r") as zip_file:

@@ -338,13 +338,11 @@ exports[`Header 2`] = `
             <div
               class="menu-entry"
             >
-              <label
-                style="display: flex; align-items: center; gap: 5px;"
+              <div
+                class="theme-switcher"
               >
                 Theme:
-                <select
-                  style="padding: 2px 4px; border: 1px solid currentcolor; border-radius: 3px;"
-                >
+                <select>
                   <option
                     value="light"
                   >
@@ -361,7 +359,7 @@ exports[`Header 2`] = `
                     System
                   </option>
                 </select>
-              </label>
+              </div>
             </div>
             <div
               class="menu-entry"
@@ -610,13 +608,11 @@ exports[`Header 3`] = `
             <div
               class="menu-entry"
             >
-              <label
-                style="display: flex; align-items: center; gap: 5px;"
+              <div
+                class="theme-switcher"
               >
                 Theme:
-                <select
-                  style="padding: 2px 4px; border: 1px solid currentcolor; border-radius: 3px;"
-                >
+                <select>
                   <option
                     value="light"
                   >
@@ -633,7 +629,7 @@ exports[`Header 3`] = `
                     System
                   </option>
                 </select>
-              </label>
+              </div>
             </div>
             <div
               class="menu-entry"

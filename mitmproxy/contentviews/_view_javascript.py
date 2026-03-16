@@ -3,6 +3,7 @@ import re
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 from mitmproxy.utils import strutils
 
 DELIMITERS = "{};\n"
@@ -42,7 +43,9 @@ def beautify(data):
 
 
 class JavaScriptContentview(Contentview):
-    syntax_highlight = "javascript"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "javascript"
     __content_types = (
         "application/x-javascript",
         "application/javascript",

@@ -136,17 +136,17 @@ class OptionListWalker(urwid.ListWalker):
         self.help_widget.update_help_text(opt.help)
         self._modified()
 
-    def get_next(self, pos):
-        if pos >= len(self.opts) - 1:
+    def get_next(self, position):
+        if position >= len(self.opts) - 1:
             return None, None
-        pos = pos + 1
-        return self._get(pos, False), pos
+        position = position + 1
+        return self._get(position, False), position
 
-    def get_prev(self, pos):
-        pos = pos - 1
-        if pos < 0:
+    def get_prev(self, position):
+        position = position - 1
+        if position < 0:
             return None, None
-        return self._get(pos, False), pos
+        return self._get(position, False), position
 
     def positions(self, reverse=False):
         if reverse:
@@ -171,11 +171,12 @@ class OptionsList(urwid.ListBox):
         if self.walker.editing:
             if key == "enter":
                 foc, idx = self.get_focus()
-                v = self.walker.get_edit_text()
-                try:
-                    self.master.options.set(f"{foc.opt.name}={v}")
-                except exceptions.OptionsError as v:
-                    signals.status_message.send(message=str(v))
+                if foc is not None:
+                    v = self.walker.get_edit_text()
+                    try:
+                        self.master.options.set(f"{foc.opt.name}={v}")
+                    except exceptions.OptionsError as v:
+                        signals.status_message.send(message=str(v))
                 self.walker.stop_editing()
                 return None
             elif key == "esc":
@@ -190,6 +191,8 @@ class OptionsList(urwid.ListBox):
                 self.walker._modified()
             elif key == "m_select":
                 foc, idx = self.get_focus()
+                if foc is None:
+                    return None
                 if foc.opt.typespec is bool:
                     self.master.options.toggler(foc.opt.name)()
                     # Bust the focus widget cache
@@ -260,7 +263,7 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
 
     def current_name(self):
         foc, idx = self.optionslist.get_focus()
-        return foc.opt.name
+        return foc.opt.name if foc else None
 
     def keypress(self, size, key):
         if key == "m_next":
@@ -270,8 +273,8 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus=True)
-        tsize = self.get_item_size(size, self.focus_position, True, item_rows)
-        return self.focus.keypress(tsize, key)
+        tsizes = self.get_rows_sizes(size, focus=True)
+        tsize = tsizes[self.focus_position]
+        if self.focus is not None:
+            return self.focus.keypress(tsize, key)
+        return key

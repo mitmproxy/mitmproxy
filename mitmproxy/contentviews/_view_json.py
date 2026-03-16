@@ -2,10 +2,13 @@ import json
 
 from mitmproxy.contentviews._api import Contentview
 from mitmproxy.contentviews._api import Metadata
+from mitmproxy.contentviews._api import SyntaxHighlight
 
 
 class JSONContentview(Contentview):
-    syntax_highlight = "yaml"
+    @property
+    def syntax_highlight(self) -> SyntaxHighlight:
+        return "yaml"
 
     def prettify(self, data: bytes, metadata: Metadata) -> str:
         data = json.loads(data)
