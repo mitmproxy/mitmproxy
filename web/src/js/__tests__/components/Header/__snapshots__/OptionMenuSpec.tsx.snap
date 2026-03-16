@@ -107,6 +107,34 @@ exports[`OptionMenu Component should render correctly 1`] = `
         <div
           class="menu-entry"
         >
+          <label
+            style="display: flex; align-items: center; gap: 5px;"
+          >
+            Theme:
+            <select
+              style="padding: 2px 4px; border: 1px solid currentcolor; border-radius: 3px;"
+            >
+              <option
+                value="light"
+              >
+                Light
+              </option>
+              <option
+                value="dark"
+              >
+                Dark
+              </option>
+              <option
+                value="system"
+              >
+                System
+              </option>
+            </select>
+          </label>
+        </div>
+        <div
+          class="menu-entry"
+        >
           <label>
             <input
               checked=""

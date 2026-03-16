@@ -1,7 +1,7 @@
 import * as React from "react";
 
 type HideInStaticProps = {
-    children: React.ReactNode;
+    children?: React.ReactNode;
 };
 
 export default function HideInStatic({ children }: HideInStaticProps) {
