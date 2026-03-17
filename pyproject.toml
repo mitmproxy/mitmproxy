@@ -226,7 +226,6 @@ exclude = [
   "mitmproxy/tools/web/app.py",
   "mitmproxy/tools/web/master.py",
   "mitmproxy/tools/web/webaddons.py",
-  "mitmproxy/utils/bits.py",
   "mitmproxy/utils/pyinstaller/*",
   "mitmproxy/utils/vt_codes.py",
 ]
