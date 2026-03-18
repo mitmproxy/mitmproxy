@@ -21,10 +21,6 @@ from mitmproxy.tools.console import tabs
 from mitmproxy.utils import strutils
 
 
-class SearchError(Exception):
-    pass
-
-
 class FlowViewHeader(urwid.WidgetWrap):
     def __init__(
         self,
