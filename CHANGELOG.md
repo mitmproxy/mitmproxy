@@ -24,6 +24,7 @@
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
 - Allow hiding the Quick Help UI in the mitmproxy console with the 'H' key.
   ([#8095](https://github.com/mitmproxy/mitmproxy/pull/8095), @seroperson)
+- Removed several dead functions using [Skylos](https://github.com/duriantaco/skylos).
 
 ## 24 November 2025: mitmproxy 12.2.1
 
