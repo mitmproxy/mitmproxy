@@ -89,7 +89,9 @@ describe("Flowcolumns Components", () => {
         testFlowColumn(<FlowColumns.time flow={tflow} rowNumber={0} />);
 
         const noResponseFlow = { ...tflow, response: undefined };
-        testFlowColumn(<FlowColumns.time flow={noResponseFlow} rowNumber={0} />);
+        testFlowColumn(
+            <FlowColumns.time flow={noResponseFlow} rowNumber={0} />,
+        );
     });
 
     it("should render CommentColumn", () => {
