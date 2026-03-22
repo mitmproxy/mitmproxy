@@ -20,7 +20,7 @@ import type { Flow } from "../../flow";
 
 type FlowColumnProps = {
     flow: Flow;
-    flowIndex?: number;
+    rowNumber: number;
 };
 
 interface FlowColumn {
@@ -43,12 +43,8 @@ export const tls: FlowColumn = ({ flow }) => {
 };
 tls.headerName = "";
 
-export const index: FlowColumn = ({ flow, flowIndex }) => {
-    // Use the index passed from the parent when available, avoiding a
-    // per-cell Redux subscription that would otherwise fire on every
-    // state change.
-    const displayIndex = flowIndex !== undefined ? flowIndex + 1 : flow.id;
-    return <td className="col-index">{displayIndex}</td>;
+export const index: FlowColumn = ({ rowNumber }) => {
+    return <td className="col-index">{rowNumber + 1}</td>;
 };
 index.headerName = "#";
 

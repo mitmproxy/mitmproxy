@@ -11,7 +11,7 @@ test("should render columns", async () => {
             <table>
                 <tbody>
                     <tr>
-                        <Col flow={tflow} flowIndex={0} />
+                        <Col flow={tflow} rowNumber={0} />
                     </tr>
                 </tbody>
             </table>,
@@ -34,7 +34,7 @@ describe("Flowcolumns Components", () => {
 
     it("should render IconColumn", () => {
         const testIconColumn = (flow: Flow) =>
-            testFlowColumn(<FlowColumns.icon flow={flow} />);
+            testFlowColumn(<FlowColumns.icon flow={flow} rowNumber={0} />);
 
         // TCP
         let tcpflow = TTCPFlow();
@@ -77,23 +77,23 @@ describe("Flowcolumns Components", () => {
 
     it("should render pathColumn", () => {
         let tflow = TFlow();
-        testFlowColumn(<FlowColumns.path flow={tflow} />);
+        testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
 
         tflow.error.msg = "Connection killed.";
         tflow.intercepted = true;
-        testFlowColumn(<FlowColumns.path flow={tflow} />);
+        testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
     });
 
     it("should render TimeColumn", () => {
         let tflow = TFlow();
-        testFlowColumn(<FlowColumns.time flow={tflow} />);
+        testFlowColumn(<FlowColumns.time flow={tflow} rowNumber={0} />);
 
         const noResponseFlow = { ...tflow, response: undefined };
-        testFlowColumn(<FlowColumns.time flow={noResponseFlow} />);
+        testFlowColumn(<FlowColumns.time flow={noResponseFlow} rowNumber={0} />);
     });
 
     it("should render CommentColumn", () => {
         const tflow = TFlow();
-        testFlowColumn(<FlowColumns.comment flow={tflow} />);
+        testFlowColumn(<FlowColumns.comment flow={tflow} rowNumber={0} />);
     });
 });

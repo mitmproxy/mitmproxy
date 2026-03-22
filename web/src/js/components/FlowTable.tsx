@@ -152,7 +152,7 @@ export class PureFlowTable extends React.Component<
                                     selected={selectedIds.has(flow.id)}
                                     highlighted={highlightedIds.has(flow.id)}
                                     displayColumnNames={displayColumnNames}
-                                    flowIndex={vScroll.start + idx}
+                                    rowNumber={vScroll.start + idx}
                                 />
                             ))}
                         <tr style={{ height: vScroll.paddingBottom }} />

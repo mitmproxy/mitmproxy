@@ -15,7 +15,7 @@ export default React.memo(function FlowTableHead() {
     );
 
     const sortType = sortDesc ? "sort-desc" : "sort-asc";
-    const displayColumns = (displayColumnNames || [])
+    const displayColumns = displayColumnNames
         .filter(isValidColumnName)
         .concat("quickactions");
 

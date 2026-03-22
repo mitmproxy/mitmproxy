@@ -10,7 +10,7 @@ type FlowRowProps = {
     selected: boolean;
     highlighted: boolean;
     displayColumnNames: string[];
-    flowIndex: number;
+    rowNumber: number;
 };
 
 export default React.memo(function FlowRow({
@@ -18,7 +18,7 @@ export default React.memo(function FlowRow({
     selected,
     highlighted,
     displayColumnNames,
-    flowIndex,
+    rowNumber,
 }: FlowRowProps) {
     const dispatch = useAppDispatch();
     const className = classnames({
@@ -57,7 +57,7 @@ export default React.memo(function FlowRow({
     return (
         <tr className={className} onClick={onClick}>
             {displayColumns.map((Column) => (
-                <Column key={Column.name} flow={flow} flowIndex={flowIndex} />
+                <Column key={Column.name} flow={flow} rowNumber={rowNumber} />
             ))}
         </tr>
     );
