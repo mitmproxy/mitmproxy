@@ -20,6 +20,31 @@ test("should render columns", async () => {
     });
 });
 
+test("index column should display rowNumber + 1", () => {
+    const tflow = TFlow();
+    const { container: c1 } = render(
+        <table>
+            <tbody>
+                <tr>
+                    <FlowColumns.index flow={tflow} rowNumber={0} />
+                </tr>
+            </tbody>
+        </table>,
+    );
+    expect(c1.querySelector(".col-index")!.textContent).toBe("1");
+
+    const { container: c2 } = render(
+        <table>
+            <tbody>
+                <tr>
+                    <FlowColumns.index flow={tflow} rowNumber={4} />
+                </tr>
+            </tbody>
+        </table>,
+    );
+    expect(c2.querySelector(".col-index")!.textContent).toBe("5");
+});
+
 describe("Flowcolumns Components", () => {
     function testFlowColumn(elem) {
         const { asFragment } = render(
