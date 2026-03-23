@@ -180,6 +180,9 @@ async def test_inject_fail(caplog) -> None:
     ps.inject_websocket(tflow.ttcpflow(), True, b"test")
     assert "Cannot inject WebSocket messages into non-WebSocket flows" in caplog.text
 
+    # str must not reach inject_event (issue #5808).
+    ps.inject_websocket("@focus", True, b"test")  # type: ignore[arg-type]
+
 
 async def test_warn_no_nextlayer(caplog):
     """
