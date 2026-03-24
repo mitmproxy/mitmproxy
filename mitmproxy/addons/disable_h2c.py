@@ -3,20 +3,20 @@ import logging
 
 class DisableH2C:
     """
-    We currently only support HTTP/2 over a TLS connection.
+    Disable unsupported h2c cleartext mechanisms.
 
-    Some clients try to upgrade a connection from HTTP/1.1 to h2c. We need to
-    remove those headers to avoid protocol errors if one endpoints suddenly
-    starts sending HTTP/2 frames.
+    The HTTP/1.1 ``Upgrade: h2c`` mechanism is never supported: those headers
+    are stripped to prevent protocol errors.
 
-    Some clients might use HTTP/2 Prior Knowledge to directly initiate a session
-    by sending the connection preface. We just kill those flows.
+    When the ``http2`` option is disabled, h2c prior knowledge connections
+    (``PRI * HTTP/2.0``) fall through to the HTTP/1.1 parser and are killed
+    here to avoid forwarding nonsensical requests upstream.
     """
 
     def process_flow(self, f):
         if f.request.headers.get("upgrade", "") == "h2c":
             logging.warning(
-                "HTTP/2 cleartext connections (h2c upgrade requests) are currently not supported."
+                "HTTP/2 cleartext upgrade requests (Upgrade: h2c) are not supported."
             )
             del f.request.headers["upgrade"]
             if "connection" in f.request.headers:
@@ -33,7 +33,8 @@ class DisableH2C:
             if f.killable:
                 f.kill()
             logging.warning(
-                "Initiating HTTP/2 connections with prior knowledge are currently not supported."
+                "HTTP/2 cleartext connections with prior knowledge are not supported "
+                "when the http2 option is disabled."
             )
 
     # Handlers

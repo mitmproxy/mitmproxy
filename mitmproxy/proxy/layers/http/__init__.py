@@ -9,8 +9,14 @@ from logging import WARNING
 import wsproto.handshake
 
 from ...context import Context
+from ...mode_specs import LocalMode
+from ...mode_specs import RegularMode
 from ...mode_specs import ReverseMode
+from ...mode_specs import Socks5Mode
+from ...mode_specs import TransparentMode
+from ...mode_specs import TunMode
 from ...mode_specs import UpstreamMode
+from ...mode_specs import WireGuardMode
 from ..quic import QuicStreamEvent
 from ._base import HttpCommand
 from ._base import HttpConnection
@@ -73,6 +79,14 @@ class HTTPMode(enum.Enum):
     upstream = 3
 
 
+def _should_use_h2c_upstream(context: Context) -> bool:
+    """h2c should be forwarded upstream in transparent-like modes and explicit proxy mode."""
+    return context.client.alpn == b"h2c" and isinstance(
+        context.client.proxy_mode,
+        (RegularMode, TransparentMode, WireGuardMode, LocalMode, TunMode, Socks5Mode),
+    )
+
+
 def validate_request(
     mode: HTTPMode, request: http.Request, validate_inbound_headers: bool
 ) -> str | None:
@@ -92,6 +106,10 @@ def validate_request(
                 "Disable the validate_inbound_headers option to skip this security check."
             )
     return None
+
+
+def is_h2_alpn(alpn: bytes | None) -> bool:
+    return alpn in (b"h2", b"h2c")
 
 
 def is_h3_alpn(alpn: bytes | None) -> bool:
@@ -953,7 +971,7 @@ class HttpLayer(layer.Layer):
             http_conn: HttpConnection
             if is_h3_alpn(self.context.client.alpn):
                 http_conn = Http3Server(self.context.fork())
-            elif self.context.client.alpn == b"h2":
+            elif is_h2_alpn(self.context.client.alpn):
                 http_conn = Http2Server(self.context.fork())
             else:
                 http_conn = Http1Server(self.context.fork())
@@ -1004,6 +1022,12 @@ class HttpLayer(layer.Layer):
                     if is_h3_alpn(self.context.server.alpn):
                         child_layer = Http3Client(self.context.fork())
                     elif self.context.server.alpn == b"h2":
+                        child_layer = Http2Client(self.context.fork())
+                    elif (
+                        not self.context.server.tls_established
+                        and _should_use_h2c_upstream(self.context)
+                    ):
+                        self.context.server.alpn = b"h2c"
                         child_layer = Http2Client(self.context.fork())
                     else:
                         child_layer = Http1Client(self.context.fork())
@@ -1084,10 +1108,9 @@ class HttpLayer(layer.Layer):
                         return
                     elif connection.connected:
                         # see "tricky multiplexing edge case" in make_http_connection for an explanation
-                        h2_to_h1 = (
-                            self.context.client.alpn == b"h2"
-                            and connection.alpn != b"h2"
-                        )
+                        h2_to_h1 = is_h2_alpn(
+                            self.context.client.alpn
+                        ) and not is_h2_alpn(connection.alpn)
                         if not h2_to_h1:
                             stream = self.command_sources.pop(event)
                             yield from self.event_to_child(
@@ -1180,8 +1203,8 @@ class HttpLayer(layer.Layer):
             # same connection. The only workaround left is to open a separate connection for each flow.
             if (
                 not command.err
-                and self.context.client.alpn == b"h2"
-                and command.connection.alpn != b"h2"
+                and is_h2_alpn(self.context.client.alpn)
+                and not is_h2_alpn(command.connection.alpn)
             ):
                 for cmd in waiting[1:]:
                     yield from self.get_connection(cmd, reuse=False)
@@ -1202,6 +1225,11 @@ class HttpClient(layer.Layer):
             if is_h3_alpn(self.context.server.alpn):
                 self.child_layer = Http3Client(self.context)
             elif self.context.server.alpn == b"h2":
+                self.child_layer = Http2Client(self.context)
+            elif not self.context.server.tls_established and _should_use_h2c_upstream(
+                self.context
+            ):
+                self.context.server.alpn = b"h2c"
                 self.child_layer = Http2Client(self.context)
             else:
                 self.child_layer = Http1Client(self.context)

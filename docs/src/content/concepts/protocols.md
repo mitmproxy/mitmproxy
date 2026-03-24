@@ -31,7 +31,8 @@ server does not speak HTTP/2, mitmproxy seamlessly translates messages to HTTP/1
 - *Priority Information*: mitmproxy currently ignores HTTP/2 PRIORITY frames. This does not affect the transmitted
   contents, but potentially affects the order in which messages are sent.
 - *Push Promises*: mitmproxy currently does not advertise support for HTTP/2 Push Promises.
-- *Cleartext HTTP/2*: mitmproxy currently does not support unencrypted HTTP/2 (h2c).
+- *Cleartext HTTP/2 (h2c)*: mitmproxy supports h2c via prior knowledge (clients that send the HTTP/2 connection
+  preface directly). The HTTP/1.1 Upgrade mechanism for h2c is not supported.
 
 ## HTTP/3
 
