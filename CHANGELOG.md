@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Set the default text encoding to UTF-8 instead of (very) legacy Latin-1.
+  In consequence, saved HARs may be different than previously.
+  ([#8126](https://github.com/mitmproxy/mitmproxy/pull/8126), @emaheuxPEREN)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
