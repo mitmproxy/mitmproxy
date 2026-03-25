@@ -6,6 +6,31 @@ from mitmproxy.net.http import multipart
 def test_decode():
     boundary = "somefancyboundary"
     content = (
+        "--{0}\r\n"
+        'Content-Disposition: form-data; name="field1"\r\n\r\n'
+        "value1\r\n"
+        "--{0}\r\n"
+        'Content-Disposition: form-data; name="field2"\r\n\r\n'
+        "value2\r\n"
+        "--{0}--".format(boundary).encode()
+    )
+    form = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
+
+    assert len(form) == 2
+    assert form[0] == (b"field1", b"value1")
+    assert form[1] == (b"field2", b"value2")
+
+    boundary = "boundary茅莽"
+    result = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
+    assert result == []
+
+    assert multipart.decode_multipart("", content) == []
+
+
+def test_decode_with_lf():
+    """Bare LF line endings should also be handled for robustness."""
+    boundary = "somefancyboundary"
+    content = (
         "--{0}\n"
         'Content-Disposition: form-data; name="field1"\n\n'
         "value1\n"
@@ -20,11 +45,81 @@ def test_decode():
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
-    boundary = "boundary茅莽"
-    result = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
-    assert result == []
 
-    assert multipart.decode_multipart("", content) == []
+def test_decode_content_preserves_newlines():
+    """Newlines within field values must be preserved (issue #4466)."""
+    boundary = "testboundary"
+    content = (
+        "--{0}\r\n"
+        'Content-Disposition: form-data; name="data"\r\n\r\n'
+        "a\r\nb\r\n"
+        "--{0}\r\n"
+        'Content-Disposition: form-data; name="data2"\r\n\r\n'
+        "line1\r\nline2\r\nline3\r\n"
+        "--{0}--".format(boundary).encode()
+    )
+    form = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content
+    )
+    assert len(form) == 2
+    assert form[0] == (b"data", b"a\r\nb")
+    assert form[1] == (b"data2", b"line1\r\nline2\r\nline3")
+
+
+def test_decode_content_preserves_lf_newlines():
+    """Bare LF newlines within field values must also be preserved."""
+    boundary = "testboundary"
+    content = (
+        "--{0}\n"
+        'Content-Disposition: form-data; name="data"\n\n'
+        "a\nb\n"
+        "--{0}--".format(boundary).encode()
+    )
+    form = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content
+    )
+    assert len(form) == 1
+    assert form[0] == (b"data", b"a\nb")
+
+
+def test_decode_binary_content():
+    """Binary content with embedded \\r\\n bytes must not be corrupted."""
+    boundary = "binboundary"
+    # Simulate binary data (e.g. a small JPEG-like payload) that contains
+    # 0x0A and 0x0D bytes naturally.
+    binary_data = b"\xff\xd8\xff\xe0\x00\x10JFIF\r\n\x00\x01\n\x01"
+    content = (
+        b"--" + boundary.encode() + b"\r\n"
+        b'Content-Disposition: form-data; name="file"; filename="test.bin"\r\n'
+        b"Content-Type: application/octet-stream\r\n\r\n"
+        + binary_data
+        + b"\r\n--" + boundary.encode() + b"--"
+    )
+    form = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content
+    )
+    assert len(form) == 1
+    assert form[0] == (b"file", binary_data)
+
+
+def test_decode_roundtrip():
+    """Encoding and then decoding should recover the field names and values.
+
+    Note: ``encode_multipart`` appends an extra CRLF after each value (it
+    joins an empty-bytes element with ``\\r\\n``), so the decoded values
+    carry a trailing ``\\r\\n`` compared to the originals.  We therefore
+    strip one trailing ``\\r\\n`` when comparing.
+    """
+    ct = "multipart/form-data; boundary=roundtripboundary"
+    parts = [
+        (b"name", b"Alice"),
+        (b"message", b"Hello World"),
+    ]
+    encoded = multipart.encode_multipart(ct, parts)
+    decoded = multipart.decode_multipart(ct, encoded)
+    assert len(decoded) == len(parts)
+    for (orig_key, _), (dec_key, _) in zip(parts, decoded):
+        assert dec_key == orig_key
 
 
 def test_encode():

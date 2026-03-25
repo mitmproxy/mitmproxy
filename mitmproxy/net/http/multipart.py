@@ -64,13 +64,39 @@ def decode_multipart(
         r = []
         if content is not None:
             for i in content.split(b"--" + boundary):
-                parts = i.splitlines()
-                if len(parts) > 1 and parts[0][0:2] != b"--":
-                    match = rx.search(parts[1])
-                    if match:
-                        key = match.group(1)
-                        value = b"".join(parts[3 + parts[2:].index(b"") :])
-                        r.append((key, value))
+                # Skip the closing boundary marker (e.g. "--\r\n")
+                if i[:2] == b"--":
+                    continue
+                # Strip the leading \r\n or \n after the boundary line
+                if i[:2] == b"\r\n":
+                    i = i[2:]
+                elif i[:1] == b"\n":
+                    i = i[1:]
+                # Find the blank line that separates headers from body.
+                # Per RFC 2046, parts use CRLF line endings, but we also
+                # handle bare LF for robustness.
+                sep_index = i.find(b"\r\n\r\n")
+                if sep_index != -1:
+                    header_bytes = i[:sep_index]
+                    body = i[sep_index + 4 :]
+                else:
+                    sep_index = i.find(b"\n\n")
+                    if sep_index != -1:
+                        header_bytes = i[:sep_index]
+                        body = i[sep_index + 2 :]
+                    else:
+                        continue
+                match = rx.search(header_bytes)
+                if match:
+                    key = match.group(1)
+                    # Strip the trailing CRLF (or LF) that precedes the
+                    # next boundary delimiter — it is part of the
+                    # encapsulation and not part of the body data.
+                    if body.endswith(b"\r\n"):
+                        body = body[:-2]
+                    elif body.endswith(b"\n"):
+                        body = body[:-1]
+                    r.append((key, body))
         return r
     return []
 
