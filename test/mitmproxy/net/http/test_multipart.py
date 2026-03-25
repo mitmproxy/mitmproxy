@@ -104,13 +104,7 @@ def test_decode_binary_content():
 
 
 def test_decode_roundtrip():
-    """Encoding and then decoding should recover the field names and values.
-
-    Note: ``encode_multipart`` appends an extra CRLF after each value (it
-    joins an empty-bytes element with ``\\r\\n``), so the decoded values
-    carry a trailing ``\\r\\n`` compared to the originals.  We therefore
-    strip one trailing ``\\r\\n`` when comparing.
-    """
+    """Encoding and then decoding should recover the field names and values."""
     ct = "multipart/form-data; boundary=roundtripboundary"
     parts = [
         (b"name", b"Alice"),
@@ -118,9 +112,7 @@ def test_decode_roundtrip():
     ]
     encoded = multipart.encode_multipart(ct, parts)
     decoded = multipart.decode_multipart(ct, encoded)
-    assert len(decoded) == len(parts)
-    for (orig_key, _), (dec_key, _) in zip(parts, decoded):
-        assert dec_key == orig_key
+    assert decoded == parts
 
 
 def test_encode():
@@ -131,11 +123,11 @@ def test_encode():
 
     assert b'Content-Disposition: form-data; name="file"' in content
     assert (
-        b"Content-Type: text/plain; charset=utf-8\r\n\r\nshell.jpg\r\n\r\n--127824672498\r\n"
+        b"Content-Type: text/plain; charset=utf-8\r\n\r\nshell.jpg\r\n--127824672498\r\n"
         in content
     )
-    assert b"1000\r\n\r\n--127824672498--\r\n"
-    assert len(content) == 252
+    assert b"1000\r\n--127824672498--\r\n" in content
+    assert len(content) == 248
 
     with pytest.raises(ValueError, match=r"boundary found in encoded string"):
         multipart.encode_multipart(

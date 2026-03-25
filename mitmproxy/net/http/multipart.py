@@ -30,7 +30,6 @@ def encode_multipart(content_type: str, parts: list[tuple[bytes, bytes]]) -> byt
                     hdrs.append(b"Content-Type: %b" % file_type.encode("utf-8"))
                     hdrs.append(b"")
                     hdrs.append(value)
-                hdrs.append(b"")
 
                 if value is not None:
                     # If boundary is found in value then raise ValueError
