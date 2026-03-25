@@ -70,10 +70,9 @@ def test_decode_content_preserves_lf_newlines():
     """Bare LF newlines within field values must also be preserved."""
     boundary = "testboundary"
     content = (
-        "--{0}\n"
-        'Content-Disposition: form-data; name="data"\n\n'
-        "a\nb\n"
-        "--{0}--".format(boundary).encode()
+        '--{0}\nContent-Disposition: form-data; name="data"\n\na\nb\n--{0}--'.format(
+            boundary
+        ).encode()
     )
     form = multipart.decode_multipart(
         f"multipart/form-data; boundary={boundary}", content
@@ -93,7 +92,9 @@ def test_decode_binary_content():
         b'Content-Disposition: form-data; name="file"; filename="test.bin"\r\n'
         b"Content-Type: application/octet-stream\r\n\r\n"
         + binary_data
-        + b"\r\n--" + boundary.encode() + b"--"
+        + b"\r\n--"
+        + boundary.encode()
+        + b"--"
     )
     form = multipart.decode_multipart(
         f"multipart/form-data; boundary={boundary}", content
