@@ -1,0 +1,315 @@
+.llm-tab {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 12px;
+}
+
+.llm-loading {
+    color: #999;
+    padding: 20px;
+    text-align: center;
+}
+
+.llm-header {
+    background-color: #5b4a9e;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-family: @font-family-monospace;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.llm-provider {
+    text-transform: capitalize;
+    font-weight: bold;
+}
+
+.llm-model {
+    opacity: 0.85;
+}
+
+.llm-section {
+    margin-bottom: 12px;
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.llm-section-title {
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 1px solid #e8e8e8;
+    color: #555;
+
+    &.llm-section-toggle {
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+
+        &:hover {
+            background-color: #ebebeb;
+        }
+
+        &:last-child {
+            // When collapsed (no sibling after title), remove bottom border
+            border-bottom: none;
+        }
+    }
+}
+
+.llm-toggle-icon {
+    display: inline-block;
+    width: 14px;
+    font-size: 10px;
+    margin-right: 6px;
+    color: #888;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.llm-section-body {
+    // No extra styling needed, just a wrapper for conditional rendering
+}
+
+.llm-section-title-text,
+.llm-item-header-text {
+    flex: 1;
+}
+
+// Copy button
+.llm-copy-btn {
+    margin-left: auto;
+    padding: 0 4px;
+    font-size: 14px;
+    color: #aaa;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+        color: #333;
+    }
+
+    &.llm-copy-btn-copied {
+        color: #4caf50;
+    }
+}
+
+.llm-content {
+    margin: 0;
+    padding: 8px 10px;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: none;
+    overflow: visible;
+    background: white;
+}
+
+.llm-json {
+    margin: 0;
+    padding: 8px 10px;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: white;
+}
+
+// Collapsible JSON viewer
+.json-viewer {
+    line-height: 1.6;
+}
+
+.json-toggle {
+    cursor: pointer;
+    user-select: none;
+    color: #888;
+    font-size: 10px;
+    display: inline-block;
+    width: 14px;
+    text-align: center;
+
+    &:hover {
+        color: #333;
+    }
+}
+
+.json-bracket {
+    color: #333;
+    font-weight: bold;
+}
+
+.json-indent {
+    padding-left: 20px;
+    border-left: 1px solid #e8e8e8;
+    margin-left: 6px;
+}
+
+.json-entry {
+    line-height: 1.6;
+}
+
+.json-key {
+    color: #881391;
+}
+
+.json-colon {
+    color: #333;
+}
+
+.json-string {
+    color: #0b7500;
+}
+
+.json-number {
+    color: #1a01cc;
+}
+
+.json-boolean {
+    color: #c7254e;
+}
+
+.json-null {
+    color: #999;
+}
+
+.json-leaf-copyable {
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.15s;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    &.json-leaf-copied {
+        background-color: rgba(76, 175, 80, 0.15);
+    }
+}
+
+.json-collapsed-hint {
+    color: #aaa;
+    font-style: italic;
+    font-size: 11px;
+}
+
+// Key-value table (used for Parameters, Tools, Messages)
+.llm-params-table {
+    width: 100%;
+    font-size: 12px;
+
+    td {
+        padding: 3px 10px;
+        vertical-align: top;
+    }
+
+    tr:not(:last-child) {
+        border-bottom: 1px solid #f0f0f0;
+    }
+}
+
+.llm-param-key {
+    font-family: @font-family-monospace;
+    font-weight: bold;
+    color: #555;
+    white-space: nowrap;
+    width: 1%;
+}
+
+.llm-param-value {
+    font-family: @font-family-monospace;
+    color: #333;
+    word-break: break-word;
+}
+
+// Collapsible list items (used for Tools, Messages, Content Blocks, Tool Calls)
+.llm-item {
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.llm-item-header {
+    padding: 4px 10px;
+    font-family: @font-family-monospace;
+    font-weight: bold;
+    font-size: 12px;
+    color: #555;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+        background-color: #fafafa;
+    }
+}
+
+.llm-item-body {
+    padding: 0 10px 6px 30px;
+}
+
+.llm-item-content {
+    margin: 0;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: transparent;
+    color: #333;
+}
+
+// Inline collapsible JSON (used inside items/sections instead of raw JSON.stringify)
+.llm-inline-json {
+    font-size: 12px;
+    line-height: 1.6;
+    font-family: @font-family-monospace;
+}
+
+// Message content part labels (tool_use, tool_result, thinking, etc.)
+.llm-msg-part {
+    margin-bottom: 4px;
+}
+
+.llm-msg-part-label {
+    font-family: @font-family-monospace;
+    font-size: 11px;
+    font-weight: bold;
+    color: #5b4a9e;
+    margin-bottom: 2px;
+}
+
+.llm-meta-value {
+    padding: 6px 10px;
+    font-family: @font-family-monospace;
+    font-size: 12px;
+}
+
+// Web search results inside content blocks
+.llm-search-results {
+    margin-top: 4px;
+}
+
+.llm-search-result {
+    margin-bottom: 4px;
+    padding: 2px 0;
+}
+
+.llm-search-result-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
+
+.llm-search-result-url {
+    font-size: 11px;
+    color: #0969da;
+    word-break: break-all;
+}

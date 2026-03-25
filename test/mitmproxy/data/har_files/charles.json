@@ -74,6 +74,7 @@
             "timestamp_end": 1680136662.5890002,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,

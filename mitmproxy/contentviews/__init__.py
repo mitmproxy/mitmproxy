@@ -31,6 +31,8 @@ from ._view_http3 import http3
 from ._view_image import image
 from ._view_javascript import javascript
 from ._view_json import json_view
+from ._view_llm import llm_request
+from ._view_llm import llm_response
 from ._view_mqtt import mqtt
 from ._view_multipart import multipart
 from ._view_query import query
@@ -138,6 +140,8 @@ _views: list[Contentview] = [
     image,
     javascript,
     json_view,
+    llm_request,
+    llm_response,
     mqtt,
     multipart,
     query,
