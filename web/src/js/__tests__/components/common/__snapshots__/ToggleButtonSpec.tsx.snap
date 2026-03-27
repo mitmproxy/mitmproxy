@@ -3,7 +3,7 @@
 exports[`ToggleButton Component should render correctly 1`] = `
 <DocumentFragment>
   <div
-    class="btn btn-toggle btn-primary"
+    class="m-btn m-toggle m-btn-primary m-toggle-on"
   >
     <i
       class="fa fa-fw fa-check-square-o"

@@ -9,10 +9,10 @@ exports[`EventLog 1`] = `
     <div>
       Eventlog
       <div
-        class="pull-right"
+        class="u-float-right"
       >
         <div
-          class="btn btn-toggle btn-primary"
+          class="m-btn m-toggle m-btn-primary m-toggle-on"
         >
           <i
             class="fa fa-fw fa-check-square-o"
@@ -20,7 +20,7 @@ exports[`EventLog 1`] = `
            debug
         </div>
         <div
-          class="btn btn-toggle btn-primary"
+          class="m-btn m-toggle m-btn-primary m-toggle-on"
         >
           <i
             class="fa fa-fw fa-check-square-o"
@@ -28,7 +28,7 @@ exports[`EventLog 1`] = `
            info
         </div>
         <div
-          class="btn btn-toggle btn-default"
+          class="m-btn m-toggle m-btn-default m-toggle-off"
         >
           <i
             class="fa fa-fw fa-square-o"
@@ -36,7 +36,7 @@ exports[`EventLog 1`] = `
            web
         </div>
         <div
-          class="btn btn-toggle btn-primary"
+          class="m-btn m-toggle m-btn-primary m-toggle-on"
         >
           <i
             class="fa fa-fw fa-check-square-o"
@@ -44,7 +44,7 @@ exports[`EventLog 1`] = `
            warn
         </div>
         <div
-          class="btn btn-toggle btn-primary"
+          class="m-btn m-toggle m-btn-primary m-toggle-on"
         >
           <i
             class="fa fa-fw fa-check-square-o"

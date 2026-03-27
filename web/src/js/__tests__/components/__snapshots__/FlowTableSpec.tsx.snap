@@ -67,10 +67,10 @@ exports[`FlowTable Component should render correctly 1`] = `
             class="col-path"
           >
             <i
-              class="fa fa-fw fa-exclamation pull-right"
+              class="fa fa-fw fa-exclamation u-float-right"
             />
             <span
-              class="marker pull-right"
+              class="marker u-float-right"
             />
             http://address:22/second
           </td>
@@ -116,10 +116,10 @@ exports[`FlowTable Component should render correctly 1`] = `
             class="col-path"
           >
             <i
-              class="fa fa-fw fa-exclamation pull-right"
+              class="fa fa-fw fa-exclamation u-float-right"
             />
             <span
-              class="marker pull-right"
+              class="marker u-float-right"
             />
             127.0.0.1:22 ↔ address:22
           </td>
@@ -224,10 +224,10 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               class="col-path"
             >
               <i
-                class="fa fa-fw fa-exclamation pull-right"
+                class="fa fa-fw fa-exclamation u-float-right"
               />
               <span
-                class="marker pull-right"
+                class="marker u-float-right"
               />
               http://address:22/second
             </td>
@@ -273,10 +273,10 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               class="col-path"
             >
               <i
-                class="fa fa-fw fa-exclamation pull-right"
+                class="fa fa-fw fa-exclamation u-float-right"
               />
               <span
-                class="marker pull-right"
+                class="marker u-float-right"
               />
               127.0.0.1:22 ↔ address:22
             </td>
@@ -382,10 +382,10 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               class="col-path"
             >
               <i
-                class="fa fa-fw fa-exclamation pull-right"
+                class="fa fa-fw fa-exclamation u-float-right"
               />
               <span
-                class="marker pull-right"
+                class="marker u-float-right"
               />
               dns.google A = 8.8.8.8, 8.8.4.4
             </td>
@@ -431,10 +431,10 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               class="col-path"
             >
               <i
-                class="fa fa-fw fa-exclamation pull-right"
+                class="fa fa-fw fa-exclamation u-float-right"
               />
               <span
-                class="marker pull-right"
+                class="marker u-float-right"
               />
               127.0.0.1:22 ↔ address:22
             </td>

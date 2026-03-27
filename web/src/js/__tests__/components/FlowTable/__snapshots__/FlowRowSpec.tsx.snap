@@ -21,13 +21,13 @@ exports[`FlowRow 1`] = `
           class="col-path"
         >
           <i
-            class="fa fa-fw fa-pause pull-right"
+            class="fa fa-fw fa-pause u-float-right"
           />
           <i
-            class="fa fa-fw fa-exclamation pull-right"
+            class="fa fa-fw fa-exclamation u-float-right"
           />
           <span
-            class="marker pull-right"
+            class="marker u-float-right"
           />
           http://address:22/path
         </td>
@@ -61,7 +61,7 @@ exports[`FlowRow 1`] = `
               href="#"
             >
               <i
-                class="fa fa-fw fa-play text-success"
+                class="fa fa-fw fa-play u-text-success"
               />
             </a>
           </div>
@@ -84,10 +84,10 @@ exports[`FlowRow 1`] = `
           class="col-path"
         >
           <i
-            class="fa fa-fw fa-exclamation pull-right"
+            class="fa fa-fw fa-exclamation u-float-right"
           />
           <span
-            class="marker pull-right"
+            class="marker u-float-right"
           />
           dns.google A = 8.8.8.8, 8.8.4.4
         </td>

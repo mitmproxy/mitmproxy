@@ -7,7 +7,7 @@ exports[`ContentRenderer 1`] = `
       foo: 42
     </div>
     <button
-      class="btn btn-xs btn-info"
+      class="m-btn m-btn-xs m-btn-info"
     >
       <i
         aria-hidden="true"

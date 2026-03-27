@@ -53,40 +53,40 @@ exports[`Header 1`] = `
             class="menu-content"
           >
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               disabled=""
               title="[r]eplay flow"
             >
               <i
-                class="fa fa-repeat text-primary"
+                class="fa fa-repeat u-text-primary"
               />
                Replay
             </button>
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               title="[D]uplicate flow"
             >
               <i
-                class="fa fa-copy text-info"
+                class="fa fa-copy u-text-info"
               />
                Duplicate
             </button>
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               disabled=""
               title="revert changes to flow [V]"
             >
               <i
-                class="fa fa-history text-warning"
+                class="fa fa-history u-text-warning"
               />
                Revert
             </button>
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               title="[d]elete flow"
             >
               <i
-                class="fa fa-trash text-danger"
+                class="fa fa-trash u-text-danger"
               />
                Delete
             </button>
@@ -95,11 +95,11 @@ exports[`Header 1`] = `
               href="#"
             >
               <button
-                class="btn btn-default"
+                class="m-btn m-btn-default"
                 title="mark flow"
               >
                 <i
-                  class="fa fa-paint-brush text-success"
+                  class="fa fa-paint-brush u-text-success"
                 />
                  Mark▾
               </button>
@@ -122,7 +122,7 @@ exports[`Header 1`] = `
               href="#"
             >
               <button
-                class="btn btn-default"
+                class="m-btn m-btn-default"
               >
                 <i
                   class="fa fa-download"
@@ -135,7 +135,7 @@ exports[`Header 1`] = `
               href="#"
             >
               <button
-                class="btn btn-default"
+                class="m-btn m-btn-default"
                 title="Export flow."
               >
                 <i
@@ -158,22 +158,22 @@ exports[`Header 1`] = `
             class="menu-content"
           >
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               disabled=""
               title="[a]ccept intercepted flow"
             >
               <i
-                class="fa fa-play text-success"
+                class="fa fa-play u-text-success"
               />
                Resume
             </button>
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               disabled=""
               title="kill intercepted flow [x]"
             >
               <i
-                class="fa fa-times text-danger"
+                class="fa fa-times u-text-danger"
               />
                Abort
             </button>
@@ -241,11 +241,11 @@ exports[`Header 2`] = `
             class="menu-content"
           >
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               title="Open Options"
             >
               <i
-                class="fa fa-cogs text-primary"
+                class="fa fa-cogs u-text-primary"
               />
                Edit Options 
               <sup>
@@ -274,6 +274,7 @@ exports[`Header 2`] = `
                 />
                 Strip cache headers 
                 <a
+                  class="m-docs-link"
                   href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
                   rel="noreferrer"
                   target="_blank"
@@ -293,6 +294,7 @@ exports[`Header 2`] = `
                 />
                 Use host header for display 
                 <a
+                  class="m-docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
                   rel="noreferrer"
                   target="_blank"
@@ -312,6 +314,7 @@ exports[`Header 2`] = `
                 />
                 Don't verify server certificates 
                 <a
+                  class="m-docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
                   rel="noreferrer"
                   target="_blank"
@@ -376,13 +379,13 @@ exports[`Header 3`] = `
       class="nav-tabs nav-tabs-lg"
     >
       <a
-        class="pull-left special open"
+        class="pull-left special open is-open"
         href="#"
       >
         File
       </a>
       <ul
-        class="dropdown-menu show"
+        class="m-dropdown-menu is-open"
         style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
       >
         <li>
@@ -430,7 +433,7 @@ exports[`Header 3`] = `
           </a>
         </li>
         <li
-          class="divider"
+          class="m-menu-divider"
           role="separator"
         />
         <li>
@@ -485,11 +488,11 @@ exports[`Header 3`] = `
             class="menu-content"
           >
             <button
-              class="btn btn-default"
+              class="m-btn m-btn-default"
               title="Open Options"
             >
               <i
-                class="fa fa-cogs text-primary"
+                class="fa fa-cogs u-text-primary"
               />
                Edit Options 
               <sup>
@@ -518,6 +521,7 @@ exports[`Header 3`] = `
                 />
                 Strip cache headers 
                 <a
+                  class="m-docs-link"
                   href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
                   rel="noreferrer"
                   target="_blank"
@@ -537,6 +541,7 @@ exports[`Header 3`] = `
                 />
                 Use host header for display 
                 <a
+                  class="m-docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
                   rel="noreferrer"
                   target="_blank"
@@ -556,6 +561,7 @@ exports[`Header 3`] = `
                 />
                 Don't verify server certificates 
                 <a
+                  class="m-docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
                   rel="noreferrer"
                   target="_blank"

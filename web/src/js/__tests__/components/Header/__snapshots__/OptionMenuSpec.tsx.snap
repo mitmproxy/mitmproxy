@@ -10,11 +10,11 @@ exports[`OptionMenu Component should render correctly 1`] = `
         class="menu-content"
       >
         <button
-          class="btn btn-default"
+          class="m-btn m-btn-default"
           title="Open Options"
         >
           <i
-            class="fa fa-cogs text-primary"
+            class="fa fa-cogs u-text-primary"
           />
            Edit Options 
           <sup>
@@ -43,6 +43,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             />
             Strip cache headers 
             <a
+              class="m-docs-link"
               href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
               rel="noreferrer"
               target="_blank"
@@ -62,6 +63,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             />
             Use host header for display 
             <a
+              class="m-docs-link"
               href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
               rel="noreferrer"
               target="_blank"
@@ -81,6 +83,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             />
             Don't verify server certificates 
             <a
+              class="m-docs-link"
               href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
               rel="noreferrer"
               target="_blank"

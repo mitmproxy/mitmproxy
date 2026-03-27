@@ -35,17 +35,17 @@ exports[`CommandBar 1`] = `
       </div>
     </div>
     <div
-      class="command-input input-group"
+      class="command-input m-input-group"
     >
       <span
-        class="input-group-addon"
+        class="m-input-group-addon"
       >
         <i
           class="fa fa-fw fa-terminal"
         />
       </span>
       <input
-        class="form-control"
+        class="m-input"
         placeholder="Enter command"
         type="text"
         value=""
@@ -90,17 +90,17 @@ exports[`CommandBar 2`] = `
       </div>
     </div>
     <div
-      class="command-input input-group"
+      class="command-input m-input-group"
     >
       <span
-        class="input-group-addon"
+        class="m-input-group-addon"
       >
         <i
           class="fa fa-fw fa-terminal"
         />
       </span>
       <input
-        class="form-control"
+        class="m-input"
         placeholder="Enter command"
         type="text"
         value=""

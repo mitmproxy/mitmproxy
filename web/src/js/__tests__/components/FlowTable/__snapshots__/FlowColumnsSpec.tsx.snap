@@ -237,10 +237,10 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
           class="col-path"
         >
           <i
-            class="fa fa-fw fa-exclamation pull-right"
+            class="fa fa-fw fa-exclamation u-float-right"
           />
           <span
-            class="marker pull-right"
+            class="marker u-float-right"
           />
           http://address:22/path
         </td>
@@ -259,13 +259,13 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
           class="col-path"
         >
           <i
-            class="fa fa-fw fa-pause pull-right"
+            class="fa fa-fw fa-pause u-float-right"
           />
           <i
-            class="fa fa-fw fa-times pull-right"
+            class="fa fa-fw fa-times u-float-right"
           />
           <span
-            class="marker pull-right"
+            class="marker u-float-right"
           />
           http://address:22/path
         </td>
@@ -350,10 +350,10 @@ exports[`should render columns: path 1`] = `
           class="col-path"
         >
           <i
-            class="fa fa-fw fa-exclamation pull-right"
+            class="fa fa-fw fa-exclamation u-float-right"
           />
           <span
-            class="marker pull-right"
+            class="marker u-float-right"
           />
           http://address:22/path
         </td>

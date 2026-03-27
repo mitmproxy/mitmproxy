@@ -12,10 +12,10 @@ exports[`MainMenu 1`] = `
         class="menu-content"
       >
         <div
-          class="filter-input input-group"
+          class="filter-input m-input-group"
         >
           <span
-            class="input-group-addon"
+            class="m-input-group-addon"
           >
             <i
               class="fa fa-fw fa-search"
@@ -23,17 +23,17 @@ exports[`MainMenu 1`] = `
             />
           </span>
           <input
-            class="form-control"
+            class="m-input"
             placeholder="Search"
             type="text"
             value="~u /second | ~tcp | ~dns | ~udp"
           />
         </div>
         <div
-          class="filter-input input-group"
+          class="filter-input m-input-group"
         >
           <span
-            class="input-group-addon"
+            class="m-input-group-addon"
           >
             <i
               class="fa fa-fw fa-tag"
@@ -41,7 +41,7 @@ exports[`MainMenu 1`] = `
             />
           </span>
           <input
-            class="form-control"
+            class="m-input"
             placeholder="Highlight"
             type="text"
             value="~u /path"
@@ -61,10 +61,10 @@ exports[`MainMenu 1`] = `
         class="menu-content"
       >
         <div
-          class="filter-input input-group"
+          class="filter-input m-input-group"
         >
           <span
-            class="input-group-addon"
+            class="m-input-group-addon"
           >
             <i
               class="fa fa-fw fa-pause"
@@ -72,18 +72,18 @@ exports[`MainMenu 1`] = `
             />
           </span>
           <input
-            class="form-control"
+            class="m-input"
             placeholder="Intercept"
             type="text"
             value=""
           />
         </div>
         <button
-          class="btn-sm btn btn-default"
+          class="m-btn-sm m-btn m-btn-default m-btn-sm"
           title="[a]ccept all"
         >
           <i
-            class="fa fa-forward text-success"
+            class="fa fa-forward u-text-success"
           />
            Resume All
         </button>
