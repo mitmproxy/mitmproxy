@@ -78,7 +78,7 @@ export function ResumeAll() {
     const dispatch = useAppDispatch();
     return (
         <Button
-            className="btn-sm"
+            className="m-btn-sm"
             title="[a]ccept all"
             icon="fa-forward u-text-success"
             onClick={() => dispatch(flowsActions.resumeAll())}

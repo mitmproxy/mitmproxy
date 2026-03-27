@@ -289,14 +289,14 @@ export default function CommandBar() {
                 description={description}
                 availableCommands={availableCommands}
             />
-            <div className={classnames("command-input input-group")}>
-                <span className="input-group-addon">
+            <div className={classnames("command-input m-input-group")}>
+                <span className="m-input-group-addon">
                     <i className={"fa fa-fw fa-terminal"} />
                 </span>
                 <input
                     type="text"
                     placeholder="Enter command"
-                    className="form-control m-input"
+                    className="m-input"
                     value={input || ""}
                     onChange={onChange}
                     onKeyDown={onKeyDown}

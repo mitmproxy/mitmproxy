@@ -4,7 +4,7 @@ import { useFloating } from "@floating-ui/react-dom";
 import classnames from "classnames";
 
 export const Divider = () => (
-    <li role="separator" className="divider m-menu-divider" />
+    <li role="separator" className="m-menu-divider" />
 );
 
 type MenuItemProps = {
@@ -42,10 +42,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
     if (open) {
         submenu = (
             <ul
-                className={classnames(
-                    "dropdown-menu m-dropdown-menu show is-open",
-                    className,
-                )}
+                className={classnames("m-dropdown-menu is-open", className)}
                 ref={refs.setFloating}
                 style={floatingStyles}
             >
@@ -124,7 +121,7 @@ export default React.memo(function Dropdown({
     if (open) {
         contents = (
             <ul
-                className="dropdown-menu m-dropdown-menu show is-open"
+                className="m-dropdown-menu is-open"
                 ref={refs.setFloating}
                 style={floatingStyles}
             >

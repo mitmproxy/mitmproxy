@@ -18,11 +18,14 @@ export default function Button({
     className,
     title,
 }: ButtonProps) {
-    const isSmall = className?.split(" ").includes("btn-sm");
+    const classes = className?.split(" ") || [];
+    const isExtraSmall = classes.includes("m-btn-xs");
+    const isSmall = classes.includes("m-btn-sm");
 
     return (
         <button
-            className={classnames(className, "btn btn-default m-btn m-btn-default", {
+            className={classnames(className, "m-btn m-btn-default", {
+                "m-btn-xs": isExtraSmall,
                 "m-btn-sm": isSmall,
             })}
             onClick={disabled ? undefined : onClick}

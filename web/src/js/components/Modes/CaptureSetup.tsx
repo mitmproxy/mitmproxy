@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 
 export default function CaptureSetup() {
     return (
-        <div style={{ padding: "1em 2em" }}>
+        <div className="capture-setup" style={{ padding: "1em 2em" }}>
             <h3>mitmproxy is running.</h3>
             <p>
                 No flows have been recorded yet.
