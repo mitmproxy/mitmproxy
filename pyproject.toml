@@ -31,7 +31,7 @@ classifiers = [
 # https://packaging.python.org/en/latest/discussions/install-requires-vs-requirements/#install-requires
 # It is not considered best practice to use install_requires to pin dependencies to specific versions.
 dependencies = [
-    "aioquic>=1.2.0,<=1.2.0",
+    "aioquic>=1.2.0,<=1.3.0",
     "argon2-cffi>=23.1.0,<=25.1.0",
     "asgiref>=3.2.10,<=3.11.0",
     "bcrypt>=5.0.0,<=5.0.0",
