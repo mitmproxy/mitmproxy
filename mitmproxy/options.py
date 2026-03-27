@@ -122,6 +122,23 @@ class Options(optmanager.OptManager):
             """,
         )
         self.add_option(
+            "allow_transparent_tunnel_inspection",
+            bool,
+            False,
+            """
+            Enable TLS interception and content inspection for tunnels established through upstream proxies
+            in transparent mode.
+
+            When transparent mode receives CONNECT requests to a forward proxy server),
+            mitmproxy forwards them to establish tunnels. By default, mitmproxy operates in passthrough mode for
+            these tunnels, forwarding encrypted traffic without inspection.
+
+            Enable this option to perform TLS interception on the tunneled traffic, allowing full inspection
+            and modification of HTTPS requests/responses. This requires the client to trust mitmproxy's
+            certificate authority.
+            """,
+        )
+        self.add_option(
             "upstream_cert",
             bool,
             True,
