@@ -69,7 +69,7 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                 <h5>[Editing]</h5>
                 <Button
                     onClick={save}
-                    icon="fa-check text-success"
+                    icon="fa-check u-text-success"
                     className="btn-xs"
                 >
                     Done
@@ -77,7 +77,7 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                 &nbsp;
                 <Button
                     onClick={() => stopEdit()}
-                    icon="fa-times text-danger"
+                    icon="fa-times u-text-danger"
                     className="btn-xs"
                 >
                     Cancel

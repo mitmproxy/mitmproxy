@@ -145,7 +145,7 @@ export default class FilterInput extends Component<
                     type="text"
                     ref={this.inputRef}
                     placeholder={placeholder}
-                    className="form-control"
+                    className="form-control m-input"
                     value={value}
                     onChange={this.onChange}
                     onFocus={this.onFocus}

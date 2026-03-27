@@ -62,7 +62,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
         >
             <a>
                 <i
-                    className="fa fa-caret-right pull-right u-float-right"
+                    className="fa fa-caret-right u-float-right"
                     aria-hidden="true"
                 />{" "}
                 {title}

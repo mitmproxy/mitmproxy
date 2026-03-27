@@ -296,7 +296,7 @@ export default function CommandBar() {
                 <input
                     type="text"
                     placeholder="Enter command"
-                    className="form-control"
+                    className="form-control m-input"
                     value={input || ""}
                     onChange={onChange}
                     onKeyDown={onKeyDown}

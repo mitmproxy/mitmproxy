@@ -52,16 +52,16 @@ function ServerDescription({
     if (!is_running) {
         desc = (
             <>
-                <div className="text-warning">{description} starting...</div>
+                <div className="u-text-warning">{description} starting...</div>
             </>
         );
     } else {
         desc = (
             <>
                 {type === "local" ? (
-                    <div className="text-success">{description} is active.</div>
+                    <div className="u-text-success">{description} is active.</div>
                 ) : (
-                    <div className="text-success">
+                    <div className="u-text-success">
                         {description} listening at {listen_str}.
                     </div>
                 )}
@@ -87,7 +87,7 @@ export function ServerStatus({
     return (
         <div className="mode-status">
             {error ? (
-                <div className="text-danger">{error}</div>
+                <div className="u-text-danger">{error}</div>
             ) : (
                 backendState && <ServerDescription {...backendState} />
             )}

@@ -63,19 +63,19 @@ export const path: FlowColumn = ({ flow }) => {
     let err;
     if (flow.error) {
         if (flow.error.msg === "Connection killed.") {
-            err = <i className="fa fa-fw fa-times pull-right" />;
+            err = <i className="fa fa-fw fa-times u-float-right" />;
         } else {
-            err = <i className="fa fa-fw fa-exclamation pull-right" />;
+            err = <i className="fa fa-fw fa-exclamation u-float-right" />;
         }
     }
     return (
         <td className="col-path">
             {flow.is_replay === "request" && (
-                <i className="fa fa-fw fa-repeat pull-right" />
+                <i className="fa fa-fw fa-repeat u-float-right" />
             )}
-            {flow.intercepted && <i className="fa fa-fw fa-pause pull-right" />}
+            {flow.intercepted && <i className="fa fa-fw fa-pause u-float-right" />}
             {err}
-            <span className="marker pull-right">{flow.marked}</span>
+            <span className="marker u-float-right">{flow.marked}</span>
             {mainPath(flow)}
         </td>
     );
@@ -167,7 +167,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
                 className="quickaction"
                 onClick={() => dispatch(flowActions.resume([flow]))}
             >
-                <i className="fa fa-fw fa-play text-success" />
+                <i className="fa fa-fw fa-play u-text-success" />
             </a>
         );
     } else if (canReplay(flow)) {
@@ -177,7 +177,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
                 className="quickaction"
                 onClick={() => dispatch(flowActions.replay([flow]))}
             >
-                <i className="fa fa-fw fa-repeat text-primary" />
+                <i className="fa fa-fw fa-repeat u-text-primary" />
             </a>
         );
     }

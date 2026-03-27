@@ -10,13 +10,13 @@ import OptionInput from "./OptionInput";
 
 function OptionHelp({ name }: { name: Option }) {
     const help = useAppSelector((state) => state.options_meta[name]?.help);
-    return <div className="help-block small">{help}</div>;
+    return <div className="help-block small m-help-block m-text-small">{help}</div>;
 }
 
 function OptionError({ name }) {
     const error = useAppSelector((state) => state.options_meta[name]?.error);
     if (!error) return null;
-    return <div className="small text-danger">{error}</div>;
+    return <div className="small text-danger m-text-small u-text-danger">{error}</div>;
 }
 
 export function PureOptionDefault({ value, defaultVal }) {
@@ -39,7 +39,7 @@ export function PureOptionDefault({ value, defaultVal }) {
             defaultVal = "null";
         }
         return (
-            <div className="small">
+            <div className="small m-text-small">
                 Default: <strong> {defaultVal} </strong>{" "}
             </div>
         );
@@ -77,7 +77,7 @@ export default function OptionModal() {
             </div>
 
             <div className="modal-body m-modal-body">
-                <div className="form-horizontal">
+                <div className="form-horizontal m-form-horizontal">
                     {options.map((name) => (
                         <div key={name} className="form-group m-form-row">
                             <div className="col-xs-6 m-col-6">
