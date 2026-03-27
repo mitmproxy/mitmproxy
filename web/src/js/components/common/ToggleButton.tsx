@@ -1,4 +1,5 @@
 import React from "react";
+import classnames from "classnames";
 
 type ToggleButtonProps = {
     checked: boolean;
@@ -13,9 +14,10 @@ export default function ToggleButton({
 }: ToggleButtonProps) {
     return (
         <div
-            className={
-                "btn btn-toggle " + (checked ? "btn-primary" : "btn-default")
-            }
+            className={classnames("btn btn-toggle m-btn m-toggle", {
+                "btn-primary m-btn-primary m-toggle-on": checked,
+                "btn-default m-btn-default m-toggle-off": !checked,
+            })}
             onClick={onToggle}
         >
             <i

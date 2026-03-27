@@ -62,7 +62,7 @@ export default function OptionModal() {
 
     return (
         <div>
-            <div className="modal-header">
+            <div className="modal-header m-modal-header">
                 <button
                     type="button"
                     className="close"
@@ -71,20 +71,20 @@ export default function OptionModal() {
                 >
                     <i className="fa fa-fw fa-times"></i>
                 </button>
-                <div className="modal-title">
+                <div className="modal-title m-modal-title">
                     <h4>Options</h4>
                 </div>
             </div>
 
-            <div className="modal-body">
+            <div className="modal-body m-modal-body">
                 <div className="form-horizontal">
                     {options.map((name) => (
-                        <div key={name} className="form-group">
-                            <div className="col-xs-6">
+                        <div key={name} className="form-group m-form-row">
+                            <div className="col-xs-6 m-col-6">
                                 <label htmlFor={name}>{name}</label>
                                 <OptionHelp name={name} />
                             </div>
-                            <div className="col-xs-6">
+                            <div className="col-xs-6 m-col-6">
                                 <OptionInput name={name} />
                                 <OptionError name={name} />
                                 <OptionDefault name={name} />
@@ -94,7 +94,7 @@ export default function OptionModal() {
                 </div>
             </div>
 
-            <div className="modal-footer"></div>
+            <div className="modal-footer m-modal-footer"></div>
         </div>
     );
 }

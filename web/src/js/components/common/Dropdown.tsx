@@ -3,7 +3,9 @@ import type { UseFloatingOptions } from "@floating-ui/react-dom";
 import { useFloating } from "@floating-ui/react-dom";
 import classnames from "classnames";
 
-export const Divider = () => <li role="separator" className="divider" />;
+export const Divider = () => (
+    <li role="separator" className="divider m-menu-divider" />
+);
 
 type MenuItemProps = {
     onClick: () => void;
@@ -40,7 +42,10 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
     if (open) {
         submenu = (
             <ul
-                className={classnames("dropdown-menu show", className)}
+                className={classnames(
+                    "dropdown-menu m-dropdown-menu show is-open",
+                    className,
+                )}
                 ref={refs.setFloating}
                 style={floatingStyles}
             >
@@ -57,7 +62,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
         >
             <a>
                 <i
-                    className="fa fa-caret-right pull-right"
+                    className="fa fa-caret-right pull-right u-float-right"
                     aria-hidden="true"
                 />{" "}
                 {title}
@@ -119,7 +124,7 @@ export default React.memo(function Dropdown({
     if (open) {
         contents = (
             <ul
-                className="dropdown-menu show"
+                className="dropdown-menu m-dropdown-menu show is-open"
                 ref={refs.setFloating}
                 style={floatingStyles}
             >
@@ -135,7 +140,7 @@ export default React.memo(function Dropdown({
             <a
                 href="#"
                 ref={refs.setReference}
-                className={classnames(className, { open: open })}
+                className={classnames(className, { open: open, "is-open": open })}
                 onClick={(e) => {
                     e.preventDefault();
                     setOpen(true);

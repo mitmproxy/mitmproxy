@@ -18,9 +18,13 @@ export default function Button({
     className,
     title,
 }: ButtonProps) {
+    const isSmall = className?.split(" ").includes("btn-sm");
+
     return (
         <button
-            className={classnames(className, "btn btn-default")}
+            className={classnames(className, "btn btn-default m-btn m-btn-default", {
+                "m-btn-sm": isSmall,
+            })}
             onClick={disabled ? undefined : onClick}
             disabled={disabled}
             title={title}
