@@ -1143,7 +1143,7 @@ exports[`FlowView 7`] = `
       class="error"
     >
       <div
-        class="alert alert-warning"
+        class="m-alert m-alert-warning"
       >
         error
         <div>
@@ -1292,7 +1292,7 @@ exports[`FlowView 9`] = `
       class="error"
     >
       <div
-        class="alert alert-warning"
+        class="m-alert m-alert-warning"
       >
         error
         <div>
@@ -1647,7 +1647,7 @@ exports[`FlowView 12`] = `
       class="error"
     >
       <div
-        class="alert alert-warning"
+        class="m-alert m-alert-warning"
       >
         error
         <div>
@@ -1796,7 +1796,7 @@ exports[`FlowView 14`] = `
       class="error"
     >
       <div
-        class="alert alert-warning"
+        class="m-alert m-alert-warning"
       >
         error
         <div>

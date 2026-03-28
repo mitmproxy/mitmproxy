@@ -56,6 +56,7 @@ exports[`Modal Component 2`] = `
                     class="m-col-6"
                   >
                     <label
+                      class="m-control-label"
                       for="anticache"
                     >
                       anticache
@@ -94,6 +95,7 @@ exports[`Modal Component 2`] = `
                     class="m-col-6"
                   >
                     <label
+                      class="m-control-label"
                       for="body_size_limit"
                     >
                       body_size_limit
@@ -126,6 +128,7 @@ exports[`Modal Component 2`] = `
                     class="m-col-6"
                   >
                     <label
+                      class="m-control-label"
                       for="connection_strategy"
                     >
                       connection_strategy
@@ -167,6 +170,7 @@ exports[`Modal Component 2`] = `
                     class="m-col-6"
                   >
                     <label
+                      class="m-control-label"
                       for="listen_port"
                     >
                       listen_port
