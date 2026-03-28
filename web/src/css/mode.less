@@ -118,11 +118,13 @@
                 align-items: center;
                 margin-right: 10px;
                 height: 30px;
+                overflow: hidden;
             }
 
             input {
                 border: none;
                 flex: 1;
+                min-width: 0;
                 outline: none;
                 color: black;
             }
@@ -185,9 +187,22 @@
         .local-popover {
             button {
                 font-size: 1rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                width: 24px;
+                height: 24px;
             }
-            i {
-                font-size: 1.5rem;
+
+            > button i {
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+
+            .dropdown-item > .fa-check {
+                font-size: 1.2rem;
+                line-height: 1;
             }
 
             @supports (anchor-name: --test) {
@@ -274,6 +289,26 @@
             border: none;
             cursor: pointer;
             font-size: 2rem;
+        }
+
+        > button i {
+            color: #777;
+        }
+
+        &.local-popover > button {
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: 26px;
+            height: 26px;
+            flex: 0 0 auto;
+        }
+
+        &.local-popover > button i {
+            font-size: 1.5rem;
+            line-height: 1;
         }
 
         @supports (anchor-name: --test) {
