@@ -69,16 +69,16 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                 <h5>[Editing]</h5>
                 <Button
                     onClick={save}
-                    icon="fa-check u-text-success"
-                    className="m-btn-xs"
+                    icon="fa-check text-success"
+                    className="btn-xs"
                 >
                     Done
                 </Button>
                 &nbsp;
                 <Button
                     onClick={() => stopEdit()}
-                    icon="fa-times u-text-danger"
-                    className="m-btn-xs"
+                    icon="fa-times text-danger"
+                    className="btn-xs"
                 >
                     Cancel
                 </Button>
@@ -138,7 +138,7 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
                     <CopyButton flow={flow} message={message} />
                 )}
                 &nbsp;
-                <Button onClick={startEdit} icon="fa-edit" className="m-btn-xs">
+                <Button onClick={startEdit} icon="fa-edit" className="btn-xs">
                     Edit
                 </Button>
                 &nbsp;
@@ -149,7 +149,7 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
                     onOpenFile={(content) =>
                         dispatch(uploadContent(flow, content, part))
                     }
-                    className="m-btn m-btn-default m-btn-xs"
+                    className="btn btn-default btn-xs"
                 />
                 &nbsp;
                 <ViewSelector
@@ -219,7 +219,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
         <Button
             onClick={handleClickCopyButton}
             icon="fa-clipboard"
-            className="m-btn-xs"
+            className="btn-xs"
             disabled={isFetchingFullContent}
         >
             {isCopied ? "Copied!" : "Copy"}

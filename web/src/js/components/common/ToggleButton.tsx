@@ -14,9 +14,9 @@ export default function ToggleButton({
 }: ToggleButtonProps) {
     return (
         <div
-            className={classnames("m-btn m-toggle", {
-                "m-btn-primary m-toggle-on": checked,
-                "m-btn-default m-toggle-off": !checked,
+            className={classnames("btn toggle", {
+                "btn-primary toggle-on": checked,
+                "btn-default toggle-off": !checked,
             })}
             onClick={onToggle}
         >

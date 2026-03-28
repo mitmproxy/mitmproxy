@@ -22,7 +22,7 @@ export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
     return (
         <Dropdown
             text={inner}
-            className="m-btn m-btn-default m-btn-xs"
+            className="btn btn-default btn-xs"
             options={{ placement: "top-end" }}
         >
             {contentViews.map((name) => (

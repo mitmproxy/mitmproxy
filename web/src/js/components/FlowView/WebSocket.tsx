@@ -26,12 +26,12 @@ function CloseSummary({ websocket }: { websocket: WebSocketData }) {
     const reason = websocket.close_reason ? `(${websocket.close_reason})` : "";
     return (
         <div>
-            <i className="fa fa-fw fa-window-close u-text-muted" />
+            <i className="fa fa-fw fa-window-close text-muted" />
             &nbsp; Closed by {websocket.closed_by_client
                 ? "client"
                 : "server"}{" "}
             with code {websocket.close_code} {reason}.
-            <small className="u-float-right">
+            <small className="float-right">
                 {formatTimeStamp(websocket.timestamp_end)}
             </small>
         </div>

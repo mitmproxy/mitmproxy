@@ -56,13 +56,13 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
             </div>
             {messages.map((d: ContentViewData, i) => {
                 const className = `fa fa-fw fa-arrow-${
-                    d.from_client ? "right u-text-primary" : "left u-text-danger"
+                    d.from_client ? "right text-primary" : "left text-danger"
                 }`;
                 const renderer = (
                     <div key={i}>
                         <small>
                             <i className={className} />
-                            <span className="u-float-right">
+                            <span className="float-right">
                                 {d.timestamp && formatTimeStamp(d.timestamp)}
                             </span>
                         </small>

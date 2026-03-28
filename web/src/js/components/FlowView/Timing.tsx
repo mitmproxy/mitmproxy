@@ -15,7 +15,7 @@ export function TimeStamp({ t, deltaTo, title }: TimeStampProps) {
             <td>
                 {formatTimeStamp(t)}
                 {deltaTo && (
-                    <span className="u-text-muted">
+                    <span className="text-muted">
                         ({formatTimeDelta(1000 * (t - deltaTo))})
                     </span>
                 )}

@@ -8,7 +8,7 @@ type DocLinkProps = {
 export default function DocsLink({ children, resource }: DocLinkProps) {
     const url = `https://docs.mitmproxy.org/stable/${resource}`;
     return (
-        <a className="m-docs-link" target="_blank" href={url} rel="noreferrer">
+        <a className="docs-link" target="_blank" href={url} rel="noreferrer">
             {children || <i className="fa fa-question-circle"></i>}
         </a>
     );

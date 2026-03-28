@@ -41,7 +41,7 @@ export default function FlowMenu(): JSX.Element {
                     <div className="menu-content">
                         <Button
                             title="[r]eplay flow"
-                            icon="fa-repeat u-text-primary"
+                            icon="fa-repeat text-primary"
                             onClick={() => dispatch(replayFlows(selectedFlows))}
                             disabled={!selectedFlows.some(canReplay)}
                         >
@@ -49,7 +49,7 @@ export default function FlowMenu(): JSX.Element {
                         </Button>
                         <Button
                             title="[D]uplicate flow"
-                            icon="fa-copy u-text-info"
+                            icon="fa-copy text-info"
                             onClick={() =>
                                 dispatch(duplicateFlows(selectedFlows))
                             }
@@ -59,14 +59,14 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             disabled={!selectedFlows.some(canRevert)}
                             title="revert changes to flow [V]"
-                            icon="fa-history u-text-warning"
+                            icon="fa-history text-warning"
                             onClick={() => dispatch(revertFlows(selectedFlows))}
                         >
                             Revert
                         </Button>
                         <Button
                             title="[d]elete flow"
-                            icon="fa-trash u-text-danger"
+                            icon="fa-trash text-danger"
                             onClick={() => {
                                 dispatch(removeFlows(selectedFlows));
                             }}
@@ -94,7 +94,7 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             disabled={!canResumeOrKillAny}
                             title="[a]ccept intercepted flow"
-                            icon="fa-play u-text-success"
+                            icon="fa-play text-success"
                             onClick={() => dispatch(resumeFlows(selectedFlows))}
                         >
                             Resume
@@ -102,7 +102,7 @@ export default function FlowMenu(): JSX.Element {
                         <Button
                             disabled={!canResumeOrKillAny}
                             title="kill intercepted flow [x]"
-                            icon="fa-times u-text-danger"
+                            icon="fa-times text-danger"
                             onClick={() => dispatch(killFlows(selectedFlows))}
                         >
                             Abort
@@ -255,7 +255,7 @@ function MarkButton({ flows }: { flows: Flow[] }) {
             text={
                 <Button
                     title="mark flow"
-                    icon="fa-paint-brush u-text-success"
+                    icon="fa-paint-brush text-success"
                     onClick={() => 1}
                 >
                     Mark▾

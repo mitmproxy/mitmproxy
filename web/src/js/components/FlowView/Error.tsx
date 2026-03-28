@@ -9,7 +9,7 @@ type ErrorProps = {
 export default function Error({ flow }: ErrorProps) {
     return (
         <section className="error">
-            <div className="m-alert m-alert-warning">
+            <div className="alert alert-warning">
                 {flow.error.msg}
                 <div>
                     <small>{formatTimeStamp(flow.error.timestamp)}</small>

@@ -21,7 +21,7 @@ const ContentRenderer = React.memo(function ContentRenderer({
                     <button
                         key="showmore"
                         onClick={showMore}
-                        className="m-btn m-btn-xs m-btn-info"
+                        className="btn btn-xs btn-info"
                     >
                         <i
                             className="fa fa-angle-double-down"

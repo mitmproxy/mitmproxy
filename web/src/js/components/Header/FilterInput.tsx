@@ -134,18 +134,18 @@ export default class FilterInput extends Component<
         const { value, focus, mousefocus } = this.state;
         return (
             <div
-                className={classnames("filter-input m-input-group", {
+                className={classnames("filter-input input-group", {
                     "has-error": !this.isValid(value),
                 })}
             >
-                <span className="m-input-group-addon">
+                <span className="input-group-addon">
                     <i className={"fa fa-fw fa-" + icon} style={{ color }} />
                 </span>
                 <input
                     type="text"
                     ref={this.inputRef}
                     placeholder={placeholder}
-                    className="m-input"
+                    className="input"
                     value={value}
                     onChange={this.onChange}
                     onFocus={this.onFocus}

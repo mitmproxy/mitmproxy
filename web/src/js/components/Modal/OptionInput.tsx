@@ -148,7 +148,7 @@ function PureOption({ choices, type, value, onChange, name, error }) {
         if (!Opt) throw `unknown option type ${type}`;
     }
     if (Opt !== BooleanOption) {
-        props.className = "m-input";
+        props.className = "input";
     }
 
     return (

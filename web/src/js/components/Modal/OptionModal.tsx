@@ -10,13 +10,13 @@ import OptionInput from "./OptionInput";
 
 function OptionHelp({ name }: { name: Option }) {
     const help = useAppSelector((state) => state.options_meta[name]?.help);
-    return <div className="m-help-block m-text-small">{help}</div>;
+    return <div className="help-block text-small">{help}</div>;
 }
 
 function OptionError({ name }) {
     const error = useAppSelector((state) => state.options_meta[name]?.error);
     if (!error) return null;
-    return <div className="m-text-small u-text-danger">{error}</div>;
+    return <div className="text-small text-danger">{error}</div>;
 }
 
 export function PureOptionDefault({ value, defaultVal }) {
@@ -39,7 +39,7 @@ export function PureOptionDefault({ value, defaultVal }) {
             defaultVal = "null";
         }
         return (
-            <div className="m-text-small">
+            <div className="text-small">
                 Default: <strong> {defaultVal} </strong>{" "}
             </div>
         );
@@ -62,31 +62,31 @@ export default function OptionModal() {
 
     return (
         <div>
-            <div className="m-modal-header">
+            <div className="modal-header">
                 <button
                     type="button"
-                    className="m-close"
+                    className="close"
                     data-dismiss="modal"
                     onClick={() => dispatch(modalAction.hideModal())}
                 >
                     <i className="fa fa-fw fa-times"></i>
                 </button>
-                <div className="m-modal-title">
+                <div className="modal-title">
                     <h4>Options</h4>
                 </div>
             </div>
 
-            <div className="m-modal-body">
-                <div className="m-form-horizontal">
+            <div className="modal-body">
+                <div className="form-horizontal">
                     {options.map((name) => (
-                        <div key={name} className="m-form-row">
-                            <div className="m-col-6">
-                                <label className="m-control-label" htmlFor={name}>
+                        <div key={name} className="form-row">
+                            <div className="col-6">
+                                <label className="control-label" htmlFor={name}>
                                     {name}
                                 </label>
                                 <OptionHelp name={name} />
                             </div>
-                            <div className="m-col-6">
+                            <div className="col-6">
                                 <OptionInput name={name} />
                                 <OptionError name={name} />
                                 <OptionDefault name={name} />
@@ -96,7 +96,7 @@ export default function OptionModal() {
                 </div>
             </div>
 
-            <div className="m-modal-footer"></div>
+            <div className="modal-footer"></div>
         </div>
     );
 }
