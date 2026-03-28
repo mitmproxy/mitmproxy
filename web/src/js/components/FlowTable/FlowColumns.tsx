@@ -73,7 +73,9 @@ export const path: FlowColumn = ({ flow }) => {
             {flow.is_replay === "request" && (
                 <i className="fa fa-fw fa-repeat float-right" />
             )}
-            {flow.intercepted && <i className="fa fa-fw fa-pause float-right" />}
+            {flow.intercepted && (
+                <i className="fa fa-fw fa-pause float-right" />
+            )}
             {err}
             <span className="marker float-right">{flow.marked}</span>
             {mainPath(flow)}

@@ -3,9 +3,7 @@ import type { UseFloatingOptions } from "@floating-ui/react-dom";
 import { useFloating } from "@floating-ui/react-dom";
 import classnames from "classnames";
 
-export const Divider = () => (
-    <li role="separator" className="menu-divider" />
-);
+export const Divider = () => <li role="separator" className="menu-divider" />;
 
 type MenuItemProps = {
     onClick: () => void;
@@ -137,7 +135,10 @@ export default React.memo(function Dropdown({
             <a
                 href="#"
                 ref={refs.setReference}
-                className={classnames(className, { open: open, "is-open": open })}
+                className={classnames(className, {
+                    open: open,
+                    "is-open": open,
+                })}
                 onClick={(e) => {
                     e.preventDefault();
                     setOpen(true);
