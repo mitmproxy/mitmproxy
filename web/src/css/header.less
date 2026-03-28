@@ -141,6 +141,37 @@ header {
         max-height: 500px;
         overflow-y: auto;
 
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+            border-spacing: 0;
+
+            td,
+            th {
+                padding: 5px;
+                line-height: 1.42857143;
+                vertical-align: top;
+            }
+
+            a {
+                color: #337ab7;
+            }
+
+            a:hover,
+            a:focus {
+                color: #23527c;
+            }
+
+            tbody tr + tr {
+                border-top: 1px solid #ddd;
+            }
+
+            tbody tr:first-child {
+                border-top: 1px solid #ddd;
+            }
+        }
+
         tr {
             cursor: pointer;
             &:hover {

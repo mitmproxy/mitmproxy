@@ -370,6 +370,15 @@ textarea {
     border-style: solid;
 }
 
+.popover > .arrow:after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+}
+
 .popover.top {
     margin-top: -10px;
 }
@@ -382,6 +391,13 @@ textarea {
     border-top-color: rgba(0, 0, 0, 25%);
 }
 
+.popover.top > .arrow:after {
+    bottom: 1px;
+    margin-left: -10px;
+    border-width: 10px 10px 0;
+    border-top-color: #fff;
+}
+
 .popover.bottom {
     margin-top: 10px;
 }
@@ -392,6 +408,13 @@ textarea {
     margin-left: -11px;
     border-width: 0 11px 11px;
     border-bottom-color: rgba(0, 0, 0, 25%);
+}
+
+.popover.bottom > .arrow:after {
+    top: 1px;
+    margin-left: -10px;
+    border-width: 0 10px 10px;
+    border-bottom-color: #fff;
 }
 
 .m-close {
