@@ -81,7 +81,9 @@ export default function OptionModal() {
                     {options.map((name) => (
                         <div key={name} className="m-form-row">
                             <div className="m-col-6">
-                                <label htmlFor={name}>{name}</label>
+                                <label className="m-control-label" htmlFor={name}>
+                                    {name}
+                                </label>
                                 <OptionHelp name={name} />
                             </div>
                             <div className="m-col-6">
