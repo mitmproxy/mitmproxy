@@ -70,7 +70,7 @@ exports[`RegularSpec 1`] = `
       >
         <div>
           <div
-            class="u-text-success"
+            class="text-success"
           >
             HTTP(S) proxy listening at 127.0.0.1:8080 and [::1]:8080.
           </div>
@@ -150,7 +150,7 @@ exports[`RegularSpec 2`] = `
         class="mode-status"
       >
         <div
-          class="u-text-danger"
+          class="text-danger"
         >
           port already in use
         </div>

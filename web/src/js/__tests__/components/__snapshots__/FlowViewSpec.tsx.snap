@@ -145,7 +145,7 @@ exports[`FlowView 1`] = `
           </h5>
            
           <button
-            class="m-btn-xs m-btn m-btn-default m-btn-xs"
+            class="btn-xs btn btn-default"
           >
             <i
               class="fa fa-edit"
@@ -154,7 +154,7 @@ exports[`FlowView 1`] = `
           </button>
            
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
             title="Upload a file to replace the content."
           >
@@ -169,7 +169,7 @@ exports[`FlowView 1`] = `
           </a>
            
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
           >
             <span>
@@ -336,7 +336,7 @@ exports[`FlowView 2`] = `
           </h5>
            
           <button
-            class="m-btn-xs m-btn m-btn-default m-btn-xs"
+            class="btn-xs btn btn-default"
           >
             <i
               class="fa fa-edit"
@@ -345,7 +345,7 @@ exports[`FlowView 2`] = `
           </button>
            
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
             title="Upload a file to replace the content."
           >
@@ -360,7 +360,7 @@ exports[`FlowView 2`] = `
           </a>
            
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
           >
             <span>
@@ -459,7 +459,7 @@ exports[`FlowView 3`] = `
             3 Messages
           </h5>
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
           >
             <span>
@@ -480,11 +480,11 @@ exports[`FlowView 3`] = `
       </div>
       <div>
         <i
-          class="fa fa-fw fa-window-close u-text-muted"
+          class="fa fa-fw fa-window-close text-muted"
         />
           Closed by server with code 1000 (Close Reason).
         <small
-          class="u-float-right"
+          class="float-right"
         >
           1999-12-31 23:00:05.000
         </small>
@@ -865,7 +865,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:00.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (0ms)
               </span>
@@ -886,7 +886,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:01.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (1s)
               </span>
@@ -899,7 +899,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:01.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (1s)
               </span>
@@ -912,7 +912,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:02.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (2s)
               </span>
@@ -925,7 +925,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:02.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (2s)
               </span>
@@ -938,7 +938,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:03.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (3s)
               </span>
@@ -951,7 +951,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:03.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (3s)
               </span>
@@ -964,7 +964,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:04.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (4s)
               </span>
@@ -977,7 +977,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:05.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (5s)
               </span>
@@ -990,7 +990,7 @@ exports[`FlowView 5`] = `
             <td>
               1999-12-31 23:00:06.000
               <span
-                class="u-text-muted"
+                class="text-muted"
               >
                 (6s)
               </span>
@@ -1143,7 +1143,7 @@ exports[`FlowView 7`] = `
       class="error"
     >
       <div
-        class="m-alert m-alert-warning"
+        class="alert alert-warning"
       >
         error
         <div>
@@ -1217,7 +1217,7 @@ exports[`FlowView 8`] = `
             2 Messages
           </h5>
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
           >
             <span>
@@ -1292,7 +1292,7 @@ exports[`FlowView 9`] = `
       class="error"
     >
       <div
-        class="m-alert m-alert-warning"
+        class="alert alert-warning"
       >
         error
         <div>
@@ -1647,7 +1647,7 @@ exports[`FlowView 12`] = `
       class="error"
     >
       <div
-        class="m-alert m-alert-warning"
+        class="alert alert-warning"
       >
         error
         <div>
@@ -1721,7 +1721,7 @@ exports[`FlowView 13`] = `
             2 Messages
           </h5>
           <a
-            class="m-btn m-btn-default m-btn-xs"
+            class="btn btn-default btn-xs"
             href="#"
           >
             <span>
@@ -1796,7 +1796,7 @@ exports[`FlowView 14`] = `
       class="error"
     >
       <div
-        class="m-alert m-alert-warning"
+        class="alert alert-warning"
       >
         error
         <div>

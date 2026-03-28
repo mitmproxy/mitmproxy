@@ -3,7 +3,7 @@
 exports[`Button Component should be able to be disabled 1`] = `
 <DocumentFragment>
   <button
-    class="classname m-btn m-btn-default"
+    class="classname btn btn-default"
     disabled=""
   >
     <a>
@@ -16,7 +16,7 @@ exports[`Button Component should be able to be disabled 1`] = `
 exports[`Button Component should render correctly 1`] = `
 <DocumentFragment>
   <button
-    class="classname m-btn m-btn-default"
+    class="classname btn btn-default"
     title="title"
   >
     <i

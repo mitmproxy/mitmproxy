@@ -3,10 +3,10 @@
 exports[`FilterInput Component should render correctly 1`] = `
 <DocumentFragment>
   <div
-    class="filter-input m-input-group"
+    class="filter-input input-group"
   >
     <span
-      class="m-input-group-addon"
+      class="input-group-addon"
     >
       <i
         class="fa fa-fw fa-search"
@@ -14,7 +14,7 @@ exports[`FilterInput Component should render correctly 1`] = `
       />
     </span>
     <input
-      class="m-input"
+      class="input"
       placeholder="bar"
       type="text"
       value="42"

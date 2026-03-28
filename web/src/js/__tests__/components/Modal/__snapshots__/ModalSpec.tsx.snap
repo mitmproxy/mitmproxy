@@ -6,28 +6,28 @@ exports[`Modal Component 2`] = `
 <DocumentFragment>
   <div>
     <div
-      class="m-modal-backdrop is-visible"
+      class="modal-backdrop is-visible"
     />
     <div
       aria-labelledby="options"
-      class="m-modal is-visible"
+      class="modal is-visible"
       id="optionsModal"
       role="dialog"
       tabindex="-1"
     >
       <div
-        class="m-modal-dialog m-modal-lg"
+        class="modal-dialog modal-lg"
         role="document"
       >
         <div
-          class="m-modal-content"
+          class="modal-content"
         >
           <div>
             <div
-              class="m-modal-header"
+              class="modal-header"
             >
               <button
-                class="m-close"
+                class="close"
                 data-dismiss="modal"
                 type="button"
               >
@@ -36,7 +36,7 @@ exports[`Modal Component 2`] = `
                 />
               </button>
               <div
-                class="m-modal-title"
+                class="modal-title"
               >
                 <h4>
                   Options
@@ -44,31 +44,31 @@ exports[`Modal Component 2`] = `
               </div>
             </div>
             <div
-              class="m-modal-body"
+              class="modal-body"
             >
               <div
-                class="m-form-horizontal"
+                class="form-horizontal"
               >
                 <div
-                  class="m-form-row"
+                  class="form-row"
                 >
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <label
-                      class="m-control-label"
+                      class="control-label"
                       for="anticache"
                     >
                       anticache
                     </label>
                     <div
-                      class="m-help-block m-text-small"
+                      class="help-block text-small"
                     >
                       Strip out request headers that might cause the server to return 304-not-modified.
                     </div>
                   </div>
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <div
                       class=""
@@ -89,31 +89,31 @@ exports[`Modal Component 2`] = `
                   </div>
                 </div>
                 <div
-                  class="m-form-row"
+                  class="form-row"
                 >
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <label
-                      class="m-control-label"
+                      class="control-label"
                       for="body_size_limit"
                     >
                       body_size_limit
                     </label>
                     <div
-                      class="m-help-block m-text-small"
+                      class="help-block text-small"
                     >
                       Byte size limit of HTTP request and response bodies. Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
                     </div>
                   </div>
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <div
                       class=""
                     >
                       <input
-                        class="m-input"
+                        class="input"
                         name="body_size_limit"
                         type="text"
                         value=""
@@ -122,31 +122,31 @@ exports[`Modal Component 2`] = `
                   </div>
                 </div>
                 <div
-                  class="m-form-row"
+                  class="form-row"
                 >
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <label
-                      class="m-control-label"
+                      class="control-label"
                       for="connection_strategy"
                     >
                       connection_strategy
                     </label>
                     <div
-                      class="m-help-block m-text-small"
+                      class="help-block text-small"
                     >
                       Determine when server connections should be established. When set to lazy, mitmproxy tries to defer establishing an upstream connection as long as possible. This makes it possible to use server replay while being offline. When set to eager, mitmproxy can detect protocols with server-side greetings, as well as accurately mirror TLS ALPN negotiation.
                     </div>
                   </div>
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <div
                       class=""
                     >
                       <select
-                        class="m-input"
+                        class="input"
                         name="connection_strategy"
                       >
                         <option
@@ -164,38 +164,38 @@ exports[`Modal Component 2`] = `
                   </div>
                 </div>
                 <div
-                  class="m-form-row"
+                  class="form-row"
                 >
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <label
-                      class="m-control-label"
+                      class="control-label"
                       for="listen_port"
                     >
                       listen_port
                     </label>
                     <div
-                      class="m-help-block m-text-small"
+                      class="help-block text-small"
                     >
                       Proxy service port.
                     </div>
                   </div>
                   <div
-                    class="m-col-6"
+                    class="col-6"
                   >
                     <div
                       class=""
                     >
                       <input
-                        class="m-input"
+                        class="input"
                         name="listen_port"
                         type="number"
                         value="8080"
                       />
                     </div>
                     <div
-                      class="m-text-small"
+                      class="text-small"
                     >
                       Default: 
                       <strong>
@@ -208,7 +208,7 @@ exports[`Modal Component 2`] = `
               </div>
             </div>
             <div
-              class="m-modal-footer"
+              class="modal-footer"
             />
           </div>
         </div>

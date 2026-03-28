@@ -12,7 +12,7 @@ exports[`HttpMessage 1`] = `
         Raw
       </h5>
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-clipboard"
@@ -21,7 +21,7 @@ exports[`HttpMessage 1`] = `
       </button>
        
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-edit"
@@ -30,7 +30,7 @@ exports[`HttpMessage 1`] = `
       </button>
        
       <a
-        class="m-btn m-btn-default m-btn-xs"
+        class="btn btn-default btn-xs"
         href="#"
         title="Upload a file to replace the content."
       >
@@ -45,7 +45,7 @@ exports[`HttpMessage 1`] = `
       </a>
        
       <a
-        class="m-btn m-btn-default m-btn-xs"
+        class="btn btn-default btn-xs"
         href="#"
       >
         <span>
@@ -97,19 +97,19 @@ exports[`HttpMessage 2`] = `
         [Editing]
       </h5>
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
-          class="fa fa-check u-text-success"
+          class="fa fa-check text-success"
         />
          Done
       </button>
        
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
-          class="fa fa-times u-text-danger"
+          class="fa fa-times text-danger"
         />
          Cancel
       </button>
@@ -219,7 +219,7 @@ exports[`HttpMessage 3`] = `
         Raw
       </h5>
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-clipboard"
@@ -228,7 +228,7 @@ exports[`HttpMessage 3`] = `
       </button>
        
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-edit"
@@ -237,7 +237,7 @@ exports[`HttpMessage 3`] = `
       </button>
        
       <a
-        class="m-btn m-btn-default m-btn-xs"
+        class="btn btn-default btn-xs"
         href="#"
         title="Upload a file to replace the content."
       >
@@ -252,7 +252,7 @@ exports[`HttpMessage 3`] = `
       </a>
        
       <a
-        class="m-btn m-btn-default m-btn-xs"
+        class="btn btn-default btn-xs"
         href="#"
       >
         <span>
@@ -304,7 +304,7 @@ exports[`HttpMessage 4`] = `
         Raw
       </h5>
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-clipboard"
@@ -313,7 +313,7 @@ exports[`HttpMessage 4`] = `
       </button>
        
       <button
-        class="m-btn-xs m-btn m-btn-default m-btn-xs"
+        class="btn-xs btn btn-default"
       >
         <i
           class="fa fa-edit"
@@ -322,7 +322,7 @@ exports[`HttpMessage 4`] = `
       </button>
        
       <a
-        class="m-btn m-btn-default m-btn-xs"
+        class="btn btn-default btn-xs"
         href="#"
         title="Upload a file to replace the content."
       >
@@ -337,7 +337,7 @@ exports[`HttpMessage 4`] = `
       </a>
        
       <a
-        class="m-btn m-btn-default m-btn-xs"
+        class="btn btn-default btn-xs"
         href="#"
       >
         <span>
