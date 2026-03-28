@@ -31,7 +31,7 @@ function CloseSummary({ websocket }: { websocket: WebSocketData }) {
                 ? "client"
                 : "server"}{" "}
             with code {websocket.close_code} {reason}.
-            <small className="pull-right">
+            <small className="float-right">
                 {formatTimeStamp(websocket.timestamp_end)}
             </small>
         </div>

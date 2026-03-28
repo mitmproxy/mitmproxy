@@ -43,6 +43,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             />
             Strip cache headers 
             <a
+              class="docs-link"
               href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
               rel="noreferrer"
               target="_blank"
@@ -62,6 +63,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             />
             Use host header for display 
             <a
+              class="docs-link"
               href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
               rel="noreferrer"
               target="_blank"
@@ -81,6 +83,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             />
             Don't verify server certificates 
             <a
+              class="docs-link"
               href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
               rel="noreferrer"
               target="_blank"

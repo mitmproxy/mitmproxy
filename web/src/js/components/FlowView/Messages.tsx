@@ -62,7 +62,7 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                     <div key={i}>
                         <small>
                             <i className={className} />
-                            <span className="pull-right">
+                            <span className="float-right">
                                 {d.timestamp && formatTimeStamp(d.timestamp)}
                             </span>
                         </small>

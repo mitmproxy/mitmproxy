@@ -14,7 +14,7 @@ exports[`FilterInput Component should render correctly 1`] = `
       />
     </span>
     <input
-      class="form-control"
+      class="input"
       placeholder="bar"
       type="text"
       value="42"
