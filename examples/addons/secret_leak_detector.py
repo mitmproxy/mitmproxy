@@ -25,12 +25,26 @@ class SecretLeakDetector:
             (re.compile(r"sk-proj-[a-zA-Z0-9_-]{48,}"), "OpenAI API Key (project)", 90),
             (re.compile(r"sk-[a-zA-Z0-9]{48}"), "OpenAI API Key (legacy)", 85),
             (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS Access Key ID", 85),
-            (re.compile(r"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"), "AWS Secret Access Key", 65),
-            (re.compile(r"eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}"), "JWT Token", 80),
+            (
+                re.compile(r"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"),
+                "AWS Secret Access Key",
+                65,
+            ),
+            (
+                re.compile(
+                    r"eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}"
+                ),
+                "JWT Token",
+                80,
+            ),
             (re.compile(r"Bearer [a-zA-Z0-9_.-]{20,}"), "Bearer Token", 75),
             (re.compile(r"AIza[0-9A-Za-z_-]{35}"), "Google API Key", 70),
             (re.compile(r"ghp_[a-zA-Z0-9]{36,}"), "GitHub PAT", 70),
-            (re.compile(r"github_pat_[a-zA-Z0-9_]{82,}"), "GitHub PAT (fine-grained)", 88),
+            (
+                re.compile(r"github_pat_[a-zA-Z0-9_]{82,}"),
+                "GitHub PAT (fine-grained)",
+                88,
+            ),
         ]
 
     def load(self, loader) -> None:
@@ -51,12 +65,21 @@ class SecretLeakDetector:
         if not s or len(s) < 8:
             return 0.0
         freq = Counter(s)
-        return -sum((count / len(s)) * math.log2(count / len(s)) for count in freq.values() if count > 0)
+        return -sum(
+            (count / len(s)) * math.log2(count / len(s))
+            for count in freq.values()
+            if count > 0
+        )
 
-    def _get_confidence(self, base_score: int, value: str, location: str, path: str) -> int:
+    def _get_confidence(
+        self, base_score: int, value: str, location: str, path: str
+    ) -> int:
         score = base_score
 
-        if any(x in location.lower() for x in ["authorization", "api-key", "token", "secret"]):
+        if any(
+            x in location.lower()
+            for x in ["authorization", "api-key", "token", "secret"]
+        ):
             score += 15
         if any(x in path.lower() for x in ["/auth", "/api", "/login", "/token"]):
             score += 10
@@ -67,9 +90,13 @@ class SecretLeakDetector:
 
     def _is_json(self, text: str) -> bool:
         text = text.strip()
-        return (text.startswith("{") and text.endswith("}")) or (text.startswith("[") and text.endswith("]"))
+        return (text.startswith("{") and text.endswith("}")) or (
+            text.startswith("[") and text.endswith("]")
+        )
 
-    def _scan_json(self, data: dict | list, location_prefix: str, flow: http.HTTPFlow) -> None:
+    def _scan_json(
+        self, data: dict | list, location_prefix: str, flow: http.HTTPFlow
+    ) -> None:
         if isinstance(data, dict):
             for k, v in data.items():
                 loc = f"{location_prefix} → {k}"
@@ -121,7 +148,9 @@ class SecretLeakDetector:
                         continue
                     flow._secret_seen.add(dedup_key)
 
-                    confidence = self._get_confidence(base_score, full_match, location, path)
+                    confidence = self._get_confidence(
+                        base_score, full_match, location, path
+                    )
 
                     if (threshold == "high" and confidence < 75) or (
                         threshold == "medium" and confidence < 60
@@ -155,22 +184,32 @@ class SecretLeakDetector:
                             continue
 
                         ctx.log.error(
-                            json.dumps({
-                                "event": "secret_leak_blocked",
-                                "reason": "high-confidence leak",
-                                "url": flow.request.pretty_url,
-                            })
+                            json.dumps(
+                                {
+                                    "event": "secret_leak_blocked",
+                                    "reason": "high-confidence leak",
+                                    "url": flow.request.pretty_url,
+                                }
+                            )
                         )
                         flow.response = http.Response.make(
                             403, b"Secret leak detected and blocked by mitmproxy addon"
                         )
                         return
 
-    def _apply_mask(self, obj: http.Request | http.Response, location: str, original: str, masked: str) -> None:
+    def _apply_mask(
+        self,
+        obj: http.Request | http.Response,
+        location: str,
+        original: str,
+        masked: str,
+    ) -> None:
         if hasattr(obj, "headers") and "Header" in location:
             header_name = location.split(": ", 1)[1]
             if header_name in obj.headers:
-                obj.headers[header_name] = obj.headers[header_name].replace(original, masked)
+                obj.headers[header_name] = obj.headers[header_name].replace(
+                    original, masked
+                )
         elif hasattr(obj, "content") and obj.content:
             try:
                 text = obj.content.decode("utf-8", errors="ignore")
@@ -186,7 +225,9 @@ class SecretLeakDetector:
             self._scan_value(value, f"Query: {name}", flow)
         if flow.request.content:
             if len(flow.request.content) >= 200_000:
-                ctx.log.info(f"[SKIPPED] Large request body ({len(flow.request.content)} bytes)")
+                ctx.log.info(
+                    f"[SKIPPED] Large request body ({len(flow.request.content)} bytes)"
+                )
             else:
                 self._scan_value(
                     flow.request.content.decode("utf-8", errors="ignore"),
@@ -201,7 +242,9 @@ class SecretLeakDetector:
             self._scan_value(value, f"Response Header: {name}", flow)
         if flow.response.content:
             if len(flow.response.content) >= 200_000:
-                ctx.log.info(f"[SKIPPED] Large response body ({len(flow.response.content)} bytes)")
+                ctx.log.info(
+                    f"[SKIPPED] Large response body ({len(flow.response.content)} bytes)"
+                )
             else:
                 self._scan_value(
                     flow.response.content.decode("utf-8", errors="ignore"),
