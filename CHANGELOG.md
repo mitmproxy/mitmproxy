@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Added SecretLeakDetector addon with real-time detection, masking, and optional blocking.
+  ([#8148](https://github.com/mitmproxy/mitmproxy/pull/8148), @MohamedXploit)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
