@@ -8,6 +8,7 @@ import math
 import re
 from collections import Counter
 from threading import Lock
+from weakref import WeakKeyDictionary
 
 from mitmproxy import ctx
 from mitmproxy import http
@@ -18,6 +19,8 @@ class SecretLeakDetector:
         self.secrets_found = 0
         self.lock = Lock()
         self.safe_paths = {"/health", "/metrics", "/static", "/favicon", "/robots.txt"}
+        # Per-flow dedup tracked on the addon, not on the flow object (mypy-safe)
+        self._seen: WeakKeyDictionary[http.HTTPFlow, set[tuple[str, str]]] = WeakKeyDictionary()
 
         # Updated patterns
         self.patterns = [
@@ -129,6 +132,11 @@ class SecretLeakDetector:
             except json.JSONDecodeError:
                 pass
 
+        # Initialise per-flow seen set on the addon (mypy-safe, no monkey-patching)
+        if flow not in self._seen:
+            self._seen[flow] = set()
+        seen = self._seen[flow]
+
         # Normal + multi-line scan
         for line in value.splitlines():
             line = line.strip()
@@ -141,12 +149,10 @@ class SecretLeakDetector:
                     full_match = match.group(0)
                     masked = full_match[:8] + "..." + full_match[-4:]
 
-                    if not hasattr(flow, "_secret_seen"):
-                        flow._secret_seen = set()
                     dedup_key = (name, masked)
-                    if dedup_key in flow._secret_seen:
+                    if dedup_key in seen:
                         continue
-                    flow._secret_seen.add(dedup_key)
+                    seen.add(dedup_key)
 
                     confidence = self._get_confidence(
                         base_score, full_match, location, path
