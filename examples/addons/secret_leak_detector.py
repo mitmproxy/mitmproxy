@@ -20,7 +20,9 @@ class SecretLeakDetector:
         self.lock = Lock()
         self.safe_paths = {"/health", "/metrics", "/static", "/favicon", "/robots.txt"}
         # Per-flow dedup tracked on the addon, not on the flow object (mypy-safe)
-        self._seen: WeakKeyDictionary[http.HTTPFlow, set[tuple[str, str]]] = WeakKeyDictionary()
+        self._seen: WeakKeyDictionary[http.HTTPFlow, set[tuple[str, str]]] = (
+            WeakKeyDictionary()
+        )
 
         # Updated patterns
         self.patterns = [
