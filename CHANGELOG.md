@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Fix body editor unable to clear content to empty.
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
