@@ -1088,10 +1088,9 @@ class HttpLayer(layer.Layer):
                         return
                     elif connection.connected:
                         # see "tricky multiplexing edge case" in make_http_connection for an explanation
-                        h2_to_h1 = (
-                            is_h2_alpn(self.context.client.alpn)
-                            and not is_h2_alpn(connection.alpn)
-                        )
+                        h2_to_h1 = is_h2_alpn(
+                            self.context.client.alpn
+                        ) and not is_h2_alpn(connection.alpn)
                         if not h2_to_h1:
                             stream = self.command_sources.pop(event)
                             yield from self.event_to_child(
