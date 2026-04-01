@@ -29,6 +29,7 @@
 - Reduce `CERT_EXPIRY` to 199 days.
   ([#8142](https://github.com/mitmproxy/mitmproxy/pull/8142), @opstic)
 - Treat ALPN "grpc-exp" as HTTP/2
+  ([#8150](https://github.com/mitmproxy/mitmproxy/pull/8150), @AlexTech01)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
