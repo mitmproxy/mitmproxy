@@ -53,6 +53,10 @@ def test_alpn_select_callback():
     )
     assert tlsconfig.alpn_select_callback(conn, [b"qux", b"h2", b"http/1.1"]) == b"h2"
 
+    # Test that grpc-exp is recognized as a valid HTTP ALPN
+    conn.set_app_data(tlsconfig.AppData(server_alpn=None, http2=True, client_alpn=None))
+    assert tlsconfig.alpn_select_callback(conn, [b"grpc-exp", b"http/1.1"]) == b"grpc-exp"
+
     # Test no overlap
     assert (
         tlsconfig.alpn_select_callback(conn, [b"qux", b"quux"])
@@ -451,6 +455,17 @@ class TestTlsConfig:
                 (proxy_tls.HTTP2_ALPN, *proxy_tls.HTTP1_ALPNS, b"foo"),
                 (*proxy_tls.HTTP1_ALPNS, b"foo"),
             )
+            assert_alpn(
+                True,
+                (b"grpc-exp", *proxy_tls.HTTP1_ALPNS),
+                (b"grpc-exp", *proxy_tls.HTTP1_ALPNS),
+            )
+            assert_alpn(
+                False,
+                (b"grpc-exp", *proxy_tls.HTTP1_ALPNS),
+                (*proxy_tls.HTTP1_ALPNS,),
+            )
+            
             assert_alpn(True, [], [])
             assert_alpn(False, [], [])
             ctx.client.timestamp_tls_setup = time.time()
