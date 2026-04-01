@@ -299,7 +299,7 @@ class TlsConfig:
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
                     server.alpn_offers = tuple(
-                        x for x in client.alpn_offers if x != b"h2"
+                        x for x in client.alpn_offers if x not in (b"h2", b"grpc-exp")
                     )
             else:
                 # We either have no client TLS or a client without ALPN.
