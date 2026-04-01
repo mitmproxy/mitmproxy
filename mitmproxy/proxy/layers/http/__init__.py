@@ -94,6 +94,10 @@ def validate_request(
     return None
 
 
+def is_h2_alpn(alpn: bytes | None) -> bool:
+    return alpn in (b"h2", b"grpc-exp")
+
+
 def is_h3_alpn(alpn: bytes | None) -> bool:
     return alpn == b"h3" or (alpn is not None and alpn.startswith(b"h3-"))
 
@@ -953,7 +957,7 @@ class HttpLayer(layer.Layer):
             http_conn: HttpConnection
             if is_h3_alpn(self.context.client.alpn):
                 http_conn = Http3Server(self.context.fork())
-            elif self.context.client.alpn == b"h2":
+            elif is_h2_alpn(self.context.client.alpn):
                 http_conn = Http2Server(self.context.fork())
             else:
                 http_conn = Http1Server(self.context.fork())
@@ -1003,7 +1007,7 @@ class HttpLayer(layer.Layer):
                     child_layer: HttpConnection
                     if is_h3_alpn(self.context.server.alpn):
                         child_layer = Http3Client(self.context.fork())
-                    elif self.context.server.alpn == b"h2":
+                    elif is_h2_alpn(self.context.server.alpn):
                         child_layer = Http2Client(self.context.fork())
                     else:
                         child_layer = Http1Client(self.context.fork())
@@ -1085,8 +1089,8 @@ class HttpLayer(layer.Layer):
                     elif connection.connected:
                         # see "tricky multiplexing edge case" in make_http_connection for an explanation
                         h2_to_h1 = (
-                            self.context.client.alpn == b"h2"
-                            and connection.alpn != b"h2"
+                            is_h2_alpn(self.context.client.alpn)
+                            and not is_h2_alpn(connection.alpn)
                         )
                         if not h2_to_h1:
                             stream = self.command_sources.pop(event)
@@ -1180,8 +1184,8 @@ class HttpLayer(layer.Layer):
             # same connection. The only workaround left is to open a separate connection for each flow.
             if (
                 not command.err
-                and self.context.client.alpn == b"h2"
-                and command.connection.alpn != b"h2"
+                and is_h2_alpn(self.context.client.alpn)
+                and not is_h2_alpn(command.connection.alpn)
             ):
                 for cmd in waiting[1:]:
                     yield from self.get_connection(cmd, reuse=False)
@@ -1201,7 +1205,7 @@ class HttpClient(layer.Layer):
         if not err:
             if is_h3_alpn(self.context.server.alpn):
                 self.child_layer = Http3Client(self.context)
-            elif self.context.server.alpn == b"h2":
+            elif is_h2_alpn(self.context.server.alpn):
                 self.child_layer = Http2Client(self.context)
             else:
                 self.child_layer = Http1Client(self.context)
