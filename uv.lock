@@ -1051,7 +1051,7 @@ requires-dist = [
     { name = "pyperclip", specifier = ">=1.9.0,<=1.11.0" },
     { name = "ruamel-yaml", specifier = ">=0.18.10,<=0.19.1" },
     { name = "sortedcontainers", specifier = ">=2.3,<=2.4.0" },
-    { name = "tornado", specifier = ">=6.5.0,<=6.5.4" },
+    { name = "tornado", specifier = ">=6.5.0,<=6.5.5" },
     { name = "typing-extensions", marker = "python_full_version < '3.13'", specifier = ">=4.13.2,<=4.14" },
     { name = "urwid", specifier = ">=2.6.14,<=3.0.5" },
     { name = "wsproto", specifier = ">=1.0,<=1.3.2" },
