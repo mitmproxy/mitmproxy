@@ -67,7 +67,7 @@ dev = [
     "maturin==1.12.6",
     "pdoc==16.0.0",
     "pyinstaller==6.19.0",
-    "pyinstaller-hooks-contrib==2026.2",
+    "pyinstaller-hooks-contrib==2026.4",
     "pytest-asyncio==1.2.0",
     "pytest-cov==7.0.0",
     "pytest-timeout==2.4.0",
