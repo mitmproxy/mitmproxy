@@ -29,7 +29,10 @@ jest.mock("../../../components/contentviews/CodeEditor", () => {
             }
             mockCapturedOnChange = onChange;
             return (
-                <textarea data-testid="mock-editor" defaultValue={initialContent} />
+                <textarea
+                    data-testid="mock-editor"
+                    defaultValue={initialContent}
+                />
             );
         },
     };
