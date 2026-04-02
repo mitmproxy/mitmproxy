@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Fix editors not allowing content to be cleared to an empty string
+  ([#8149](https://github.com/mitmproxy/mitmproxy/pull/8149), @ariel42)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options

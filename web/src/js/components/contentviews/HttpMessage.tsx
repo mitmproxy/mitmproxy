@@ -58,7 +58,7 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
     const save = async () => {
         await dispatch(
             flowActions.update(flow, {
-                [part]: { content: editedContent || content || "" },
+                [part]: { content: editedContent ?? content ?? "" },
             }),
         );
         stopEdit();
