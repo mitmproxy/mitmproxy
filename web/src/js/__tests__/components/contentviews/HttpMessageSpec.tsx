@@ -8,27 +8,31 @@ import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 enableFetchMocks();
 
-// Mock CodeEditor — CodeMirror is not drivable in jsdom.
-let capturedOnChange: ((content: string) => void) | null = null;
+let mockUseCodeEditor = false,
+    mockCapturedOnChange: ((content: string) => void) | null = null;
 
-jest.mock("../../../components/contentviews/CodeEditor", () => ({
-    __esModule: true,
-    default: ({
-        initialContent,
-        onChange,
-    }: {
-        initialContent: string;
-        onChange: (c: string) => void;
-    }) => {
-        capturedOnChange = onChange;
-        return (
-            <textarea data-testid="mock-editor" defaultValue={initialContent} />
-        );
-    },
-}));
-
-beforeEach(() => {
-    capturedOnChange = null;
+jest.mock("../../../components/contentviews/CodeEditor", () => {
+    const actual = jest.requireActual(
+        "../../../components/contentviews/CodeEditor",
+    );
+    return {
+        __esModule: true,
+        default: ({
+            initialContent,
+            onChange,
+        }: {
+            initialContent: string;
+            onChange: (c: string) => void;
+        }) => {
+            if (!mockUseCodeEditor) {
+                return actual.default({ initialContent, onChange });
+            }
+            mockCapturedOnChange = onChange;
+            return (
+                <textarea data-testid="mock-editor" defaultValue={initialContent} />
+            );
+        },
+    };
 });
 
 test("HttpMessage", async () => {
@@ -140,15 +144,22 @@ describe("HttpMessage Copy Button", () => {
 });
 
 describe("HttpMessage body edit", () => {
-    const CVD = { view_name: "Raw", description: "", syntax_highlight: "none" };
+    const cvd = { view_name: "Raw", description: "", syntax_highlight: "none" };
 
     beforeEach(() => {
+        mockUseCodeEditor = true;
+        mockCapturedOnChange = null;
         fetchMock.resetMocks();
+    });
+
+    afterEach(() => {
+        mockUseCodeEditor = false;
+        mockCapturedOnChange = null;
     });
 
     test("saving empty body sends empty string, not original content", async () => {
         fetchMock.mockResponses(
-            JSON.stringify({ text: "original body", ...CVD }),
+            JSON.stringify({ text: "original body", ...cvd }),
             "original body",
             JSON.stringify({}),
         );
@@ -160,8 +171,8 @@ describe("HttpMessage body edit", () => {
         fireEvent.click(screen.getByText("Edit"));
         await waitFor(() => screen.getByText("Done"));
 
-        expect(capturedOnChange).not.toBeNull();
-        act(() => capturedOnChange!(""));
+        expect(mockCapturedOnChange).not.toBeNull();
+        act(() => mockCapturedOnChange!(""));
 
         fireEvent.click(screen.getByText("Done"));
 
@@ -177,7 +188,7 @@ describe("HttpMessage body edit", () => {
 
     test("saving unedited body sends original content", async () => {
         fetchMock.mockResponses(
-            JSON.stringify({ text: "original body", ...CVD }),
+            JSON.stringify({ text: "original body", ...cvd }),
             "original body",
             JSON.stringify({}),
         );
