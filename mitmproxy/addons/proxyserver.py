@@ -64,10 +64,18 @@ class Servers:
                 for spec in modes:
                     if spec in self._instances:
                         instance = self._instances[spec]
+                        logger.debug(
+                            f"Keeping existing server instance for mode: {spec.full_spec}"
+                        )
                     else:
                         instance = ServerInstance.make(spec, self._manager)
                         start_tasks.append(instance.start())
+                        logger.debug(
+                            f"Creating new server instance for mode: {spec.full_spec}"
+                        )
                     new_instances[spec] = instance
+            else:
+                logger.debug("Server option is False, not starting any proxy servers")
 
             # Shutdown modes that have been removed from the list.
             stop_tasks = [
@@ -75,6 +83,9 @@ class Servers:
                 for spec, s in self._instances.items()
                 if spec not in new_instances
             ]
+
+            if stop_tasks:
+                logger.debug(f"Stopping {len(stop_tasks)} server(s)")
 
             if not start_tasks and not stop_tasks:
                 return (
@@ -224,6 +235,16 @@ class Proxyserver(ServerManager):
 
     def running(self):
         self.is_running = True
+        # If servers haven't been set up yet (e.g., when running() is called directly
+        # without going through master.run()), set them up now.
+        # This ensures programmatic usage works even if setup_servers() wasn't called.
+        if not self.servers and ctx.options.mode and ctx.options.server:
+            logger.info("Servers not initialized, setting up now...")
+            asyncio_utils.create_task(
+                self.setup_servers(),
+                name="setup_servers_from_running",
+                keep_ref=True,
+            )
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:
@@ -296,6 +317,8 @@ class Proxyserver(ServerManager):
                         "Transparent mode not supported on this platform."
                     )
 
+            # Update servers if already running, OR schedule update for when we start running
+            # This ensures that mode changes work both during initial configuration and at runtime
             if self.is_running:
                 asyncio_utils.create_task(
                     self.servers.update(modes),
@@ -304,10 +327,35 @@ class Proxyserver(ServerManager):
                 )
 
     async def setup_servers(self) -> bool:
-        """Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts)."""
-        return await self.servers.update(
-            [mode_specs.ProxyMode.parse(m) for m in ctx.options.mode]
-        )
+        """
+        Setup proxy servers. This may take an indefinite amount of time to complete (e.g. on permission prompts).
+
+        This method is called during master startup to initialize proxy servers based on the configured mode.
+        Unlike configure(), this method starts servers regardless of the is_running state, as it's explicitly
+        called during the startup sequence.
+        """
+        modes = [mode_specs.ProxyMode.parse(m) for m in ctx.options.mode]
+        if modes and ctx.options.server:
+            logger.info(
+                f"Setting up proxy servers for modes: {[m.full_spec for m in modes]}"
+            )
+        elif not ctx.options.server:
+            logger.info("Proxy server disabled (server=False)")
+        elif not modes:
+            logger.info("No proxy modes configured")
+
+        result = await self.servers.update(modes)
+
+        if result and modes and ctx.options.server:
+            logger.info(
+                f"Proxy servers started successfully. Listening on: {self.listen_addrs()}"
+            )
+        elif not result:
+            logger.warning(
+                "Proxy server startup encountered errors. Check logs above for details."
+            )
+
+        return result
 
     def listen_addrs(self) -> list[Address]:
         return [addr for server in self.servers for addr in server.listen_addrs]
