@@ -201,6 +201,13 @@ class ConsoleMaster(master.Master):
         self.loop.process_input([key])
 
     async def running(self) -> None:
+        # If proxy servers haven't been set up yet (e.g., when running() is called directly
+        # without going through master.run()), set them up now.
+        # This ensures programmatic usage works even if setup_servers() wasn't called.
+        proxyserver = self.addons.get("proxyserver")
+        if proxyserver and not proxyserver._servers_initialized:
+            await proxyserver.setup_servers()
+        
         if not sys.stdout.isatty():
             print(
                 "Error: mitmproxy's console interface requires a tty. "

@@ -102,6 +102,12 @@ class WebMaster(master.Master):
         return cast(webaddons.WebAuth, self.addons.get("webauth")).web_url
 
     async def running(self):
+        # If proxy servers haven't been set up yet (e.g., when running() is called directly
+        # without going through master.run()), set them up now.
+        # This ensures programmatic usage works even if setup_servers() wasn't called.
+        if not self.proxyserver._servers_initialized:
+            await self.proxyserver.setup_servers()
+        
         # Register tornado with the current event loop
         tornado.ioloop.IOLoop.current()
 

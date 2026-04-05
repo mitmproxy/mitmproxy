@@ -237,16 +237,6 @@ class Proxyserver(ServerManager):
 
     def running(self):
         self.is_running = True
-        # If servers haven't been set up yet (e.g., when running() is called directly
-        # without going through master.run()), set them up now.
-        # This ensures programmatic usage works even if setup_servers() wasn't called.
-        if not self._servers_initialized and ctx.options.mode and ctx.options.server:
-            logger.info("Servers not initialized, setting up now...")
-            asyncio_utils.create_task(
-                self.setup_servers(),
-                name="setup_servers_from_running",
-                keep_ref=True,
-            )
 
     def configure(self, updated) -> None:
         if "stream_large_bodies" in updated:
