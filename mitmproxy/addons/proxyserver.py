@@ -131,11 +131,13 @@ class Proxyserver(ServerManager):
 
     is_running: bool
     _connect_addr: Address | None = None
+    _servers_initialized: bool
 
     def __init__(self):
         self.connections = {}
         self.servers = Servers(self)
         self.is_running = False
+        self._servers_initialized = False
 
     def __repr__(self):
         return f"Proxyserver({len(self.connections)} active conns)"
@@ -238,7 +240,7 @@ class Proxyserver(ServerManager):
         # If servers haven't been set up yet (e.g., when running() is called directly
         # without going through master.run()), set them up now.
         # This ensures programmatic usage works even if setup_servers() wasn't called.
-        if not self.servers and ctx.options.mode and ctx.options.server:
+        if not self._servers_initialized and ctx.options.mode and ctx.options.server:
             logger.info("Servers not initialized, setting up now...")
             asyncio_utils.create_task(
                 self.setup_servers(),
@@ -334,6 +336,7 @@ class Proxyserver(ServerManager):
         Unlike configure(), this method starts servers regardless of the is_running state, as it's explicitly
         called during the startup sequence.
         """
+        self._servers_initialized = True
         modes = [mode_specs.ProxyMode.parse(m) for m in ctx.options.mode]
         if modes and ctx.options.server:
             logger.info(
