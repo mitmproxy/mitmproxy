@@ -207,7 +207,7 @@ class ConsoleMaster(master.Master):
         proxyserver = self.addons.get("proxyserver")
         if proxyserver and not proxyserver._servers_initialized:
             await proxyserver.setup_servers()
-        
+
         if not sys.stdout.isatty():
             print(
                 "Error: mitmproxy's console interface requires a tty. "

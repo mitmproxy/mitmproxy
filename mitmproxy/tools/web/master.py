@@ -107,7 +107,7 @@ class WebMaster(master.Master):
         # This ensures programmatic usage works even if setup_servers() wasn't called.
         if not self.proxyserver._servers_initialized:
             await self.proxyserver.setup_servers()
-        
+
         # Register tornado with the current event loop
         tornado.ioloop.IOLoop.current()
 
