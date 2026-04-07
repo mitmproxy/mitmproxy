@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `view.settings.setval.toggle` command to correctly use the provided key parameter instead of hardcoded "key" string.
+- Fix connection state inconsistency in proxy server by ensuring `transports.pop()` is always called in a finally block.
+- Fix potential stale data in TLS layer by clearing `recv_buffer` before yielding to child event handlers.
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
