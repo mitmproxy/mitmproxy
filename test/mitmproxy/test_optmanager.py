@@ -258,7 +258,7 @@ def test_serialize():
         opts: optmanager.OptManager, text: str, defaults: bool = False
     ) -> str:
         buf = io.StringIO()
-        optmanager.serialize(opts, buf, text, defaults)
+        opts.serialize(buf, text, defaults)
         return buf.getvalue()
 
     o = TD2()
@@ -269,7 +269,7 @@ def test_serialize():
     assert "dfour" not in data
 
     o2 = TD2()
-    optmanager.load(o2, data)
+    o2.load(data)
     assert o2 == o
     assert not o == 42
 
@@ -278,32 +278,32 @@ def test_serialize():
     """
     data = serialize(o, t)
     o2 = TD2()
-    optmanager.load(o2, data)
+    o2.load(data)
     assert o2 == o
 
     t = "invalid: foo\ninvalid"
     with pytest.raises(Exception, match="Config error"):
-        optmanager.load(o2, t)
+        o2.load(t)
 
     t = "invalid"
     with pytest.raises(Exception, match="Config error"):
-        optmanager.load(o2, t)
+        o2.load(t)
 
     t = "# a comment"
-    optmanager.load(o2, t)
-    optmanager.load(o2, "foobar: '123'")
+    o2.load(t)
+    o2.load("foobar: '123'")
     assert o2.deferred == {"foobar": "123"}
 
     t = ""
-    optmanager.load(o2, t)
-    optmanager.load(o2, "foobar: '123'")
+    o2.load(t)
+    o2.load("foobar: '123'")
     assert o2.deferred == {"foobar": "123"}
 
 
 def test_serialize_defaults():
     o = options.Options()
     buf = io.StringIO()
-    optmanager.serialize(o, buf, "", defaults=True)
+    o.serialize(buf, "", defaults=True)
     assert buf.getvalue()
 
 
@@ -311,39 +311,39 @@ def test_saving(tmpdir):
     o = TD2()
     o.three = "set"
     dst = Path(tmpdir.join("conf"))
-    optmanager.save(o, dst, defaults=True)
+    o.save(dst, defaults=True)
 
     o2 = TD2()
-    optmanager.load_paths(o2, dst)
+    o2.load_paths(dst)
     o2.three = "foo"
-    optmanager.save(o2, dst, defaults=True)
+    o2.save(dst, defaults=True)
 
-    optmanager.load_paths(o, dst)
+    o.load_paths(dst)
     assert o.three == "foo"
 
     with open(dst, "a") as f:
         f.write("foobar: '123'")
-    optmanager.load_paths(o, dst)
+    o.load_paths(dst)
     assert o.deferred == {"foobar": "123"}
 
     with open(dst, "a") as f:
         f.write("'''")
     with pytest.raises(exceptions.OptionsError):
-        optmanager.load_paths(o, dst)
+        o.load_paths(dst)
 
     with open(dst, "wb") as f:
         f.write(b"\x01\x02\x03")
     with pytest.raises(exceptions.OptionsError):
-        optmanager.load_paths(o, dst)
+        o.load_paths(dst)
     with pytest.raises(exceptions.OptionsError):
-        optmanager.save(o, dst)
+        o.save(dst)
 
     with open(dst, "wb") as f:
         f.write(b"\xff\xff\xff")
     with pytest.raises(exceptions.OptionsError):
-        optmanager.load_paths(o, dst)
+        o.load_paths(dst)
     with pytest.raises(exceptions.OptionsError):
-        optmanager.save(o, dst)
+        o.save(dst)
 
 
 def test_merge():
@@ -373,14 +373,14 @@ def test_option():
 def test_dump_defaults():
     o = TTypes()
     buf = io.StringIO()
-    optmanager.dump_defaults(o, buf)
+    o.dump_defaults(buf)
     assert buf.getvalue()
 
 
 def test_dump_dicts():
     o = options.Options()
-    assert optmanager.dump_dicts(o)
-    assert optmanager.dump_dicts(o, ["http2", "listen_port"])
+    assert o.dump_dicts()
+    assert o.dump_dicts(["http2", "listen_port"])
 
 
 class TTypes(optmanager.OptManager):
@@ -482,7 +482,7 @@ def test_set():
 def test_load_paths(tdata):
     opts = TS()
     conf_path = tdata.path("mitmproxy/data/test_config.yml")
-    optmanager.load_paths(opts, conf_path)
+    opts.load_paths(conf_path)
     assert opts.scripts == [
         str(Path.home().absolute().joinpath("abc")),
         str(Path(conf_path).parent.joinpath("abc")),
