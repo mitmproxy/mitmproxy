@@ -372,7 +372,21 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
         self.pubkey = mitmproxy_rs.wireguard.pubkey(self.client_key)
         _ = mitmproxy_rs.wireguard.pubkey(self.server_key)
 
-        await super()._start()
+        try:
+            await super()._start()
+        except Exception as e:
+            # The Rust WireGuard layer raises a generic exception (not OSError)
+            # for port conflicts. Provide a user-friendly message with a fix hint.
+            err_str = str(e)
+            if "Address already in use" in err_str or "EADDRINUSE" in err_str:
+                port = self.mode.listen_port(ctx.options.listen_port)
+                host = self.mode.custom_listen_host or "*"
+                msg = (
+                    f"WireGuard server failed to listen on {host}:{port} with {e}\n"
+                    f"Try specifying a different port by using `--mode {self.mode.full_spec}@{port + 2}`."
+                )
+                raise OSError(errno.EADDRINUSE, msg) from e
+            raise
 
         conf = self.client_conf()
         assert conf
