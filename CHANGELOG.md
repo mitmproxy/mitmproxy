@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
+  ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
 - mitmweb: Fix editors not allowing content to be cleared to an empty string
   ([#8149](https://github.com/mitmproxy/mitmproxy/pull/8149), @ariel42)
 - Update optmanager value parsing exceptions to include the option name
