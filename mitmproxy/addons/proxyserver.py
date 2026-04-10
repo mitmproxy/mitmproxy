@@ -338,6 +338,7 @@ class Proxyserver(ServerManager):
     ):
         if not isinstance(flow, http.HTTPFlow) or not flow.websocket:
             logger.warning("Cannot inject WebSocket messages into non-WebSocket flows.")
+            return
 
         msg = websocket.WebSocketMessage(
             Opcode.TEXT if is_text else Opcode.BINARY, not to_client, message
@@ -352,6 +353,7 @@ class Proxyserver(ServerManager):
     def inject_tcp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, tcp.TCPFlow):
             logger.warning("Cannot inject TCP messages into non-TCP flows.")
+            return
 
         event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, message))
         try:
@@ -363,6 +365,7 @@ class Proxyserver(ServerManager):
     def inject_udp(self, flow: Flow, to_client: bool, message: bytes):
         if not isinstance(flow, udp.UDPFlow):
             logger.warning("Cannot inject UDP messages into non-UDP flows.")
+            return
 
         event = UdpMessageInjected(flow, udp.UDPMessage(not to_client, message))
         try:

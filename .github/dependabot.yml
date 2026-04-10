@@ -2,6 +2,8 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: "/"
+    cooldown:
+      default-days: 42
     schedule:
       interval: "monthly"
     groups:
@@ -10,6 +12,8 @@ updates:
           - "*"
   - package-ecosystem: pip
     directory: "/"
+    cooldown:
+      default-days: 42
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 10

@@ -9,6 +9,8 @@
 
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
   ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
+- mitmweb: Fix editors not allowing content to be cleared to an empty string
+  ([#8149](https://github.com/mitmproxy/mitmproxy/pull/8149), @ariel42)
 - Update optmanager value parsing exceptions to include the option name
   ([#8016](https://github.com/mitmproxy/mitmproxy/pull/8016), @zdwg42)
 - mitmweb: show intercept filter tag at the bottom for default options
@@ -24,6 +26,12 @@
   ([#8046](https://github.com/mitmproxy/mitmproxy/pull/8046), @HueCodes)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
   ([#7944](https://github.com/mitmproxy/mitmproxy/pull/7944), @lups2000)
+- Allow hiding the Quick Help UI in the mitmproxy console with the 'H' key.
+  ([#8095](https://github.com/mitmproxy/mitmproxy/pull/8095), @seroperson)
+- Removed several dead functions using [Skylos](https://github.com/duriantaco/skylos).
+  ([#8136](https://github.com/mitmproxy/mitmproxy/pull/8136), @duriantaco)
+- Reduce `CERT_EXPIRY` to 199 days.
+  ([#8142](https://github.com/mitmproxy/mitmproxy/pull/8142), @opstic)
 
 ## 24 November 2025: mitmproxy 12.2.1
 

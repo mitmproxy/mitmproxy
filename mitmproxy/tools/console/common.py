@@ -310,20 +310,6 @@ def colorize_req(s: str):
     return attr
 
 
-def colorize_url(url):
-    parts = url.split("/", 3)
-    if len(parts) < 4 or len(parts[1]) > 0 or parts[0][-1:] != ":":
-        return [("error", len(url))]  # bad URL
-    return (
-        [
-            (SCHEME_STYLES.get(parts[0], "scheme_other"), len(parts[0]) - 1),
-            ("url_punctuation", 3),  # ://
-        ]
-        + colorize_host(parts[2])
-        + colorize_req("/" + parts[3])
-    )
-
-
 def format_http_content_type(content_type: str) -> tuple[str, str]:
     content_type = content_type.split(";")[0]
     if content_type.endswith("/javascript"):

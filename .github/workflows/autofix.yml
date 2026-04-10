@@ -16,9 +16,7 @@ jobs:
       - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
       - uses: mhils/workflows/setup-uv@8fe88b311a66c441e01edfebe4cd90d8a47fa335
 
-      # If we need to update the lockfile (--check returns an error),
-      # make sure to upgrade everything.
-      - run: uv lock --check || uv lock --upgrade
+      - run: uv lock
 
       - uses: mhils/workflows/uv-sync@8fe88b311a66c441e01edfebe4cd90d8a47fa335
 
@@ -40,4 +38,4 @@ jobs:
 
       - uses: mhils/add-pr-ref-in-changelog@main
 
-      - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27
+      - uses: autofix-ci/action@7a166d7532b277f34e16238930461bf77f9d7ed8
