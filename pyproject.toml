@@ -86,7 +86,7 @@ tox = [
     "tox-uv==1.33.1",
 ]
 ruff = [
-    "ruff==0.15.5",
+    "ruff==0.15.8",
 ]
 deploy = [
     "awscli==1.44.53",
