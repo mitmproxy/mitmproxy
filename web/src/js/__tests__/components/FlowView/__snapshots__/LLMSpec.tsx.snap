@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LLMRequest should render loading state 1`] = `
+<DocumentFragment>
+  <section
+    class="llm-tab"
+  >
+    <div
+      class="llm-loading"
+    >
+      Loading...
+    </div>
+  </section>
+</DocumentFragment>
+`;
+
+exports[`LLMResponse should render loading state 1`] = `
+<DocumentFragment>
+  <section
+    class="llm-tab"
+  >
+    <div
+      class="llm-loading"
+    >
+      Loading...
+    </div>
+  </section>
+</DocumentFragment>
+`;

@@ -78,6 +78,7 @@
             "timestamp_end": 1702398196.169108,
             "pretty_host": "files.pythonhosted.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,

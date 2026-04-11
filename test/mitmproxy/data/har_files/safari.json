@@ -94,6 +94,7 @@
             "timestamp_end": 1680135212.5293427,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/2",
             "status_code": 200,
@@ -222,6 +223,7 @@
             "timestamp_end": 1680135212.5420642,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -350,6 +352,7 @@
             "timestamp_end": 1680135212.5520737,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -478,6 +481,7 @@
             "timestamp_end": 1680135212.5540507,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -606,6 +610,7 @@
             "timestamp_end": 1680135212.555055,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -734,6 +739,7 @@
             "timestamp_end": 1680135212.5553012,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -862,6 +868,7 @@
             "timestamp_end": 1680135212.5573125,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -990,6 +997,7 @@
             "timestamp_end": 1680135212.5590725,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1118,6 +1126,7 @@
             "timestamp_end": 1680135212.5590615,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1258,6 +1267,7 @@
             "timestamp_end": 1680135212.5948346,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1398,6 +1408,7 @@
             "timestamp_end": 1680135212.5948346,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1538,6 +1549,7 @@
             "timestamp_end": 1680135212.5999687,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1678,6 +1690,7 @@
             "timestamp_end": 1680135212.5999687,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1806,6 +1819,7 @@
             "timestamp_end": 1680135212.5640807,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -1934,6 +1948,7 @@
             "timestamp_end": 1680135212.5650442,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -2062,6 +2077,7 @@
             "timestamp_end": 1680135212.5650575,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -2190,6 +2206,7 @@
             "timestamp_end": 1680135212.5831468,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -2353,6 +2370,7 @@
             "timestamp_end": 1680135212.7652235,
             "pretty_host": "s3-us-west-2.amazonaws.com"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/1.1",
             "status_code": 200,
@@ -2500,6 +2518,7 @@
             "timestamp_end": 1680135212.609897,
             "pretty_host": "mitmproxy.org"
         },
+        "is_llm": false,
         "response": {
             "http_version": "HTTP/2",
             "status_code": 200,

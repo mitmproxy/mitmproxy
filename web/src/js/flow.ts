@@ -22,6 +22,7 @@ export interface HTTPFlow extends _Flow {
     request: HTTPRequest;
     response?: HTTPResponse;
     websocket?: WebSocketData;
+    is_llm: boolean;
 }
 
 export interface TCPFlow extends _Flow {

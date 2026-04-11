@@ -29,6 +29,7 @@ export function THTTPFlow(): Required<HTTPFlow> {
         },
         "id": "d91165be-ca1f-4612-88a9-c0f8696f3e29",
         "intercepted": false,
+        "is_llm": false,
         "is_replay": undefined,
         "marked": "",
         "modified": false,
