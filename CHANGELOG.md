@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `view.settings.setval.toggle` command to correctly use the provided key parameter instead of hardcoded "key" string.
+  ([#8167](https://github.com/mitmproxy/mitmproxy/pull/8167), @nameearly)
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
   ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
 - mitmweb: Fix editors not allowing content to be cleared to an empty string
