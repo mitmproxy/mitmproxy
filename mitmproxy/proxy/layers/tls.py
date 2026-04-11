@@ -598,12 +598,10 @@ class ClientTLSLayer(TLSLayer):
                 self.child_layer = udp.UDPLayer(self.context, ignore=True)
             else:
                 self.child_layer = tcp.TCPLayer(self.context, ignore=True)
-            # Clear buffer before yielding to ensure cleanup happens even if event_to_child fails
-            recv_data = bytes(self.recv_buffer)
-            self.recv_buffer.clear()
             yield from self.event_to_child(
-                events.DataReceived(self.context.client, recv_data)
+                events.DataReceived(self.context.client, bytes(self.recv_buffer))
             )
+            self.recv_buffer.clear()
             return True, None
         if (
             tls_clienthello.establish_server_tls_first

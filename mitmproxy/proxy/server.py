@@ -322,8 +322,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer.close()
         except OSError:
             pass
-        finally:
-            self.transports.pop(connection, None)
+        self.transports.pop(connection)
 
         if cancelled:
             raise cancelled
