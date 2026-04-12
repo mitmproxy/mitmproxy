@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix console command panel losing focus due to incoming traffic (e.g. websocket messages).
+  ([#8173](https://github.com/mitmproxy/mitmproxy/pull/8173), @emanuele-em)
 - mitmdump: Fix failed CONNECT requests not being displayed.
   ([#7083](https://github.com/mitmproxy/mitmproxy/issues/7083))
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).

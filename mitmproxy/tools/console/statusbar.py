@@ -77,7 +77,7 @@ class ActionBar(urwid.WidgetWrap):
             self._w = urwid.Pile([self.top, self.bottom])
 
     def sig_update(self, flow=None) -> None:
-        if not self.prompting and flow is None or flow == self.master.view.focus.flow:
+        if not self.prompting and (flow is None or flow == self.master.view.focus.flow):
             self.show_quickhelp()
 
     def sig_options_update(self, options, updated) -> None:
