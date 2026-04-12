@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Accept leading zeros in Content-Length headers when `validate_inbound_headers` is disabled.
+  ([#8177](https://github.com/mitmproxy/mitmproxy/pull/8177), @emanuele-em)
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
   ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
 - mitmweb: Fix editors not allowing content to be cleared to an empty string
