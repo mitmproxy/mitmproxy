@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 12 April 2026: mitmproxy 12.2.2
+
 - [GHSA-527g-3w9m-29hv](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-527g-3w9m-29hv):
   Fix LDAP injection vulnerability reported by @yueyueL.
   ([#8178](https://github.com/mitmproxy/mitmproxy/pull/8178), @mhils)
