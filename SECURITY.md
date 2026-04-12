@@ -12,7 +12,8 @@
 
  - **Denial of Service (DoS):** We consider DoS vectors to be ordinary bugs and not security vulnerabilities.
    You may post them openly on the issue tracker. We will not issue any advisories or CVEs for them.
-   The reasoning here is that mitmproxy is a single-threaded Python application. It can typically be overwhelmed by sending many requests anyways.
+   The reasoning here is that mitmproxy is an interactive inspection tool, not a web server for high volume traffic.
+   It can typically be overwhelmed by sending too many requests; any DoS is just a variation of this.
  - **All other vulnerabilities:** Please report them using the process below.
 
 ## Reporting a Vulnerability
