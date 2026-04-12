@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- [GHSA-527g-3w9m-29hv](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-527g-3w9m-29hv):
+  Fix LDAP injection vulnerability reported by @yueyueL.
 - Fix addon options not being included in `--options` output.
   ([#4423](https://github.com/mitmproxy/mitmproxy/issues/4423))
 - Fix `view.settings.setval.toggle` command to correctly use the provided key parameter instead of hardcoded "key" string.
