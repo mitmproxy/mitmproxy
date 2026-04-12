@@ -590,7 +590,9 @@ class HttpStream(layer.Layer):
             # the 'early' case: we have not started consuming the body
             try:
                 expected_size = expected_http_body_size(
-                    self.flow.request, self.flow.response if response else None
+                    self.flow.request,
+                    self.flow.response if response else None,
+                    self.context.options.validate_inbound_headers,
                 )
             except ValueError:  # pragma: no cover
                 # we just don't stream/kill malformed content-length headers.
