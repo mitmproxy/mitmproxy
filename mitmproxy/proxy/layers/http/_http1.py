@@ -183,7 +183,12 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 return
             try:
                 read_until_eof_semantics = (
-                    http1.expected_http_body_size(self.request, self.response) == -1
+                    http1.expected_http_body_size(
+                        self.request,
+                        self.response,
+                        self.context.options.validate_inbound_headers,
+                    )
+                    == -1
                 )
             except ValueError:
                 # this may raise only now (and not earlier) because an addon set invalid headers,
@@ -288,7 +293,10 @@ class Http1Server(Http1Connection):
                     self.request = http1.read_request_head(
                         [bytes(x) for x in request_head]
                     )
-                    expected_body_size = http1.expected_http_body_size(self.request)
+                    expected_body_size = http1.expected_http_body_size(
+                        self.request,
+                        validate_inbound_headers=self.context.options.validate_inbound_headers,
+                    )
                 except ValueError as e:
                     yield commands.SendData(self.conn, make_error_response(400, str(e)))
                     yield commands.CloseConnection(self.conn)
@@ -388,7 +396,11 @@ class Http1Client(Http1Connection):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1.expected_http_body_size(self.request, self.response) == -1:
+            elif http1.expected_http_body_size(
+                self.request,
+                self.response,
+                self.context.options.validate_inbound_headers,
+            ) == -1:
                 yield commands.CloseTcpConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
         else:
@@ -412,7 +424,9 @@ class Http1Client(Http1Connection):
                         [bytes(x) for x in response_head]
                     )
                     expected_size = http1.expected_http_body_size(
-                        self.request, self.response
+                        self.request,
+                        self.response,
+                        self.context.options.validate_inbound_headers,
                     )
                 except ValueError as e:
                     yield commands.CloseConnection(self.conn)

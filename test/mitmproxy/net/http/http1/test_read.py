@@ -151,6 +151,17 @@ def test_expected_http_body_size():
 
     # explicit length
     assert expected_http_body_size(treq(headers=Headers(content_length="42"))) == 42
+    # leading zeros are accepted when validate_inbound_headers is false
+    assert (
+        expected_http_body_size(
+            treq(headers=Headers(content_length="0012")),
+            validate_inbound_headers=False,
+        )
+        == 12
+    )
+    # leading zeros are rejected when validate_inbound_headers is true (default)
+    with pytest.raises(ValueError):
+        expected_http_body_size(treq(headers=Headers(content_length="0012")))
     # invalid lengths
     with pytest.raises(ValueError):
         expected_http_body_size(treq(headers=Headers(content_length=b"foo")))
