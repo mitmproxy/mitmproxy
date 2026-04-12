@@ -281,10 +281,14 @@ class Ldap(Validator):
         except ValueError:
             raise exceptions.OptionsError(f"Invalid LDAP specification: {spec}")
 
+    def make_search_filter(self, username: str) -> str:
+        username = ldap3.utils.conv.escape_filter_chars(username)
+        return f"({self.filter_key}={username})"
+
     def __call__(self, username: str, password: str) -> bool:
         if not username or not password:
             return False
-        self.conn.search(self.dn_subtree, f"({self.filter_key}={username})")
+        self.conn.search(self.dn_subtree, self.make_search_filter(username))
         if self.conn.response:
             c = ldap3.Connection(
                 self.server, self.conn.response[0]["dn"], password, auto_bind=True
