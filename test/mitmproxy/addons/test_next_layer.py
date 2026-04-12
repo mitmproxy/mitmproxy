@@ -756,6 +756,15 @@ transparent_proxy_configs = [
     ),
     pytest.param(
         TConf(
+            before=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer],
+            after=[modes.TransparentProxy, ServerTLSLayer, ClientTLSLayer, HttpLayer],
+            data_client=b"GO /method-too-short-for-heuristic HTTP/1.1\r\n",
+            alpn=b"grpc-exp",
+        ),
+        id="transparent proxy: grpc-exp via ALPN",
+    ),
+    pytest.param(
+        TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, TCPLayer],
             server_address=("192.0.2.1", 23),
