@@ -274,5 +274,7 @@ def test_ldap(monkeypatch, spec):
 def test_ldap_username_sanitization(monkeypatch):
     monkeypatch.setattr(ldap3, "Server", mock.MagicMock())
     monkeypatch.setattr(ldap3, "Connection", mock.MagicMock())
-    validator = proxyauth.Ldap("ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+    validator = proxyauth.Ldap(
+        "ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+    )
     assert validator.make_search_filter("*") == "(cn=\\2a)"
