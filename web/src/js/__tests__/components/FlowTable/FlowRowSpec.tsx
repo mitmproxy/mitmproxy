@@ -5,13 +5,26 @@ import { TStore } from "../../ducks/tutils";
 
 test("FlowRow", async () => {
     const store = TStore();
+    const displayColumnNames = store.getState().options.web_columns;
     const tflow0 = store.getState().flows.list[0];
     const tflow3 = store.getState().flows.list[3];
     const { asFragment } = render(
         <table>
             <tbody>
-                <FlowRow flow={tflow0} selected={false} highlighted={false} />
-                <FlowRow flow={tflow3} selected={false} highlighted={false} />
+                <FlowRow
+                    flow={tflow0}
+                    selected={false}
+                    highlighted={false}
+                    displayColumnNames={displayColumnNames}
+                    rowNumber={0}
+                />
+                <FlowRow
+                    flow={tflow3}
+                    selected={false}
+                    highlighted={false}
+                    displayColumnNames={displayColumnNames}
+                    rowNumber={3}
+                />
             </tbody>
         </table>,
         { store },

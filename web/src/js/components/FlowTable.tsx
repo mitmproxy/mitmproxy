@@ -15,6 +15,8 @@ type FlowTableProps = {
     selectedIds: Set<string>;
     onlySelectedId: string | false;
     firstSelectedIndex: number | undefined;
+    displayColumnNames: string[];
+    listIndex: Map<string, number>;
 };
 
 type FlowTableState = {
@@ -124,7 +126,13 @@ export class PureFlowTable extends React.Component<
 
     render() {
         const { vScroll, viewportTop } = this.state;
-        const { flowView, selectedIds, highlightedIds } = this.props;
+        const {
+            flowView,
+            selectedIds,
+            highlightedIds,
+            displayColumnNames,
+            listIndex,
+        } = this.props;
 
         return (
             <div
@@ -149,6 +157,8 @@ export class PureFlowTable extends React.Component<
                                     flow={flow}
                                     selected={selectedIds.has(flow.id)}
                                     highlighted={highlightedIds.has(flow.id)}
+                                    displayColumnNames={displayColumnNames}
+                                    rowNumber={listIndex.get(flow.id)!}
                                 />
                             ))}
                         <tr style={{ height: vScroll.paddingBottom }} />
@@ -166,4 +176,10 @@ export default connect((state: RootState) => ({
     onlySelectedId:
         state.flows.selected.length === 1 && state.flows.selected[0].id,
     firstSelectedIndex: state.flows._viewIndex.get(state.flows.selected[0]?.id),
+    // Fetch column names once at the table level; avoids N identical
+    // useAppSelector subscriptions inside each FlowRow.
+    displayColumnNames: state.options.web_columns,
+    // Pass list index so the # column shows the original flow number
+    // (list position), not the view position after sort/filter.
+    listIndex: state.flows._listIndex,
 }))(PureFlowTable);

@@ -180,6 +180,11 @@ def _read_request_line(
                 raise ValueError
         else:
             scheme, rest = target.split(b"://", maxsplit=1)
+            # https://www.rfc-editor.org/rfc/rfc3986.html#section-3.1
+            # An implementation should accept uppercase letters as equivalent to lowercase in scheme names
+            # (e.g., allow "HTTP" as well as "http") for the sake of robustness but should only produce
+            # lowercase scheme names for consistency.
+            scheme = scheme.lower()
             authority, _, path_ = rest.partition(b"/")
             path = b"/" + path_
             host, port = url.parse_authority(authority, check=True)

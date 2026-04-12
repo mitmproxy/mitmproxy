@@ -294,6 +294,10 @@ class Dumper:
         if self.match(f):
             self.echo_flow(f)
 
+    def http_connect_error(self, f):
+        if self.match(f):
+            self.echo_flow(f)
+
     def websocket_message(self, f: http.HTTPFlow):
         assert f.websocket is not None  # satisfy type checker
         if self.match(f):

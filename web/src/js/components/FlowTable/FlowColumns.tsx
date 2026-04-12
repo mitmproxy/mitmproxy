@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import React, { type JSX } from "react";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import { useAppDispatch } from "../../ducks";
 import classnames from "classnames";
 import type { sortFunctions } from "../../flow/utils";
 import {
@@ -20,6 +20,7 @@ import type { Flow } from "../../flow";
 
 type FlowColumnProps = {
     flow: Flow;
+    rowNumber: number;
 };
 
 interface FlowColumn {
@@ -42,11 +43,8 @@ export const tls: FlowColumn = ({ flow }) => {
 };
 tls.headerName = "";
 
-export const index: FlowColumn = ({ flow }) => {
-    const index = useAppSelector(
-        (state) => state.flows._listIndex.get(flow.id)!,
-    );
-    return <td className="col-index">{index + 1}</td>;
+export const index: FlowColumn = ({ rowNumber }) => {
+    return <td className="col-index">{rowNumber + 1}</td>;
 };
 index.headerName = "#";
 

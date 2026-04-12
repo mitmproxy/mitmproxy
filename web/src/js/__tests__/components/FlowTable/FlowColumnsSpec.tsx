@@ -11,13 +11,38 @@ test("should render columns", async () => {
             <table>
                 <tbody>
                     <tr>
-                        <Col flow={tflow} />
+                        <Col flow={tflow} rowNumber={0} />
                     </tr>
                 </tbody>
             </table>,
         );
         expect(asFragment()).toMatchSnapshot(name);
     });
+});
+
+test("index column should display rowNumber + 1", () => {
+    const tflow = TFlow();
+    const { container: c1 } = render(
+        <table>
+            <tbody>
+                <tr>
+                    <FlowColumns.index flow={tflow} rowNumber={0} />
+                </tr>
+            </tbody>
+        </table>,
+    );
+    expect(c1.querySelector(".col-index")!.textContent).toBe("1");
+
+    const { container: c2 } = render(
+        <table>
+            <tbody>
+                <tr>
+                    <FlowColumns.index flow={tflow} rowNumber={4} />
+                </tr>
+            </tbody>
+        </table>,
+    );
+    expect(c2.querySelector(".col-index")!.textContent).toBe("5");
 });
 
 describe("Flowcolumns Components", () => {
@@ -34,7 +59,7 @@ describe("Flowcolumns Components", () => {
 
     it("should render IconColumn", () => {
         const testIconColumn = (flow: Flow) =>
-            testFlowColumn(<FlowColumns.icon flow={flow} />);
+            testFlowColumn(<FlowColumns.icon flow={flow} rowNumber={0} />);
 
         // TCP
         let tcpflow = TTCPFlow();
@@ -77,23 +102,25 @@ describe("Flowcolumns Components", () => {
 
     it("should render pathColumn", () => {
         let tflow = TFlow();
-        testFlowColumn(<FlowColumns.path flow={tflow} />);
+        testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
 
         tflow.error.msg = "Connection killed.";
         tflow.intercepted = true;
-        testFlowColumn(<FlowColumns.path flow={tflow} />);
+        testFlowColumn(<FlowColumns.path flow={tflow} rowNumber={0} />);
     });
 
     it("should render TimeColumn", () => {
         let tflow = TFlow();
-        testFlowColumn(<FlowColumns.time flow={tflow} />);
+        testFlowColumn(<FlowColumns.time flow={tflow} rowNumber={0} />);
 
         const noResponseFlow = { ...tflow, response: undefined };
-        testFlowColumn(<FlowColumns.time flow={noResponseFlow} />);
+        testFlowColumn(
+            <FlowColumns.time flow={noResponseFlow} rowNumber={0} />,
+        );
     });
 
     it("should render CommentColumn", () => {
         const tflow = TFlow();
-        testFlowColumn(<FlowColumns.comment flow={tflow} />);
+        testFlowColumn(<FlowColumns.comment flow={tflow} rowNumber={0} />);
     });
 });

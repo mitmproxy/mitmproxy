@@ -281,6 +281,22 @@ def test_websocket():
         assert "(reason: I swear I had a reason)" in sio.getvalue()
 
 
+def test_http_connect_error():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=1)
+        f = tflow.tflow(resp=tutils.tresp(status_code=502, reason=b"Bad Gateway"))
+        d.http_connect_error(f)
+        assert sio.getvalue()
+        assert "502" in sio.getvalue()
+        sio.truncate(0)
+
+        ctx.configure(d, flow_detail=0)
+        d.http_connect_error(f)
+        assert not sio.getvalue()
+
+
 def test_http2():
     sio = io.StringIO()
     d = dumper.Dumper(sio)
