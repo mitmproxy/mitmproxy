@@ -9,6 +9,10 @@
 
 - Fix 400 Bad Request for HTTP requests with uppercase scheme (e.g. `HTTP://`).
   ([#8174](https://github.com/mitmproxy/mitmproxy/pull/8174), @emanuele-em)
+- Fix console command panel losing focus due to incoming traffic (e.g. websocket messages).
+  ([#8173](https://github.com/mitmproxy/mitmproxy/pull/8173), @emanuele-em)
+- mitmdump: Fix failed CONNECT requests not being displayed.
+  ([#7083](https://github.com/mitmproxy/mitmproxy/issues/7083))
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
   ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
 - mitmweb: Fix editors not allowing content to be cleared to an empty string
