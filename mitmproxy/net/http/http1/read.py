@@ -180,6 +180,7 @@ def _read_request_line(
                 raise ValueError
         else:
             scheme, rest = target.split(b"://", maxsplit=1)
+            scheme = scheme.lower()
             authority, _, path_ = rest.partition(b"/")
             path = b"/" + path_
             host, port = url.parse_authority(authority, check=True)
