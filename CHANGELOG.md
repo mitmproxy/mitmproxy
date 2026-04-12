@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix addon options not being included in `--options` output.
+  ([#4423](https://github.com/mitmproxy/mitmproxy/issues/4423))
 - Fix `view.settings.setval.toggle` command to correctly use the provided key parameter instead of hardcoded "key" string.
   ([#8167](https://github.com/mitmproxy/mitmproxy/pull/8167), @nameearly)
 - Fix 400 Bad Request for HTTP requests with uppercase scheme (e.g. `HTTP://`).

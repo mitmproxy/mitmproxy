@@ -91,6 +91,11 @@ def run(
             process_options(parser, opts, args)
 
             if args.options:
+                # Load custom addons so that their options are registered
+                if sl := master.addons.get("scriptloader"):
+                    for s in sl.addons:
+                        if s.ns is None:
+                            s.loadscript()
                 optmanager.dump_defaults(opts, sys.stdout)
                 sys.exit(0)
             if args.commands:
