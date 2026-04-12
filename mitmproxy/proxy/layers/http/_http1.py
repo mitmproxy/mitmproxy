@@ -396,11 +396,14 @@ class Http1Client(Http1Connection):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1.expected_http_body_size(
-                self.request,
-                self.response,
-                self.context.options.validate_inbound_headers,
-            ) == -1:
+            elif (
+                http1.expected_http_body_size(
+                    self.request,
+                    self.response,
+                    self.context.options.validate_inbound_headers,
+                )
+                == -1
+            ):
                 yield commands.CloseTcpConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
         else:
