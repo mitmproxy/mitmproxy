@@ -10,8 +10,13 @@
 - [GHSA-527g-3w9m-29hv](https://github.com/mitmproxy/mitmproxy/security/advisories/GHSA-527g-3w9m-29hv):
   Fix LDAP injection vulnerability reported by @yueyueL.
   ([#8178](https://github.com/mitmproxy/mitmproxy/pull/8178), @mhils)
+- Reduce `CERT_EXPIRY` to 199 days.
+  ([#8142](https://github.com/mitmproxy/mitmproxy/pull/8142), @opstic)
+- Switch all content-encoding compression algorithms to use fastest settings by default.
+  This significantly improves addon runtime performance when assigning to `message.content`.
+  ([#8055](https://github.com/mitmproxy/mitmproxy/pull/8055), @Prinzhorn)
 - Fix addon options not being included in `--options` output.
-  ([#4423](https://github.com/mitmproxy/mitmproxy/issues/4423))
+  ([#4423](https://github.com/mitmproxy/mitmproxy/issues/4423), @emanuele-em)
 - Fix `view.settings.setval.toggle` command to correctly use the provided key parameter instead of hardcoded "key" string.
   ([#8167](https://github.com/mitmproxy/mitmproxy/pull/8167), @nameearly)
 - Fix 400 Bad Request for HTTP requests with uppercase scheme (e.g. `HTTP://`).
@@ -19,7 +24,7 @@
 - Fix console command panel losing focus due to incoming traffic (e.g. websocket messages).
   ([#8173](https://github.com/mitmproxy/mitmproxy/pull/8173), @emanuele-em)
 - mitmdump: Fix failed CONNECT requests not being displayed.
-  ([#7083](https://github.com/mitmproxy/mitmproxy/issues/7083))
+  ([#7083](https://github.com/mitmproxy/mitmproxy/issues/7083), @Prinzhorn)
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
   ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
 - mitmweb: Fix editors not allowing content to be cleared to an empty string
@@ -29,12 +34,9 @@
 - mitmweb: show intercept filter tag at the bottom for default options
   ([#8026](https://github.com/mitmproxy/mitmproxy/pull/8026), @xBZZZZ)
 - Fix a bug where mitmweb would show a blank page on Windows.
-  ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Copilot)
+  ([#8041](https://github.com/mitmproxy/mitmproxy/pull/8041), @Prinzhorn)
 - mitmweb: Add number of selected flows in the footer
   ([#8057](https://github.com/mitmproxy/mitmproxy/pull/8057), @skrattara)
-- Switch all content-encoding compression algorithms to use fastest settings by default.
-  This significantly improves addon runtime performance when assigning to `message.content`.
-  ([#8055](https://github.com/mitmproxy/mitmproxy/pull/8055), @Copilot)
 - Fix `modify_body` crash when replacement strings contain backslash sequences.
   ([#8046](https://github.com/mitmproxy/mitmproxy/pull/8046), @HueCodes)
 - Added support for adding and editing comments on individual flows in the mitmproxy console.
@@ -43,8 +45,6 @@
   ([#8095](https://github.com/mitmproxy/mitmproxy/pull/8095), @seroperson)
 - Removed several dead functions using [Skylos](https://github.com/duriantaco/skylos).
   ([#8136](https://github.com/mitmproxy/mitmproxy/pull/8136), @duriantaco)
-- Reduce `CERT_EXPIRY` to 199 days.
-  ([#8142](https://github.com/mitmproxy/mitmproxy/pull/8142), @opstic)
 
 ## 24 November 2025: mitmproxy 12.2.1
 
