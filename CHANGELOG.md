@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - Fix console command panel losing focus due to incoming traffic (e.g. websocket messages).
+  ([#8173](https://github.com/mitmproxy/mitmproxy/pull/8173), @emanuele-em)
 - mitmweb: Reduce FlowTable Redux subscriptions from O(rows) to O(1).
   ([#8104](https://github.com/mitmproxy/mitmproxy/pull/8104), @ariel42)
 - mitmweb: Fix editors not allowing content to be cleared to an empty string
