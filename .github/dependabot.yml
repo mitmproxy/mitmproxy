@@ -14,6 +14,10 @@ updates:
     directory: "/"
     cooldown:
       default-days: 42
+      exclude:
+      - "pyopenssl"
+      - "cryptography"
+      - "mitmproxy*"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 10
