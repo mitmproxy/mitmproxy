@@ -1242,6 +1242,113 @@ def test_http_server_aborts(tctx, stream):
     assert not flow().live
 
 
+def test_error_hook_response_override(tctx):
+    """Test that an addon can override the error response in the error hook."""
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+
+    def provide_cached_response(f: HTTPFlow):
+        # Simulate addon providing a cached response
+        f.response = Response.make(
+            200,
+            b"Cached content",
+            {"Content-Type": "text/plain"},
+        )
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> reply(side_effect=provide_cached_response)
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 200 OK\r\n"
+            b"Content-Type: text/plain\r\n"
+            b"content-length: 14\r\n\r\n"
+            b"Cached content",
+        )
+    )
+
+    assert flow().response.status_code == 200
+    assert flow().response.content == b"Cached content"
+    assert flow().error.msg == "Connection refused"
+    assert not flow().live
+
+
+def test_error_hook_no_response_override(tctx):
+    """Test that the default error response is sent when addon doesn't provide one."""
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> reply()
+        << SendData(tctx.client, BytesMatching(b"502 Bad Gateway.+Connection refused"))
+        << CloseConnection(tctx.client)
+    )
+
+    assert flow().response is None
+    assert flow().error.msg == "Connection refused"
+    assert not flow().live
+
+
+def test_error_hook_response_override_empty_body(tctx):
+    """Test that an addon can override with an empty body response."""
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+
+    def provide_empty_response(f: HTTPFlow):
+        # Simulate addon providing a 204 No Content response
+        f.response = Response.make(204, b"", {})
+
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+        )
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply("Connection refused")
+        << http.HttpErrorHook(flow)
+        >> reply(side_effect=provide_empty_response)
+        << SendData(
+            tctx.client,
+            b"HTTP/1.1 204 No Content\r\ncontent-length: 0\r\n\r\n",
+        )
+    )
+
+    assert flow().response.status_code == 204
+    assert flow().response.content == b""
+    assert flow().error.msg == "Connection refused"
+
+
 @pytest.mark.parametrize(
     "when",
     [
