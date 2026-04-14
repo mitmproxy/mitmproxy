@@ -233,6 +233,9 @@ function ExportButton({ flow }: { flow: Flow }) {
             <MenuItem onClick={() => copy(flow, "httpie")}>
                 Copy as HTTPie
             </MenuItem>
+            <MenuItem onClick={() => copy(flow, "python_requests")}>
+                Copy as Python Requests
+            </MenuItem>
         </Dropdown>
     );
 }
