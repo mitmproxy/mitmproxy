@@ -45,7 +45,7 @@ exports[`CommandBar 1`] = `
         />
       </span>
       <input
-        class="form-control"
+        class="input"
         placeholder="Enter command"
         type="text"
         value=""
@@ -100,7 +100,7 @@ exports[`CommandBar 2`] = `
         />
       </span>
       <input
-        class="form-control"
+        class="input"
         placeholder="Enter command"
         type="text"
         value=""

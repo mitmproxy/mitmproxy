@@ -7,9 +7,9 @@ type ModalLayoutProps = {
 export default function ModalLayout({ children }: ModalLayoutProps) {
     return (
         <div>
-            <div className="modal-backdrop fade in"></div>
+            <div className="modal-backdrop is-visible"></div>
             <div
-                className="modal modal-visible"
+                className="modal is-visible"
                 id="optionsModal"
                 tabIndex={-1}
                 role="dialog"

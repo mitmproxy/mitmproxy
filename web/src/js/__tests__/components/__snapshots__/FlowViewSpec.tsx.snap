@@ -484,7 +484,7 @@ exports[`FlowView 3`] = `
         />
           Closed by server with code 1000 (Close Reason).
         <small
-          class="pull-right"
+          class="float-right"
         >
           1999-12-31 23:00:05.000
         </small>

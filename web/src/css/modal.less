@@ -1,12 +1,134 @@
-.modal-visible {
+.modal.is-visible {
     display: block;
 }
 
 .modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 30px auto;
     overflow-y: initial !important;
 }
 
 .modal-body {
     max-height: calc(100vh - 200px);
     overflow-y: auto;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: #000;
+}
+
+.modal-backdrop.is-visible {
+    opacity: 0.5;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1050;
+    overflow-y: auto;
+    outline: 0;
+}
+
+.modal-lg {
+    width: 900px;
+}
+
+@media (max-width: 991px) {
+    .modal-lg {
+        width: auto;
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 20%);
+    border-radius: 6px;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 50%);
+    background-clip: padding-box;
+    outline: 0;
+}
+
+.modal-header {
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+    min-height: 16.42857143px;
+}
+
+.modal-title {
+    margin: 0;
+    line-height: 1.42857143;
+}
+
+.modal-body {
+    position: relative;
+    padding: 15px;
+}
+
+.modal-footer {
+    padding: 15px;
+    text-align: right;
+    border-top: 1px solid #e5e5e5;
+}
+
+.form-horizontal .form-row {
+    margin-left: -15px;
+    margin-right: -15px;
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.form-horizontal .col-6 {
+    width: 50%;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.form-horizontal .checkbox {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 7px;
+}
+
+.form-horizontal .checkbox label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-weight: 400;
+}
+
+.form-horizontal .checkbox input[type="checkbox"] {
+    margin: 0;
+}
+
+.help-block {
+    display: block;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    color: #737373;
+}
+
+.control-label {
+    display: inline-block;
+    max-width: 100%;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.text-small {
+    font-size: 85%;
 }

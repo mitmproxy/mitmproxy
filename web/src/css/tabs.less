@@ -5,12 +5,19 @@
 
     > a {
         display: inline-block;
+        color: #337ab7;
         border: solid transparent 1px;
         text-decoration: none;
         //text-transform: uppercase;
         //font-family: Lato;
 
+        &:hover,
+        &:focus {
+            color: #23527c;
+        }
+
         &.active {
+            color: #337ab7;
             background-color: white;
             border-color: @separator-color;
             border-bottom-color: white;

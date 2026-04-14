@@ -1,7 +1,21 @@
-@import (reference) "../../node_modules/bootstrap/less/variables.less";
-@import (reference) "../../node_modules/bootstrap/less/mixins/grid.less";
-@import (reference) "../../node_modules/bootstrap/less/mixins/labels.less";
-@import (reference) "../../node_modules/bootstrap/less/labels.less";
+@screen-xs-max: 767px;
+@label-info-bg: #5bc0de;
+@label-success-bg: #5cb85c;
+@label-danger-bg: #d9534f;
+@label-warning-bg: #f0ad4e;
+
+.connection-label-base() {
+    display: inline;
+    padding: 0.2em 0.6em 0.3em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25em;
+}
 
 @menu-height: 95px;
 
@@ -127,6 +141,37 @@ header {
         max-height: 500px;
         overflow-y: auto;
 
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+            border-spacing: 0;
+
+            td,
+            th {
+                padding: 5px;
+                line-height: 1.42857143;
+                vertical-align: top;
+            }
+
+            a {
+                color: #337ab7;
+            }
+
+            a:hover,
+            a:focus {
+                color: #23527c;
+            }
+
+            tbody tr + tr {
+                border-top: 1px solid #ddd;
+            }
+
+            tbody tr:first-child {
+                border-top: 1px solid #ddd;
+            }
+        }
+
         tr {
             cursor: pointer;
             &:hover {
@@ -137,7 +182,7 @@ header {
 }
 
 .connection-indicator {
-    .label();
+    .connection-label-base();
     float: right;
     margin: 5px;
     opacity: 1;

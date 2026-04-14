@@ -5,7 +5,7 @@ exports[`PureOptionDefault Component should handle array 1`] = `<DocumentFragmen
 exports[`PureOptionDefault Component should handle array 2`] = `
 <DocumentFragment>
   <div
-    class="small"
+    class="text-small"
   >
     Default: 
     <strong>
@@ -19,7 +19,7 @@ exports[`PureOptionDefault Component should handle array 2`] = `
 exports[`PureOptionDefault Component should handle boolean type 1`] = `
 <DocumentFragment>
   <div
-    class="small"
+    class="text-small"
   >
     Default: 
     <strong>
@@ -33,7 +33,7 @@ exports[`PureOptionDefault Component should handle boolean type 1`] = `
 exports[`PureOptionDefault Component should handle null value 1`] = `
 <DocumentFragment>
   <div
-    class="small"
+    class="text-small"
   >
     Default: 
     <strong>
@@ -47,7 +47,7 @@ exports[`PureOptionDefault Component should handle null value 1`] = `
 exports[`PureOptionDefault Component should handle string 1`] = `
 <DocumentFragment>
   <div
-    class="small"
+    class="text-small"
   >
     Default: 
     <strong>
