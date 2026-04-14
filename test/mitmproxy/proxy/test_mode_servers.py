@@ -291,6 +291,31 @@ async def test_wireguard_invalid_conf(tmp_path):
         assert "Invalid configuration file" in repr(inst.last_exception)
 
 
+async def test_wireguard_start_port_in_use_has_hint(monkeypatch, tmp_path):
+    """Regression test for https://github.com/mitmproxy/mitmproxy/issues/7650.
+
+    `mitmproxy_rs` may raise a generic exception for EADDRINUSE instead of OSError.
+    We still want a helpful error message with a port-change hint.
+    """
+
+    async def _boom(*args, **kwargs):
+        raise RuntimeError("Address already in use (os error 48)")
+
+    with taddons.context(Proxyserver()) as tctx:
+        tctx.options.confdir = str(tmp_path)
+        inst = WireGuardServerInstance.make("wireguard@51821", MagicMock())
+        monkeypatch.setattr(mitmproxy_rs.wireguard, "start_wireguard_server", _boom)
+
+        with pytest.raises(
+            OSError,
+            match=r"WireGuard server failed to listen on .*:51821.*Address already in use",
+        ) as excinfo:
+            await inst.start()
+
+        # Should include a concrete suggestion for how to pick a different port.
+        assert "Try specifying a different port" in str(excinfo.value)
+
+
 async def test_tcp_start_error():
     manager = MagicMock()
 
