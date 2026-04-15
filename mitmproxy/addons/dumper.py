@@ -278,6 +278,9 @@ class Dumper:
         self.outfp.flush()
 
     def match(self, f):
+        # If quiet mode is enabled, only allow errors through
+        if ctx.options.quiet:
+            return f.error is not None
         if ctx.options.flow_detail == 0:
             return False
         if not self.filter:
