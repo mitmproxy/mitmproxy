@@ -341,3 +341,24 @@ def test_styling():
 def test_has_styles_for_tags():
     missing = set(mitmproxy_rs.syntax_highlight.tags()) - set(CONTENTVIEW_STYLES)
     assert not missing, f"Missing styles for tags: {missing}"
+
+
+def test_quiet_flag():
+    sio = io.StringIO()
+    d = dumper.Dumper(sio)
+    with taddons.context(d) as ctx:
+        # With quiet enabled, normal flows should not be displayed
+        ctx.configure(d, quiet=True, flow_detail=4)
+        d.response(tflow.tflow(resp=True))
+        assert not sio.getvalue()
+        sio.truncate(0)
+
+        # With quiet enabled, errors should still be displayed
+        d.error(tflow.tflow(err=True))
+        assert sio.getvalue()
+        sio.truncate(0)
+
+        # Without quiet, flows display normally
+        ctx.configure(d, quiet=False, flow_detail=4)
+        d.response(tflow.tflow(resp=True))
+        assert sio.getvalue()
