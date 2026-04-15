@@ -48,6 +48,7 @@ export interface OptionsState {
     protobuf_definitions: string | undefined;
     proxy_debug: boolean;
     proxyauth: string | undefined;
+    quiet: boolean;
     rawtcp: boolean;
     readfile_filter: string | undefined;
     request_client_cert: boolean;
@@ -155,6 +156,7 @@ export const defaultState: OptionsState = {
     protobuf_definitions: undefined,
     proxy_debug: false,
     proxyauth: undefined,
+    quiet: false,
     rawtcp: true,
     readfile_filter: undefined,
     request_client_cert: false,
