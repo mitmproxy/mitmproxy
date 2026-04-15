@@ -245,5 +245,11 @@ class Options(optmanager.OptManager):
             Timeout in seconds for inactive TCP connections. Connections will be closed after this period of inactivity.
             """,
         )
+        self.add_option(
+            "quiet",
+            bool,
+            False,
+            "Suppress all output except errors.",
+        )
 
         self.update(**kwargs)
