@@ -133,6 +133,10 @@ def is_mostly_bin(s: bytes) -> bool:
     # chop a multibyte code point in half.
     if len(s) > 100:
         for cut in range(100, 104):
+            if cut >= len(s):
+                s = s[:cut]
+                break
+            
             is_continuation_byte = (s[cut] >> 6) == 0b10
             if not is_continuation_byte:
                 # A new character starts here, so we cut off just before that.
