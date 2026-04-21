@@ -136,7 +136,7 @@ def is_mostly_bin(s: bytes) -> bool:
             if cut >= len(s):
                 s = s[:cut]
                 break
-            
+
             is_continuation_byte = (s[cut] >> 6) == 0b10
             if not is_continuation_byte:
                 # A new character starts here, so we cut off just before that.
