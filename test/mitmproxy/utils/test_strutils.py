@@ -94,6 +94,10 @@ def test_is_mostly_bin():
     assert not strutils.is_mostly_bin(b"aaaaa" + 50 * "𐍅".encode())
     # only utf8 continuation chars
     assert strutils.is_mostly_bin(150 * b"\x80")
+    # test 101-103 byte boundary
+    assert not strutils.is_mostly_bin(b"a" * 99 + "𐍅".encode())
+    assert not strutils.is_mostly_bin(b"a" * 100 + "é".encode())
+    assert not strutils.is_mostly_bin(b"a" * 100 + "ñ".encode())
 
 
 def test_is_xml():
