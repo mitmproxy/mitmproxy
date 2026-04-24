@@ -26,6 +26,14 @@ class Intercept:
             else:
                 self.filt = None
                 ctx.options.intercept_active = False
+                
+        if "intercept_active" in updated and ctx.options.intercept_active and not ctx.options.intercept:
+            raise exceptions.OptionsError(
+                "intercept_active=true requires a filter. Available filter options: "
+                "~q (request), ~s (response), ~a (assets), ~h (header), ~b (body), "
+                "~d (domain), ~m (method), ~u (url), ~c (response code). "
+                "Example: --set intercept='~q' or --set intercept='~d example.com'"
+            )
 
     def should_intercept(self, f: flow.Flow) -> bool:
         return bool(
