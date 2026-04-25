@@ -9,6 +9,7 @@
 
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
+  ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)
 
 ## 12 April 2026: mitmproxy 12.2.2
 
