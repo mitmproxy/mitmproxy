@@ -94,6 +94,11 @@ def test_is_mostly_bin():
     assert not strutils.is_mostly_bin(b"aaaaa" + 50 * "𐍅".encode())
     # only utf8 continuation chars
     assert strutils.is_mostly_bin(150 * b"\x80")
+    # regression #8188: payloads with len 101-103 and a continuation byte at
+    # the 100-byte cutoff used to raise IndexError because the lookahead loop
+    # ran past the end of the string. Should not raise.
+    for tail in (1, 2, 3):
+        strutils.is_mostly_bin(b"a" * 100 + b"\x80" * tail)
 
 
 def test_is_xml():

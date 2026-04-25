@@ -132,7 +132,7 @@ def is_mostly_bin(s: bytes) -> bool:
     # Cut off at ~100 chars, but do it smartly so that if the input is UTF-8, we don't
     # chop a multibyte code point in half.
     if len(s) > 100:
-        for cut in range(100, 104):
+        for cut in range(100, min(104, len(s))):
             is_continuation_byte = (s[cut] >> 6) == 0b10
             if not is_continuation_byte:
                 # A new character starts here, so we cut off just before that.
