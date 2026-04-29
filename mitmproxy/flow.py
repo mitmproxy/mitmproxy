@@ -245,15 +245,15 @@ class Flow(serializable.Serializable):
         # Fire FlowKilledHook so subscribers (proxyserver) can close live
         # connections for flows that aren't currently at a hook checkpoint.
         # Lazy imports avoid a circular dependency with `mitmproxy.proxy`.
-        # The try/except guards data-only contexts (tests, deserialized flows)
-        # where the addon manager is unavailable.
         try:
             from mitmproxy import ctx
             from mitmproxy.proxy import server_hooks
-
-            ctx.master.addons.trigger(server_hooks.FlowKilledHook(self))
-        except (AttributeError, ImportError):
-            pass
+        except ImportError:
+            return
+        master = getattr(ctx, "master", None)
+        if master is None:
+            return
+        master.addons.trigger(server_hooks.FlowKilledHook(self))
 
     def intercept(self):
         """

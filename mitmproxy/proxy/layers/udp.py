@@ -101,6 +101,7 @@ class UDPLayer(layer.Layer):
                 self._handle_event = self.done
                 yield commands.CloseConnection(self.context.server)
                 yield commands.CloseConnection(self.context.client)
+                yield UdpErrorHook(self.flow)
                 self.flow.live = False
             return
 

@@ -145,8 +145,10 @@ class WebsocketLayer(layer.Layer):
         if isinstance(event, events.KillInjected):
             if event.flow is self.flow:
                 self.flow.websocket.timestamp_end = time.time()
-                yield commands.CloseConnection(self.context.server)
-                yield commands.CloseConnection(self.context.client)
+                if self.context.server.state is not connection.ConnectionState.CLOSED:
+                    yield commands.CloseConnection(self.context.server)
+                if self.context.client.state is not connection.ConnectionState.CLOSED:
+                    yield commands.CloseConnection(self.context.client)
                 yield WebsocketEndHook(self.flow)
                 self.flow.live = False
                 self._handle_event = self.done

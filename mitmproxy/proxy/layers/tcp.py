@@ -104,8 +104,8 @@ class TCPLayer(layer.Layer):
                     yield commands.CloseConnection(self.context.server)
                 if self.context.client.state is not ConnectionState.CLOSED:
                     yield commands.CloseConnection(self.context.client)
-                if self.flow:
-                    self.flow.live = False
+                yield TcpErrorHook(self.flow)
+                self.flow.live = False
             return
 
         if isinstance(event, TcpMessageInjected):

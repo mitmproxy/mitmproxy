@@ -8,6 +8,7 @@ from mitmproxy.proxy.commands import OpenConnection
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import KillInjected
 from mitmproxy.proxy.layers import udp
 from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.udp import UDPFlow
@@ -127,3 +128,22 @@ def test_inject(tctx):
         << None
     )
     assert len(f().messages) == 2
+
+
+def test_kill_injected(tctx):
+    """KillInjected closes both connections and emits UdpErrorHook."""
+    f = Placeholder(UDPFlow)
+
+    assert (
+        Playbook(udp.UDPLayer(tctx))
+        << udp.UdpStartHook(f)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        >> KillInjected(f)
+        << CloseConnection(tctx.server)
+        << CloseConnection(tctx.client)
+        << udp.UdpErrorHook(f)
+        >> reply()
+    )
+    assert f().live is False
