@@ -190,10 +190,18 @@ class HttpStream(layer.Layer):
                 f")"
             )
 
-    @expect(events.Start, HttpEvent)
+    @expect(events.Start, HttpEvent, events.KillInjected)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
             self.client_state = self.state_wait_for_request_headers
+        elif isinstance(event, events.KillInjected):
+            # Flow.kill() has fired and FlowKilledHook has injected this event
+            # into our layer stack. flow.error is already set to KILLED_MESSAGE,
+            # so we can run the existing check_killed teardown directly — same
+            # path as a kill that lands at a hook checkpoint, just without the
+            # checkpoint dependency. (Flow.kill already cleared `live`, so we
+            # don't gate on it here; check_killed gates on `flow.error.msg`.)
+            yield from self.check_killed(emit_error_hook=True)
         elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
             yield from self.handle_protocol_error(event)
         elif isinstance(
@@ -968,8 +976,9 @@ class HttpLayer(layer.Layer):
         elif isinstance(event, events.CommandCompleted):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
-        elif isinstance(event, events.MessageInjected):
-            # For injected messages we pass the HTTP stacks entirely and directly address the stream.
+        elif isinstance(event, (events.MessageInjected, events.KillInjected)):
+            # For injected messages and kill events we pass the HTTP stacks
+            # entirely and directly address the stream.
             try:
                 conn = self.connections[event.flow.server_conn]
             except KeyError:

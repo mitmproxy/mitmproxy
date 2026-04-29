@@ -89,8 +89,21 @@ class UDPLayer(layer.Layer):
 
     _handle_event = start
 
-    @expect(events.DataReceived, events.ConnectionClosed, UdpMessageInjected)
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        UdpMessageInjected,
+        events.KillInjected,
+    )
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.KillInjected):
+            if self.flow and event.flow is self.flow:
+                self._handle_event = self.done
+                yield commands.CloseConnection(self.context.server)
+                yield commands.CloseConnection(self.context.client)
+                self.flow.live = False
+            return
+
         if isinstance(event, UdpMessageInjected):
             # we just spoof that we received data here and then process that regularly.
             event = events.DataReceived(
@@ -127,6 +140,11 @@ class UDPLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed, UdpMessageInjected)
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        UdpMessageInjected,
+        events.KillInjected,
+    )
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()

@@ -163,6 +163,20 @@ async def test_inject() -> None:
             await _wait_for_connection_closes(ps)
 
 
+async def test_flow_killed_no_live_connection(caplog) -> None:
+    """
+    Subscriber for FlowKilledHook must silently no-op when the flow has no
+    live connection. (#4711) The existing flow.kill code path calls this on
+    every kill, including kills of flows already deserialized from disk or
+    flows whose connection has already gone away.
+    """
+    ps = Proxyserver()
+    # tflow with no live connection should not raise and should not log
+    # anything alarming — there's nothing to kill at the layer level.
+    ps.flow_killed(tflow.tflow())
+    assert "Flow is not from a live connection." not in caplog.text
+
+
 async def test_inject_fail(caplog) -> None:
     ps = Proxyserver()
     ps.inject_websocket(tflow.tflow(), True, b"test")
