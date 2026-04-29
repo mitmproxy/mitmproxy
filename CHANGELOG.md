@@ -13,6 +13,7 @@
 - Fix killing an intercepted flow leaving the client connection open. `Flow.kill()`
   now wakes any pending `wait_for_resume()` awaiter so the proxy can run its
   post-hook teardown and close the connection.
+  ([#8199](https://github.com/mitmproxy/mitmproxy/pull/8199), @georgeglarson)
 
 ## 12 April 2026: mitmproxy 12.2.2
 
