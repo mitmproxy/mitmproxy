@@ -16,6 +16,7 @@
   `KillInjected` event into the connection's layer stack so the active
   protocol layer can tear down its connections. Resolves the long-standing
   TODO referencing #4711.
+  ([#8200](https://github.com/mitmproxy/mitmproxy/pull/8200), @georgeglarson)
 
 ## 12 April 2026: mitmproxy 12.2.2
 
