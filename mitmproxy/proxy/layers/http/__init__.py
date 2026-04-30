@@ -201,6 +201,15 @@ class HttpStream(layer.Layer):
             # path as a kill that lands at a hook checkpoint, just without the
             # checkpoint dependency. (Flow.kill already cleared `live`, so we
             # don't gate on it here; check_killed gates on `flow.error.msg`.)
+            #
+            # Idempotency: if a hook reply just ran and check_killed already
+            # tore the stream down (state_errored on both sides), don't fire
+            # HttpErrorHook + ResponseProtocolError(KILL) a second time.
+            if (
+                self.client_state == self.state_errored
+                and self.server_state == self.state_errored
+            ):
+                return
             yield from self.check_killed(emit_error_hook=True)
         elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
             yield from self.handle_protocol_error(event)
@@ -979,6 +988,21 @@ class HttpLayer(layer.Layer):
         elif isinstance(event, (events.MessageInjected, events.KillInjected)):
             # For injected messages and kill events we pass the HTTP stacks
             # entirely and directly address the stream.
+            #
+            # KillInjected may target an HTTP/2 stream, in which case the
+            # connection-lookup-then-extract-stream-id path below would land on
+            # an Http2Server instead of an Http1Connection and assert. Look up
+            # the stream by flow identity instead — works for both protocols.
+            if isinstance(event, events.KillInjected):
+                for stream in self.streams.values():
+                    if (
+                        isinstance(stream, HttpStream)
+                        and stream.flow is event.flow
+                    ):
+                        yield from self.event_to_child(stream, event)
+                        return
+                # No matching live stream — the flow may have already finished.
+                return
             try:
                 conn = self.connections[event.flow.server_conn]
             except KeyError:
