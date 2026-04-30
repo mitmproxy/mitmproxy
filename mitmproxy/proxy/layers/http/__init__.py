@@ -995,10 +995,7 @@ class HttpLayer(layer.Layer):
             # the stream by flow identity instead — works for both protocols.
             if isinstance(event, events.KillInjected):
                 for stream in self.streams.values():
-                    if (
-                        isinstance(stream, HttpStream)
-                        and stream.flow is event.flow
-                    ):
+                    if isinstance(stream, HttpStream) and stream.flow is event.flow:
                         yield from self.event_to_child(stream, event)
                         return
                 # No matching live stream — the flow may have already finished.
