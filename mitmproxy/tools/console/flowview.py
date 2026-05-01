@@ -307,7 +307,12 @@ class FlowDetails(tabs.Tabs):
         self, viewmode: str, message: http.Message
     ) -> tuple[str, list[urwid.Text]]:
         if message.raw_content is None:
-            return "", [urwid.Text([("error", "[content missing]")])]
+            if isinstance(message, http.Request):
+                query = getattr(message, "query", "")
+                if not query or viewmode.lower() not in ("auto", "default", "query"):
+                    return "", [urwid.Text([("error", "[content missing]")])]
+            else:
+                return "", [urwid.Text([("error", "[content missing]")])]
 
         if message.raw_content == b"":
             if isinstance(message, http.Request):

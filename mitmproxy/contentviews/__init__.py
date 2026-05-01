@@ -43,6 +43,7 @@ from ._view_zip import zip
 from .base import View
 import mitmproxy_rs.contentviews
 from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy.utils import strutils
 
 logger = logging.getLogger(__name__)
@@ -67,15 +68,30 @@ def prettify_message(
 ) -> ContentviewResult:
     data, enc = get_data(message)
     if data is None:
-        return ContentviewResult(
-            text="Content is missing.",
-            syntax_highlight="error",
-            description="",
-            view_name=None,
-        )
+        if isinstance(message, http.Request):
+            # The query view only depends on request metadata, not body content.
+            metadata = Metadata(flow=flow, http_message=message)
+            view = registry.get_view(b"", metadata, view_name)
+            if view.name == query.name:
+                data = b""
+            else:
+                return ContentviewResult(
+                    text="Content is missing.",
+                    syntax_highlight="error",
+                    description="",
+                    view_name=None,
+                )
+        else:
+            return ContentviewResult(
+                text="Content is missing.",
+                syntax_highlight="error",
+                description="",
+                view_name=None,
+            )
+    else:
+        metadata = make_metadata(message, flow)
 
     # Determine the correct view
-    metadata = make_metadata(message, flow)
     view = registry.get_view(data, metadata, view_name)
 
     # Finally, we can pretty-print!

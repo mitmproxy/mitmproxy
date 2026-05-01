@@ -55,6 +55,28 @@ async def test_content_missing_returns_error(console):
     assert "[content missing]" == first_text
 
 
+async def test_missing_content_query_view(console):
+    f = tflow.tflow(
+        req=http.Request.make("GET", "http://example.com/?a=b&c=d", b"initial"),
+    )
+    f.request.raw_content = None
+
+    await console.load_flow(f)
+
+    fd = FlowDetails(console)
+
+    title, txt_objs = fd.content_view("query", f.request)
+    assert title == "Query "
+
+    text = txt_objs[0].get_text()[0]
+    assert "a: b" in text
+    assert "c: d" in text
+
+    title, txt_objs = fd.content_view("raw", f.request)
+    assert title == ""
+    assert txt_objs[0].get_text()[0] == "[content missing]"
+
+
 async def test_empty_content_request_and_response(console):
     fd = FlowDetails(console)
 

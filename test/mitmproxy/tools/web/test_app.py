@@ -363,6 +363,19 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
         assert self.fetch("/flows/42/messages/content/raw").code == 400
 
+    def test_flow_contentview_missing_content_query(self):
+        f = self.view.get_by_id("42")
+        assert f
+        f.request.path = "/?a=b&c=d"
+        f.request.raw_content = None
+
+        assert get_json(self.fetch("/flows/42/request/content/query")) == {
+            "description": "",
+            "syntax_highlight": "yaml",
+            "text": "a: b\nc: d\n",
+            "view_name": "Query",
+        }
+
     def test_flow_contentview_websocket(self):
         assert get_json(self.fetch("/flows/43/messages/content/raw?lines=2")) == [
             {
