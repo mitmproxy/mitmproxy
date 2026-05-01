@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix secure web proxy negotiating `h2` ALPN with the client, which broke
+  HTTP/1.1 CONNECT for clients that offer `h2,http/1.1` on the outer TLS
+  (e.g. Node.js's default).
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)

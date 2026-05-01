@@ -254,8 +254,15 @@ class TlsConfig:
         # Force HTTP/1 for secure web proxies, we currently don't support CONNECT over HTTP/2.
         # There is a proof-of-concept branch at https://github.com/mhils/mitmproxy/tree/http2-proxy,
         # but the complexity outweighs the benefits for now.
-        if len(tls_start.context.layers) == 2 and isinstance(
-            tls_start.context.layers[0], modes.HttpProxy
+        # `server.address is None` distinguishes the outer listener TLS from a CONNECT-tunneled
+        # inner TLS, which has server.address set to the CONNECT target.
+        if (
+            tls_start.context.layers
+            and isinstance(
+                tls_start.context.layers[0],
+                (modes.HttpProxy, modes.HttpUpstreamProxy),
+            )
+            and tls_start.context.server.address is None
         ):
             client_alpn: bytes | None = b"http/1.1"
         else:
