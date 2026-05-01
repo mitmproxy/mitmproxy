@@ -13,6 +13,7 @@
 - Fix secure web proxy negotiating `h2` ALPN with the client, which broke
   HTTP/1.1 CONNECT for clients that offer `h2,http/1.1` on the outer TLS
   (e.g. Node.js's default).
+  ([#8204](https://github.com/mitmproxy/mitmproxy/pull/8204), @emanuele-em)
 
 ## 25 October 2026: mitmproxy 12.3.1
 
