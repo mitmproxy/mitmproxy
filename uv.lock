@@ -1071,7 +1071,7 @@ dev = [
     { name = "mypy", specifier = "==1.19.1" },
     { name = "pdoc", specifier = "==16.0.0" },
     { name = "pyinstaller", specifier = "==6.19.0" },
-    { name = "pyinstaller-hooks-contrib", specifier = "==2026.2" },
+    { name = "pyinstaller-hooks-contrib", specifier = "==2026.3" },
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-asyncio", specifier = "==1.2.0" },
     { name = "pytest-cov", specifier = "==7.0.0" },
@@ -1408,15 +1408,15 @@ wheels = [
 
 [[package]]
 name = "pyinstaller-hooks-contrib"
-version = "2026.2"
+version = "2026.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
     { name = "setuptools" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/90/f3b30d72b89ab5b8f3ef714db94d09c7c263cce6562b4c7c636d99630695/pyinstaller_hooks_contrib-2026.2.tar.gz", hash = "sha256:cbd1eb00b5d13301b1cce602e1fffb17f0c531c0391f0a87a383d376be68a186", size = 171884, upload-time = "2026-03-02T23:07:01.221Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/80/17/716326f6ba18d0663f7995ae369c23e50efebc22fbb054e9710a45688f61/pyinstaller_hooks_contrib-2026.3.tar.gz", hash = "sha256:800d3a198a49a6cd0de2d7fb795005fdca7a0222ed9cb47c0691abd1c27b9310", size = 172323, upload-time = "2026-03-09T22:44:06.345Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/3b/1efef5ff4d4d150f646b873e963437c0b800cb375a37df01fefab149f4d9/pyinstaller_hooks_contrib-2026.2-py3-none-any.whl", hash = "sha256:fc29f0481b58adf78ce9c1d9cf135fe96f38c708f74b2aa0670ef93e59578ab9", size = 453939, upload-time = "2026-03-02T23:06:59.469Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/19/781352446af28755f16ce52b2d97f7a6f2d7974ac34c00ca5cd8c40c9098/pyinstaller_hooks_contrib-2026.3-py3-none-any.whl", hash = "sha256:5ecd1068ad262afecadf07556279d2be52ca93a88b049fae17f1a2eb2969254a", size = 454625, upload-time = "2026-03-09T22:44:04.717Z" },
 ]
 
 [[package]]
