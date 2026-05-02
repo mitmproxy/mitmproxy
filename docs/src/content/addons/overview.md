@@ -54,3 +54,50 @@ This lets us place event handler functions in the module scope.
 For instance, here is a complete script that adds a header to every request:
 
 {{< example src="examples/addons/anatomy2.py" lang="py" >}}
+
+# Developing Addons
+
+## Live Reloading
+
+Scripts loaded with `-s path/to/script.py` are watched for changes.
+Whenever the file's modification time changes, mitmproxy unregisters the
+old module, re-imports the file, and re-registers the new addon — without
+restarting the proxy or losing the state of any other addons or in-flight
+flows. This means you can edit your addon in your editor and the changes
+take effect on the next save (within roughly one second).
+
+Errors raised at import time, in `configure`, or in `running` are logged
+to the event log and the previous version of the addon is left
+unregistered. Fix the error and save the file again to retry. Errors
+raised inside event handlers (`request`, `response`, …) are logged but do
+not unload the addon.
+
+## Testing Addons
+
+Because addons are plain Python objects, the easiest way to unit-test
+them is to import the module from your test, instantiate the addon, and
+call the event handler directly with a flow built by
+`mitmproxy.test.tflow`. The `mitmproxy.test.taddons.context()` context
+manager wires up `ctx` (options, master, logger) so addons that read
+`ctx.options` or call `ctx.master` work the same way they do when loaded
+by mitmproxy.
+
+For the `Counter` addon from `anatomy.py` above:
+
+```python
+from mitmproxy.test import taddons, tflow
+from anatomy import Counter
+
+def test_counter_increments_on_request():
+    addon = Counter()
+    with taddons.context(addon):
+        addon.request(tflow.tflow())
+        addon.request(tflow.tflow())
+        assert addon.num == 2
+```
+
+For tests that need the full event sequence (load, configure, request,
+response, …), `await tctx.cycle(addon, flow)` runs through it from an
+`async def` test. Mitmproxy's own test suite under
+`test/mitmproxy/addons/` is a good place to look for patterns when
+testing more complex hooks.
