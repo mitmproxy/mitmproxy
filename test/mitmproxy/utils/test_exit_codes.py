@@ -14,7 +14,6 @@ import logging
 import pytest
 
 from mitmproxy import exceptions
-from mitmproxy import log
 from mitmproxy.addons import errorcheck
 from mitmproxy.addons import save
 from mitmproxy.addons import termlog

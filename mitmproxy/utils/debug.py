@@ -112,7 +112,6 @@ def dump_info(signal=None, frame=None, file=sys.stdout):  # pragma: no cover
         sys.exit(exit_codes.DEBUG_EXIT)
 
 
-
 def dump_stacks(signal=None, frame=None, file=sys.stdout):
     id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
