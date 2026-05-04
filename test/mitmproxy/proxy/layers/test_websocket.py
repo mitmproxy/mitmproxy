@@ -14,6 +14,7 @@ from mitmproxy.proxy.commands import Log
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import KillInjected
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers import websocket
 from mitmproxy.proxy.layers.http import HTTPMode
@@ -484,3 +485,19 @@ def test_inject_message(ws_testdata):
     assert flow.websocket.messages[-1].from_client is False
     assert flow.websocket.messages[-1].injected is True
     assert playbook >> reply() << SendData(tctx.client, b"\x81\x05hello")
+
+
+def test_kill_injected(ws_testdata):
+    """KillInjected closes both connections and emits WebsocketEndHook."""
+    tctx, playbook, flow = ws_testdata
+    assert (
+        playbook
+        << websocket.WebsocketStartHook(flow)
+        >> reply()
+        >> KillInjected(flow)
+        << CloseConnection(tctx.server)
+        << CloseConnection(tctx.client)
+        << websocket.WebsocketEndHook(flow)
+        >> reply()
+    )
+    assert flow.live is False
