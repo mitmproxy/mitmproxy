@@ -56,7 +56,9 @@ def _master_is_mitmweb(master: Any) -> bool:
     enough to recognise the mitmweb tools tree without re-importing it.
     """
     cls = master.__class__
-    return cls.__module__.startswith("mitmproxy.tools.web") or cls.__name__ == "WebMaster"
+    return (
+        cls.__module__.startswith("mitmproxy.tools.web") or cls.__name__ == "WebMaster"
+    )
 
 
 class _OrderKey:
