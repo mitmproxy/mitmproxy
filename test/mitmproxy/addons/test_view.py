@@ -696,3 +696,46 @@ def test_configure():
 )
 def test_marker(marker, expected):
     assert render_marker(marker) == expected
+
+
+class _FakeWebMaster:
+    """Stand-in for mitmproxy.tools.web.master.WebMaster used to exercise the
+    mitmweb-detection path in view._master_is_mitmweb without importing the
+    real class (which would create an import cycle into the view addon).
+    """
+
+
+# Set the module path so it looks like mitmweb's master.
+_FakeWebMaster.__module__ = "mitmproxy.tools.web.master"
+
+
+class _FakeConsoleMaster:
+    pass
+
+
+def test_master_is_mitmweb():
+    assert view._master_is_mitmweb(_FakeWebMaster()) is True
+    assert view._master_is_mitmweb(_FakeConsoleMaster()) is False
+
+
+def test_view_order_reversed_warns_in_mitmweb(caplog):
+    v = view.View()
+    with taddons.context(v) as tctx:
+        # Pretend the running master is mitmweb's WebMaster.
+        tctx.master.__class__ = _FakeWebMaster
+        with caplog.at_level("WARNING"):
+            tctx.configure(v, view_order_reversed=True)
+        warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+        assert any(
+            "mitmweb" in msg and "view_order_reversed" in msg for msg in warnings
+        ), warnings
+
+
+def test_view_order_reversed_silent_in_console():
+    v = view.View()
+    with taddons.context(v) as tctx:
+        tctx.master.__class__ = _FakeConsoleMaster
+        # No warning should be emitted on the console master.
+        tctx.configure(v, view_order_reversed=True)
+        # The option should still take effect on the view addon.
+        assert v.order_reversed is True

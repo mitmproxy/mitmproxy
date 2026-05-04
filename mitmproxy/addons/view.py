@@ -47,6 +47,18 @@ from mitmproxy.utils import signals
 # when they are updated.
 
 
+def _master_is_mitmweb(master: Any) -> bool:
+    """Return True when the running master is mitmweb's WebMaster.
+
+    We can't import mitmproxy.tools.web.master directly here because the view
+    addon is loaded by every Master subclass (including mitmweb's), and a
+    direct import would create a cycle. Inspecting the class' module path is
+    enough to recognise the mitmweb tools tree without re-importing it.
+    """
+    cls = master.__class__
+    return cls.__module__.startswith("mitmproxy.tools.web") or cls.__name__ == "WebMaster"
+
+
 class _OrderKey:
     def __init__(self, view):
         self.view = view
@@ -198,7 +210,16 @@ class View(collections.abc.Sequence):
             choices=list(map(lambda c: c[1], orders)),
         )
         loader.add_option(
-            "view_order_reversed", bool, False, "Reverse the sorting order."
+            "view_order_reversed",
+            bool,
+            False,
+            (
+                "Reverse the sorting order. "
+                "Currently honored only by the mitmproxy console (TUI); "
+                "mitmweb's flow table sorts by clicked column and does not "
+                "respect this option. See "
+                "https://github.com/mitmproxy/mitmproxy/issues/5520."
+            ),
         )
         loader.add_option(
             "console_focus_follow", bool, False, "Focus follows new flows."
@@ -577,6 +598,12 @@ class View(collections.abc.Sequence):
             self.set_order(ctx.options.view_order)
         if "view_order_reversed" in updated:
             self.set_reversed(ctx.options.view_order_reversed)
+            if ctx.options.view_order_reversed and _master_is_mitmweb(ctx.master):
+                logging.warning(
+                    "The view_order_reversed option is set, but mitmweb's flow "
+                    "list sorts by clicked column and ignores it. See "
+                    "https://github.com/mitmproxy/mitmproxy/issues/5520."
+                )
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
