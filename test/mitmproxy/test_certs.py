@@ -1,11 +1,16 @@
+import hashlib
 import ipaddress
 import os
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 
 import pytest
 from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509 import NameOID
 
 from ..conftest import skip_windows
@@ -175,6 +180,86 @@ class TestDummyCert:
         assert r.organization is None
         assert r.altnames == x509.GeneralNames([])
         assert r.crl_distribution_points == []
+
+    @staticmethod
+    def _build_ca_with_ski(
+        ski_digest: bytes,
+    ) -> tuple[rsa.RSAPrivateKey, x509.Certificate]:
+        """Build a self-signed CA whose SubjectKeyIdentifier is `ski_digest`."""
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "test ca")])
+        now = datetime.now(timezone.utc)
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(name)
+            .issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - timedelta(days=1))
+            .not_valid_after(now + timedelta(days=365))
+            .add_extension(
+                x509.BasicConstraints(ca=True, path_length=None), critical=True
+            )
+            .add_extension(x509.SubjectKeyIdentifier(digest=ski_digest), critical=False)
+            .sign(private_key=key, algorithm=hashes.SHA256())
+        )
+        return key, cert
+
+    def test_aki_copies_issuer_ski_non_sha1(self):
+        # RFC 5280 §4.2.1.2: a child cert's AKI keyIdentifier MUST be byte-equal
+        # to the issuer's stored SubjectKeyIdentifier. mitmproxy must therefore
+        # copy the issuer's SKI verbatim, not recompute it from the public key
+        # (which always produces a SHA-1 digest and so mismatches whenever the
+        # CA used a different method, e.g. cert-manager >=1.18 / Go >=1.25
+        # which default to truncated SHA-256 for FIPS 140-3 compliance).
+        pub_der = (
+            rsa.generate_private_key(public_exponent=65537, key_size=2048)
+            .public_key()
+            .public_bytes(
+                encoding=serialization.Encoding.DER,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+        )
+        sha256_ski_digest = hashlib.sha256(pub_der).digest()[:20]
+        ca_key, ca_cert = self._build_ca_with_ski(sha256_ski_digest)
+
+        leaf = certs.dummy_cert(ca_key, ca_cert, "example.com", [])
+
+        leaf_aki = leaf._cert.extensions.get_extension_for_class(
+            x509.AuthorityKeyIdentifier
+        ).value
+        assert leaf_aki.key_identifier == sha256_ski_digest
+
+    def test_aki_falls_back_when_issuer_has_no_ski(self):
+        # Legacy CAs may not have an SKI extension at all. Falling back to
+        # `from_issuer_public_key` keeps mitmproxy producing a usable AKI
+        # rather than raising.
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "no-ski ca")])
+        now = datetime.now(timezone.utc)
+        ca_cert = (
+            x509.CertificateBuilder()
+            .subject_name(name)
+            .issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - timedelta(days=1))
+            .not_valid_after(now + timedelta(days=365))
+            .add_extension(
+                x509.BasicConstraints(ca=True, path_length=None), critical=True
+            )
+            .sign(private_key=key, algorithm=hashes.SHA256())
+        )
+
+        leaf = certs.dummy_cert(key, ca_cert, "example.com", [])
+
+        leaf_aki = leaf._cert.extensions.get_extension_for_class(
+            x509.AuthorityKeyIdentifier
+        ).value
+        expected = x509.AuthorityKeyIdentifier.from_issuer_public_key(
+            ca_cert.public_key()  # type: ignore[arg-type]
+        ).key_identifier
+        assert leaf_aki.key_identifier == expected
 
 
 class TestCert:

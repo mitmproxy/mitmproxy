@@ -7,6 +7,14 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `authority and subject key identifier mismatch` errors when mitmproxy
+  is configured with a custom CA whose SubjectKeyIdentifier was not derived
+  as SHA-1 of the public key. Per RFC 5280 §4.2.1.2, the leaf certificate's
+  AuthorityKeyIdentifier now mirrors the issuer's stored SKI byte-for-byte
+  rather than recomputing a SHA-1 digest. This unblocks CAs provisioned by
+  cert-manager >=1.18 / Go >=1.25, which default to truncated SHA-256 SKIs
+  for FIPS 140-3 compliance, as well as any CA that uses an RFC 7093 method
+  or a hardware-rooted SKI value.
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)
