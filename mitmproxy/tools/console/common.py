@@ -43,6 +43,7 @@ def highlight_key(text, key, textattr="text", keyattr="key"):
 
 
 KEY_MAX = 30
+COL_GAP = 2
 
 
 def format_keyvals(
@@ -67,6 +68,26 @@ def format_keyvals(
     if indent > 2:
         indent -= 2  # We use dividechars=2 below, which already adds two empty spaces
 
+    cols, _ = urwid.raw_display.Screen().get_cols_rows()
+    available_cols = cols - (
+        indent + 2 * COL_GAP
+    )  # total console columns minus the indent whitespace and the column gaps
+    key_lengths = []
+    val_lengths = []
+    for k, v in entries:
+        if k is not None:
+            key_lengths.append(len(k))
+            if v is not None and isinstance(v, str):
+                val_lengths.append(len(v))
+    max_entry_key_len = max(key_lengths, default=0)
+    max_entry_val_len = max(val_lengths, default=0)
+    unused_cols = available_cols - (max_entry_key_len + max_entry_val_len)
+    max_key_len = (
+        max(KEY_MAX, available_cols - max_entry_val_len)
+        if unused_cols < 0
+        else max_entry_key_len
+    )
+
     ret = []
     for k, v in entries:
         if v is None:
@@ -80,7 +101,7 @@ def format_keyvals(
                     ("fixed", max_key_len, urwid.Text([(key_format, k)])),
                     v,
                 ],
-                dividechars=2,
+                dividechars=COL_GAP,
             )
         )
     return ret
