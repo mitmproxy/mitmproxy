@@ -12,19 +12,19 @@ export default React.memo(function LanguageSelector(): React.ReactElement {
 
     return (
         <div className="menu-entry">
-                <label htmlFor="language-selector">
-                    {t("languageSelector.label")}
-                </label>
-                <select
-                    id="language-selector"
-                    className="language-selector form-control input-xs"
-                    value={i18n.language}
-                    onChange={handleChange}
-                    title={t("languageSelector.label")}
-                >
-                    <option value="en">{t("languageSelector.english")}</option>
-                    <option value="zh">{t("languageSelector.chinese")}</option>
-                </select>
+            <label htmlFor="language-selector">
+                {t("languageSelector.label")}
+            </label>
+            <select
+                id="language-selector"
+                className="language-selector form-control input-xs"
+                value={i18n.language}
+                onChange={handleChange}
+                title={t("languageSelector.label")}
+            >
+                <option value="en">{t("languageSelector.english")}</option>
+                <option value="zh">{t("languageSelector.chinese")}</option>
+            </select>
         </div>
     );
 });

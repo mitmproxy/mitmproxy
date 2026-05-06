@@ -33,7 +33,9 @@ export default function Upstream() {
     return (
         <div>
             <h4 className="mode-title">{t("modes.upstream.title")}</h4>
-            <p className="mode-description">{t("modes.upstream.description")}</p>
+            <p className="mode-description">
+                {t("modes.upstream.description")}
+            </p>
             {servers}
         </div>
     );

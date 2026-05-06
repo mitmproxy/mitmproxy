@@ -186,7 +186,9 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                         </ul>
                     ) : (
                         <span>
-                            {t("modes.localDropdown.pressEnter", { search: currentSearch })}
+                            {t("modes.localDropdown.pressEnter", {
+                                search: currentSearch,
+                            })}
                         </span>
                     )}
                 </Popover>

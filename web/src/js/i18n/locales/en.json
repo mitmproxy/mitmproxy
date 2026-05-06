@@ -1,350 +1,350 @@
 {
-  "proxyApp": {
-    "crashTitle": "mitmproxy has crashed.",
-    "crashReport": "Please lodge a bug report at",
-    "componentStack": "Component Stack:"
-  },
-  "header": {
-    "tabs": {
-      "capture": "Capture",
-      "flowList": "Flow List",
-      "options": "Options",
-      "flow": "Flow"
+    "proxyApp": {
+        "crashTitle": "mitmproxy has crashed.",
+        "crashReport": "Please lodge a bug report at",
+        "componentStack": "Component Stack:"
     },
-    "fileMenu": {
-      "title": "File",
-      "open": "Open...",
-      "save": "Save",
-      "saveFiltered": "Save filtered",
-      "confirmDeleteAll": "Delete all flows?",
-      "clearAll": "Clear All",
-      "installCerts": "Install Certificates..."
+    "header": {
+        "tabs": {
+            "capture": "Capture",
+            "flowList": "Flow List",
+            "options": "Options",
+            "flow": "Flow"
+        },
+        "fileMenu": {
+            "title": "File",
+            "open": "Open...",
+            "save": "Save",
+            "saveFiltered": "Save filtered",
+            "confirmDeleteAll": "Delete all flows?",
+            "clearAll": "Clear All",
+            "installCerts": "Install Certificates..."
+        },
+        "flowListMenu": {
+            "title": "Flow List",
+            "find": "Find",
+            "intercept": "Intercept",
+            "interceptPlaceholder": "Intercept",
+            "searchPlaceholder": "Search",
+            "highlightPlaceholder": "Highlight",
+            "resumeAll": "Resume All",
+            "resumeAllTitle": "[a]ccept all"
+        },
+        "flowMenu": {
+            "title": "Flow",
+            "flowModification": "Flow Modification",
+            "export": "Export",
+            "interception": "Interception",
+            "replay": "Replay",
+            "replayTitle": "[r]eplay flow",
+            "duplicate": "Duplicate",
+            "duplicateTitle": "[D]uplicate flow",
+            "revert": "Revert",
+            "revertTitle": "revert changes to flow [V]",
+            "delete": "Delete",
+            "deleteTitle": "[d]elete flow",
+            "resume": "Resume",
+            "resumeTitle": "[a]ccept intercepted flow",
+            "abort": "Abort",
+            "abortTitle": "kill intercepted flow [x]",
+            "download": "Download",
+            "downloadRequest": "Download request",
+            "downloadResponse": "Download response",
+            "exportTooltip": "Export flow.",
+            "copyRawRequest": "Copy raw request",
+            "copyRawResponse": "Copy raw response",
+            "copyRawCombined": "Copy raw request and response",
+            "copyAsCurl": "Copy as cURL",
+            "copyAsHttpie": "Copy as HTTPie",
+            "mark": "Mark",
+            "markTooltip": "mark flow",
+            "noMarker": "⚪ (no marker)"
+        },
+        "optionMenu": {
+            "title": "Options",
+            "editOptions": "Edit Options",
+            "alpha": "alpha",
+            "openOptionsTitle": "Open Options",
+            "optionsEditor": "Options Editor",
+            "quickOptions": "Quick Options",
+            "viewOptions": "View Options",
+            "stripCacheHeaders": "Strip cache headers",
+            "useHostHeader": "Use host header for display",
+            "dontVerifyServerCerts": "Don't verify server certificates"
+        },
+        "connectionIndicator": {
+            "connecting": "connecting…",
+            "fetchingData": "fetching data…",
+            "connected": "connected",
+            "connectionLost": "connection lost"
+        },
+        "filterDocs": {
+            "docsLink": "mitmproxy docs"
+        }
     },
-    "flowListMenu": {
-      "title": "Flow List",
-      "find": "Find",
-      "intercept": "Intercept",
-      "interceptPlaceholder": "Intercept",
-      "searchPlaceholder": "Search",
-      "highlightPlaceholder": "Highlight",
-      "resumeAll": "Resume All",
-      "resumeAllTitle": "[a]ccept all"
+    "commandBar": {
+        "title": "Command Result",
+        "placeholder": "Enter command",
+        "argumentSuggestion": "Argument suggestion:",
+        "signatureHelp": "Signature help:",
+        "availableCommands": "Available Commands:",
+        "label": "Display Command Bar"
     },
-    "flowMenu": {
-      "title": "Flow",
-      "flowModification": "Flow Modification",
-      "export": "Export",
-      "interception": "Interception",
-      "replay": "Replay",
-      "replayTitle": "[r]eplay flow",
-      "duplicate": "Duplicate",
-      "duplicateTitle": "[D]uplicate flow",
-      "revert": "Revert",
-      "revertTitle": "revert changes to flow [V]",
-      "delete": "Delete",
-      "deleteTitle": "[d]elete flow",
-      "resume": "Resume",
-      "resumeTitle": "[a]ccept intercepted flow",
-      "abort": "Abort",
-      "abortTitle": "kill intercepted flow [x]",
-      "download": "Download",
-      "downloadRequest": "Download request",
-      "downloadResponse": "Download response",
-      "exportTooltip": "Export flow.",
-      "copyRawRequest": "Copy raw request",
-      "copyRawResponse": "Copy raw response",
-      "copyRawCombined": "Copy raw request and response",
-      "copyAsCurl": "Copy as cURL",
-      "copyAsHttpie": "Copy as HTTPie",
-      "mark": "Mark",
-      "markTooltip": "mark flow",
-      "noMarker": "⚪ (no marker)"
+    "eventLog": {
+        "title": "Eventlog",
+        "levels": {
+            "debug": "debug",
+            "info": "info",
+            "web": "web",
+            "warn": "warn",
+            "error": "error"
+        },
+        "label": "Display Event Log"
     },
-    "optionMenu": {
-      "title": "Options",
-      "editOptions": "Edit Options",
-      "alpha": "alpha",
-      "openOptionsTitle": "Open Options",
-      "optionsEditor": "Options Editor",
-      "quickOptions": "Quick Options",
-      "viewOptions": "View Options",
-      "stripCacheHeaders": "Strip cache headers",
-      "useHostHeader": "Use host header for display",
-      "dontVerifyServerCerts": "Don't verify server certificates"
+    "footer": {
+        "intercept": "Intercept: {{value}}",
+        "sslInsecure": "ssl_insecure",
+        "showhost": "showhost",
+        "noUpstreamCert": "no-upstream-cert",
+        "noRawTcp": "no-raw-tcp",
+        "noHttp2": "no-http2",
+        "noWebsocket": "no-websocket",
+        "anticache": "anticache",
+        "anticomp": "anticomp",
+        "stickyauth": "stickyauth: {{value}}",
+        "stickycookie": "stickycookie: {{value}}",
+        "stream": "stream: {{value}}",
+        "flowsSelected": "{{selected}} of {{total}} flows selected",
+        "proxyAddressTitle": "HTTP Proxy Server Address",
+        "versionTitle": "Mitmproxy Version"
     },
-    "connectionIndicator": {
-      "connecting": "connecting…",
-      "fetchingData": "fetching data…",
-      "connected": "connected",
-      "connectionLost": "connection lost"
+    "captureSetup": {
+        "running": "mitmproxy is running.",
+        "noFlows": "No flows have been recorded yet.",
+        "configureMessage": "To start capturing traffic, please configure your settings in the Capture tab.",
+        "starting": "{{description}} starting...",
+        "isActive": "{{description}} is active.",
+        "listeningAt": "{{description}} listening at {{address}}."
     },
-    "filterDocs": {
-      "docsLink": "mitmproxy docs"
+    "modes": {
+        "title": "Intercept Traffic",
+        "description": "Configure how you want to intercept traffic with mitmproxy.",
+        "recommended": "Recommended",
+        "advanced": "Advanced",
+        "localRedirectMissingTitle": "Local Redirect Mode",
+        "transparentMissingDescription": "This mode is only supported on Linux and MacOS.",
+        "regular": {
+            "title": "Explicit HTTP(S) Proxy",
+            "description": "You manually configure your client application or device to use an HTTP(S) proxy.",
+            "toggleLabel": "Run HTTP/S Proxy",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "portPlaceholder": "8080"
+        },
+        "local": {
+            "title": "Local Applications",
+            "description": "Transparently Intercept local application(s).",
+            "toggleLabel": "Intercept traffic for"
+        },
+        "localDropdown": {
+            "allApplications": "all applications",
+            "addMore": "Add more",
+            "selectAll": "All applications",
+            "currentProcessesHeader": "Current Applications running on machine",
+            "pressEnter": "Press Enter to capture traffic for programs matching: {{search}}"
+        },
+        "wireguard": {
+            "title": "WireGuard Server",
+            "description": "Start a WireGuard™ server and connect an external device for transparent proxying.",
+            "toggleLabel": "Run WireGuard Server",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "configFile": "Configuration File",
+            "hostPlaceholder": "(all interfaces)",
+            "portPlaceholder": "51820",
+            "filePlaceholder": "~/.mitmproxy/wireguard.conf"
+        },
+        "reverse": {
+            "title": "Reverse Proxy",
+            "description": "Requests are forwarded to a preconfigured destination.",
+            "toggleLabel": "Forward",
+            "trafficTo": "traffic to",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "addServer": "Add additional server",
+            "destinationPlaceholder": "example.com",
+            "hostPlaceholder": "*",
+            "portPlaceholder": "8080"
+        },
+        "transparent": {
+            "title": "Transparent Proxy",
+            "description": "You configure your routing table to send traffic through mitmproxy.",
+            "configureRoutingTable": "configure your routing table",
+            "toggleLabel": "Run Transparent Proxy",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "portPlaceholder": "8080"
+        },
+        "socks": {
+            "title": "SOCKS Proxy",
+            "description": "You manually configure your client application or device to use a SOCKS5 proxy.",
+            "toggleLabel": "Run SOCKS Proxy",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "portPlaceholder": "8080"
+        },
+        "upstream": {
+            "title": "Explicit HTTP(S) Proxy (With Upstream Proxy)",
+            "description": "All requests are forwarded to a second HTTP(S) proxy server.",
+            "toggleLabel": "Run HTTP/S Proxy and forward requests to",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "destinationPlaceholder": "http://example.com:8080",
+            "portPlaceholder": "8080"
+        },
+        "dns": {
+            "title": "DNS Server",
+            "description": "A recursive DNS resolver using the host's DNS configuration.",
+            "toggleLabel": "Run DNS Server",
+            "advancedConfig": "Advanced Configuration",
+            "listenHost": "Listen Host",
+            "listenPort": "Listen Port",
+            "portPlaceholder": "8080"
+        }
+    },
+    "flowColumns": {
+        "index": "#",
+        "path": "Path",
+        "method": "Method",
+        "version": "Version",
+        "status": "Status",
+        "size": "Size",
+        "time": "Time",
+        "startTime": "Start time",
+        "comment": "Comment",
+        "connectionKilled": "Connection killed."
+    },
+    "flowView": {
+        "tabs": {
+            "request": "Request",
+            "response": "Response",
+            "error": "Error",
+            "connection": "Connection",
+            "timing": "Timing",
+            "websocket": "WebSocket",
+            "streamData": "Stream Data",
+            "datagrams": "Datagrams",
+            "dnsRequest": "Request",
+            "dnsResponse": "Response",
+            "comment": "Comment"
+        },
+        "httpMessages": {
+            "trailers": "HTTP Trailers"
+        },
+        "dnsMessages": {
+            "question": "Question",
+            "recursiveQuestion": "Recursive Question",
+            "answer": "Answer",
+            "authoritativeAnswer": "Authoritative Answer",
+            "recursiveAnswer": "Recursive Answer",
+            "authority": "Authority",
+            "additional": "Additional",
+            "name": "Name",
+            "type": "Type",
+            "class": "Class",
+            "ttl": "TTL",
+            "data": "Data",
+            "truncated": "(Truncated)"
+        },
+        "messages": {
+            "count": "{{count}} Messages"
+        },
+        "webSocket": {
+            "title": "WebSocket",
+            "closedBy": "Closed by {{who}} with code {{code}} {{reason}}.",
+            "client": "client",
+            "server": "server"
+        },
+        "connection": {
+            "clientConnection": "Client Connection",
+            "serverConnection": "Server Connection",
+            "serverCertificate": "Server Certificate",
+            "address": "Address",
+            "resolvedAddress": "Resolved address",
+            "sourceAddress": "Source address",
+            "sni": "SNI",
+            "sniTitle": "TLS Server Name Indication",
+            "alpn": "ALPN",
+            "alpnTitle": "ALPN protocol negotiated",
+            "tlsVersion": "TLS Version",
+            "tlsCipher": "TLS Cipher",
+            "type": "Type",
+            "bits": "bits",
+            "sha256Digest": "SHA256 digest",
+            "validFrom": "Valid from",
+            "validTo": "Valid to",
+            "subjectAlternativeNames": "Subject Alternative Names",
+            "subject": "Subject",
+            "issuer": "Issuer",
+            "serial": "Serial"
+        },
+        "timing": {
+            "title": "Timing",
+            "serverConnInitiated": "Server conn. initiated",
+            "serverConnTcpHandshake": "Server conn. TCP handshake",
+            "serverConnTlsHandshake": "Server conn. TLS handshake",
+            "serverConnClosed": "Server conn. closed",
+            "clientConnEstablished": "Client conn. established",
+            "clientConnTlsHandshake": "Client conn. TLS handshake",
+            "clientConnClosed": "Client conn. closed",
+            "firstRequestByte": "First request byte",
+            "requestComplete": "Request complete",
+            "firstResponseByte": "First response byte",
+            "responseComplete": "Response complete"
+        },
+        "comment": {
+            "title": "Comment",
+            "placeholder": "empty"
+        }
+    },
+    "contentview": {
+        "editing": "[Editing]",
+        "noContent": "No content",
+        "loading": "Loading...",
+        "done": "Done",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "replace": "Replace",
+        "replaceTitle": "Upload a file to replace the content.",
+        "copy": "Copy",
+        "copied": "Copied!",
+        "view": "View",
+        "showMore": "Show more",
+        "errorGettingContent": "Error getting content: {{error}}.",
+        "networkError": "Network Error"
+    },
+    "editors": {
+        "keyValueList": {
+            "add": "Add",
+            "placeholder": "empty"
+        }
+    },
+    "modal": {
+        "optionModal": {
+            "title": "Options",
+            "enable": "Enable",
+            "default": "Default: {{value}}"
+        }
+    },
+    "languageSelector": {
+        "label": "Language",
+        "english": "English",
+        "chinese": "中文"
     }
-  },
-  "commandBar": {
-    "title": "Command Result",
-    "placeholder": "Enter command",
-    "argumentSuggestion": "Argument suggestion:",
-    "signatureHelp": "Signature help:",
-    "availableCommands": "Available Commands:",
-    "label": "Display Command Bar"
-  },
-  "eventLog": {
-    "title": "Eventlog",
-    "levels": {
-      "debug": "debug",
-      "info": "info",
-      "web": "web",
-      "warn": "warn",
-      "error": "error"
-    },
-    "label": "Display Event Log"
-  },
-  "footer": {
-    "intercept": "Intercept: {{value}}",
-    "sslInsecure": "ssl_insecure",
-    "showhost": "showhost",
-    "noUpstreamCert": "no-upstream-cert",
-    "noRawTcp": "no-raw-tcp",
-    "noHttp2": "no-http2",
-    "noWebsocket": "no-websocket",
-    "anticache": "anticache",
-    "anticomp": "anticomp",
-    "stickyauth": "stickyauth: {{value}}",
-    "stickycookie": "stickycookie: {{value}}",
-    "stream": "stream: {{value}}",
-    "flowsSelected": "{{selected}} of {{total}} flows selected",
-    "proxyAddressTitle": "HTTP Proxy Server Address",
-    "versionTitle": "Mitmproxy Version"
-  },
-  "captureSetup": {
-    "running": "mitmproxy is running.",
-    "noFlows": "No flows have been recorded yet.",
-    "configureMessage": "To start capturing traffic, please configure your settings in the Capture tab.",
-    "starting": "{{description}} starting...",
-    "isActive": "{{description}} is active.",
-    "listeningAt": "{{description}} listening at {{address}}."
-  },
-  "modes": {
-    "title": "Intercept Traffic",
-    "description": "Configure how you want to intercept traffic with mitmproxy.",
-    "recommended": "Recommended",
-    "advanced": "Advanced",
-    "localRedirectMissingTitle": "Local Redirect Mode",
-    "transparentMissingDescription": "This mode is only supported on Linux and MacOS.",
-    "regular": {
-      "title": "Explicit HTTP(S) Proxy",
-      "description": "You manually configure your client application or device to use an HTTP(S) proxy.",
-      "toggleLabel": "Run HTTP/S Proxy",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "portPlaceholder": "8080"
-    },
-    "local": {
-      "title": "Local Applications",
-      "description": "Transparently Intercept local application(s).",
-      "toggleLabel": "Intercept traffic for"
-    },
-    "localDropdown": {
-      "allApplications": "all applications",
-      "addMore": "Add more",
-      "selectAll": "All applications",
-      "currentProcessesHeader": "Current Applications running on machine",
-      "pressEnter": "Press Enter to capture traffic for programs matching: {{search}}"
-    },
-    "wireguard": {
-      "title": "WireGuard Server",
-      "description": "Start a WireGuard™ server and connect an external device for transparent proxying.",
-      "toggleLabel": "Run WireGuard Server",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "configFile": "Configuration File",
-      "hostPlaceholder": "(all interfaces)",
-      "portPlaceholder": "51820",
-      "filePlaceholder": "~/.mitmproxy/wireguard.conf"
-    },
-    "reverse": {
-      "title": "Reverse Proxy",
-      "description": "Requests are forwarded to a preconfigured destination.",
-      "toggleLabel": "Forward",
-      "trafficTo": "traffic to",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "addServer": "Add additional server",
-      "destinationPlaceholder": "example.com",
-      "hostPlaceholder": "*",
-      "portPlaceholder": "8080"
-    },
-    "transparent": {
-      "title": "Transparent Proxy",
-      "description": "You configure your routing table to send traffic through mitmproxy.",
-      "configureRoutingTable": "configure your routing table",
-      "toggleLabel": "Run Transparent Proxy",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "portPlaceholder": "8080"
-    },
-    "socks": {
-      "title": "SOCKS Proxy",
-      "description": "You manually configure your client application or device to use a SOCKS5 proxy.",
-      "toggleLabel": "Run SOCKS Proxy",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "portPlaceholder": "8080"
-    },
-    "upstream": {
-      "title": "Explicit HTTP(S) Proxy (With Upstream Proxy)",
-      "description": "All requests are forwarded to a second HTTP(S) proxy server.",
-      "toggleLabel": "Run HTTP/S Proxy and forward requests to",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "destinationPlaceholder": "http://example.com:8080",
-      "portPlaceholder": "8080"
-    },
-    "dns": {
-      "title": "DNS Server",
-      "description": "A recursive DNS resolver using the host's DNS configuration.",
-      "toggleLabel": "Run DNS Server",
-      "advancedConfig": "Advanced Configuration",
-      "listenHost": "Listen Host",
-      "listenPort": "Listen Port",
-      "portPlaceholder": "8080"
-    }
-  },
-  "flowColumns": {
-    "index": "#",
-    "path": "Path",
-    "method": "Method",
-    "version": "Version",
-    "status": "Status",
-    "size": "Size",
-    "time": "Time",
-    "startTime": "Start time",
-    "comment": "Comment",
-    "connectionKilled": "Connection killed."
-  },
-  "flowView": {
-    "tabs": {
-      "request": "Request",
-      "response": "Response",
-      "error": "Error",
-      "connection": "Connection",
-      "timing": "Timing",
-      "websocket": "WebSocket",
-      "streamData": "Stream Data",
-      "datagrams": "Datagrams",
-      "dnsRequest": "Request",
-      "dnsResponse": "Response",
-      "comment": "Comment"
-    },
-    "httpMessages": {
-      "trailers": "HTTP Trailers"
-    },
-    "dnsMessages": {
-      "question": "Question",
-      "recursiveQuestion": "Recursive Question",
-      "answer": "Answer",
-      "authoritativeAnswer": "Authoritative Answer",
-      "recursiveAnswer": "Recursive Answer",
-      "authority": "Authority",
-      "additional": "Additional",
-      "name": "Name",
-      "type": "Type",
-      "class": "Class",
-      "ttl": "TTL",
-      "data": "Data",
-      "truncated": "(Truncated)"
-    },
-    "messages": {
-      "count": "{{count}} Messages"
-    },
-    "webSocket": {
-      "title": "WebSocket",
-      "closedBy": "Closed by {{who}} with code {{code}} {{reason}}.",
-      "client": "client",
-      "server": "server"
-    },
-    "connection": {
-      "clientConnection": "Client Connection",
-      "serverConnection": "Server Connection",
-      "serverCertificate": "Server Certificate",
-      "address": "Address",
-      "resolvedAddress": "Resolved address",
-      "sourceAddress": "Source address",
-      "sni": "SNI",
-      "sniTitle": "TLS Server Name Indication",
-      "alpn": "ALPN",
-      "alpnTitle": "ALPN protocol negotiated",
-      "tlsVersion": "TLS Version",
-      "tlsCipher": "TLS Cipher",
-      "type": "Type",
-      "bits": "bits",
-      "sha256Digest": "SHA256 digest",
-      "validFrom": "Valid from",
-      "validTo": "Valid to",
-      "subjectAlternativeNames": "Subject Alternative Names",
-      "subject": "Subject",
-      "issuer": "Issuer",
-      "serial": "Serial"
-    },
-    "timing": {
-      "title": "Timing",
-      "serverConnInitiated": "Server conn. initiated",
-      "serverConnTcpHandshake": "Server conn. TCP handshake",
-      "serverConnTlsHandshake": "Server conn. TLS handshake",
-      "serverConnClosed": "Server conn. closed",
-      "clientConnEstablished": "Client conn. established",
-      "clientConnTlsHandshake": "Client conn. TLS handshake",
-      "clientConnClosed": "Client conn. closed",
-      "firstRequestByte": "First request byte",
-      "requestComplete": "Request complete",
-      "firstResponseByte": "First response byte",
-      "responseComplete": "Response complete"
-    },
-    "comment": {
-      "title": "Comment",
-      "placeholder": "empty"
-    }
-  },
-  "contentview": {
-    "editing": "[Editing]",
-    "noContent": "No content",
-    "loading": "Loading...",
-    "done": "Done",
-    "cancel": "Cancel",
-    "edit": "Edit",
-    "replace": "Replace",
-    "replaceTitle": "Upload a file to replace the content.",
-    "copy": "Copy",
-    "copied": "Copied!",
-    "view": "View",
-    "showMore": "Show more",
-    "errorGettingContent": "Error getting content: {{error}}.",
-    "networkError": "Network Error"
-  },
-  "editors": {
-    "keyValueList": {
-      "add": "Add",
-      "placeholder": "empty"
-    }
-  },
-  "modal": {
-    "optionModal": {
-      "title": "Options",
-      "enable": "Enable",
-      "default": "Default: {{value}}"
-    }
-  },
-  "languageSelector": {
-    "label": "Language",
-    "english": "English",
-    "chinese": "中文"
-  }
 }

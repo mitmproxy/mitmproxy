@@ -54,17 +54,24 @@ function ServerDescription({
     if (!is_running) {
         desc = (
             <>
-                <div className="text-warning">{t("captureSetup.starting", { description })}</div>
+                <div className="text-warning">
+                    {t("captureSetup.starting", { description })}
+                </div>
             </>
         );
     } else {
         desc = (
             <>
                 {type === "local" ? (
-                    <div className="text-success">{t("captureSetup.isActive", { description })}</div>
+                    <div className="text-success">
+                        {t("captureSetup.isActive", { description })}
+                    </div>
                 ) : (
                     <div className="text-success">
-                        {t("captureSetup.listeningAt", { description, address: listen_str })}
+                        {t("captureSetup.listeningAt", {
+                            description,
+                            address: listen_str,
+                        })}
                     </div>
                 )}
                 {wireguard_conf && (

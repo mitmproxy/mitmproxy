@@ -36,13 +36,22 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
         address_info = (
             <>
                 {formatAddress(t("flowView.connection.address"), conn.address)}
-                {formatAddress(t("flowView.connection.resolvedAddress"), conn.peername)}
-                {formatAddress(t("flowView.connection.sourceAddress"), conn.sockname)}
+                {formatAddress(
+                    t("flowView.connection.resolvedAddress"),
+                    conn.peername,
+                )}
+                {formatAddress(
+                    t("flowView.connection.sourceAddress"),
+                    conn.sockname,
+                )}
             </>
         );
     } else {
         // Client
-        address_info = formatAddress(t("flowView.connection.address"), conn.peername);
+        address_info = formatAddress(
+            t("flowView.connection.address"),
+            conn.peername,
+        );
     }
     return (
         <table className="connection-table">
@@ -51,7 +60,9 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
                 {conn.sni ? (
                     <tr>
                         <td>
-                            <abbr title={t("flowView.connection.sniTitle")}>{t("flowView.connection.sni")}:</abbr>
+                            <abbr title={t("flowView.connection.sniTitle")}>
+                                {t("flowView.connection.sni")}:
+                            </abbr>
                         </td>
                         <td>{conn.sni}</td>
                     </tr>
@@ -59,7 +70,9 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
                 {conn.alpn ? (
                     <tr>
                         <td>
-                            <abbr title={t("flowView.connection.alpnTitle")}>{t("flowView.connection.alpn")}:</abbr>
+                            <abbr title={t("flowView.connection.alpnTitle")}>
+                                {t("flowView.connection.alpn")}:
+                            </abbr>
                         </td>
                         <td>{conn.alpn}</td>
                     </tr>
@@ -107,7 +120,8 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
                     <tr>
                         <td>{t("flowView.connection.type")}</td>
                         <td>
-                            {cert.keyinfo[0]}, {cert.keyinfo[1]} {t("flowView.connection.bits")}
+                            {cert.keyinfo[0]}, {cert.keyinfo[1]}{" "}
+                            {t("flowView.connection.bits")}
                         </td>
                     </tr>
                     <tr>
@@ -131,7 +145,9 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>{t("flowView.connection.subjectAlternativeNames")}</td>
+                        <td>
+                            {t("flowView.connection.subjectAlternativeNames")}
+                        </td>
                         <td>{cert.altnames.join(", ")}</td>
                     </tr>
                     <tr>

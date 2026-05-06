@@ -25,10 +25,13 @@ export default function OptionMenu() {
                             icon="fa-cogs text-primary"
                             onClick={() => dispatch(openOptions())}
                         >
-                            {t("header.optionMenu.editOptions")} <sup>{t("header.optionMenu.alpha")}</sup>
+                            {t("header.optionMenu.editOptions")}{" "}
+                            <sup>{t("header.optionMenu.alpha")}</sup>
                         </Button>
                     </div>
-                    <div className="menu-legend">{t("header.optionMenu.optionsEditor")}</div>
+                    <div className="menu-legend">
+                        {t("header.optionMenu.optionsEditor")}
+                    </div>
                 </div>
 
                 <div className="menu-group">
@@ -46,7 +49,9 @@ export default function OptionMenu() {
                             <DocsLink resource="concepts/options/#ssl_insecure" />
                         </OptionsToggle>
                     </div>
-                    <div className="menu-legend">{t("header.optionMenu.quickOptions")}</div>
+                    <div className="menu-legend">
+                        {t("header.optionMenu.quickOptions")}
+                    </div>
                 </div>
             </HideInStatic>
 
@@ -56,7 +61,9 @@ export default function OptionMenu() {
                     <CommandBarToggle />
                     <LanguageSelector />
                 </div>
-                <div className="menu-legend">{t("header.optionMenu.viewOptions")}</div>
+                <div className="menu-legend">
+                    {t("header.optionMenu.viewOptions")}
+                </div>
             </div>
         </div>
     );

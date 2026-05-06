@@ -42,21 +42,45 @@ export default function Footer() {
                 </span>
             )}
             {ssl_insecure && (
-                <span className="label label-danger">{t("footer.sslInsecure")}</span>
+                <span className="label label-danger">
+                    {t("footer.sslInsecure")}
+                </span>
             )}
-            {showhost && <span className="label label-success">{t("footer.showhost")}</span>}
+            {showhost && (
+                <span className="label label-success">
+                    {t("footer.showhost")}
+                </span>
+            )}
             {!upstream_cert && (
-                <span className="label label-success">{t("footer.noUpstreamCert")}</span>
+                <span className="label label-success">
+                    {t("footer.noUpstreamCert")}
+                </span>
             )}
-            {!rawtcp && <span className="label label-success">{t("footer.noRawTcp")}</span>}
-            {!http2 && <span className="label label-success">{t("footer.noHttp2")}</span>}
+            {!rawtcp && (
+                <span className="label label-success">
+                    {t("footer.noRawTcp")}
+                </span>
+            )}
+            {!http2 && (
+                <span className="label label-success">
+                    {t("footer.noHttp2")}
+                </span>
+            )}
             {!websocket && (
-                <span className="label label-success">{t("footer.noWebsocket")}</span>
+                <span className="label label-success">
+                    {t("footer.noWebsocket")}
+                </span>
             )}
             {anticache && (
-                <span className="label label-success">{t("footer.anticache")}</span>
+                <span className="label label-success">
+                    {t("footer.anticache")}
+                </span>
             )}
-            {anticomp && <span className="label label-success">{t("footer.anticomp")}</span>}
+            {anticomp && (
+                <span className="label label-success">
+                    {t("footer.anticomp")}
+                </span>
+            )}
             {stickyauth && (
                 <span className="label label-success">
                     {t("footer.stickyauth", { value: stickyauth })}
@@ -69,12 +93,17 @@ export default function Footer() {
             )}
             {stream_large_bodies && (
                 <span className="label label-success">
-                    {t("footer.stream", { value: formatSize(stream_large_bodies) })}
+                    {t("footer.stream", {
+                        value: formatSize(stream_large_bodies),
+                    })}
                 </span>
             )}
             {totalFlowsLength > 0 && (
                 <span className="label label-default">
-                    {t("footer.flowsSelected", { selected: selectedFlowsLength, total: totalFlowsLength })}
+                    {t("footer.flowsSelected", {
+                        selected: selectedFlowsLength,
+                        total: totalFlowsLength,
+                    })}
                 </span>
             )}
             <div className="pull-right">
@@ -88,7 +117,10 @@ export default function Footer() {
                         </span>
                     )}
                 </HideInStatic>
-                <span className="label label-default" title={t("footer.versionTitle")}>
+                <span
+                    className="label label-default"
+                    title={t("footer.versionTitle")}
+                >
                     mitmproxy {version}
                 </span>
             </div>

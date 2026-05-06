@@ -49,7 +49,9 @@ export default function Modes() {
                     ) : (
                         <MissingMode
                             title={t("modes.transparent.title")}
-                            description={t("modes.transparentMissingDescription")}
+                            description={t(
+                                "modes.transparentMissingDescription",
+                            )}
                         />
                     )}
                 </div>

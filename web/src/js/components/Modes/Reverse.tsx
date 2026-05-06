@@ -49,7 +49,8 @@ export default function Reverse() {
                     className="mode-reverse-add-server"
                     onClick={() => dispatch(addServer())}
                 >
-                    <i className="fa fa-plus-square-o" aria-hidden="true"></i> {t("modes.reverse.addServer")}
+                    <i className="fa fa-plus-square-o" aria-hidden="true"></i>{" "}
+                    {t("modes.reverse.addServer")}
                 </div>
             </div>
         </div>

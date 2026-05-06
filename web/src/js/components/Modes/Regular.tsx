@@ -32,9 +32,7 @@ export default function Regular() {
     return (
         <div>
             <h4 className="mode-title">{t("modes.regular.title")}</h4>
-            <p className="mode-description">
-                {t("modes.regular.description")}
-            </p>
+            <p className="mode-description">{t("modes.regular.description")}</p>
             {servers}
         </div>
     );

@@ -33,7 +33,9 @@ export default function Wireguard() {
     return (
         <div>
             <h4 className="mode-title">{t("modes.wireguard.title")}</h4>
-            <p className="mode-description">{t("modes.wireguard.description")}</p>
+            <p className="mode-description">
+                {t("modes.wireguard.description")}
+            </p>
             {servers}
         </div>
     );

@@ -78,7 +78,9 @@ export default function FlowMenu(): JSX.Element {
 
                         <MarkButton flows={selectedFlows} />
                     </div>
-                    <div className="menu-legend">{t("header.flowMenu.flowModification")}</div>
+                    <div className="menu-legend">
+                        {t("header.flowMenu.flowModification")}
+                    </div>
                 </div>
             </HideInStatic>
 
@@ -110,7 +112,9 @@ export default function FlowMenu(): JSX.Element {
                             {t("header.flowMenu.abort")}
                         </Button>
                     </div>
-                    <div className="menu-legend">{t("header.flowMenu.interception")}</div>
+                    <div className="menu-legend">
+                        {t("header.flowMenu.interception")}
+                    </div>
                 </div>
             </HideInStatic>
         </div>
@@ -233,7 +237,9 @@ function ExportButton({ flow }: { flow: Flow }) {
             <MenuItem onClick={() => copy(flow, "raw")}>
                 {t("header.flowMenu.copyRawCombined")}
             </MenuItem>
-            <MenuItem onClick={() => copy(flow, "curl")}>{t("header.flowMenu.copyAsCurl")}</MenuItem>
+            <MenuItem onClick={() => copy(flow, "curl")}>
+                {t("header.flowMenu.copyAsCurl")}
+            </MenuItem>
             <MenuItem onClick={() => copy(flow, "httpie")}>
                 {t("header.flowMenu.copyAsHttpie")}
             </MenuItem>

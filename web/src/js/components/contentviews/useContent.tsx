@@ -25,7 +25,9 @@ export function useContent(url: string, hash?: string): string | undefined {
                 if (controller.signal.aborted) {
                     return;
                 }
-                setContent(i18n.t("contentview.errorGettingContent", { error: e }));
+                setContent(
+                    i18n.t("contentview.errorGettingContent", { error: e }),
+                );
             });
 
         setAbort(controller);

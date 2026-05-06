@@ -43,7 +43,11 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
     return (
         <div className="contentview">
             <div className="controls">
-                <h5>{t("flowView.messages.count", { count: messages_meta.count })}</h5>
+                <h5>
+                    {t("flowView.messages.count", {
+                        count: messages_meta.count,
+                    })}
+                </h5>
                 <ViewSelector
                     value={contentView}
                     onChange={(cv) =>

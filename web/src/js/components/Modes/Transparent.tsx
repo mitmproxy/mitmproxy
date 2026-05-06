@@ -34,14 +34,19 @@ export default function Transparent() {
         <div>
             <h4 className="mode-title">{t("modes.transparent.title")}</h4>
             <p className="mode-description">
-                {t("modes.transparent.description").replace("configure your routing table", "")}
+                {t("modes.transparent.description").replace(
+                    "configure your routing table",
+                    "",
+                )}
                 <a
                     href="https://docs.mitmproxy.org/stable/howto-transparent/"
                     style={{ textDecoration: "underline", color: "inherit" }}
                 >
                     {t("modes.transparent.configureRoutingTable")}
                 </a>{" "}
-                {t("modes.transparent.description").split("configure your routing table")[1] || ""}
+                {t("modes.transparent.description").split(
+                    "configure your routing table",
+                )[1] || ""}
             </p>
 
             {servers}

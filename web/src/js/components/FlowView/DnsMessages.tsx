@@ -22,7 +22,11 @@ const Questions: React.FC<{
     const { t } = useTranslation();
     return (
         <>
-            <h5>{message.recursion_desired ? t("flowView.dnsMessages.recursiveQuestion") : t("flowView.dnsMessages.question")}</h5>
+            <h5>
+                {message.recursion_desired
+                    ? t("flowView.dnsMessages.recursiveQuestion")
+                    : t("flowView.dnsMessages.question")}
+            </h5>
             <table>
                 <thead>
                     <tr>
@@ -72,7 +76,10 @@ const ResourceRecords: React.FC<{
                                 <td>{rr.class}</td>
                                 <td>{rr.ttl}</td>
                                 <td>
-                                    {JSON.stringify(rr.data).replace(/^"|"$/g, "")}
+                                    {JSON.stringify(rr.data).replace(
+                                        /^"|"$/g,
+                                        "",
+                                    )}
                                 </td>
                             </tr>
                         ))}
@@ -99,14 +106,22 @@ const Message: React.FC<{
             <hr />
             <ResourceRecords
                 name={`${message.authoritative_answer ? t("flowView.dnsMessages.authoritativeAnswer") + " " : ""}${
-                    message.recursion_available ? t("flowView.dnsMessages.recursiveAnswer") + " " : ""
+                    message.recursion_available
+                        ? t("flowView.dnsMessages.recursiveAnswer") + " "
+                        : ""
                 }${t("flowView.dnsMessages.answer")}`}
                 values={message.answers}
             />
             <hr />
-            <ResourceRecords name={t("flowView.dnsMessages.authority")} values={message.authorities} />
+            <ResourceRecords
+                name={t("flowView.dnsMessages.authority")}
+                values={message.authorities}
+            />
             <hr />
-            <ResourceRecords name={t("flowView.dnsMessages.additional")} values={message.additionals} />
+            <ResourceRecords
+                name={t("flowView.dnsMessages.additional")}
+                values={message.additionals}
+            />
         </section>
     );
 };

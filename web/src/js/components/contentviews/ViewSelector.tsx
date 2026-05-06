@@ -17,7 +17,8 @@ export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
     const inner = (
         <span>
             <i className="fa fa-fw fa-files-o" />
-            &nbsp;<b>{t("contentview.view")}:</b> {value.toLowerCase()} <span className="caret" />
+            &nbsp;<b>{t("contentview.view")}:</b> {value.toLowerCase()}{" "}
+            <span className="caret" />
         </span>
     );
 

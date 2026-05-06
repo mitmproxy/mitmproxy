@@ -17,7 +17,9 @@ export default function FlowListMenu() {
                     <FlowFilterInput />
                     <HighlightInput />
                 </div>
-                <div className="menu-legend"><FlowListMenuSectionLegend /></div>
+                <div className="menu-legend">
+                    <FlowListMenuSectionLegend />
+                </div>
             </div>
 
             <div className="menu-group">
@@ -25,7 +27,9 @@ export default function FlowListMenu() {
                     <InterceptInput />
                     <ResumeAll />
                 </div>
-                <div className="menu-legend"><InterceptSectionLegend /></div>
+                <div className="menu-legend">
+                    <InterceptSectionLegend />
+                </div>
             </div>
         </div>
     );

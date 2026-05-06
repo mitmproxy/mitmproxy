@@ -36,21 +36,65 @@ export default function Timing({ flow }: { flow: Flow }) {
         ref = flow.client_conn.timestamp_start;
     }
 
-    const timestamps: { titleKey: string; ts: number | undefined; deltaTo?: number }[] = [
-        { titleKey: "serverConnInitiated", ts: flow.server_conn?.timestamp_start, deltaTo: ref },
-        { titleKey: "serverConnTcpHandshake", ts: flow.server_conn?.timestamp_tcp_setup, deltaTo: ref },
-        { titleKey: "serverConnTlsHandshake", ts: flow.server_conn?.timestamp_tls_setup, deltaTo: ref },
-        { titleKey: "serverConnClosed", ts: flow.server_conn?.timestamp_end, deltaTo: ref },
-        { titleKey: "clientConnEstablished", ts: flow.client_conn.timestamp_start, deltaTo: flow.type === "http" ? ref : undefined },
-        { titleKey: "clientConnTlsHandshake", ts: flow.client_conn.timestamp_tls_setup, deltaTo: ref },
-        { titleKey: "clientConnClosed", ts: flow.client_conn.timestamp_end, deltaTo: ref },
+    const timestamps: {
+        titleKey: string;
+        ts: number | undefined;
+        deltaTo?: number;
+    }[] = [
+        {
+            titleKey: "serverConnInitiated",
+            ts: flow.server_conn?.timestamp_start,
+            deltaTo: ref,
+        },
+        {
+            titleKey: "serverConnTcpHandshake",
+            ts: flow.server_conn?.timestamp_tcp_setup,
+            deltaTo: ref,
+        },
+        {
+            titleKey: "serverConnTlsHandshake",
+            ts: flow.server_conn?.timestamp_tls_setup,
+            deltaTo: ref,
+        },
+        {
+            titleKey: "serverConnClosed",
+            ts: flow.server_conn?.timestamp_end,
+            deltaTo: ref,
+        },
+        {
+            titleKey: "clientConnEstablished",
+            ts: flow.client_conn.timestamp_start,
+            deltaTo: flow.type === "http" ? ref : undefined,
+        },
+        {
+            titleKey: "clientConnTlsHandshake",
+            ts: flow.client_conn.timestamp_tls_setup,
+            deltaTo: ref,
+        },
+        {
+            titleKey: "clientConnClosed",
+            ts: flow.client_conn.timestamp_end,
+            deltaTo: ref,
+        },
     ];
     if (flow.type === "http") {
         timestamps.push(
             { titleKey: "firstRequestByte", ts: flow.request.timestamp_start },
-            { titleKey: "requestComplete", ts: flow.request.timestamp_end, deltaTo: ref },
-            { titleKey: "firstResponseByte", ts: flow.response?.timestamp_start, deltaTo: ref },
-            { titleKey: "responseComplete", ts: flow.response?.timestamp_end, deltaTo: ref },
+            {
+                titleKey: "requestComplete",
+                ts: flow.request.timestamp_end,
+                deltaTo: ref,
+            },
+            {
+                titleKey: "firstResponseByte",
+                ts: flow.response?.timestamp_start,
+                deltaTo: ref,
+            },
+            {
+                titleKey: "responseComplete",
+                ts: flow.response?.timestamp_end,
+                deltaTo: ref,
+            },
         );
     }
 
@@ -60,7 +104,15 @@ export default function Timing({ flow }: { flow: Flow }) {
             <table className="timing-table">
                 <tbody>
                     {timestamps
-                        .filter((v): v is { titleKey: string; ts: number; deltaTo?: number } => !!v.ts)
+                        .filter(
+                            (
+                                v,
+                            ): v is {
+                                titleKey: string;
+                                ts: number;
+                                deltaTo?: number;
+                            } => !!v.ts,
+                        )
                         .sort((a, b) => a.ts - b.ts)
                         .map(({ titleKey, ts, deltaTo }) => (
                             <TimeStamp

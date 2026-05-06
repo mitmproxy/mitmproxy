@@ -30,8 +30,11 @@ function CloseSummary({ websocket }: { websocket: WebSocketData }) {
     return (
         <div>
             <i className="fa fa-fw fa-window-close text-muted" />
-            &nbsp; {t("flowView.webSocket.closedBy", {
-                who: websocket.closed_by_client ? t("flowView.webSocket.client") : t("flowView.webSocket.server"),
+            &nbsp;{" "}
+            {t("flowView.webSocket.closedBy", {
+                who: websocket.closed_by_client
+                    ? t("flowView.webSocket.client")
+                    : t("flowView.webSocket.server"),
                 code: websocket.close_code,
                 reason,
             })}
