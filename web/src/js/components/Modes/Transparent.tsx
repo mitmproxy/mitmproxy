@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useAppDispatch, useAppSelector } from "../../ducks";
+import { useTranslation } from "react-i18next";
 import type { TransparentState } from "../../modes/transparent";
 import { getSpec } from "../../modes/transparent";
 import type { ServerInfo } from "../../ducks/backendState";
@@ -10,11 +10,13 @@ import {
 } from "../../ducks/modes/transparent";
 
 import { ModeToggle } from "./ModeToggle";
+import { useAppDispatch, useAppSelector } from "../../ducks";
 import { ServerStatus } from "./CaptureSetup";
 import ValueEditor from "../editors/ValueEditor";
 import { Popover } from "./Popover";
 
 export default function Transparent() {
+    const { t } = useTranslation();
     const serverState = useAppSelector((state) => state.modes.transparent);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
@@ -30,16 +32,16 @@ export default function Transparent() {
 
     return (
         <div>
-            <h4 className="mode-title">Transparent Proxy</h4>
+            <h4 className="mode-title">{t("modes.transparent.title")}</h4>
             <p className="mode-description">
-                You{" "}
+                {t("modes.transparent.description").replace("configure your routing table", "")}
                 <a
                     href="https://docs.mitmproxy.org/stable/howto-transparent/"
                     style={{ textDecoration: "underline", color: "inherit" }}
                 >
-                    configure your routing table
+                    {t("modes.transparent.configureRoutingTable")}
                 </a>{" "}
-                to send traffic through mitmproxy.
+                {t("modes.transparent.description").split("configure your routing table")[1] || ""}
             </p>
 
             {servers}
@@ -54,6 +56,7 @@ function TransparentRow({
     server: TransparentState;
     backendState?: ServerInfo;
 }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const error = server.error || backendState?.last_exception || undefined;
@@ -62,14 +65,14 @@ function TransparentRow({
         <div>
             <ModeToggle
                 value={server.active}
-                label="Run Transparent Proxy"
+                label={t("modes.transparent.toggleLabel")}
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
                 <Popover iconClass="fa fa-cog">
-                    <h4>Advanced Configuration</h4>
-                    <p>Listen Host</p>
+                    <h4>{t("modes.transparent.advancedConfig")}</h4>
+                    <p>{t("modes.transparent.listenHost")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.listen_host || ""}
@@ -78,7 +81,7 @@ function TransparentRow({
                         }
                     />
 
-                    <p>Listen Port</p>
+                    <p>{t("modes.transparent.listenPort")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={
@@ -86,7 +89,7 @@ function TransparentRow({
                                 ? server.listen_port.toString()
                                 : ""
                         }
-                        placeholder="8080"
+                        placeholder={t("modes.transparent.portPlaceholder")}
                         onEditDone={(port) =>
                             dispatch(
                                 setListenPort({

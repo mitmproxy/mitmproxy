@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { formatTimeStamp } from "../../utils";
 import type { Address, Client, Flow, Server } from "../../flow";
 
@@ -28,19 +29,20 @@ export function formatAddress(
 }
 
 export function ConnectionInfo({ conn }: ConnectionInfoProps) {
+    const { t } = useTranslation();
     let address_info: React.ReactElement;
     if ("address" in conn) {
         // Server
         address_info = (
             <>
-                {formatAddress("Address", conn.address)}
-                {formatAddress("Resolved address", conn.peername)}
-                {formatAddress("Source address", conn.sockname)}
+                {formatAddress(t("flowView.connection.address"), conn.address)}
+                {formatAddress(t("flowView.connection.resolvedAddress"), conn.peername)}
+                {formatAddress(t("flowView.connection.sourceAddress"), conn.sockname)}
             </>
         );
     } else {
         // Client
-        address_info = formatAddress("Address", conn.peername);
+        address_info = formatAddress(t("flowView.connection.address"), conn.peername);
     }
     return (
         <table className="connection-table">
@@ -49,7 +51,7 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
                 {conn.sni ? (
                     <tr>
                         <td>
-                            <abbr title="TLS Server Name Indication">SNI</abbr>:
+                            <abbr title={t("flowView.connection.sniTitle")}>{t("flowView.connection.sni")}:</abbr>
                         </td>
                         <td>{conn.sni}</td>
                     </tr>
@@ -57,20 +59,20 @@ export function ConnectionInfo({ conn }: ConnectionInfoProps) {
                 {conn.alpn ? (
                     <tr>
                         <td>
-                            <abbr title="ALPN protocol negotiated">ALPN</abbr>:
+                            <abbr title={t("flowView.connection.alpnTitle")}>{t("flowView.connection.alpn")}:</abbr>
                         </td>
                         <td>{conn.alpn}</td>
                     </tr>
                 ) : null}
                 {conn.tls_version ? (
                     <tr>
-                        <td>TLS Version:</td>
+                        <td>{t("flowView.connection.tlsVersion")}:</td>
                         <td>{conn.tls_version}</td>
                     </tr>
                 ) : null}
                 {conn.cipher ? (
                     <tr>
-                        <td>TLS Cipher:</td>
+                        <td>{t("flowView.connection.tlsCipher")}:</td>
                         <td>{conn.cipher}</td>
                     </tr>
                 ) : null}
@@ -93,26 +95,27 @@ function attrList(data: [string, string][]): React.ReactElement {
 }
 
 export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
+    const { t } = useTranslation();
     const cert = flow.server_conn?.cert;
     if (!cert) return <></>;
 
     return (
         <>
-            <h4 key="name">Server Certificate</h4>
+            <h4 key="name">{t("flowView.connection.serverCertificate")}</h4>
             <table className="certificate-table">
                 <tbody>
                     <tr>
-                        <td>Type</td>
+                        <td>{t("flowView.connection.type")}</td>
                         <td>
-                            {cert.keyinfo[0]}, {cert.keyinfo[1]} bits
+                            {cert.keyinfo[0]}, {cert.keyinfo[1]} {t("flowView.connection.bits")}
                         </td>
                     </tr>
                     <tr>
-                        <td>SHA256 digest</td>
+                        <td>{t("flowView.connection.sha256Digest")}</td>
                         <td>{cert.sha256}</td>
                     </tr>
                     <tr>
-                        <td>Valid from</td>
+                        <td>{t("flowView.connection.validFrom")}</td>
                         <td>
                             {formatTimeStamp(cert.notbefore, {
                                 includeMilliseconds: false,
@@ -120,7 +123,7 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>Valid to</td>
+                        <td>{t("flowView.connection.validTo")}</td>
                         <td>
                             {formatTimeStamp(cert.notafter, {
                                 includeMilliseconds: false,
@@ -128,19 +131,19 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>Subject Alternative Names</td>
+                        <td>{t("flowView.connection.subjectAlternativeNames")}</td>
                         <td>{cert.altnames.join(", ")}</td>
                     </tr>
                     <tr>
-                        <td>Subject</td>
+                        <td>{t("flowView.connection.subject")}</td>
                         <td>{attrList(cert.subject)}</td>
                     </tr>
                     <tr>
-                        <td>Issuer</td>
+                        <td>{t("flowView.connection.issuer")}</td>
                         <td>{attrList(cert.issuer)}</td>
                     </tr>
                     <tr>
-                        <td>Serial</td>
+                        <td>{t("flowView.connection.serial")}</td>
                         <td>{cert.serial}</td>
                     </tr>
                 </tbody>
@@ -150,14 +153,15 @@ export function CertificateInfo({ flow }: { flow: Flow }): React.ReactElement {
 }
 
 export default function Connection({ flow }: { flow: Flow }) {
+    const { t } = useTranslation();
     return (
         <section className="detail">
-            <h4>Client Connection</h4>
+            <h4>{t("flowView.connection.clientConnection")}</h4>
             <ConnectionInfo conn={flow.client_conn} />
 
             {flow.server_conn?.address && (
                 <>
-                    <h4>Server Connection</h4>
+                    <h4>{t("flowView.connection.serverConnection")}</h4>
                     <ConnectionInfo conn={flow.server_conn} />
                 </>
             )}

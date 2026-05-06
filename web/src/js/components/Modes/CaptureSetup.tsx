@@ -1,18 +1,19 @@
 import * as React from "react";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { ServerInfo } from "../../ducks/backendState";
 import { formatAddress } from "../../utils";
 import QRCode from "qrcode";
 
 export default function CaptureSetup() {
+    const { t } = useTranslation();
     return (
         <div style={{ padding: "1em 2em" }}>
-            <h3>mitmproxy is running.</h3>
+            <h3>{t("captureSetup.running")}</h3>
             <p>
-                No flows have been recorded yet.
+                {t("captureSetup.noFlows")}
                 <br />
-                To start capturing traffic, please configure your settings in
-                the Capture tab.
+                {t("captureSetup.configureMessage")}
             </p>
         </div>
     );
@@ -25,7 +26,8 @@ function ServerDescription({
     wireguard_conf,
     type,
 }: ServerInfo) {
-    const qrCode = useRef(null);
+    const { t } = useTranslation();
+    const qrCode = useRef<HTMLCanvasElement | null>(null);
     useEffect(() => {
         if (wireguard_conf && qrCode.current)
             QRCode.toCanvas(qrCode.current, wireguard_conf, {
@@ -52,17 +54,17 @@ function ServerDescription({
     if (!is_running) {
         desc = (
             <>
-                <div className="text-warning">{description} starting...</div>
+                <div className="text-warning">{t("captureSetup.starting", { description })}</div>
             </>
         );
     } else {
         desc = (
             <>
                 {type === "local" ? (
-                    <div className="text-success">{description} is active.</div>
+                    <div className="text-success">{t("captureSetup.isActive", { description })}</div>
                 ) : (
                     <div className="text-success">
-                        {description} listening at {listen_str}.
+                        {t("captureSetup.listeningAt", { description, address: listen_str })}
                     </div>
                 )}
                 {wireguard_conf && (

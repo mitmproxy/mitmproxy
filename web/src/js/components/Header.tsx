@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import classnames from "classnames";
 import FileMenu from "./Header/FileMenu";
 import ConnectionIndicator from "./Header/ConnectionIndicator";
@@ -18,7 +19,15 @@ const tabs: { [key in Tab]: Menu } = {
     [Tab.Flow]: FlowMenu,
 };
 
+const tabTranslationKeys: { [key in Tab]: string } = {
+    [Tab.Capture]: "header.tabs.capture",
+    [Tab.FlowList]: "header.tabs.flowList",
+    [Tab.Options]: "header.tabs.options",
+    [Tab.Flow]: "header.tabs.flow",
+};
+
 export default function Header() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const currentTab = useAppSelector((state) => state.ui.tabs.current);
     const selectedFlows = useAppSelector((state) => state.flows.selected);
@@ -63,7 +72,7 @@ export default function Header() {
                         className={classnames({ active: tab === currentTab })}
                         onClick={(e) => handleClick(tab, e)}
                     >
-                        {tabs[tab].title}
+                        {t(tabTranslationKeys[tab])}
                     </a>
                 ))}
                 <HideInStatic>

@@ -356,6 +356,31 @@ exports[`Header 2`] = `
                 Display Command Bar
               </label>
             </div>
+            <div
+              class="menu-entry"
+            >
+              <label
+                for="language-selector"
+              >
+                Language
+              </label>
+              <select
+                class="language-selector form-control input-xs"
+                id="language-selector"
+                title="Language"
+              >
+                <option
+                  value="en"
+                >
+                  English
+                </option>
+                <option
+                  value="zh"
+                >
+                  中文
+                </option>
+              </select>
+            </div>
           </div>
           <div
             class="menu-legend"
@@ -392,7 +417,7 @@ exports[`Header 3`] = `
             <i
               class="fa fa-fw fa-folder-open"
             />
-             Open...
+             Open...
             <input
               class="hidden"
               type="file"
@@ -599,6 +624,31 @@ exports[`Header 3`] = `
                 />
                 Display Command Bar
               </label>
+            </div>
+            <div
+              class="menu-entry"
+            >
+              <label
+                for="language-selector"
+              >
+                Language
+              </label>
+              <select
+                class="language-selector form-control input-xs"
+                id="language-selector"
+                title="Language"
+              >
+                <option
+                  value="en"
+                >
+                  English
+                </option>
+                <option
+                  value="zh"
+                >
+                  中文
+                </option>
+              </select>
             </div>
           </div>
           <div

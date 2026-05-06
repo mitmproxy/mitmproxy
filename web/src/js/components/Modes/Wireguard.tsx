@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import type { WireguardState } from "../../modes/wireguard";
@@ -15,6 +16,7 @@ import type { ServerInfo } from "../../ducks/backendState";
 import { ServerStatus } from "./CaptureSetup";
 
 export default function Wireguard() {
+    const { t } = useTranslation();
     const serverState = useAppSelector((state) => state.modes.wireguard);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
@@ -30,11 +32,8 @@ export default function Wireguard() {
 
     return (
         <div>
-            <h4 className="mode-title">WireGuard Server</h4>
-            <p className="mode-description">
-                Start a WireGuard™ server and connect an external device for
-                transparent proxying.
-            </p>
+            <h4 className="mode-title">{t("modes.wireguard.title")}</h4>
+            <p className="mode-description">{t("modes.wireguard.description")}</p>
             {servers}
         </div>
     );
@@ -47,6 +46,7 @@ function WireGuardRow({
     server: WireguardState;
     backendState?: ServerInfo;
 }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const error = server.error || backendState?.last_exception || undefined;
@@ -55,23 +55,23 @@ function WireGuardRow({
         <div>
             <ModeToggle
                 value={server.active}
-                label="Run WireGuard Server"
+                label={t("modes.wireguard.toggleLabel")}
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
                 <Popover iconClass="fa fa-cog">
-                    <h4>Advanced Configuration</h4>
-                    <p>Listen Host</p>
+                    <h4>{t("modes.wireguard.advancedConfig")}</h4>
+                    <p>{t("modes.wireguard.listenHost")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.listen_host || ""}
-                        placeholder="(all interfaces)"
+                        placeholder={t("modes.wireguard.hostPlaceholder")}
                         onEditDone={(host) =>
                             dispatch(setListenHost({ server, value: host }))
                         }
                     />
-                    <p>Listen Port</p>
+                    <p>{t("modes.wireguard.listenPort")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={
@@ -79,7 +79,7 @@ function WireGuardRow({
                                 ? server.listen_port.toString()
                                 : ""
                         }
-                        placeholder="51820"
+                        placeholder={t("modes.wireguard.portPlaceholder")}
                         onEditDone={(port) =>
                             dispatch(
                                 setListenPort({
@@ -89,11 +89,11 @@ function WireGuardRow({
                             )
                         }
                     />
-                    <p>Configuration File</p>
+                    <p>{t("modes.wireguard.configFile")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.file_path || ""}
-                        placeholder="~/.mitmproxy/wireguard.conf"
+                        placeholder={t("modes.wireguard.filePlaceholder")}
                         onEditDone={(path) =>
                             dispatch(setFilePath({ server, value: path }))
                         }

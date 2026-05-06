@@ -125,6 +125,31 @@ exports[`OptionMenu Component should render correctly 1`] = `
             Display Command Bar
           </label>
         </div>
+        <div
+          class="menu-entry"
+        >
+          <label
+            for="language-selector"
+          >
+            Language
+          </label>
+          <select
+            class="language-selector form-control input-xs"
+            id="language-selector"
+            title="Language"
+          >
+            <option
+              value="en"
+            >
+              English
+            </option>
+            <option
+              value="zh"
+            >
+              中文
+            </option>
+          </select>
+        </div>
       </div>
       <div
         class="menu-legend"

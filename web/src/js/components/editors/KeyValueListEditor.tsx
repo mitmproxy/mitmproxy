@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { withTranslation, type WithTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import ValueEditor from "./ValueEditor";
 import { isEqual } from "lodash";
 import classnames from "classnames";
@@ -11,6 +13,7 @@ type RowProps = {
     onEditDone: (newItem: Item) => void;
     onClickEmptyArea: () => void;
     onTabNext: () => void;
+    t: TFunction;
 };
 
 class Row extends Component<RowProps> {
@@ -19,6 +22,7 @@ class Row extends Component<RowProps> {
     valueInput = React.createRef<ValueEditor>();
 
     render = () => {
+        const { t } = this.props;
         const [key, value] = this.props.item;
 
         return (
@@ -47,7 +51,7 @@ class Row extends Component<RowProps> {
                     onEditDone={(newVal) =>
                         this.props.onEditDone([key, newVal])
                     }
-                    placeholder="empty"
+                    placeholder={t("editors.keyValueList.placeholder")}
                     selectAllOnClick={true}
                 />
             </div>
@@ -72,14 +76,14 @@ type KeyValueListProps = {
     onChange: (newList: Item[]) => void;
     data?: Item[];
     className?: string;
-};
+} & WithTranslation;
 
 type KeyValueListState = {
     currentList: Item[];
     initialList?: Item[];
 };
 
-export default class KeyValueListEditor extends Component<
+class KeyValueListEditor extends Component<
     KeyValueListProps,
     KeyValueListState
 > {
@@ -102,6 +106,7 @@ export default class KeyValueListEditor extends Component<
     }
 
     render = () => {
+        const { t } = this.props;
         this.rowRefs = {};
 
         const rows = this.state.currentList.map((h, row) => {
@@ -116,6 +121,7 @@ export default class KeyValueListEditor extends Component<
                     ref={(e) => {
                         this.rowRefs[row] = e;
                     }}
+                    t={t}
                 />
             );
         });
@@ -135,7 +141,7 @@ export default class KeyValueListEditor extends Component<
                     }}
                     className="kv-add-row fa fa-plus-square-o"
                     role="button"
-                    aria-label="Add"
+                    aria-label={t("editors.keyValueList.add")}
                 />
             </div>
         );
@@ -173,3 +179,5 @@ export default class KeyValueListEditor extends Component<
         this.justFinishedEditing = this.currentlyEditing;
     };
 }
+
+export default withTranslation()(KeyValueListEditor);

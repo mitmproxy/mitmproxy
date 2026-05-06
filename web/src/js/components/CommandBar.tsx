@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, type JSX } from "react";
+import { useTranslation } from "react-i18next";
 import classnames from "classnames";
 import { fetchApi, runCommand } from "../utils";
 import Filt from "../filt/command";
@@ -90,6 +91,7 @@ export function CommandHelp({
     description,
     availableCommands,
 }: CommandHelpProps) {
+    const { t } = useTranslation();
     const argumentSuggestion: JSX.Element[] = [];
     for (let i: number = 0; i < nextArgs.length; i++) {
         if (i == currentArg) {
@@ -104,19 +106,19 @@ export function CommandHelp({
             <div className="popover-content">
                 {argumentSuggestion.length > 0 && (
                     <div>
-                        <strong>Argument suggestion:</strong>{" "}
+                        <strong>{t("commandBar.argumentSuggestion")}</strong>{" "}
                         {argumentSuggestion}
                     </div>
                 )}
                 {help?.includes("->") && (
                     <div>
-                        <strong>Signature help: </strong>
+                        <strong>{t("commandBar.signatureHelp")} </strong>
                         {help}
                     </div>
                 )}
                 {description && <div># {description}</div>}
                 <div>
-                    <strong>Available Commands: </strong>
+                    <strong>{t("commandBar.availableCommands")} </strong>
                     <p className="available-commands">
                         {JSON.stringify(availableCommands)}
                     </p>
@@ -127,6 +129,7 @@ export function CommandHelp({
 }
 
 export default function CommandBar() {
+    const { t } = useTranslation();
     const [input, setInput] = useState<string>("");
     const [originalInput, setOriginalInput] = useState<string>("");
     const [currentCompletion, setCurrentCompletion] = useState<number>(0);
@@ -280,7 +283,7 @@ export default function CommandBar() {
 
     return (
         <div className="command">
-            <div className="command-title">Command Result</div>
+            <div className="command-title">{t("commandBar.title")}</div>
             <Results results={results} />
             <CommandHelp
                 nextArgs={nextArgs}
@@ -295,7 +298,7 @@ export default function CommandBar() {
                 </span>
                 <input
                     type="text"
-                    placeholder="Enter command"
+                    placeholder={t("commandBar.placeholder")}
                     className="form-control"
                     value={input || ""}
                     onChange={onChange}

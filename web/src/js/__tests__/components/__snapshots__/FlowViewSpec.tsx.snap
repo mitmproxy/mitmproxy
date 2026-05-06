@@ -576,9 +576,8 @@ exports[`FlowView 4`] = `
               <abbr
                 title="TLS Server Name Indication"
               >
-                SNI
+                SNI:
               </abbr>
-              :
             </td>
             <td>
               address
@@ -589,9 +588,8 @@ exports[`FlowView 4`] = `
               <abbr
                 title="ALPN protocol negotiated"
               >
-                ALPN
+                ALPN:
               </abbr>
-              :
             </td>
             <td>
               http/1.1
@@ -651,9 +649,8 @@ exports[`FlowView 4`] = `
               <abbr
                 title="TLS Server Name Indication"
               >
-                SNI
+                SNI:
               </abbr>
-              :
             </td>
             <td>
               address
@@ -1516,7 +1513,7 @@ exports[`FlowView 11`] = `
       </table>
       <hr />
       <h5>
-        Recursive Answer
+        Recursive Answer Answer
       </h5>
       <table>
         <thead>

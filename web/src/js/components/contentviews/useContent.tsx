@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchApi } from "../../utils";
+import i18n from "../../i18n/i18n";
 
 export function useContent(url: string, hash?: string): string | undefined {
     const [content, setContent] = useState<string>();
@@ -24,7 +25,7 @@ export function useContent(url: string, hash?: string): string | undefined {
                 if (controller.signal.aborted) {
                     return;
                 }
-                setContent(`Error getting content: ${e}.`);
+                setContent(i18n.t("contentview.errorGettingContent", { error: e }));
             });
 
         setAbort(controller);

@@ -1,4 +1,5 @@
 import React, { Component, type JSX } from "react";
+import { withTranslation, type WithTranslation } from "react-i18next";
 import { onKeyDown } from "../ducks/ui/keyboard";
 import MainView from "./MainView";
 import Header from "./Header";
@@ -13,7 +14,7 @@ type ProxyAppMainProps = {
     showEventLog: boolean;
     showCommandBar: boolean;
     onKeyDown: (e: KeyboardEvent) => void;
-};
+} & WithTranslation;
 
 type ProxyAppMainState = {
     error?: Error;
@@ -29,23 +30,23 @@ class ProxyAppMain extends Component<ProxyAppMainProps, ProxyAppMainState> {
     state: ProxyAppMainState = {};
 
     render = () => {
-        const { showEventLog, showCommandBar } = this.props;
+        const { showEventLog, showCommandBar, t } = this.props;
 
         if (this.state.error) {
             console.log("ERR", this.state);
             return (
                 <div className="container">
-                    <h1>mitmproxy has crashed.</h1>
+                    <h1>{t("proxyApp.crashTitle")}</h1>
                     <pre>
                         {this.state.error.stack}
                         <br />
                         <br />
-                        Component Stack:
+                        {t("proxyApp.componentStack")}
                         {this.state.errorInfo?.componentStack}
                     </pre>
 
                     <p>
-                        Please lodge a bug report at{" "}
+                        {t("proxyApp.crashReport")}{" "}
                         <a href="https://github.com/mitmproxy/mitmproxy/issues">
                             https://github.com/mitmproxy/mitmproxy/issues
                         </a>
@@ -88,4 +89,4 @@ export default connect(
     {
         onKeyDown,
     },
-)(ProxyAppMain);
+)(withTranslation()(ProxyAppMain));

@@ -1,0 +1,350 @@
+{
+  "proxyApp": {
+    "crashTitle": "mitmproxy 已崩溃。",
+    "crashReport": "请在以下地址提交 bug 报告：",
+    "componentStack": "组件堆栈："
+  },
+  "header": {
+    "tabs": {
+      "capture": "捕获",
+      "flowList": "流量列表",
+      "options": "选项",
+      "flow": "流量"
+    },
+    "fileMenu": {
+      "title": "文件",
+      "open": "打开...",
+      "save": "保存",
+      "saveFiltered": "保存已过滤",
+      "confirmDeleteAll": "删除所有流量？",
+      "clearAll": "全部清除",
+      "installCerts": "安装证书..."
+    },
+    "flowListMenu": {
+      "title": "流量列表",
+      "find": "查找",
+      "intercept": "拦截",
+      "interceptPlaceholder": "拦截",
+      "searchPlaceholder": "搜索",
+      "highlightPlaceholder": "高亮",
+      "resumeAll": "全部放行",
+      "resumeAllTitle": "[a] 全部放行"
+    },
+    "flowMenu": {
+      "title": "流量",
+      "flowModification": "流量修改",
+      "export": "导出",
+      "interception": "拦截",
+      "replay": "重放",
+      "replayTitle": "[r] 重放流量",
+      "duplicate": "复制",
+      "duplicateTitle": "[D] 复制流量",
+      "revert": "还原",
+      "revertTitle": "还原流量更改 [V]",
+      "delete": "删除",
+      "deleteTitle": "[d] 删除流量",
+      "resume": "放行",
+      "resumeTitle": "[a] 放行拦截的流量",
+      "abort": "中止",
+      "abortTitle": "[x] 终止拦截的流量",
+      "download": "下载",
+      "downloadRequest": "下载请求",
+      "downloadResponse": "下载响应",
+      "exportTooltip": "导出流量。",
+      "copyRawRequest": "复制原始请求",
+      "copyRawResponse": "复制原始响应",
+      "copyRawCombined": "复制原始请求和响应",
+      "copyAsCurl": "复制为 cURL",
+      "copyAsHttpie": "复制为 HTTPie",
+      "mark": "标记",
+      "markTooltip": "标记流量",
+      "noMarker": "⚪ (无标记)"
+    },
+    "optionMenu": {
+      "title": "选项",
+      "editOptions": "编辑选项",
+      "alpha": "测试版",
+      "openOptionsTitle": "打开选项",
+      "optionsEditor": "选项编辑器",
+      "quickOptions": "快捷选项",
+      "viewOptions": "视图选项",
+      "stripCacheHeaders": "移除缓存头",
+      "useHostHeader": "使用 Host 头显示",
+      "dontVerifyServerCerts": "不验证服务器证书"
+    },
+    "connectionIndicator": {
+      "connecting": "连接中…",
+      "fetchingData": "获取数据中…",
+      "connected": "已连接",
+      "connectionLost": "连接已断开"
+    },
+    "filterDocs": {
+      "docsLink": "mitmproxy 文档"
+    }
+  },
+  "commandBar": {
+    "title": "命令结果",
+    "placeholder": "输入命令",
+    "argumentSuggestion": "参数建议：",
+    "signatureHelp": "签名帮助：",
+    "availableCommands": "可用命令：",
+    "label": "显示命令栏"
+  },
+  "eventLog": {
+    "title": "事件日志",
+    "levels": {
+      "debug": "调试",
+      "info": "信息",
+      "web": "网页",
+      "warn": "警告",
+      "error": "错误"
+    },
+    "label": "显示事件日志"
+  },
+  "footer": {
+    "intercept": "拦截：{{value}}",
+    "sslInsecure": "不验证SSL",
+    "showhost": "显示主机",
+    "noUpstreamCert": "无上游证书",
+    "noRawTcp": "无原始TCP",
+    "noHttp2": "无HTTP/2",
+    "noWebsocket": "无WebSocket",
+    "anticache": "防缓存",
+    "anticomp": "防压缩",
+    "stickyauth": "粘性认证：{{value}}",
+    "stickycookie": "粘性Cookie：{{value}}",
+    "stream": "流式传输：{{value}}",
+    "flowsSelected": "已选中 {{selected}}/{{total}} 个流量",
+    "proxyAddressTitle": "HTTP 代理服务器地址",
+    "versionTitle": "Mitmproxy 版本"
+  },
+  "captureSetup": {
+    "running": "mitmproxy 正在运行。",
+    "noFlows": "尚未记录任何流量。",
+    "configureMessage": "要开始捕获流量，请在「捕获」选项卡中配置您的设置。",
+    "starting": "{{description}} 正在启动...",
+    "isActive": "{{description}} 已激活。",
+    "listeningAt": "{{description}} 正在监听 {{address}}。"
+  },
+  "modes": {
+    "title": "拦截流量",
+    "description": "配置 mitmproxy 拦截流量的方式。",
+    "recommended": "推荐",
+    "advanced": "高级",
+    "localRedirectMissingTitle": "本地重定向模式",
+    "transparentMissingDescription": "此模式仅在 Linux 和 macOS 上受支持。",
+    "regular": {
+      "title": "显式 HTTP(S) 代理",
+      "description": "手动配置客户端应用程序或设备以使用 HTTP(S) 代理。",
+      "toggleLabel": "运行 HTTP/S 代理",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "portPlaceholder": "8080"
+    },
+    "local": {
+      "title": "本地应用程序",
+      "description": "透明地拦截本地应用程序流量。",
+      "toggleLabel": "拦截以下流量"
+    },
+    "localDropdown": {
+      "allApplications": "all applications",
+      "addMore": "添加更多",
+      "selectAll": "所有应用程序",
+      "currentProcessesHeader": "当前计算机上运行的应用程序",
+      "pressEnter": "按回车键以捕获匹配以下条件的程序流量：{{search}}"
+    },
+    "wireguard": {
+      "title": "WireGuard 服务器",
+      "description": "启动 WireGuard™ 服务器并连接外部设备以进行透明代理。",
+      "toggleLabel": "运行 WireGuard 服务器",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "configFile": "配置文件",
+      "hostPlaceholder": "（所有接口）",
+      "portPlaceholder": "51820",
+      "filePlaceholder": "~/.mitmproxy/wireguard.conf"
+    },
+    "reverse": {
+      "title": "反向代理",
+      "description": "请求将被转发到预设的目标地址。",
+      "toggleLabel": "转发",
+      "trafficTo": "流量到",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "addServer": "添加额外服务器",
+      "destinationPlaceholder": "example.com",
+      "hostPlaceholder": "*",
+      "portPlaceholder": "8080"
+    },
+    "transparent": {
+      "title": "透明代理",
+      "description": "配置路由表将流量发送到 mitmproxy。",
+      "configureRoutingTable": "配置路由表",
+      "toggleLabel": "运行透明代理",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "portPlaceholder": "8080"
+    },
+    "socks": {
+      "title": "SOCKS 代理",
+      "description": "手动配置客户端应用程序或设备以使用 SOCKS5 代理。",
+      "toggleLabel": "运行 SOCKS 代理",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "portPlaceholder": "8080"
+    },
+    "upstream": {
+      "title": "显式 HTTP(S) 代理（带上游代理）",
+      "description": "所有请求将转发到第二个 HTTP(S) 代理服务器。",
+      "toggleLabel": "运行 HTTP/S 代理并将请求转发到",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "destinationPlaceholder": "http://example.com:8080",
+      "portPlaceholder": "8080"
+    },
+    "dns": {
+      "title": "DNS 服务器",
+      "description": "使用主机的 DNS 配置的递归 DNS 解析器。",
+      "toggleLabel": "运行 DNS 服务器",
+      "advancedConfig": "高级配置",
+      "listenHost": "监听主机",
+      "listenPort": "监听端口",
+      "portPlaceholder": "8080"
+    }
+  },
+  "flowColumns": {
+    "index": "#",
+    "path": "路径",
+    "method": "方法",
+    "version": "版本",
+    "status": "状态",
+    "size": "大小",
+    "time": "耗时",
+    "startTime": "开始时间",
+    "comment": "注释",
+    "connectionKilled": "连接已终止。"
+  },
+  "flowView": {
+    "tabs": {
+      "request": "请求",
+      "response": "响应",
+      "error": "错误",
+      "connection": "连接",
+      "timing": "计时",
+      "websocket": "WebSocket",
+      "streamData": "流数据",
+      "datagrams": "数据报",
+      "dnsRequest": "请求",
+      "dnsResponse": "响应",
+      "comment": "注释"
+    },
+    "httpMessages": {
+      "trailers": "HTTP 尾部"
+    },
+    "dnsMessages": {
+      "question": "问题",
+      "recursiveQuestion": "递归问题",
+      "answer": "答案",
+      "authoritativeAnswer": "权威答案",
+      "recursiveAnswer": "递归答案",
+      "authority": "授权",
+      "additional": "附加",
+      "name": "名称",
+      "type": "类型",
+      "class": "类别",
+      "ttl": "TTL",
+      "data": "数据",
+      "truncated": "（已截断）"
+    },
+    "messages": {
+      "count": "{{count}} 条消息"
+    },
+    "webSocket": {
+      "title": "WebSocket",
+      "closedBy": "被{{who}}关闭，代码 {{code}} {{reason}}。",
+      "client": "客户端",
+      "server": "服务器"
+    },
+    "connection": {
+      "clientConnection": "客户端连接",
+      "serverConnection": "服务器连接",
+      "serverCertificate": "服务器证书",
+      "address": "地址",
+      "resolvedAddress": "已解析地址",
+      "sourceAddress": "源地址",
+      "sni": "SNI",
+      "sniTitle": "TLS 服务器名称指示",
+      "alpn": "ALPN",
+      "alpnTitle": "协商的 ALPN 协议",
+      "tlsVersion": "TLS 版本",
+      "tlsCipher": "TLS 加密套件",
+      "type": "类型",
+      "bits": "位",
+      "sha256Digest": "SHA256 摘要",
+      "validFrom": "有效期从",
+      "validTo": "有效期至",
+      "subjectAlternativeNames": "主题备用名称",
+      "subject": "主题",
+      "issuer": "颁发者",
+      "serial": "序列号"
+    },
+    "timing": {
+      "title": "计时",
+      "serverConnInitiated": "服务器连接发起",
+      "serverConnTcpHandshake": "服务器 TCP 握手",
+      "serverConnTlsHandshake": "服务器 TLS 握手",
+      "serverConnClosed": "服务器连接关闭",
+      "clientConnEstablished": "客户端连接已建立",
+      "clientConnTlsHandshake": "客户端 TLS 握手",
+      "clientConnClosed": "客户端连接关闭",
+      "firstRequestByte": "首个请求字节",
+      "requestComplete": "请求完成",
+      "firstResponseByte": "首个响应字节",
+      "responseComplete": "响应完成"
+    },
+    "comment": {
+      "title": "注释",
+      "placeholder": "空"
+    }
+  },
+  "contentview": {
+    "editing": "[编辑中]",
+    "noContent": "无内容",
+    "loading": "加载中...",
+    "done": "完成",
+    "cancel": "取消",
+    "edit": "编辑",
+    "replace": "替换",
+    "replaceTitle": "上传文件以替换内容。",
+    "copy": "复制",
+    "copied": "已复制！",
+    "view": "视图",
+    "showMore": "显示更多",
+    "errorGettingContent": "获取内容时出错：{{error}}。",
+    "networkError": "网络错误"
+  },
+  "editors": {
+    "keyValueList": {
+      "add": "添加",
+      "placeholder": "空"
+    }
+  },
+  "modal": {
+    "optionModal": {
+      "title": "选项",
+      "enable": "启用",
+      "default": "默认值：{{value}}"
+    }
+  },
+  "languageSelector": {
+    "label": "语言",
+    "english": "English",
+    "chinese": "中文"
+  }
+}

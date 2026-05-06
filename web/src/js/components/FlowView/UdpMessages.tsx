@@ -1,5 +1,5 @@
+import React from "react";
 import type { UDPFlow } from "../../flow";
-import * as React from "react";
 import Messages from "./Messages";
 
 export default function UdpMessages({ flow }: { flow: UDPFlow }) {

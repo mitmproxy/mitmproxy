@@ -1,15 +1,17 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import type { ServerInfo } from "../../ducks/backendState";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
 import { ModeToggle } from "./ModeToggle";
-import { Popover } from "./Popover";
 import { setActive, setListenHost, setListenPort } from "../../ducks/modes/dns";
 import type { DnsState } from "../../modes/dns";
 import { getSpec } from "../../modes/dns";
+import { Popover } from "./Popover";
 
 export default function Dns() {
+    const { t } = useTranslation();
     const serverState = useAppSelector((state) => state.modes.dns);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
@@ -25,11 +27,8 @@ export default function Dns() {
 
     return (
         <div>
-            <h4 className="mode-title">DNS Server</h4>
-            <p className="mode-description">
-                A recursive DNS resolver using the host&apos;s DNS
-                configuration.
-            </p>
+            <h4 className="mode-title">{t("modes.dns.title")}</h4>
+            <p className="mode-description">{t("modes.dns.description")}</p>
             {servers}
         </div>
     );
@@ -42,6 +41,7 @@ function DnsRow({
     server: DnsState;
     backendState?: ServerInfo;
 }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const error = server.error || backendState?.last_exception || undefined;
@@ -50,14 +50,14 @@ function DnsRow({
         <div>
             <ModeToggle
                 value={server.active}
-                label="Run DNS Server"
+                label={t("modes.dns.toggleLabel")}
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
                 <Popover iconClass="fa fa-cog">
-                    <h4>Advanced Configuration</h4>
-                    <p>Listen Host</p>
+                    <h4>{t("modes.dns.advancedConfig")}</h4>
+                    <p>{t("modes.dns.listenHost")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.listen_host || ""}
@@ -66,7 +66,7 @@ function DnsRow({
                         }
                     />
 
-                    <p>Listen Port</p>
+                    <p>{t("modes.dns.listenPort")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={
@@ -74,7 +74,7 @@ function DnsRow({
                                 ? server.listen_port.toString()
                                 : ""
                         }
-                        placeholder="8080"
+                        placeholder={t("modes.dns.portPlaceholder")}
                         onEditDone={(port) =>
                             dispatch(
                                 setListenPort({

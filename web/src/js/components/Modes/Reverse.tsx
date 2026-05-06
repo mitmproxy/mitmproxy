@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import {
     addServer,
@@ -15,7 +17,6 @@ import { ReverseProxyProtocols } from "../../backends/consts";
 import type { ServerInfo } from "../../ducks/backendState";
 import ValueEditor from "../editors/ValueEditor";
 import { ServerStatus } from "./CaptureSetup";
-import { ModeToggle } from "./ModeToggle";
 import { Popover } from "./Popover";
 
 interface ReverseToggleRowProps {
@@ -25,6 +26,7 @@ interface ReverseToggleRowProps {
 }
 
 export default function Reverse() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const servers = useAppSelector((state) => state.modes.reverse);
@@ -32,10 +34,8 @@ export default function Reverse() {
 
     return (
         <div>
-            <h4 className="mode-title">Reverse Proxy</h4>
-            <p className="mode-description">
-                Requests are forwarded to a preconfigured destination.
-            </p>
+            <h4 className="mode-title">{t("modes.reverse.title")}</h4>
+            <p className="mode-description">{t("modes.reverse.description")}</p>
             <div className="mode-reverse-servers">
                 {servers.map((server, i) => (
                     <ReverseToggleRow
@@ -49,8 +49,7 @@ export default function Reverse() {
                     className="mode-reverse-add-server"
                     onClick={() => dispatch(addServer())}
                 >
-                    <i className="fa fa-plus-square-o" aria-hidden="true"></i>
-                    Add additional server
+                    <i className="fa fa-plus-square-o" aria-hidden="true"></i> {t("modes.reverse.addServer")}
                 </div>
             </div>
         </div>
@@ -62,6 +61,7 @@ function ReverseToggleRow({
     server,
     backendState,
 }: ReverseToggleRowProps) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const protocols = Object.values(ReverseProxyProtocols);
@@ -79,7 +79,7 @@ function ReverseToggleRow({
         <div>
             <ModeToggle
                 value={server.active}
-                label="Forward"
+                label={t("modes.reverse.toggleLabel")}
                 onChange={() => {
                     dispatch(setActive({ server, value: !server.active }));
                 }}
@@ -103,27 +103,27 @@ function ReverseToggleRow({
                         </option>
                     ))}
                 </select>
-                traffic to
+                {t("modes.reverse.trafficTo")}
                 <ValueEditor
                     className="mode-reverse-input"
                     content={server.destination?.toString() || ""}
                     onEditDone={(value) =>
                         dispatch(setDestination({ server, value }))
                     }
-                    placeholder="example.com"
+                    placeholder={t("modes.reverse.destinationPlaceholder")}
                 />
                 <Popover iconClass="fa fa-cog">
-                    <h4>Advanced Configuration</h4>
-                    <p>Listen Host</p>
+                    <h4>{t("modes.reverse.advancedConfig")}</h4>
+                    <p>{t("modes.reverse.listenHost")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.listen_host || ""}
                         onEditDone={(value) =>
                             dispatch(setListenHost({ server, value }))
                         }
-                        placeholder="*"
+                        placeholder={t("modes.reverse.hostPlaceholder")}
                     />
-                    <p>Listen Port</p>
+                    <p>{t("modes.reverse.listenPort")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={String(server.listen_port || "")}
@@ -135,7 +135,7 @@ function ReverseToggleRow({
                                 }),
                             )
                         }
-                        placeholder="8080"
+                        placeholder={t("modes.reverse.portPlaceholder")}
                     />
                 </Popover>
                 {removable && (

@@ -7,11 +7,7 @@ exports[`PureOptionDefault Component should handle array 2`] = `
   <div
     class="small"
   >
-    Default: 
-    <strong>
-       [ ] 
-    </strong>
-     
+    Default: [ ]
   </div>
 </DocumentFragment>
 `;
@@ -21,11 +17,7 @@ exports[`PureOptionDefault Component should handle boolean type 1`] = `
   <div
     class="small"
   >
-    Default: 
-    <strong>
-       false 
-    </strong>
-     
+    Default: false
   </div>
 </DocumentFragment>
 `;
@@ -35,11 +27,7 @@ exports[`PureOptionDefault Component should handle null value 1`] = `
   <div
     class="small"
   >
-    Default: 
-    <strong>
-       null 
-    </strong>
-     
+    Default: null
   </div>
 </DocumentFragment>
 `;
@@ -49,11 +37,7 @@ exports[`PureOptionDefault Component should handle string 1`] = `
   <div
     class="small"
   >
-    Default: 
-    <strong>
-       "" 
-    </strong>
-     
+    Default: ""
   </div>
 </DocumentFragment>
 `;

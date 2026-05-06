@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { Provider } from "react-redux";
 import { TStore } from "./ducks/tutils";
+import "../i18n/i18n";
 
 // re-export everything
 export { waitFor, fireEvent, act, screen } from "@testing-library/react";

@@ -1,11 +1,7 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
-import {
-    isValidHttpVersion,
-    MessageUtils,
-    parseUrl,
-    RequestUtils,
-} from "../../flow/utils";
+import { isValidHttpVersion, MessageUtils, parseUrl, RequestUtils } from "../../flow/utils";
 import ValidateEditor from "../editors/ValidateEditor";
 import ValueEditor from "../editors/ValueEditor";
 
@@ -143,6 +139,7 @@ type TrailersProps = {
 };
 
 function Trailers({ flow, message }: TrailersProps) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const part = flow.request === message ? "request" : "response";
     const hasTrailers = !!MessageUtils.get_first_header(message, /^trailer$/i);
@@ -152,7 +149,7 @@ function Trailers({ flow, message }: TrailersProps) {
     return (
         <>
             <hr />
-            <h5>HTTP Trailers</h5>
+            <h5>{t("flowView.httpMessages.trailers")}</h5>
             <KeyValueListEditor
                 className="trailers"
                 data={message.trailers}

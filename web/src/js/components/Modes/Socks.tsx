@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import type { SocksState } from "../../modes/socks";
 import { getSpec } from "../../modes/socks";
@@ -15,6 +16,7 @@ import ValueEditor from "../editors/ValueEditor";
 import { Popover } from "./Popover";
 
 export default function Socks() {
+    const { t } = useTranslation();
     const serverState = useAppSelector((state) => state.modes.socks);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
@@ -30,11 +32,8 @@ export default function Socks() {
 
     return (
         <div>
-            <h4 className="mode-title">SOCKS Proxy</h4>
-            <p className="mode-description">
-                You manually configure your client application or device to use
-                a SOCKS5 proxy.
-            </p>
+            <h4 className="mode-title">{t("modes.socks.title")}</h4>
+            <p className="mode-description">{t("modes.socks.description")}</p>
 
             {servers}
         </div>
@@ -48,6 +47,7 @@ function SocksRow({
     server: SocksState;
     backendState?: ServerInfo;
 }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const error = server.error || backendState?.last_exception || undefined;
@@ -56,14 +56,14 @@ function SocksRow({
         <div>
             <ModeToggle
                 value={server.active}
-                label="Run SOCKS Proxy"
+                label={t("modes.socks.toggleLabel")}
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
                 <Popover iconClass="fa fa-cog">
-                    <h4>Advanced Configuration</h4>
-                    <p>Listen Host</p>
+                    <h4>{t("modes.socks.advancedConfig")}</h4>
+                    <p>{t("modes.socks.listenHost")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.listen_host || ""}
@@ -72,7 +72,7 @@ function SocksRow({
                         }
                     />
 
-                    <p>Listen Port</p>
+                    <p>{t("modes.socks.listenPort")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={
@@ -80,7 +80,7 @@ function SocksRow({
                                 ? server.listen_port.toString()
                                 : ""
                         }
-                        placeholder="8080"
+                        placeholder={t("modes.socks.portPlaceholder")}
                         onEditDone={(port) =>
                             dispatch(
                                 setListenPort({

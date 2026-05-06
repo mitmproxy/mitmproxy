@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useAppSelector } from "../../ducks";
 import Dropdown, { MenuItem } from "../common/Dropdown";
 
@@ -8,6 +9,7 @@ type ViewSelectorProps = {
 };
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
+    const { t } = useTranslation();
     const contentViews = useAppSelector(
         (state) => state.backendState.contentViews || [],
     );
@@ -15,7 +17,7 @@ export default function ViewSelector({ value, onChange }: ViewSelectorProps) {
     const inner = (
         <span>
             <i className="fa fa-fw fa-files-o" />
-            &nbsp;<b>View:</b> {value.toLowerCase()} <span className="caret" />
+            &nbsp;<b>{t("contentview.view")}:</b> {value.toLowerCase()} <span className="caret" />
         </span>
     );
 

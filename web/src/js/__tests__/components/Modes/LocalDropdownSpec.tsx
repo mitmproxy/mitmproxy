@@ -48,9 +48,8 @@ test("LocalDropdown - no matching processes", async () => {
     );
 
     await waitFor(() => {
-        expect(screen.getByText(/Press/i)).toBeInTheDocument();
-        expect(screen.getByText("Enter")).toBeInTheDocument();
-        expect(screen.getByText("nonexistent")).toBeInTheDocument();
+        expect(screen.getByText(/Press Enter/i)).toBeInTheDocument();
+        expect(screen.getByText(/nonexistent/)).toBeInTheDocument();
     });
 });
 

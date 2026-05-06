@@ -21,10 +21,12 @@
         "bootstrap": "^3.4.1",
         "classnames": "^2.3.1",
         "codemirror": "^6.0.1",
+        "i18next": "^26.0.8",
         "lodash": "^4.17.21",
         "qrcode": "^1.5.4",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
+        "react-i18next": "^17.0.6",
         "react-redux": "^9.2.0"
     },
     "devDependencies": {

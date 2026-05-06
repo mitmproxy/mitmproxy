@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Add Chinese (zh) localization support. English remains the default language.
+  A language selector is available in the header bar.
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)

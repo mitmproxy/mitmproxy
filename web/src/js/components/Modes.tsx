@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import Local from "./Modes/Local";
 import Regular from "./Modes/Regular";
 import Wireguard from "./Modes/Wireguard";
@@ -11,22 +12,23 @@ import Dns from "./Modes/Dns";
 import MissingMode from "./Modes/MissingMode";
 
 export default function Modes() {
+    const { t } = useTranslation();
     const { platform, localModeUnavailable } = useAppSelector(
         (state) => state.backendState,
     );
 
     return (
         <div className="modes">
-            <h2>Intercept Traffic</h2>
-            <p>Configure how you want to intercept traffic with mitmproxy.</p>
+            <h2>{t("modes.title")}</h2>
+            <p>{t("modes.description")}</p>
 
             <div className="modes-category green-left-border">
-                <h3>Recommended</h3>
+                <h3>{t("modes.recommended")}</h3>
                 <div className="modes-container">
                     <Regular />
                     {localModeUnavailable !== null ? (
                         <MissingMode
-                            title="Local Redirect Mode"
+                            title={t("modes.localRedirectMissingTitle")}
                             description={localModeUnavailable}
                         />
                     ) : (
@@ -37,7 +39,7 @@ export default function Modes() {
                 </div>
             </div>
             <div className="modes-category gray-left-border">
-                <h3>Advanced</h3>
+                <h3>{t("modes.advanced")}</h3>
                 <div className="modes-container">
                     <Socks />
                     <Upstream />
@@ -46,8 +48,8 @@ export default function Modes() {
                         <Transparent />
                     ) : (
                         <MissingMode
-                            title="Transparent Proxy"
-                            description="This mode is only supported on Linux and MacOS."
+                            title={t("modes.transparent.title")}
+                            description={t("modes.transparentMissingDescription")}
                         />
                     )}
                 </div>

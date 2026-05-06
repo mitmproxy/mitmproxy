@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setActive, setSelectedProcesses } from "../../ducks/modes/local";
@@ -10,6 +11,7 @@ import LocalDropdown from "./LocalDropdown";
 import { fetchProcesses } from "../../ducks/processes";
 
 export default function Local() {
+    const { t } = useTranslation();
     const serverState = useAppSelector((state) => state.modes.local);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
@@ -25,10 +27,8 @@ export default function Local() {
 
     return (
         <div>
-            <h4 className="mode-title">Local Applications</h4>
-            <p className="mode-description">
-                Transparently Intercept local application(s).
-            </p>
+            <h4 className="mode-title">{t("modes.local.title")}</h4>
+            <p className="mode-description">{t("modes.local.description")}</p>
             {servers}
         </div>
     );
@@ -41,6 +41,7 @@ function LocalRow({
     server: LocalState;
     backendState?: ServerInfo;
 }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const fetchProcessesError = useAppSelector(
@@ -71,7 +72,7 @@ function LocalRow({
         <div className="mode-local">
             <ModeToggle
                 value={server.active}
-                label="Intercept traffic for"
+                label={t("modes.local.toggleLabel")}
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }

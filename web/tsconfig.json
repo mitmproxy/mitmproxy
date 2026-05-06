@@ -6,6 +6,7 @@
         "esModuleInterop": true,
         "jsx": "react",
         "strictNullChecks": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "resolveJsonModule": true
     }
 }

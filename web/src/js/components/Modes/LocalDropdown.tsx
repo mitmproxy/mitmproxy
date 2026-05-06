@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import type { LocalState } from "../../modes/local";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setSelectedProcesses } from "../../ducks/modes/local";
@@ -12,6 +13,7 @@ interface LocalDropdownProps {
 }
 
 export default function LocalDropdown({ server }: LocalDropdownProps) {
+    const { t } = useTranslation();
     const { currentProcesses, isLoading } = useAppSelector(
         (state) => state.processes,
     );
@@ -109,8 +111,8 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     className="autocomplete-input"
                     placeholder={
                         selectedProcesses && selectedProcesses?.length > 0
-                            ? "Add more"
-                            : "all applications"
+                            ? t("modes.localDropdown.addMore")
+                            : t("modes.localDropdown.allApplications")
                     }
                     value={currentSearch}
                     onChange={handleInputChange}
@@ -123,7 +125,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                     classname="local-popover"
                     isVisible={isPopoverVisible}
                 >
-                    <h4>Current Applications running on machine</h4>
+                    <h4>{t("modes.localDropdown.currentProcessesHeader")}</h4>
                     {isLoading ? (
                         <i className="fa fa-spinner" aria-hidden="true"></i>
                     ) : filteredProcesses.length > 0 ? (
@@ -143,7 +145,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                                 <div className="process-details">
                                     <div className="process-icon" />
                                     <span className="process-name">
-                                        All applications
+                                        {t("modes.localDropdown.selectAll")}
                                     </span>
                                 </div>
                                 {selectedProcesses === "" && (
@@ -184,8 +186,7 @@ export default function LocalDropdown({ server }: LocalDropdownProps) {
                         </ul>
                     ) : (
                         <span>
-                            Press <strong>Enter</strong> to capture traffic for
-                            programs matching: <strong>{currentSearch}</strong>
+                            {t("modes.localDropdown.pressEnter", { search: currentSearch })}
                         </span>
                     )}
                 </Popover>

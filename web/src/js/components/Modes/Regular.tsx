@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { ModeToggle } from "./ModeToggle";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import {
@@ -14,6 +15,7 @@ import type { ServerInfo } from "../../ducks/backendState";
 import { ServerStatus } from "./CaptureSetup";
 
 export default function Regular() {
+    const { t } = useTranslation();
     const serverState = useAppSelector((state) => state.modes.regular);
     const backendState = useAppSelector((state) => state.backendState.servers);
 
@@ -29,10 +31,9 @@ export default function Regular() {
 
     return (
         <div>
-            <h4 className="mode-title">Explicit HTTP(S) Proxy</h4>
+            <h4 className="mode-title">{t("modes.regular.title")}</h4>
             <p className="mode-description">
-                You manually configure your client application or device to use
-                an HTTP(S) proxy.
+                {t("modes.regular.description")}
             </p>
             {servers}
         </div>
@@ -47,6 +48,7 @@ function RegularRow({
     error?: string;
     backendState?: ServerInfo;
 }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const error = server.error || backendState?.last_exception || undefined;
@@ -55,14 +57,14 @@ function RegularRow({
         <div>
             <ModeToggle
                 value={server.active}
-                label="Run HTTP/S Proxy"
+                label={t("modes.regular.toggleLabel")}
                 onChange={() =>
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
                 <Popover iconClass="fa fa-cog">
-                    <h4>Advanced Configuration</h4>
-                    <p>Listen Host</p>
+                    <h4>{t("modes.regular.advancedConfig")}</h4>
+                    <p>{t("modes.regular.listenHost")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={server.listen_host || ""}
@@ -71,7 +73,7 @@ function RegularRow({
                         }
                     />
 
-                    <p>Listen Port</p>
+                    <p>{t("modes.regular.listenPort")}</p>
                     <ValueEditor
                         className="mode-input"
                         content={
@@ -79,7 +81,7 @@ function RegularRow({
                                 ? server.listen_port.toString()
                                 : ""
                         }
-                        placeholder="8080"
+                        placeholder={t("modes.regular.portPlaceholder")}
                         onEditDone={(port) =>
                             dispatch(
                                 setListenPort({

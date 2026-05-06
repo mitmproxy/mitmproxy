@@ -3,6 +3,7 @@ import * as eventLogActions from "../../ducks/eventLog";
 import * as commandBarActions from "../../ducks/commandBar";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as optionsActions from "../../ducks/options";
+import { useTranslation } from "react-i18next";
 
 type MenuToggleProps = {
     value: boolean;
@@ -41,6 +42,7 @@ export function OptionsToggle({ name, children }: OptionsToggleProps) {
 }
 
 export function EventlogToggle() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const visible = useAppSelector((state) => state.eventLog.visible);
 
@@ -49,12 +51,13 @@ export function EventlogToggle() {
             value={visible}
             onChange={() => dispatch(eventLogActions.toggleVisibility())}
         >
-            Display Event Log
+            {t("eventLog.label")}
         </MenuToggle>
     );
 }
 
 export function CommandBarToggle() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const visible = useAppSelector((state) => state.commandBar.visible);
 
@@ -63,7 +66,7 @@ export function CommandBarToggle() {
             value={visible}
             onChange={() => dispatch(commandBarActions.toggleVisibility())}
         >
-            Display Command Bar
+            {t("commandBar.label")}
         </MenuToggle>
     );
 }

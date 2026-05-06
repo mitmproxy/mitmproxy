@@ -1,5 +1,6 @@
-import * as React from "react";
 import type { FunctionComponent } from "react";
+import React from "react";
+import { useTranslation } from "react-i18next";
 import { Request, Response } from "./FlowView/HttpMessages";
 import {
     Request as DnsRequest,
@@ -38,6 +39,20 @@ export const allTabs: {
     comment: Comment,
 };
 
+const tabTranslationKeys: Record<string, string> = {
+    request: "flowView.tabs.request",
+    response: "flowView.tabs.response",
+    error: "flowView.tabs.error",
+    connection: "flowView.tabs.connection",
+    timing: "flowView.tabs.timing",
+    websocket: "flowView.tabs.websocket",
+    tcpmessages: "flowView.tabs.streamData",
+    udpmessages: "flowView.tabs.datagrams",
+    dnsrequest: "flowView.tabs.dnsRequest",
+    dnsresponse: "flowView.tabs.dnsResponse",
+    comment: "flowView.tabs.comment",
+};
+
 export function tabsForFlow(flow: Flow): string[] {
     let tabs;
     switch (flow.type) {
@@ -65,6 +80,7 @@ export function tabsForFlow(flow: Flow): string[] {
 }
 
 export default function FlowView() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const flow = useAppSelector((state) => state.flows.selected[0]);
     let active = useAppSelector((state) => state.ui.flow.tab);
@@ -106,7 +122,7 @@ export default function FlowView() {
                             dispatch(selectTab(tabId));
                         }}
                     >
-                        {allTabs[tabId].displayName}
+                        {t(tabTranslationKeys[tabId])}
                     </a>
                 ))}
             </nav>

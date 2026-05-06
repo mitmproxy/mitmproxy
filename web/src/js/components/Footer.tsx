@@ -1,9 +1,11 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { formatSize } from "../utils";
 import HideInStatic from "../components/common/HideInStatic";
 import { useAppSelector } from "../ducks";
 
 export default function Footer() {
+    const { t } = useTranslation();
     const version = useAppSelector((state) => state.backendState.version);
     const {
         mode,
@@ -36,43 +38,43 @@ export default function Footer() {
             )}
             {intercept && (
                 <span className="label label-success">
-                    Intercept: {intercept}
+                    {t("footer.intercept", { value: intercept })}
                 </span>
             )}
             {ssl_insecure && (
-                <span className="label label-danger">ssl_insecure</span>
+                <span className="label label-danger">{t("footer.sslInsecure")}</span>
             )}
-            {showhost && <span className="label label-success">showhost</span>}
+            {showhost && <span className="label label-success">{t("footer.showhost")}</span>}
             {!upstream_cert && (
-                <span className="label label-success">no-upstream-cert</span>
+                <span className="label label-success">{t("footer.noUpstreamCert")}</span>
             )}
-            {!rawtcp && <span className="label label-success">no-raw-tcp</span>}
-            {!http2 && <span className="label label-success">no-http2</span>}
+            {!rawtcp && <span className="label label-success">{t("footer.noRawTcp")}</span>}
+            {!http2 && <span className="label label-success">{t("footer.noHttp2")}</span>}
             {!websocket && (
-                <span className="label label-success">no-websocket</span>
+                <span className="label label-success">{t("footer.noWebsocket")}</span>
             )}
             {anticache && (
-                <span className="label label-success">anticache</span>
+                <span className="label label-success">{t("footer.anticache")}</span>
             )}
-            {anticomp && <span className="label label-success">anticomp</span>}
+            {anticomp && <span className="label label-success">{t("footer.anticomp")}</span>}
             {stickyauth && (
                 <span className="label label-success">
-                    stickyauth: {stickyauth}
+                    {t("footer.stickyauth", { value: stickyauth })}
                 </span>
             )}
             {stickycookie && (
                 <span className="label label-success">
-                    stickycookie: {stickycookie}
+                    {t("footer.stickycookie", { value: stickycookie })}
                 </span>
             )}
             {stream_large_bodies && (
                 <span className="label label-success">
-                    stream: {formatSize(stream_large_bodies)}
+                    {t("footer.stream", { value: formatSize(stream_large_bodies) })}
                 </span>
             )}
             {totalFlowsLength > 0 && (
                 <span className="label label-default">
-                    {selectedFlowsLength} of {totalFlowsLength} flows selected
+                    {t("footer.flowsSelected", { selected: selectedFlowsLength, total: totalFlowsLength })}
                 </span>
             )}
             <div className="pull-right">
@@ -80,13 +82,13 @@ export default function Footer() {
                     {server && (
                         <span
                             className="label label-primary"
-                            title="HTTP Proxy Server Address"
+                            title={t("footer.proxyAddressTitle")}
                         >
                             {listen_host || "*"}:{listen_port || 8080}
                         </span>
                     )}
                 </HideInStatic>
-                <span className="label label-default" title="Mitmproxy Version">
+                <span className="label label-default" title={t("footer.versionTitle")}>
                     mitmproxy {version}
                 </span>
             </div>

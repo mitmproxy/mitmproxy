@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { withTranslation, type WithTranslation } from "react-i18next";
 import { connect } from "react-redux";
 import type { EventLogItem } from "../ducks/eventLog";
 import { LogLevel, toggleFilter, toggleVisibility } from "../ducks/eventLog";
@@ -16,7 +17,7 @@ type EventLogProps = {
     toggleFilter: (filter: LogLevel) => any;
     close: () => any;
     defaultHeight: number;
-};
+} & WithTranslation;
 
 export class PureEventLog extends Component<EventLogProps, EventLogState> {
     static defaultProps = {
@@ -54,17 +55,17 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
 
     render() {
         const { height } = this.state;
-        const { filters, events, toggleFilter, close } = this.props;
+        const { filters, events, toggleFilter, close, t } = this.props;
 
         return (
             <div className="eventlog" style={{ height }}>
                 <div onMouseDown={this.onDragStart}>
-                    Eventlog
+                    {t("eventLog.title")}
                     <div className="pull-right">
                         {Object.values(LogLevel).map((type) => (
                             <ToggleButton
                                 key={type}
-                                text={type}
+                                text={t(`eventLog.levels.${type}`)}
                                 checked={filters[type]}
                                 onToggle={() => toggleFilter(type)}
                             />
@@ -87,4 +88,4 @@ export default connect(
         close: toggleVisibility,
         toggleFilter: toggleFilter,
     },
-)(PureEventLog);
+)(withTranslation()(PureEventLog));

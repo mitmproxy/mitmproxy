@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { HTTPFlow, HTTPMessage } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import { setContentViewFor } from "../../ducks/ui/flow";
@@ -48,6 +49,7 @@ type HttpMessageEditProps = {
 };
 
 function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const part = flow.request === message ? "request" : "response";
@@ -66,13 +68,13 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
     return (
         <div className="contentview" key="edit">
             <div className="controls">
-                <h5>[Editing]</h5>
+                <h5>{t("contentview.editing")}</h5>
                 <Button
                     onClick={save}
                     icon="fa-check text-success"
                     className="btn-xs"
                 >
-                    Done
+                    {t("contentview.done")}
                 </Button>
                 &nbsp;
                 <Button
@@ -80,7 +82,7 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                     icon="fa-times text-danger"
                     className="btn-xs"
                 >
-                    Cancel
+                    {t("contentview.cancel")}
                 </Button>
             </div>
             <CodeEditor
@@ -98,6 +100,7 @@ type HttpMessageViewProps = {
 };
 
 function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
@@ -122,9 +125,9 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
 
     let desc: string;
     if (message.contentLength === 0) {
-        desc = "No content";
+        desc = t("contentview.noContent");
     } else if (contentViewData === undefined) {
-        desc = "Loading...";
+        desc = t("contentview.loading");
     } else {
         desc =
             `${contentViewData.view_name} ${contentViewData.description}`.trimEnd();
@@ -139,13 +142,13 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
                 )}
                 &nbsp;
                 <Button onClick={startEdit} icon="fa-edit" className="btn-xs">
-                    Edit
+                    {t("contentview.edit")}
                 </Button>
                 &nbsp;
                 <FileChooser
                     icon="fa-upload"
-                    text="Replace"
-                    title="Upload a file to replace the content."
+                    text={t("contentview.replace")}
+                    title={t("contentview.replaceTitle")}
                     onOpenFile={(content) =>
                         dispatch(uploadContent(flow, content, part))
                     }
@@ -182,6 +185,7 @@ type CopyButtonProps = {
 };
 
 function CopyButton({ flow, message }: CopyButtonProps) {
+    const { t } = useTranslation();
     const part = flow.request === message ? "request" : "response";
     const contentView = useAppSelector(
         (state) => state.ui.flow.contentViewFor[flow.id + part] || "Auto",
@@ -222,7 +226,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
             className="btn-xs"
             disabled={isFetchingFullContent}
         >
-            {isCopied ? "Copied!" : "Copy"}
+            {isCopied ? t("contentview.copied") : t("contentview.copy")}
         </Button>
     );
 }

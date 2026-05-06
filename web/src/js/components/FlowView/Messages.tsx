@@ -1,6 +1,7 @@
 import type { Flow, MessagesMeta } from "../../flow";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useCallback, useState } from "react";
 import type { ContentViewData } from "../contentviews/useContentView";
 import { useContentView } from "../contentviews/useContentView";
@@ -15,6 +16,7 @@ type MessagesPropTypes = {
 };
 
 export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const contentView = useAppSelector(
@@ -41,7 +43,7 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
     return (
         <div className="contentview">
             <div className="controls">
-                <h5>{messages_meta.count} Messages</h5>
+                <h5>{t("flowView.messages.count", { count: messages_meta.count })}</h5>
                 <ViewSelector
                     value={contentView}
                     onChange={(cv) =>

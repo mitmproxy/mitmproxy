@@ -1,5 +1,5 @@
-import type { TCPFlow } from "../../flow";
 import * as React from "react";
+import type { TCPFlow } from "../../flow";
 import Messages from "./Messages";
 
 export default function TcpMessages({ flow }: { flow: TCPFlow }) {

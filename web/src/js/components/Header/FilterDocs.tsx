@@ -1,18 +1,16 @@
 import React, { Component } from "react";
+import { withTranslation, type WithTranslation } from "react-i18next";
 import { fetchApi } from "../../utils";
 
 type FilterDocsProps = {
     selectHandler: (cmd: string) => void;
-};
+} & WithTranslation;
 
 type FilterDocsStates = {
     doc: { commands: string[][] };
 };
 
-export default class FilterDocs extends Component<
-    FilterDocsProps,
-    FilterDocsStates
-> {
+class FilterDocs extends Component<FilterDocsProps, FilterDocsStates> {
     // @todo move to redux
 
     static xhr: Promise<any> | null;
@@ -41,6 +39,7 @@ export default class FilterDocs extends Component<
     }
 
     render() {
+        const { t } = this.props;
         const { doc } = this.state;
         return !doc ? (
             <i className="fa fa-spinner fa-spin" />
@@ -56,7 +55,7 @@ export default class FilterDocs extends Component<
                                 )
                             }
                         >
-                            <td>{cmd[0].replace(" ", "\u00a0")}</td>
+                            <td>{cmd[0].replace(" ", " ")}</td>
                             <td>{cmd[1]}</td>
                         </tr>
                     ))}
@@ -68,7 +67,7 @@ export default class FilterDocs extends Component<
                                 rel="noreferrer"
                             >
                                 <i className="fa fa-external-link" />
-                                &nbsp; mitmproxy docs
+                                &nbsp; {t("header.filterDocs.docsLink")}
                             </a>
                         </td>
                     </tr>
@@ -77,3 +76,5 @@ export default class FilterDocs extends Component<
         );
     }
 }
+
+export default withTranslation()(FilterDocs);

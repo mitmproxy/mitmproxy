@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import Button from "../common/Button";
 import {
     canReplay,
@@ -26,6 +27,7 @@ import type { JSX } from "react";
 FlowMenu.title = "Flow";
 
 export default function FlowMenu(): JSX.Element {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
     const selectedFlows = useAppSelector((state) => state.flows.selected);
@@ -40,43 +42,43 @@ export default function FlowMenu(): JSX.Element {
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button
-                            title="[r]eplay flow"
+                            title={t("header.flowMenu.replayTitle")}
                             icon="fa-repeat text-primary"
                             onClick={() => dispatch(replayFlows(selectedFlows))}
                             disabled={!selectedFlows.some(canReplay)}
                         >
-                            Replay
+                            {t("header.flowMenu.replay")}
                         </Button>
                         <Button
-                            title="[D]uplicate flow"
+                            title={t("header.flowMenu.duplicateTitle")}
                             icon="fa-copy text-info"
                             onClick={() =>
                                 dispatch(duplicateFlows(selectedFlows))
                             }
                         >
-                            Duplicate
+                            {t("header.flowMenu.duplicate")}
                         </Button>
                         <Button
                             disabled={!selectedFlows.some(canRevert)}
-                            title="revert changes to flow [V]"
+                            title={t("header.flowMenu.revertTitle")}
                             icon="fa-history text-warning"
                             onClick={() => dispatch(revertFlows(selectedFlows))}
                         >
-                            Revert
+                            {t("header.flowMenu.revert")}
                         </Button>
                         <Button
-                            title="[d]elete flow"
+                            title={t("header.flowMenu.deleteTitle")}
                             icon="fa-trash text-danger"
                             onClick={() => {
                                 dispatch(removeFlows(selectedFlows));
                             }}
                         >
-                            Delete
+                            {t("header.flowMenu.delete")}
                         </Button>
 
                         <MarkButton flows={selectedFlows} />
                     </div>
-                    <div className="menu-legend">Flow Modification</div>
+                    <div className="menu-legend">{t("header.flowMenu.flowModification")}</div>
                 </div>
             </HideInStatic>
 
@@ -85,7 +87,7 @@ export default function FlowMenu(): JSX.Element {
                     <DownloadButton flow={flow} />
                     <ExportButton flow={flow} />
                 </div>
-                <div className="menu-legend">Export</div>
+                <div className="menu-legend">{t("header.flowMenu.export")}</div>
             </div>
 
             <HideInStatic>
@@ -93,22 +95,22 @@ export default function FlowMenu(): JSX.Element {
                     <div className="menu-content">
                         <Button
                             disabled={!canResumeOrKillAny}
-                            title="[a]ccept intercepted flow"
+                            title={t("header.flowMenu.resumeTitle")}
                             icon="fa-play text-success"
                             onClick={() => dispatch(resumeFlows(selectedFlows))}
                         >
-                            Resume
+                            {t("header.flowMenu.resume")}
                         </Button>
                         <Button
                             disabled={!canResumeOrKillAny}
-                            title="kill intercepted flow [x]"
+                            title={t("header.flowMenu.abortTitle")}
                             icon="fa-times text-danger"
                             onClick={() => dispatch(killFlows(selectedFlows))}
                         >
-                            Abort
+                            {t("header.flowMenu.abort")}
                         </Button>
                     </div>
-                    <div className="menu-legend">Interception</div>
+                    <div className="menu-legend">{t("header.flowMenu.interception")}</div>
                 </div>
             </HideInStatic>
         </div>
@@ -122,6 +124,7 @@ const openInNewTab = (url) => {
 };
 
 function DownloadButton({ flow }: { flow: Flow }) {
+    const { t } = useTranslation();
     const hasSingleFlowSelected = useAppSelector(
         (state) => state.flows.selected.length === 1,
     );
@@ -129,7 +132,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
     if (flow.type !== "http")
         return (
             <Button icon="fa-download" onClick={() => 0} disabled>
-                Download
+                {t("header.flowMenu.download")}
             </Button>
         );
 
@@ -142,7 +145,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                 }
                 disabled={!hasSingleFlowSelected}
             >
-                Download
+                {t("header.flowMenu.download")}
             </Button>
         );
     }
@@ -157,7 +160,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                     }
                     disabled={!hasSingleFlowSelected}
                 >
-                    Download
+                    {t("header.flowMenu.download")}
                 </Button>
             );
         }
@@ -170,7 +173,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                             onClick={() => 1}
                             disabled={!hasSingleFlowSelected}
                         >
-                            Download▾
+                            {t("header.flowMenu.download")}▾
                         </Button>
                     }
                     options={{ placement: "bottom-start" }}
@@ -182,7 +185,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                             )
                         }
                     >
-                        Download request
+                        {t("header.flowMenu.downloadRequest")}
                     </MenuItem>
                     <MenuItem
                         onClick={() =>
@@ -191,7 +194,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
                             )
                         }
                     >
-                        Download response
+                        {t("header.flowMenu.downloadResponse")}
                     </MenuItem>
                 </Dropdown>
             );
@@ -202,6 +205,7 @@ function DownloadButton({ flow }: { flow: Flow }) {
 }
 
 function ExportButton({ flow }: { flow: Flow }) {
+    const { t } = useTranslation();
     const hasSingleFlowSelected = useAppSelector(
         (state) => state.flows.selected.length === 1,
     );
@@ -210,28 +214,28 @@ function ExportButton({ flow }: { flow: Flow }) {
             className=""
             text={
                 <Button
-                    title="Export flow."
+                    title={t("header.flowMenu.exportTooltip")}
                     icon="fa-clone"
                     onClick={() => 1}
                     disabled={flow.type !== "http" || !hasSingleFlowSelected}
                 >
-                    Export▾
+                    {t("header.flowMenu.export")}▾
                 </Button>
             }
             options={{ placement: "bottom-start" }}
         >
             <MenuItem onClick={() => copy(flow, "raw_request")}>
-                Copy raw request
+                {t("header.flowMenu.copyRawRequest")}
             </MenuItem>
             <MenuItem onClick={() => copy(flow, "raw_response")}>
-                Copy raw response
+                {t("header.flowMenu.copyRawResponse")}
             </MenuItem>
             <MenuItem onClick={() => copy(flow, "raw")}>
-                Copy raw request and response
+                {t("header.flowMenu.copyRawCombined")}
             </MenuItem>
-            <MenuItem onClick={() => copy(flow, "curl")}>Copy as cURL</MenuItem>
+            <MenuItem onClick={() => copy(flow, "curl")}>{t("header.flowMenu.copyAsCurl")}</MenuItem>
             <MenuItem onClick={() => copy(flow, "httpie")}>
-                Copy as HTTPie
+                {t("header.flowMenu.copyAsHttpie")}
             </MenuItem>
         </Dropdown>
     );
@@ -248,23 +252,24 @@ const markers = {
 };
 
 function MarkButton({ flows }: { flows: Flow[] }) {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     return (
         <Dropdown
             className=""
             text={
                 <Button
-                    title="mark flow"
+                    title={t("header.flowMenu.markTooltip")}
                     icon="fa-paint-brush text-success"
                     onClick={() => 1}
                 >
-                    Mark▾
+                    {t("header.flowMenu.mark")}▾
                 </Button>
             }
             options={{ placement: "bottom-start" }}
         >
             <MenuItem onClick={() => dispatch(markFlows(flows, ""))}>
-                ⚪ (no marker)
+                {t("header.flowMenu.noMarker")}
             </MenuItem>
             {Object.entries(markers).map(([name, sym]) => (
                 <MenuItem

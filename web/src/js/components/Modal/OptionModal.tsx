@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { connect, shallowEqual } from "react-redux";
 import * as modalAction from "../../ducks/ui/modal";
 import type { Option } from "../../ducks/options";
@@ -20,6 +21,7 @@ function OptionError({ name }) {
 }
 
 export function PureOptionDefault({ value, defaultVal }) {
+    const { t } = useTranslation();
     if (value === defaultVal) {
         return null;
     } else {
@@ -40,7 +42,7 @@ export function PureOptionDefault({ value, defaultVal }) {
         }
         return (
             <div className="small">
-                Default: <strong> {defaultVal} </strong>{" "}
+                {t("modal.optionModal.default", { value: defaultVal })}
             </div>
         );
     }
@@ -54,6 +56,7 @@ const OptionDefault = connect(
 )(PureOptionDefault);
 
 export default function OptionModal() {
+    const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const options = useAppSelector(
         (state) => Object.keys(state.options_meta),
@@ -72,7 +75,7 @@ export default function OptionModal() {
                     <i className="fa fa-fw fa-times"></i>
                 </button>
                 <div className="modal-title">
-                    <h4>Options</h4>
+                    <h4>{t("modal.optionModal.title")}</h4>
                 </div>
             </div>
 

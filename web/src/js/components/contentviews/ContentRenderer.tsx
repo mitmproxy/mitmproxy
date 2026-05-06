@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 type ContentRendererProps = {
     content: string;
@@ -11,6 +12,7 @@ const ContentRenderer = React.memo(function ContentRenderer({
     maxLines,
     showMore,
 }: ContentRendererProps) {
+    const { t } = useTranslation();
     if (content.length === 0) {
         return null;
     }
@@ -27,7 +29,7 @@ const ContentRenderer = React.memo(function ContentRenderer({
                             className="fa fa-angle-double-down"
                             aria-hidden="true"
                         />{" "}
-                        Show more
+                        {t("contentview.showMore")}
                     </button>
                 ) : (
                     <div key={i}>{line}</div>
