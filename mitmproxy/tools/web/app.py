@@ -363,7 +363,7 @@ class IndexHandler(RequestHandler):
         self.render("login.html", invalid_password=invalid_password)
 
     def get(self):
-        self.render("../index.html")
+        self.render("../index.html", xsrf_token=self.xsrf_token.decode())
 
     post = get  # login form
 

@@ -51,6 +51,11 @@ describe("reverseString", () => {
 });
 
 describe("fetchApi", () => {
+    afterEach(() => {
+        document.querySelector('meta[name="xsrf-token"]')?.remove();
+        fetchMock.mockClear();
+    });
+
     it("should handle fetch operation", () => {
         utils.fetchApi("http://foo/bar", { method: "POST" });
         expect(fetchMock.mock.calls[0][0]).toEqual("http://foo/bar");
@@ -61,7 +66,6 @@ describe("fetchApi", () => {
     });
 
     it("should be possible to do put request", () => {
-        fetchMock.mockClear();
         utils.fetchApi.put("http://foo", [1, 2, 3], {});
         expect(fetchMock.mock.calls[0]).toEqual([
             "http://foo",
@@ -70,11 +74,35 @@ describe("fetchApi", () => {
                 credentials: "same-origin",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-XSRFToken": undefined,
                 },
                 method: "PUT",
             },
         ]);
+    });
+
+    it("should prefer the rendered xsrf token over cookies", () => {
+        const meta = document.createElement("meta");
+        meta.setAttribute("name", "xsrf-token");
+        meta.setAttribute("content", "rendered-token");
+        document.head.appendChild(meta);
+
+        utils.fetchApi.put("http://foo", [1, 2, 3], {});
+        expect(fetchMock.mock.calls[0][1]?.headers).toEqual({
+            "Content-Type": "application/json",
+            "X-XSRFToken": "rendered-token",
+        });
+    });
+
+    it("should ignore the vite template placeholder", () => {
+        const meta = document.createElement("meta");
+        meta.setAttribute("name", "xsrf-token");
+        meta.setAttribute("content", "{{ xsrf_token }}");
+        document.head.appendChild(meta);
+
+        utils.fetchApi.put("http://foo", [1, 2, 3], {});
+        expect(fetchMock.mock.calls[0][1]?.headers).toEqual({
+            "Content-Type": "application/json",
+        });
     });
 });
 

@@ -77,19 +77,26 @@ function getCookie(name) {
     return r ? r[1] : undefined;
 }
 
-let xsrf = () => {
-    const cached = getCookie("_xsrf");
-    xsrf = () => cached;
-    return xsrf();
-};
+function xsrf() {
+    const rendered = document
+        .querySelector('meta[name="xsrf-token"]')
+        ?.getAttribute("content");
+    if (rendered && !rendered.includes("{{")) {
+        return rendered;
+    }
+    return getCookie("_xsrf");
+}
 
 export function fetchApi(
     url: string,
     options: RequestInit = {},
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
-        options.headers = options.headers || {};
-        options.headers["X-XSRFToken"] = xsrf();
+        const token = xsrf();
+        if (token) {
+            options.headers = options.headers || {};
+            options.headers["X-XSRFToken"] = token;
+        }
     }
     if (url.startsWith("/")) {
         url = "." + url;
