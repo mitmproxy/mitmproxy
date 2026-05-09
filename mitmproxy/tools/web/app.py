@@ -537,9 +537,7 @@ class DumpFlows(RequestHandler):
 
 class DumpFlowsCharles(RequestHandler):
     def get(self) -> None:
-        self.set_header(
-            "Content-Disposition", "attachment; filename=flows.chlsj"
-        )
+        self.set_header("Content-Disposition", "attachment; filename=flows.chlsj")
         self.set_header("Content-Type", "application/json")
 
         match: Callable[[mitmproxy.flow.Flow], bool]

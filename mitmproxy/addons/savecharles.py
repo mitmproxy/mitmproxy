@@ -72,9 +72,7 @@ def _headers_list(message: http.Message) -> list[dict[str, str]]:
 
 class SaveCharles:
     @command.command("save.charles")
-    def export_charles(
-        self, flows: Sequence[flow.Flow], path: types.Path
-    ) -> None:
+    def export_charles(self, flows: Sequence[flow.Flow], path: types.Path) -> None:
         """Export flows to a Charles Proxy JSON Session (.chlsj) file."""
         data = json.dumps(self.make_charles(flows), indent=4).encode()
         with open(path, "wb") as f:
@@ -180,9 +178,7 @@ class SaveCharles:
             client_port = int(f.client_conn.peername[1])
 
         # Request side
-        req_mime, req_charset = _split_content_type(
-            req.headers.get("Content-Type", "")
-        )
+        req_mime, req_charset = _split_content_type(req.headers.get("Content-Type", ""))
         req_encoding = req.headers.get("Content-Encoding") or None
         request_obj: dict[str, Any] = {
             "sizes": {

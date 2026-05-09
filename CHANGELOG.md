@@ -10,6 +10,7 @@
 - Add a `save.charles` command and a "Export as Charles JSON Session..." entry
   in the mitmweb File menu to export the current session to the Charles Proxy
   JSON Session (`.chlsj`) format.
+  ([#8220](https://github.com/mitmproxy/mitmproxy/pull/8220), @mackode)
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)

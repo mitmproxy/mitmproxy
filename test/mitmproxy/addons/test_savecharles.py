@@ -92,9 +92,10 @@ def test_ms_helpers():
 def test_split_content_type():
     assert savecharles._split_content_type("") == (None, None)
     assert savecharles._split_content_type("text/html") == ("text/html", None)
-    assert savecharles._split_content_type(
-        'text/html; charset="utf-8"; foo=bar'
-    ) == ("text/html", "utf-8")
+    assert savecharles._split_content_type('text/html; charset="utf-8"; foo=bar') == (
+        "text/html",
+        "utf-8",
+    )
 
 
 def test_body_helpers():
@@ -145,9 +146,7 @@ def test_make_charles_text_decode_failure(monkeypatch):
     """get_text returns None => fall back to encoded body."""
     f = tflow.tflow(resp=True)
     f.response.content = b"plain text"
-    monkeypatch.setattr(
-        type(f.response), "get_text", lambda self, strict=True: None
-    )
+    monkeypatch.setattr(type(f.response), "get_text", lambda self, strict=True: None)
     body = SaveCharles().make_charles([f])[0]["response"]["body"]
     assert "encoded" in body
     assert base64.b64decode(body["encoded"]) == b"plain text"
