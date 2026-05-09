@@ -147,6 +147,18 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         resp = self.fetch("/flows/dump?filter=[")
         assert resp.code == 400
 
+    def test_flows_dump_charles(self):
+        resp = self.fetch("/flows/dump.chlsj")
+        assert resp.code == 200
+        assert resp.headers.get("Content-Type") == "application/json"
+        data = json.loads(resp.body)
+        assert isinstance(data, list)
+        assert any(entry.get("method") for entry in data)
+
+    def test_flows_dump_charles_filter_error(self):
+        resp = self.fetch("/flows/dump.chlsj?filter=[")
+        assert resp.code == 400
+
     def test_clear(self):
         events = self.events.data.copy()
         flows = list(self.view)

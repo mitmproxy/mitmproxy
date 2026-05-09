@@ -20,6 +20,7 @@ from mitmproxy.addons import onboarding
 from mitmproxy.addons import proxyauth
 from mitmproxy.addons import proxyserver
 from mitmproxy.addons import save
+from mitmproxy.addons import savecharles
 from mitmproxy.addons import savehar
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
@@ -60,6 +61,7 @@ def default_addons():
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
         save.Save(),
+        savecharles.SaveCharles(),
         savehar.SaveHar(),
         tlsconfig.TlsConfig(),
         upstream_auth.UpstreamAuth(),

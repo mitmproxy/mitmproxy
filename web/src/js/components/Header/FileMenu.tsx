@@ -41,6 +41,10 @@ export default React.memo(function FileMenu() {
                 <i className="fa fa-fw fa-floppy-o" />
                 &nbsp;Save filtered
             </MenuItem>
+            <MenuItem onClick={() => location.replace("/flows/dump.chlsj")}>
+                <i className="fa fa-fw fa-file-code-o" />
+                &nbsp;Export as Charles JSON Session...
+            </MenuItem>
             <MenuItem
                 onClick={() =>
                     confirm("Delete all flows?") &&

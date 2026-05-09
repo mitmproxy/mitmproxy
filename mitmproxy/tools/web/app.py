@@ -535,6 +535,29 @@ class DumpFlows(RequestHandler):
         bio.close()
 
 
+class DumpFlowsCharles(RequestHandler):
+    def get(self) -> None:
+        self.set_header(
+            "Content-Disposition", "attachment; filename=flows.chlsj"
+        )
+        self.set_header("Content-Type", "application/json")
+
+        match: Callable[[mitmproxy.flow.Flow], bool]
+        try:
+            match = flowfilter.parse(self.request.arguments["filter"][0].decode())
+        except ValueError:
+            raise APIError(400, "Invalid filter argument / regex")
+        except (KeyError, IndexError):
+
+            def match(_) -> bool:
+                return True
+
+        from mitmproxy.addons.savecharles import SaveCharles
+
+        flows = [f for f in self.view if match(f)]
+        self.write(json.dumps(SaveCharles().make_charles(flows), indent=4))
+
+
 class ClearAll(RequestHandler):
     def post(self):
         self.view.clear()
@@ -893,6 +916,7 @@ handlers = [
     (r"/events(?:\.json)?", Events),
     (r"/flows(?:\.json)?", Flows),
     (r"/flows/dump", DumpFlows),
+    (r"/flows/dump.chlsj", DumpFlowsCharles),
     (r"/flows/resume", ResumeFlows),
     (r"/flows/kill", KillFlows),
     (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
