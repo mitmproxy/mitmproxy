@@ -94,11 +94,12 @@ def decode_multipart(
                 match = rx.search(header_section)
                 if match:
                     key = match.group(1)
-                    # Strip trailing CRLF/LF which belongs to the boundary delimiter
-                    # (per RFC 2046, the CRLF before a boundary is not part of the data)
-                    if body.endswith(b"\r\n"):
+                    # Strip trailing CRLF/LF sequences that belong to the boundary
+                    # delimiter or encoding artifacts (per RFC 2046, the CRLF before
+                    # a boundary is not part of the data)
+                    while body.endswith(b"\r\n"):
                         body = body[:-2]
-                    elif body.endswith(b"\n"):
+                    if body.endswith(b"\n"):
                         body = body[:-1]
                     r.append((key, body))
         return r
