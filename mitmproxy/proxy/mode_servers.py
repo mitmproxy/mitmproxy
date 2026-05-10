@@ -1,4 +1,4 @@
-﻿"""
+"""
 This module defines "server instances", which manage
 the TCP/UDP servers spawned by mitmproxy as specified by the proxy mode.
 
@@ -391,7 +391,7 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
                 self.handle_stream,
             )
         except RuntimeError as e:
-            if 'Address already in use' in str(e):
+            if "Address already in use" in str(e):
                 raise OSError(errno.EADDRINUSE, str(e)) from e
             raise
 

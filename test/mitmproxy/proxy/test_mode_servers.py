@@ -1,9 +1,9 @@
 import asyncio
+import errno
 import platform
 import socket
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
-import errno
 from unittest.mock import Mock
 
 import pytest
@@ -315,7 +315,6 @@ async def test_wireguard_eaddrinuse_error():
             assert "Try specifying a different port" in str(excinfo.value)
         finally:
             wg_mod.start_wireguard_server = original
-
 
 
 async def test_tcp_start_error():
