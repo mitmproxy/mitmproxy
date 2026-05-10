@@ -43,10 +43,7 @@ def test_decode_preserves_newlines():
     content3 = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="bin"\r\n'
-        + b"\r\n"
-        + b"binary\x00data\nwith\r\nbytes"
-        + f"\r\n--{boundary}--\r\n".encode()
-    )
+    ).encode() + b"\r\n" + b"binary\x00data\nwith\r\nbytes" + f"\r\n--{boundary}--\r\n".encode()
 
     form3 = multipart.decode_multipart(
         f"multipart/form-data; boundary={boundary}", content3
