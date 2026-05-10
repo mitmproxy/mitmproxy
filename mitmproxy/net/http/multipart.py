@@ -82,12 +82,12 @@ def decode_multipart(
                 sep_idx = part.find(b"\r\n\r\n")
                 if sep_idx != -1:
                     header_section = part[:sep_idx]
-                    body = part[sep_idx + 4:]
+                    body = part[sep_idx + 4 :]
                 else:
                     sep_idx = part.find(b"\n\n")
                     if sep_idx != -1:
                         header_section = part[:sep_idx]
-                        body = part[sep_idx + 2:]
+                        body = part[sep_idx + 2 :]
                     else:
                         continue
 

@@ -35,24 +35,24 @@ def test_decode_preserves_newlines():
         f"multipart/form-data; boundary={boundary}", content2
     )
     assert len(form2) == 1
-    assert form2[0] == (b"file", b"line1\r\nline2"), \
+    assert form2[0] == (b"file", b"line1\r\nline2"), (
         f"Expected CRLF preserved, got {form2[0]}"
+    )
 
     # Binary bytes (0x00) should also be preserved
     content3 = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="bin"\r\n'
-        f"\r\n"
-        + b"binary\x00data\nwith\r\nbytes"
-        + f"\r\n--{boundary}--\r\n".encode()
+        f"\r\n" + b"binary\x00data\nwith\r\nbytes" + f"\r\n--{boundary}--\r\n".encode()
     )
 
     form3 = multipart.decode_multipart(
         f"multipart/form-data; boundary={boundary}", content3
     )
     assert len(form3) == 1
-    assert form3[0] == (b"bin", b"binary\x00data\nwith\r\nbytes"), \
+    assert form3[0] == (b"bin", b"binary\x00data\nwith\r\nbytes"), (
         f"Expected binary data preserved, got {form3[0]}"
+    )
 
 
 def test_decode():
