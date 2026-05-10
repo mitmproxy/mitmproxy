@@ -4,7 +4,7 @@ from mitmproxy.net.http import multipart
 
 
 def test_decode_preserves_newlines():
-    """Test that decode_multipart preserves \\n and \\r within binary content."""
+    """Test that decode_multipart preserves \n and \r within binary content."""
     boundary = "boundary123"
     # Content with embedded newlines in the value
     content = (
@@ -43,7 +43,8 @@ def test_decode_preserves_newlines():
     content3 = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="bin"\r\n'
-        b"\r\n" + b"binary\x00data\nwith\r\nbytes" + f"\r\n--{boundary}--\r\n".encode()
+        + b"\r\n" + b"binary\x00data\nwith\r\nbytes"
+        + f"\r\n--{boundary}--\r\n".encode()
     )
 
     form3 = multipart.decode_multipart(
@@ -72,7 +73,7 @@ def test_decode():
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
-    boundary = "boundary茅莽"
+    boundary = "boundaryéç"
     result = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
     assert result == []
 
@@ -99,7 +100,7 @@ def test_encode():
         )
 
     result = multipart.encode_multipart(
-        "multipart/form-data; boundary=boundary茅莽", data
+        "multipart/form-data; boundary=boundaryéç", data
     )
     assert result == b""
 
