@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Render the Query content view for requests whose body content is still being received.
+  ([#8202](https://github.com/mitmproxy/mitmproxy/pull/8202), @emanuele-em)
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)

@@ -57,6 +57,18 @@ class TestPrettifyMessage:
             assert result.syntax_highlight == "error"
             assert result.view_name is None
 
+    def test_missing_content_query_view(self):
+        with taddons.context():
+            f = tflow.tflow()
+            f.request.path = "/?a=b&c=d"
+            f.request.content = None
+
+            result = prettify_message(f.request, f, "query")
+
+            assert result.text == "a: b\nc: d\n"
+            assert result.syntax_highlight == "yaml"
+            assert result.view_name == "Query"
+
     def test_hex_stream(self):
         with taddons.context():
             f = tflow.tflow()
