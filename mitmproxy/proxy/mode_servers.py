@@ -1,4 +1,4 @@
-"""
+﻿"""
 This module defines "server instances", which manage
 the TCP/UDP servers spawned by mitmproxy as specified by the proxy mode.
 
@@ -381,14 +381,19 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     async def start_udp_based_server(
         self, host, port
     ) -> mitmproxy_rs.wireguard.WireGuardServer:
-        return await mitmproxy_rs.wireguard.start_wireguard_server(
-            host,
-            port,
-            self.server_key,
-            [self.pubkey],
-            self.handle_stream,
-            self.handle_stream,
-        )
+        try:
+            return await mitmproxy_rs.wireguard.start_wireguard_server(
+                host,
+                port,
+                self.server_key,
+                [self.pubkey],
+                self.handle_stream,
+                self.handle_stream,
+            )
+        except RuntimeError as e:
+            if 'Address already in use' in str(e):
+                raise OSError(errno.EADDRINUSE, str(e)) from e
+            raise
 
     def client_conf(self) -> str | None:
         if not self._servers:
