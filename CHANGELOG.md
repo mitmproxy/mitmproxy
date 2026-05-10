@@ -1,4 +1,4 @@
-﻿# Release History
+﻿﻿# Release History
 
 <!--
 ✨ Please add a bullet point describing your change.                                                             ✨
