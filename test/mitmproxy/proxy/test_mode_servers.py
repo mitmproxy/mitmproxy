@@ -3,6 +3,7 @@ import platform
 import socket
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
+import errno
 from unittest.mock import Mock
 
 import pytest
@@ -289,6 +290,32 @@ async def test_wireguard_invalid_conf(tmp_path):
             await inst.start()
 
         assert "Invalid configuration file" in repr(inst.last_exception)
+
+
+async def test_wireguard_eaddrinuse_error():
+    """Test that WireGuard EADDRINUSE errors are converted to OSError with helpful message."""
+    manager = MagicMock()
+    import mitmproxy_rs.wireguard as wg_mod
+
+    with taddons.context():
+        inst = WireGuardServerInstance.make("wireguard@0", manager)
+        original = wg_mod.start_wireguard_server
+        wg_mod.start_wireguard_server = AsyncMock(
+            side_effect=RuntimeError(
+                "Failed to bind UDP socket to 0.0.0.0:51820\n"
+                "Caused by:\n"
+                "    Address already in use (os error 98)"
+            )
+        )
+        try:
+            with pytest.raises(OSError) as excinfo:
+                await inst.start()
+            assert excinfo.value.errno == errno.EADDRINUSE
+            assert "Address already in use" in str(excinfo.value)
+            assert "Try specifying a different port" in str(excinfo.value)
+        finally:
+            wg_mod.start_wireguard_server = original
+
 
 
 async def test_tcp_start_error():
