@@ -50,6 +50,9 @@ def decode_multipart(
 ) -> list[tuple[bytes, bytes]]:
     """
     Takes a multipart boundary encoded string and returns list of (key, value) tuples.
+
+    Preserves all \\n and \\r characters within the body content, unlike the
+    previous implementation which used splitlines() and lost those bytes.
     """
     if content_type:
         ct = headers.parse_content_type(content_type)
@@ -63,14 +66,41 @@ def decode_multipart(
         rx = re.compile(rb'\bname="([^"]+)"')
         r = []
         if content is not None:
-            for i in content.split(b"--" + boundary):
-                parts = i.splitlines()
-                if len(parts) > 1 and parts[0][0:2] != b"--":
-                    match = rx.search(parts[1])
-                    if match:
-                        key = match.group(1)
-                        value = b"".join(parts[3 + parts[2:].index(b"") :])
-                        r.append((key, value))
+            for part in content.split(b"--" + boundary):
+                # Strip leading newline(s) that follow the boundary delimiter
+                if part.startswith(b"\r\n"):
+                    part = part[2:]
+                elif part.startswith(b"\n"):
+                    part = part[1:]
+
+                # Skip empty parts and closing boundary (--)
+                if not part or part.startswith(b"--"):
+                    continue
+
+                # Find the header/body separator
+                # RFC 2046 uses \r\n\r\n, but some clients send \n\n
+                sep_idx = part.find(b"\r\n\r\n")
+                if sep_idx != -1:
+                    header_section = part[:sep_idx]
+                    body = part[sep_idx + 4:]
+                else:
+                    sep_idx = part.find(b"\n\n")
+                    if sep_idx != -1:
+                        header_section = part[:sep_idx]
+                        body = part[sep_idx + 2:]
+                    else:
+                        continue
+
+                match = rx.search(header_section)
+                if match:
+                    key = match.group(1)
+                    # Strip trailing CRLF/LF which belongs to the boundary delimiter
+                    # (per RFC 2046, the CRLF before a boundary is not part of the data)
+                    if body.endswith(b"\r\n"):
+                        body = body[:-2]
+                    elif body.endswith(b"\n"):
+                        body = body[:-1]
+                    r.append((key, body))
         return r
     return []
 
