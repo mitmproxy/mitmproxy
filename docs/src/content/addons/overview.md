@@ -74,30 +74,8 @@ not unload the addon.
 
 ## Testing Addons
 
-Because addons are plain Python objects, the easiest way to unit-test
+Because addons are regular Python files, the easiest way to unit-test
 them is to import the module from your test, instantiate the addon, and
-call the event handler directly with a flow built by
-`mitmproxy.test.tflow`. The `mitmproxy.test.taddons.context()` context
-manager wires up `ctx` (options, master, logger) so addons that read
-`ctx.options` or call `ctx.master` work the same way they do when loaded
-by mitmproxy.
-
-For the `Counter` addon from `anatomy.py` above:
-
-```python
-from mitmproxy.test import taddons, tflow
-from anatomy import Counter
-
-def test_counter_increments_on_request():
-    addon = Counter()
-    with taddons.context(addon):
-        addon.request(tflow.tflow())
-        addon.request(tflow.tflow())
-        assert addon.num == 2
-```
-
-For tests that need the full event sequence (load, configure, request,
-response, …), `await tctx.cycle(addon, flow)` runs through it from an
-`async def` test. Mitmproxy's own test suite under
-`test/mitmproxy/addons/` is a good place to look for patterns when
-testing more complex hooks.
+call the event handler directly. For more complex testing needs, 
+see [`test/mitmproxy/addons`](https://github.com/mitmproxy/mitmproxy/tree/main/test/mitmproxy/addons)
+(but please note that internal testing helpers have no guaranteed stable API).
