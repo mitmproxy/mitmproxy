@@ -7,7 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
-- Reduce generated leaf certificate validity to 180 days so the 2-day
+- Reduce generated leaf certificate validity from 199 to 197 days so the 2-day
   `notBefore` backdate remains below Chromium's 200-day limit.
   ([#8203](https://github.com/mitmproxy/mitmproxy/pull/8203), @emanuele-em)
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads

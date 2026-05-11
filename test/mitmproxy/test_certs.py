@@ -148,10 +148,9 @@ class TestDummyCert:
             "foo.com",
             [],
         )
-
         validity_period = r.notafter - r.notbefore
-        assert validity_period == certs.CERT_EXPIRY + timedelta(days=2)
-        assert validity_period <= timedelta(days=200)
+        assert validity_period == certs.CERT_EXPIRY
+        assert validity_period < timedelta(days=200)
 
     def test_with_ca(self, tstore):
         r = certs.dummy_cert(

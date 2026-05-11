@@ -35,9 +35,13 @@ else:
 logger = logging.getLogger(__name__)
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
+# Note that expiry will be offset by `CERT_VALIDITY_OFFSET`, i.e. the cert will be
+# backdated a bit to account for clients with incorrect clocks.
 CA_EXPIRY = datetime.timedelta(days=10 * 365)
-CERT_EXPIRY = datetime.timedelta(days=180)
+CERT_EXPIRY = datetime.timedelta(days=199)
 CRL_EXPIRY = datetime.timedelta(days=7)
+
+CERT_VALIDITY_OFFSET = datetime.timedelta(days=-2)
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -245,8 +249,8 @@ def create_ca(
     builder = x509.CertificateBuilder()
     builder = builder.serial_number(x509.random_serial_number())
     builder = builder.subject_name(name)
-    builder = builder.not_valid_before(now - datetime.timedelta(days=2))
-    builder = builder.not_valid_after(now + CA_EXPIRY)
+    builder = builder.not_valid_before(now + CERT_VALIDITY_OFFSET)
+    builder = builder.not_valid_after(now + CERT_VALIDITY_OFFSET + CA_EXPIRY )
     builder = builder.issuer_name(name)
     builder = builder.public_key(private_key.public_key())
     builder = builder.add_extension(
@@ -335,8 +339,8 @@ def dummy_cert(
     builder = builder.public_key(cacert.public_key())
 
     now = datetime.datetime.now()
-    builder = builder.not_valid_before(now - datetime.timedelta(days=2))
-    builder = builder.not_valid_after(now + CERT_EXPIRY)
+    builder = builder.not_valid_before(now + CERT_VALIDITY_OFFSET)
+    builder = builder.not_valid_after(now + CERT_VALIDITY_OFFSET + CERT_EXPIRY)
 
     subject = []
     is_valid_commonname = commonname is not None and len(commonname) < 64
@@ -400,8 +404,8 @@ def dummy_crl(
     builder = builder.issuer_name(cacert.issuer)
 
     now = datetime.datetime.now()
-    builder = builder.last_update(now - datetime.timedelta(days=2))
-    builder = builder.next_update(now + CRL_EXPIRY)
+    builder = builder.last_update(now + CERT_VALIDITY_OFFSET)
+    builder = builder.next_update(now + CERT_VALIDITY_OFFSET + CRL_EXPIRY)
 
     builder = builder.add_extension(x509.CRLNumber(1000), False)  # meaningless number
     crl = builder.sign(private_key=privkey, algorithm=hashes.SHA256())
