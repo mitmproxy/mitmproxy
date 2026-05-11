@@ -250,7 +250,7 @@ def create_ca(
     builder = builder.serial_number(x509.random_serial_number())
     builder = builder.subject_name(name)
     builder = builder.not_valid_before(now + CERT_VALIDITY_OFFSET)
-    builder = builder.not_valid_after(now + CERT_VALIDITY_OFFSET + CA_EXPIRY )
+    builder = builder.not_valid_after(now + CERT_VALIDITY_OFFSET + CA_EXPIRY)
     builder = builder.issuer_name(name)
     builder = builder.public_key(private_key.public_key())
     builder = builder.add_extension(
