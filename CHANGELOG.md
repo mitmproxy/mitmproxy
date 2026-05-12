@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+
+## 12 May 2026: mitmproxy 12.2.3
+
 - Reduce generated leaf certificate validity from 199 to 197 days so the 2-day
   `notBefore` backdate remains below Chromium's 200-day limit.
   ([#8203](https://github.com/mitmproxy/mitmproxy/pull/8203), @emanuele-em)
