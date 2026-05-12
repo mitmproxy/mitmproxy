@@ -14,13 +14,13 @@ exports[`Dropdown 1`] = `
 exports[`Dropdown 2`] = `
 <DocumentFragment>
   <a
-    class="open"
+    class="open is-open"
     href="#"
   >
     open me
   </a>
   <ul
-    class="dropdown-menu show"
+    class="dropdown-menu is-open"
     style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
   >
     <li>
@@ -31,7 +31,7 @@ exports[`Dropdown 2`] = `
       </a>
     </li>
     <li
-      class="divider"
+      class="menu-divider"
       role="separator"
     />
     <li>
@@ -63,7 +63,7 @@ exports[`SubMenu 1`] = `
     <a>
       <i
         aria-hidden="true"
-        class="fa fa-caret-right pull-right"
+        class="fa fa-caret-right float-right"
       />
        submenu
     </a>
@@ -77,12 +77,12 @@ exports[`SubMenu 2`] = `
     <a>
       <i
         aria-hidden="true"
-        class="fa fa-caret-right pull-right"
+        class="fa fa-caret-right float-right"
       />
        submenu
     </a>
     <ul
-      class="dropdown-menu show"
+      class="dropdown-menu is-open"
       style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
     >
       <li>
@@ -103,7 +103,7 @@ exports[`SubMenu 3`] = `
     <a>
       <i
         aria-hidden="true"
-        class="fa fa-caret-right pull-right"
+        class="fa fa-caret-right float-right"
       />
        submenu
     </a>

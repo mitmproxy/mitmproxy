@@ -26,7 +26,7 @@ exports[`ViewSelector 1`] = `
 exports[`ViewSelector 2`] = `
 <DocumentFragment>
   <a
-    class="btn btn-default btn-xs open"
+    class="btn btn-default btn-xs open is-open"
     href="#"
   >
     <span>
@@ -44,7 +44,7 @@ exports[`ViewSelector 2`] = `
     </span>
   </a>
   <ul
-    class="dropdown-menu show"
+    class="dropdown-menu is-open"
     style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
   >
     <li>
