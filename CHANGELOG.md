@@ -10,6 +10,8 @@
 - Reduce generated leaf certificate validity from 199 to 197 days so the 2-day
   `notBefore` backdate remains below Chromium's 200-day limit.
   ([#8203](https://github.com/mitmproxy/mitmproxy/pull/8203), @emanuele-em)
+- Fixed a bug where mitmweb would not pick up its XSRF cookie.
+  ([#8224](https://github.com/mitmproxy/mitmproxy/pull/8224), @mhils)
 - Fix `authority and subject key identifier mismatch` errors when mitmproxy
   is configured with a custom CA whose SubjectKeyIdentifier was not derived
   as SHA-1 of the public key.
