@@ -733,6 +733,15 @@ class HttpStream(layer.Layer):
             or self.server_state in (self.state_done, self.state_errored)
         )
 
+        # Save any buffered request/response body data before we lose it,
+        # so users can see what was received before the connection broke.
+        if self.request_body_buf and self.flow and self.flow.request:
+            if self.flow.request.raw_content is None:
+                self.flow.request.data.content = bytes(self.request_body_buf)
+        if self.response_body_buf and self.flow and self.flow.response:
+            if self.flow.response.raw_content is None:
+                self.flow.response.data.content = bytes(self.response_body_buf)
+
         if is_client_error_but_we_already_talk_upstream:
             yield SendHttp(event, self.context.server)
             self.client_state = self.state_errored
