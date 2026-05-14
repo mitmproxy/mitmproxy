@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Fix an infinite update cycle in `FlowTable` by only recomputing the virtual-scroll window in `componentDidUpdate` when `flowView` or `rowHeight` actually change.
 
 ## 12 May 2026: mitmproxy 12.2.3
 
