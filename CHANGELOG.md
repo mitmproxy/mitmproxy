@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Fix AVIF images and `image/vnd.microsoft.icon` favicons not rendering in the response tab.
 
 ## 12 May 2026: mitmproxy 12.2.3
 
