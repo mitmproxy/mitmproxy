@@ -8,6 +8,7 @@
 ## Unreleased: mitmproxy next
 
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
+  ([#8234](https://github.com/mitmproxy/mitmproxy/pull/8234), @ariel42)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
