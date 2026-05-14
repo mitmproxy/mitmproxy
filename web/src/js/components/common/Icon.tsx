@@ -1,0 +1,124 @@
+import * as React from "react";
+import classnames from "classnames";
+import type { LucideIcon } from "lucide-react";
+import {
+    AlertTriangle,
+    AppWindow,
+    ArrowLeft,
+    ArrowRight,
+    Ban,
+    Bug,
+    Check,
+    ChevronsDown,
+    ChevronDown,
+    ChevronRight,
+    CircleQuestionMark,
+    CircleX,
+    Clipboard,
+    Copy,
+    CopyPlus,
+    Download,
+    ExternalLink,
+    FileOutput,
+    Files,
+    FolderOpen,
+    History,
+    Highlighter,
+    Info,
+    LoaderCircle,
+    Paintbrush,
+    Pause,
+    Pencil,
+    Play,
+    Redo2,
+    RefreshCw,
+    Save,
+    Search,
+    Settings,
+    Square,
+    SquareCheck,
+    SquarePlus,
+    StepForward,
+    Terminal,
+    Trash2,
+    Upload,
+    X,
+} from "lucide-react";
+
+export const iconsMap = {
+    abort: X,
+    addSquare: SquarePlus,
+    arrowLeft: ArrowLeft,
+    arrowRight: ArrowRight,
+    browser: AppWindow,
+    chevronDown: ChevronDown,
+    chevronRight: ChevronRight,
+    close: X,
+    closeCircle: CircleX,
+    clipboard: Clipboard,
+    confirm: Check,
+    confirmSquare: SquareCheck,
+    copy: Copy,
+    debug: Bug,
+    delete: Trash2,
+    download: Download,
+    duplicate: CopyPlus,
+    edit: Pencil,
+    error: Ban,
+    expandMore: ChevronsDown,
+    export: FileOutput,
+    external: ExternalLink,
+    files: Files,
+    help: CircleQuestionMark,
+    highlight: Highlighter,
+    info: Info,
+    intercept: Pause,
+    loading: LoaderCircle,
+    mark: Paintbrush,
+    openFolder: FolderOpen,
+    pause: Pause,
+    replay: Redo2,
+    refresh: RefreshCw,
+    revert: History,
+    resume: Play,
+    resumeAll: StepForward,
+    save: Save,
+    search: Search,
+    settings: Settings,
+    square: Square,
+    terminal: Terminal,
+    upload: Upload,
+    warning: AlertTriangle,
+} as const satisfies Record<string, LucideIcon>;
+
+export type IconName = keyof typeof iconsMap;
+
+type IconProps = {
+    name: IconName;
+    size?: number;
+    className?: string;
+    title?: string;
+    "aria-label"?: string;
+};
+
+export default function Icon({
+    name,
+    size = 16,
+    className,
+    title,
+    "aria-label": ariaLabel,
+}: IconProps) {
+    const SvgIcon = iconsMap[name];
+    const decorative = !title && !ariaLabel;
+
+    return (
+        <SvgIcon
+            size={size}
+            className={classnames("icon", className)}
+            aria-label={ariaLabel}
+            aria-hidden={decorative || undefined}
+        >
+            {title ? <title>{title}</title> : null}
+        </SvgIcon>
+    );
+}
