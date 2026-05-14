@@ -3,7 +3,7 @@ import FilterInput, {
     FilterIcon,
 } from "../../../components/Header/FilterInput";
 import FilterDocs from "../../../components/Header/FilterDocs";
-import { act, render } from "../../test-utils";
+import { act, fireEvent, render } from "../../test-utils";
 
 describe("FilterInput Component", () => {
     it("should render correctly", () => {
@@ -54,6 +54,37 @@ describe("FilterInput Component", () => {
             />,
         );
         expect(getByDisplayValue("bar")).toBeInTheDocument();
+    });
+
+    it("preserves user-typed text when the parent re-renders with an unchanged value prop", () => {
+        // `onChange` only propagates valid filters, so a half-typed
+        // invalid filter lives in local state while `props.value`
+        // remains the last valid filter. A parent re-render with the
+        // same `value` must not clobber the in-progress text.
+        const onChange = jest.fn();
+        const props = {
+            icon: FilterIcon.SEARCH,
+            color: "red",
+            placeholder: "Filter",
+            value: "",
+            onChange,
+        };
+        const { rerender, getByPlaceholderText } = render(
+            <FilterInput {...props} />,
+        );
+        const input = getByPlaceholderText("Filter") as HTMLInputElement;
+
+        // User types an invalid filter — `onChange` does not propagate
+        // it (see the existing `should handle isValid` test that
+        // asserts "~foo bar" is invalid).
+        act(() => fireEvent.change(input, { target: { value: "~foo bar" } }));
+        expect(input.value).toBe("~foo bar");
+        expect(onChange).not.toHaveBeenCalled();
+
+        // Parent re-renders with the same `value=""`. The input must
+        // retain the user's in-progress text.
+        rerender(<FilterInput {...props} />);
+        expect(input.value).toBe("~foo bar");
     });
 
     it("should handle isValid", () => {
