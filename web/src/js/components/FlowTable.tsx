@@ -65,7 +65,22 @@ export class PureFlowTable extends React.Component<
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
-        this.onViewportUpdate();
+        // Only recompute the virtual-scroll window when the flow list
+        // or the row height actually changed. Other call sites still
+        // drive onViewportUpdate as needed (componentDidMount, the
+        // resize listener, the viewport onScroll, the post-scroll-into-
+        // view call). Calling it unconditionally from here let
+        // setState -> componentDidUpdate -> setState spin whenever
+        // vScroll.end * rowHeight was less than scrollTop: the capped
+        // Math.min(scrollTop, vScroll.end * rowHeight) stayed strictly
+        // below scrollTop and the `state.viewportTop !== scrollTop`
+        // setState condition kept re-firing.
+        if (
+            prevProps.flowView !== this.props.flowView ||
+            prevProps.rowHeight !== this.props.rowHeight
+        ) {
+            this.onViewportUpdate();
+        }
 
         const { onlySelectedId } = this.props;
 
