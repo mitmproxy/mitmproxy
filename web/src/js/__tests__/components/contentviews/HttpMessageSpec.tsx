@@ -101,6 +101,27 @@ test("ViewImage", async () => {
     expect(asFragment()).toMatchSnapshot();
 });
 
+test("ViewImage.matches", () => {
+    const flow = TFlow();
+    const matches = (contentType: string) => {
+        flow.response.headers = [["Content-Type", contentType]];
+        return ViewImage.matches(flow.response);
+    };
+    expect(matches("image/png")).toBe(true);
+    expect(matches("image/jpeg")).toBe(true);
+    expect(matches("image/jpg")).toBe(true);
+    expect(matches("image/gif")).toBe(true);
+    expect(matches("image/webp")).toBe(true);
+    expect(matches("image/avif")).toBe(true);
+    expect(matches("image/svg+xml")).toBe(true);
+    expect(matches("image/vnd.microsoft.icon")).toBe(true);
+    expect(matches("image/x-icon")).toBe(true);
+    expect(matches("IMAGE/AVIF")).toBe(true);
+    expect(matches("image/heic")).toBe(false);
+    expect(matches("application/json")).toBe(false);
+    expect(matches("video/mp4")).toBe(false);
+});
+
 /*
     This test differs from the one above because clicking the copy button triggers 'handleClickCopyButton'.
     In the previous test, the response contained "raw content," which caused an "invalid JSON response body" error
