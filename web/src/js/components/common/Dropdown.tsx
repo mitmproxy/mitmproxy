@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { UseFloatingOptions } from "@floating-ui/react-dom";
 import { useFloating } from "@floating-ui/react-dom";
 import classnames from "classnames";
+import Icon from "./Icon";
 
 export const Divider = () => <li role="separator" className="menu-divider" />;
 
@@ -56,10 +57,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
             onMouseLeave={() => setOpen(false)}
         >
             <a>
-                <i
-                    className="fa fa-caret-right float-right"
-                    aria-hidden="true"
-                />{" "}
+                <Icon name="chevronRight" className="float-right" />{" "}
                 {title}
             </a>
             {submenu}
