@@ -96,6 +96,7 @@ export type IconName = keyof typeof iconsMap;
 type IconProps = {
     name: IconName;
     size?: number;
+    strokeWidth?: number;
     className?: string;
     onClick?: React.MouseEventHandler<SVGSVGElement>;
     "aria-label"?: string;
@@ -104,6 +105,7 @@ type IconProps = {
 export default function Icon({
     name,
     size = 16,
+    strokeWidth = 2,
     className,
     onClick,
     "aria-label": ariaLabel,
@@ -114,6 +116,7 @@ export default function Icon({
     return (
         <SvgIcon
             size={size}
+            strokeWidth={strokeWidth}
             className={classnames("icon", `icon-${name}`, className)}
             onClick={onClick}
             aria-label={ariaLabel}

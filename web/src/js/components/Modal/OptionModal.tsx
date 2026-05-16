@@ -7,6 +7,7 @@ import { compact, isEmpty } from "lodash";
 import type { RootState } from "../../ducks";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 import OptionInput from "./OptionInput";
+import Icon from "../common/Icon";
 
 function OptionHelp({ name }: { name: Option }) {
     const help = useAppSelector((state) => state.options_meta[name]?.help);
@@ -69,7 +70,7 @@ export default function OptionModal() {
                     data-dismiss="modal"
                     onClick={() => dispatch(modalAction.hideModal())}
                 >
-                    <i className="fa fa-fw fa-times"></i>
+                    <Icon name="close" />
                 </button>
                 <div className="modal-title">
                     <h4>Options</h4>
