@@ -57,8 +57,7 @@ export function SubMenu({ title, children, className }: SubMenuProps) {
             onMouseLeave={() => setOpen(false)}
         >
             <a>
-                <Icon name="chevronRight" className="float-right" />{" "}
-                {title}
+                <Icon name="chevronRight" className="float-right" /> {title}
             </a>
             {submenu}
         </li>

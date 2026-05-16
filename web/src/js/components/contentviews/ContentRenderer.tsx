@@ -24,8 +24,7 @@ const ContentRenderer = React.memo(function ContentRenderer({
                         onClick={showMore}
                         className="btn btn-xs btn-info"
                     >
-                        <Icon name="expandMore" />{" "}
-                        Show more
+                        <Icon name="expandMore" /> Show more
                     </button>
                 ) : (
                     <div key={i}>{line}</div>

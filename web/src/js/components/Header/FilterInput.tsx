@@ -147,7 +147,7 @@ export default class FilterInput extends Component<
             >
                 <span className="input-group-addon">
                     <span style={{ color }}>
-                        <Icon name={icon} strokeWidth={2.5}/>
+                        <Icon name={icon} strokeWidth={2.5} />
                     </span>
                 </span>
                 <input
