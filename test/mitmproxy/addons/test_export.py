@@ -124,7 +124,15 @@ class TestExportCurlCommand:
 
     def test_expand_escaped(self, export_curl, post_request):
         post_request.request.content = b"foo\nbar"
-        result = "curl -X POST http://address:22/path -d \"$(printf 'foo\\x0abar')\""
+        result = "curl -X POST http://address:22/path -d \"$(printf -- 'foo\\x0abar')\""
+        assert export_curl(post_request) == result
+
+    def test_expand_escaped_body_starting_with_dash(self, export_curl, post_request):
+        post_request.request.content = b"---other-data\n"
+        result = (
+            "curl -X POST http://address:22/path "
+            "-d \"$(printf -- '---other-data\\x0a')\""
+        )
         assert export_curl(post_request) == result
 
     def test_no_expand_when_no_escaped(self, export_curl, post_request):
