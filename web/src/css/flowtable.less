@@ -37,24 +37,21 @@
         &.sort-asc,
         &.sort-desc {
             background-color: lighten(#f2f2f2, 3%);
+            padding-right: 18px;
         }
 
-        &.sort-asc:after,
-        &.sort-desc:after {
-            font: normal normal normal 14px/1 FontAwesome;
+        .th-content {
+            display: block;
+            min-height: 23px;
+        }
+
+        .sort-indicator {
             position: absolute;
             right: 3px;
-            top: 3px;
-            padding: 2px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
             background-color: fadeout(lighten(#f2f2f2, 3%), 20%);
-        }
-
-        &.sort-asc:after {
-            content: "\f0de";
-        }
-
-        &.sort-desc:after {
-            content: "\f0dd";
         }
     }
 
