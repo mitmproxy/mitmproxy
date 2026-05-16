@@ -230,7 +230,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
 }
 
 const isImage =
-    /^image\/(png|jpe?g|gif|webp|vnc.microsoft.icon|x-icon|svg\+xml)$/i;
+    /^image\/(png|jpe?g|gif|webp|avif|vnd\.microsoft\.icon|x-icon|svg\+xml)$/i;
 ViewImage.matches = (msg) =>
     isImage.test(MessageUtils.getContentType(msg) || "");
 

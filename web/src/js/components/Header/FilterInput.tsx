@@ -52,7 +52,13 @@ export default class FilterInput extends Component<
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
-        this.setState({ value: nextProps.value });
+        // Local state intentionally diverges from props while typing
+        // (only valid filters reach the parent via `onChange`), so an
+        // unconditional sync would wipe the user's in-progress text on
+        // any unrelated parent re-render.
+        if (nextProps.value !== this.props.value) {
+            this.setState({ value: nextProps.value });
+        }
     }
 
     isValid(filt: string) {
