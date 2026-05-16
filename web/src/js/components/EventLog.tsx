@@ -5,6 +5,7 @@ import { LogLevel, toggleFilter, toggleVisibility } from "../ducks/eventLog";
 import ToggleButton from "./common/ToggleButton";
 import EventList from "./EventLog/EventList";
 import type { RootState } from "../ducks";
+import Icon from "./common/Icon";
 
 type EventLogState = {
     height: number;
@@ -60,7 +61,7 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
             <div className="eventlog" style={{ height }}>
                 <div onMouseDown={this.onDragStart}>
                     Eventlog
-                    <div className="float-right">
+                    <div className="eventlog-actions float-right">
                         {Object.values(LogLevel).map((type) => (
                             <ToggleButton
                                 key={type}
@@ -69,7 +70,7 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
                                 onToggle={() => toggleFilter(type)}
                             />
                         ))}
-                        <i onClick={close} className="fa fa-close"></i>
+                        <Icon name="close" onClick={close} />
                     </div>
                 </div>
                 <EventList events={events} />

@@ -22,7 +22,6 @@ export default function ToggleButton({
             onClick={onToggle}
         >
             <Icon name={checked ? "confirmSquare" : "square"} />
-            &nbsp;
             {text}
         </div>
     );
