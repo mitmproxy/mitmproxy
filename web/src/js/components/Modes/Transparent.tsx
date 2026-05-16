@@ -67,7 +67,7 @@ function TransparentRow({
                     dispatch(setActive({ server, value: !server.active }))
                 }
             >
-                <Popover iconClass="fa fa-cog">
+                <Popover icon="settings">
                     <h4>Advanced Configuration</h4>
                     <p>Listen Host</p>
                     <ValueEditor

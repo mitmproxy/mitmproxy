@@ -40,15 +40,22 @@
         text-align: left;
         display: flex;
         align-items: center;
+        gap: 8px;
         font-size: 1.5rem;
         font-weight: normal;
         margin: 0;
 
         input[type="checkbox"] {
-            margin: 0 10px;
-            vertical-align: middle;
+            margin: 0 2px 0 0;
             width: 1.8rem;
             height: 1.8rem;
+            flex: 0 0 auto;
+        }
+
+        .mode-entry-label {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
         }
 
         p {
@@ -63,9 +70,14 @@
     }
 
     .mode-local {
-        i {
+        .icon {
             font-size: 1.8rem;
             cursor: pointer;
+            transition: color 120ms ease-in-out;
+
+            &:hover {
+                color: #333;
+            }
         }
         .processes-container {
             display: flex;
@@ -93,7 +105,7 @@
             align-content: center;
             align-items: center;
 
-            > i {
+            > .icon {
                 font-size: 15px;
             }
         }
@@ -195,12 +207,12 @@
                 height: 24px;
             }
 
-            > button i {
+            > button .icon {
                 font-size: 1.2rem;
                 line-height: 1;
             }
 
-            .dropdown-item > .fa-check {
+            .dropdown-item > .icon-confirm {
                 font-size: 1.2rem;
                 line-height: 1;
             }
@@ -277,22 +289,40 @@
             opacity: 1;
         }
 
-        i {
-            font-size: 2rem;
+        .icon {
+            width: 20px;
+            height: 20px;
             margin-right: 5px;
         }
     }
 
     .mode-popover {
+        display: inline-flex;
+        align-items: center;
+        align-self: center;
+
         > button {
             background-color: transparent;
             border: none;
             cursor: pointer;
-            font-size: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: 26px;
+            height: 26px;
+            line-height: 1;
         }
 
-        > button i {
+        > button .icon {
             color: #777;
+            width: 20px;
+            height: 20px;
+            transition: color 120ms ease-in-out;
+
+            &:hover {
+                color: #333;
+            }
         }
 
         &.local-popover > button {
@@ -306,9 +336,9 @@
             flex: 0 0 auto;
         }
 
-        &.local-popover > button i {
-            font-size: 1.5rem;
-            line-height: 1;
+        &.local-popover > button .icon {
+            width: 18px;
+            height: 18px;
         }
 
         @supports (anchor-name: --test) {
