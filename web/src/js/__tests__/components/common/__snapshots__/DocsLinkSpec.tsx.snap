@@ -21,9 +21,31 @@ exports[`DocsLink Component should be able to be rendered without children nodes
     rel="noreferrer"
     target="_blank"
   >
-    <i
-      class="fa fa-question-circle"
-    />
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-circle-question-mark icon icon-help"
+      fill="none"
+      height="14"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="14"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+      />
+      <path
+        d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+      />
+      <path
+        d="M12 17h.01"
+      />
+    </svg>
   </a>
 </DocumentFragment>
 `;

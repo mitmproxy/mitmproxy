@@ -8,10 +8,32 @@ exports[`FilterInput Component should render correctly 1`] = `
     <span
       class="input-group-addon"
     >
-      <i
-        class="fa fa-fw fa-search"
+      <span
         style="color: red;"
-      />
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-search icon icon-search"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m21 21-4.34-4.34"
+          />
+          <circle
+            cx="11"
+            cy="11"
+            r="8"
+          />
+        </svg>
+      </span>
     </span>
     <input
       class="input"

@@ -5,10 +5,31 @@ exports[`ToggleButton Component should render correctly 1`] = `
   <div
     class="btn toggle btn-primary toggle-on"
   >
-    <i
-      class="fa fa-fw fa-check-square-o"
-    />
-     foo
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-square-check icon icon-confirmSquare"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="16"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        height="18"
+        rx="2"
+        width="18"
+        x="3"
+        y="3"
+      />
+      <path
+        d="m9 12 2 2 4-4"
+      />
+    </svg>
+    foo
   </div>
 </DocumentFragment>
 `;

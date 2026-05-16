@@ -9,7 +9,7 @@ describe("Button Component", () => {
                 className="classname"
                 onClick={() => "onclick"}
                 title="title"
-                icon="icon"
+                icon="settings"
             >
                 <a>foo</a>
             </Button>,

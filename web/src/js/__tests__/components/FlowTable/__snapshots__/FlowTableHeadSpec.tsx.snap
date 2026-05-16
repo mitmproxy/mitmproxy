@@ -7,38 +7,87 @@ exports[`FlowTableHead Component 1`] = `
       <tr>
         <th
           class="col-tls"
-        />
+        >
+          <span
+            class="th-content"
+          />
+        </th>
         <th
           class="col-icon"
-        />
+        >
+          <span
+            class="th-content"
+          />
+        </th>
         <th
           class="col-path sort-desc"
         >
-          Path
+          <span
+            class="th-content"
+          >
+            Path
+          </span>
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-chevron-down icon icon-chevronDown sort-indicator"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="3"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
         </th>
         <th
           class="col-method"
         >
-          Method
+          <span
+            class="th-content"
+          >
+            Method
+          </span>
         </th>
         <th
           class="col-status"
         >
-          Status
+          <span
+            class="th-content"
+          >
+            Status
+          </span>
         </th>
         <th
           class="col-size"
         >
-          Size
+          <span
+            class="th-content"
+          >
+            Size
+          </span>
         </th>
         <th
           class="col-time"
         >
-          Time
+          <span
+            class="th-content"
+          >
+            Time
+          </span>
         </th>
         <th
           class="col-quickactions"
-        />
+        >
+          <span
+            class="th-content"
+          />
+        </th>
       </tr>
     </thead>
   </table>

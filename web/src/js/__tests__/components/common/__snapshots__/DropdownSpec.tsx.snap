@@ -61,10 +61,23 @@ exports[`SubMenu 1`] = `
 <DocumentFragment>
   <li>
     <a>
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-caret-right float-right"
-      />
+        class="lucide lucide-chevron-right icon icon-chevronRight float-right"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m9 18 6-6-6-6"
+        />
+      </svg>
        submenu
     </a>
   </li>
@@ -75,10 +88,23 @@ exports[`SubMenu 2`] = `
 <DocumentFragment>
   <li>
     <a>
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-caret-right float-right"
-      />
+        class="lucide lucide-chevron-right icon icon-chevronRight float-right"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m9 18 6-6-6-6"
+        />
+      </svg>
        submenu
     </a>
     <ul
@@ -101,10 +127,23 @@ exports[`SubMenu 3`] = `
 <DocumentFragment>
   <li>
     <a>
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-caret-right float-right"
-      />
+        class="lucide lucide-chevron-right icon icon-chevronRight float-right"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m9 18 6-6-6-6"
+        />
+      </svg>
        submenu
     </a>
   </li>
