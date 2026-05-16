@@ -114,7 +114,7 @@
         }
     }
 
-    .fa {
+    .icon {
         line-height: inherit;
     }
 
@@ -139,21 +139,21 @@
         .marker {
         }
 
-        .fa {
+        .icon {
             margin-left: 0;
             font-size: 16px;
         }
 
-        .fa-repeat {
+        .icon-replay {
             color: green;
         }
 
-        .fa-pause {
+        .icon-pause {
             color: @interceptorange;
         }
 
-        .fa-exclamation,
-        .fa-times {
+        .icon-warning,
+        .icon-close {
             color: darkred;
         }
     }
@@ -220,19 +220,13 @@
             height: 32px;
             width: 32px;
             border-radius: 16px;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
             &:hover {
                 background-color: rgba(0, 0, 0, 5%);
             }
         }
-    }
-
-    .col-quickactions .fa-play {
-        transform: translate(1px, 2px);
-    }
-
-    .col-quickactions .fa-repeat {
-        transform: translate(-0px, 2px);
     }
 }
