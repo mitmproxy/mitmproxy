@@ -1,4 +1,5 @@
 import React from "react";
+import Icon from "../common/Icon";
 
 type ContentRendererProps = {
     content: string;
@@ -23,10 +24,7 @@ const ContentRenderer = React.memo(function ContentRenderer({
                         onClick={showMore}
                         className="btn btn-xs btn-info"
                     >
-                        <i
-                            className="fa fa-angle-double-down"
-                            aria-hidden="true"
-                        />{" "}
+                        <Icon name="expandMore" />{" "}
                         Show more
                     </button>
                 ) : (
