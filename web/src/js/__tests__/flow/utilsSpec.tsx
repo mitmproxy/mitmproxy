@@ -1,7 +1,7 @@
 import * as utils from "../../flow/utils";
 import { TFlow, TTCPFlow, TUDPFlow } from "../ducks/tutils";
 import { TDNSFlow, THTTPFlow } from "../ducks/_tflow";
-import type { HTTPFlow } from "../../flow";
+import type { HTTPFlow, HTTPHeader, HTTPMessage } from "../../flow";
 
 describe("MessageUtils", () => {
     it("should be possible to get first header", () => {
@@ -23,8 +23,12 @@ describe("MessageUtils", () => {
     });
 
     it("should be possible to match header", () => {
-        const h1 = ["foo", "bar"];
-        const msg = { headers: [h1] };
+        const h1: HTTPHeader = ["foo", "bar"];
+        const msg: HTTPMessage = {
+            http_version: "HTTP/1.1",
+            headers: [h1],
+            timestamp_start: 0,
+        };
         expect(utils.MessageUtils.match_header(msg, /foo/i)).toEqual(h1);
         expect(utils.MessageUtils.match_header(msg, /123/i)).toBeFalsy();
     });
