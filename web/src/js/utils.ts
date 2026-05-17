@@ -4,7 +4,14 @@ import type { ContentViewData } from "./components/contentviews/useContentView";
 
 window.React = React;
 
-export const formatSize = function (bytes) {
+type JsonObject = Record<string, unknown>;
+type CommandResult = {
+    value?: any;
+    error?: string;
+};
+
+export const formatSize = function (bytes: number | string): string {
+    bytes = Number(bytes);
     if (bytes === 0) return "0";
     const prefix = ["b", "kb", "mb", "gb", "tb"];
     let i = 0;
@@ -13,13 +20,13 @@ export const formatSize = function (bytes) {
             break;
         }
     }
-    let precision;
+    let precision: number;
     if (bytes % Math.pow(1024, i) === 0) precision = 0;
     else precision = 1;
     return (bytes / Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
 
-export const formatTimeDelta = function (milliseconds) {
+export const formatTimeDelta = function (milliseconds: number): string {
     let time = milliseconds;
     const prefix = ["ms", "s", "min", "h"];
     const div = [1000, 60, 60];
@@ -34,7 +41,7 @@ export const formatTimeDelta = function (milliseconds) {
 export const formatTimeStamp = function (
     seconds: number,
     { includeMilliseconds = true } = {},
-) {
+): string {
     const date = new Date(seconds * 1000);
 
     const yearStr = String(date.getFullYear());
@@ -64,7 +71,7 @@ export function formatAddress(address: [string, number]): string {
 // This beauty "reverses" a JS string.
 const end = String.fromCharCode(0xffff);
 
-export function reverseString(s) {
+export function reverseString(s: string): string {
     return (
         String.fromCharCode(
             ...s.split("").map((c) => 0xffff - c.charCodeAt(0)),
@@ -72,24 +79,28 @@ export function reverseString(s) {
     );
 }
 
-function getCookie(name) {
+function getCookie(name: string): string | undefined {
     const r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
 
-let xsrf = () => {
+let xsrf: () => string | undefined = () => {
     const cached = getCookie("_mitmproxy_xsrf");
     xsrf = () => cached;
     return xsrf();
 };
 
-export function fetchApi(
+export const fetchApi = function (
     url: string,
     options: RequestInit = {},
 ): Promise<Response> {
     if (options.method && options.method !== "GET") {
-        options.headers = options.headers || {};
-        options.headers["X-XSRFToken"] = xsrf();
+        const headers = new Headers(options.headers);
+        const token = xsrf();
+        if (token) {
+            headers.set("X-XSRFToken", token);
+        }
+        options.headers = headers;
     }
     if (url.startsWith("/")) {
         url = "." + url;
@@ -99,9 +110,9 @@ export function fetchApi(
         credentials: "same-origin",
         ...options,
     });
-}
+};
 
-fetchApi.put = (url: string, json: any, options: RequestInit = {}) =>
+fetchApi.put = (url: string, json: unknown, options: RequestInit = {}) =>
     fetchApi(url, {
         method: "PUT",
         headers: {
@@ -111,7 +122,7 @@ fetchApi.put = (url: string, json: any, options: RequestInit = {}) =>
         ...options,
     });
 
-fetchApi.post = (url: string, json: any, options: RequestInit = {}) =>
+fetchApi.post = (url: string, json: unknown, options: RequestInit = {}) =>
     fetchApi(url, {
         method: "POST",
         headers: {
@@ -124,7 +135,7 @@ fetchApi.post = (url: string, json: any, options: RequestInit = {}) =>
 export async function runCommand(
     command: string,
     ...args: string[]
-): Promise<any> {
+): Promise<CommandResult> {
     const response = await fetchApi(`/commands/${command}`, {
         method: "POST",
         headers: {
@@ -135,16 +146,17 @@ export async function runCommand(
     return await response.json();
 }
 
+function isPlainObject(value: unknown): value is JsonObject {
+    return Object.prototype.toString.call(value) === "[object Object]";
+}
+
 // deep comparison of two json objects (dicts). arrays are handeled as a single value.
 // return: json object including only the changed keys value pairs.
-export function getDiff(obj1, obj2) {
+export function getDiff(obj1: JsonObject, obj2: JsonObject): JsonObject {
     const result = { ...obj2 };
     for (const key in obj1) {
         if (isEqual(obj2[key], obj1[key])) result[key] = undefined;
-        else if (
-            Object.prototype.toString.call(obj2[key]) === "[object Object]" &&
-            Object.prototype.toString.call(obj1[key]) === "[object Object]"
-        )
+        else if (isPlainObject(obj2[key]) && isPlainObject(obj1[key]))
             result[key] = getDiff(obj1[key], obj2[key]);
     }
     return result;
@@ -188,7 +200,7 @@ export async function copyToClipboard(
         t.focus();
         t.select();
         if (!document.execCommand("copy")) {
-            throw "failed to copy";
+            throw new Error("failed to copy");
         }
     } catch {
         alert(text);
@@ -199,7 +211,7 @@ export async function copyToClipboard(
 
 export async function copyViewContentDataToClipboard(
     contentViewData: ContentViewData | undefined,
-) {
+): Promise<void> {
     await copyToClipboard(Promise.resolve(contentViewData?.text || ""));
 }
 
