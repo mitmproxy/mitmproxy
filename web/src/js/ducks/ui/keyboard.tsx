@@ -57,9 +57,12 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (!flow) break;
                 const tabs = tabsForFlow(flow);
                 const currentTab = getState().ui.flow.tab;
+                const currentTabIndex = tabs.findIndex(
+                    (tab) => tab === currentTab,
+                );
                 const nextTab =
                     tabs[
-                        (Math.max(0, tabs.indexOf(currentTab)) -
+                        (Math.max(0, currentTabIndex) -
                             1 +
                             tabs.length) %
                             tabs.length
@@ -73,9 +76,12 @@ export function onKeyDown(e: KeyboardEvent) {
                 if (!flow) break;
                 const tabs = tabsForFlow(flow);
                 const currentTab = getState().ui.flow.tab;
+                const currentTabIndex = tabs.findIndex(
+                    (tab) => tab === currentTab,
+                );
                 const nextTab =
                     tabs[
-                        (Math.max(0, tabs.indexOf(currentTab)) + 1) %
+                        (Math.max(0, currentTabIndex) + 1) %
                             tabs.length
                     ];
                 dispatch(selectTab(nextTab));

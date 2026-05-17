@@ -12,37 +12,110 @@ import WebSocket from "./FlowView/WebSocket";
 import Comment from "./FlowView/Comment";
 import { selectTab } from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
-import type { Flow } from "../flow";
+import type { DNSFlow, Error as FlowError, Flow, HTTPFlow } from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
 import * as flowsActions from "../ducks/flows";
 
+type TabId =
+    | "request"
+    | "response"
+    | "error"
+    | "connection"
+    | "timing"
+    | "websocket"
+    | "tcpmessages"
+    | "udpmessages"
+    | "dnsrequest"
+    | "dnsresponse"
+    | "comment";
+
 type TabProps = {
     flow: Flow;
 };
 
-export const allTabs: {
-    [name: string]: FunctionComponent<TabProps> & { displayName: string };
-} = {
-    request: Request,
-    response: Response,
-    error: Error,
+function hasError(flow: Flow): flow is Flow & { error: FlowError } {
+    return !!flow.error;
+}
+
+function hasWebSocket(
+    flow: Flow,
+): flow is HTTPFlow & Required<Pick<HTTPFlow, "websocket">> {
+    return flow.type === "http" && !!flow.websocket;
+}
+
+function hasDnsResponse(
+    flow: Flow,
+): flow is DNSFlow & Required<Pick<DNSFlow, "response">> {
+    return flow.type === "dns" && !!flow.response;
+}
+
+const RequestTab = Object.assign(() => <Request />, {
+    displayName: Request.displayName,
+});
+const ResponseTab = Object.assign(() => <Response />, {
+    displayName: Response.displayName,
+});
+const DnsRequestTab = Object.assign(() => <DnsRequest />, {
+    displayName: DnsRequest.displayName,
+});
+const DnsResponseTab = Object.assign(
+    ({ flow }: TabProps) => (hasDnsResponse(flow) ? <DnsResponse /> : null),
+    {
+        displayName: DnsResponse.displayName,
+    },
+);
+const ErrorTab = Object.assign(
+    ({ flow }: TabProps) => (hasError(flow) ? <Error flow={flow} /> : null),
+    {
+        displayName: Error.displayName,
+    },
+);
+const WebSocketTab = Object.assign(
+    ({ flow }: TabProps) =>
+        hasWebSocket(flow) ? <WebSocket flow={flow} /> : null,
+    {
+        displayName: WebSocket.displayName,
+    },
+);
+const TcpMessagesTab = Object.assign(
+    ({ flow }: TabProps) => (flow.type === "tcp" ? <TcpMessages flow={flow} /> : null),
+    {
+        displayName: TcpMessages.displayName,
+    },
+);
+const UdpMessagesTab = Object.assign(
+    ({ flow }: TabProps) => (flow.type === "udp" ? <UdpMessages flow={flow} /> : null),
+    {
+        displayName: UdpMessages.displayName,
+    },
+);
+
+export const allTabs: Record<
+    TabId,
+    FunctionComponent<TabProps> & { displayName?: string }
+> = {
+    request: RequestTab,
+    response: ResponseTab,
+    error: ErrorTab,
     connection: Connection,
     timing: Timing,
-    websocket: WebSocket,
-    tcpmessages: TcpMessages,
-    udpmessages: UdpMessages,
-    dnsrequest: DnsRequest,
-    dnsresponse: DnsResponse,
+    websocket: WebSocketTab,
+    tcpmessages: TcpMessagesTab,
+    udpmessages: UdpMessagesTab,
+    dnsrequest: DnsRequestTab,
+    dnsresponse: DnsResponseTab,
     comment: Comment,
 };
 
-export function tabsForFlow(flow: Flow): string[] {
-    let tabs;
+export function tabsForFlow(flow: Flow): TabId[] {
+    let tabs: TabId[];
     switch (flow.type) {
         case "http":
-            tabs = ["request", "response", "websocket"].filter((k) => flow[k]);
+            tabs = ["request"];
+            if (flow.response) tabs.push("response");
+            if (flow.websocket) tabs.push("websocket");
             break;
         case "tcp":
             tabs = ["tcpmessages"];
@@ -51,9 +124,8 @@ export function tabsForFlow(flow: Flow): string[] {
             tabs = ["udpmessages"];
             break;
         case "dns":
-            tabs = ["request", "response"]
-                .filter((k) => flow[k])
-                .map((s) => "dns" + s);
+            tabs = ["dnsrequest"];
+            if (flow.response) tabs.push("dnsresponse");
             break;
     }
 
@@ -67,7 +139,7 @@ export function tabsForFlow(flow: Flow): string[] {
 export default function FlowView() {
     const dispatch = useAppDispatch();
     const flow = useAppSelector((state) => state.flows.selected[0]);
-    let active = useAppSelector((state) => state.ui.flow.tab);
+    let active = useAppSelector((state) => state.ui.flow.tab) as TabId;
 
     if (flow == undefined) {
         return <></>;
@@ -78,7 +150,11 @@ export default function FlowView() {
     if (tabs.indexOf(active) < 0) {
         if (active === "response" && flow.error) {
             active = "error";
-        } else if (active === "error" && "response" in flow) {
+        } else if (
+            active === "error" &&
+            flow.type === "http" &&
+            flow.response
+        ) {
             active = "response";
         } else {
             active = tabs[0];

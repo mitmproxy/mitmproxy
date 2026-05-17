@@ -186,13 +186,13 @@ export default function CommandBar() {
         }
     };
 
-    const onChange = (e) => {
+    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
         setOriginalInput(e.target.value);
         setCurrentCompletion(0);
     };
 
-    const onKeyDown = (e) => {
+    const onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
         if (e.key === "Enter") {
             const [cmd, ...args] = Filt.parse(input);
 
@@ -269,7 +269,7 @@ export default function CommandBar() {
         e.stopPropagation();
     };
 
-    const onKeyUp = (e) => {
+    const onKeyUp = (e: React.KeyboardEvent<HTMLElement>) => {
         if (!input) {
             setAvailableCommands(Object.keys(allCommands));
             return;

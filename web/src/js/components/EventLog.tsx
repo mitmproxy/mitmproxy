@@ -13,8 +13,8 @@ type EventLogState = {
 type EventLogProps = {
     events: EventLogItem[];
     filters: { [level in LogLevel]: boolean };
-    toggleFilter: (filter: LogLevel) => any;
-    close: () => any;
+    toggleFilter: (filter: LogLevel) => void;
+    close: () => void;
     defaultHeight: number;
 };
 
@@ -22,10 +22,10 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
     static defaultProps = {
         defaultHeight: 200,
     };
-    private dragStart: number;
+    private dragStart = 0;
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props: EventLogProps) {
+        super(props);
 
         this.state = { height: this.props.defaultHeight };
 
