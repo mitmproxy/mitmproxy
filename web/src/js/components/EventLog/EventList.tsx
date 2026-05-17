@@ -25,7 +25,7 @@ export default class EventLogList extends Component<
 
     viewport = React.createRef<HTMLPreElement>();
 
-    constructor(props) {
+    constructor(props: EventLogListProps) {
         super(props);
 
         this.heights = {};
@@ -47,7 +47,13 @@ export default class EventLogList extends Component<
         return autoscroll.isAtBottom(this.viewport);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(
+        prevProps: EventLogListProps,
+        prevState: EventLogListState,
+        snapshot: boolean,
+    ) {
+        void prevProps;
+        void prevState;
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
@@ -72,7 +78,7 @@ export default class EventLogList extends Component<
         }
     }
 
-    setHeight(id, node) {
+    setHeight(id: string, node: HTMLDivElement | null) {
         if (node && !this.heights[id]) {
             const height = node.offsetHeight;
             if (this.heights[id] !== height) {
@@ -111,8 +117,9 @@ function LogIcon({ event }: { event: EventLogItem }) {
         {
             web: "html5",
             debug: "bug",
+            info: "info",
             warn: "exclamation-triangle",
             error: "ban",
-        }[event.level] || "info";
+        }[event.level];
     return <i className={`fa fa-fw fa-${icon}`} />;
 }
