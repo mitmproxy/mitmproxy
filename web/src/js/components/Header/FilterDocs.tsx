@@ -5,8 +5,12 @@ type FilterDocsProps = {
     selectHandler: (cmd: string) => void;
 };
 
+type FilterDocsDoc = {
+    commands: [string, string][];
+};
+
 type FilterDocsStates = {
-    doc: { commands: string[][] };
+    doc: FilterDocsDoc;
 };
 
 export default class FilterDocs extends Component<
@@ -15,11 +19,11 @@ export default class FilterDocs extends Component<
 > {
     // @todo move to redux
 
-    static xhr: Promise<any> | null;
-    static doc: { commands: string[][] };
+    static xhr: Promise<FilterDocsDoc> | null;
+    static doc: FilterDocsDoc;
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props: FilterDocsProps) {
+        super(props);
         this.state = { doc: FilterDocs.doc };
     }
 
