@@ -17,8 +17,8 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
 
     node = React.createRef<HTMLDivElement>();
 
-    constructor(props, context) {
-        super(props, context);
+    constructor(props: SplitterProps) {
+        super(props);
         this.state = { applied: false, startPos: 0, dragPointer: 0.1 };
         this.onLostPointerCapture = this.onLostPointerCapture.bind(this);
         this.onPointerDown = this.onPointerDown.bind(this);
@@ -76,7 +76,7 @@ export default class Splitter extends Component<SplitterProps, SplitterState> {
         );
     }
 
-    reset(willUnmount) {
+    reset(willUnmount: boolean) {
         if (!this.state.applied) {
             return;
         }

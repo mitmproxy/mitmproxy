@@ -11,7 +11,7 @@ type MenuItemProps = {
 };
 
 export function MenuItem({ onClick, children, ...attrs }: MenuItemProps) {
-    const click = (e) => {
+    const click = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         onClick();
     };
