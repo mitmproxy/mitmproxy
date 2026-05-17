@@ -77,9 +77,7 @@ describe("fetchApi", () => {
             ),
         ).toEqual("application/json");
         expect(
-            (fetchMock.mock.calls[0][1]?.headers as Headers).has(
-                "X-XSRFToken",
-            ),
+            (fetchMock.mock.calls[0][1]?.headers as Headers).has("X-XSRFToken"),
         ).toBeFalsy();
     });
 });

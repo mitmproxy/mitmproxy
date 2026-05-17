@@ -80,13 +80,15 @@ const WebSocketTab = Object.assign(
     },
 );
 const TcpMessagesTab = Object.assign(
-    ({ flow }: TabProps) => (flow.type === "tcp" ? <TcpMessages flow={flow} /> : null),
+    ({ flow }: TabProps) =>
+        flow.type === "tcp" ? <TcpMessages flow={flow} /> : null,
     {
         displayName: TcpMessages.displayName,
     },
 );
 const UdpMessagesTab = Object.assign(
-    ({ flow }: TabProps) => (flow.type === "udp" ? <UdpMessages flow={flow} /> : null),
+    ({ flow }: TabProps) =>
+        flow.type === "udp" ? <UdpMessages flow={flow} /> : null,
     {
         displayName: UdpMessages.displayName,
     },

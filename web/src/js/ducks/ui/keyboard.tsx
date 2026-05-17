@@ -62,9 +62,7 @@ export function onKeyDown(e: KeyboardEvent) {
                 );
                 const nextTab =
                     tabs[
-                        (Math.max(0, currentTabIndex) -
-                            1 +
-                            tabs.length) %
+                        (Math.max(0, currentTabIndex) - 1 + tabs.length) %
                             tabs.length
                     ];
                 dispatch(selectTab(nextTab));
@@ -80,10 +78,7 @@ export function onKeyDown(e: KeyboardEvent) {
                     (tab) => tab === currentTab,
                 );
                 const nextTab =
-                    tabs[
-                        (Math.max(0, currentTabIndex) + 1) %
-                            tabs.length
-                    ];
+                    tabs[(Math.max(0, currentTabIndex) + 1) % tabs.length];
                 dispatch(selectTab(nextTab));
                 break;
             }

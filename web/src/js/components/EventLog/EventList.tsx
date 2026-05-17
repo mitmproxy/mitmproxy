@@ -113,13 +113,12 @@ export default class EventLogList extends Component<
 }
 
 function LogIcon({ event }: { event: EventLogItem }) {
-    const icon =
-        {
-            web: "html5",
-            debug: "bug",
-            info: "info",
-            warn: "exclamation-triangle",
-            error: "ban",
-        }[event.level];
+    const icon = {
+        web: "html5",
+        debug: "bug",
+        info: "info",
+        warn: "exclamation-triangle",
+        error: "ban",
+    }[event.level];
     return <i className={`fa fa-fw fa-${icon}`} />;
 }
