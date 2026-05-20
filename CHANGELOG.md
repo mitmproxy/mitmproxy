@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix `Http1Server`/`Http1Client` emitting the chunked-encoding body-end terminator `0\r\n\r\n` when a `ResponseData`/`RequestData` event carries an empty payload. Previously, a `response.stream` addon callable that returned `b""` (e.g. while buffering for a later flush) would make the client treat the response as complete and stop reading mid-stream.
+  ([#8242](https://github.com/mitmproxy/mitmproxy/pull/8242), @Osezno-byte)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
   ([#8234](https://github.com/mitmproxy/mitmproxy/pull/8234), @ariel42)
 - mitmweb: Fix an infinite update cycle in `FlowTable` by only recomputing the virtual-scroll window in `componentDidUpdate` when `flowView` or `rowHeight` actually change.

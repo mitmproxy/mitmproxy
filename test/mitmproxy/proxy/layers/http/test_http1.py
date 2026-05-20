@@ -111,8 +111,76 @@ class TestServer:
             << ReceiveHttp(RequestEndOfMessage(3))
         )
 
+    def test_chunked_response_empty_data_no_terminator(self, tctx):
+        """Empty ResponseData(b"") on a chunked response must NOT emit the
+        chunked-encoding body-end terminator `0\r\n\r\n`.
+
+        Before this fix, a `response.stream` callable returning `b""` (e.g. a
+        rehydrator buffering events for a later flush) caused
+        `b"%x\r\n%s\r\n" % (0, b"") == b"0\r\n\r\n"` to be sent, which the
+        client parses as end-of-body and stops reading mid-stream.
+        """
+        playbook = Playbook(Http1Server(tctx))
+        (
+            playbook
+            >> DataReceived(
+                tctx.client,
+                b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n",
+            )
+            << ReceiveHttp(Placeholder(RequestHeaders))
+            << ReceiveHttp(RequestEndOfMessage(1))
+            >> ResponseHeaders(
+                1,
+                http.Response.make(200, b"", headers={"transfer-encoding": "chunked"}),
+            )
+            << SendData(
+                tctx.client,
+                b"HTTP/1.1 200 OK\r\ntransfer-encoding: chunked\r\n\r\n",
+            )
+            >> ResponseData(1, b"hello")
+            << SendData(tctx.client, b"5\r\nhello\r\n")
+            # Empty ResponseData must produce no SendData. Playbook is strict:
+            # any unexpected SendData here would fail the test.
+            >> ResponseData(1, b"")
+            >> ResponseData(1, b"world")
+            << SendData(tctx.client, b"5\r\nworld\r\n")
+            >> ResponseEndOfMessage(1)
+            << SendData(tctx.client, b"0\r\n\r\n")
+        )
+        assert playbook
+
 
 class TestClient:
+    def test_chunked_request_empty_data_no_terminator(self, tctx):
+        """Empty RequestData(b"") on a chunked request must NOT emit the
+        chunked-encoding body-end terminator. Same bug as
+        TestServer.test_chunked_response_empty_data_no_terminator, just on
+        the request side.
+        """
+        req = http.Request.make(
+            "POST",
+            "http://example.com/",
+            headers={"transfer-encoding": "chunked"},
+        )
+        playbook = Playbook(Http1Client(tctx))
+        (
+            playbook
+            >> RequestHeaders(1, req, False)
+            << SendData(
+                tctx.server,
+                b"POST / HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n",
+            )
+            >> RequestData(1, b"hello")
+            << SendData(tctx.server, b"5\r\nhello\r\n")
+            # Empty RequestData → no SendData. Playbook is strict.
+            >> RequestData(1, b"")
+            >> RequestData(1, b"world")
+            << SendData(tctx.server, b"5\r\nworld\r\n")
+            >> RequestEndOfMessage(1)
+            << SendData(tctx.server, b"0\r\n\r\n")
+        )
+        assert playbook
+
     @pytest.mark.parametrize("pipeline", ["pipeline", None])
     def test_simple(self, tctx, pipeline):
         req = http.Request.make("GET", "http://example.com/")
