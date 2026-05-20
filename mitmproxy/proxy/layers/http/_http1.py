@@ -250,6 +250,14 @@ class Http1Server(Http1Connection):
             yield commands.SendData(self.conn, raw)
         elif isinstance(event, ResponseData):
             assert self.response
+            if not event.data:
+                # Empty ResponseData is a no-op. Under chunked transfer-encoding
+                # we must NOT emit a zero-length chunk — `0\r\n\r\n` is the
+                # body-end terminator and would make the client treat the
+                # response as complete mid-stream. See: stream callable in a
+                # response.stream addon returning b"" while buffering for a
+                # later flush.
+                return
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
             else:
@@ -378,6 +386,13 @@ class Http1Client(Http1Connection):
             yield commands.SendData(self.conn, raw)
         elif isinstance(event, RequestData):
             assert self.request
+            if not event.data:
+                # Empty RequestData is a no-op. Under chunked transfer-encoding
+                # we must NOT emit a zero-length chunk — `0\r\n\r\n` is the
+                # body-end terminator and would make the upstream treat the
+                # request body as complete mid-stream. Same reasoning as
+                # Http1Server.send for ResponseData.
+                return
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
             else:
