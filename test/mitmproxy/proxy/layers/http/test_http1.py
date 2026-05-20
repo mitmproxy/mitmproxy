@@ -111,7 +111,6 @@ class TestServer:
             << ReceiveHttp(RequestEndOfMessage(3))
         )
 
-
     def test_chunked_response_empty_data_no_terminator(self, tctx):
         """Empty ResponseData(b"") on a chunked response must NOT emit the
         chunked-encoding body-end terminator `0\r\n\r\n`.
@@ -132,9 +131,7 @@ class TestServer:
             << ReceiveHttp(RequestEndOfMessage(1))
             >> ResponseHeaders(
                 1,
-                http.Response.make(
-                    200, b"", headers={"transfer-encoding": "chunked"}
-                ),
+                http.Response.make(200, b"", headers={"transfer-encoding": "chunked"}),
             )
             << SendData(
                 tctx.client,
