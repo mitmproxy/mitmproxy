@@ -416,7 +416,13 @@ class TLSLayer(tunnel.TunnelLayer):
                 plaintext.extend(self.tls.recv(65535))
             except SSL.WantReadError:
                 break
-            except SSL.ZeroReturnError:
+            except (SSL.ZeroReturnError, SSL.SysCallError):
+                # SysCallError is raised when the peer closes the underlying
+                # transport without sending a TLS close_notify alert (an
+                # unclean but common shutdown). Treat it like ZeroReturnError
+                # so that buffered plaintext is delivered to the child layer
+                # before the connection close event propagates. See also
+                # send_data, where the same exception is handled.
                 close = True
                 break
             except SSL.Error as e:

@@ -337,6 +337,83 @@ class TestServerTLS:
             << None
         )
 
+    def test_unclean_close_preserves_buffered_data(self, tctx, monkeypatch):
+            """
+            When a TLS peer closes the underlying transport without sending a
+            close_notify alert, OpenSSL raises SSL.SysCallError(-1, 'Unexpected
+            EOF') from recv(). Any plaintext already buffered must still be
+            delivered to the child layer before the connection close event
+            propagates.
+            """
+            server_layer = tls.ServerTLSLayer(tctx)
+            playbook = tutils.Playbook(server_layer)
+            tctx.server.address = ("example.mitmproxy.org", 443)
+            tctx.server.state = ConnectionState.OPEN
+            tctx.server.sni = "example.mitmproxy.org"
+
+            tssl = SSLTest(server_side=True)
+
+            # Drive the handshake to completion.
+            data = tutils.Placeholder(bytes)
+            assert (
+                playbook
+                << tls.TlsStartServerHook(tutils.Placeholder())
+                >> reply_tls_start_server()
+                << commands.SendData(tctx.server, data)
+            )
+            tssl.bio_write(data())
+            with pytest.raises(ssl.SSLWantReadError):
+                tssl.do_handshake()
+
+            finish_handshake(playbook, tctx.server, tssl)
+
+            tssl.do_handshake()
+            playbook >> events.DataReceived(tctx.server, tssl.bio_read())
+            playbook << None
+            assert playbook
+            assert tctx.server.tls_established
+
+            # Establish a child layer that echoes received data back.
+            assert (
+                playbook
+                >> events.DataReceived(tctx.client, b"trigger")
+                << layer.NextLayerHook(tutils.Placeholder())
+                >> tutils.reply_next_layer(TlsEchoLayer)
+                << commands.SendData(tctx.client, b"trigger")
+            )
+
+            # The server delivers one record of plaintext, then the peer aborts
+            # the connection without close_notify. We simulate this by patching
+            # recv() to return the plaintext on the first call and raise
+            # SysCallError on subsequent calls.
+            tssl.obj.write(b"PARTIAL RESPONSE BODY")
+            ciphertext = tssl.bio_read()
+
+            assert server_layer.tls is not None
+            original_recv = server_layer.tls.recv
+            calls = {"n": 0}
+
+            def fake_recv(bufsize):
+                calls["n"] += 1
+                if calls["n"] == 1:
+                    return original_recv(bufsize)
+                raise SSL.SysCallError(-1, "Unexpected EOF")
+
+            monkeypatch.setattr(server_layer.tls, "recv", fake_recv)
+
+            # The buffered plaintext must be delivered to the child layer before
+            # the unclean close propagates. TlsEchoLayer echoes received data
+            # back, so SendData proves b"PARTIAL RESPONSE BODY" was not
+            # discarded. CloseConnection must then follow because the
+            # SysCallError is now treated like an EOF condition (close=True).
+            echoed_ciphertext = tutils.Placeholder(bytes)
+            assert (
+                playbook
+                >> events.DataReceived(tctx.server, ciphertext)
+                << commands.SendData(tctx.server, echoed_ciphertext)
+                << commands.CloseConnection(tctx.server)
+            )
+    
     def test_untrusted_cert(self, tctx):
         """If the certificate is not trusted, we should fail."""
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
