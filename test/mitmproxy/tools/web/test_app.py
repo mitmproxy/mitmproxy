@@ -532,6 +532,50 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client.close()
 
     @tornado.testing.gen_test
+    def test_websocket_filter_parse_error_keeps_connection(self):
+        ws_req = httpclient.HTTPRequest(
+            f"ws://localhost:{self.get_http_port()}/updates",
+            headers={"Cookie": self.auth_cookie},
+        )
+        ws_client = yield tornado.websocket.websocket_connect(ws_req)
+
+        yield ws_client.write_message(
+            json.dumps(
+                {
+                    "type": "flows/updateFilter",
+                    "payload": {
+                        "name": "search",
+                        "expr": "~u Content-Type'",
+                    },
+                }
+            ).encode()
+        )
+        yield ws_client.write_message(
+            json.dumps(
+                {
+                    "type": "flows/updateFilter",
+                    "payload": {
+                        "name": "search",
+                        "expr": "~bq foo",
+                    },
+                }
+            ).encode()
+        )
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "type": "flows/filterUpdate",
+            "payload": {
+                "name": "search",
+                "matching_flow_ids": ["42"],
+            },
+        }
+
+        ws_client.close()
+
+    @tornado.testing.gen_test
     def test_websocket_filter_command_error(self):
         # can't do pytest.parametrize, so we do this.
         for data in [
