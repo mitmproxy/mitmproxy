@@ -163,8 +163,10 @@ def is_mostly_bin(s: bytes) -> bool:
 
 
 def is_xml(s: bytes) -> bool:
+    # XML 1.0 §2.3 defines whitespace as (#x20 | #x9 | #xD | #xA), so a
+    # leading \r before "<" should also be skipped here.
     for char in s:
-        if char in (9, 10, 32):  # is space?
+        if char in (9, 10, 13, 32):  # is whitespace?
             continue
         return char == 60  # is a "<"?
     return False
