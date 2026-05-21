@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix contentview detection for XML files that start with CRLF.
+  ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
   ([#8234](https://github.com/mitmproxy/mitmproxy/pull/8234), @ariel42)
 - mitmweb: Fix an infinite update cycle in `FlowTable` by only recomputing the virtual-scroll window in `componentDidUpdate` when `flowView` or `rowHeight` actually change.
