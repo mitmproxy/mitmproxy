@@ -48,12 +48,10 @@ export default class EventLogList extends Component<
     }
 
     componentDidUpdate(
-        prevProps: EventLogListProps,
-        prevState: EventLogListState,
+        _prevProps: EventLogListProps,
+        _prevState: EventLogListState,
         snapshot: boolean,
     ) {
-        void prevProps;
-        void prevState;
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }

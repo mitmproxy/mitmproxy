@@ -1,5 +1,4 @@
 import * as React from "react";
-import type { FunctionComponent } from "react";
 import { Request, Response } from "./FlowView/HttpMessages";
 import {
     Request as DnsRequest,
@@ -12,7 +11,12 @@ import WebSocket from "./FlowView/WebSocket";
 import Comment from "./FlowView/Comment";
 import { selectTab } from "../ducks/ui/flow";
 import { useAppDispatch, useAppSelector } from "../ducks";
-import type { DNSFlow, Error as FlowError, Flow, HTTPFlow } from "../flow";
+import type {
+    Error as FlowError,
+    Flow,
+    HTTPFlow,
+    WebSocketData,
+} from "../flow";
 import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
@@ -31,85 +35,58 @@ type TabId =
     | "dnsresponse"
     | "comment";
 
-type TabProps = {
-    flow: Flow;
+export const tabLabels: Record<TabId, string> = {
+    request: Request.displayName,
+    response: Response.displayName,
+    error: Error.displayName,
+    connection: Connection.displayName,
+    timing: Timing.displayName,
+    websocket: WebSocket.displayName,
+    tcpmessages: TcpMessages.displayName,
+    udpmessages: UdpMessages.displayName,
+    dnsrequest: DnsRequest.displayName,
+    dnsresponse: DnsResponse.displayName,
+    comment: Comment.displayName,
 };
 
-function hasError(flow: Flow): flow is Flow & { error: FlowError } {
-    return !!flow.error;
+function renderTab(active: TabId, flow: Flow): React.ReactElement | null {
+    switch (active) {
+        case "request":
+            return <Request />;
+        case "response":
+            return <Response />;
+        case "error":
+            return flow.error ? (
+                <Error flow={flow as Flow & { error: FlowError }} />
+            ) : null;
+        case "connection":
+            return <Connection flow={flow} />;
+        case "timing":
+            return <Timing flow={flow} />;
+        case "websocket":
+            return flow.type === "http" && flow.websocket ? (
+                <WebSocket
+                    flow={
+                        flow as HTTPFlow & {
+                            websocket: WebSocketData;
+                        }
+                    }
+                />
+            ) : null;
+        case "tcpmessages":
+            return flow.type === "tcp" ? <TcpMessages flow={flow} /> : null;
+        case "udpmessages":
+            return flow.type === "udp" ? <UdpMessages flow={flow} /> : null;
+        case "dnsrequest":
+            return <DnsRequest />;
+        case "dnsresponse":
+            return flow.type === "dns" && flow.response ? (
+                <DnsResponse />
+            ) : null;
+        case "comment":
+            return <Comment flow={flow} />;
+    }
 }
-
-function hasWebSocket(
-    flow: Flow,
-): flow is HTTPFlow & Required<Pick<HTTPFlow, "websocket">> {
-    return flow.type === "http" && !!flow.websocket;
-}
-
-function hasDnsResponse(
-    flow: Flow,
-): flow is DNSFlow & Required<Pick<DNSFlow, "response">> {
-    return flow.type === "dns" && !!flow.response;
-}
-
-const RequestTab = Object.assign(() => <Request />, {
-    displayName: Request.displayName,
-});
-const ResponseTab = Object.assign(() => <Response />, {
-    displayName: Response.displayName,
-});
-const DnsRequestTab = Object.assign(() => <DnsRequest />, {
-    displayName: DnsRequest.displayName,
-});
-const DnsResponseTab = Object.assign(
-    ({ flow }: TabProps) => (hasDnsResponse(flow) ? <DnsResponse /> : null),
-    {
-        displayName: DnsResponse.displayName,
-    },
-);
-const ErrorTab = Object.assign(
-    ({ flow }: TabProps) => (hasError(flow) ? <Error flow={flow} /> : null),
-    {
-        displayName: Error.displayName,
-    },
-);
-const WebSocketTab = Object.assign(
-    ({ flow }: TabProps) =>
-        hasWebSocket(flow) ? <WebSocket flow={flow} /> : null,
-    {
-        displayName: WebSocket.displayName,
-    },
-);
-const TcpMessagesTab = Object.assign(
-    ({ flow }: TabProps) =>
-        flow.type === "tcp" ? <TcpMessages flow={flow} /> : null,
-    {
-        displayName: TcpMessages.displayName,
-    },
-);
-const UdpMessagesTab = Object.assign(
-    ({ flow }: TabProps) =>
-        flow.type === "udp" ? <UdpMessages flow={flow} /> : null,
-    {
-        displayName: UdpMessages.displayName,
-    },
-);
-
-export const allTabs: Record<
-    TabId,
-    FunctionComponent<TabProps> & { displayName?: string }
-> = {
-    request: RequestTab,
-    response: ResponseTab,
-    error: ErrorTab,
-    connection: Connection,
-    timing: Timing,
-    websocket: WebSocketTab,
-    tcpmessages: TcpMessagesTab,
-    udpmessages: UdpMessagesTab,
-    dnsrequest: DnsRequestTab,
-    dnsresponse: DnsResponseTab,
-    comment: Comment,
-};
 
 export function tabsForFlow(flow: Flow): TabId[] {
     let tabs: TabId[];
@@ -162,8 +139,6 @@ export default function FlowView() {
             active = tabs[0];
         }
     }
-    const Tab = allTabs[active];
-
     return (
         <div className="flow-detail">
             <nav className="nav-tabs nav-tabs-sm">
@@ -184,11 +159,11 @@ export default function FlowView() {
                             dispatch(selectTab(tabId));
                         }}
                     >
-                        {allTabs[tabId].displayName}
+                        {tabLabels[tabId]}
                     </a>
                 ))}
             </nav>
-            <Tab flow={flow} />
+            {renderTab(active, flow)}
         </div>
     );
 }
