@@ -90,7 +90,7 @@ let xsrf: () => string | undefined = () => {
     return xsrf();
 };
 
-export function fetchApi (
+export function fetchApi(
     url: string,
     options: RequestInit = {},
 ): Promise<Response> {
@@ -110,7 +110,7 @@ export function fetchApi (
         credentials: "same-origin",
         ...options,
     });
-};
+}
 
 fetchApi.put = (url: string, json: unknown, options: RequestInit = {}) =>
     fetchApi(url, {
