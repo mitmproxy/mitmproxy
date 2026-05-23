@@ -106,6 +106,11 @@ def test_is_xml():
     assert not strutils.is_xml(b"foo")
     assert strutils.is_xml(b"<foo")
     assert strutils.is_xml(b"  \n<foo")
+    # XML 1.0 §2.3 lists CR as whitespace, so bodies that arrive with
+    # CRLF (or a stray \r) before the root element must still be detected.
+    assert strutils.is_xml(b"\r<foo")
+    assert strutils.is_xml(b"\r\n<foo")
+    assert not strutils.is_xml(b"\r\nfoo")
 
 
 def test_clean_hanging_newline():

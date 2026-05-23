@@ -7,7 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
-- mitmproxy: Fix HTTP response body being dropped when a TLS peer closes the connection without sending a `close_notify` alert. `OpenSSL.SSL.SysCallError(-1, 'Unexpected EOF')` on `recv` is now handled symmetrically to `ZeroReturnError`, matching the existing behavior on `send`.
+- Fix contentview detection for XML files that start with CRLF.
+  ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
+- Fix HTTP response body being dropped when a TLS peer closes the connection without sending a `close_notify` alert. `OpenSSL.SSL.SysCallError(-1, 'Unexpected EOF')` on `recv` is now handled symmetrically to `ZeroReturnError`, matching the existing behavior on `send`.
   ([#8241](https://github.com/mitmproxy/mitmproxy/pull/8241), @ravivasani75)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
   ([#8234](https://github.com/mitmproxy/mitmproxy/pull/8234), @ariel42)
