@@ -520,9 +520,7 @@ class FUrl(_StrRex):
         if isinstance(f, http.HTTPFlow):
             return bool(self.re.search(f.request.pretty_url))
         assert isinstance(f, dns.DNSFlow)
-        return bool(
-            f.request.questions and self.re.search(f.request.questions[0].name)
-        )
+        return bool(f.request.questions and self.re.search(f.request.questions[0].name))
 
     def __str__(self) -> str:
         return f"url matches {self.regex_str}"
