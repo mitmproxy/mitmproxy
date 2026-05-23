@@ -42,7 +42,6 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from typing import AnyStr
 from typing import cast
-from typing import Any
 from typing import ClassVar
 from typing import Generic
 from typing import Protocol
@@ -187,8 +186,7 @@ class FReq(_Action):
 
     @only(http.HTTPFlow, dns.DNSFlow)
     def __call__(self, f) -> bool:
-        if not f.response:
-            return True
+        return not f.response
 
     def __str__(self) -> str:
         return "has no response"
@@ -355,6 +353,7 @@ class FHeadRequest(_BinRex):
     def __call__(self, f) -> bool:
         if f.request and self.re.search(bytes(f.request.headers)):
             return True
+        return False
 
     def __str__(self) -> str:
         return f"req. header matches {self.regex_str}"
@@ -369,6 +368,7 @@ class FHeadResponse(_BinRex):
     def __call__(self, f) -> bool:
         if f.response and self.re.search(bytes(f.response.headers)):
             return True
+        return False
 
     def __str__(self) -> str:
         return f"resp. header matches {self.regex_str}"
@@ -438,6 +438,7 @@ class FBodRequest(_BinRex):
         elif isinstance(f, dns.DNSFlow):
             if f.request and self.re.search(str(f.request).encode()):
                 return True
+        return False
 
     def __str__(self) -> str:
         return f"body request matches {self.regex_str}"
@@ -468,6 +469,7 @@ class FBodResponse(_BinRex):
         elif isinstance(f, dns.DNSFlow):
             if f.response and self.re.search(str(f.response).encode()):
                 return True
+        return False
 
     def __str__(self) -> str:
         return f"body response matches {self.regex_str}"
@@ -519,6 +521,7 @@ class FUrl(_StrRex):
             return bool(self.re.search(f.request.pretty_url))
         elif isinstance(f, dns.DNSFlow):
             return f.request.questions and bool(self.re.search(f.request.questions[0].name))
+        return False
 
     def __str__(self) -> str:
         return f"url matches {self.regex_str}"
@@ -634,6 +637,7 @@ class FCode(_Int):
     def __call__(self, f) -> bool:
         if f.response and f.response.status_code == self.num:
             return True
+        return False
 
     def __str__(self) -> str:
         return f"response code is {self.num}"
