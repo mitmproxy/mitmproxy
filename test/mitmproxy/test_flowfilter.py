@@ -130,7 +130,10 @@ class TestParsing:
             ("~marker red", "marker matches /red/i"),
             ("~comment note", "comment matches /note/im"),
             ("~c 404", "response code is 404"),
-            ("(~u foobar & ~h voing)", "url matches /foobar/i and header matches /voing/im"),
+            (
+                "(~u foobar & ~h voing)",
+                "url matches /foobar/i and header matches /voing/im",
+            ),
             ("!~h test", "not header matches /test/im"),
             ("~u foo & ~c 200", "url matches /foo/i and response code is 200"),
             ("~u foo | ~c 200", "url matches /foo/i or response code is 200"),

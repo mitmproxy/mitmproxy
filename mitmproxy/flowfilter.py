@@ -520,7 +520,9 @@ class FUrl(_StrRex):
         if isinstance(f, http.HTTPFlow):
             return bool(self.re.search(f.request.pretty_url))
         elif isinstance(f, dns.DNSFlow):
-            return f.request.questions and bool(self.re.search(f.request.questions[0].name))
+            return f.request.questions and bool(
+                self.re.search(f.request.questions[0].name)
+            )
         return False
 
     def __str__(self) -> str:
@@ -641,6 +643,7 @@ class FCode(_Int):
 
     def __str__(self) -> str:
         return f"response code is {self.num}"
+
 
 def _parenthesize(t: _Token) -> str:
     if isinstance(t, (FAnd, FOr)):
@@ -792,6 +795,7 @@ class TFilter(Protocol):
     def __str__(self) -> str: ...  # pragma: no cover
 
     def dump(self, indent=0, fp=sys.stdout): ...  # pragma: no cover
+
 
 def parse(s: str) -> TFilter:
     """
