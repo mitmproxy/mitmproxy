@@ -15,6 +15,7 @@ def map(km: Keymap) -> None:
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")
     km.add("O", "console.view.options", ["commonkey", "global"], "View options")
     km.add("E", "console.view.eventlog", ["commonkey", "global"], "View event log")
+    km.add("Y", "console.view.versioninfo", ["global"], "View version information")
     km.add("Q", "console.exit", ["global"], "Exit immediately")
     km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current view")
     km.add("esc", "console.view.pop", ["commonkey", "global"], "Exit the current view")
