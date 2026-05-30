@@ -71,6 +71,7 @@ export interface OptionsState {
     show_ignored_hosts: boolean;
     showhost: boolean;
     ssl_insecure: boolean;
+    ssl_use_windows_cert_store: boolean;
     ssl_verify_upstream_trusted_ca: string | undefined;
     ssl_verify_upstream_trusted_confdir: string | undefined;
     stickyauth: string | undefined;
@@ -178,6 +179,7 @@ export const defaultState: OptionsState = {
     show_ignored_hosts: false,
     showhost: false,
     ssl_insecure: false,
+    ssl_use_windows_cert_store: true,
     ssl_verify_upstream_trusted_ca: undefined,
     ssl_verify_upstream_trusted_confdir: undefined,
     stickyauth: undefined,
