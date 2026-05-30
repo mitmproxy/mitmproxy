@@ -7,6 +7,26 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix contentview detection for XML files that start with CRLF.
+  ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
+- mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
+  ([#8234](https://github.com/mitmproxy/mitmproxy/pull/8234), @ariel42)
+- mitmweb: Fix an infinite update cycle in `FlowTable` by only recomputing the virtual-scroll window in `componentDidUpdate` when `flowView` or `rowHeight` actually change.
+  ([#8233](https://github.com/mitmproxy/mitmproxy/pull/8233), @ariel42)
+- mitmweb: Fix AVIF images and `image/vnd.microsoft.icon` favicons not rendering in the response tab.
+  ([#8232](https://github.com/mitmproxy/mitmproxy/pull/8232), @ariel42)
+
+## 12 May 2026: mitmproxy 12.2.3
+
+- Reduce generated leaf certificate validity from 199 to 197 days so the 2-day
+  `notBefore` backdate remains below Chromium's 200-day limit.
+  ([#8203](https://github.com/mitmproxy/mitmproxy/pull/8203), @emanuele-em)
+- Fixed a bug where mitmweb would not pick up its XSRF cookie.
+  ([#8224](https://github.com/mitmproxy/mitmproxy/pull/8224), @mhils)
+- Fix `authority and subject key identifier mismatch` errors when mitmproxy
+  is configured with a custom CA whose SubjectKeyIdentifier was not derived
+  as SHA-1 of the public key.
+  ([#8214](https://github.com/mitmproxy/mitmproxy/pull/8214), @unique-jakub)
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)

@@ -60,7 +60,7 @@ export class PureEventLog extends Component<EventLogProps, EventLogState> {
             <div className="eventlog" style={{ height }}>
                 <div onMouseDown={this.onDragStart}>
                     Eventlog
-                    <div className="pull-right">
+                    <div className="float-right">
                         {Object.values(LogLevel).map((type) => (
                             <ToggleButton
                                 key={type}
