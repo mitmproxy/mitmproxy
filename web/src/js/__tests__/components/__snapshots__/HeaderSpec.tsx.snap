@@ -274,6 +274,7 @@ exports[`Header 2`] = `
                 />
                 Strip cache headers 
                 <a
+                  class="docs-link"
                   href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
                   rel="noreferrer"
                   target="_blank"
@@ -293,6 +294,7 @@ exports[`Header 2`] = `
                 />
                 Use host header for display 
                 <a
+                  class="docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
                   rel="noreferrer"
                   target="_blank"
@@ -312,6 +314,7 @@ exports[`Header 2`] = `
                 />
                 Don't verify server certificates 
                 <a
+                  class="docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
                   rel="noreferrer"
                   target="_blank"
@@ -376,13 +379,13 @@ exports[`Header 3`] = `
       class="nav-tabs nav-tabs-lg"
     >
       <a
-        class="pull-left special open"
+        class="pull-left special open is-open"
         href="#"
       >
         File
       </a>
       <ul
-        class="dropdown-menu show"
+        class="dropdown-menu is-open"
         style="position: absolute; left: 0px; top: 0px; transform: translate(0px, 0px);"
       >
         <li>
@@ -430,7 +433,7 @@ exports[`Header 3`] = `
           </a>
         </li>
         <li
-          class="divider"
+          class="menu-divider"
           role="separator"
         />
         <li>
@@ -518,6 +521,7 @@ exports[`Header 3`] = `
                 />
                 Strip cache headers 
                 <a
+                  class="docs-link"
                   href="https://docs.mitmproxy.org/stable/overview/features/#anticache"
                   rel="noreferrer"
                   target="_blank"
@@ -537,6 +541,7 @@ exports[`Header 3`] = `
                 />
                 Use host header for display 
                 <a
+                  class="docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#showhost"
                   rel="noreferrer"
                   target="_blank"
@@ -556,6 +561,7 @@ exports[`Header 3`] = `
                 />
                 Don't verify server certificates 
                 <a
+                  class="docs-link"
                   href="https://docs.mitmproxy.org/stable/concepts/options/#ssl_insecure"
                   rel="noreferrer"
                   target="_blank"

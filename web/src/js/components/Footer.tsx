@@ -75,7 +75,7 @@ export default function Footer() {
                     {selectedFlowsLength} of {totalFlowsLength} flows selected
                 </span>
             )}
-            <div className="pull-right">
+            <div className="float-right">
                 <HideInStatic>
                     {server && (
                         <span

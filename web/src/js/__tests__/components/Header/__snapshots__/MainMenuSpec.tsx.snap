@@ -23,7 +23,7 @@ exports[`MainMenu 1`] = `
             />
           </span>
           <input
-            class="form-control"
+            class="input"
             placeholder="Search"
             type="text"
             value="~u /second | ~tcp | ~dns | ~udp"
@@ -41,7 +41,7 @@ exports[`MainMenu 1`] = `
             />
           </span>
           <input
-            class="form-control"
+            class="input"
             placeholder="Highlight"
             type="text"
             value="~u /path"
@@ -72,7 +72,7 @@ exports[`MainMenu 1`] = `
             />
           </span>
           <input
-            class="form-control"
+            class="input"
             placeholder="Intercept"
             type="text"
             value=""
