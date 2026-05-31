@@ -15,7 +15,9 @@ exports[`ContentRenderer 1`] = `
       />
        Show more
     </button>
-    <div />
+    <div>
+       
+    </div>
   </pre>
 </DocumentFragment>
 `;

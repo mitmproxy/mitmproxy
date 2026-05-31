@@ -79,7 +79,9 @@ exports[`HttpMessage 1`] = `
       <div>
         rawdata
       </div>
-      <div />
+      <div>
+         
+      </div>
     </pre>
   </div>
 </DocumentFragment>
@@ -286,7 +288,9 @@ exports[`HttpMessage 3`] = `
       <div>
         rawdata
       </div>
-      <div />
+      <div>
+         
+      </div>
     </pre>
   </div>
 </DocumentFragment>
@@ -371,7 +375,9 @@ exports[`HttpMessage 4`] = `
       <div>
         rawdata
       </div>
-      <div />
+      <div>
+         
+      </div>
     </pre>
   </div>
 </DocumentFragment>
