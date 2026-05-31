@@ -486,7 +486,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "type": "flows/updateFilter",
                 "payload": {
                     "name": "search",
-                    "expr": "~u \"unmatched quote",
+                    "expr": '~u "unmatched quote',
                 },
             }
         ).encode()
