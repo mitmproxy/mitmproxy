@@ -480,6 +480,30 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             },
         }
 
+        # test invalid filter expression does not crash WebSocket
+        message = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "~u \"unmatched quote",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
+        response = yield ws_client.read_message()
+        response = json.loads(response)
+
+        assert response == {
+            "type": "flows/filterError",
+            "payload": {
+                "name": "search",
+                "error": "invalid filter expression",
+            },
+        }
+
+        # Connection should still be open and able to receive messages
         # test add flow
         f = tflow.tflow(resp=True)
         f.id = "41"
