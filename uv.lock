@@ -1045,7 +1045,7 @@ requires-dist = [
     { name = "mitmproxy-rs", specifier = ">=0.12.6,<0.13" },
     { name = "msgpack", specifier = ">=1.0.0,<=1.1.2" },
     { name = "publicsuffix2", specifier = ">=2.20190812,<=2.20191221" },
-    { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=2.1.0" },
+    { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=3.1.1" },
     { name = "pyopenssl", specifier = ">=24.3,<=27.0.0" },
     { name = "pyparsing", specifier = ">=2.4.2,<=3.3.2" },
     { name = "pyperclip", specifier = ">=1.9.0,<=1.11.0" },
