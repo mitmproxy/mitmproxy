@@ -76,8 +76,8 @@ dev = [
     "requests==2.33.1",
     "wheel==0.46.3",
     "build==1.4.2",
-    "mypy==1.19.1",
-    "types-requests==2.33.0.20260327",
+    "mypy==1.20.1",
+    "types-requests==2.33.0.20260408",
     {include-group = "tox"},
     {include-group = "ruff"},
 ]
