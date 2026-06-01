@@ -70,15 +70,17 @@ DEFAULT_MIN_VERSION = Version.TLS1_2
 DEFAULT_MAX_VERSION = Version.UNBOUNDED
 DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 
-
 @cache
 def is_supported_version(version: Version):
     client_ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)
-    # Without SECLEVEL, recent OpenSSL versions forbid old TLS versions.
-    # https://github.com/pyca/cryptography/issues/9523
     client_ctx.set_cipher_list(b"@SECLEVEL=0:ALL")
-    client_ctx.set_min_proto_version(version.value)
-    client_ctx.set_max_proto_version(version.value)
+    try:
+        client_ctx.set_min_proto_version(version.value)
+        client_ctx.set_max_proto_version(version.value)
+    except SSL.Error:
+        # Modern OpenSSL builds may raise here for versions
+        # that have been disabled at compile time (e.g. SSL3).
+        return False
     client_conn = SSL.Connection(client_ctx)
     client_conn.set_connect_state()
 
