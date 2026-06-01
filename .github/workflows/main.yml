@@ -96,7 +96,7 @@ jobs:
       - if: runner.os == 'macOS' && github.repository == 'mitmproxy/mitmproxy'
             && (startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/'))
         id: keychain
-        uses: apple-actions/import-codesign-certs@fe74d46e82474f87e1ba79832ad28a4013d0e33a
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466
         with:
           keychain: ${{ runner.temp }}/temp
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
@@ -153,11 +153,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: mhils/workflows/checkout@8fe88b311a66c441e01edfebe4cd90d8a47fa335
-      - uses: actions/setup-node@v6.3.0
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version-file: .github/node-version.txt
       - name: Cache Node.js modules
-        uses: actions/cache@v5.0.4
+        uses: actions/cache@v5.0.5
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
@@ -254,12 +254,12 @@ jobs:
       - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v1.6.0
 
       - name: Login to Docker Hub
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           username: mitmbot
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -283,7 +283,7 @@ jobs:
 
       - name: Build and push
         id: push
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: release/docker
           platforms: linux/amd64,linux/arm64
