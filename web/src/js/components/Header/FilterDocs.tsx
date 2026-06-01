@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { fetchApi } from "../../utils";
+import Icon from "../common/Icon";
 
 type FilterDocsProps = {
     selectHandler: (cmd: string) => void;
@@ -47,7 +48,7 @@ export default class FilterDocs extends Component<
     render() {
         const { doc } = this.state;
         return !doc ? (
-            <i className="fa fa-spinner fa-spin" />
+            <Icon name="loading" className="icon-spin" />
         ) : (
             <table className="table table-condensed">
                 <tbody>
@@ -71,7 +72,7 @@ export default class FilterDocs extends Component<
                                 target="_blank"
                                 rel="noreferrer"
                             >
-                                <i className="fa fa-external-link" />
+                                <Icon name="external" />
                                 &nbsp; mitmproxy docs
                             </a>
                         </td>

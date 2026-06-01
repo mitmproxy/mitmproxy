@@ -2,6 +2,7 @@ import type { HTTPFlow, WebSocketData } from "../../flow";
 import * as React from "react";
 import { formatTimeStamp } from "../../utils";
 import Messages from "./Messages";
+import Icon from "../common/Icon";
 
 export default function WebSocket({
     flow,
@@ -26,7 +27,7 @@ function CloseSummary({ websocket }: { websocket: WebSocketData }) {
     const reason = websocket.close_reason ? `(${websocket.close_reason})` : "";
     return (
         <div>
-            <i className="fa fa-fw fa-window-close text-muted" />
+            <Icon name="close" className="text-muted" />
             &nbsp; Closed by {websocket.closed_by_client
                 ? "client"
                 : "server"}{" "}

@@ -56,8 +56,9 @@ header {
         padding: 12px 5px;
         border: none;
         border-radius: 0;
-        i {
-            font-size: 20px;
+        .icon {
+            width: 24px;
+            height: 24px;
             display: block;
             margin: 0 auto 5px;
         }
@@ -66,9 +67,10 @@ header {
     > .btn.btn-sm {
         height: ((@menu-height - @menu-legend-height) / 3);
         padding: 0 5px;
-        i {
+        .icon {
             display: inline-block;
-            font-size: 14px;
+            width: 14px;
+            height: 14px;
             margin: 0;
         }
     }
@@ -81,13 +83,15 @@ header {
     padding: 0.5rem 1rem;
 
     label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         font-size: 1.2rem;
         font-weight: normal;
         margin: 0;
     }
     input[type="checkbox"] {
-        margin: 0 2px;
-        vertical-align: middle;
+        margin: 0;
     }
 }
 

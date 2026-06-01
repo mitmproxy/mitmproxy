@@ -20,10 +20,23 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
         <button
           popovertarget="«r0»"
         >
-          <i
+          <svg
             aria-hidden="true"
-            class="fa fa-chevron-down"
-          />
+            class="lucide lucide-chevron-down icon icon-chevronDown"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
         </button>
         <div
           id="«r0»"
@@ -51,10 +64,23 @@ exports[`LocalDropdown - initial render and filtering 1`] = `
                   All applications
                 </span>
               </div>
-              <i
+              <svg
                 aria-hidden="true"
-                class="fa fa-check"
-              />
+                class="lucide lucide-check icon icon-confirm"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6 9 17l-5-5"
+                />
+              </svg>
             </li>
             <hr
               class="process-separator"

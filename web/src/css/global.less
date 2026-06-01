@@ -114,6 +114,24 @@ textarea {
     float: right;
 }
 
+.icon {
+    display: inline-block;
+    vertical-align: text-bottom;
+}
+
+.icon-spin {
+    animation: icon-spin 2s infinite linear;
+}
+
+@keyframes icon-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 .text-primary {
     color: #337ab7;
 }

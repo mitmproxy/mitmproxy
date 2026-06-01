@@ -80,7 +80,8 @@ export function ResumeAll() {
         <Button
             className="btn-sm"
             title="[a]ccept all"
-            icon="fa-forward text-success"
+            icon="resumeAll"
+            iconClassName="text-success"
             onClick={() => dispatch(flowsActions.resumeAll())}
         >
             Resume All

@@ -21,6 +21,7 @@ import classnames from "classnames";
 import TcpMessages from "./FlowView/TcpMessages";
 import UdpMessages from "./FlowView/UdpMessages";
 import * as flowsActions from "../ducks/flows";
+import Icon from "./common/Icon";
 
 type TabId =
     | "request"
@@ -147,7 +148,7 @@ export default function FlowView() {
                     className="close-button"
                     onClick={() => dispatch(flowsActions.select([]))}
                 >
-                    <i className="fa fa-times-circle"></i>
+                    <Icon name="closeCircle" />
                 </button>
                 {tabs.map((tabId) => (
                     <a

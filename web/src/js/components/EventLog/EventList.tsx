@@ -2,8 +2,9 @@ import React, { Component } from "react";
 import * as autoscroll from "../helpers/AutoScroll";
 import type { VScroll } from "../helpers/VirtualScroll";
 import { calcVScroll } from "../helpers/VirtualScroll";
-import type { EventLogItem } from "../../ducks/eventLog";
+import { LogLevel, type EventLogItem } from "../../ducks/eventLog";
 import { shallowEqual } from "react-redux";
+import Icon, { type IconName } from "../common/Icon";
 
 type EventLogListProps = {
     events: EventLogItem[];
@@ -111,13 +112,13 @@ export default class EventLogList extends Component<
 }
 
 function LogIcon({ event }: { event: EventLogItem }) {
-    const icon =
-        {
-            web: "html5",
-            debug: "bug",
-            info: "info",
-            warn: "exclamation-triangle",
-            error: "ban",
-        }[event.level] || "info";
-    return <i className={`fa fa-fw fa-${icon}`} />;
+    const iconsByLevel: Record<LogLevel, IconName> = {
+        [LogLevel.web]: "browser",
+        [LogLevel.debug]: "debug",
+        [LogLevel.info]: "info",
+        [LogLevel.warn]: "warning",
+        [LogLevel.error]: "error",
+    };
+    const icon = iconsByLevel[event.level] ?? "info";
+    return <Icon name={icon} />;
 }

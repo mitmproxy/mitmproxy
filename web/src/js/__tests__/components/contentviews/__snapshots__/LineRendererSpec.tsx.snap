@@ -9,13 +9,31 @@ exports[`ContentRenderer 1`] = `
     <button
       class="btn btn-xs btn-info"
     >
-      <i
+      <svg
         aria-hidden="true"
-        class="fa fa-angle-double-down"
-      />
+        class="lucide lucide-chevrons-down icon icon-expandMore"
+        fill="none"
+        height="16"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="16"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="m7 6 5 5 5-5"
+        />
+        <path
+          d="m7 13 5 5 5-5"
+        />
+      </svg>
        Show more
     </button>
-    <div />
+    <div>
+       
+    </div>
   </pre>
 </DocumentFragment>
 `;

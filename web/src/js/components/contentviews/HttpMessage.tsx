@@ -69,7 +69,8 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                 <h5>[Editing]</h5>
                 <Button
                     onClick={save}
-                    icon="fa-check text-success"
+                    icon="confirm"
+                    iconClassName="text-success"
                     className="btn-xs"
                 >
                     Done
@@ -77,7 +78,8 @@ function HttpMessageEdit({ flow, message, stopEdit }: HttpMessageEditProps) {
                 &nbsp;
                 <Button
                     onClick={() => stopEdit()}
-                    icon="fa-times text-danger"
+                    icon="close"
+                    iconClassName="text-danger"
                     className="btn-xs"
                 >
                     Cancel
@@ -138,12 +140,12 @@ function HttpMessageView({ flow, message, startEdit }: HttpMessageViewProps) {
                     <CopyButton flow={flow} message={message} />
                 )}
                 &nbsp;
-                <Button onClick={startEdit} icon="fa-edit" className="btn-xs">
+                <Button onClick={startEdit} icon="edit" className="btn-xs">
                     Edit
                 </Button>
                 &nbsp;
                 <FileChooser
-                    icon="fa-upload"
+                    icon="upload"
                     text="Replace"
                     title="Upload a file to replace the content."
                     onOpenFile={(content) =>
@@ -218,7 +220,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
     return (
         <Button
             onClick={handleClickCopyButton}
-            icon="fa-clipboard"
+            icon="clipboard"
             className="btn-xs"
             disabled={isFetchingFullContent}
         >

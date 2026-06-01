@@ -19,9 +19,28 @@ exports[`Button Component should render correctly 1`] = `
     class="classname btn btn-default"
     title="title"
   >
-    <i
-      class="fa icon"
-    />
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-settings icon icon-settings"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="16"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+      />
+    </svg>
      
     <a>
       foo

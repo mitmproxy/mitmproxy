@@ -12,38 +12,87 @@ exports[`FlowTable Component should render correctly 1`] = `
         <tr>
           <th
             class="col-tls"
-          />
+          >
+            <span
+              class="th-content"
+            />
+          </th>
           <th
             class="col-icon"
-          />
+          >
+            <span
+              class="th-content"
+            />
+          </th>
           <th
             class="col-path sort-desc"
           >
-            Path
+            <span
+              class="th-content"
+            >
+              Path
+            </span>
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-chevron-down icon icon-chevronDown sort-indicator"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="3"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m6 9 6 6 6-6"
+              />
+            </svg>
           </th>
           <th
             class="col-method"
           >
-            Method
+            <span
+              class="th-content"
+            >
+              Method
+            </span>
           </th>
           <th
             class="col-status"
           >
-            Status
+            <span
+              class="th-content"
+            >
+              Status
+            </span>
           </th>
           <th
             class="col-size"
           >
-            Size
+            <span
+              class="th-content"
+            >
+              Size
+            </span>
           </th>
           <th
             class="col-time"
           >
-            Time
+            <span
+              class="th-content"
+            >
+              Time
+            </span>
           </th>
           <th
             class="col-quickactions"
-          />
+          >
+            <span
+              class="th-content"
+            />
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -66,9 +115,29 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-path"
           >
-            <i
-              class="fa fa-fw fa-exclamation float-right"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-triangle-alert icon icon-warning float-right"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+              />
+              <path
+                d="M12 9v4"
+              />
+              <path
+                d="M12 17h.01"
+              />
+            </svg>
             <span
               class="marker float-right"
             />
@@ -115,9 +184,29 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-path"
           >
-            <i
-              class="fa fa-fw fa-exclamation float-right"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-triangle-alert icon icon-warning float-right"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+              />
+              <path
+                d="M12 9v4"
+              />
+              <path
+                d="M12 17h.01"
+              />
+            </svg>
             <span
               class="marker float-right"
             />
@@ -169,38 +258,87 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           <tr>
             <th
               class="col-tls"
-            />
+            >
+              <span
+                class="th-content"
+              />
+            </th>
             <th
               class="col-icon"
-            />
+            >
+              <span
+                class="th-content"
+              />
+            </th>
             <th
               class="col-path sort-desc"
             >
-              Path
+              <span
+                class="th-content"
+              >
+                Path
+              </span>
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down icon icon-chevronDown sort-indicator"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
             </th>
             <th
               class="col-method"
             >
-              Method
+              <span
+                class="th-content"
+              >
+                Method
+              </span>
             </th>
             <th
               class="col-status"
             >
-              Status
+              <span
+                class="th-content"
+              >
+                Status
+              </span>
             </th>
             <th
               class="col-size"
             >
-              Size
+              <span
+                class="th-content"
+              >
+                Size
+              </span>
             </th>
             <th
               class="col-time"
             >
-              Time
+              <span
+                class="th-content"
+              >
+                Time
+              </span>
             </th>
             <th
               class="col-quickactions"
-            />
+            >
+              <span
+                class="th-content"
+              />
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -223,9 +361,29 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-path"
             >
-              <i
-                class="fa fa-fw fa-exclamation float-right"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-triangle-alert icon icon-warning float-right"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                />
+                <path
+                  d="M12 9v4"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
               <span
                 class="marker float-right"
               />
@@ -272,9 +430,29 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-path"
             >
-              <i
-                class="fa fa-fw fa-exclamation float-right"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-triangle-alert icon icon-warning float-right"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                />
+                <path
+                  d="M12 9v4"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
               <span
                 class="marker float-right"
               />
@@ -327,38 +505,87 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           <tr>
             <th
               class="col-tls"
-            />
+            >
+              <span
+                class="th-content"
+              />
+            </th>
             <th
               class="col-icon"
-            />
+            >
+              <span
+                class="th-content"
+              />
+            </th>
             <th
               class="col-path sort-desc"
             >
-              Path
+              <span
+                class="th-content"
+              >
+                Path
+              </span>
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down icon icon-chevronDown sort-indicator"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="3"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
             </th>
             <th
               class="col-method"
             >
-              Method
+              <span
+                class="th-content"
+              >
+                Method
+              </span>
             </th>
             <th
               class="col-status"
             >
-              Status
+              <span
+                class="th-content"
+              >
+                Status
+              </span>
             </th>
             <th
               class="col-size"
             >
-              Size
+              <span
+                class="th-content"
+              >
+                Size
+              </span>
             </th>
             <th
               class="col-time"
             >
-              Time
+              <span
+                class="th-content"
+              >
+                Time
+              </span>
             </th>
             <th
               class="col-quickactions"
-            />
+            >
+              <span
+                class="th-content"
+              />
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -381,9 +608,29 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-path"
             >
-              <i
-                class="fa fa-fw fa-exclamation float-right"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-triangle-alert icon icon-warning float-right"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                />
+                <path
+                  d="M12 9v4"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
               <span
                 class="marker float-right"
               />
@@ -430,9 +677,29 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-path"
             >
-              <i
-                class="fa fa-fw fa-exclamation float-right"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-triangle-alert icon icon-warning float-right"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                />
+                <path
+                  d="M12 9v4"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
               <span
                 class="marker float-right"
               />

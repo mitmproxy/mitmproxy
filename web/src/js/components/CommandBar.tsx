@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, type JSX } from "react";
 import classnames from "classnames";
 import { fetchApi, runCommand } from "../utils";
 import Filt from "../filt/command";
+import Icon from "./common/Icon";
 
 type CommandParameter = {
     name: string;
@@ -291,7 +292,7 @@ export default function CommandBar() {
             />
             <div className={classnames("command-input input-group")}>
                 <span className="input-group-addon">
-                    <i className={"fa fa-fw fa-terminal"} />
+                    <Icon name="terminal" />
                 </span>
                 <input
                     type="text"
