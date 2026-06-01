@@ -25,7 +25,7 @@ CSS_SPECIAL_CHARS = "{};:"
 
 def beautify(data: str, indent: str = "    "):
     """Beautify a string containing CSS code"""
-    #修改
+    # 修改
     data = data.replace("\r\n", "\n").replace("\r", "\n")
     data = strutils.escape_special_areas(
         data.strip(),

@@ -70,6 +70,7 @@ DEFAULT_MIN_VERSION = Version.TLS1_2
 DEFAULT_MAX_VERSION = Version.UNBOUNDED
 DEFAULT_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION
 
+
 @cache
 def is_supported_version(version: Version):
     client_ctx = SSL.Context(SSL.TLS_CLIENT_METHOD)
