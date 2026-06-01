@@ -31,9 +31,26 @@ exports[`Modal Component 2`] = `
                 data-dismiss="modal"
                 type="button"
               >
-                <i
-                  class="fa fa-fw fa-times"
-                />
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-x icon icon-close"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M18 6 6 18"
+                  />
+                  <path
+                    d="m6 6 12 12"
+                  />
+                </svg>
               </button>
               <div
                 class="modal-title"

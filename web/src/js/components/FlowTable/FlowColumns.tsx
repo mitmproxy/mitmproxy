@@ -17,6 +17,7 @@ import {
 import { formatSize, formatTimeDelta, formatTimeStamp } from "../../utils";
 import * as flowActions from "../../ducks/flows";
 import type { Flow } from "../../flow";
+import Icon from "../common/Icon";
 
 type FlowColumnProps = {
     flow: Flow;
@@ -61,19 +62,17 @@ export const path: FlowColumn = ({ flow }) => {
     let err;
     if (flow.error) {
         if (flow.error.msg === "Connection killed.") {
-            err = <i className="fa fa-fw fa-times float-right" />;
+            err = <Icon name="close" className="float-right" />;
         } else {
-            err = <i className="fa fa-fw fa-exclamation float-right" />;
+            err = <Icon name="warning" className="float-right" />;
         }
     }
     return (
         <td className="col-path">
             {flow.is_replay === "request" && (
-                <i className="fa fa-fw fa-repeat float-right" />
+                <Icon name="replay" className="float-right" />
             )}
-            {flow.intercepted && (
-                <i className="fa fa-fw fa-pause float-right" />
-            )}
+            {flow.intercepted && <Icon name="pause" className="float-right" />}
             {err}
             <span className="marker float-right">{flow.marked}</span>
             {mainPath(flow)}
@@ -167,7 +166,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
                 className="quickaction"
                 onClick={() => dispatch(flowActions.resume([flow]))}
             >
-                <i className="fa fa-fw fa-play text-success" />
+                <Icon name="resume" className="text-success" />
             </a>
         );
     } else if (canReplay(flow)) {
@@ -177,7 +176,7 @@ export const quickactions: FlowColumn = ({ flow }) => {
                 className="quickaction"
                 onClick={() => dispatch(flowActions.replay([flow]))}
             >
-                <i className="fa fa-fw fa-repeat text-primary" />
+                <Icon name="replay" className="text-primary" />
             </a>
         );
     }

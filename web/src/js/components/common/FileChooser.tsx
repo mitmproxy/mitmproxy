@@ -1,7 +1,10 @@
 import React from "react";
+import Icon from "./Icon";
+import type { IconName } from "./Icon";
 
 type FileChooserProps = {
-    icon: string;
+    icon: IconName;
+    iconClassName?: string;
     text?: string;
     className?: string;
     title?: string;
@@ -11,6 +14,7 @@ type FileChooserProps = {
 
 export default React.memo(function FileChooser({
     icon,
+    iconClassName,
     text,
     className,
     title,
@@ -28,7 +32,8 @@ export default React.memo(function FileChooser({
             className={className}
             title={title}
         >
-            <i className={"fa fa-fw " + icon} />
+            <Icon name={icon} className={iconClassName} />
+            &nbsp;
             {text}
             <input
                 ref={(ref) => {

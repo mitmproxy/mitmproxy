@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ValueEditor from "./ValueEditor";
 import { isEqual } from "lodash";
 import classnames from "classnames";
+import Icon from "../common/Icon";
 
 type Item = [key: string, value: string];
 
@@ -133,10 +134,12 @@ export default class KeyValueListEditor extends Component<
                             this.state.currentList.length - 1,
                         );
                     }}
-                    className="kv-add-row fa fa-plus-square-o"
+                    className="kv-add-row"
                     role="button"
                     aria-label="Add"
-                />
+                >
+                    <Icon name="addSquare" />
+                </div>
             </div>
         );
     };

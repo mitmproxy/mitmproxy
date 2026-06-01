@@ -17,10 +17,32 @@ exports[`MainMenu 1`] = `
           <span
             class="input-group-addon"
           >
-            <i
-              class="fa fa-fw fa-search"
+            <span
               style="color: black;"
-            />
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-search icon icon-search"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21 21-4.34-4.34"
+                />
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="8"
+                />
+              </svg>
+            </span>
           </span>
           <input
             class="input"
@@ -35,10 +57,30 @@ exports[`MainMenu 1`] = `
           <span
             class="input-group-addon"
           >
-            <i
-              class="fa fa-fw fa-tag"
+            <span
               style="color: rgb(0, 0, 0);"
-            />
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-highlighter icon icon-highlight"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m9 11-6 6v3h9l3-3"
+                />
+                <path
+                  d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"
+                />
+              </svg>
+            </span>
           </span>
           <input
             class="input"
@@ -66,10 +108,38 @@ exports[`MainMenu 1`] = `
           <span
             class="input-group-addon"
           >
-            <i
-              class="fa fa-fw fa-pause"
+            <span
               style="color: rgb(68, 68, 68);"
-            />
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-pause icon icon-intercept"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  height="18"
+                  rx="1"
+                  width="5"
+                  x="14"
+                  y="3"
+                />
+                <rect
+                  height="18"
+                  rx="1"
+                  width="5"
+                  x="5"
+                  y="3"
+                />
+              </svg>
+            </span>
           </span>
           <input
             class="input"
@@ -82,9 +152,26 @@ exports[`MainMenu 1`] = `
           class="btn-sm btn btn-default"
           title="[a]ccept all"
         >
-          <i
-            class="fa fa-forward text-success"
-          />
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-step-forward icon icon-resumeAll text-success"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"
+            />
+            <path
+              d="M3 4v16"
+            />
+          </svg>
            Resume All
         </button>
       </div>

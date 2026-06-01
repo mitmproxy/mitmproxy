@@ -57,18 +57,69 @@ exports[`Header 1`] = `
               disabled=""
               title="[r]eplay flow"
             >
-              <i
-                class="fa fa-repeat text-primary"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-redo2 lucide-redo-2 icon icon-replay text-primary"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m15 14 5-5-5-5"
+                />
+                <path
+                  d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"
+                />
+              </svg>
                Replay
             </button>
             <button
               class="btn btn-default"
               title="[D]uplicate flow"
             >
-              <i
-                class="fa fa-copy text-info"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-copy-plus icon icon-duplicate text-info"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <line
+                  x1="15"
+                  x2="15"
+                  y1="12"
+                  y2="18"
+                />
+                <line
+                  x1="12"
+                  x2="18"
+                  y1="15"
+                  y2="15"
+                />
+                <rect
+                  height="14"
+                  rx="2"
+                  ry="2"
+                  width="14"
+                  x="8"
+                  y="8"
+                />
+                <path
+                  d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                />
+              </svg>
                Duplicate
             </button>
             <button
@@ -76,18 +127,64 @@ exports[`Header 1`] = `
               disabled=""
               title="revert changes to flow [V]"
             >
-              <i
-                class="fa fa-history text-warning"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-history icon icon-revert text-warning"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+                />
+                <path
+                  d="M3 3v5h5"
+                />
+                <path
+                  d="M12 7v5l4 2"
+                />
+              </svg>
                Revert
             </button>
             <button
               class="btn btn-default"
               title="[d]elete flow"
             >
-              <i
-                class="fa fa-trash text-danger"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-trash2 lucide-trash-2 icon icon-delete text-danger"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10 11v6"
+                />
+                <path
+                  d="M14 11v6"
+                />
+                <path
+                  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+                />
+                <path
+                  d="M3 6h18"
+                />
+                <path
+                  d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                />
+              </svg>
                Delete
             </button>
             <a
@@ -98,9 +195,29 @@ exports[`Header 1`] = `
                 class="btn btn-default"
                 title="mark flow"
               >
-                <i
-                  class="fa fa-paint-brush text-success"
-                />
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-paintbrush icon icon-mark text-success"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m14.622 17.897-10.68-2.913"
+                  />
+                  <path
+                    d="M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z"
+                  />
+                  <path
+                    d="M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15"
+                  />
+                </svg>
                  Mark▾
               </button>
             </a>
@@ -124,9 +241,29 @@ exports[`Header 1`] = `
               <button
                 class="btn btn-default"
               >
-                <i
-                  class="fa fa-download"
-                />
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-download icon icon-download"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 15V3"
+                  />
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                  />
+                  <path
+                    d="m7 10 5 5 5-5"
+                  />
+                </svg>
                  Download▾
               </button>
             </a>
@@ -138,9 +275,32 @@ exports[`Header 1`] = `
                 class="btn btn-default"
                 title="Export flow."
               >
-                <i
-                  class="fa fa-clone"
-                />
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-file-output icon icon-export"
+                  fill="none"
+                  height="16"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4.226 20.925A2 2 0 0 0 6 22h12a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v3.127"
+                  />
+                  <path
+                    d="M14 2v5a1 1 0 0 0 1 1h5"
+                  />
+                  <path
+                    d="m5 11-3 3"
+                  />
+                  <path
+                    d="m5 17-3-3h10"
+                  />
+                </svg>
                  Export▾
               </button>
             </a>
@@ -162,9 +322,23 @@ exports[`Header 1`] = `
               disabled=""
               title="[a]ccept intercepted flow"
             >
-              <i
-                class="fa fa-play text-success"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-play icon icon-resume text-success"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"
+                />
+              </svg>
                Resume
             </button>
             <button
@@ -172,9 +346,26 @@ exports[`Header 1`] = `
               disabled=""
               title="kill intercepted flow [x]"
             >
-              <i
-                class="fa fa-times text-danger"
-              />
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-x icon icon-abort text-danger"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M18 6 6 18"
+                />
+                <path
+                  d="m6 6 12 12"
+                />
+              </svg>
                Abort
             </button>
           </div>
@@ -244,13 +435,29 @@ exports[`Header 2`] = `
               class="btn btn-default"
               title="Open Options"
             >
-              <i
-                class="fa fa-cogs text-primary"
-              />
-               Edit Options 
-              <sup>
-                alpha
-              </sup>
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-settings icon icon-settings text-primary"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
+               Edit Options
             </button>
           </div>
           <div
@@ -279,9 +486,31 @@ exports[`Header 2`] = `
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <i
-                    class="fa fa-question-circle"
-                  />
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-circle-question-mark icon icon-help"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <path
+                      d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                    />
+                    <path
+                      d="M12 17h.01"
+                    />
+                  </svg>
                 </a>
               </label>
             </div>
@@ -299,9 +528,31 @@ exports[`Header 2`] = `
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <i
-                    class="fa fa-question-circle"
-                  />
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-circle-question-mark icon icon-help"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <path
+                      d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                    />
+                    <path
+                      d="M12 17h.01"
+                    />
+                  </svg>
                 </a>
               </label>
             </div>
@@ -319,9 +570,31 @@ exports[`Header 2`] = `
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <i
-                    class="fa fa-question-circle"
-                  />
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-circle-question-mark icon icon-help"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <path
+                      d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                    />
+                    <path
+                      d="M12 17h.01"
+                    />
+                  </svg>
                 </a>
               </label>
             </div>
@@ -392,10 +665,24 @@ exports[`Header 3`] = `
           <a
             href="#"
           >
-            <i
-              class="fa fa-fw fa-folder-open"
-            />
-             Open...
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-folder-open icon icon-openFolder"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+              Open...
             <input
               class="hidden"
               type="file"
@@ -406,9 +693,29 @@ exports[`Header 3`] = `
           <a
             href="#"
           >
-            <i
-              class="fa fa-fw fa-floppy-o"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-save icon icon-save"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"
+              />
+              <path
+                d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"
+              />
+              <path
+                d="M7 3v4a1 1 0 0 0 1 1h7"
+              />
+            </svg>
              Save
           </a>
         </li>
@@ -416,9 +723,29 @@ exports[`Header 3`] = `
           <a
             href="#"
           >
-            <i
-              class="fa fa-fw fa-floppy-o"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-save icon icon-save"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"
+              />
+              <path
+                d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"
+              />
+              <path
+                d="M7 3v4a1 1 0 0 0 1 1h7"
+              />
+            </svg>
              Save filtered
           </a>
         </li>
@@ -426,9 +753,35 @@ exports[`Header 3`] = `
           <a
             href="#"
           >
-            <i
-              class="fa fa-fw fa-trash"
-            />
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2 icon icon-delete"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
              Clear All
           </a>
         </li>
@@ -442,10 +795,30 @@ exports[`Header 3`] = `
             rel="noreferrer"
             target="_blank"
           >
-            <i
-              class="fa fa-fw fa-external-link"
-            />
-             Install Certificates...
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-external-link icon icon-external"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15 3h6v6"
+              />
+              <path
+                d="M10 14 21 3"
+              />
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              />
+            </svg>
+             Install Certificates
           </a>
         </li>
       </ul>
@@ -491,13 +864,29 @@ exports[`Header 3`] = `
               class="btn btn-default"
               title="Open Options"
             >
-              <i
-                class="fa fa-cogs text-primary"
-              />
-               Edit Options 
-              <sup>
-                alpha
-              </sup>
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-settings icon icon-settings text-primary"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
+               Edit Options
             </button>
           </div>
           <div
@@ -526,9 +915,31 @@ exports[`Header 3`] = `
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <i
-                    class="fa fa-question-circle"
-                  />
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-circle-question-mark icon icon-help"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <path
+                      d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                    />
+                    <path
+                      d="M12 17h.01"
+                    />
+                  </svg>
                 </a>
               </label>
             </div>
@@ -546,9 +957,31 @@ exports[`Header 3`] = `
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <i
-                    class="fa fa-question-circle"
-                  />
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-circle-question-mark icon icon-help"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <path
+                      d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                    />
+                    <path
+                      d="M12 17h.01"
+                    />
+                  </svg>
                 </a>
               </label>
             </div>
@@ -566,9 +999,31 @@ exports[`Header 3`] = `
                   rel="noreferrer"
                   target="_blank"
                 >
-                  <i
-                    class="fa fa-question-circle"
-                  />
+                  <svg
+                    aria-hidden="true"
+                    class="lucide lucide-circle-question-mark icon icon-help"
+                    fill="none"
+                    height="14"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="14"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                    />
+                    <path
+                      d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+                    />
+                    <path
+                      d="M12 17h.01"
+                    />
+                  </svg>
                 </a>
               </label>
             </div>

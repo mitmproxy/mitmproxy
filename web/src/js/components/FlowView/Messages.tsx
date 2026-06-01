@@ -8,6 +8,7 @@ import ViewSelector from "../contentviews/ViewSelector";
 import { setContentViewFor } from "../../ducks/ui/flow";
 import { formatTimeStamp } from "../../utils";
 import ContentRenderer from "../contentviews/ContentRenderer";
+import Icon from "../common/Icon";
 
 type MessagesPropTypes = {
     flow: Flow;
@@ -55,13 +56,14 @@ export default function Messages({ flow, messages_meta }: MessagesPropTypes) {
                 />
             </div>
             {messages.map((d: ContentViewData, i) => {
-                const className = `fa fa-fw fa-arrow-${
-                    d.from_client ? "right text-primary" : "left text-danger"
-                }`;
+                const iconName = d.from_client ? "arrowRight" : "arrowLeft";
+                const iconClassName = d.from_client
+                    ? "text-primary"
+                    : "text-danger";
                 const renderer = (
                     <div key={i}>
                         <small>
-                            <i className={className} />
+                            <Icon name={iconName} className={iconClassName} />
                             <span className="float-right">
                                 {d.timestamp && formatTimeStamp(d.timestamp)}
                             </span>

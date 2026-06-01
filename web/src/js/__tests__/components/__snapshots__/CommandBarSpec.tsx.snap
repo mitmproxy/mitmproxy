@@ -40,9 +40,26 @@ exports[`CommandBar 1`] = `
       <span
         class="input-group-addon"
       >
-        <i
-          class="fa fa-fw fa-terminal"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-terminal icon icon-terminal"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 19h8"
+          />
+          <path
+            d="m4 17 6-6-6-6"
+          />
+        </svg>
       </span>
       <input
         class="input"
@@ -95,9 +112,26 @@ exports[`CommandBar 2`] = `
       <span
         class="input-group-addon"
       >
-        <i
-          class="fa fa-fw fa-terminal"
-        />
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-terminal icon icon-terminal"
+          fill="none"
+          height="16"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="16"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 19h8"
+          />
+          <path
+            d="m4 17 6-6-6-6"
+          />
+        </svg>
       </span>
       <input
         class="input"

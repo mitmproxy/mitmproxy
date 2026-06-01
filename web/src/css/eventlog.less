@@ -23,19 +23,24 @@
         background-color: #fcfcfc;
     }
 
-    .fa-close {
+    .eventlog-actions {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .icon-close {
         cursor: pointer;
-        float: right;
         color: grey;
-        padding: 3px 0;
-        padding-left: 10px;
+        margin-left: 6px;
         &:hover {
             color: black;
         }
     }
 
     .toggle {
-        margin-top: -2px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         margin-left: 3px;
         padding: 2px 2px;
         font-size: 10px;
@@ -46,7 +51,6 @@
         cursor: pointer;
         vertical-align: middle;
         display: inline-block;
-        margin-top: -2px;
         margin-left: 3px;
     }
 }
