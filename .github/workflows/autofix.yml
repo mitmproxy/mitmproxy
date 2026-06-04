@@ -25,7 +25,7 @@ jobs:
 
       - run: web/gen/all
 
-      - uses: actions/setup-node@v6.4.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .github/node-version.txt
       - run: npm ci
@@ -36,6 +36,6 @@ jobs:
       - run: npm run prettier
         working-directory: web
 
-      - uses: mhils/add-pr-ref-in-changelog@main
+      - uses: mhils/add-pr-ref-in-changelog@6df8cd5a0c4d0a8c0353b663153d4a36384054f4 # main
 
       - uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a
