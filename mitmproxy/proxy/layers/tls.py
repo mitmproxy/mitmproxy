@@ -416,7 +416,7 @@ class TLSLayer(tunnel.TunnelLayer):
                 plaintext.extend(self.tls.recv(65535))
             except SSL.WantReadError:
                 break
-            except SSL.ZeroReturnError:
+            except (SSL.ZeroReturnError, SSL.SysCallError):
                 close = True
                 break
             except SSL.Error as e:
