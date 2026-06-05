@@ -5,6 +5,26 @@ from mitmproxy import tcp
 from mitmproxy.test import tflow
 
 
+class TestTCPMessage:
+    def test_attributes(self):
+        m = tcp.TCPMessage(True, b"hello")
+        assert isinstance(m.from_client, bool)
+        assert isinstance(m.content, bytes)
+        assert isinstance(m.timestamp, float)
+
+    def test_repr(self):
+        assert repr(tcp.TCPMessage(True, "foo")) == "-> 'foo'"
+        assert repr(tcp.TCPMessage(False, b"bar")) == "<- b'bar'"
+
+    def test_copy(self):
+        m = tcp.TCPMessage(True, b"hello", 12345.0)
+        m2 = m.copy()
+        assert m is not m2
+        assert m.from_client == m2.from_client
+        assert m.content == m2.content
+        assert m.timestamp == m2.timestamp
+
+
 class TestTCPFlow:
     def test_copy(self):
         f = tflow.ttcpflow()
