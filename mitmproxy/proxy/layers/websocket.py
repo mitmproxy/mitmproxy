@@ -133,9 +133,26 @@ class WebsocketLayer(layer.Layer):
 
     _handle_event = start
 
-    @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        WebSocketMessageInjected,
+        events.KillInjected,
+    )
     def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.flow.websocket  # satisfy type checker
+
+        if isinstance(event, events.KillInjected):
+            if event.flow is self.flow:
+                self.flow.websocket.timestamp_end = time.time()
+                if self.context.server.state is not connection.ConnectionState.CLOSED:
+                    yield commands.CloseConnection(self.context.server)
+                if self.context.client.state is not connection.ConnectionState.CLOSED:
+                    yield commands.CloseConnection(self.context.client)
+                yield WebsocketEndHook(self.flow)
+                self.flow.live = False
+                self._handle_event = self.done
+            return
 
         if isinstance(event, events.ConnectionEvent):
             from_client = event.connection == self.context.client
@@ -219,7 +236,12 @@ class WebsocketLayer(layer.Layer):
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
+    @expect(
+        events.DataReceived,
+        events.ConnectionClosed,
+        WebSocketMessageInjected,
+        events.KillInjected,
+    )
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
