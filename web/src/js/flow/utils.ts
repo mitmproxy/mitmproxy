@@ -3,7 +3,9 @@ import type { Flow, HTTPMessage, HTTPRequest } from "../flow";
 const defaultPorts = {
     http: 80,
     https: 443,
-};
+} as const;
+
+type SupportedScheme = keyof typeof defaultPorts;
 
 const _headerLookups: WeakMap<
     HTTPMessage,
@@ -38,7 +40,10 @@ export class MessageUtils {
         return ret !== false ? ret : undefined;
     }
 
-    static match_header(message, regex) {
+    static match_header(
+        message: HTTPMessage,
+        regex: RegExp,
+    ): [string, string] | false {
         const headers = message.headers;
         if (!headers) return false;
         let i = headers.length;
@@ -74,7 +79,10 @@ export class MessageUtils {
 export class RequestUtils extends MessageUtils {
     static pretty_url(request: HTTPRequest): string {
         let port = "";
-        if (defaultPorts[request.scheme] !== request.port) {
+        if (
+            request.scheme in defaultPorts &&
+            defaultPorts[request.scheme as SupportedScheme] !== request.port
+        ) {
             port = ":" + request.port;
         }
         return (
@@ -86,14 +94,14 @@ export class RequestUtils extends MessageUtils {
 export class ResponseUtils extends MessageUtils {}
 
 type ParsedUrl = {
-    scheme?: string;
+    scheme?: SupportedScheme;
     host?: string;
     port?: number;
     path?: string;
 };
 
 const parseUrl_regex = /^(?:(https?):\/\/)?([^/:]+)?(?::(\d+))?(\/.*)?$/i;
-export const parseUrl = function (url): ParsedUrl | undefined {
+export const parseUrl = function (url: string): ParsedUrl | undefined {
     //there are many correct ways to parse a URL,
     //however, a mitmproxy user may also wish to generate a not-so-correct URL. ;-)
     const parts = parseUrl_regex.exec(url);
@@ -101,7 +109,7 @@ export const parseUrl = function (url): ParsedUrl | undefined {
         return undefined;
     }
 
-    const scheme = parts[1];
+    const scheme = parts[1] as SupportedScheme | undefined;
     const host = parts[2];
     const optionalPort = parseInt(parts[3]);
     const path = parts[4];

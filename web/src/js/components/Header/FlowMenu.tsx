@@ -122,7 +122,7 @@ export default function FlowMenu(): JSX.Element {
 }
 
 // Reference: https://stackoverflow.com/a/63627688/9921431
-const openInNewTab = (url) => {
+const openInNewTab = (url: string) => {
     const newWindow = window.open(url, "_blank", "noopener,noreferrer");
     if (newWindow) newWindow.opener = null;
 };

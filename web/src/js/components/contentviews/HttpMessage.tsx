@@ -231,7 +231,7 @@ function CopyButton({ flow, message }: CopyButtonProps) {
 
 const isImage =
     /^image\/(png|jpe?g|gif|webp|avif|vnd\.microsoft\.icon|x-icon|svg\+xml)$/i;
-ViewImage.matches = (msg) =>
+ViewImage.matches = (msg: HTTPMessage) =>
     isImage.test(MessageUtils.getContentType(msg) || "");
 
 type ViewImageProps = {

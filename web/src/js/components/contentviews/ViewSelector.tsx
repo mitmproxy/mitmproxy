@@ -5,7 +5,7 @@ import Icon from "../common/Icon";
 
 type ViewSelectorProps = {
     value: string;
-    onChange: (string) => void;
+    onChange: (viewName: string) => void;
 };
 
 export default function ViewSelector({ value, onChange }: ViewSelectorProps) {

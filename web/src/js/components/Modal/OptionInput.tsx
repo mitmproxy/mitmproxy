@@ -6,7 +6,7 @@ import { update as updateOptions } from "../../ducks/options";
 import classnames from "classnames";
 import { useAppDispatch, useAppSelector } from "../../ducks";
 
-const stopPropagation = (e) => {
+const stopPropagation = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key !== "Escape") {
         e.stopPropagation();
     }
@@ -103,7 +103,7 @@ function StringSequenceOption({
 
     const [textAreaValue, setTextAreaValue] = React.useState(value.join("\n"));
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newValue = e.target.value;
         setTextAreaValue(newValue); //save in the state the current input value
         onChange(
