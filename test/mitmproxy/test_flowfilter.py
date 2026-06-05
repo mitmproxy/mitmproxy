@@ -5,11 +5,13 @@ import pytest
 
 from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy.flowfilter import FAnd
+from mitmproxy.flowfilter import TFilter
 from mitmproxy.test import tflow
 
 
 class TestParsing:
-    def _dump(self, x):
+    def _dump(self, x: TFilter):
         c = io.StringIO()
         x.dump(fp=c)
         assert c.getvalue()
@@ -34,6 +36,7 @@ class TestParsing:
         assert flowfilter.parse("~comment .")
         p = flowfilter.parse("~q ~c 10")
         self._dump(p)
+        assert isinstance(p, FAnd)
         assert len(p.lst) == 2
 
     def test_non_ascii(self):
@@ -64,9 +67,11 @@ class TestParsing:
         a = flowfilter.parse("(~u foobar & ~h voing)")
         assert a.lst[0].expr == "foobar"
         self._dump(a)
+        assert str(a) == "url matches /foobar/i and header matches /voing/im"
 
     def test_not(self):
         a = flowfilter.parse("!~h test")
+        assert str(a) == "not header matches /test/im"
         assert a.itm.expr == "test"
         a = flowfilter.parse("!(~u test & ~h bar)")
         assert a.itm.lst[0].expr == "test"
@@ -104,12 +109,14 @@ class TestMatchingHTTPFlow:
         s = self.req()
         assert self.q("~http", s)
         assert not self.q("~tcp", s)
+        assert str(flowfilter.parse("~http")) == "is an HTTP Flow"
 
     def test_asset(self):
         s = self.resp()
         assert not self.q("~a", s)
         s.response.headers["content-type"] = "text/javascript"
         assert self.q("~a", s)
+        assert str(flowfilter.parse("~a")) == "is asset"
 
     def test_fcontenttype(self):
         q = self.req()
@@ -131,19 +138,32 @@ class TestMatchingHTTPFlow:
         assert self.q("~tq json", s)
         assert not self.q("~ts json", s)
 
+        assert str(flowfilter.parse("~t content")) == "content type matches /content/i"
+        assert (
+            str(flowfilter.parse("~tq content"))
+            == "req. content type matches /content/i"
+        )
+        assert (
+            str(flowfilter.parse("~ts content"))
+            == "resp. content type matches /content/i"
+        )
+
     def test_freq_fresp(self):
         q = self.req()
         s = self.resp()
 
         assert self.q("~q", q)
         assert not self.q("~q", s)
+        assert str(flowfilter.parse("~q")) == "has no response"
 
         assert not self.q("~s", q)
         assert self.q("~s", s)
+        assert str(flowfilter.parse("~s")) == "has response"
 
     def test_ferr(self):
         e = self.err()
         assert self.q("~e", e)
+        assert str(flowfilter.parse("~e")) == "has error"
 
     def test_fmarked(self):
         q = self.req()
@@ -827,7 +847,7 @@ def test_pyparsing_bug(extract_tb):
 
 def test_match():
     with pytest.raises(ValueError):
-        flowfilter.match("[foobar", None)
+        flowfilter.match("[foobar", tflow.tflow())
 
-    assert flowfilter.match(None, None)
-    assert not flowfilter.match("foobar", None)
+    assert flowfilter.match(None, tflow.tflow())
+    assert not flowfilter.match("foobar", tflow.tflow())
