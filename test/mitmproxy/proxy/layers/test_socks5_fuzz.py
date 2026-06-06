@@ -6,6 +6,7 @@ from mitmproxy.connection import Client
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers.modes import Socks5Proxy
+from mitmproxy.proxy.layers.modes import Socks5UdpProxy
 
 opts = options.Options()
 tctx = Context(
@@ -21,4 +22,10 @@ tctx = Context(
 @given(binary())
 def test_socks5_fuzz(data):
     layer = Socks5Proxy(tctx)
+    list(layer.handle_event(DataReceived(tctx.client, data)))
+
+
+@given(binary())
+def test_socks5_udp_fuzz(data):
+    layer = Socks5UdpProxy(tctx)
     list(layer.handle_event(DataReceived(tctx.client, data)))

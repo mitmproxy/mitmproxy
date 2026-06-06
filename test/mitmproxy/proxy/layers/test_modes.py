@@ -30,11 +30,13 @@ from mitmproxy.proxy.layers.tcp import TcpStartHook
 from mitmproxy.proxy.layers.tls import ClientTLSLayer
 from mitmproxy.proxy.layers.tls import TlsStartClientHook
 from mitmproxy.proxy.layers.tls import TlsStartServerHook
+from mitmproxy.proxy.layers.udp import UdpMessageInjected
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.tcp import TCPFlow
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.udp import UDPFlow
+from mitmproxy.udp import UDPMessage
 from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_client
 from test.mitmproxy.proxy.layers.test_tls import reply_tls_start_server
 from test.mitmproxy.proxy.tutils import Placeholder
@@ -590,3 +592,168 @@ def test_socks5_premature_close(tctx: Context):
         << Log(r"Client closed connection before completing SOCKS5 handshake: b'\x05'")
         << CloseConnection(tctx.client)
     )
+
+
+# SOCKS5 UDP ASSOCIATE
+
+# RSV(0000) FRAG(00) ATYP(01=IPv4) DST.ADDR(1.2.3.4) DST.PORT(0005)
+UDP_HEADER = b"\x00\x00\x00\x01\x01\x02\x03\x04\x00\x05"
+
+
+def test_socks5_udp_associate(tctx: Context):
+    """The control connection accepts UDP ASSOCIATE and replies with the relay address."""
+    playbook = Playbook(modes.Socks5Proxy(tctx))
+    assert (
+        playbook
+        >> DataReceived(tctx.client, CLIENT_HELLO)
+        << SendData(tctx.client, SERVER_HELLO)
+        # VER=5 CMD=3 (UDP ASSOCIATE) RSV=0 ATYP=1 0.0.0.0:0
+        >> DataReceived(tctx.client, b"\x05\x03\x00\x01\x00\x00\x00\x00\x00\x00")
+        # The reply points the client at our relay, i.e. the proxy address it connected
+        # to (tctx.client.sockname == 127.0.0.1:8080, 8080 == 0x1f90).
+        << SendData(tctx.client, b"\x05\x00\x00\x01\x7f\x00\x00\x01\x1f\x90")
+    )
+    # The control connection stays open and idle; stray data is ignored, and closing it
+    # tears the association down.
+    assert (
+        playbook
+        >> DataReceived(tctx.client, b"ignored")
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.client)
+    )
+
+
+def test_socks5_udp_relay(tctx: Context):
+    """Socks5UdpProxy decapsulates a datagram, relays it, and re-encapsulates the reply."""
+    tctx.client.transport_protocol = "udp"
+    flow = Placeholder(UDPFlow)
+    server = Placeholder(Server)
+    assert (
+        Playbook(modes.Socks5UdpProxy(tctx))
+        >> DataReceived(tctx.client, UDP_HEADER + b"ping")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(server, b"ping")
+        # The server's reply is wrapped back into a SOCKS5 UDP datagram for the client.
+        >> DataReceived(server, b"pong")
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(tctx.client, UDP_HEADER + b"pong")
+        # An injected client message is relayed onward as well.
+        >> UdpMessageInjected(flow, UDPMessage(True, b"inject"))
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(server, b"inject")
+        # When the server side closes, the destination is forgotten (no client close
+        # to forward over the connectionless relay).
+        >> ConnectionClosed(server)
+        << udp.UdpEndHook(flow)
+        >> reply()
+    )
+    assert server().address == ("1.2.3.4", 5)
+    assert [(m.from_client, m.content) for m in flow().messages] == [
+        (True, b"ping"),
+        (False, b"pong"),
+        (True, b"inject"),
+    ]
+
+
+def test_socks5_udp_relay_client_close(tctx: Context):
+    """Closing the relay (client) connection tears down all destinations."""
+    tctx.client.transport_protocol = "udp"
+    flow = Placeholder(UDPFlow)
+    server = Placeholder(Server)
+    assert (
+        Playbook(modes.Socks5UdpProxy(tctx))
+        >> DataReceived(tctx.client, UDP_HEADER + b"x")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << udp.UdpMessageHook(flow)
+        >> reply()
+        << SendData(server, b"x")
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(server)
+        << udp.UdpEndHook(flow)
+        >> reply()
+    )
+
+
+def test_socks5_udp_relay_multiple_destinations(tctx: Context):
+    """A single association fans out to multiple destinations, one flow each."""
+    tctx.client.transport_protocol = "udp"
+    flow1 = Placeholder(UDPFlow)
+    flow2 = Placeholder(UDPFlow)
+    server1 = Placeholder(Server)
+    server2 = Placeholder(Server)
+    header2 = b"\x00\x00\x00\x01\x05\x06\x07\x08\x00\x06"  # 5.6.7.8:6
+    assert (
+        Playbook(modes.Socks5UdpProxy(tctx))
+        >> DataReceived(tctx.client, UDP_HEADER + b"a")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow1)
+        >> reply()
+        << OpenConnection(server1)
+        >> reply(None)
+        << udp.UdpMessageHook(flow1)
+        >> reply()
+        << SendData(server1, b"a")
+        >> DataReceived(tctx.client, header2 + b"b")
+        << NextLayerHook(Placeholder(NextLayer))
+        >> reply_next_layer(layers.UDPLayer)
+        << udp.UdpStartHook(flow2)
+        >> reply()
+        << OpenConnection(server2)
+        >> reply(None)
+        << udp.UdpMessageHook(flow2)
+        >> reply()
+        << SendData(server2, b"b")
+    )
+    assert server1().address == ("1.2.3.4", 5)
+    assert server2().address == ("5.6.7.8", 6)
+    assert flow1() is not flow2()
+
+
+def test_socks5_udp_relay_invalid(tctx: Context):
+    """Malformed/fragmented datagrams are dropped without relaying anything."""
+    tctx.client.transport_protocol = "udp"
+    assert (
+        Playbook(modes.Socks5UdpProxy(tctx))
+        # too short
+        >> DataReceived(tctx.client, b"\x00")
+        # bad RSV
+        >> DataReceived(tctx.client, b"\xff\xff\x00\x01\x01\x02\x03\x04\x00\x05data")
+        # fragmented (FRAG != 0), unsupported
+        >> DataReceived(tctx.client, b"\x00\x00\x01\x01\x01\x02\x03\x04\x00\x05data")
+        # unknown address type
+        >> DataReceived(tctx.client, b"\x00\x00\x00\x07\x01\x02")
+        # truncated address
+        >> DataReceived(tctx.client, b"\x00\x00\x00\x01\x01\x02")
+    )
+
+
+@pytest.mark.parametrize(
+    "host,port",
+    [("1.2.3.4", 80), ("::1", 443), ("example.com", 8080)],
+)
+def test_socks5_address_roundtrip(host: str, port: int):
+    packed = modes.pack_socks5_address(host, port)
+    assert modes.parse_socks5_address(packed) == (host, port, len(packed))
+
+
+def test_socks5_address_incomplete():
+    assert modes.parse_socks5_address(b"") is None  # need ATYP byte
+    assert modes.parse_socks5_address(b"\x03") is None  # domain needs length byte
+    assert modes.parse_socks5_address(b"\x01\x01\x02") is None  # IPv4 truncated
+    with pytest.raises(modes.Socks5Error, match="Unknown address type: 9"):
+        modes.parse_socks5_address(b"\x09")

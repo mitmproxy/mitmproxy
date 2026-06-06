@@ -492,6 +492,8 @@ class ReverseInstance(AsyncioServerInstance[mode_specs.ReverseMode]):
 
 class Socks5Instance(AsyncioServerInstance[mode_specs.Socks5Mode]):
     def make_top_layer(self, context: Context) -> Layer:
+        if context.client.transport_protocol == "udp":
+            return layers.modes.Socks5UdpProxy(context)
         return layers.modes.Socks5Proxy(context)
 
 
