@@ -439,6 +439,20 @@ In this mode, mitmproxy acts as a SOCKS5 proxy.
 This is similar to the regular proxy mode, but using SOCKS5 instead of HTTP for connection establishment
 with the proxy.
 
+mitmproxy supports the `CONNECT` (TCP) and `UDP ASSOCIATE` (UDP) commands.
+For UDP associations, mitmproxy listens for relayed datagrams on the SOCKS5 control connection port,
+forwards them to their destination, and records each as a regular UDP flow.
+Datagram reassembly using the `FRAG` field is not supported.
+
+{{% note %}}
+
+The UDP relay forwards datagrams using the SOCKS5 header without confirming prior source
+authentication. As a result, [`proxyauth`]({{< relref "/concepts/options" >}}#proxyauth)
+restricts only the TCP control connection. To maintain security when relaying UDP, bind the proxy
+to localhost or another trusted network.
+
+{{% /note %}}
+
 
 ## DNS Server
 

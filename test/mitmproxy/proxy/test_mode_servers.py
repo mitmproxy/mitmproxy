@@ -45,6 +45,21 @@ def test_make():
         WireGuardServerInstance.make("regular", manager)
 
 
+def test_socks5_make_top_layer():
+    from mitmproxy.proxy.layers import modes
+
+    manager = Mock()
+    inst = ServerInstance.make("socks5", manager)
+
+    tcp_ctx = MagicMock()
+    tcp_ctx.client.transport_protocol = "tcp"
+    assert isinstance(inst.make_top_layer(tcp_ctx), modes.Socks5Proxy)
+
+    udp_ctx = MagicMock()
+    udp_ctx.client.transport_protocol = "udp"
+    assert isinstance(inst.make_top_layer(udp_ctx), modes.Socks5UdpProxy)
+
+
 async def test_last_exception_and_running(monkeypatch):
     manager = MagicMock()
     err = ValueError("something else")

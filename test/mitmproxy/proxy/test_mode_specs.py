@@ -37,6 +37,11 @@ def test_parse_subclass():
         Socks5Mode.parse("regular")
 
 
+def test_socks5_dual_transport():
+    # SOCKS5 listens on both TCP (CONNECT) and UDP (the UDP ASSOCIATE relay).
+    assert Socks5Mode.parse("socks5").transport_protocol == "both"
+
+
 def test_listen_addr():
     assert ProxyMode.parse("regular").listen_port() == 8080
     assert ProxyMode.parse("regular@1234").listen_port() == 1234
