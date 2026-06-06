@@ -9,6 +9,7 @@
 
 - Add SOCKS5 UDP support: mitmproxy now handles the `UDP ASSOCIATE` command and relays
   UDP datagrams, capturing them as regular UDP flows.
+  ([#8275](https://github.com/mitmproxy/mitmproxy/pull/8275), @pedro-cs-ribeiro)
 - Fix contentview detection for XML files that start with CRLF.
   ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
