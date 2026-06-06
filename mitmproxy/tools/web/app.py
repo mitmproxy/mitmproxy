@@ -466,7 +466,20 @@ class ClientConnection(WebSocketEventBroadcaster):
 
     def update_filter(self, name: str, expr: str) -> None:
         if expr:
-            filt = flowfilter.parse(expr)
+            try:
+                filt = flowfilter.parse(expr)
+            except ValueError:
+                error_message = self._json_dumps(
+                    {
+                        "type": "flows/filterError",
+                        "payload": {
+                            "name": name,
+                            "error": "invalid filter expression",
+                        },
+                    },
+                )
+                self.send(message=error_message)
+                return
             self.filters[name] = filt
             matching_flow_ids = [f.id for f in self.application.master.view if filt(f)]
         else:
