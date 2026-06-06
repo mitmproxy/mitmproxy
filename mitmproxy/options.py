@@ -180,6 +180,16 @@ class Options(optmanager.OptManager):
             TLS interception.""",
         )
         self.add_option(
+            "ssl_use_windows_cert_store",
+            bool,
+            True,
+            """Use the Windows certificate store for upstream server verification (Windows only).
+
+            When enabled on Windows with OpenSSL 3.2+, mitmproxy will use the Windows certificate store to verify
+            upstream server certificates. This allows for use of custom certificate authorities installed in the Windows
+            certificate store. This option is enabled by default on Windows and has no effect on other platforms.""",
+        )
+        self.add_option(
             "ssl_verify_upstream_trusted_confdir",
             Optional[str],
             None,
