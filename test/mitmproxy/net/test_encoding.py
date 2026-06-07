@@ -66,6 +66,26 @@ def test_encoders_strings(encoder):
         encoding.decode("foobar", encoder)
 
 
+def test_multiple_encodings():
+    """https://github.com/mitmproxy/mitmproxy/issues/2246
+
+    Content-Encoding can be a comma separated list, so we should apply each
+    codec in turn instead of doing a single dict lookup that raises KeyError.
+    sdch is unsupported so it just passes through like identity.
+    """
+    # gzip body that was also tagged sdch should still decode fine
+    gzipped = encoding.encode(b"mitmproxy", "gzip")
+    assert encoding.decode(gzipped, "sdch, gzip") == b"mitmproxy"
+
+    # whitespace variations and casing shouldn't matter
+    assert encoding.decode(gzipped, "GZIP") == b"mitmproxy"
+    assert encoding.decode(gzipped, "sdch,gzip") == b"mitmproxy"
+
+    # round trip through two real codecs
+    both = encoding.encode(b"mitmproxy", "gzip, deflate")
+    assert encoding.decode(both, "gzip, deflate") == b"mitmproxy"
+
+
 class TestDecodeGzip:
     def test_regular_gzip(self):
         # generated with gzip.compress(b"mitmproxy")
