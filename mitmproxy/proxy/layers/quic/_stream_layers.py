@@ -170,11 +170,11 @@ class QuicLayer(tunnel.TunnelLayer):
 
         # send all queued datagrams
         assert self.quic
-        
+
         # aioquic 1.2.0 raises IndexError in datagrams_to_send() if no network path exists yet.
         if not self.quic._network_paths:
             return
-        
+
         now = self._time()
 
         for data, addr in self.quic.datagrams_to_send(now=now):
