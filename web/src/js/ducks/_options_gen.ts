@@ -80,6 +80,7 @@ export interface OptionsState {
     strip_ech: boolean;
     tcp_hosts: string[];
     tcp_timeout: number;
+    termlog_colors: string;
     termlog_verbosity: string;
     tls_ecdh_curve_client: string | undefined;
     tls_ecdh_curve_server: string | undefined;
@@ -187,6 +188,7 @@ export const defaultState: OptionsState = {
     strip_ech: true,
     tcp_hosts: [],
     tcp_timeout: 600,
+    termlog_colors: "auto",
     termlog_verbosity: "info",
     tls_ecdh_curve_client: undefined,
     tls_ecdh_curve_server: undefined,

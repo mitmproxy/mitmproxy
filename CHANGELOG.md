@@ -11,6 +11,7 @@
   force-disable ANSI color output for log and mitmdump flow output. Useful
   for piping `mitmdump` output to a pager (e.g. `mitmdump | less -R`) while
   keeping colors.
+  ([#8280](https://github.com/mitmproxy/mitmproxy/pull/8280), @gaurav0107)
 - Fix contentview detection for XML files that start with CRLF.
   ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
