@@ -4,6 +4,7 @@ import base64
 import logging
 import time
 from datetime import datetime
+from typing import cast
 
 from mitmproxy import connection
 from mitmproxy import exceptions
@@ -35,6 +36,14 @@ def fix_headers(
         flow_headers.append((key.encode(), value.encode()))
 
     return http.Headers(flow_headers)
+
+
+def encode_response_text_content(response_content: str, content_encoding: str) -> bytes:
+    try:
+        return cast(bytes, http.encoding.encode(response_content, content_encoding))
+    except ValueError:
+        # Fallback to UTF-8
+        return response_content.encode("utf-8", errors="surrogateescape")
 
 
 def request_to_flow(request_json: dict) -> http.HTTPFlow:
@@ -93,19 +102,13 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
         response_content = base64.b64decode(response_content)
     elif isinstance(response_content, str):
         # Convert text to bytes, as in `Response.set_text`
-        try:
-            response_content = http.encoding.encode(
-                response_content,
-                (
-                    content_encoding
-                    or infer_content_encoding(response_headers.get("content-type", ""))
-                ),
+        if not content_encoding:
+            content_encoding = infer_content_encoding(
+                response_headers.get("content-type", "")
             )
-        except ValueError:
-            # Fallback to UTF-8
-            response_content = response_content.encode(
-                "utf-8", errors="surrogateescape"
-            )
+        response_content = encode_response_text_content(
+            response_content, content_encoding
+        )
 
     # Then encode the content, as in `Response.set_content`
     response_content = http.encoding.encode(
@@ -134,18 +137,14 @@ def request_to_flow(request_json: dict) -> http.HTTPFlow:
     # Update HTTP version
 
     match http_version_req:
-        case "http/2.0":
-            new_flow.request.http_version = "HTTP/2"
-        case "HTTP/2":
+        case "http/2.0" | "HTTP/2":
             new_flow.request.http_version = "HTTP/2"
         case "HTTP/3":
             new_flow.request.http_version = "HTTP/3"
         case _:
             new_flow.request.http_version = "HTTP/1.1"
     match http_version_resp:
-        case "http/2.0":
-            new_flow.response.http_version = "HTTP/2"
-        case "HTTP/2":
+        case "http/2.0" | "HTTP/2":
             new_flow.response.http_version = "HTTP/2"
         case "HTTP/3":
             new_flow.response.http_version = "HTTP/3"
