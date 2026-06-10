@@ -11,6 +11,7 @@ import abc
 import asyncio
 import collections
 import logging
+import socket
 import time
 from collections.abc import Awaitable
 from collections.abc import Callable
@@ -235,6 +236,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     raise
             else:
                 if command.connection.transport_protocol == "tcp":
+                    # This makes our time measurements more accurate (HeadSpin capture timestamps).
+                    transport = writer.get_extra_info("socket")
+                    if transport is not None:
+                        transport.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                     # TODO: Rename to `timestamp_setup` and make it agnostic for both TCP (SYN/ACK) and UDP (DNS resl.)
                     command.connection.timestamp_tcp_setup = time.time()
                 command.connection.state = ConnectionState.OPEN

@@ -567,11 +567,13 @@ class Http2Client(Http2Connection):
                 yield RequestWakeup(self.context.options.http2_ping_keepalive)
             yield from super()._handle_event(event)
         elif isinstance(event, RequestHeaders):
+            event.request.hs_timestamp_start = time.time()
             self.h2_conn.send_headers(
                 event.stream_id,
                 headers=(yield from format_h2_request_headers(self.context, event)),
                 end_stream=event.end_stream,
             )
+            event.request.hs_timestamp_end = time.time()
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS
             yield SendData(self.conn, self.h2_conn.data_to_send())
         else:

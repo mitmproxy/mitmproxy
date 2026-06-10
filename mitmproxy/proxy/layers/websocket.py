@@ -154,6 +154,7 @@ class WebsocketLayer(layer.Layer):
             src_ws = self.server_ws
             dst_ws = self.client_ws
 
+        recv_ts_start = time.time()
         if isinstance(event, events.DataReceived):
             src_ws.receive_data(event.data)
         elif isinstance(event, events.ConnectionClosed):
@@ -183,12 +184,19 @@ class WebsocketLayer(layer.Layer):
                     message = websocket.WebSocketMessage(
                         typ, from_client, content, injected=injected
                     )
+                    if from_client:
+                        message.hs_timestamp_start = time.time()
+                    else:
+                        message.hs_timestamp_start = recv_ts_start
+                        message.hs_timestamp_end = time.time()
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
                     if not message.dropped:
                         for msg in fragmentizer(message.content):
                             yield dst_ws.send2(msg)
+                        if from_client:
+                            message.hs_timestamp_end = time.time()
 
                 elif ws_event.frame_finished:
                     src_ws.frame_buf.append(b"")

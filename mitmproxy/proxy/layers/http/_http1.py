@@ -1,4 +1,5 @@
 import abc
+import time
 from collections.abc import Callable
 from typing import Union
 
@@ -374,8 +375,10 @@ class Http1Client(Http1Connection):
                     # see: https://www.rfc-editor.org/rfc/rfc6265#section-5.4
                     #      https://www.rfc-editor.org/rfc/rfc7540#section-8.1.2.5
                     request.headers["Cookie"] = "; ".join(cookie_headers)
+            request.hs_timestamp_start = time.time()
             raw = http1.assemble_request_head(request)
             yield commands.SendData(self.conn, raw)
+            request.hs_timestamp_end = time.time()
         elif isinstance(event, RequestData):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
@@ -384,6 +387,8 @@ class Http1Client(Http1Connection):
                 raw = event.data
             if raw:
                 yield commands.SendData(self.conn, raw)
+                assert self.request
+                self.request.hs_timestamp_end = time.time()
         elif isinstance(event, RequestEndOfMessage):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
