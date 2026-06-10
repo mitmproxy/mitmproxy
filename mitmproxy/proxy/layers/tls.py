@@ -12,6 +12,7 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import connection
+from mitmproxy import headspin
 from mitmproxy.connection import TlsVersion
 from mitmproxy.net.tls import starts_like_dtls_record
 from mitmproxy.net.tls import starts_like_tls_record
@@ -237,6 +238,34 @@ class TlsFailedServerHook(StartHook):
     """
 
     data: TlsData
+
+
+@dataclass
+class TlsExceptionHook(StartHook):
+    """
+    HeadSpin: server TLS handshake failed for a named host.
+
+    Addons may set `event.keep_in_session` to keep the host in the capture session.
+    """
+
+    event: headspin.TlsExceptionEvent
+
+
+TlsExceptionHook.name = "tlsexception"
+
+
+@dataclass
+class ProtocolExceptionHook(StartHook):
+    """
+    HeadSpin: a protocol error occurred for a server connection.
+
+    Addons may set `event.keep_in_session` to keep the host in the capture session.
+    """
+
+    event: headspin.ProtocolExceptionEvent
+
+
+ProtocolExceptionHook.name = "protocolexception"
 
 
 class TLSLayer(tunnel.TunnelLayer):
@@ -507,8 +536,23 @@ class ServerTLSLayer(TLSLayer):
         else:
             yield from super().event_to_child(event)
 
+    def _named_address(self) -> tuple[str, int] | None:
+        if self.context.server.address:
+            return self.context.server.address
+        if self.context.client.sni:
+            return self.context.client.sni, 443
+        return None
+
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         yield commands.Log(f"Server TLS handshake failed. {err}", level=WARNING)
+        named_address = self._named_address()
+        if named_address:
+            event = headspin.TlsExceptionEvent(named_address)
+            yield TlsExceptionHook(event)
+            if event.keep_in_session:
+                headspin.keep_host_in_session(self.context, named_address)
+            else:
+                headspin.exclude_host_from_session(self.context, named_address)
         yield from super().on_handshake_error(err)
 
 

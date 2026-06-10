@@ -21,7 +21,10 @@ def lookup(address, port, s):
     specv6 = f"{address}[{port}]"
 
     for i in s.split("\n"):
-        if "ESTABLISHED:ESTABLISHED" in i and specv4 in i:
+        # usually we expect ESTABLISHED:ESTABLISHED
+        # on some macos hosts, ESTABLISHED:FIN_WAIT_2 should also be considered a connected state
+        # widen this to any established client connection
+        if "ESTABLISHED:" in i and specv4 in i:
             s = i.split()
             if len(s) > 4:
                 if sys.platform.startswith("freebsd"):
@@ -32,7 +35,7 @@ def lookup(address, port, s):
 
                 if len(s) == 2:
                     return s[0], int(s[1])
-        elif "ESTABLISHED:ESTABLISHED" in i and specv6 in i:
+        elif "ESTABLISHED:" in i and specv6 in i:
             s = i.split()
             if len(s) > 4:
                 s = s[4].split("[")
