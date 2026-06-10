@@ -2,6 +2,7 @@ import asyncio
 import logging
 import sys
 
+from mitmproxy import ctx
 from mitmproxy import log
 from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
@@ -32,7 +33,24 @@ class ErrorCheck:
             plural = "s" if len(self.logger.has_errored) > 1 else ""
             if self.repeat_errors_on_stderr:
                 message = f"Error{plural} logged during startup:"
-                if vt_codes.ensure_supported(sys.stderr):  # pragma: no cover
+                # `ctx.options` may not be loaded yet if errorcheck fires
+                # before option registration; default to "auto" in that case.
+                opts = getattr(ctx, "options", None)
+                raw_override = (
+                    getattr(opts, "termlog_colors", "auto")
+                    if opts is not None
+                    else "auto"
+                )
+                color_override: vt_codes.ColorOverride
+                if raw_override == "always":
+                    color_override = "always"
+                elif raw_override == "never":
+                    color_override = "never"
+                else:
+                    color_override = "auto"
+                if vt_codes.ensure_supported(
+                    sys.stderr, override=color_override
+                ):  # pragma: no cover
                     message = miniclick.style(message, fg="red")
                 details = "\n".join(
                     self.logger.format(r) for r in self.logger.has_errored
