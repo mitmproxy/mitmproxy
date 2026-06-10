@@ -1086,11 +1086,14 @@ class TestMessageContentEncoding:
         assert t.headers["content-length"] == "7"
 
 
+U_UMLAUT_UTF8 = b"\xc3\xbc"
+
+
 class TestMessageText:
     def test_simple(self):
-        r = tresp(content=b"\xfc")
-        assert r.raw_content == b"\xfc"
-        assert r.content == b"\xfc"
+        r = tresp(content=U_UMLAUT_UTF8)
+        assert r.raw_content == U_UMLAUT_UTF8
+        assert r.content == U_UMLAUT_UTF8
         assert r.text == "ü"
 
         r.encode("gzip")
@@ -1099,13 +1102,12 @@ class TestMessageText:
         assert r.text == "ü"
 
         r.headers["content-type"] = "text/html; charset=latin1"
-        r.content = b"\xc3\xbc"
         assert r.text == "Ã¼"
         r.headers["content-type"] = "text/html; charset=utf8"
         assert r.text == "ü"
 
     def test_guess_json(self):
-        r = tresp(content=b'"\xc3\xbc"')
+        r = tresp(content=b'"' + U_UMLAUT_UTF8 + b'"')
         r.headers["content-type"] = "application/json"
         assert r.text == '"ü"'
 
@@ -1147,6 +1149,7 @@ class TestMessageText:
 
     def test_guess_latin_1(self):
         r = tresp(content=b"\xf0\xe2")
+        r.headers["content-type"] = "text/plain; charset=latin1"
         assert r.text == "ðâ"
 
     def test_none(self):
@@ -1161,11 +1164,11 @@ class TestMessageText:
         r = tresp()
 
         r.text = "ü"
-        assert r.raw_content == b"\xfc"
+        assert r.raw_content == U_UMLAUT_UTF8
 
         r.headers["content-type"] = "text/html; charset=utf8"
         r.text = "ü"
-        assert r.raw_content == b"\xc3\xbc"
+        assert r.raw_content == U_UMLAUT_UTF8
         assert r.headers["content-length"] == "2"
 
     def test_unknown_ce(self):
@@ -1198,13 +1201,17 @@ class TestMessageText:
 
         r.headers["content-type"] = "gibberish"
         r.text = "☃"
-        assert r.headers["content-type"] == "text/plain; charset=utf-8"
+        assert r.headers["content-type"] == "gibberish"
         assert r.raw_content == b"\xe2\x98\x83"
 
         del r.headers["content-type"]
         r.text = "☃"
-        assert r.headers["content-type"] == "text/plain; charset=utf-8"
+        assert "content-type" not in r.headers
         assert r.raw_content == b"\xe2\x98\x83"
+
+        r.text = "\udc80"
+        assert r.headers["content-type"] == "text/plain; charset=utf-8"
+        assert r.raw_content == b"\x80"
 
         r.headers["content-type"] = "text/html; charset=latin1"
         r.text = "\udcff"
