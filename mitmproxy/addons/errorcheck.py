@@ -8,6 +8,19 @@ from mitmproxy.contrib import click as miniclick
 from mitmproxy.utils import vt_codes
 
 
+def _resolve_color_override(raw: object) -> vt_codes.ColorOverride:
+    """Coerce the raw ``termlog_colors`` option value into a known literal.
+
+    Defaults to ``"auto"`` for any unexpected value so the type narrows to
+    ``vt_codes.ColorOverride`` without requiring callers to validate.
+    """
+    if raw == "always":
+        return "always"
+    if raw == "never":
+        return "never"
+    return "auto"
+
+
 class ErrorCheck:
     """Monitor startup for error log entries, and terminate immediately if there are some."""
 
@@ -36,18 +49,9 @@ class ErrorCheck:
                 # `ctx.options` may not be loaded yet if errorcheck fires
                 # before option registration; default to "auto" in that case.
                 opts = getattr(ctx, "options", None)
-                raw_override = (
-                    getattr(opts, "termlog_colors", "auto")
-                    if opts is not None
-                    else "auto"
+                color_override = _resolve_color_override(
+                    getattr(opts, "termlog_colors", "auto") if opts else "auto"
                 )
-                color_override: vt_codes.ColorOverride
-                if raw_override == "always":
-                    color_override = "always"
-                elif raw_override == "never":
-                    color_override = "never"
-                else:
-                    color_override = "auto"
                 if vt_codes.ensure_supported(
                     sys.stderr, override=color_override
                 ):  # pragma: no cover
