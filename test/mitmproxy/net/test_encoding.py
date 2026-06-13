@@ -85,6 +85,9 @@ def test_multiple_encodings():
     both = encoding.encode(b"mitmproxy", "gzip, deflate")
     assert encoding.decode(both, "gzip, deflate") == b"mitmproxy"
 
+    # encoding sdch is a no-op too, so a sdch+gzip body is just the gzip
+    assert encoding.encode(b"mitmproxy", "sdch, gzip") == gzipped
+
 
 class TestDecodeGzip:
     def test_regular_gzip(self):
