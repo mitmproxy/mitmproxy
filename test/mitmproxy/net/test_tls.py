@@ -116,7 +116,7 @@ def test_supported_openssl_error(monkeypatch):
     # Clear the cache so our monkeypatched version runs
     tls.is_supported_version.cache_clear()
     
-    original_context = SSL.Context.__init__
+    # original_context = SSL.Context.__init__
     
     def mock_set_min(*args, **kwargs):
         raise SSL.Error("version not supported")
