@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from unittest.mock import patch
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import SSL
@@ -111,7 +111,7 @@ def test_get_curve():
 def test_supported_openssl_error(monkeypatch):
     """Test that is_supported_version returns False when OpenSSL raises SSL.Error
     at context setup time (e.g. for versions disabled at compile time)."""
-    from unittest.mock import patch, MagicMock
+    # from unittest.mock import patch, MagicMock
     
     # Clear the cache so our monkeypatched version runs
     tls.is_supported_version.cache_clear()
