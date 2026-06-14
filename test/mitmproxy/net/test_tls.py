@@ -106,3 +106,24 @@ def test_is_dtls_record_magic():
 
 def test_get_curve():
     assert isinstance(tls.get_curve("secp256r1"), ec.SECP256R1)
+
+    
+def test_supported_openssl_error(monkeypatch):
+    """Test that is_supported_version returns False when OpenSSL raises SSL.Error
+    at context setup time (e.g. for versions disabled at compile time)."""
+    from unittest.mock import patch, MagicMock
+    
+    # Clear the cache so our monkeypatched version runs
+    tls.is_supported_version.cache_clear()
+    
+    original_context = SSL.Context.__init__
+    
+    def mock_set_min(*args, **kwargs):
+        raise SSL.Error("version not supported")
+    
+    with patch.object(SSL.Context, "set_min_proto_version", mock_set_min):
+        result = tls.is_supported_version(tls.Version.TLS1)
+        assert result is False
+    
+    # Restore cache state
+    tls.is_supported_version.cache_clear()
