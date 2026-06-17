@@ -148,9 +148,9 @@ def hostport(scheme: AnyStr, host: AnyStr, port: int) -> AnyStr:
     """
     # IPv6 addresses contain colons and must be bracketed in URIs (RFC 3986 §3.2.2).
     if isinstance(host, bytes):
-        host_in_uri: AnyStr = (b"[" + host + b"]") if b":" in host else host
+        host_in_uri: AnyStr = (b"[" + host + b"]") if (host and b":" in host) else host
     else:
-        host_in_uri = f"[{host}]" if ":" in host else host
+        host_in_uri = f"[{host}]" if (host and ":" in host) else host
 
     if default_port(scheme) == port:
         return host_in_uri
