@@ -41,7 +41,7 @@
 
 ### Homebrew
 
-- The Homebrew maintainers are typically very fast and detect our new relese
+- The Homebrew maintainers are typically very fast and detect our new release
   within a day.
 - If you feel the need, you can run this from a macOS machine:
   `brew bump-cask-pr mitmproxy`
