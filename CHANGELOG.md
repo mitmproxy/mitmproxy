@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Set the default text encoding to UTF-8 instead of (very) legacy Latin-1.
+  In consequence, saved HARs may be different than previously.
+  ([#8126](https://github.com/mitmproxy/mitmproxy/pull/8126), @emaheuxPEREN)
 - Fix contentview detection for XML files that start with CRLF.
   ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
