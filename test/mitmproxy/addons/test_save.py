@@ -358,7 +358,9 @@ def test_compression_level(tmp_path):
 def test_compression_invalid(tmp_path):
     sa = save.Save()
     with taddons.context(sa) as tctx:
-        with pytest.raises(exceptions.OptionsError, match="Invalid compression algorithm"):
+        with pytest.raises(
+            exceptions.OptionsError, match="Invalid compression algorithm"
+        ):
             tctx.configure(
                 sa,
                 save_stream_file=str(tmp_path / "foo"),
@@ -370,19 +372,25 @@ def test_compression_invalid(tmp_path):
                 save_stream_file=str(tmp_path / "foo"),
                 save_stream_compression="gz=abc",
             )
-        with pytest.raises(exceptions.OptionsError, match="Invalid compression level .* for gz"):
+        with pytest.raises(
+            exceptions.OptionsError, match="Invalid compression level .* for gz"
+        ):
             tctx.configure(
                 sa,
                 save_stream_file=str(tmp_path / "foo"),
                 save_stream_compression="gz=10",
             )
-        with pytest.raises(exceptions.OptionsError, match="Invalid compression level .* for bz2"):
+        with pytest.raises(
+            exceptions.OptionsError, match="Invalid compression level .* for bz2"
+        ):
             tctx.configure(
                 sa,
                 save_stream_file=str(tmp_path / "foo"),
                 save_stream_compression="bz2=0",
             )
-        with pytest.raises(exceptions.OptionsError, match="Invalid compression level .* for xz"):
+        with pytest.raises(
+            exceptions.OptionsError, match="Invalid compression level .* for xz"
+        ):
             tctx.configure(
                 sa,
                 save_stream_file=str(tmp_path / "foo"),

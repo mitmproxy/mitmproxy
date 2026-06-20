@@ -150,7 +150,11 @@ class Save:
                     "Cannot change save_stream_compression while writing to the same file. "
                     "Change save_stream_file first or restart with the new compression."
                 )
-        if "save_stream_file" in updated or "save_stream_filter" in updated or "save_stream_compression" in updated:
+        if (
+            "save_stream_file" in updated
+            or "save_stream_filter" in updated
+            or "save_stream_compression" in updated
+        ):
             if ctx.options.save_stream_file:
                 try:
                     self.maybe_rotate_to_new_file()

@@ -72,9 +72,7 @@ class FlowReader:
         try:
             yield from self._stream_inner()
         except (EOFError, OSError, lzma.LZMAError) as e:
-            raise exceptions.FlowReadException(
-                f"Invalid data format: {e}"
-            ) from e
+            raise exceptions.FlowReadException(f"Invalid data format: {e}") from e
 
     def _stream_inner(self) -> Iterable[flow.Flow]:
         if self.peek(4).startswith(
