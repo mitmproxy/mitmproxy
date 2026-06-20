@@ -9,6 +9,7 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import BinaryIO
+from typing import cast
 from typing import Literal
 from typing import Optional
 
@@ -178,14 +179,20 @@ class Save:
         if compression:
             algo, level = _parse_compression(compression)
             if algo == "gz":
-                kwargs = {"compresslevel": level} if level is not None else {}
-                f = gzip.open(new_log_file, mode, **kwargs)
+                if level is not None:
+                    f = cast(BinaryIO, gzip.open(new_log_file, mode, compresslevel=level))
+                else:
+                    f = cast(BinaryIO, gzip.open(new_log_file, mode))
             elif algo == "bz2":
-                kwargs = {"compresslevel": level} if level is not None else {}
-                f = bz2.open(new_log_file, mode, **kwargs)
+                if level is not None:
+                    f = cast(BinaryIO, bz2.open(new_log_file, mode, compresslevel=level))
+                else:
+                    f = cast(BinaryIO, bz2.open(new_log_file, mode))
             elif algo == "xz":
-                kwargs = {"preset": level} if level is not None else {}
-                f = lzma.open(new_log_file, mode, **kwargs)
+                if level is not None:
+                    f = cast(BinaryIO, lzma.open(new_log_file, mode, preset=level))
+                else:
+                    f = cast(BinaryIO, lzma.open(new_log_file, mode))
         else:
             f = new_log_file.open(mode)
         self.stream = io.FilteredFlowWriter(f, self.filt)

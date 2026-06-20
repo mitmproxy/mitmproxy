@@ -31,11 +31,11 @@ def open_flow_file(path: str) -> BinaryIO:
         header = raw.read(6)
 
     if header[:2] == _GZIP_MAGIC:
-        return gzip.open(path, "rb")
+        return cast(BinaryIO, gzip.open(path, "rb"))
     elif header[:3] == _BZ2_MAGIC:
-        return bz2.open(path, "rb")
+        return cast(BinaryIO, bz2.open(path, "rb"))
     elif header[:6] == _XZ_MAGIC:
-        return lzma.open(path, "rb")
+        return cast(BinaryIO, lzma.open(path, "rb"))
     else:
         return open(path, "rb")
 
