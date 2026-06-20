@@ -251,7 +251,7 @@ class Socks5Mode(ProxyMode):
 
     description = "SOCKS v5 proxy"
     default_port = 1080
-    transport_protocol = TCP
+    transport_protocol = BOTH
 
     def __post_init__(self) -> None:
         _check_empty(self.data)
