@@ -9,6 +9,7 @@
 
 - Add `--set save_stream_compression` option to compress stream files on the fly with gzip, bz2, or xz.
   Reading compressed flow files is auto-detected via magic bytes.
+  ([#8287](https://github.com/mitmproxy/mitmproxy/pull/8287), @joelverhagen)
 - Fix contentview detection for XML files that start with CRLF.
   ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
