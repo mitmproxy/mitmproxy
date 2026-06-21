@@ -184,12 +184,16 @@ class Save:
             algo, level = _parse_compression(compression)
             if algo == "gz":
                 if level is not None:
-                    f = cast(BinaryIO, gzip.open(new_log_file, mode, compresslevel=level))
+                    f = cast(
+                        BinaryIO, gzip.open(new_log_file, mode, compresslevel=level)
+                    )
                 else:
                     f = cast(BinaryIO, gzip.open(new_log_file, mode))
             elif algo == "bz2":
                 if level is not None:
-                    f = cast(BinaryIO, bz2.open(new_log_file, mode, compresslevel=level))
+                    f = cast(
+                        BinaryIO, bz2.open(new_log_file, mode, compresslevel=level)
+                    )
                 else:
                     f = cast(BinaryIO, bz2.open(new_log_file, mode))
             elif algo == "xz":
