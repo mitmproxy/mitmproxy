@@ -9,6 +9,7 @@ from mitmproxy.proxy.commands import OpenConnection
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import ConnectionClosed
 from mitmproxy.proxy.events import DataReceived
+from mitmproxy.proxy.events import KillInjected
 from mitmproxy.proxy.layers import tcp
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.tcp import TCPFlow
@@ -149,3 +150,22 @@ def test_inject(tctx):
         << None
     )
     assert len(f().messages) == 2
+
+
+def test_kill_injected(tctx):
+    """KillInjected closes both connections and emits TcpErrorHook."""
+    f = Placeholder(TCPFlow)
+
+    assert (
+        Playbook(tcp.TCPLayer(tctx))
+        << tcp.TcpStartHook(f)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        >> KillInjected(f)
+        << CloseConnection(tctx.server)
+        << CloseConnection(tctx.client)
+        << tcp.TcpErrorHook(f)
+        >> reply()
+    )
+    assert f().live is False
