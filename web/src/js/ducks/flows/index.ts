@@ -84,7 +84,7 @@ export default function flowsReducer(
     action: UnknownAction,
 ): FlowsState {
     if (FLOWS_RECEIVE.match(action)) {
-        const { sort } = state;
+        const { sort, orderReversed } = state;
         const list = action.payload;
         const _listIndex = buildIndex(list);
         const byId = new Map(list.map((f) => [f.id, f]));
@@ -104,7 +104,7 @@ export default function flowsReducer(
             view,
             _viewIndex,
             sort,
-            orderReversed: state.orderReversed,
+            orderReversed,
             selected,
             selectedIds,
             highlightedIds,
@@ -114,7 +114,7 @@ export default function flowsReducer(
         if (state._listIndex.has(flow.id)) {
             return state; // WebSocket/HTTP race
         }
-        const { sort, selected, selectedIds } = state;
+        const { sort, selected, selectedIds, orderReversed } = state;
         let { view, _viewIndex, highlightedIds } = state;
         // Update list
         const _listIndex = new Map(state._listIndex);
@@ -132,7 +132,7 @@ export default function flowsReducer(
                 _viewIndex,
                 flow,
                 sort,
-                state.orderReversed,
+                orderReversed,
             ));
         }
         // Update highlight
@@ -148,14 +148,14 @@ export default function flowsReducer(
             view,
             _viewIndex,
             sort,
-            orderReversed: state.orderReversed,
+            orderReversed,
             selected,
             selectedIds,
             highlightedIds,
         };
     } else if (FLOWS_UPDATE.match(action)) {
         const { flow, matching_filters } = action.payload;
-        const { _listIndex, sort, selectedIds } = state;
+        const { _listIndex, sort, selectedIds, orderReversed } = state;
         let { view, _viewIndex, selected, highlightedIds } = state;
         // Update list
         const listPos = state._listIndex.get(flow.id);
@@ -219,14 +219,14 @@ export default function flowsReducer(
             view,
             _viewIndex,
             sort,
-            orderReversed: state.orderReversed,
+            orderReversed,
             selected,
             selectedIds,
             highlightedIds,
         };
     } else if (FLOWS_REMOVE.match(action)) {
         const flow_id = action.payload;
-        const { sort } = state;
+        const { sort, orderReversed } = state;
         let { view, _viewIndex, selected, selectedIds } = state;
         const listPos = state._listIndex.get(flow_id);
         if (listPos === undefined) {
@@ -267,7 +267,7 @@ export default function flowsReducer(
             view,
             _viewIndex,
             sort,
-            orderReversed: state.orderReversed,
+            orderReversed,
             selected,
             selectedIds,
             highlightedIds,
