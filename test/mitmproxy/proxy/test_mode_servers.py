@@ -317,6 +317,32 @@ async def test_wireguard_port_conflict(tmp_path, monkeypatch):
             await inst.start()
 
 
+async def test_wireguard_unrelated_runtime_error(tmp_path, monkeypatch):
+    """RuntimeError from mitmproxy_rs that is not a bind failure is re-raised unchanged."""
+    import json
+
+    conf_file = tmp_path / "wireguard.conf"
+    conf_file.write_text(
+        json.dumps(
+            {
+                "server_key": mitmproxy_rs.wireguard.genkey(),
+                "client_key": mitmproxy_rs.wireguard.genkey(),
+            }
+        )
+    )
+
+    monkeypatch.setattr(
+        mitmproxy_rs.wireguard,
+        "start_wireguard_server",
+        AsyncMock(side_effect=RuntimeError("some unexpected wireguard error")),
+    )
+
+    with taddons.context(Proxyserver()):
+        inst = WireGuardServerInstance.make(f"wireguard:{conf_file}@51820", MagicMock())
+        with pytest.raises(RuntimeError, match="some unexpected wireguard error"):
+            await inst.start()
+
+
 async def test_tcp_start_error():
     manager = MagicMock()
 
