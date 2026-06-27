@@ -381,14 +381,24 @@ class WireGuardServerInstance(AsyncioServerInstance[mode_specs.WireGuardMode]):
     async def start_udp_based_server(
         self, host, port
     ) -> mitmproxy_rs.wireguard.WireGuardServer:
-        return await mitmproxy_rs.wireguard.start_wireguard_server(
-            host,
-            port,
-            self.server_key,
-            [self.pubkey],
-            self.handle_stream,
-            self.handle_stream,
-        )
+        try:
+            return await mitmproxy_rs.wireguard.start_wireguard_server(
+                host,
+                port,
+                self.server_key,
+                [self.pubkey],
+                self.handle_stream,
+                self.handle_stream,
+            )
+        except RuntimeError as e:
+            # mitmproxy_rs raises RuntimeError (from Rust/PyO3) instead of OSError
+            # when the UDP port is already in use. Convert it so that the caller's
+            # OSError handler (which formats a helpful "port already in use" message)
+            # fires correctly.
+            msg = str(e).lower()
+            if "address already in use" in msg or "failed to bind" in msg:
+                raise OSError(errno.EADDRINUSE, str(e)) from e
+            raise
 
     def client_conf(self) -> str | None:
         if not self._servers:

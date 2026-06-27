@@ -291,6 +291,32 @@ async def test_wireguard_invalid_conf(tmp_path):
         assert "Invalid configuration file" in repr(inst.last_exception)
 
 
+async def test_wireguard_port_conflict(tmp_path, monkeypatch):
+    """RuntimeError from mitmproxy_rs on port conflict is converted to OSError with a helpful message."""
+    import json
+
+    conf_file = tmp_path / "wireguard.conf"
+    conf_file.write_text(
+        json.dumps(
+            {
+                "server_key": mitmproxy_rs.wireguard.genkey(),
+                "client_key": mitmproxy_rs.wireguard.genkey(),
+            }
+        )
+    )
+
+    monkeypatch.setattr(
+        mitmproxy_rs.wireguard,
+        "start_wireguard_server",
+        AsyncMock(side_effect=RuntimeError("Address already in use (os error 98)")),
+    )
+
+    with taddons.context(Proxyserver()):
+        inst = WireGuardServerInstance.make(f"wireguard:{conf_file}@51820", MagicMock())
+        with pytest.raises(OSError, match="51820"):
+            await inst.start()
+
+
 async def test_tcp_start_error():
     manager = MagicMock()
 
