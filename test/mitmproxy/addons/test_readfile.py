@@ -119,3 +119,19 @@ class TestReadFileStdin:
                 rf.running()
                 await asyncio.sleep(0)
                 mck.assert_awaited()
+
+
+class TestReadFileCompressed:
+    async def test_load_gzip(self, tmp_path):
+        import gzip
+
+        rf = readfile.ReadFile()
+        with taddons.context(rf):
+            p = tmp_path / "flows.gz"
+            with gzip.open(str(p), "wb") as f:
+                w = mitmproxy.io.FlowWriter(f)
+                w.add(tflow.tflow(resp=True))
+
+            with mock.patch("mitmproxy.master.Master.load_flow") as mck:
+                await rf.load_flows_from_path(str(p))
+                mck.assert_awaited_once()

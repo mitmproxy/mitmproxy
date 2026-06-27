@@ -1,4 +1,7 @@
+import bz2
+import gzip
 import json
+import lzma
 import os
 from collections.abc import Iterable
 from io import BufferedReader
@@ -13,6 +16,28 @@ from mitmproxy import flowfilter
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 from mitmproxy.io.har import request_to_flow
+
+# Magic bytes for compressed formats
+_GZIP_MAGIC = b"\x1f\x8b"
+_BZ2_MAGIC = b"BZh"
+_XZ_MAGIC = b"\xfd7zXZ\x00"
+
+
+def open_flow_file(path: str) -> BinaryIO:
+    """
+    Open a flow file for reading, auto-detecting compression from magic bytes.
+    """
+    with open(path, "rb") as raw:
+        header = raw.read(6)
+
+    if header[:2] == _GZIP_MAGIC:
+        return cast(BinaryIO, gzip.open(path, "rb"))
+    elif header[:3] == _BZ2_MAGIC:
+        return cast(BinaryIO, bz2.open(path, "rb"))
+    elif header[:6] == _XZ_MAGIC:
+        return cast(BinaryIO, lzma.open(path, "rb"))
+    else:
+        return open(path, "rb")
 
 
 class FlowWriter:
@@ -44,7 +69,12 @@ class FlowReader:
         """
         Yields Flow objects from the dump.
         """
+        try:
+            yield from self._stream_inner()
+        except (EOFError, OSError, lzma.LZMAError) as e:
+            raise exceptions.FlowReadException(f"Invalid data format: {e}") from e
 
+    def _stream_inner(self) -> Iterable[flow.Flow]:
         if self.peek(4).startswith(
             b"\xef\xbb\xbf{"
         ):  # skip BOM, usually added by Fiddler
@@ -107,8 +137,10 @@ def read_flows_from_paths(paths) -> list[flow.Flow]:
         flows: list[flow.Flow] = []
         for path in paths:
             path = os.path.expanduser(path)
-            with open(path, "rb") as f:
+            with open_flow_file(path) as f:
                 flows.extend(FlowReader(f).stream())
     except OSError as e:
         raise exceptions.FlowReadException(e.strerror)
+    except (EOFError, lzma.LZMAError) as e:
+        raise exceptions.FlowReadException(f"Error reading compressed flow file: {e}")
     return flows
