@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Fix a crash when loading an addon script that defines a `@dataclass`. Script
+  modules are now registered in `sys.modules` before execution, as required by
+  the standard library's import machinery.
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.

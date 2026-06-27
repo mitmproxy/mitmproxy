@@ -35,7 +35,18 @@ def load_script(path: str) -> types.ModuleType | None:
         spec = importlib.util.spec_from_loader(fullname, loader=loader)
         assert spec
         m = importlib.util.module_from_spec(spec)
-        loader.exec_module(m)
+        # Register the module in sys.modules before executing it, as recommended
+        # by the importlib docs. Parts of the standard library (e.g. dataclasses,
+        # pickling, typing.get_type_hints) look the defining module up in
+        # sys.modules by its __module__ name while the module body runs. Without
+        # this, a script that defines a @dataclass fails to load.
+        sys.modules[fullname] = m
+        try:
+            loader.exec_module(m)
+        except BaseException:
+            # Don't leave a half-initialized module behind on failure.
+            sys.modules.pop(fullname, None)
+            raise
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
         return m
