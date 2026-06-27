@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- WireGuard mode now shows a helpful "port already in use" error with a port
+  hint when the UDP port is occupied, instead of the raw Rust error message.
+  ([#8291](https://github.com/mitmproxy/mitmproxy/pull/8291), @PhinehasNarh)
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
