@@ -3,6 +3,8 @@ import { defaultState } from "../../../ducks/flows";
 import { testState, TFlow, TStore } from "../tutils";
 import FlowColumns from "../../../components/FlowTable/FlowColumns";
 import { FilterName } from "../../../ducks/ui/filter";
+import { OPTIONS_RECEIVE, OPTIONS_UPDATE } from "../../../ducks/options";
+import type { OptionsStateWithMeta } from "../../../ducks/options";
 
 describe("flow reducer", () => {
     let s;
@@ -376,6 +378,74 @@ describe("flow reducer", () => {
                 flowActions.setSort({ column: undefined, desc: false }),
             );
             expect(s.view).toEqual(state.view);
+        });
+    });
+
+    describe("view_order_reversed (#5520)", () => {
+        const reversedOption = (value: boolean) =>
+            ({
+                view_order_reversed: { value },
+            }) as unknown as OptionsStateWithMeta;
+        const reversedOn = reversedOption(true);
+        const reversedOff = reversedOption(false);
+
+        const addFlows = (s, ids: string[]) => {
+            for (const id of ids) {
+                s = reduceFlows(
+                    s,
+                    flowActions.FLOWS_ADD({
+                        flow: { ...TFlow(), id },
+                        matching_filters: {},
+                    }),
+                );
+            }
+            return s;
+        };
+
+        it("tracks the option via OPTIONS_RECEIVE and OPTIONS_UPDATE", () => {
+            let s = reduceFlows(undefined, OPTIONS_RECEIVE(reversedOn));
+            expect(s.orderReversed).toBe(true);
+            s = reduceFlows(s, OPTIONS_UPDATE(reversedOff));
+            expect(s.orderReversed).toBe(false);
+        });
+
+        it("ignores option payloads without view_order_reversed", () => {
+            const s = reduceFlows(state, OPTIONS_UPDATE({}));
+            expect(s.orderReversed).toBe(state.orderReversed);
+        });
+
+        it("prepends live flows when reversed and no column sort is active", () => {
+            let s = reduceFlows(undefined, OPTIONS_RECEIVE(reversedOn));
+            s = addFlows(s, ["0", "1", "2"]);
+            expect(s.view.map((f) => f.id)).toEqual(["2", "1", "0"]);
+        });
+
+        it("appends live flows when not reversed", () => {
+            let s = reduceFlows(undefined, OPTIONS_RECEIVE(reversedOff));
+            s = addFlows(s, ["0", "1", "2"]);
+            expect(s.view.map((f) => f.id)).toEqual(["0", "1", "2"]);
+        });
+
+        it("lets an active column sort take precedence over the option", () => {
+            let s = reduceFlows(undefined, OPTIONS_RECEIVE(reversedOn));
+            s = reduceFlows(
+                s,
+                flowActions.setSort({ column: "comment", desc: false }),
+            );
+            for (const [id, comment] of [
+                ["x", "c"],
+                ["y", "a"],
+                ["z", "b"],
+            ]) {
+                s = reduceFlows(
+                    s,
+                    flowActions.FLOWS_ADD({
+                        flow: { ...TFlow(), id, comment },
+                        matching_filters: {},
+                    }),
+                );
+            }
+            expect(s.view.map((f) => f.id)).toEqual(["y", "z", "x"]);
         });
     });
 });
