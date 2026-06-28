@@ -11,7 +11,6 @@ from typing import Any
 from typing import BinaryIO
 
 import certifi
-import OpenSSL
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurve
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurveOID
 from cryptography.hazmat.primitives.asymmetric.ec import get_curve_for_oid
@@ -201,6 +200,7 @@ def create_proxy_server_context(
     ca_pemfile: str | None,
     client_cert: str | None,
     legacy_server_connect: bool,
+    use_windows_cert_store: bool = False,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=method,
@@ -211,14 +211,42 @@ def create_proxy_server_context(
     )
     context.set_verify(verify.value, None)
 
-    if ca_path is None and ca_pemfile is None:
+    # If explicitly configured CAs are provided, use them
+    if ca_path is not None or ca_pemfile is not None:
+        try:
+            context.load_verify_locations(ca_pemfile, ca_path)
+        except SSL.Error as e:
+            raise RuntimeError(
+                f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=})."
+            ) from e
+    # If Windows cert store should be used, load default system paths (including Windows cert store in OpenSSL 3.2+)
+    elif use_windows_cert_store:
+        try:
+            # Load default system paths which includes Windows certificate store on OpenSSL 3.2+ Windows builds
+            ok = SSL._lib.SSL_CTX_set_default_verify_paths(context._context)  # type: ignore
+            if ok != 1:
+                # Fallback to certifi if set_default_verify_paths fails
+                ca_pemfile = certifi.where()
+                context.load_verify_locations(ca_pemfile, None)
+        except (AttributeError, SSL.Error):
+            # Fallback if the function is not available or fails
+            ca_pemfile = certifi.where()
+            try:
+                context.load_verify_locations(ca_pemfile, None)
+            except SSL.Error as e2:
+                raise RuntimeError(
+                    f"Cannot load trusted certificates ({ca_pemfile=}). "
+                    "Failed to use Windows certificate store and fallback."
+                ) from e2
+    # Otherwise, use certifi as default
+    else:
         ca_pemfile = certifi.where()
-    try:
-        context.load_verify_locations(ca_pemfile, ca_path)
-    except SSL.Error as e:
-        raise RuntimeError(
-            f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=})."
-        ) from e
+        try:
+            context.load_verify_locations(ca_pemfile, None)
+        except SSL.Error as e:
+            raise RuntimeError(
+                f"Cannot load trusted certificates ({ca_pemfile=})."
+            ) from e
 
     # Client Certs
     if client_cert:
@@ -292,13 +320,12 @@ def create_client_proxy_context(
     return context
 
 
-def accept_all(
-    conn_: SSL.Connection,
-    x509: OpenSSL.crypto.X509,
-    errno: int,
-    err_depth: int,
-    is_cert_verified: int,
-) -> bool:
+def accept_all(conn_: SSL.Connection, *args) -> bool:
+    """
+    Certificate verify callback that accepts any number of positional
+    arguments from different OpenSSL versions and always returns True to
+    bypass verification errors when requested by configuration.
+    """
     # Return true to prevent cert verification error
     return True
 

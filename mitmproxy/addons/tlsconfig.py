@@ -340,6 +340,7 @@ class TlsConfig:
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
             legacy_server_connect=ctx.options.ssl_insecure,
+            use_windows_cert_store=ctx.options.ssl_use_windows_cert_store,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)

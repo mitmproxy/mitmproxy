@@ -578,3 +578,47 @@ def test_default_ciphers():
         tlsconfig._default_ciphers(net_tls.Version.UNBOUNDED)
         == tlsconfig._DEFAULT_CIPHERS_WITH_SECLEVEL_0
     )
+
+
+class TestWindowsCertStoreOption:
+    """Test the ssl_use_windows_cert_store option."""
+
+    def test_ssl_use_windows_cert_store_option_exists(self):
+        """Test that ssl_use_windows_cert_store option can be configured."""
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            # The option should be configurable
+            tctx.configure(ta, ssl_use_windows_cert_store=True)
+            assert tctx.options.ssl_use_windows_cert_store is True
+
+            tctx.configure(ta, ssl_use_windows_cert_store=False)
+            assert tctx.options.ssl_use_windows_cert_store is False
+
+    def test_ssl_use_windows_cert_store_default_true(self):
+        """Test that ssl_use_windows_cert_store defaults to True."""
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            # Default should be True
+            assert tctx.options.ssl_use_windows_cert_store is True
+
+    def test_windows_cert_store_with_tls_handshake(self, tdata):
+        """Test that ssl_use_windows_cert_store doesn't break TLS handshake."""
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = _ctx(tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
+
+            # Configure with trusted CA
+            tctx.configure(
+                ta,
+                ssl_use_windows_cert_store=True,
+                ssl_verify_upstream_trusted_ca=tdata.path(
+                    "mitmproxy/net/data/verificationcerts/trusted-root.crt"
+                ),
+            )
+
+            tls_start = tls.TlsData(ctx.server, context=ctx)
+            ta.tls_start_server(tls_start)
+            assert tls_start.ssl_conn is not None
+
+
