@@ -21,6 +21,8 @@
   ([#8232](https://github.com/mitmproxy/mitmproxy/pull/8232), @ariel42)
 - mitmweb: Fix correctly displaying multiple blank lines in content renderer.
   ([#8248](https://github.com/mitmproxy/mitmproxy/pull/8248), @vincentdehaan)
+- Guard QUIC datagram flushing when no network path is available.
+  ([#8277](https://github.com/mitmproxy/mitmproxy/pull/8277), @lups2000)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
