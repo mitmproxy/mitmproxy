@@ -48,6 +48,16 @@ def decode(
         return None
     encoding = encoding.lower()
 
+    # Content-Encoding can technically be a list like "sdch, gzip", so if we
+    # see commas we just peel off one codec at a time. decode order is the
+    # reverse of how it was applied, so handle the last token first.
+    # https://github.com/mitmproxy/mitmproxy/issues/2246
+    if "," in encoding:
+        encodings = [e.strip() for e in encoding.split(",") if e.strip()]
+        for e in reversed(encodings):
+            encoded = decode(encoded, e, errors)
+        return encoded
+
     global _cache
     cached = (
         isinstance(encoded, bytes)
@@ -61,7 +71,12 @@ def decode(
         try:
             decoded = custom_decode[encoding](encoded)
         except KeyError:
-            decoded = codecs.decode(encoded, encoding, errors)  # type: ignore
+            # sdch is a thing browsers used to advertise but we never actually
+            # decode it, so treat it like identity instead of choking on it.
+            if encoding == "sdch":
+                decoded = encoded
+            else:
+                decoded = codecs.decode(encoded, encoding, errors)  # type: ignore
         if encoding in ("gzip", "deflate", "deflateraw", "br", "zstd"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return decoded
@@ -106,6 +121,14 @@ def encode(
         return None
     encoding = encoding.lower()
 
+    # same deal as decode for a comma separated Content-Encoding, just in the
+    # forward order this time.
+    if "," in encoding:
+        encodings = [e.strip() for e in encoding.split(",") if e.strip()]
+        for e in encodings:
+            decoded = encode(decoded, e, errors)
+        return decoded
+
     global _cache
     cached = (
         isinstance(decoded, bytes)
@@ -119,7 +142,10 @@ def encode(
         try:
             encoded = custom_encode[encoding](decoded)
         except KeyError:
-            encoded = codecs.encode(decoded, encoding, errors)  # type: ignore
+            if encoding == "sdch":
+                encoded = decoded
+            else:
+                encoded = codecs.encode(decoded, encoding, errors)  # type: ignore
         if encoding in ("gzip", "deflate", "deflateraw", "br", "zstd"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return encoded
