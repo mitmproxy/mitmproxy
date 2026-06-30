@@ -21,6 +21,8 @@
   ([#8232](https://github.com/mitmproxy/mitmproxy/pull/8232), @ariel42)
 - mitmweb: Fix correctly displaying multiple blank lines in content renderer.
   ([#8248](https://github.com/mitmproxy/mitmproxy/pull/8248), @vincentdehaan)
+- Docker image now comes with `iproute2` and WireGuard tools pre-installed.
+  ([#8299](https://github.com/mitmproxy/mitmproxy/pull/8299), @ouillie)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
