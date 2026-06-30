@@ -32,6 +32,8 @@
   ([#8248](https://github.com/mitmproxy/mitmproxy/pull/8248), @vincentdehaan)
 - Fix QUIC connections never starting if --allow-hosts or --ignore-hosts is set.
   ([#8295](https://github.com/mitmproxy/mitmproxy/pull/8295), @tbodt)
+- Correctly read the SNI hostname from fragmented QUIC client hellos.
+  ([#8296](https://github.com/mitmproxy/mitmproxy/pull/8296), @tbodt)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
