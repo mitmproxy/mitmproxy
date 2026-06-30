@@ -36,6 +36,10 @@
 - Fix `IndexError` in `is_mostly_bin` when exporting flows to HAR with payloads
   that have a UTF-8 continuation byte at the 100-byte cutoff.
   ([#8196](https://github.com/mitmproxy/mitmproxy/pull/8196), @juliosuas)
+- Replace generic `sys.exit(1)` calls with categorised exit codes from
+  `mitmproxy.utils.exit_codes` so a parent process can distinguish startup
+  errors, missing TTY, invalid args/options, and I/O failures.
+  ([#5696](https://github.com/mitmproxy/mitmproxy/issues/5696))
 
 ## 12 April 2026: mitmproxy 12.2.2
 
