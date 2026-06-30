@@ -7,7 +7,7 @@ FROM python:3.14-slim-trixie
 
 RUN useradd -mU mitmproxy
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gosu nano \
+    && apt-get install -y --no-install-recommends gosu iproute2 nano wireguard-tools \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /home/mitmproxy/.mitmproxy \
