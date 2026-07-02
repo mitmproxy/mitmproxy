@@ -46,6 +46,34 @@ async def test_styling(monkeypatch) -> None:
     t.uninstall()
 
 
+async def test_force_color() -> None:
+    """termlog_colors=always emits ANSI codes even on a non-TTY (StringIO)."""
+    f = io.StringIO()
+    t = termlog.TermLog(out=f)
+    with taddons.context(t) as tctx:
+        tctx.configure(t, termlog_colors="always")
+        logging.warning("hello")
+
+    assert "\x1b[33mhello\x1b[0m" in f.getvalue()
+    t.uninstall()
+
+
+async def test_disable_color(monkeypatch) -> None:
+    """termlog_colors=never disables ANSI codes even when isatty() is True."""
+    monkeypatch.setattr(vt_codes, "_ensure_supported_native", lambda _: True)
+
+    f = io.StringIO()
+    t = termlog.TermLog(out=f)
+    with taddons.context(t) as tctx:
+        tctx.configure(t, termlog_colors="never")
+        logging.warning("hello")
+
+    out = f.getvalue()
+    assert "hello" in out
+    assert "\x1b[" not in out  # no ANSI escapes
+    t.uninstall()
+
+
 async def test_cannot_print(monkeypatch) -> None:
     def _raise(*args, **kwargs):
         raise OSError
