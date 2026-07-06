@@ -59,14 +59,13 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [macOS](https://support.apple.com/guide/keychain-access/add-certificates-to-a-keychain-kyca2431/mac)
 - [macOS (automated)](https://www.dssw.co.uk/reference/security.html):
   `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
-- [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
+- [Ubuntu/Debian](https://ubuntu.com/server/docs/security/certificates)
 - [Fedora](https://docs.fedoraproject.org/en-US/quick-docs/using-shared-system-certificates/#proc_adding-new-certificates)
 - [Arch Linux](https://wiki.archlinux.org/title/Transport_Layer_Security#Add_a_certificate_to_a_trust_store)
-- [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
-- [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
-- [iOS](http://jasdev.me/intercepting-ios-traffic)  
-  On recent iOS versions you also need to enable full trust for the mitmproxy
-  root certificate:
+- [Mozilla Firefox](https://support.mozilla.org/en-US/kb/setting-certificate-authorities)
+- [Chrome on Linux](https://chromium.googlesource.com/chromium/src/+/main/net/data/ssl/chrome_root_store/README.md)
+- iOS: After installing the certificate, on recent iOS versions you also need to
+  enable full trust for the mitmproxy root certificate:
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
        the mitmproxy certificate.
@@ -75,11 +74,14 @@ documentation for some common platforms. The mitmproxy CA cert is located in
   2. Open Safari on the emulator and visit `mitm.it` to download the iOS certificate.
   3. Navigate to Settings > General > VPN & Device Management to install the certificate.
   4. Go to Settings > About > Certificate Trust Settings and enable trust for the installed root certificate.
-- [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html):  
+- [Java](https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html):
   `sudo keytool -importcert -alias mitmproxy -storepass changeit -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -file ~/.mitmproxy/mitmproxy-ca-cert.pem`
-- [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
-- [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
-- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx):  
+- [Android](https://developer.android.com/training/articles/security-config#CustomTrust):
+  Note: On Android 7.0 and above, apps do not trust user-installed CA certificates
+  by default. You need to configure your app's network security config to trust
+  the mitmproxy certificate.
+- [Windows](https://learn.microsoft.com/en-us/windows-server/identity/ad-cs/deploy/install-the-certification-authority)
+- [Windows (automated)](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil):
   `certutil -addstore root mitmproxy-ca-cert.cer`
 
 ### Upstream Certificate Sniffing
@@ -95,9 +97,11 @@ Upstream cert sniffing is on by default, and can optionally be disabled by turni
 ### Certificate Pinning
 
 Some applications employ [Certificate
-Pinning](https://en.wikipedia.org/wiki/HTTP_Public_Key_Pinning) to prevent
+Pinning](https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning) to prevent
 man-in-the-middle attacks. This means that **mitmproxy's**
 certificates will not be accepted by these applications without modifying them.
+Note that HTTP Public Key Pinning (HPKP), a web-standard pinning mechanism, has been
+deprecated by all major browsers, but application-level pinning remains common in mobile apps.
 If the contents of these connections are not important, it is recommended to use
 the [ignore_hosts]({{< relref "/howto/ignore-domains">}}) feature to prevent
 **mitmproxy** from intercepting traffic to these specific

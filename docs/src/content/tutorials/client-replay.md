@@ -16,12 +16,12 @@ transparent proxy.
 
 I tend to automate this kind of thing at the first opportunity, on the theory
 that time spent now will be more than made up in the long run. In this case, I
-might use [Firebug](https://getfirebug.com/) to ferret out the form post
-parameters and target URL, then fire up an editor to write a little script using
-Python's [urllib](https://docs.python.org/library/urllib.html) to simulate a
-submission. That's a lot of futzing about. With mitmproxy we can do the job in
-literally 30 seconds, without having to worry about any of the details. Here's
-how.
+might use my browser's built-in [developer tools](https://developer.mozilla.org/docs/Tools)
+to ferret out the form post parameters and target URL, then fire up an editor to
+write a little script using Python's [urllib](https://docs.python.org/library/urllib.html)
+to simulate a submission. That's a lot of futzing about. With mitmproxy we can
+do the job in literally 30 seconds, without having to worry about any of the
+details. Here's how.
 
 ## 1. Run mitmdump to record our HTTP conversation to a file.
 
@@ -48,9 +48,9 @@ mitmdump -C wireless-login
 ## Embellishments
 
 We're really done at this point, but there are a couple of embellishments we
-could make if we wanted. I use [wicd](https://launchpad.net/wicd) to
-automatically join wireless networks I frequent, and it lets me specify a
-command to run after connecting. I used the client replay command above and
+could make if we wanted. For example, you could use NetworkManager's dispatcher
+scripts (on modern Linux systems) to automatically run a command after connecting
+to a wireless network. I used the client replay command above and
 voila\! - totally hands-free wireless network startup.
 
 We might also want to prune requests that download CSS, JS, images and so forth.
@@ -64,5 +64,5 @@ mitmproxy -r wireless-login
 
 We can now go through and manually delete (using the <span
 data-role="kbd">d</span> keyboard shortcut) everything we want to trim. When
-we're done, we use <span data-role="kbd">w</span> to save the conversation back
-to the file.
+we're done, we use <span data-role="kbd">w</span> and enter a file path to save
+the flows to a file.
