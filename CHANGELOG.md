@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Fix an infinite update cycle in the event log by only recomputing the virtual-scroll window in `componentDidUpdate` when the event list or `rowHeight` actually change.
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.

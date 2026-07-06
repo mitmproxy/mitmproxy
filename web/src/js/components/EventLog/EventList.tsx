@@ -49,14 +49,29 @@ export default class EventLogList extends Component<
     }
 
     componentDidUpdate(
-        _prevProps: EventLogListProps,
+        prevProps: EventLogListProps,
         _prevState: EventLogListState,
         snapshot: boolean,
     ) {
         if (snapshot) {
             autoscroll.adjustScrollTop(this.viewport);
         }
-        this.onViewportUpdate();
+        // Only recompute the virtual-scroll window when the event list or the
+        // row height actually changed. Calling onViewportUpdate on every
+        // update (including the setState it produces itself) let
+        // setState -> componentDidUpdate -> setState spin without converging
+        // once measured row heights differed from the assumed rowHeight,
+        // surfacing as "Maximum update depth exceeded" while scrolling the
+        // event log. The same fix was applied to FlowTable in #8233. The
+        // other call sites still drive updates as needed: componentDidMount,
+        // the resize listener, the viewport onScroll, and setHeight when a
+        // row is first measured.
+        if (
+            prevProps.events !== this.props.events ||
+            prevProps.rowHeight !== this.props.rowHeight
+        ) {
+            this.onViewportUpdate();
+        }
     }
 
     onViewportUpdate() {
