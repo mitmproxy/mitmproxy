@@ -256,7 +256,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 try:
                     await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
                 except Exception:
-                    self.log(f"ServerConnectedHook failed, closing connection", logging.ERROR, exc_info=True)
+                    self.log(
+                        f"ServerConnectedHook failed, closing connection",
+                        logging.ERROR,
+                        exc_info=True,
+                    )
                     writer.close()
                     self.transports.pop(command.connection, None)
                     raise
