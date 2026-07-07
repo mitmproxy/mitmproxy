@@ -136,34 +136,35 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             client=self.client.peername,
         )
 
-        self.log("client connect")
-        await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
-        if self.client.error:
-            self.log("client kill connection")
-            writer = self.transports.pop(self.client).writer
-            assert writer
-            writer.close()
-        else:
-            await self.server_event(events.Start())
-            handler = asyncio_utils.create_task(
-                self.handle_connection(self.client),
-                name=f"client connection handler",
-                keep_ref=False,
-                client=self.client.peername,
-            )
-            self.transports[self.client].handler = handler
-            await asyncio.wait([handler])
-            if not handler.cancelled() and (e := handler.exception()):
-                self.log(
-                    f"connection handler has crashed: {e}",
-                    logging.ERROR,
-                    exc_info=(type(e), e, e.__traceback__),
+        try:
+            self.log("client connect")
+            await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
+            if self.client.error:
+                self.log("client kill connection")
+                writer = self.transports.pop(self.client).writer
+                assert writer
+                writer.close()
+            else:
+                await self.server_event(events.Start())
+                handler = asyncio_utils.create_task(
+                    self.handle_connection(self.client),
+                    name=f"client connection handler",
+                    keep_ref=False,
+                    client=self.client.peername,
                 )
-
-        watch.cancel()
-        while self.wakeup_timer:
-            timer = self.wakeup_timer.pop()
-            timer.cancel()
+                self.transports[self.client].handler = handler
+                await asyncio.wait([handler])
+                if not handler.cancelled() and (e := handler.exception()):
+                    self.log(
+                        f"connection handler has crashed: {e}",
+                        logging.ERROR,
+                        exc_info=(type(e), e, e.__traceback__),
+                    )
+        finally:
+            watch.cancel()
+            while self.wakeup_timer:
+                timer = self.wakeup_timer.pop()
+                timer.cancel()
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
@@ -252,7 +253,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 else:
                     addr = human.format_address(command.connection.address)
                 self.log(f"server connect {addr}")
-                await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
+                try:
+                    await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
+                except Exception:
+                    self.log(f"ServerConnectedHook failed, closing connection", logging.ERROR, exc_info=True)
+                    writer.close()
+                    self.transports.pop(command.connection, None)
+                    raise
                 await self.server_event(events.OpenConnectionCompleted(command, None))
 
                 try:
