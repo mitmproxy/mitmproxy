@@ -197,3 +197,26 @@ def test_disk_full(tmp_path, monkeypatch, capsys):
             sa.response(f)
 
         assert "Error while writing" in capsys.readouterr().err
+
+
+def test_filtered_flow_writer_init_failure(tmp_path, monkeypatch):
+    """Test that file handle is closed when FilteredFlowWriter initialization fails."""
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        tctx.configure(sa, save_stream_file=str(tmp_path / "foo.txt"))
+
+        f1 = tflow.tflow(resp=True)
+        sa.request(f1)
+        sa.response(f1)
+
+        def failing_init(self, *args, **kwargs):
+            raise RuntimeError("Simulated initialization failure")
+
+        monkeypatch.setattr(io.FilteredFlowWriter, "__init__", failing_init)
+
+        sa.current_path = str(tmp_path / "different.txt")
+
+        with pytest.raises(RuntimeError, match="Simulated initialization failure"):
+            sa.maybe_rotate_to_new_file()
+
+        assert sa.stream is None
