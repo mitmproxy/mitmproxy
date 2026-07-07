@@ -132,7 +132,7 @@ async def test_client_connected_hook_failure_cleanup(monkeypatch):
 
     monkeypatch.setattr(
         "mitmproxy.proxy.server.asyncio_utils.create_task",
-        lambda coro, *args, **kwargs: (coro.close(), watch_task)[1]
+        lambda coro, *args, **kwargs: (coro.close(), watch_task)[1],
     )
 
     with pytest.raises(RuntimeError, match="ClientConnectedHook failed"):
@@ -157,14 +157,14 @@ async def test_server_connected_hook_failure_cleanup(monkeypatch):
     monkeypatch.setattr(
         asyncio,
         "open_connection",
-        mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock()))
+        mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock())),
     )
 
     writer_mock = mock.MagicMock()
     monkeypatch.setattr(
         asyncio,
         "open_connection",
-        mock.AsyncMock(return_value=(mock.MagicMock(), writer_mock))
+        mock.AsyncMock(return_value=(mock.MagicMock(), writer_mock)),
     )
 
     conn = Server(address=("example.com", 8080))
