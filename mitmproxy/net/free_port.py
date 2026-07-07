@@ -15,11 +15,11 @@ def get_free_port() -> int:
             tcp.bind(("", 0))
             port: int = tcp.getsockname()[1]
             udp.bind(("", port))
-            udp.close()
             return port
         except OSError:
             pass
         finally:
             tcp.close()
+            udp.close()
 
     return 0
