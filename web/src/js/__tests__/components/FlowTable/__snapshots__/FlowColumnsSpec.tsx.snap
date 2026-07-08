@@ -237,7 +237,6 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-triangle-alert icon icon-warning float-right"
             fill="none"
             height="16"
@@ -258,6 +257,9 @@ exports[`Flowcolumns Components should render pathColumn 1`] = `
             <path
               d="M12 17h.01"
             />
+            <title>
+              error
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -279,7 +281,6 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-pause icon icon-pause float-right"
             fill="none"
             height="16"
@@ -305,9 +306,11 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
               x="5"
               y="3"
             />
+            <title>
+              Intercepted — waiting to resume
+            </title>
           </svg>
           <svg
-            aria-hidden="true"
             class="lucide lucide-x icon icon-close float-right"
             fill="none"
             height="16"
@@ -325,6 +328,9 @@ exports[`Flowcolumns Components should render pathColumn 2`] = `
             <path
               d="m6 6 12 12"
             />
+            <title>
+              Connection killed
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -395,7 +401,11 @@ exports[`should render columns: method 1`] = `
         <td
           class="col-method"
         >
-          WSS
+          <span
+            class="method-badge"
+          >
+            WSS
+          </span>
         </td>
       </tr>
     </tbody>
@@ -412,7 +422,6 @@ exports[`should render columns: path 1`] = `
           class="col-path"
         >
           <svg
-            aria-hidden="true"
             class="lucide lucide-triangle-alert icon icon-warning float-right"
             fill="none"
             height="16"
@@ -433,6 +442,9 @@ exports[`should render columns: path 1`] = `
             <path
               d="M12 17h.01"
             />
+            <title>
+              error
+            </title>
           </svg>
           <span
             class="marker float-right"
@@ -483,7 +495,11 @@ exports[`should render columns: status 1`] = `
         <td
           class="col-status"
         >
-          200
+          <span
+            class="status-badge status-2xx"
+          >
+            200
+          </span>
         </td>
       </tr>
     </tbody>
@@ -530,6 +546,7 @@ exports[`should render columns: tls 1`] = `
       <tr>
         <td
           class="col-tls col-tls-https"
+          title="TLS encrypted"
         />
       </tr>
     </tbody>

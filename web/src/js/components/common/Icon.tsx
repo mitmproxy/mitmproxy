@@ -102,6 +102,7 @@ type IconProps = {
     className?: string;
     onClick?: React.MouseEventHandler<SVGSVGElement>;
     "aria-label"?: string;
+    title?: string;
 };
 
 export default function Icon({
@@ -111,9 +112,10 @@ export default function Icon({
     className,
     onClick,
     "aria-label": ariaLabel,
+    title,
 }: IconProps) {
     const SvgIcon = iconsMap[name];
-    const decorative = !ariaLabel;
+    const decorative = !ariaLabel && !title;
 
     return (
         <SvgIcon
@@ -123,6 +125,8 @@ export default function Icon({
             onClick={onClick}
             aria-label={ariaLabel}
             aria-hidden={decorative || undefined}
-        />
+        >
+            {title ? <title>{title}</title> : null}
+        </SvgIcon>
     );
 }

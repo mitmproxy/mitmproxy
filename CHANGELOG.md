@@ -19,6 +19,8 @@
 - mitmweb: Add a dark theme, selectable via the new `web_theme` option (`system`, `dark`, or `light`).
   `system` follows the operating system's color-scheme preference.
   ([#8317](https://github.com/mitmproxy/mitmproxy/pull/8317), @sleeyax)
+- mitmweb: Show colored status-code badges and method badges in the flow table, and add hover
+  tooltips to the TLS, replay, intercept, and error indicators.
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
