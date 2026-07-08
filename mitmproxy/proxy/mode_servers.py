@@ -253,9 +253,10 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
         assert not self._servers
         host = self.mode.listen_host(ctx.options.listen_host)
         port = self.mode.listen_port(ctx.options.listen_port)
+        uds = self.mode.listen_uds(ctx.options.listen_uds)
         assert port is not None
         try:
-            self._servers = await self.listen(host, port)
+            self._servers = await self.listen(host, port, uds)
         except OSError as e:
             message = f"{self.mode.description} failed to listen on {host or '*'}:{port} with {e}"
             if e.errno == errno.EADDRINUSE and self.mode.custom_listen_port is None:
@@ -277,7 +278,7 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             self._servers = []
 
     async def listen(
-        self, host: str, port: int
+        self, host: str, port: int, uds: str | None = None
     ) -> list[
         asyncio.Server
         | mitmproxy_rs.udp.UdpServer
@@ -303,9 +304,11 @@ class AsyncioServerInstance(ServerInstance[M], metaclass=ABCMeta):
             | mitmproxy_rs.udp.UdpServer
             | mitmproxy_rs.wireguard.WireGuardServer
         ] = []
-        if self.mode.transport_protocol in ("tcp", "both"):
+        if uds and self.mode.transport_protocol in ("tcp", "both"):
+            servers.append(await asyncio.start_unix_server(self.handle_stream, uds))
+        if self.mode.transport_protocol in ("tcp", "both") and not uds:
             servers.append(await asyncio.start_server(self.handle_stream, host, port))
-        if self.mode.transport_protocol in ("udp", "both"):
+        if self.mode.transport_protocol in ("udp", "both") and not uds:
             # we start two servers for dual-stack support.
             # On Linux, this would also be achievable by toggling IPV6_V6ONLY off, but this here works cross-platform.
             if host == "":
