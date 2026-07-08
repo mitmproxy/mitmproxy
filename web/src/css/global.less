@@ -67,6 +67,81 @@
     --mitmweb-alert-warning-border: #faebcc;
 }
 
+[data-theme="dark"] {
+    // Surfaces
+    --mitmweb-bg: #1e1e1e;
+    --mitmweb-bg-alt: #252526;
+    --mitmweb-bg-muted: #2d2d2d;
+    --mitmweb-bg-hover: #333333;
+    --mitmweb-bg-active: #3a3a3a;
+
+    // Text
+    --mitmweb-fg: #d4d4d4;
+    --mitmweb-fg-input: #cccccc;
+    --mitmweb-fg-muted: #9a9a9a;
+    --mitmweb-fg-strong: #ffffff;
+
+    // Borders
+    --mitmweb-border: #3c3c3c;
+    --mitmweb-border-light: #333333;
+    --mitmweb-border-lighter: #333333;
+    --mitmweb-border-strong: #555555;
+
+    // Accent (primary) — brightened for contrast on dark surfaces
+    --mitmweb-accent: #4a9eff;
+    --mitmweb-accent-hover: #6fb3ff;
+    --mitmweb-accent-active: #3a8ae0;
+    --mitmweb-accent-border: #3a8ae0;
+    --mitmweb-accent-border-active: #2f77c4;
+    --mitmweb-focus-ring: #4a9eff;
+
+    // State — solid backgrounds keep their vivid hues
+    --mitmweb-info: #5bc0de;
+    --mitmweb-info-hover: #31b0d5;
+    --mitmweb-info-border: #46b8da;
+    --mitmweb-info-border-hover: #269abc;
+    --mitmweb-success: #5cb85c;
+    --mitmweb-danger: #d9534f;
+    --mitmweb-warning: #f0ad4e;
+
+    // State — text lightened for dark background
+    --mitmweb-text-success: #6cc26c;
+    --mitmweb-text-info: #5bc0de;
+    --mitmweb-text-warning: #d0a95c;
+    --mitmweb-text-danger: #e07b7b;
+
+    // Alert
+    --mitmweb-alert-warning-bg: #4d4327;
+    --mitmweb-alert-warning-border: #6b5d2f;
+
+    // Flow-table row backgrounds are derived with LESS color functions
+    // (lighten/fadeout) that cannot operate on var(), so they are overridden here.
+    .flow-table tr {
+        background-color: hsl(0, 0%, 12%);
+        &:nth-child(even) {
+            background-color: hsl(0, 0%, 16%);
+        }
+        &.highlighted {
+            background-color: hsl(48, 60%, 26%);
+            &:nth-child(even) {
+                background-color: hsl(48, 60%, 22%);
+            }
+        }
+        &.selected {
+            background-color: hsl(209, 45%, 26%) !important;
+            &:nth-child(even) {
+                background-color: hsl(209, 45%, 22%) !important;
+            }
+        }
+        &.selected.highlighted {
+            background-color: hsl(209, 55%, 34%) !important;
+            &:nth-child(even) {
+                background-color: hsl(209, 55%, 30%) !important;
+            }
+        }
+    }
+}
+
 // www.paulirish.com/2012/box-sizing-border-box-ftw/
 html {
     box-sizing: border-box;

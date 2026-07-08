@@ -49,6 +49,17 @@ class TestWebAuth:
             assert not a.is_valid_password("")
             assert not a.is_valid_password("test")
 
+    def test_web_theme_option(self):
+        with taddons.context(webaddons.WebAddon()) as tctx:
+            assert tctx.options.web_theme == "system"
+            assert tctx.options._options["web_theme"].choices == [
+                "system",
+                "dark",
+                "light",
+            ]
+            tctx.options.web_theme = "dark"
+            assert tctx.options.web_theme == "dark"
+
     @pytest.mark.parametrize(
         "web_host,web_port,expected_web_url",
         [
