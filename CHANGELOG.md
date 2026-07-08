@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Introduce a semantic CSS custom-property color layer as the foundation for theming.
+  Light-mode colors are unchanged.
+
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
