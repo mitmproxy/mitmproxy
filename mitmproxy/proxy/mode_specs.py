@@ -58,6 +58,8 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
     """A custom listen host, if specified in the spec."""
     custom_listen_port: int | None
     """A custom listen port, if specified in the spec."""
+    custom_listen_uds: str | None
+    """A custom listen uds, if specified in the spec."""
 
     type_name: ClassVar[
         str
@@ -107,7 +109,11 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
 
         mode, _, data = head.partition(":")
 
-        if listen_at:
+        if listen_at.startswith("/"):
+            host = None
+            port = None
+            uds = listen_at
+        elif listen_at:
             if ":" in listen_at:
                 host, _, port_str = listen_at.rpartition(":")
             else:
@@ -119,9 +125,11 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
                     raise ValueError
             except ValueError:
                 raise ValueError(f"invalid port: {port_str}")
+            uds = None
         else:
             host = None
             port = None
+            uds = None
 
         try:
             mode_cls = ProxyMode.__types[mode.lower()]
@@ -132,7 +140,7 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise ValueError(f"{mode!r} is not a spec for a {cls.type_name} mode")
 
         return mode_cls(
-            full_spec=spec, data=data, custom_listen_host=host, custom_listen_port=port
+            full_spec=spec, data=data, custom_listen_host=host, custom_listen_port=port, custom_listen_uds=uds
         )
 
     def listen_host(self, default: str | None = None) -> str:
