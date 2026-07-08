@@ -40,6 +40,20 @@
             padding-right: 18px;
         }
 
+        .col-resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 6px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 1;
+        }
+
+        .col-resize-handle:hover {
+            background-color: rgba(0, 0, 0, 15%);
+        }
+
         .th-content {
             display: block;
             min-height: 23px;

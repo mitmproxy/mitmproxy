@@ -7,6 +7,18 @@ import FlowTableHead from "./FlowTable/FlowTableHead";
 import FlowRow from "./FlowTable/FlowRow";
 import type { Flow } from "../flow";
 import type { RootState } from "../ducks";
+import { isValidColumnName } from "../flow/utils";
+
+const COLUMN_WIDTHS_KEY = "mitmweb-column-widths";
+
+function loadColumnWidths(): Record<string, number> {
+    try {
+        const raw = localStorage.getItem(COLUMN_WIDTHS_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch {
+        return {};
+    }
+}
 
 type FlowTableProps = {
     flowView: Flow[];
@@ -22,6 +34,7 @@ type FlowTableProps = {
 type FlowTableState = {
     vScroll: VScroll;
     viewportTop: number;
+    columnWidths: Record<string, number>;
 };
 
 export class PureFlowTable extends React.Component<
@@ -40,8 +53,25 @@ export class PureFlowTable extends React.Component<
         this.state = {
             vScroll: calcVScroll(),
             viewportTop: 0,
+            columnWidths: loadColumnWidths(),
         };
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
+        this.setColumnWidth = this.setColumnWidth.bind(this);
+    }
+
+    setColumnWidth(column: string, width: number) {
+        this.setState((state) => {
+            const columnWidths = { ...state.columnWidths, [column]: width };
+            try {
+                localStorage.setItem(
+                    COLUMN_WIDTHS_KEY,
+                    JSON.stringify(columnWidths),
+                );
+            } catch {
+                /* persistence is best-effort */
+            }
+            return { columnWidths };
+        });
     }
 
     componentDidMount() {
@@ -141,7 +171,7 @@ export class PureFlowTable extends React.Component<
     }
 
     render() {
-        const { vScroll, viewportTop } = this.state;
+        const { vScroll, viewportTop, columnWidths } = this.state;
         const {
             flowView,
             selectedIds,
@@ -151,6 +181,10 @@ export class PureFlowTable extends React.Component<
             rowHeight,
         } = this.props;
 
+        const orderedColumns = displayColumnNames
+            .filter(isValidColumnName)
+            .concat("quickactions");
+
         return (
             <div
                 className="flow-table"
@@ -158,11 +192,27 @@ export class PureFlowTable extends React.Component<
                 ref={this.viewport}
             >
                 <table>
+                    <colgroup>
+                        {orderedColumns.map((colName) => (
+                            <col
+                                key={colName}
+                                className={`col-${colName}`}
+                                style={
+                                    columnWidths[colName]
+                                        ? { width: columnWidths[colName] }
+                                        : undefined
+                                }
+                            />
+                        ))}
+                    </colgroup>
                     <thead
                         ref={this.head}
                         style={{ transform: `translateY(${viewportTop}px)` }}
                     >
-                        <FlowTableHead />
+                        <FlowTableHead
+                            columnWidths={columnWidths}
+                            onResize={this.setColumnWidth}
+                        />
                     </thead>
                     <tbody>
                         <tr style={{ height: vScroll.paddingTop }} />
