@@ -105,6 +105,12 @@ class Options(optmanager.OptManager):
             "By default, the port is mode-specific. The default regular HTTP proxy spawns on port 8080.",
         )
         self.add_option(
+            "listen_uds",
+            Optional[str],
+            None,
+            "Unix domain socket to listen to (may be overridden for individual modes, see `mode`). "
+        )
+        self.add_option(
             "mode",
             Sequence[str],
             ["regular"],

@@ -61,6 +61,7 @@ def common_options(parser, opts):
     group = parser.add_argument_group("Proxy Options")
     opts.make_parser(group, "listen_host", metavar="HOST")
     opts.make_parser(group, "listen_port", metavar="PORT", short="p")
+    opts.make_parser(group, "listen_uds")
     opts.make_parser(group, "server", short="n")
     opts.make_parser(group, "ignore_hosts", metavar="HOST")
     opts.make_parser(group, "allow_hosts", metavar="HOST")
