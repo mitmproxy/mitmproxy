@@ -37,6 +37,7 @@ export interface OptionsState {
     key_size: number;
     listen_host: string;
     listen_port: number | undefined;
+    listen_uds: string | undefined;
     map_local: string[];
     map_remote: string[];
     mode: string[];
@@ -144,6 +145,7 @@ export const defaultState: OptionsState = {
     key_size: 2048,
     listen_host: "",
     listen_port: undefined,
+    listen_uds: undefined,
     map_local: [],
     map_remote: [],
     mode: ["regular"],
