@@ -6,6 +6,32 @@ exports[`FlowTable Component should render correctly 1`] = `
     class="flow-table"
   >
     <table>
+      <colgroup>
+        <col
+          class="col-tls"
+        />
+        <col
+          class="col-icon"
+        />
+        <col
+          class="col-path"
+        />
+        <col
+          class="col-method"
+        />
+        <col
+          class="col-status"
+        />
+        <col
+          class="col-size"
+        />
+        <col
+          class="col-time"
+        />
+        <col
+          class="col-quickactions"
+        />
+      </colgroup>
       <thead
         style="transform: translateY(0px);"
       >
@@ -16,12 +42,18 @@ exports[`FlowTable Component should render correctly 1`] = `
             <span
               class="th-content"
             />
+            <span
+              class="col-resize-handle"
+            />
           </th>
           <th
             class="col-icon"
           >
             <span
               class="th-content"
+            />
+            <span
+              class="col-resize-handle"
             />
           </th>
           <th
@@ -49,6 +81,9 @@ exports[`FlowTable Component should render correctly 1`] = `
                 d="m6 9 6 6 6-6"
               />
             </svg>
+            <span
+              class="col-resize-handle"
+            />
           </th>
           <th
             class="col-method"
@@ -58,6 +93,9 @@ exports[`FlowTable Component should render correctly 1`] = `
             >
               Method
             </span>
+            <span
+              class="col-resize-handle"
+            />
           </th>
           <th
             class="col-status"
@@ -67,6 +105,9 @@ exports[`FlowTable Component should render correctly 1`] = `
             >
               Status
             </span>
+            <span
+              class="col-resize-handle"
+            />
           </th>
           <th
             class="col-size"
@@ -76,6 +117,9 @@ exports[`FlowTable Component should render correctly 1`] = `
             >
               Size
             </span>
+            <span
+              class="col-resize-handle"
+            />
           </th>
           <th
             class="col-time"
@@ -85,6 +129,9 @@ exports[`FlowTable Component should render correctly 1`] = `
             >
               Time
             </span>
+            <span
+              class="col-resize-handle"
+            />
           </th>
           <th
             class="col-quickactions"
@@ -328,6 +375,32 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
       class="flow-table"
     >
       <table>
+        <colgroup>
+          <col
+            class="col-tls"
+          />
+          <col
+            class="col-icon"
+          />
+          <col
+            class="col-path"
+          />
+          <col
+            class="col-method"
+          />
+          <col
+            class="col-status"
+          />
+          <col
+            class="col-size"
+          />
+          <col
+            class="col-time"
+          />
+          <col
+            class="col-quickactions"
+          />
+        </colgroup>
         <thead
           style="transform: translateY(0px);"
         >
@@ -338,12 +411,18 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               <span
                 class="th-content"
               />
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-icon"
             >
               <span
                 class="th-content"
+              />
+              <span
+                class="col-resize-handle"
               />
             </th>
             <th
@@ -371,6 +450,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
                   d="m6 9 6 6 6-6"
                 />
               </svg>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-method"
@@ -380,6 +462,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               >
                 Method
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-status"
@@ -389,6 +474,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               >
                 Status
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-size"
@@ -398,6 +486,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               >
                 Size
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-time"
@@ -407,6 +498,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               >
                 Time
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-quickactions"
@@ -651,6 +745,32 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
       class="flow-table"
     >
       <table>
+        <colgroup>
+          <col
+            class="col-tls"
+          />
+          <col
+            class="col-icon"
+          />
+          <col
+            class="col-path"
+          />
+          <col
+            class="col-method"
+          />
+          <col
+            class="col-status"
+          />
+          <col
+            class="col-size"
+          />
+          <col
+            class="col-time"
+          />
+          <col
+            class="col-quickactions"
+          />
+        </colgroup>
         <thead
           style="transform: translateY(128px);"
         >
@@ -661,12 +781,18 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               <span
                 class="th-content"
               />
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-icon"
             >
               <span
                 class="th-content"
+              />
+              <span
+                class="col-resize-handle"
               />
             </th>
             <th
@@ -694,6 +820,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
                   d="m6 9 6 6 6-6"
                 />
               </svg>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-method"
@@ -703,6 +832,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               >
                 Method
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-status"
@@ -712,6 +844,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               >
                 Status
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-size"
@@ -721,6 +856,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               >
                 Size
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-time"
@@ -730,6 +868,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               >
                 Time
               </span>
+              <span
+                class="col-resize-handle"
+              />
             </th>
             <th
               class="col-quickactions"
