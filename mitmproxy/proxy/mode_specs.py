@@ -170,6 +170,20 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         else:
             return self.default_port
 
+    def listen_uds(self, default: str | None = None) -> str:
+        """
+        Return the unix domain socket this mode should listen on. This can be either directly
+        specified in the spec or taken from a user-configured global default (`options.listen_uds`).
+        May be `None` for not listening on a UDS.
+        Returns `None` instead of the default if a custom host or port are set.
+        """
+        if self.custom_listen_uds is not None:
+            return self.custom_listen_uds
+        elif default is not None and self.custom_listen_host is None and self.custom_listen_port is None:
+            return default
+        else:
+            return ""
+
     @classmethod
     def from_state(cls, state):
         return ProxyMode.parse(state)
