@@ -98,6 +98,28 @@ async def test_tcp_start_stop(caplog_async):
         assert await caplog_async.await_log("stopped")
 
 
+async def test_uds_start_stop(caplog_async):
+    caplog_async.set_level("INFO")
+    manager = MagicMock()
+
+    with taddons.context():
+        inst = ServerInstance.make("regular@/tmp/mitmproxy_test_uds_start_stop.sock", manager)
+        await inst.start()
+        assert inst.last_exception is None
+        assert await caplog_async.await_log("proxy listening")
+
+        path = inst.listen_addrs[0]
+        reader, writer = await asyncio.open_unix_connection(path)
+        assert await caplog_async.await_log("client connect")
+
+        writer.close()
+        await writer.wait_closed()
+        assert await caplog_async.await_log("client disconnect")
+
+        await inst.stop()
+        assert await caplog_async.await_log("stopped")
+
+
 async def test_tcp_timeout(caplog_async):
     """Test that TCP connections are closed after the configured timeout period."""
     caplog_async.set_level("INFO")
