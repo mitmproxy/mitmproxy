@@ -55,6 +55,9 @@ def test_listen_addr():
     assert ProxyMode.parse("reverse:https://1.2.3.4").listen_port() == 8080
     assert ProxyMode.parse("reverse:dns://8.8.8.8").listen_port() == 53
 
+    assert ProxyMode.parse("regular").listen_uds() is None
+    assert ProxyMode.parse("regular@1234").listen_uds() is None
+    assert ProxyMode.parse("regular@/tmp/test.sock").listen_uds() == "/tmp/test.sock"
 
 def test_parse_specific_modes():
     assert ProxyMode.parse("regular")
