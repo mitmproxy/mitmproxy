@@ -179,10 +179,10 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
         """
         if self.custom_listen_uds is not None:
             return self.custom_listen_uds
-        elif default is not None and self.custom_listen_host is None and self.custom_listen_port is None:
+        elif self.custom_listen_host is None and self.custom_listen_port is None:
             return default
         else:
-            return ""
+            return None
 
     @classmethod
     def from_state(cls, state):
