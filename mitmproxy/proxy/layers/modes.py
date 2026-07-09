@@ -73,10 +73,10 @@ class ReverseProxy(DestinationKnown):
 
         # For secure protocols, set SNI if keep_host_header is false
         match spec.scheme:
-            case "http3" | "quic" | "https" | "tls" | "dtls":
+            case "http3" | "quic" | "https" | "tls" | "dtls" | "https+unix":
                 if not self.context.options.keep_host_header:
                     self.context.server.sni = spec.address[0]
-            case "tcp" | "http" | "udp" | "dns":
+            case "tcp" | "http" | "udp" | "dns" | "unix" | "http+unix":
                 pass
             case _:  # pragma: no cover
                 assert_never(spec.scheme)
