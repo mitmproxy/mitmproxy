@@ -16,10 +16,14 @@ ServerSpec = tuple[
 server_spec_re = re.compile(
     r"""
         ^
-        (?:(?P<scheme>\w+)://)?  # scheme is optional
-        (?P<host>[^:/]+|\[.+\])  # hostname can be DNS name, IPv4, or IPv6 address.
-        (?::(?P<port>\d+))?  #  port is optional
-        /?  #  we allow a trailing backslash, but no path
+        (?:(?P<scheme>[\w+]+)://)?  # scheme is optional
+        (?:
+            (?P<host>[^:/]+|\[.+\])  # hostname can be DNS name, IPv4, or IPv6 address.
+            (?::(?P<port>\d+))?  #  port is optional
+            /?  #  we allow a trailing backslash, but no path
+            |
+            (?P<uds>/.*)
+        )
         $
         """,
     re.VERBOSE,
