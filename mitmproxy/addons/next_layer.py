@@ -343,11 +343,11 @@ class NextLayer:
         stack = tunnel.LayerStack()
 
         match spec.scheme:
-            case "http":
+            case "http" | "http+unix":
                 if starts_like_tls_record(data_client):
                     stack /= ClientTLSLayer(context)
                 stack /= HttpLayer(context, HTTPMode.transparent)
-            case "https":
+            case "https" | "https+unix":
                 if context.client.transport_protocol == "udp":
                     stack /= ServerQuicLayer(context)
                     stack /= ClientQuicLayer(context)
@@ -358,7 +358,7 @@ class NextLayer:
                         stack /= ClientTLSLayer(context)
                     stack /= HttpLayer(context, HTTPMode.transparent)
 
-            case "tcp":
+            case "tcp" | "unix":
                 if starts_like_tls_record(data_client):
                     stack /= ClientTLSLayer(context)
                 stack /= TCPLayer(context)
