@@ -9,7 +9,7 @@ from typing import Literal
 from mitmproxy.net import check
 
 ServerSpec = tuple[
-    Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"],
+    Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic", "unix", "http+unix", "https+unix"],
     tuple[str, int],
 ]
 
@@ -48,6 +48,8 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
 
     if m.group("scheme"):
         scheme = m.group("scheme")
+    elif m.group("uds"):
+        scheme = "http+unix"
     else:
         scheme = default_scheme
     if scheme not in (
@@ -60,15 +62,30 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
         "udp",
         "dns",
         "quic",
+        "unix",
+        "http+unix",
+        "https+unix",
     ):
         raise ValueError(f"Invalid server scheme: {scheme}")
 
-    host = m.group("host")
-    # IPv6 brackets
-    if host.startswith("[") and host.endswith("]"):
-        host = host[1:-1]
-    if not check.is_valid_host(host):
-        raise ValueError(f"Invalid hostname: {host}")
+    if m.group("uds"):
+        uds = m.group("uds")
+    else:
+        uds = None
+    if uds and "unix" not in scheme:
+        raise ValueError(f"Invalid server scheme for uds mode: {scheme}")
+    elif not uds and "unix" in scheme:
+        raise ValueError(f"Invalid server scheme for network mode: {scheme}")
+
+    if uds:
+        host = uds
+    else:
+        host = m.group("host")
+        # IPv6 brackets
+        if host.startswith("[") and host.endswith("]"):
+            host = host[1:-1]
+        if not check.is_valid_host(host):
+            raise ValueError(f"Invalid hostname: {host}")
 
     if m.group("port"):
         port = int(m.group("port"))
@@ -80,6 +97,9 @@ def parse(server_spec: str, default_scheme: str) -> ServerSpec:
                 "quic": 443,
                 "http3": 443,
                 "dns": 53,
+                "unix": 0,
+                "http+unix": 0,
+                "https+unix": 0,
             }[scheme]
         except KeyError:
             raise ValueError(f"Port specification missing.")
