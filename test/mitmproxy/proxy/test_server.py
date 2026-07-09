@@ -175,3 +175,53 @@ async def test_server_connected_hook_failure_cleanup(monkeypatch):
 
     writer_mock.close.assert_called_once()
     assert conn not in handler.transports
+
+
+async def test_handle_client_normal_path_cleanup(monkeypatch):
+    """Test that watchdog and timers are cleaned up in normal execution path."""
+    handler = MockConnectionHandler()
+
+    timer_mock = mock.Mock()
+    handler.wakeup_timer.add(timer_mock)
+
+    watch_cancelled = False
+
+    async def dummy_watch():
+        nonlocal watch_cancelled
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            watch_cancelled = True
+            raise
+
+    watch_task = asyncio.create_task(dummy_watch())
+
+    async def dummy_handle_connection():
+        await asyncio.sleep(0)
+
+    handler_task = asyncio.create_task(dummy_handle_connection())
+
+    call_count = [0]
+
+    def mock_create_task(coro, *args, **kwargs):
+        call_count[0] += 1
+        name = kwargs.get("name", "")
+        if "timeout" in name:
+            coro.close()
+            return watch_task
+        else:
+            coro.close()
+            return handler_task
+
+    monkeypatch.setattr(
+        "mitmproxy.proxy.server.asyncio_utils.create_task",
+        mock_create_task,
+    )
+
+    await handler.handle_client()
+
+    await asyncio.sleep(0)
+
+    assert watch_cancelled
+    timer_mock.cancel.assert_called()
+    assert len(handler.wakeup_timer) == 0
