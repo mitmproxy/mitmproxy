@@ -225,3 +225,54 @@ async def test_handle_client_normal_path_cleanup(monkeypatch):
     assert watch_cancelled
     timer_mock.cancel.assert_called()
     assert len(handler.wakeup_timer) == 0
+
+
+async def test_handle_client_connection_handler_crash_logs_error(monkeypatch, caplog):
+    """Test that handle_client logs a connection-handler crash and still cleans up.
+
+    Covers the `if not handler.cancelled() and (e := handler.exception()):`
+    branch in `handle_client` (mitmproxy/proxy/server.py).
+    """
+    handler = MockConnectionHandler()
+
+    async def dummy_watch():
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            raise
+
+    watch_task = asyncio.create_task(dummy_watch())
+
+    async def crashing_handle_connection():
+        await asyncio.sleep(0)
+        raise RuntimeError("connection handler crashed")
+
+    handler_task = asyncio.create_task(crashing_handle_connection())
+
+    def mock_create_task(coro, *args, **kwargs):
+        name = kwargs.get("name", "")
+        if "timeout" in name:
+            coro.close()
+            return watch_task
+        else:
+            coro.close()
+            return handler_task
+
+    monkeypatch.setattr(
+        "mitmproxy.proxy.server.asyncio_utils.create_task",
+        mock_create_task,
+    )
+
+    import logging
+
+    with caplog.at_level(logging.ERROR):
+        await handler.handle_client()
+
+    await asyncio.sleep(0)
+
+    assert any(
+        "connection handler has crashed" in rec.message
+        and "connection handler crashed" in rec.message
+        for rec in caplog.records
+    ), f"Expected crash log, got: {[r.message for r in caplog.records]}"
+    assert len(handler.wakeup_timer) == 0
