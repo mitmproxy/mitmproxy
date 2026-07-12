@@ -248,7 +248,7 @@ class ReverseMode(ProxyMode):
     description = "reverse proxy"
     transport_protocol = TCP
     scheme: Literal[
-        "http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic"
+        "http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic", 'unix', 'http+unix', 'https+unix'
     ]
     address: tuple[str, int]
 
