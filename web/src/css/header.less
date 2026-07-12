@@ -22,7 +22,7 @@
 header {
     padding-top: 6px;
     background-color: var(--mitmweb-bg);
-    @separator-color: lighten(grey, 15%);
+    @separator-color: var(--mitmweb-border-strong);
     > div:not(:empty) {
         display: block;
         margin: 0;
@@ -107,7 +107,7 @@ header {
     @space: 10px;
     margin-left: -(@menu-group-hmargin + 1px);
     content: " ";
-    border-left: solid 1px lighten(grey, 40%);
+    border-left: solid 1px var(--mitmweb-border-lighter);
     margin-top: @space;
     height: @menu-height - @space*2;
     position: absolute;
