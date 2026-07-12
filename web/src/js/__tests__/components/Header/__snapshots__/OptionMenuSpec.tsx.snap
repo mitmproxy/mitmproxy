@@ -217,6 +217,45 @@ exports[`OptionMenu Component should render correctly 1`] = `
         View Options
       </div>
     </div>
+    <div
+      class="menu-group"
+    >
+      <div
+        class="menu-content"
+      >
+        <div
+          class="menu-entry"
+        >
+          <label>
+            Theme
+            <select
+              class="theme-select"
+            >
+              <option
+                value="system"
+              >
+                system
+              </option>
+              <option
+                value="dark"
+              >
+                dark
+              </option>
+              <option
+                value="light"
+              >
+                light
+              </option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div
+        class="menu-legend"
+      >
+        Appearance
+      </div>
+    </div>
   </div>
 </DocumentFragment>
 `;
