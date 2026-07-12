@@ -96,7 +96,7 @@
             display: flex;
             flex-direction: row;
             gap: 5px;
-            background-color: #e0e0e0;
+            background-color: var(--mitmweb-bg-active);
             padding: 5px;
             border-radius: 4px;
             height: 30px;
@@ -164,11 +164,11 @@
             }
 
             .dropdown-item.selected {
-                background-color: #e0e0e0;
+                background-color: var(--mitmweb-bg-active);
             }
 
             .dropdown-item:hover {
-                background-color: #f0f0f0;
+                background-color: var(--mitmweb-bg-muted);
             }
 
             .process-details {
@@ -353,7 +353,7 @@
             border: 1px solid var(--mitmweb-border);
             border-radius: 4px;
             padding: 10px 15px;
-            background-color: #f9f9f9;
+            background-color: var(--mitmweb-bg);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
             &:popover-open {
