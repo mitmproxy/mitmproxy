@@ -3,6 +3,9 @@
 // A future dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
 // (lighten/darken/fadeout) consume are left as literals here because those functions cannot operate on var().
 :root {
+    // Match native controls (form inputs, scrollbars) to the active theme.
+    color-scheme: light;
+
     // Surfaces
     --mitmweb-bg: #fff;
     --mitmweb-bg-alt: #f2f2f2;
@@ -68,6 +71,8 @@
 }
 
 [data-theme="dark"] {
+    color-scheme: dark;
+
     // Surfaces
     --mitmweb-bg: #1e1e1e;
     --mitmweb-bg-alt: #252526;
