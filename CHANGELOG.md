@@ -7,6 +7,7 @@
 
 ## Unreleased: mitmproxy next
 
+- Add support for listening to, and forwarding to, unix domain sockets.
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
