@@ -51,6 +51,11 @@ from mitmproxy.test import taddons
         (False, True, False, ("::ffff:216.58.207.174",)),
         (False, True, False, (r"::ffff:216.58.207.174%scope",)),
         (False, True, False, ("2001:4860:4860::8888",)),
+        # uds: never block
+        (False, True, False, "/tmp/mitmproxy.sock"),
+        (False, False, False, "/tmp/mitmproxy.sock"),
+        (True, True, False, "/tmp/mitmproxy.sock"),
+        (True, False, False, "/tmp/mitmproxy.sock"),
     ],
 )
 async def test_block_global(block_global, block_private, should_be_killed, address):

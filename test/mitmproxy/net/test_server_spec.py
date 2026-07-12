@@ -38,3 +38,9 @@ def test_parse_err():
 
     with pytest.raises(ValueError, match="Port specification missing"):
         server_spec.parse("example.com", "tcp")
+
+    with pytest.raises(ValueError, match="Invalid server scheme for uds mode"):
+        server_spec.parse("tcp:///tmp/mitmproxy.sock", "https")
+
+    with pytest.raises(ValueError, match="Invalid server scheme for network mode"):
+        server_spec.parse("unix://example.com", "https")

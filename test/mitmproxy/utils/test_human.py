@@ -64,3 +64,4 @@ def test_format_address():
     assert human.format_address(("::", "8080")) == "*:8080"
     assert human.format_address(("0.0.0.0", "8080")) == "*:8080"
     assert human.format_address(None) == "<no address>"
+    assert human.format_address("/tmp/mitmproxy.sock") == "/tmp/mitmproxy.sock"
