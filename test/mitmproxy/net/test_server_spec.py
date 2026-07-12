@@ -14,7 +14,11 @@ from mitmproxy.net import server_spec
         ("http://[::1]/", "https", ("http", ("::1", 80))),
         ("https://[::1]/", "https", ("https", ("::1", 443))),
         ("http://[::1]:8080", "https", ("http", ("::1", 8080))),
-        ("http+unix:///tmp/mitmproxy.sock", "https", ("http+unix", ("/tmp/mitmproxy.sock", 0))),
+        (
+            "http+unix:///tmp/mitmproxy.sock",
+            "https",
+            ("http+unix", ("/tmp/mitmproxy.sock", 0)),
+        ),
         ("unix:///tmp/mitmproxy.sock", "https", ("unix", ("/tmp/mitmproxy.sock", 0))),
         ("/tmp/mitmproxy.sock", "https", ("http+unix", ("/tmp/mitmproxy.sock", 0))),
     ],

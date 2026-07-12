@@ -140,7 +140,11 @@ class ProxyMode(Serializable, metaclass=ABCMeta):
             raise ValueError(f"{mode!r} is not a spec for a {cls.type_name} mode")
 
         return mode_cls(
-            full_spec=spec, data=data, custom_listen_host=host, custom_listen_port=port, custom_listen_uds=uds
+            full_spec=spec,
+            data=data,
+            custom_listen_host=host,
+            custom_listen_port=port,
+            custom_listen_uds=uds,
         )
 
     def listen_host(self, default: str | None = None) -> str:
@@ -248,7 +252,18 @@ class ReverseMode(ProxyMode):
     description = "reverse proxy"
     transport_protocol = TCP
     scheme: Literal[
-        "http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic", 'unix', 'http+unix', 'https+unix'
+        "http",
+        "https",
+        "http3",
+        "tls",
+        "dtls",
+        "tcp",
+        "udp",
+        "dns",
+        "quic",
+        "unix",
+        "http+unix",
+        "https+unix",
     ]
     address: tuple[str, int]
 

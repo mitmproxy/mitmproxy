@@ -73,7 +73,9 @@ async def test_open_connection(result, monkeypatch):
     assert server_disconnected.called == (result == "success")
 
 
-@pytest.mark.skipif(not hasattr(asyncio, "start_unix_server"), reason="Unix sockets not supported")
+@pytest.mark.skipif(
+    not hasattr(asyncio, "start_unix_server"), reason="Unix sockets not supported"
+)
 @pytest.mark.parametrize("result", ("success", "killed", "failed"))
 async def test_open_unix_connection(result, monkeypatch):
     handler = MockConnectionHandler()

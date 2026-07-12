@@ -59,6 +59,7 @@ def test_listen_addr():
     assert ProxyMode.parse("regular@1234").listen_uds() is None
     assert ProxyMode.parse("regular@/tmp/test.sock").listen_uds() == "/tmp/test.sock"
 
+
 def test_parse_specific_modes():
     assert ProxyMode.parse("regular")
     # assert ProxyMode.parse("http3")

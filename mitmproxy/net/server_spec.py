@@ -9,7 +9,20 @@ from typing import Literal
 from mitmproxy.net import check
 
 ServerSpec = tuple[
-    Literal["http", "https", "http3", "tls", "dtls", "tcp", "udp", "dns", "quic", "unix", "http+unix", "https+unix"],
+    Literal[
+        "http",
+        "https",
+        "http3",
+        "tls",
+        "dtls",
+        "tcp",
+        "udp",
+        "dns",
+        "quic",
+        "unix",
+        "http+unix",
+        "https+unix",
+    ],
     tuple[str, int],
 ]
 

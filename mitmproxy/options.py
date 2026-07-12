@@ -108,7 +108,7 @@ class Options(optmanager.OptManager):
             "listen_uds",
             Optional[str],
             None,
-            "Unix domain socket to listen to (may be overridden for individual modes, see `mode`). "
+            "Unix domain socket to listen to (may be overridden for individual modes, see `mode`). ",
         )
         self.add_option(
             "mode",

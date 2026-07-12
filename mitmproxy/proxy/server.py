@@ -208,7 +208,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer: asyncio.StreamWriter | mitmproxy_rs.Stream
             try:
                 command.connection.timestamp_start = time.time()
-                if command.connection.transport_protocol == "tcp" and command.connection.address[0].startswith("/"):
+                if (
+                    command.connection.transport_protocol == "tcp"
+                    and command.connection.address[0].startswith("/")
+                ):
                     reader, writer = await asyncio.open_unix_connection(
                         command.connection.address[0],
                     )

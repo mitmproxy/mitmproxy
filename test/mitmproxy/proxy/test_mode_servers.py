@@ -98,13 +98,17 @@ async def test_tcp_start_stop(caplog_async):
         assert await caplog_async.await_log("stopped")
 
 
-@pytest.mark.skipif(not hasattr(asyncio, "start_unix_server"), reason="Unix sockets not supported")
+@pytest.mark.skipif(
+    not hasattr(asyncio, "start_unix_server"), reason="Unix sockets not supported"
+)
 async def test_uds_start_stop(caplog_async):
     caplog_async.set_level("INFO")
     manager = MagicMock()
 
     with taddons.context():
-        inst = ServerInstance.make("regular@/tmp/mitmproxy_test_uds_start_stop.sock", manager)
+        inst = ServerInstance.make(
+            "regular@/tmp/mitmproxy_test_uds_start_stop.sock", manager
+        )
         await inst.start()
         assert inst.last_exception is None
         assert await caplog_async.await_log("proxy listening")
