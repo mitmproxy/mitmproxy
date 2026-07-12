@@ -9,6 +9,9 @@ export enum ReverseProxyProtocols {
     UDP = "udp",
     DNS = "dns",
     QUIC = "quic",
+    UNIX = "unix",
+    HTTP+UNIX = "http+unix",
+    HTTPS+UNIX = "https+unix",
 }
 
 export enum SyntaxHighlight {
