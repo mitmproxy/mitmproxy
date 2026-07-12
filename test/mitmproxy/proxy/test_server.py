@@ -73,6 +73,48 @@ async def test_open_connection(result, monkeypatch):
     assert server_disconnected.called == (result == "success")
 
 
+@pytest.mark.skipif(not hasattr(asyncio, "start_unix_server"), reason="Unix sockets not supported")
+@pytest.mark.parametrize("result", ("success", "killed", "failed"))
+async def test_open_unix_connection(result, monkeypatch):
+    handler = MockConnectionHandler()
+    server_connect = handler.hook_handlers["server_connect"]
+    server_connected = handler.hook_handlers["server_connected"]
+    server_connect_error = handler.hook_handlers["server_connect_error"]
+    server_disconnected = handler.hook_handlers["server_disconnected"]
+
+    match result:
+        case "success":
+            monkeypatch.setattr(
+                asyncio,
+                "open_unix_connection",
+                mock.AsyncMock(return_value=(mock.MagicMock(), mock.MagicMock())),
+            )
+            monkeypatch.setattr(
+                MockConnectionHandler, "handle_connection", mock.AsyncMock()
+            )
+        case "failed":
+            monkeypatch.setattr(
+                asyncio, "open_unix_connection", mock.AsyncMock(side_effect=OSError)
+            )
+        case "killed":
+
+            def _kill(d: server_hooks.ServerConnectionHookData) -> None:
+                d.server.error = "do not connect"
+
+            server_connect.side_effect = _kill
+
+    await handler.open_connection(
+        commands.OpenConnection(connection=Server(address=("/sock", 0)))
+    )
+
+    assert server_connect.call_args[0][0].server.address == ("/sock", 0)
+
+    assert server_connected.called == (result == "success")
+    assert server_connect_error.called == (result != "success")
+
+    assert server_disconnected.called == (result == "success")
+
+
 async def test_no_reentrancy(capsys):
     class ReentrancyTestLayer(layer.Layer):
         def handle_event(self, event: Event) -> layer.CommandGenerator[None]:
