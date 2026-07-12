@@ -98,6 +98,7 @@ async def test_tcp_start_stop(caplog_async):
         assert await caplog_async.await_log("stopped")
 
 
+@pytest.mark.skipif(not hasattr(asyncio, "start_unix_server"), reason="Unix sockets not supported")
 async def test_uds_start_stop(caplog_async):
     caplog_async.set_level("INFO")
     manager = MagicMock()
