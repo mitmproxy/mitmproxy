@@ -10,8 +10,8 @@ export enum ReverseProxyProtocols {
     DNS = "dns",
     QUIC = "quic",
     UNIX = "unix",
-    HTTP+UNIX = "http+unix",
-    HTTPS+UNIX = "https+unix",
+    HTTP_PLUS_UNIX = "http+unix",
+    HTTPS_PLUS_UNIX = "https+unix",
 }
 
 export enum SyntaxHighlight {

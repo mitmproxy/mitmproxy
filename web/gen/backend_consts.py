@@ -15,7 +15,7 @@ filename = here / "../src/js/backends/consts.ts"
 async def make() -> str:
     protocols = typing.get_args(typing.get_type_hints(ReverseMode)["scheme"])
     protocol_enum = ",\n    ".join(
-        f'{protocol.upper()} = "{protocol.lower()}"' for protocol in protocols
+        f'{protocol.upper().replace("+", "_PLUS_")} = "{protocol.lower()}"' for protocol in protocols
     )
 
     langs = typing.get_args(SyntaxHighlight.__value__)
