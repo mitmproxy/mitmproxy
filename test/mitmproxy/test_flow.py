@@ -168,3 +168,28 @@ class TestError:
         e = flow.Error("yay")
         assert repr(e)
         assert str(e)
+
+    def test_code_default(self):
+        # The machine-readable code defaults to GENERIC, and the
+        # human-readable message is unaffected.
+        e = flow.Error("something went wrong")
+        assert e.code == flow.Error.Code.GENERIC
+        assert e.msg == "something went wrong"
+
+    def test_code_explicit(self):
+        e = flow.Error(flow.Error.KILLED_MESSAGE, code=flow.Error.Code.KILLED)
+        assert e.code == flow.Error.Code.KILLED
+        assert e.msg == flow.Error.KILLED_MESSAGE
+
+    def test_code_roundtrip(self):
+        e = flow.Error("boom", code=flow.Error.Code.PROTOCOL)
+        state = e.get_state()
+        # The code is serialized by its (stable) string value.
+        assert state["code"] == "protocol"
+        assert flow.Error.from_state(state).code == flow.Error.Code.PROTOCOL
+
+        e2 = flow.Error("other")
+        assert e2.code == flow.Error.Code.GENERIC
+        e2.set_state(e.get_state())
+        assert e2.code == flow.Error.Code.PROTOCOL
+        assert e2.get_state() == e.get_state()

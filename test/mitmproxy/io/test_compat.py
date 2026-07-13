@@ -2,6 +2,7 @@ import pytest
 
 from mitmproxy import exceptions
 from mitmproxy import io
+from mitmproxy.io import compat
 
 
 @pytest.mark.parametrize(
@@ -29,3 +30,16 @@ def test_cannot_convert(tdata):
         flow_reader = io.FlowReader(f)
         with pytest.raises(exceptions.FlowReadException):
             list(flow_reader.stream())
+
+
+def test_convert_21_22():
+    # Flows with an error gain the new machine-readable error code, defaulting
+    # to GENERIC for pre-existing flows.
+    with_error = {"version": 21, "error": {"msg": "boom", "timestamp": 1.0}}
+    assert compat.convert_21_22(with_error) == {
+        "version": 22,
+        "error": {"msg": "boom", "timestamp": 1.0, "code": "generic"},
+    }
+    # Flows without an error are left untouched apart from the version bump.
+    no_error = {"version": 21, "error": None}
+    assert compat.convert_21_22(no_error) == {"version": 22, "error": None}

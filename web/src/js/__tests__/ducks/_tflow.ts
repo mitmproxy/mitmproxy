@@ -24,6 +24,7 @@ export function THTTPFlow(): Required<HTTPFlow> {
         },
         "comment": "I'm a comment!",
         "error": {
+            "code": "generic",
             "msg": "error",
             "timestamp": 946681207.0
         },
@@ -184,6 +185,7 @@ export function TTCPFlow(): Required<TCPFlow> {
         },
         "comment": "",
         "error": {
+            "code": "generic",
             "msg": "error",
             "timestamp": 946681207.0
         },
@@ -250,6 +252,7 @@ export function TUDPFlow(): Required<UDPFlow> {
         },
         "comment": "",
         "error": {
+            "code": "generic",
             "msg": "error",
             "timestamp": 946681207.0
         },
@@ -316,6 +319,7 @@ export function TDNSFlow(): Required<DNSFlow> {
         },
         "comment": "",
         "error": {
+            "code": "generic",
             "msg": "error",
             "timestamp": 946681207.0
         },

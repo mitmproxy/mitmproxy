@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import enum
 import time
 import uuid
 from dataclasses import dataclass
@@ -26,11 +27,34 @@ class Error(serializable.SerializableDataclass):
     communications, like interrupted connections, timeouts, or protocol errors.
     """
 
+    class Code(enum.Enum):
+        """
+        Machine-readable category of an `Error`.
+
+        Unlike `Error.msg`, which is a human-readable description that may change
+        at any time, these values are stable and safe to branch on. This
+        enumeration also documents which kinds of errors mitmproxy can produce.
+        """
+
+        GENERIC = "generic"
+        """An error that does not fit any of the more specific categories."""
+        KILLED = "killed"
+        """The flow was killed by the user or an addon."""
+        CONNECTION = "connection"
+        """A connection could not be established or was interrupted."""
+        TIMEOUT = "timeout"
+        """An operation timed out."""
+        PROTOCOL = "protocol"
+        """The peer violated the protocol or sent data mitmproxy could not process."""
+
     msg: str
     """Message describing the error."""
 
     timestamp: float = field(default_factory=time.time)
     """Unix timestamp of when this error happened."""
+
+    code: Code = Code.GENERIC
+    """Machine-readable error category. See `Error.Code`."""
 
     KILLED_MESSAGE: ClassVar[str] = "Connection killed."
 
@@ -237,7 +261,7 @@ class Flow(serializable.Serializable):
         #  flows in transit (https://github.com/mitmproxy/mitmproxy/issues/4711), even though they are advertised
         #  as killable. An alternative approach would be to introduce a `KillInjected` event similar to
         #  `MessageInjected`, which should fix this issue.
-        self.error = Error(Error.KILLED_MESSAGE)
+        self.error = Error(Error.KILLED_MESSAGE, code=Error.Code.KILLED)
         self.intercepted = False
         self.live = False
 
