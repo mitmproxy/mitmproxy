@@ -10,6 +10,7 @@
 - Add a machine-readable `code` to `mitmproxy.flow.Error` (a `flow.Error.Code`
   enum: `GENERIC`, `KILLED`, `CONNECTION`, `TIMEOUT`, `PROTOCOL`) so error
   categories can be determined without parsing the human-readable `msg`.
+  ([#8321](https://github.com/mitmproxy/mitmproxy/pull/8321), @youdie006)
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
