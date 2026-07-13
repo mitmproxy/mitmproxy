@@ -433,6 +433,15 @@ def convert_20_21(data):
     return data
 
 
+def convert_21_22(data):
+    data["version"] = 22
+    # flow.Error gained a machine-readable `code`. Existing errors predate the
+    # categorization, so they default to flow.Error.Code.GENERIC.
+    if data["error"] is not None:
+        data["error"]["code"] = "generic"
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -498,6 +507,7 @@ converters = {
     18: convert_18_19,
     19: convert_19_20,
     20: convert_20_21,
+    21: convert_21_22,
 }
 
 

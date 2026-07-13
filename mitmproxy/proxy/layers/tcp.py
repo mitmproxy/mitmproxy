@@ -81,7 +81,9 @@ class TCPLayer(layer.Layer):
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 if self.flow:
-                    self.flow.error = flow.Error(str(err))
+                    self.flow.error = flow.Error(
+                        str(err), code=flow.Error.Code.CONNECTION
+                    )
                     yield TcpErrorHook(self.flow)
                 yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done

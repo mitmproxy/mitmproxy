@@ -668,7 +668,7 @@ class HttpStream(layer.Layer):
                 )
 
         if err:
-            self.flow.error = flow.Error(err)
+            self.flow.error = flow.Error(err, code=flow.Error.Code.PROTOCOL)
 
             if request:
                 # flow has not been seen yet, register it.
@@ -707,7 +707,9 @@ class HttpStream(layer.Layer):
 
         if killed_by_remote:
             if not self.flow.error:
-                self.flow.error = flow.Error(killed_by_remote)
+                self.flow.error = flow.Error(
+                    killed_by_remote, code=flow.Error.Code.CONNECTION
+                )
         if killed_by_us or killed_by_remote:
             if emit_error_hook:
                 yield HttpErrorHook(self.flow)
@@ -740,7 +742,7 @@ class HttpStream(layer.Layer):
         if need_error_hook:
             # We don't want to trigger both a response hook and an error hook,
             # so we need to check if the response is done yet or not.
-            self.flow.error = flow.Error(event.message)
+            self.flow.error = flow.Error(event.message, code=flow.Error.Code.PROTOCOL)
             yield HttpErrorHook(self.flow)
 
         if (yield from self.check_killed(False)):
