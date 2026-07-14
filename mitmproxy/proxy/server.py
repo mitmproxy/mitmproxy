@@ -142,7 +142,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.log("client kill connection")
             writer = self.transports.pop(self.client).writer
             assert writer
-            writer.close()
+            try:
+                writer.close()
+            except OSError:
+                pass
         else:
             await self.server_event(events.Start())
             handler = asyncio_utils.create_task(
@@ -322,7 +325,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer.close()
         except OSError:
             pass
-        self.transports.pop(connection)
+        finally:
+            self.transports.pop(connection, None)
 
         if cancelled:
             raise cancelled
