@@ -104,3 +104,92 @@ async def test_no_reentrancy(capsys):
         Hook completed (must not happen before start is completed).
         """
     )
+
+
+async def test_handle_client_writer_close_oserror():
+    """Test that handle_client handles OSError when closing writer."""
+    handler = MockConnectionHandler()
+    handler.client.error = "test error"
+
+    # Set up a transport with a writer that raises OSError on close
+    mock_writer = mock.Mock()
+    mock_writer.close.side_effect = OSError("Connection reset")
+    handler.transports[handler.client] = server.ConnectionIO(
+        handler=None,
+        reader=mock.Mock(),
+        writer=mock_writer,
+    )
+
+    # Mock the hooks to avoid actual execution
+    handler.handle_hook = mock.AsyncMock()
+
+    # This should not raise an exception
+    await handler.handle_client()
+
+    # Verify writer.close() was called
+    mock_writer.close.assert_called_once()
+
+
+async def test_handle_connection_cleanup_with_oserror():
+    """Test that handle_connection properly cleans up transports even when writer.close() raises OSError."""
+    handler = MockConnectionHandler()
+
+    # Create a mock connection
+    connection = Server(address=("server", 1234))
+    connection.state = 0  # ConnectionState.CLOSED
+
+    # Set up a transport with a writer that raises OSError on close
+    mock_writer = mock.Mock()
+    mock_writer.close.side_effect = OSError("Connection reset")
+    mock_reader = mock.AsyncMock()
+    mock_reader.read.side_effect = OSError("Connection closed")
+
+    handler.transports[connection] = server.ConnectionIO(
+        handler=None,
+        reader=mock_reader,
+        writer=mock_writer,
+    )
+
+    # Mock the hooks to avoid actual execution
+    handler.handle_hook = mock.AsyncMock()
+    handler.server_event = mock.AsyncMock()
+
+    # This should not raise an exception
+    await handler.handle_connection(connection)
+
+    # Verify writer.close() was called
+    mock_writer.close.assert_called_once()
+    # Verify transport was removed even though close() raised OSError
+    assert connection not in handler.transports
+
+
+async def test_handle_connection_cleanup_success():
+    """Test that handle_connection properly cleans up transports on success path."""
+    handler = MockConnectionHandler()
+
+    # Create a mock connection
+    connection = Server(address=("server", 1234))
+    connection.state = 0  # ConnectionState.CLOSED
+
+    # Set up a transport with a normal writer
+    mock_writer = mock.Mock()
+    mock_reader = mock.AsyncMock()
+    mock_reader.read.side_effect = OSError("Connection closed")
+
+    handler.transports[connection] = server.ConnectionIO(
+        handler=None,
+        reader=mock_reader,
+        writer=mock_writer,
+    )
+
+    # Mock the hooks to avoid actual execution
+    handler.handle_hook = mock.AsyncMock()
+    handler.server_event = mock.AsyncMock()
+
+    # This should complete successfully
+    await handler.handle_connection(connection)
+
+    # Verify writer.close() was called
+    mock_writer.close.assert_called_once()
+    # Verify transport was removed
+    assert connection not in handler.transports
