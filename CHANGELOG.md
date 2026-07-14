@@ -9,6 +9,9 @@
 
 - mitmweb: Fix an infinite update cycle in the event log by only recomputing the virtual-scroll window in `componentDidUpdate` when the event list or `rowHeight` actually change.
   ([#8312](https://github.com/mitmproxy/mitmproxy/pull/8312), @hexbinoct)
+- Remove the unused `msgpack` dependency. The msgpack contentview is
+  implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
+  ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
@@ -97,7 +100,7 @@
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
 - Add example addon to spoof DNS responses.
   ([#7973](https://github.com/mitmproxy/mitmproxy/pull/7973), @mhils)
-- Gracefully handle decoding of raw binary payloads that previously caused 
+- Gracefully handle decoding of raw binary payloads that previously caused
   "Raw cannot decode" or "failed to parse as JSON" errors
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
