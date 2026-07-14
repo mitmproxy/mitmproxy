@@ -7,6 +7,8 @@
 
 ## Unreleased: mitmproxy next
 
+- mitmweb: Fix an infinite update cycle in the event log by only recomputing the virtual-scroll window in `componentDidUpdate` when the event list or `rowHeight` actually change.
+  ([#8312](https://github.com/mitmproxy/mitmproxy/pull/8312), @hexbinoct)
 - Remove the unused `msgpack` dependency. The msgpack contentview is
   implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
   ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
