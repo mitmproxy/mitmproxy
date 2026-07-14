@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from mitmproxy import options
+from mitmproxy.connection import ConnectionState
 from mitmproxy.connection import Server
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import layer
@@ -136,7 +137,7 @@ async def test_handle_connection_cleanup_with_oserror():
 
     # Create a mock connection
     connection = Server(address=("server", 1234))
-    connection.state = 0  # ConnectionState.CLOSED
+    connection.state = ConnectionState.CLOSED
 
     # Set up a transport with a writer that raises OSError on close
     mock_writer = mock.Mock()
@@ -169,7 +170,7 @@ async def test_handle_connection_cleanup_success():
 
     # Create a mock connection
     connection = Server(address=("server", 1234))
-    connection.state = 0  # ConnectionState.CLOSED
+    connection.state = ConnectionState.CLOSED
 
     # Set up a transport with a normal writer
     mock_writer = mock.Mock()
