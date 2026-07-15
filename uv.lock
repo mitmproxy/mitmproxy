@@ -1054,7 +1054,7 @@ requires-dist = [
     { name = "publicsuffix2", specifier = ">=2.20190812,<=2.20191221" },
     { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=3.1.1" },
     { name = "pyopenssl", specifier = ">=24.3,<=27.0.0" },
-    { name = "pyparsing", specifier = ">=2.4.2,<=3.3.2" },
+    { name = "pyparsing", specifier = "<=3.3.2,>=3.3.2" },
     { name = "pyperclip", specifier = ">=1.9.0,<=1.11.0" },
     { name = "ruamel-yaml", specifier = ">=0.18.10,<=0.19.1" },
     { name = "sortedcontainers", specifier = ">=2.3,<=2.4.0" },
@@ -1426,11 +1426,11 @@ wheels = [
 
 [[package]]
 name = "pyparsing"
-version = "3.3.1"
+version = "3.3.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/33/c1/1d9de9aeaa1b89b0186e5fe23294ff6517fce1bc69149185577cd31016b2/pyparsing-3.3.1.tar.gz", hash = "sha256:47fad0f17ac1e2cad3de3b458570fbc9b03560aa029ed5e16ee5554da9a2251c", size = 1550512, upload-time = "2025-12-23T03:14:04.391Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/91/9c6ee907786a473bf81c5f53cf703ba0957b23ab84c264080fb5a450416f/pyparsing-3.3.2.tar.gz", hash = "sha256:c777f4d763f140633dcb6d8a3eda953bf7a214dc4eff598413c070bcdc117cbc", size = 6851574, upload-time = "2026-01-21T03:57:59.36Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/40/2614036cdd416452f5bf98ec037f38a1afb17f327cb8e6b652d4729e0af8/pyparsing-3.3.1-py3-none-any.whl", hash = "sha256:023b5e7e5520ad96642e2c6db4cb683d3970bd640cdf7115049a6e9c3682df82", size = 121793, upload-time = "2025-12-23T03:14:02.103Z" },
+    { url = "https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl", hash = "sha256:850ba148bd908d7e2411587e247a1e4f0327839c40e2e5e6d05a007ecc69911d", size = 122781, upload-time = "2026-01-21T03:57:55.912Z" },
 ]
 
 [[package]]
