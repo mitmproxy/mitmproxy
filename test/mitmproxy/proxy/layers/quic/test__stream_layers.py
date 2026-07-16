@@ -1008,6 +1008,36 @@ class TestClientQuic:
             << tls.TlsFailedClientHook(tutils.Placeholder())
         )
 
+    def test_post_handshake_close_without_network_path(self, tctx: context.Context):
+        # We want to exercise the post-handshake `receive_data()` path directly
+        tctx.client.state = connection.ConnectionState.CLOSED
+        client_layer = ClientQuicLayer(tctx, time=lambda: 0)
+        client_layer.child_layer = TlsEchoLayer(tctx)
+        client_layer.tunnel_state = tls.tunnel.TunnelState.CLOSED
+
+        playbook = tutils.Playbook(client_layer, expected=[])
+
+        quic_buf = QuicBuffer(data=client_hello)
+        header = pull_quic_header(quic_buf, host_cid_length=8)
+        config = QuicConfiguration(is_client=False)
+        config.load_cert_chain(
+            tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt"),
+            tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.key"),
+        )
+        client_layer.quic = QuicConnection(
+            configuration=config,
+            original_destination_connection_id=header.destination_cid,
+        )
+
+        # This reproduces the problematic aioquic state: server-side QUIC has been
+        # created, but no datagram was processed yet, so no network path exists.
+        assert client_layer.quic._network_paths == []
+
+        # A late empty read after handshake failure must not try to drain
+        # datagrams from aioquic before a network path was established.
+        assert playbook >> events.DataReceived(tctx.client, b"")
+        assert playbook
+
     def test_no_server_tls(self, tctx: context.Context):
         playbook, client_layer, tssl_client = make_client_tls_layer(
             tctx, no_server=True
