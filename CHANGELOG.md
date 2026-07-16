@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
+  to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
+  authority per RFC 3986 instead of the malformed `2001:db8::1:443`.
 - mitmweb: Fix an infinite update cycle in the event log by only recomputing the virtual-scroll window in `componentDidUpdate` when the event list or `rowHeight` actually change.
   ([#8312](https://github.com/mitmproxy/mitmproxy/pull/8312), @hexbinoct)
 - Remove the unused `msgpack` dependency. The msgpack contentview is

@@ -939,6 +939,37 @@ def test_upstream_proxy(tctx, redirect, domain, scheme):
     assert playbook
 
 
+def test_upstream_proxy_ipv6(tctx):
+    """
+    Regression test for #8309: the CONNECT request (and Host header) sent to an
+    upstream proxy must bracket IPv6 target literals per RFC 3986 §3.2.2 /
+    RFC 7230 §5.4, i.e. ``[2001:db8::1]:443`` rather than ``2001:db8::1:443``.
+    The unbracketed form is a malformed authority that downstream proxies
+    reject.
+    """
+    server = Placeholder(Server)
+    tctx.client.proxy_mode = ProxyMode.parse("upstream:http://proxy:8080")
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.upstream), hooks=False)
+    assert (
+        playbook
+        >> DataReceived(
+            tctx.client,
+            b"CONNECT [2001:db8::1]:443 HTTP/1.1\r\nHost: [2001:db8::1]:443\r\n\r\n",
+        )
+        << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
+        >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: [2001:db8::1]\r\n\r\n")
+        << layer.NextLayerHook(Placeholder())
+        >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(
+            server,
+            b"CONNECT [2001:db8::1]:443 HTTP/1.1\r\nHost: [2001:db8::1]:443\r\n\r\n",
+        )
+    )
+    assert server().address == ("proxy", 8080)
+
+
 @pytest.mark.parametrize("mode", ["regular", "upstream"])
 @pytest.mark.parametrize("close_first", ["client", "server"])
 def test_http_proxy_tcp(tctx, mode, close_first):
