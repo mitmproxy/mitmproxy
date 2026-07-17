@@ -1,3 +1,4 @@
+import ipaddress
 import time
 from logging import DEBUG
 
@@ -50,9 +51,17 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             return (yield from super().start_handshake())
         assert self.conn.address
         flow = http.HTTPFlow(self.context.client, self.tunnel_connection)
-        authority = (
-            self.conn.address[0].encode("idna") + f":{self.conn.address[1]}".encode()
-        )
+        host = self.conn.address[0]
+        try:
+            is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)
+        except ValueError:
+            is_ipv6 = False
+        if is_ipv6:
+            # RFC 3986 §3.2.2: IPv6 literals in an authority must be bracketed.
+            host_bytes = b"[" + host.encode() + b"]"
+        else:
+            host_bytes = host.encode("idna")
+        authority = host_bytes + f":{self.conn.address[1]}".encode()
         headers = http.Headers()
         if self.context.options.http_connect_send_host_header:
             headers.insert(0, b"Host", authority)
