@@ -32,6 +32,7 @@ from mitmproxy.proxy.layers import UDPLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.http import HttpStream
 from mitmproxy.proxy.layers.tls import HTTP1_ALPNS
+from mitmproxy.proxy.layers.tls import HTTP3_ALPN
 from mitmproxy.proxy.mode_specs import ProxyMode
 from mitmproxy.test import taddons
 
@@ -98,6 +99,8 @@ quic_short_header_packet = bytes.fromhex(
     "7d0720be075fce3126de3f0d54dc059150e0f80f1a8db5e542eb03240b0a1db44a322fb4fd3c6f2e054b369e14"
     "5a5ff925db617d187ec65a7f00d77651968e74c1a9ddc3c7fab57e8df821b07e103264244a3a03d17984e29933"
 )
+
+invalid_quic = bytes.fromhex("806b3343cf00000000000000000000000000")
 
 dns_query = bytes.fromhex("002a01000001000000000000076578616d706c6503636f6d0000010001")
 
@@ -277,6 +280,15 @@ class TestNextLayer:
                 quic_client_hello,
                 True,
                 id="quic sni",
+            ),
+            pytest.param(
+                ["example.com"],
+                [],
+                "udp",
+                "192.0.2.1",
+                invalid_quic,
+                False,
+                id="invalid quic",
             ),
             # allow
             pytest.param(
@@ -755,6 +767,16 @@ transparent_proxy_configs = [
         id=f"transparent proxy: http via ALPN",
     ),
     pytest.param(
+        http3 := TConf(
+            before=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer],
+            after=[modes.TransparentProxy, ServerQuicLayer, ClientQuicLayer, HttpLayer],
+            server_address=("192.0.2.1", 443),
+            transport_protocol="udp",
+            alpn=HTTP3_ALPN,
+        ),
+        id=f"transparent proxy: http3 via ALPN",
+    ),
+    pytest.param(
         TConf(
             before=[modes.TransparentProxy],
             after=[modes.TransparentProxy, TCPLayer],
@@ -848,6 +870,13 @@ transparent_proxy_configs = [
             tls_version="QUICv1",
         ),
         id=f"transparent proxy: non-http quic",
+    ),
+    pytest.param(
+        dataclasses.replace(
+            http3,
+            ignore_hosts=["$^"],
+        ),
+        id="transparent proxy: http3 not ignored but with ignoring active",
     ),
 ]
 
