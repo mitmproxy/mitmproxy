@@ -37,7 +37,7 @@ dependencies = [
     "bcrypt>=5.0.0,<=5.0.0",
     "Brotli>=1.0,<=1.2.0",
     "certifi>=2019.9.11",  # no upper bound here to get latest CA bundle
-    "cryptography>=42.0,<=48.1",  # relaxed upper bound here to get security fixes
+    "cryptography>=42.0,<=49.0.0",  # relaxed upper bound here to get security fixes
     "flask>=3.0,<=3.1.3",
     "h11>=0.16.0,<=0.16.0",
     "h2>=4.3.0,<=4.3.0",
@@ -45,10 +45,9 @@ dependencies = [
     "kaitaistruct>=0.10,<=0.11",
     "ldap3>=2.8,<=2.9.1",
     "mitmproxy_rs>=0.12.6,<0.13",  # relaxed upper bound here: we control this
-    "msgpack>=1.0.0,<=1.1.2",
     "pydivert>=2.0.3,<=3.1.1; sys_platform == 'win32'",
     "pyOpenSSL>=24.3,<=27.0.0",
-    "pyparsing>=2.4.2,<=3.3.2",
+    "pyparsing>=3.3.2,<=3.3.2",
     "pyperclip>=1.9.0,<=1.11.0",
     "ruamel.yaml>=0.18.10,<=0.19.1",
     "sortedcontainers>=2.3,<=2.4.0",
@@ -62,19 +61,19 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "click==8.3.2",
+    "click==8.4.0",
     "hypothesis==6.130.6",
-    "maturin==1.13.1",
+    "maturin==1.13.3",
     "pdoc==16.0.0",
-    "pyinstaller==6.19.0",
-    "pyinstaller-hooks-contrib==2026.4",
+    "pyinstaller==6.20.0",
+    "pyinstaller-hooks-contrib==2026.5",
     "pytest-asyncio==1.2.0",
     "pytest-cov==7.0.0",
     "pytest-timeout==2.4.0",
     "pytest-xdist==3.8.0",
     "pytest==8.4.2",
     "requests==2.33.1",
-    "wheel==0.46.3",
+    "wheel==0.47.0",
     "build==1.4.3",
     "mypy==1.20.2",
     "types-requests==2.33.0.20260408",
@@ -82,14 +81,14 @@ dev = [
     {include-group = "ruff"},
 ]
 tox = [
-    "tox==4.53.0",
-    "tox-uv==1.35.1",
+    "tox==4.54.0",
+    "tox-uv==1.35.2",
 ]
 ruff = [
     "ruff==0.15.11",
 ]
 deploy = [
-    "awscli==1.44.83",
+    "awscli==1.45.12",
     "twine==6.2.0",
 ]
 

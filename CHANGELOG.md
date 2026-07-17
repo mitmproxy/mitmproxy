@@ -7,9 +7,22 @@
 
 ## Unreleased: mitmproxy next
 
-- Add `--set save_stream_compression` option to compress stream files on the fly with gzip, bz2, or xz.
+- Add `--set save_stream_compression` option to compress stream files on the fly with zstandard.
   Reading compressed flow files is auto-detected via magic bytes.
   ([#8287](https://github.com/mitmproxy/mitmproxy/pull/8287), @joelverhagen)
+- Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
+  to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
+  authority per RFC 3986 instead of the malformed `2001:db8::1:443`.
+  ([#8326](https://github.com/mitmproxy/mitmproxy/pull/8326), @gaurav0107)
+- mitmweb: Fix an infinite update cycle in the event log by only recomputing the virtual-scroll window in `componentDidUpdate` when the event list or `rowHeight` actually change.
+  ([#8312](https://github.com/mitmproxy/mitmproxy/pull/8312), @hexbinoct)
+- Remove the unused `msgpack` dependency. The msgpack contentview is
+  implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
+  ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
+- mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
+  now placed at the top of the table when the option is set, instead of always
+  being appended at the bottom.
+  ([#8288](https://github.com/mitmproxy/mitmproxy/pull/8288), @hexbinoct)
 - Fix contentview detection for XML files that start with CRLF.
   ([#8243](https://github.com/mitmproxy/mitmproxy/pull/8243), @ADiTyaRaj8969)
 - mitmweb: Fix the filter input losing half-typed text on unrelated parent re-renders.
@@ -20,6 +33,10 @@
   ([#8232](https://github.com/mitmproxy/mitmproxy/pull/8232), @ariel42)
 - mitmweb: Fix correctly displaying multiple blank lines in content renderer.
   ([#8248](https://github.com/mitmproxy/mitmproxy/pull/8248), @vincentdehaan)
+- Fix QUIC connections never starting if --allow-hosts or --ignore-hosts is set.
+  ([#8295](https://github.com/mitmproxy/mitmproxy/pull/8295), @tbodt)
+- Correctly read the SNI hostname from fragmented QUIC client hellos.
+  ([#8296](https://github.com/mitmproxy/mitmproxy/pull/8296), @tbodt)
 
 ## 12 May 2026: mitmproxy 12.2.3
 
@@ -94,7 +111,7 @@
   ([#7928](https://github.com/mitmproxy/mitmproxy/pull/7928), @xu-cheng)
 - Add example addon to spoof DNS responses.
   ([#7973](https://github.com/mitmproxy/mitmproxy/pull/7973), @mhils)
-- Gracefully handle decoding of raw binary payloads that previously caused 
+- Gracefully handle decoding of raw binary payloads that previously caused
   "Raw cannot decode" or "failed to parse as JSON" errors
   ([#7940](https://github.com/mitmproxy/mitmproxy/pull/7940), @AdityaPatadiya)
 - Show query parameters for empty-body requests in the mitmproxy console.
