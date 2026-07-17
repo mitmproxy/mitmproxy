@@ -373,6 +373,28 @@ class FilterHelp(RequestHandler):
         self.write(dict(commands=flowfilter.help))
 
 
+class FilterValidation(RequestHandler):
+    def post(self) -> None:
+        try:
+            expression = self.json["expression"]
+        except (KeyError, TypeError):
+            raise APIError(400, "Missing filter expression.")
+
+        if not isinstance(expression, str):
+            raise APIError(400, "Filter expression must be a string.")
+
+        if not expression:
+            self.write({"valid": True, "description": ""})
+            return
+
+        try:
+            filt = flowfilter.parse(expression)
+        except ValueError as err:
+            self.write({"valid": False, "error": str(err)})
+        else:
+            self.write({"valid": True, "description": str(filt)})
+
+
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler, AuthRequestHandler):
     # raise an error if inherited class doesn't specify its own instance.
     connections: ClassVar[set[WebSocketEventBroadcaster]]
@@ -887,6 +909,7 @@ class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
 handlers = [
     (r"/", IndexHandler),
     (r"/filter-help(?:\.json)?", FilterHelp),
+    (r"/filter/validate", FilterValidation),
     (r"/updates", ClientConnection),
     (r"/commands(?:\.json)?", Commands),
     (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
