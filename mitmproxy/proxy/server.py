@@ -325,8 +325,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             writer.close()
         except OSError:
             pass
-        finally:
-            self.transports.pop(connection, None)
+        self.transports.pop(connection, None)
 
         if cancelled:
             raise cancelled
@@ -612,3 +611,4 @@ if __name__ == "__main__":  # pragma: no cover
     server.close()
     loop.run_until_complete(server.wait_closed())
     loop.close()
+
