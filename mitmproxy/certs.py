@@ -737,5 +737,9 @@ def load_pem_private_key(data: bytes, password: bytes | None) -> rsa.RSAPrivateK
         return serialization.load_pem_private_key(data, password)  # type: ignore
     except TypeError:
         if password is not None:
+            logger.warning(
+                "Unable to load private key with the provided password, "
+                "retrying without password. This may indicate a misconfigured certificate."
+            )
             return load_pem_private_key(data, None)
         raise
