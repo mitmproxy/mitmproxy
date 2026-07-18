@@ -1,3 +1,72 @@
+// Semantic color tokens.
+// Light values below are byte-equal to the literals they replace, so this change is visually a no-op.
+// A future dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
+// (lighten/darken/fadeout) consume are left as literals here because those functions cannot operate on var().
+:root {
+    // Surfaces
+    --mitmweb-bg: #fff;
+    --mitmweb-bg-alt: #f2f2f2;
+    --mitmweb-bg-muted: #eee;
+    --mitmweb-bg-hover: #e6e6e6;
+    --mitmweb-bg-active: #e5e5e5;
+
+    // Text
+    --mitmweb-fg: #333;
+    --mitmweb-fg-input: #555;
+    --mitmweb-fg-muted: #777;
+    --mitmweb-fg-strong: #000;
+
+    // Neutral gray (muted border + text)
+    --mitmweb-gray: #b2b2b2;
+
+    // Green (mode left border)
+    --mitmweb-green: #77c77a;
+
+    // Borders
+    --mitmweb-border: #ccc;
+    --mitmweb-border-light: #ddd;
+    --mitmweb-border-lighter: #e5e5e5;
+    --mitmweb-border-strong: #adadad;
+
+    // Accent (primary)
+    --mitmweb-accent: #337ab7;
+    --mitmweb-accent-hover: #23527c;
+    --mitmweb-accent-active: #286090;
+    --mitmweb-accent-border: #2e6da4;
+    --mitmweb-accent-border-active: #204d74;
+    --mitmweb-focus-ring: #66afe9;
+
+    // State — solid backgrounds
+    --mitmweb-info: #5bc0de;
+    --mitmweb-info-hover: #31b0d5;
+    --mitmweb-info-border: #46b8da;
+    --mitmweb-info-border-hover: #269abc;
+    --mitmweb-success: #5cb85c;
+    --mitmweb-danger: #d9534f;
+    --mitmweb-warning: #f0ad4e;
+
+    // State — text
+    --mitmweb-text-success: #3c763d;
+    --mitmweb-text-info: #31708f;
+    --mitmweb-text-warning: #8a6d3b;
+    --mitmweb-text-danger: #a94442;
+
+    // Highlight (row hover / suggestion selection)
+    --mitmweb-highlight: hsla(209, 52%, 84%, 0.5);
+
+    // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
+    --mitmweb-row-highlight: hsl(48, 100%, 80%);
+    --mitmweb-row-highlight-alt: hsl(48, 100%, 75%);
+    --mitmweb-row-selected: hsl(209, 51%, 92%);
+    --mitmweb-row-selected-alt: hsl(209, 51%, 86%);
+    --mitmweb-row-selected-highlight: hsl(209, 96%, 74%);
+    --mitmweb-row-selected-highlight-alt: hsl(209, 96%, 68%);
+
+    // Alert
+    --mitmweb-alert-warning-bg: #fcf8e3;
+    --mitmweb-alert-warning-border: #faebcc;
+}
+
 // www.paulirish.com/2012/box-sizing-border-box-ftw/
 html {
     box-sizing: border-box;
@@ -32,8 +101,8 @@ body {
     font-family: @font-family-sans-serif;
     font-size: 14px;
     line-height: 1.42857143;
-    color: #333;
-    background-color: #fff;
+    color: var(--mitmweb-fg);
+    background-color: var(--mitmweb-bg);
 }
 
 h1,
@@ -133,38 +202,38 @@ textarea {
 }
 
 .text-primary {
-    color: #337ab7;
+    color: var(--mitmweb-accent);
 }
 
 .docs-link,
 .docs-link:visited {
-    color: #337ab7;
+    color: var(--mitmweb-accent);
     text-decoration: none;
 }
 
 .docs-link:hover,
 .docs-link:focus {
-    color: #23527c;
+    color: var(--mitmweb-accent-hover);
 }
 
 .text-success {
-    color: #3c763d;
+    color: var(--mitmweb-text-success);
 }
 
 .text-info {
-    color: #31708f;
+    color: var(--mitmweb-text-info);
 }
 
 .text-warning {
-    color: #8a6d3b;
+    color: var(--mitmweb-text-warning);
 }
 
 .text-danger {
-    color: #a94442;
+    color: var(--mitmweb-text-danger);
 }
 
 .text-muted {
-    color: #777;
+    color: var(--mitmweb-fg-muted);
 }
 
 .hidden {
@@ -203,7 +272,7 @@ textarea {
 
 .btn:focus,
 .btn:hover {
-    color: #333;
+    color: var(--mitmweb-fg);
     text-decoration: none;
 }
 
@@ -221,42 +290,42 @@ textarea {
 }
 
 .btn-default {
-    color: #333;
-    background-color: #fff;
-    border-color: #ccc;
+    color: var(--mitmweb-fg);
+    background-color: var(--mitmweb-bg);
+    border-color: var(--mitmweb-border);
 }
 
 .btn-default:hover,
 .btn-default:focus {
-    color: #333;
-    background-color: #e6e6e6;
-    border-color: #adadad;
+    color: var(--mitmweb-fg);
+    background-color: var(--mitmweb-bg-hover);
+    border-color: var(--mitmweb-border-strong);
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #337ab7;
-    border-color: #2e6da4;
+    background-color: var(--mitmweb-accent);
+    border-color: var(--mitmweb-accent-border);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
     color: #fff;
-    background-color: #286090;
-    border-color: #204d74;
+    background-color: var(--mitmweb-accent-active);
+    border-color: var(--mitmweb-accent-border-active);
 }
 
 .btn-info {
     color: #fff;
-    background-color: #5bc0de;
-    border-color: #46b8da;
+    background-color: var(--mitmweb-info);
+    border-color: var(--mitmweb-info-border);
 }
 
 .btn-info:hover,
 .btn-info:focus {
     color: #fff;
-    background-color: #31b0d5;
-    border-color: #269abc;
+    background-color: var(--mitmweb-info-hover);
+    border-color: var(--mitmweb-info-border-hover);
 }
 
 .btn-sm {
@@ -287,19 +356,19 @@ textarea {
 }
 
 .label-default {
-    background-color: #777;
+    background-color: var(--mitmweb-fg-muted);
 }
 
 .label-primary {
-    background-color: #337ab7;
+    background-color: var(--mitmweb-accent);
 }
 
 .label-success {
-    background-color: #5cb85c;
+    background-color: var(--mitmweb-success);
 }
 
 .label-danger {
-    background-color: #d9534f;
+    background-color: var(--mitmweb-danger);
 }
 
 .alert {
@@ -310,9 +379,9 @@ textarea {
 }
 
 .alert-warning {
-    color: #8a6d3b;
-    background-color: #fcf8e3;
-    border-color: #faebcc;
+    color: var(--mitmweb-text-warning);
+    background-color: var(--mitmweb-alert-warning-bg);
+    border-color: var(--mitmweb-alert-warning-border);
 }
 
 .input-group {
@@ -342,10 +411,10 @@ textarea {
     font-size: 14px;
     font-weight: 400;
     line-height: 1;
-    color: #555;
+    color: var(--mitmweb-fg-input);
     text-align: center;
-    background-color: #eee;
-    border: 1px solid #ccc;
+    background-color: var(--mitmweb-bg-muted);
+    border: 1px solid var(--mitmweb-border);
     border-radius: 4px;
 }
 
@@ -369,7 +438,7 @@ textarea {
     max-width: 276px;
     padding: 1px;
     text-align: left;
-    background-color: #fff;
+    background-color: var(--mitmweb-bg);
     background-clip: padding-box;
     border: 1px solid rgba(0, 0, 0, 20%);
     border-radius: 6px;
@@ -413,7 +482,7 @@ textarea {
     bottom: 1px;
     margin-left: -10px;
     border-width: 10px 10px 0;
-    border-top-color: #fff;
+    border-top-color: var(--mitmweb-bg);
 }
 
 .popover.bottom {
@@ -432,7 +501,7 @@ textarea {
     top: 1px;
     margin-left: -10px;
     border-width: 0 10px 10px;
-    border-bottom-color: #fff;
+    border-bottom-color: var(--mitmweb-bg);
 }
 
 .close {
@@ -440,7 +509,7 @@ textarea {
     font-size: 21px;
     font-weight: 700;
     line-height: 1;
-    color: #000;
+    color: var(--mitmweb-fg-strong);
     text-shadow: 0 1px 0 #fff;
     opacity: 0.2;
     background: transparent;
@@ -451,7 +520,7 @@ textarea {
 
 .close:hover,
 .close:focus {
-    color: #000;
+    color: var(--mitmweb-fg-strong);
     text-decoration: none;
     cursor: pointer;
     opacity: 0.5;
@@ -463,8 +532,8 @@ textarea {
     height: auto;
     padding: 4px;
     line-height: 1.42857143;
-    background-color: #fff;
-    border: 1px solid #ddd;
+    background-color: var(--mitmweb-bg);
+    border: 1px solid var(--mitmweb-border-light);
     border-radius: 4px;
     transition: all 0.2s ease-in-out;
 }
@@ -476,9 +545,9 @@ textarea {
     padding: 6px 12px;
     font-size: 14px;
     line-height: 1.42857143;
-    color: #555;
-    background-color: #fff;
-    border: 1px solid #ccc;
+    color: var(--mitmweb-fg-input);
+    background-color: var(--mitmweb-bg);
+    border: 1px solid var(--mitmweb-border);
     border-radius: 4px;
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 7.5%);
     transition:
@@ -487,7 +556,7 @@ textarea {
 }
 
 .input:focus {
-    border-color: #66afe9;
+    border-color: var(--mitmweb-focus-ring);
     outline: 0;
     box-shadow:
         inset 0 1px 1px rgba(0, 0, 0, 7.5%),
@@ -503,5 +572,5 @@ textarea.input {
 }
 
 .has-error .input {
-    border-color: #a94442;
+    border-color: var(--mitmweb-text-danger);
 }
