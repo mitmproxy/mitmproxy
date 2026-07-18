@@ -18,6 +18,7 @@ export interface OptionsState {
     command_history: boolean;
     confdir: string;
     connect_addr: string | undefined;
+    connection_max_per_address: number;
     connection_strategy: string;
     console_focus_follow: boolean;
     content_view_lines_cutoff: number;
@@ -125,6 +126,7 @@ export const defaultState: OptionsState = {
     command_history: true,
     confdir: "~/.mitmproxy",
     connect_addr: undefined,
+    connection_max_per_address: 5,
     connection_strategy: "eager",
     console_focus_follow: false,
     content_view_lines_cutoff: 512,
