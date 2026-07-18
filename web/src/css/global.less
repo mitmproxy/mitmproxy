@@ -1,6 +1,6 @@
 // Semantic color tokens.
 // Light values below are byte-equal to the literals they replace, so this change is visually a no-op.
-// A future dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
+// The dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
 // (lighten/darken/fadeout) consume are left as literals here because those functions cannot operate on var().
 :root {
     // Match native controls (form inputs, scrollbars) to the active theme.
@@ -115,36 +115,17 @@
     --mitmweb-text-warning: #d0a95c;
     --mitmweb-text-danger: #e07b7b;
 
+    // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
+    --mitmweb-row-highlight: hsl(48, 60%, 26%);
+    --mitmweb-row-highlight-alt: hsl(48, 60%, 22%);
+    --mitmweb-row-selected: hsl(209, 45%, 26%);
+    --mitmweb-row-selected-alt: hsl(209, 45%, 22%);
+    --mitmweb-row-selected-highlight: hsl(209, 55%, 34%);
+    --mitmweb-row-selected-highlight-alt: hsl(209, 55%, 30%);
+
     // Alert
     --mitmweb-alert-warning-bg: #4d4327;
     --mitmweb-alert-warning-border: #6b5d2f;
-
-    // Flow-table row backgrounds are derived with LESS color functions
-    // (lighten/fadeout) that cannot operate on var(), so they are overridden here.
-    .flow-table tr {
-        background-color: hsl(0, 0%, 12%);
-        &:nth-child(even) {
-            background-color: hsl(0, 0%, 16%);
-        }
-        &.highlighted {
-            background-color: hsl(48, 60%, 26%);
-            &:nth-child(even) {
-                background-color: hsl(48, 60%, 22%);
-            }
-        }
-        &.selected {
-            background-color: hsl(209, 45%, 26%) !important;
-            &:nth-child(even) {
-                background-color: hsl(209, 45%, 22%) !important;
-            }
-        }
-        &.selected.highlighted {
-            background-color: hsl(209, 55%, 34%) !important;
-            &:nth-child(even) {
-                background-color: hsl(209, 55%, 30%) !important;
-            }
-        }
-    }
 }
 
 // www.paulirish.com/2012/box-sizing-border-box-ftw/
