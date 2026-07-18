@@ -29,7 +29,7 @@ class ReadFile:
             "rfile",
             Optional[str],
             None,
-            "Read flows from file. Gzip, bzip2, and xz compressed files are detected automatically.",
+            "Read flows from file. Zstandard-compressed files are detected automatically.",
         )
         loader.add_option(
             "readfile_filter", Optional[str], None, "Read only matching flows."

@@ -7,52 +7,20 @@ def test_integration(tdata, console):
     assert "http://example.com/" in console.screen_contents()
 
 
-def test_load_compressed_gzip(tmp_path, console):
-    import gzip
+def test_load_compressed_zstd(tmp_path, console):
+    import zstandard as zstd
 
     from mitmproxy import io as mio
     from mitmproxy.test import tflow
 
-    p = tmp_path / "flows.gz"
-    with gzip.open(str(p), "wb") as f:
-        w = mio.FlowWriter(f)
-        flow = tflow.tflow(resp=True)
-        flow.request.url = "http://compressed.example.com/gztest"
-        w.add(flow)
-
-    console.type(f":view.flows.load {p}<enter>")
-    assert "compressed.example.com" in console.screen_contents()
-
-
-def test_load_compressed_bz2(tmp_path, console):
-    import bz2
-
-    from mitmproxy import io as mio
-    from mitmproxy.test import tflow
-
-    p = tmp_path / "flows.bz2"
-    with bz2.open(str(p), "wb") as f:
-        w = mio.FlowWriter(f)
-        flow = tflow.tflow(resp=True)
-        flow.request.url = "http://compressed.example.com/bz2test"
-        w.add(flow)
-
-    console.type(f":view.flows.load {p}<enter>")
-    assert "compressed.example.com" in console.screen_contents()
-
-
-def test_load_compressed_xz(tmp_path, console):
-    import lzma
-
-    from mitmproxy import io as mio
-    from mitmproxy.test import tflow
-
-    p = tmp_path / "flows.xz"
-    with lzma.open(str(p), "wb") as f:
-        w = mio.FlowWriter(f)
-        flow = tflow.tflow(resp=True)
-        flow.request.url = "http://compressed.example.com/xztest"
-        w.add(flow)
+    p = tmp_path / "flows.zst"
+    cctx = zstd.ZstdCompressor()
+    with open(str(p), "wb") as raw:
+        with cctx.stream_writer(raw) as writer:
+            w = mio.FlowWriter(writer)
+            flow = tflow.tflow(resp=True)
+            flow.request.url = "http://compressed.example.com/zstdtest"
+            w.add(flow)
 
     console.type(f":view.flows.load {p}<enter>")
     assert "compressed.example.com" in console.screen_contents()

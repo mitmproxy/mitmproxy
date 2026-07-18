@@ -1,7 +1,4 @@
-import bz2
-import gzip
 import json
-import lzma
 import os
 from collections.abc import Iterable
 from io import BufferedReader
@@ -10,6 +7,8 @@ from typing import BinaryIO
 from typing import cast
 from typing import Union
 
+import zstandard as zstd
+
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
@@ -17,25 +16,23 @@ from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 from mitmproxy.io.har import request_to_flow
 
-# Magic bytes for compressed formats
-_GZIP_MAGIC = b"\x1f\x8b"
-_BZ2_MAGIC = b"BZh"
-_XZ_MAGIC = b"\xfd7zXZ\x00"
+# Magic bytes for zstandard format
+_ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 
 
 def open_flow_file(path: str) -> BinaryIO:
     """
-    Open a flow file for reading, auto-detecting compression from magic bytes.
+    Open a flow file for reading, auto-detecting zstandard compression from magic bytes.
     """
     with open(path, "rb") as raw:
-        header = raw.read(6)
+        header = raw.read(4)
 
-    if header[:2] == _GZIP_MAGIC:
-        return cast(BinaryIO, gzip.open(path, "rb"))
-    elif header[:3] == _BZ2_MAGIC:
-        return cast(BinaryIO, bz2.open(path, "rb"))
-    elif header[:6] == _XZ_MAGIC:
-        return cast(BinaryIO, lzma.open(path, "rb"))
+    if header[:4] == _ZSTD_MAGIC:
+        dctx = zstd.ZstdDecompressor()
+        f = open(path, "rb")
+        reader = dctx.stream_reader(f, read_across_frames=True, closefd=True)
+        # Wrap in BufferedReader to provide peek() and buffered seeking
+        return BufferedReader(reader)  # type: ignore[arg-type]
     else:
         return open(path, "rb")
 
@@ -71,7 +68,7 @@ class FlowReader:
         """
         try:
             yield from self._stream_inner()
-        except (EOFError, OSError, lzma.LZMAError) as e:
+        except (EOFError, OSError, zstd.ZstdError) as e:
             raise exceptions.FlowReadException(f"Invalid data format: {e}") from e
 
     def _stream_inner(self) -> Iterable[flow.Flow]:
@@ -112,7 +109,7 @@ class FlowReader:
 
 
 class FilteredFlowWriter:
-    def __init__(self, fo: BinaryIO, flt: flowfilter.TFilter | None):
+    def __init__(self, fo, flt: flowfilter.TFilter | None):
         self.fo = fo
         self.flt = flt
 
@@ -141,6 +138,6 @@ def read_flows_from_paths(paths) -> list[flow.Flow]:
                 flows.extend(FlowReader(f).stream())
     except OSError as e:
         raise exceptions.FlowReadException(e.strerror)
-    except (EOFError, lzma.LZMAError) as e:
+    except (EOFError, zstd.ZstdError) as e:
         raise exceptions.FlowReadException(f"Error reading compressed flow file: {e}")
     return flows

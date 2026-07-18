@@ -1,10 +1,8 @@
-import bz2
-import gzip
 import io
-import lzma
 from pathlib import Path
 
 import pytest
+import zstandard as zstd
 from hypothesis import example
 from hypothesis import given
 from hypothesis.strategies import binary
@@ -67,12 +65,14 @@ class TestFlowReader:
                 pass
 
 
-def _write_flow_to_file(path, compress_open=None):
-    """Helper to write a test flow to a file, optionally compressed."""
+def _write_flow_to_file(path, compressed=False):
+    """Helper to write a test flow to a file, optionally compressed with zstd."""
     f = tflow.tflow(resp=True)
-    if compress_open:
-        with compress_open(str(path), "wb") as fo:
-            FlowWriter(fo).add(f)
+    if compressed:
+        cctx = zstd.ZstdCompressor()
+        with open(str(path), "wb") as raw:
+            with cctx.stream_writer(raw) as writer:
+                FlowWriter(writer).add(f)
     else:
         with open(str(path), "wb") as fo:
             FlowWriter(fo).add(f)
@@ -88,87 +88,47 @@ class TestOpenFlowFile:
         assert len(flows) == 1
         assert flows[0].response
 
-    def test_gzip(self, tmp_path):
+    def test_zstd(self, tmp_path):
         p = tmp_path / "flows.bin"
-        _write_flow_to_file(p, gzip.open)
+        _write_flow_to_file(p, compressed=True)
         with open_flow_file(str(p)) as f:
             flows = list(FlowReader(f).stream())
         assert len(flows) == 1
         assert flows[0].response
 
-    def test_bz2(self, tmp_path):
+    def test_concatenated_zstd(self, tmp_path):
         p = tmp_path / "flows.bin"
-        _write_flow_to_file(p, bz2.open)
-        with open_flow_file(str(p)) as f:
-            flows = list(FlowReader(f).stream())
-        assert len(flows) == 1
-        assert flows[0].response
-
-    def test_xz(self, tmp_path):
-        p = tmp_path / "flows.bin"
-        _write_flow_to_file(p, lzma.open)
-        with open_flow_file(str(p)) as f:
-            flows = list(FlowReader(f).stream())
-        assert len(flows) == 1
-        assert flows[0].response
-
-    def test_concatenated_gzip(self, tmp_path):
-        p = tmp_path / "flows.bin"
-        _write_flow_to_file(p, gzip.open)
-        # Append a second gzip member
+        _write_flow_to_file(p, compressed=True)
+        # Append a second zstd frame
+        cctx = zstd.ZstdCompressor()
         f2 = tflow.tflow(resp=True)
-        with gzip.open(str(p), "ab") as fo:
-            FlowWriter(fo).add(f2)
+        with open(str(p), "ab") as raw:
+            with cctx.stream_writer(raw) as writer:
+                FlowWriter(writer).add(f2)
         with open_flow_file(str(p)) as f:
             flows = list(FlowReader(f).stream())
         assert len(flows) == 2
 
 
 class TestReadFlowsFromPathsCompressed:
-    def test_gzip(self, tmp_path):
-        p = tmp_path / "flows.gz"
-        _write_flow_to_file(p, gzip.open)
-        flows = read_flows_from_paths([str(p)])
-        assert len(flows) == 1
-
-    def test_bz2(self, tmp_path):
-        p = tmp_path / "flows.bz2"
-        _write_flow_to_file(p, bz2.open)
-        flows = read_flows_from_paths([str(p)])
-        assert len(flows) == 1
-
-    def test_xz(self, tmp_path):
-        p = tmp_path / "flows.xz"
-        _write_flow_to_file(p, lzma.open)
+    def test_zstd(self, tmp_path):
+        p = tmp_path / "flows.zst"
+        _write_flow_to_file(p, compressed=True)
         flows = read_flows_from_paths([str(p)])
         assert len(flows) == 1
 
 
 class TestCorruptCompressedFiles:
-    def test_corrupt_gzip(self, tmp_path):
-        # Valid gzip magic but corrupt data
+    def test_corrupt_zstd(self, tmp_path):
+        # Valid zstd magic but corrupt frame data
         p = tmp_path / "corrupt.bin"
-        p.write_bytes(b"\x1f\x8b" + b"\x00" * 20)
+        p.write_bytes(b"\x28\xb5\x2f\xfd" + b"\xff" * 20)
         with pytest.raises(exceptions.FlowReadException):
             with open_flow_file(str(p)) as f:
                 list(FlowReader(f).stream())
 
-    def test_corrupt_bz2(self, tmp_path):
+    def test_corrupt_zstd_via_read_flows_from_paths(self, tmp_path):
         p = tmp_path / "corrupt.bin"
-        p.write_bytes(b"BZh" + b"\x00" * 20)
-        with pytest.raises(exceptions.FlowReadException):
-            with open_flow_file(str(p)) as f:
-                list(FlowReader(f).stream())
-
-    def test_corrupt_xz(self, tmp_path):
-        p = tmp_path / "corrupt.bin"
-        p.write_bytes(b"\xfd7zXZ\x00" + b"\x00" * 20)
-        with pytest.raises(exceptions.FlowReadException):
-            with open_flow_file(str(p)) as f:
-                list(FlowReader(f).stream())
-
-    def test_corrupt_gzip_via_read_flows_from_paths(self, tmp_path):
-        p = tmp_path / "corrupt.bin"
-        p.write_bytes(b"\x1f\x8b" + b"\x00" * 20)
+        p.write_bytes(b"\x28\xb5\x2f\xfd" + b"\xff" * 20)
         with pytest.raises(exceptions.FlowReadException):
             read_flows_from_paths([str(p)])

@@ -1,17 +1,15 @@
-import bz2
-import gzip
 import logging
-import lzma
 import os.path
 import sys
 from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
+from io import BufferedWriter
 from pathlib import Path
-from typing import BinaryIO
-from typing import cast
 from typing import Literal
 from typing import Optional
+
+import zstandard as zstd
 
 import mitmproxy.types
 from mitmproxy import command
@@ -44,57 +42,15 @@ def _mode(path: str) -> Literal["ab", "wb"]:
         return "wb"
 
 
-_COMPRESSION_ALGOS = ("gz", "bz2", "xz")
-
-
-def _parse_compression(value: str) -> tuple[str, int | None]:
-    """
-    Parse a compression option value like "gz", "bz2=5", or "xz=6".
-    Returns (algorithm, level) where level may be None.
-    Validates the level by attempting to instantiate the compressor.
-    """
-    if "=" in value:
-        algo, level_str = value.split("=", 1)
-        try:
-            level = int(level_str)
-        except ValueError:
-            raise ValueError(
-                f"Invalid compression level: {level_str!r}. Must be an integer."
-            )
-    else:
-        algo = value
-        level = None
-
-    if algo not in _COMPRESSION_ALGOS:
-        raise ValueError(
-            f"Invalid compression algorithm: {algo!r}. Must be one of: {', '.join(_COMPRESSION_ALGOS)}"
-        )
-
-    if level is not None:
-        import io as _io
-
-        try:
-            if algo == "gz":
-                gzip.open(_io.BytesIO(), "wb", compresslevel=level).close()
-            elif algo == "bz2":
-                bz2.open(_io.BytesIO(), "wb", compresslevel=level).close()
-            elif algo == "xz":
-                lzma.open(_io.BytesIO(), "wb", preset=level).close()
-        except (ValueError, lzma.LZMAError) as e:
-            raise ValueError(
-                f"Invalid compression level {level} for {algo}: {e}"
-            ) from e
-
-    return algo, level
-
-
 class Save:
     def __init__(self) -> None:
         self.stream: io.FilteredFlowWriter | None = None
         self.filt: flowfilter.TFilter | None = None
         self.active_flows: set[flow.Flow] = set()
         self.current_path: str | None = None
-        self.current_compression: str | None = None
+        self._compressed: bool = False
+        self._raw_file: BufferedWriter | None = None
+        self._compressor_writer: zstd.ZstdCompressionWriter | None = None
 
     def load(self, loader):
         loader.add_option(
@@ -106,7 +62,7 @@ class Save:
             The full path can use python strftime() formating, missing
             directories are created as needed. A new file is opened every time
             the formatted string changes. Use save_stream_compression to
-            compress output.
+            compress output with zstandard.
             """,
         )
         loader.add_option(
@@ -117,13 +73,9 @@ class Save:
         )
         loader.add_option(
             "save_stream_compression",
-            Optional[str],
-            None,
-            """
-            Compress stream files on the fly. Supported values: gz, bz2, xz,
-            optionally with a level: gz=0-9, bz2=1-9, xz=0-9 (e.g. gz=9).
-            Compression is not inferred from the filename.
-            """,
+            bool,
+            False,
+            "Compress stream files on the fly using zstandard.",
         )
 
     def configure(self, updated):
@@ -135,21 +87,6 @@ class Save:
                     raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filt = None
-        if "save_stream_compression" in updated:
-            if ctx.options.save_stream_compression:
-                try:
-                    _parse_compression(ctx.options.save_stream_compression)
-                except ValueError as e:
-                    raise exceptions.OptionsError(str(e)) from e
-            if (
-                "save_stream_file" not in updated
-                and self.stream
-                and self.current_compression != ctx.options.save_stream_compression
-            ):
-                raise exceptions.OptionsError(
-                    "Cannot change save_stream_compression while writing to the same file. "
-                    "Change save_stream_file first or restart with the new compression."
-                )
         if (
             "save_stream_file" in updated
             or "save_stream_filter" in updated
@@ -167,41 +104,45 @@ class Save:
 
     def maybe_rotate_to_new_file(self) -> None:
         path = datetime.today().strftime(_path(ctx.options.save_stream_file))
-        compression = ctx.options.save_stream_compression
-        if self.current_path == path and self.current_compression == compression:
+        compressed = ctx.options.save_stream_compression
+        if self.current_path == path and self._compressed == compressed:
             return
 
-        if self.stream:
-            self.stream.fo.close()
-            self.stream = None
+        self._close_stream()
 
         new_log_file = Path(path)
         new_log_file.parent.mkdir(parents=True, exist_ok=True)
 
         mode = _mode(ctx.options.save_stream_file)
-        f: BinaryIO
-        if compression:
-            algo, level = _parse_compression(compression)
-            if algo == "gz":
-                if level is not None:
-                    f = cast(BinaryIO, gzip.open(new_log_file, mode, compresslevel=level))
-                else:
-                    f = cast(BinaryIO, gzip.open(new_log_file, mode))
-            elif algo == "bz2":
-                if level is not None:
-                    f = cast(BinaryIO, bz2.open(new_log_file, mode, compresslevel=level))
-                else:
-                    f = cast(BinaryIO, bz2.open(new_log_file, mode))
-            elif algo == "xz":
-                if level is not None:
-                    f = cast(BinaryIO, lzma.open(new_log_file, mode, preset=level))
-                else:
-                    f = cast(BinaryIO, lzma.open(new_log_file, mode))
+        if ctx.options.save_stream_compression:
+            self._raw_file = new_log_file.open(mode)
+            cctx = zstd.ZstdCompressor()
+            self._compressor_writer = cctx.stream_writer(
+                self._raw_file, closefd=False
+            )
+            self.stream = io.FilteredFlowWriter(
+                self._compressor_writer, self.filt
+            )
         else:
-            f = new_log_file.open(mode)
-        self.stream = io.FilteredFlowWriter(f, self.filt)
+            self._raw_file = None
+            self._compressor_writer = None
+            self.stream = io.FilteredFlowWriter(
+                new_log_file.open(mode), self.filt
+            )
         self.current_path = path
-        self.current_compression = compression
+        self._compressed = compressed
+
+    def _close_stream(self) -> None:
+        if self.stream:
+            if self._compressor_writer:
+                self._compressor_writer.close()
+            if self._raw_file:
+                self._raw_file.close()
+            else:
+                self.stream.fo.close()
+            self.stream = None
+            self._compressor_writer = None
+            self._raw_file = None
 
     def save_flow(self, flow: flow.Flow) -> None:
         """
@@ -228,9 +169,7 @@ class Save:
             self.active_flows.clear()
 
             self.current_path = None
-            self.current_compression = None
-            self.stream.fo.close()
-            self.stream = None
+            self._close_stream()
 
     @command.command("save.file")
     def save(self, flows: Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
