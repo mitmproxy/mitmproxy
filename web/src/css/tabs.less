@@ -23,12 +23,11 @@
             border-bottom-color: var(--mitmweb-bg);
         }
         &.special {
-            @special-color: #396cad;
             color: white;
-            background-color: @special-color;
-            border-bottom-color: @special-color;
+            background-color: var(--mitmweb-accent);
+            border-bottom-color: var(--mitmweb-accent);
             &:hover {
-                background-color: lighten(@special-color, 10%);
+                background-color: var(--mitmweb-accent-active);
             }
         }
     }
