@@ -20,8 +20,8 @@
     }
 
     thead tr {
-        background-color: #f2f2f2;
-        border-bottom: solid #bebebe 1px;
+        background-color: var(--mitmweb-bg-alt);
+        border-bottom: solid var(--mitmweb-border) 1px;
         line-height: 23px;
     }
 
@@ -59,30 +59,32 @@
         cursor: pointer;
 
         & {
-            background-color: hsl(0, 0%, 100%);
+            background-color: var(--mitmweb-bg);
             &:nth-child(even) {
-                background-color: hsl(0, 0%, 95%);
+                background-color: var(--mitmweb-bg-alt);
             }
         }
 
         &.highlighted {
-            background-color: hsl(48, 100%, 80%);
+            background-color: var(--mitmweb-row-highlight);
             &:nth-child(even) {
-                background-color: hsl(48, 100%, 75%);
+                background-color: var(--mitmweb-row-highlight-alt);
             }
         }
 
         &.selected {
-            background-color: hsl(209, 51%, 92%) !important;
+            background-color: var(--mitmweb-row-selected) !important;
             &:nth-child(even) {
-                background-color: hsl(209, 51%, 86%) !important;
+                background-color: var(--mitmweb-row-selected-alt) !important;
             }
         }
 
         &.selected.highlighted {
-            background-color: hsl(209, 96%, 74%) !important;
+            background-color: var(--mitmweb-row-selected-highlight) !important;
             &:nth-child(even) {
-                background-color: hsl(209, 96%, 68%) !important;
+                background-color: var(
+                    --mitmweb-row-selected-highlight-alt
+                ) !important;
             }
         }
     }

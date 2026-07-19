@@ -13,11 +13,11 @@
     }
 
     .green-left-border {
-        border-left: 10px solid #77c77a;
+        border-left: 10px solid var(--mitmweb-green);
     }
 
     .gray-left-border {
-        border-left: 10px solid #b2b2b2;
+        border-left: 10px solid var(--mitmweb-gray);
     }
 
     .modes-container {
@@ -32,7 +32,7 @@
     }
 
     .mode-description {
-        color: #b2b2b2;
+        color: var(--mitmweb-gray);
         margin-top: -10px;
     }
 
@@ -76,7 +76,7 @@
             transition: color 120ms ease-in-out;
 
             &:hover {
-                color: #333;
+                color: var(--mitmweb-fg);
             }
         }
         .processes-container {
@@ -96,7 +96,7 @@
             display: flex;
             flex-direction: row;
             gap: 5px;
-            background-color: #e0e0e0;
+            background-color: var(--mitmweb-bg-active);
             padding: 5px;
             border-radius: 4px;
             height: 30px;
@@ -122,7 +122,7 @@
 
             .dropdown-header {
                 padding: 5px;
-                border: 1px solid #ccc;
+                border: 1px solid var(--mitmweb-border);
                 border-radius: 4px;
                 cursor: pointer;
                 display: flex;
@@ -164,11 +164,11 @@
             }
 
             .dropdown-item.selected {
-                background-color: #e0e0e0;
+                background-color: var(--mitmweb-bg-active);
             }
 
             .dropdown-item:hover {
-                background-color: #f0f0f0;
+                background-color: var(--mitmweb-bg-muted);
             }
 
             .process-details {
@@ -187,7 +187,7 @@
 
             .process-name {
                 font-weight: 500;
-                color: #333;
+                color: var(--mitmweb-fg);
             }
 
             .process-separator {
@@ -237,7 +237,7 @@
     }
 
     .mode-input {
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         margin-left: 10px;
         border-radius: 4px;
         min-width: 120px;
@@ -245,7 +245,7 @@
     }
 
     .mode-reverse-input {
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         margin-left: 10px;
         margin-right: 10px;
         border-radius: 4px;
@@ -254,7 +254,7 @@
     }
 
     .mode-upstream-input {
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         margin-left: 10px;
         margin-right: 5px;
         border-radius: 4px;
@@ -264,7 +264,7 @@
 
     .mode-reverse-dropdown {
         margin: 0 5px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--mitmweb-border);
         border-radius: 4px;
         height: 25px;
     }
@@ -315,13 +315,13 @@
         }
 
         > button .icon {
-            color: #777;
+            color: var(--mitmweb-fg-muted);
             width: 20px;
             height: 20px;
             transition: color 120ms ease-in-out;
 
             &:hover {
-                color: #333;
+                color: var(--mitmweb-fg);
             }
         }
 
@@ -350,10 +350,10 @@
         }
 
         > div {
-            border: 1px solid #ccc;
+            border: 1px solid var(--mitmweb-border);
             border-radius: 4px;
             padding: 10px 15px;
-            background-color: #f9f9f9;
+            background-color: var(--mitmweb-bg);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
             &:popover-open {
@@ -370,14 +370,14 @@
             }
             > .mode-input {
                 text-align: right;
-                background-color: white;
+                background-color: var(--mitmweb-bg);
                 margin: 0;
             }
         }
     }
 
     .missing-mode-container {
-        color: #b2b2b2;
+        color: var(--mitmweb-gray);
 
         .title-icon-container {
             display: flex;

@@ -5,7 +5,7 @@
 
     > a {
         display: inline-block;
-        color: #337ab7;
+        color: var(--mitmweb-accent);
         border: solid transparent 1px;
         text-decoration: none;
         //text-transform: uppercase;
@@ -13,22 +13,21 @@
 
         &:hover,
         &:focus {
-            color: #23527c;
+            color: var(--mitmweb-accent-hover);
         }
 
         &.active {
-            color: #337ab7;
-            background-color: white;
+            color: var(--mitmweb-accent);
+            background-color: var(--mitmweb-bg);
             border-color: @separator-color;
-            border-bottom-color: white;
+            border-bottom-color: var(--mitmweb-bg);
         }
         &.special {
-            @special-color: #396cad;
             color: white;
-            background-color: @special-color;
-            border-bottom-color: @special-color;
+            background-color: var(--mitmweb-accent);
+            border-bottom-color: var(--mitmweb-accent);
             &:hover {
-                background-color: lighten(@special-color, 10%);
+                background-color: var(--mitmweb-accent-active);
             }
         }
     }

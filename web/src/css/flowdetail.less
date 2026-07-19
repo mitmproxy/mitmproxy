@@ -5,7 +5,7 @@
     flex-direction: column;
 
     nav {
-        background-color: #f2f2f2;
+        background-color: var(--mitmweb-bg-alt);
     }
 
     section {
@@ -39,7 +39,7 @@
 
     .first-line {
         font-family: @font-family-monospace;
-        background-color: #428bca;
+        background-color: var(--mitmweb-accent);
         color: white;
         margin: 0 -8px 2px;
         padding: 4px 8px;
@@ -71,7 +71,7 @@
 
     hr {
         border: 0;
-        border-top: 1px solid #eee;
+        border-top: 1px solid var(--mitmweb-border-lighter);
         margin: 0;
     }
 }
@@ -128,7 +128,7 @@
     word-break: break-all;
 
     tr:not(:first-child) td {
-        border-top: 1px solid #f7f7f7;
+        border-top: 1px solid var(--mitmweb-border-lighter);
     }
 
     td {
@@ -163,12 +163,12 @@
     }
 
     .inline-input {
-        background-color: white;
+        background-color: var(--mitmweb-bg);
     }
 
     .kv-add-row {
         opacity: 0;
-        color: #666;
+        color: var(--mitmweb-fg-muted);
         position: absolute;
         bottom: 4px;
         right: 4px;

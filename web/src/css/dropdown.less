@@ -11,9 +11,8 @@
     list-style: none;
     font-size: 14px;
     text-align: left;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border: 1px solid rgba(0, 0, 0, 15%);
+    background-color: var(--mitmweb-bg);
+    border: 1px solid var(--mitmweb-border);
     border-radius: 4px;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 17.5%);
     background-clip: padding-box;
@@ -31,7 +30,7 @@
         clear: both;
         font-weight: 400;
         line-height: 1.42857143;
-        color: #333;
+        color: var(--mitmweb-fg);
         white-space: nowrap;
         text-decoration: none;
     }
@@ -39,8 +38,8 @@
     > li > a:hover,
     > li > a:focus {
         text-decoration: none;
-        color: #262626;
-        background-color: #f5f5f5;
+        color: var(--mitmweb-fg-strong);
+        background-color: var(--mitmweb-bg-muted);
     }
 
     max-height: 250px;
@@ -51,5 +50,5 @@
     height: 1px;
     margin: 9px 0;
     overflow: hidden;
-    background-color: #e5e5e5;
+    background-color: var(--mitmweb-border-lighter);
 }
