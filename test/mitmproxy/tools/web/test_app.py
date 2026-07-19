@@ -111,6 +111,32 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_filter_help(self):
         assert self.fetch("/filter-help").code == 200
 
+    def test_filter_validation_valid(self):
+        resp = self.fetch("/filter/validate?expression=~http")
+        assert resp.code == 200
+        assert get_json(resp) == {
+            "valid": True,
+            "description": "is an HTTP Flow",
+        }
+
+    def test_filter_validation_invalid(self):
+        resp = self.fetch("/filter/validate?expression=~htt")
+        assert resp.code == 200
+        assert get_json(resp) == {
+            "valid": False,
+            "error": "Invalid filter expression: '~htt'",
+        }
+
+    def test_filter_validation_empty(self):
+        resp = self.fetch("/filter/validate?expression=")
+        assert resp.code == 200
+        assert get_json(resp) == {"valid": True, "description": ""}
+
+    def test_filter_validation_bad_request(self):
+        resp = self.fetch("/filter/validate")
+        assert resp.code == 400
+        assert resp.body == b"Missing filter expression."
+
     def test_javascript_mime_type(self):
         """Test that JavaScript files are served with the correct MIME type."""
         # Verify that .js files are served with text/javascript MIME type
@@ -456,6 +482,18 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             headers={"Cookie": self.auth_cookie},
         )
         ws_client = yield tornado.websocket.websocket_connect(ws_req)
+
+        # Invalid filters should be ignored without closing the connection.
+        message = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "~u Content-Type'",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(message)
 
         # test update filter message
         message = json.dumps(
