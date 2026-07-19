@@ -7,12 +7,34 @@ from typing import BinaryIO
 from typing import cast
 from typing import Union
 
+import zstandard as zstd
+
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 from mitmproxy.io.har import request_to_flow
+
+# Magic bytes for zstandard format
+_ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
+
+
+def open_flow_file(path: str) -> BinaryIO:
+    """
+    Open a flow file for reading, auto-detecting zstandard compression from magic bytes.
+    """
+    with open(path, "rb") as raw:
+        header = raw.read(4)
+
+    if header[:4] == _ZSTD_MAGIC:
+        dctx = zstd.ZstdDecompressor()
+        f = open(path, "rb")
+        reader = dctx.stream_reader(f, read_across_frames=True, closefd=True)
+        # Wrap in BufferedReader to provide peek() and buffered seeking
+        return BufferedReader(reader)  # type: ignore[arg-type]
+    else:
+        return open(path, "rb")
 
 
 class FlowWriter:
@@ -44,7 +66,12 @@ class FlowReader:
         """
         Yields Flow objects from the dump.
         """
+        try:
+            yield from self._stream_inner()
+        except (EOFError, OSError, zstd.ZstdError) as e:
+            raise exceptions.FlowReadException(f"Invalid data format: {e}") from e
 
+    def _stream_inner(self) -> Iterable[flow.Flow]:
         if self.peek(4).startswith(
             b"\xef\xbb\xbf{"
         ):  # skip BOM, usually added by Fiddler
@@ -82,7 +109,7 @@ class FlowReader:
 
 
 class FilteredFlowWriter:
-    def __init__(self, fo: BinaryIO, flt: flowfilter.TFilter | None):
+    def __init__(self, fo, flt: flowfilter.TFilter | None):
         self.fo = fo
         self.flt = flt
 
@@ -107,8 +134,10 @@ def read_flows_from_paths(paths) -> list[flow.Flow]:
         flows: list[flow.Flow] = []
         for path in paths:
             path = os.path.expanduser(path)
-            with open(path, "rb") as f:
+            with open_flow_file(path) as f:
                 flows.extend(FlowReader(f).stream())
     except OSError as e:
         raise exceptions.FlowReadException(e.strerror)
+    except (EOFError, zstd.ZstdError) as e:
+        raise exceptions.FlowReadException(f"Error reading compressed flow file: {e}")
     return flows

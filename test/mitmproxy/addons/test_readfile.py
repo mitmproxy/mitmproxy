@@ -119,3 +119,21 @@ class TestReadFileStdin:
                 rf.running()
                 await asyncio.sleep(0)
                 mck.assert_awaited()
+
+
+class TestReadFileCompressed:
+    async def test_load_zstd(self, tmp_path):
+        import zstandard as zstd
+
+        rf = readfile.ReadFile()
+        with taddons.context(rf):
+            p = tmp_path / "flows.zst"
+            cctx = zstd.ZstdCompressor()
+            with open(str(p), "wb") as raw:
+                with cctx.stream_writer(raw) as writer:
+                    w = mitmproxy.io.FlowWriter(writer)
+                    w.add(tflow.tflow(resp=True))
+
+            with mock.patch("mitmproxy.master.Master.load_flow") as mck:
+                await rf.load_flows_from_path(str(p))
+                mck.assert_awaited_once()

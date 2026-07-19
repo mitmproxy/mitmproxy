@@ -25,7 +25,12 @@ class ReadFile:
         self._read_task: asyncio.Task | None = None
 
     def load(self, loader):
-        loader.add_option("rfile", Optional[str], None, "Read flows from file.")
+        loader.add_option(
+            "rfile",
+            Optional[str],
+            None,
+            "Read flows from file. Zstandard-compressed files are detected automatically.",
+        )
         loader.add_option(
             "readfile_filter", Optional[str], None, "Read only matching flows."
         )
@@ -61,7 +66,7 @@ class ReadFile:
     async def load_flows_from_path(self, path: str) -> int:
         path = os.path.expanduser(path)
         try:
-            with open(path, "rb") as f:
+            with io.open_flow_file(path) as f:
                 return await self.load_flows(f)
         except OSError as e:
             logging.error(f"Cannot load flows: {e}")

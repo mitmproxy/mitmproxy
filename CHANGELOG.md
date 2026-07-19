@@ -7,6 +7,9 @@
 
 ## Unreleased: mitmproxy next
 
+- Add `--set save_stream_compress` option to compress stream files on the fly with zstandard.
+  Reading compressed flow files is auto-detected via magic bytes.
+  ([#8287](https://github.com/mitmproxy/mitmproxy/pull/8287), @joelverhagen)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.

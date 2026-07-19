@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from mitmproxy import exceptions
@@ -25,6 +27,12 @@ def test_configure(tmp_path):
 
 def rd(p):
     with open(p, "rb") as f:
+        x = io.FlowReader(f)
+        return list(x.stream())
+
+
+def rd_zstd(p):
+    with io.open_flow_file(str(p)) as f:
         x = io.FlowReader(f)
         return list(x.stream())
 
@@ -197,3 +205,71 @@ def test_disk_full(tmp_path, monkeypatch, capsys):
             sa.response(f)
 
         assert "Error while writing" in capsys.readouterr().err
+
+
+def test_simple_zstd(tmp_path):
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "foo")
+
+        tctx.configure(sa, save_stream_file=p, save_stream_compress=True)
+
+        f = tflow.tflow(resp=True)
+        sa.request(f)
+        sa.response(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert Path(p).read_bytes()[:4] == b"\x28\xb5\x2f\xfd"
+        assert rd_zstd(p)[0].response
+
+        # Test append mode (concatenated zstd frames)
+        tctx.configure(sa, save_stream_file="+" + p, save_stream_compress=True)
+        f = tflow.tflow(err=True)
+        sa.request(f)
+        sa.error(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert rd_zstd(p)[1].error
+
+
+def test_rotate_stream_zstd(tmp_path):
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        tctx.configure(
+            sa,
+            save_stream_file=str(tmp_path / "a"),
+            save_stream_compress=True,
+        )
+        f1 = tflow.tflow(resp=True)
+        f2 = tflow.tflow(resp=True)
+        sa.request(f1)
+        sa.response(f1)
+        sa.request(f2)  # second request already started.
+        tctx.configure(sa, save_stream_file=str(tmp_path / "b"))
+        sa.response(f2)
+        sa.done()
+
+        assert len(rd_zstd(tmp_path / "a")) == 1
+        assert len(rd_zstd(tmp_path / "b")) == 1
+
+
+def test_toggle_compression(tmp_path):
+    """Toggling save_stream_compress reopens the stream with the new setting."""
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "flows")
+
+        # Start without compression
+        tctx.configure(sa, save_stream_file=p, save_stream_compress=False)
+        f = tflow.tflow(resp=True)
+        sa.request(f)
+        sa.response(f)
+
+        # Toggle compression on (same path)
+        tctx.configure(sa, save_stream_compress=True)
+        f2 = tflow.tflow(resp=True)
+        sa.request(f2)
+        sa.response(f2)
+        tctx.configure(sa, save_stream_file=None)
+
+        # The file should now contain zstd data (reopened with compression)
+        raw = Path(p).read_bytes()
+        assert raw[:4] == b"\x28\xb5\x2f\xfd"

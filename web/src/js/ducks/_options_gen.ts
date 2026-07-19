@@ -52,6 +52,7 @@ export interface OptionsState {
     readfile_filter: string | undefined;
     request_client_cert: boolean;
     rfile: string | undefined;
+    save_stream_compress: boolean;
     save_stream_file: string | undefined;
     save_stream_filter: string | undefined;
     scripts: string[];
@@ -159,6 +160,7 @@ export const defaultState: OptionsState = {
     readfile_filter: undefined,
     request_client_cert: false,
     rfile: undefined,
+    save_stream_compress: false,
     save_stream_file: undefined,
     save_stream_filter: undefined,
     scripts: [],

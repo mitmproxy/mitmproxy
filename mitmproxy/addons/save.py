@@ -4,9 +4,12 @@ import sys
 from collections.abc import Sequence
 from datetime import datetime
 from functools import lru_cache
+from io import BufferedWriter
 from pathlib import Path
 from typing import Literal
 from typing import Optional
+
+import zstandard as zstd
 
 import mitmproxy.types
 from mitmproxy import command
@@ -45,6 +48,9 @@ class Save:
         self.filt: flowfilter.TFilter | None = None
         self.active_flows: set[flow.Flow] = set()
         self.current_path: str | None = None
+        self._compressed: bool = False
+        self._raw_file: BufferedWriter | None = None
+        self._compressor_writer: zstd.ZstdCompressionWriter | None = None
 
     def load(self, loader):
         loader.add_option(
@@ -55,7 +61,8 @@ class Save:
             Stream flows to file as they arrive. Prefix path with + to append.
             The full path can use python strftime() formating, missing
             directories are created as needed. A new file is opened every time
-            the formatted string changes.
+            the formatted string changes. Use save_stream_compress to
+            compress output with zstandard.
             """,
         )
         loader.add_option(
@@ -63,6 +70,12 @@ class Save:
             Optional[str],
             None,
             "Filter which flows are written to file.",
+        )
+        loader.add_option(
+            "save_stream_compress",
+            bool,
+            False,
+            "Compress stream files on the fly using zstandard.",
         )
 
     def configure(self, updated):
@@ -74,7 +87,11 @@ class Save:
                     raise exceptions.OptionsError(str(e)) from e
             else:
                 self.filt = None
-        if "save_stream_file" in updated or "save_stream_filter" in updated:
+        if (
+            "save_stream_file" in updated
+            or "save_stream_filter" in updated
+            or "save_stream_compress" in updated
+        ):
             if ctx.options.save_stream_file:
                 try:
                     self.maybe_rotate_to_new_file()
@@ -87,19 +104,39 @@ class Save:
 
     def maybe_rotate_to_new_file(self) -> None:
         path = datetime.today().strftime(_path(ctx.options.save_stream_file))
-        if self.current_path == path:
+        compressed = ctx.options.save_stream_compress
+        if self.current_path == path and self._compressed == compressed:
             return
 
-        if self.stream:
-            self.stream.fo.close()
-            self.stream = None
+        self._close_stream()
 
         new_log_file = Path(path)
         new_log_file.parent.mkdir(parents=True, exist_ok=True)
 
-        f = new_log_file.open(_mode(ctx.options.save_stream_file))
-        self.stream = io.FilteredFlowWriter(f, self.filt)
+        mode = _mode(ctx.options.save_stream_file)
+        if ctx.options.save_stream_compress:
+            self._raw_file = new_log_file.open(mode)
+            cctx = zstd.ZstdCompressor()
+            self._compressor_writer = cctx.stream_writer(self._raw_file, closefd=False)
+            self.stream = io.FilteredFlowWriter(self._compressor_writer, self.filt)
+        else:
+            self._raw_file = None
+            self._compressor_writer = None
+            self.stream = io.FilteredFlowWriter(new_log_file.open(mode), self.filt)
         self.current_path = path
+        self._compressed = compressed
+
+    def _close_stream(self) -> None:
+        if self.stream:
+            if self._compressor_writer:
+                self._compressor_writer.close()
+            if self._raw_file:
+                self._raw_file.close()
+            else:
+                self.stream.fo.close()
+            self.stream = None
+            self._compressor_writer = None
+            self._raw_file = None
 
     def save_flow(self, flow: flow.Flow) -> None:
         """
@@ -126,8 +163,7 @@ class Save:
             self.active_flows.clear()
 
             self.current_path = None
-            self.stream.fo.close()
-            self.stream = None
+            self._close_stream()
 
     @command.command("save.file")
     def save(self, flows: Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
