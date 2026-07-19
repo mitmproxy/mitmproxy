@@ -117,18 +117,12 @@ class Save:
         if ctx.options.save_stream_compress:
             self._raw_file = new_log_file.open(mode)
             cctx = zstd.ZstdCompressor()
-            self._compressor_writer = cctx.stream_writer(
-                self._raw_file, closefd=False
-            )
-            self.stream = io.FilteredFlowWriter(
-                self._compressor_writer, self.filt
-            )
+            self._compressor_writer = cctx.stream_writer(self._raw_file, closefd=False)
+            self.stream = io.FilteredFlowWriter(self._compressor_writer, self.filt)
         else:
             self._raw_file = None
             self._compressor_writer = None
-            self.stream = io.FilteredFlowWriter(
-                new_log_file.open(mode), self.filt
-            )
+            self.stream = io.FilteredFlowWriter(new_log_file.open(mode), self.filt)
         self.current_path = path
         self._compressed = compressed
 
