@@ -483,6 +483,18 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         )
         ws_client = yield tornado.websocket.websocket_connect(ws_req)
 
+        # Invalid filters should be ignored without closing the connection.
+        message = json.dumps(
+            {
+                "type": "flows/updateFilter",
+                "payload": {
+                    "name": "search",
+                    "expr": "~u Content-Type'",
+                },
+            }
+        ).encode()
+        yield ws_client.write_message(message)
+
         # test update filter message
         message = json.dumps(
             {

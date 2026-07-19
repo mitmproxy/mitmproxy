@@ -508,7 +508,12 @@ class ClientConnection(WebSocketEventBroadcaster):
             data = json.loads(message)
             match data["type"]:
                 case "flows/updateFilter":
-                    self.update_filter(data["payload"]["name"], data["payload"]["expr"])
+                    try:
+                        self.update_filter(
+                            data["payload"]["name"], data["payload"]["expr"]
+                        )
+                    except ValueError as err:
+                        logger.warning("Ignoring invalid filter expression: %s", err)
                 case other:
                     raise ValueError(f"Unsupported command: {other}")
         except Exception as e:
