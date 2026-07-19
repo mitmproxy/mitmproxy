@@ -101,14 +101,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             headers={"Content-Type": "application/json"},
         )
 
-    def post_json(self, url: str, data: object) -> httpclient.HTTPResponse:
-        return self.fetch(
-            url,
-            method="POST",
-            body=json.dumps(data),
-            headers={"Content-Type": "application/json"},
-        )
-
     def test_index(self):
         response = self.fetch("/")
         assert response.code == 200
@@ -120,7 +112,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert self.fetch("/filter-help").code == 200
 
     def test_filter_validation_valid(self):
-        resp = self.post_json("/filter/validate", {"expression": "~http"})
+        resp = self.fetch("/filter/validate?expression=~http")
         assert resp.code == 200
         assert get_json(resp) == {
             "valid": True,
@@ -128,7 +120,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
 
     def test_filter_validation_invalid(self):
-        resp = self.post_json("/filter/validate", {"expression": "~htt"})
+        resp = self.fetch("/filter/validate?expression=~htt")
         assert resp.code == 200
         assert get_json(resp) == {
             "valid": False,
@@ -136,18 +128,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         }
 
     def test_filter_validation_empty(self):
-        resp = self.post_json("/filter/validate", {"expression": ""})
+        resp = self.fetch("/filter/validate?expression=")
         assert resp.code == 200
         assert get_json(resp) == {"valid": True, "description": ""}
 
     def test_filter_validation_bad_request(self):
-        resp = self.post_json("/filter/validate", {})
+        resp = self.fetch("/filter/validate")
         assert resp.code == 400
         assert resp.body == b"Missing filter expression."
-
-        resp = self.post_json("/filter/validate", {"expression": 42})
-        assert resp.code == 400
-        assert resp.body == b"Filter expression must be a string."
 
     def test_javascript_mime_type(self):
         """Test that JavaScript files are served with the correct MIME type."""

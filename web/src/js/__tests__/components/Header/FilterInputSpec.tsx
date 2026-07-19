@@ -157,10 +157,9 @@ describe("FilterInput Component", () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(fetchMock).toHaveBeenCalledWith(
-            "./filter/validate",
+            "./filter/validate?expression=%7Eu+foo",
             expect.objectContaining({
-                method: "POST",
-                body: JSON.stringify({ expression: "~u foo" }),
+                signal: expect.any(AbortSignal),
             }),
         );
         expect(filterInput.props.onChange).toHaveBeenCalledWith("~u foo");

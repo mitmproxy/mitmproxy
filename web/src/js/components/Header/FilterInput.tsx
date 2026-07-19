@@ -21,11 +21,8 @@ export async function validateFilter(
     expression: string,
     signal?: AbortSignal,
 ): Promise<FilterValidationResponse> {
-    const response = await fetchApi.post(
-        "/filter/validate",
-        { expression },
-        { signal },
-    );
+    const query = new URLSearchParams({ expression });
+    const response = await fetchApi(`/filter/validate?${query}`, { signal });
     if (!response.ok) {
         throw new Error((await response.text()) || response.statusText);
     }

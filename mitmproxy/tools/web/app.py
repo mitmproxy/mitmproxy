@@ -373,15 +373,12 @@ class FilterHelp(RequestHandler):
         self.write(dict(commands=flowfilter.help))
 
 
-class FilterValidation(RequestHandler):
-    def post(self) -> None:
+class FilterDescription(RequestHandler):
+    def get(self) -> None:
         try:
-            expression = self.json["expression"]
-        except (KeyError, TypeError):
+            expression = self.get_query_argument("expression")
+        except tornado.web.MissingArgumentError:
             raise APIError(400, "Missing filter expression.")
-
-        if not isinstance(expression, str):
-            raise APIError(400, "Filter expression must be a string.")
 
         if not expression:
             self.write({"valid": True, "description": ""})
@@ -909,7 +906,7 @@ class GZipContentAndFlowFiles(tornado.web.GZipContentEncoding):
 handlers = [
     (r"/", IndexHandler),
     (r"/filter-help(?:\.json)?", FilterHelp),
-    (r"/filter/validate", FilterValidation),
+    (r"/filter/validate", FilterDescription),
     (r"/updates", ClientConnection),
     (r"/commands(?:\.json)?", Commands),
     (r"/commands/(?P<cmd>[a-z.]+)", ExecuteCommand),
