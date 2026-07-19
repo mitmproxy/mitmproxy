@@ -137,3 +137,5 @@ class TestReadFileCompressed:
             with mock.patch("mitmproxy.master.Master.load_flow") as mck:
                 await rf.load_flows_from_path(str(p))
                 mck.assert_awaited_once()
+                loaded_flow = mck.call_args[0][0]
+                assert loaded_flow.response

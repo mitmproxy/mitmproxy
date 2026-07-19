@@ -32,7 +32,7 @@ def rd(p):
 
 
 def rd_zstd(p):
-    with io.open_flow_file(str(p)) as f:
+    with open(str(p), "rb") as f:
         x = io.FlowReader(f)
         return list(x.stream())
 
@@ -252,7 +252,7 @@ def test_rotate_stream_zstd(tmp_path):
 
 
 def test_toggle_compression(tmp_path):
-    """Toggling save_stream_compress reopens the stream with the new setting."""
+    """Toggling save_stream_compress reopens the file with the new format (truncating in wb mode)."""
     sa = save.Save()
     with taddons.context(sa) as tctx:
         p = str(tmp_path / "flows")
@@ -263,13 +263,85 @@ def test_toggle_compression(tmp_path):
         sa.request(f)
         sa.response(f)
 
-        # Toggle compression on (same path)
+        # Toggle compression on (same path, non-append mode truncates)
         tctx.configure(sa, save_stream_compress=True)
         f2 = tflow.tflow(resp=True)
         sa.request(f2)
         sa.response(f2)
         tctx.configure(sa, save_stream_file=None)
 
-        # The file should now contain zstd data (reopened with compression)
+        # File was reopened with compression; only the second flow remains
         raw = Path(p).read_bytes()
         assert raw[:4] == b"\x28\xb5\x2f\xfd"
+        assert len(rd_zstd(p)) == 1
+
+
+def test_append_compression_mismatch(tmp_path):
+    """Appending with mismatched compression raises OptionsError."""
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "flows")
+
+        # Write uncompressed data
+        tctx.configure(sa, save_stream_file=p, save_stream_compress=False)
+        f = tflow.tflow(resp=True)
+        sa.request(f)
+        sa.response(f)
+        tctx.configure(sa, save_stream_file=None)
+
+        # Try to append compressed data to uncompressed file
+        with pytest.raises(exceptions.OptionsError, match="Cannot append compressed"):
+            tctx.configure(sa, save_stream_file="+" + p, save_stream_compress=True)
+
+        # Write compressed data to a new file
+        p2 = str(tmp_path / "flows2")
+        tctx.configure(sa, save_stream_file=p2, save_stream_compress=True)
+        f = tflow.tflow(resp=True)
+        sa.request(f)
+        sa.response(f)
+        tctx.configure(sa, save_stream_file=None)
+
+        # Try to append uncompressed data to compressed file
+        with pytest.raises(exceptions.OptionsError, match="Cannot append uncompressed"):
+            tctx.configure(sa, save_stream_file="+" + p2, save_stream_compress=False)
+
+
+def test_append_compressed_to_compressed(tmp_path):
+    """Appending compressed data to an existing compressed file succeeds."""
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "flows")
+
+        # Write first compressed flow
+        tctx.configure(sa, save_stream_file=p, save_stream_compress=True)
+        f = tflow.tflow(resp=True)
+        sa.request(f)
+        sa.response(f)
+        tctx.configure(sa, save_stream_file=None)
+
+        # Append second compressed flow
+        tctx.configure(sa, save_stream_file="+" + p, save_stream_compress=True)
+        f2 = tflow.tflow(resp=True)
+        sa.request(f2)
+        sa.response(f2)
+        tctx.configure(sa, save_stream_file=None)
+
+        # Both flows readable
+        assert len(rd_zstd(p)) == 2
+
+
+def test_append_to_empty_file(tmp_path):
+    """Appending to an empty file with compression works regardless of format."""
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmp_path / "flows")
+        Path(p).write_bytes(b"")  # create empty file
+
+        # Append compressed to empty file - should not raise
+        tctx.configure(sa, save_stream_file="+" + p, save_stream_compress=True)
+        f = tflow.tflow(resp=True)
+        sa.request(f)
+        sa.response(f)
+        tctx.configure(sa, save_stream_file=None)
+
+        assert len(rd_zstd(p)) == 1

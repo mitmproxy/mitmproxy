@@ -66,7 +66,7 @@ class ReadFile:
     async def load_flows_from_path(self, path: str) -> int:
         path = os.path.expanduser(path)
         try:
-            with io.open_flow_file(path) as f:
+            with open(path, "rb") as f:
                 return await self.load_flows(f)
         except OSError as e:
             logging.error(f"Cannot load flows: {e}")

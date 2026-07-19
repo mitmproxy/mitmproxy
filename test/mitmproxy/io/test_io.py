@@ -11,7 +11,6 @@ from mitmproxy import exceptions
 from mitmproxy import version
 from mitmproxy.io import FlowReader
 from mitmproxy.io import FlowWriter
-from mitmproxy.io import open_flow_file
 from mitmproxy.io import read_flows_from_paths
 from mitmproxy.io import tnetstring
 from mitmproxy.test import tflow
@@ -83,7 +82,7 @@ class TestOpenFlowFile:
     def test_uncompressed(self, tmp_path):
         p = tmp_path / "flows"
         _write_flow_to_file(p)
-        with open_flow_file(str(p)) as f:
+        with open(str(p), "rb") as f:
             flows = list(FlowReader(f).stream())
         assert len(flows) == 1
         assert flows[0].response
@@ -91,7 +90,7 @@ class TestOpenFlowFile:
     def test_zstd(self, tmp_path):
         p = tmp_path / "flows.bin"
         _write_flow_to_file(p, compressed=True)
-        with open_flow_file(str(p)) as f:
+        with open(str(p), "rb") as f:
             flows = list(FlowReader(f).stream())
         assert len(flows) == 1
         assert flows[0].response
@@ -105,7 +104,7 @@ class TestOpenFlowFile:
         with open(str(p), "ab") as raw:
             with cctx.stream_writer(raw) as writer:
                 FlowWriter(writer).add(f2)
-        with open_flow_file(str(p)) as f:
+        with open(str(p), "rb") as f:
             flows = list(FlowReader(f).stream())
         assert len(flows) == 2
 
@@ -124,7 +123,7 @@ class TestCorruptCompressedFiles:
         p = tmp_path / "corrupt.bin"
         p.write_bytes(b"\x28\xb5\x2f\xfd" + b"\xff" * 20)
         with pytest.raises(exceptions.FlowReadException):
-            with open_flow_file(str(p)) as f:
+            with open(str(p), "rb") as f:
                 list(FlowReader(f).stream())
 
     def test_corrupt_zstd_via_read_flows_from_paths(self, tmp_path):
@@ -132,3 +131,31 @@ class TestCorruptCompressedFiles:
         p.write_bytes(b"\x28\xb5\x2f\xfd" + b"\xff" * 20)
         with pytest.raises(exceptions.FlowReadException):
             read_flows_from_paths([str(p)])
+
+    def test_short_file(self):
+        """A file shorter than 4 bytes is not misdetected as zstd and raises FlowReadException."""
+        with pytest.raises(exceptions.FlowReadException, match="^Invalid data format\\.$"):
+            list(FlowReader(io.BytesIO(b"\x28\xb5")).stream())
+
+    def test_truncated_zstd(self, tmp_path):
+        """Truncated zstd yields partial data insufficient for tnetstring, so 0 flows (no error)."""
+        p = tmp_path / "truncated.bin"
+        _write_flow_to_file(p, compressed=True)
+        full_data = p.read_bytes()
+        p.write_bytes(full_data[: len(full_data) // 2])
+        with open(str(p), "rb") as f:
+            flows = list(FlowReader(f).stream())
+        assert flows == []
+
+    def test_corruption_after_valid_flow(self, tmp_path):
+        """A valid compressed flow followed by corruption raises FlowReadException."""
+        import zstandard as zstd_lib
+
+        p = tmp_path / "partial_corrupt.bin"
+        _write_flow_to_file(p, compressed=True)
+        # Append garbage after the valid frame
+        with open(str(p), "ab") as f:
+            f.write(b"\xff" * 20)
+        with pytest.raises(exceptions.FlowReadException):
+            with open(str(p), "rb") as f:
+                list(FlowReader(f).stream())
