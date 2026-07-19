@@ -61,7 +61,7 @@ class Save:
             Stream flows to file as they arrive. Prefix path with + to append.
             The full path can use python strftime() formating, missing
             directories are created as needed. A new file is opened every time
-            the formatted string changes. Use save_stream_compression to
+            the formatted string changes. Use save_stream_compress to
             compress output with zstandard.
             """,
         )
@@ -72,7 +72,7 @@ class Save:
             "Filter which flows are written to file.",
         )
         loader.add_option(
-            "save_stream_compression",
+            "save_stream_compress",
             bool,
             False,
             "Compress stream files on the fly using zstandard.",
@@ -90,7 +90,7 @@ class Save:
         if (
             "save_stream_file" in updated
             or "save_stream_filter" in updated
-            or "save_stream_compression" in updated
+            or "save_stream_compress" in updated
         ):
             if ctx.options.save_stream_file:
                 try:
@@ -104,7 +104,7 @@ class Save:
 
     def maybe_rotate_to_new_file(self) -> None:
         path = datetime.today().strftime(_path(ctx.options.save_stream_file))
-        compressed = ctx.options.save_stream_compression
+        compressed = ctx.options.save_stream_compress
         if self.current_path == path and self._compressed == compressed:
             return
 
@@ -114,7 +114,7 @@ class Save:
         new_log_file.parent.mkdir(parents=True, exist_ok=True)
 
         mode = _mode(ctx.options.save_stream_file)
-        if ctx.options.save_stream_compression:
+        if ctx.options.save_stream_compress:
             self._raw_file = new_log_file.open(mode)
             cctx = zstd.ZstdCompressor()
             self._compressor_writer = cctx.stream_writer(

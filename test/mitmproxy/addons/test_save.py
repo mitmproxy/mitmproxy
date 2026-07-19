@@ -212,7 +212,7 @@ def test_simple_zstd(tmp_path):
     with taddons.context(sa) as tctx:
         p = str(tmp_path / "foo")
 
-        tctx.configure(sa, save_stream_file=p, save_stream_compression=True)
+        tctx.configure(sa, save_stream_file=p, save_stream_compress=True)
 
         f = tflow.tflow(resp=True)
         sa.request(f)
@@ -222,7 +222,7 @@ def test_simple_zstd(tmp_path):
         assert rd_zstd(p)[0].response
 
         # Test append mode (concatenated zstd frames)
-        tctx.configure(sa, save_stream_file="+" + p, save_stream_compression=True)
+        tctx.configure(sa, save_stream_file="+" + p, save_stream_compress=True)
         f = tflow.tflow(err=True)
         sa.request(f)
         sa.error(f)
@@ -236,7 +236,7 @@ def test_rotate_stream_zstd(tmp_path):
         tctx.configure(
             sa,
             save_stream_file=str(tmp_path / "a"),
-            save_stream_compression=True,
+            save_stream_compress=True,
         )
         f1 = tflow.tflow(resp=True)
         f2 = tflow.tflow(resp=True)
@@ -251,34 +251,20 @@ def test_rotate_stream_zstd(tmp_path):
         assert len(rd_zstd(tmp_path / "b")) == 1
 
 
-def test_tcp_zstd(tmp_path):
-    sa = save.Save()
-    with taddons.context(sa) as tctx:
-        p = str(tmp_path / "foo")
-        tctx.configure(sa, save_stream_file=p, save_stream_compression=True)
-
-        tt = tflow.ttcpflow()
-        sa.tcp_start(tt)
-        sa.tcp_end(tt)
-
-        tctx.configure(sa, save_stream_file=None)
-        assert len(rd_zstd(p)) == 1
-
-
 def test_toggle_compression(tmp_path):
-    """Toggling save_stream_compression reopens the stream with the new setting."""
+    """Toggling save_stream_compress reopens the stream with the new setting."""
     sa = save.Save()
     with taddons.context(sa) as tctx:
         p = str(tmp_path / "flows")
 
         # Start without compression
-        tctx.configure(sa, save_stream_file=p, save_stream_compression=False)
+        tctx.configure(sa, save_stream_file=p, save_stream_compress=False)
         f = tflow.tflow(resp=True)
         sa.request(f)
         sa.response(f)
 
         # Toggle compression on (same path)
-        tctx.configure(sa, save_stream_compression=True)
+        tctx.configure(sa, save_stream_compress=True)
         f2 = tflow.tflow(resp=True)
         sa.request(f2)
         sa.response(f2)

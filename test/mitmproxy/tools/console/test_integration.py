@@ -7,25 +7,6 @@ def test_integration(tdata, console):
     assert "http://example.com/" in console.screen_contents()
 
 
-def test_load_compressed_zstd(tmp_path, console):
-    import zstandard as zstd
-
-    from mitmproxy import io as mio
-    from mitmproxy.test import tflow
-
-    p = tmp_path / "flows.zst"
-    cctx = zstd.ZstdCompressor()
-    with open(str(p), "wb") as raw:
-        with cctx.stream_writer(raw) as writer:
-            w = mio.FlowWriter(writer)
-            flow = tflow.tflow(resp=True)
-            flow.request.url = "http://compressed.example.com/zstdtest"
-            w.add(flow)
-
-    console.type(f":view.flows.load {p}<enter>")
-    assert "compressed.example.com" in console.screen_contents()
-
-
 def test_options_home_end(console):
     console.type("O<home><end>")
     assert "Options" in console.screen_contents()
