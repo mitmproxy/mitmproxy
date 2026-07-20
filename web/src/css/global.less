@@ -83,6 +83,9 @@
 
     // Drop shadow cast by panel edges (footers)
     --mitmweb-shadow: lightgray;
+
+    // Applied to bitmap icons supplied by the OS, which we cannot recolor
+    --mitmweb-bitmap-icon-filter: none;
 }
 
 [data-theme="dark"] {
@@ -159,6 +162,11 @@
 
     // Drop shadow cast by panel edges (footers)
     --mitmweb-shadow: #000;
+
+    // The OS hands us light icons.
+    // The generic executable icon is a plain white square, which glares on a dark popover.
+    // Dimming knocks it back to grey while leaving colored app icons recognizable.
+    --mitmweb-bitmap-icon-filter: brightness(0.7);
 }
 
 // www.paulirish.com/2012/box-sizing-border-box-ftw/
