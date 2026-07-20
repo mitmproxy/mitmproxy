@@ -86,6 +86,9 @@
 
     // Applied to bitmap icons supplied by the OS, which we cannot recolor
     --mitmweb-bitmap-icon-filter: none;
+
+    // `thumb track` for scrollbars
+    --mitmweb-scrollbar: auto;
 }
 
 [data-theme="dark"] {
@@ -167,6 +170,11 @@
     // The generic executable icon is a plain white square, which glares on a dark popover.
     // Dimming knocks it back to grey while leaving colored app icons recognizable.
     --mitmweb-bitmap-icon-filter: brightness(0.7);
+
+    // Panes such as the flow table reserve a scrollbar gutter permanently (`overflow-y: scroll`).
+    // Under `color-scheme: dark` the UA paints that gutter light, so an idle scrollbar reads as a stray vertical line against the pane divider.
+    // Sinking the track into the surface keeps it as invisible as it is on light backgrounds.
+    --mitmweb-scrollbar: var(--mitmweb-border-strong) var(--mitmweb-bg);
 }
 
 // www.paulirish.com/2012/box-sizing-border-box-ftw/
@@ -205,6 +213,7 @@ body {
     line-height: 1.42857143;
     color: var(--mitmweb-fg);
     background-color: var(--mitmweb-bg);
+    scrollbar-color: var(--mitmweb-scrollbar);
 }
 
 h1,
