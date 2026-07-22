@@ -3,6 +3,59 @@ import pytest
 from mitmproxy.net.http import multipart
 
 
+def test_decode_preserves_newlines():
+    """Test that decode_multipart preserves \n and \r within binary content."""
+    boundary = "boundary123"
+    # Content with embedded newlines in the value
+    content = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="data"\r\n'
+        f"Content-Type: text/plain\r\n"
+        f"\r\n"
+        f"a\nb\r\n"
+        f"--{boundary}--\r\n"
+    ).encode()
+
+    form = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content
+    )
+    assert len(form) == 1
+    assert form[0] == (b"data", b"a\nb"), f"Expected newline preserved, got {form[0]}"
+
+    # CRLF in content should also be preserved
+    content2 = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"\r\n'
+        f"\r\n"
+        f"line1\r\nline2\r\n"
+        f"--{boundary}--\r\n"
+    ).encode()
+
+    form2 = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content2
+    )
+    assert len(form2) == 1
+    assert form2[0] == (b"file", b"line1\r\nline2"), (
+        f"Expected CRLF preserved, got {form2[0]}"
+    )
+
+    # Binary bytes (0x00) should also be preserved
+    content3 = (
+        (f'--{boundary}\r\nContent-Disposition: form-data; name="bin"\r\n').encode()
+        + b"\r\n"
+        + b"binary\x00data\nwith\r\nbytes"
+        + f"\r\n--{boundary}--\r\n".encode()
+    )
+
+    form3 = multipart.decode_multipart(
+        f"multipart/form-data; boundary={boundary}", content3
+    )
+    assert len(form3) == 1
+    assert form3[0] == (b"bin", b"binary\x00data\nwith\r\nbytes"), (
+        f"Expected binary data preserved, got {form3[0]}"
+    )
+
+
 def test_decode():
     boundary = "somefancyboundary"
     content = (
@@ -20,7 +73,7 @@ def test_decode():
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
-    boundary = "boundary茅莽"
+    boundary = "boundaryéç"
     result = multipart.decode_multipart(f"multipart/form-data; {boundary=!s}", content)
     assert result == []
 
@@ -47,7 +100,7 @@ def test_encode():
         )
 
     result = multipart.encode_multipart(
-        "multipart/form-data; boundary=boundary茅莽", data
+        "multipart/form-data; boundary=boundaryéç", data
     )
     assert result == b""
 
