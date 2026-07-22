@@ -34,6 +34,7 @@
   ([#8295](https://github.com/mitmproxy/mitmproxy/pull/8295), @tbodt)
 - Correctly read the SNI hostname from fragmented QUIC client hellos.
   ([#8296](https://github.com/mitmproxy/mitmproxy/pull/8296), @tbodt)
+- mitmweb: Fix for modified reason phrase not being sent
 
 ## 12 May 2026: mitmproxy 12.2.3
 
