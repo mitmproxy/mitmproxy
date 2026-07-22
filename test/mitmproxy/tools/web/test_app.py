@@ -207,7 +207,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "content": "req",
             },
             "response": {
-                "msg": "Non-Authorisé",
+                "reason": "Non-Authorisé",
                 "code": 404,
                 "headers": [("bar", "baz")],
                 "trailers": [("foo", "bar")],
@@ -221,7 +221,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert f.request.port == 123
         assert f.request.headers["foo"] == "bar"
         assert f.request.text == "req"
-        assert f.response.msg == "Non-Authorisé"
+        assert f.response.reason == "Non-Authorisé"
         assert f.response.status_code == 404
         assert f.response.headers["bar"] == "baz"
         assert f.response.text == "resp"
