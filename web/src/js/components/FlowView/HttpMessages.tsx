@@ -106,7 +106,9 @@ function ResponseLine({ flow }: ResponseLineProps) {
                         content={flow.response.reason}
                         onEditDone={(reason) =>
                             dispatch(
-                                flowActions.update(flow, { response: { reason } }),
+                                flowActions.update(flow, {
+                                    response: { reason },
+                                }),
                             )
                         }
                         selectAllOnClick={true}
