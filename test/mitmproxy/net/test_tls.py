@@ -15,6 +15,23 @@ def test_supported(version):
     assert tls.is_supported_version(version) == expected_support
 
 
+def test_supported_setup_error(monkeypatch):
+    # On OpenSSL builds that have dropped a protocol version entirely,
+    # set_min_proto_version raises SSL.Error at context-setup time, before
+    # the recv() probe. is_supported_version must report the version as
+    # unsupported instead of letting the exception propagate (#8264).
+    def raise_ssl_error(self, version):
+        raise SSL.Error("unsupported protocol version")
+
+    monkeypatch.setattr(SSL.Context, "set_min_proto_version", raise_ssl_error)
+    tls.is_supported_version.cache_clear()
+    try:
+        assert tls.is_supported_version(tls.Version.SSL3) is False
+    finally:
+        # Don't leave a result cached under the monkeypatched setter.
+        tls.is_supported_version.cache_clear()
+
+
 def test_make_master_secret_logger():
     assert tls.make_master_secret_logger(None) is None
     assert isinstance(tls.make_master_secret_logger("filepath"), tls.MasterSecretLogger)
