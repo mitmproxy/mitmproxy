@@ -3,6 +3,7 @@ import pytest
 from ..tutils import Placeholder
 from ..tutils import Playbook
 from ..tutils import reply
+from mitmproxy import flow
 from mitmproxy.proxy.commands import CloseConnection
 from mitmproxy.proxy.commands import OpenConnection
 from mitmproxy.proxy.commands import SendData
@@ -141,6 +142,40 @@ def test_kill_injected(tctx):
         << OpenConnection(tctx.server)
         >> reply(None)
         >> KillInjected(f)
+        << CloseConnection(tctx.server)
+        << CloseConnection(tctx.client)
+        << udp.UdpErrorHook(f)
+        >> reply()
+    )
+    assert f().live is False
+
+
+def test_kill_in_message_hook(tctx):
+    """
+    An addon may call flow.kill() from inside the udp_message hook. Flow.kill()
+    injects the KillInjected event asynchronously, so it does not reach us
+    before we resume past the hook. Check the killed state synchronously here
+    so the in-flight datagram is not forwarded to its destination (#8200).
+    """
+    f = Placeholder(UDPFlow)
+
+    def kill(killed_flow):
+        # Mirror Flow.kill()'s effect on the flow (the async FlowKilledHook
+        # path is not wired into an isolated layer playbook). The hook's flow
+        # is passed to the side_effect as its single positional argument.
+        killed_flow.error = flow.Error(flow.Error.KILLED_MESSAGE)
+        killed_flow.live = False
+
+    assert (
+        Playbook(udp.UDPLayer(tctx))
+        << udp.UdpStartHook(f)
+        >> reply()
+        << OpenConnection(tctx.server)
+        >> reply(None)
+        >> DataReceived(tctx.client, b"do-not-forward")
+        << udp.UdpMessageHook(f)
+        >> reply(side_effect=kill)
+        # datagram must NOT reach the server; the flow tears down instead.
         << CloseConnection(tctx.server)
         << CloseConnection(tctx.client)
         << udp.UdpErrorHook(f)
