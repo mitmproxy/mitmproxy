@@ -6,6 +6,7 @@ import wsproto.events
 from wsproto.frame_protocol import Opcode
 
 from mitmproxy.connection import ConnectionState
+from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow
 from mitmproxy.http import Request
 from mitmproxy.http import Response
@@ -499,5 +500,40 @@ def test_kill_injected(ws_testdata):
         << CloseConnection(tctx.client)
         << websocket.WebsocketEndHook(flow)
         >> reply()
+    )
+    assert flow.live is False
+
+
+def test_kill_in_message_hook(ws_testdata):
+    """
+    An addon may call flow.kill() from inside the websocket_message hook.
+    Flow.kill() injects the KillInjected event asynchronously, so it does not
+    reach us before we resume past the hook. Check the killed state
+    synchronously here so the in-flight frame is not forwarded (#8200).
+    """
+    tctx, playbook, flow = ws_testdata
+
+    def kill(killed_flow):
+        # Mirror Flow.kill()'s effect on the flow (the async FlowKilledHook
+        # path is not wired into an isolated layer playbook). The hook's flow
+        # is passed to the side_effect as its single positional argument.
+        killed_flow.error = Error(Error.KILLED_MESSAGE)
+        killed_flow.live = False
+
+    assert (
+        playbook
+        << websocket.WebsocketStartHook(flow)
+        >> reply()
+        >> DataReceived(tctx.server, b"\x81\x03foo")
+        << websocket.WebsocketMessageHook(flow)
+        >> reply(side_effect=kill)
+        # frame must NOT reach the client; the flow tears down instead.
+        << CloseConnection(tctx.server)
+        << CloseConnection(tctx.client)
+        << websocket.WebsocketEndHook(flow)
+        >> reply()
+        # the async KillInjected that Flow.kill() queued arrives late; it must
+        # be a no-op now (no second teardown / end hook).
+        >> KillInjected(flow)
     )
     assert flow.live is False

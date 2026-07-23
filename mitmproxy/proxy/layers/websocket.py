@@ -9,6 +9,7 @@ from wsproto import ConnectionState
 from wsproto.frame_protocol import Opcode
 
 from mitmproxy import connection
+from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import websocket
 from mitmproxy.proxy import commands
@@ -133,6 +134,24 @@ class WebsocketLayer(layer.Layer):
 
     _handle_event = start
 
+    def _killed(self) -> bool:
+        """True if Flow.kill() has marked this flow as killed."""
+        return bool(
+            self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
+        )
+
+    def _kill(self) -> layer.CommandGenerator[None]:
+        """Close both connections and emit the end hook for a killed flow."""
+        assert self.flow.websocket
+        self._handle_event = self.done
+        self.flow.websocket.timestamp_end = time.time()
+        if self.context.server.state is not connection.ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.server)
+        if self.context.client.state is not connection.ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.client)
+        yield WebsocketEndHook(self.flow)
+        self.flow.live = False
+
     @expect(
         events.DataReceived,
         events.ConnectionClosed,
@@ -144,14 +163,7 @@ class WebsocketLayer(layer.Layer):
 
         if isinstance(event, events.KillInjected):
             if event.flow is self.flow:
-                self.flow.websocket.timestamp_end = time.time()
-                if self.context.server.state is not connection.ConnectionState.CLOSED:
-                    yield commands.CloseConnection(self.context.server)
-                if self.context.client.state is not connection.ConnectionState.CLOSED:
-                    yield commands.CloseConnection(self.context.client)
-                yield WebsocketEndHook(self.flow)
-                self.flow.live = False
-                self._handle_event = self.done
+                yield from self._kill()
             return
 
         if isinstance(event, events.ConnectionEvent):
@@ -202,6 +214,13 @@ class WebsocketLayer(layer.Layer):
                     )
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
+                    # An addon may have called flow.kill() inside the hook.
+                    # Flow.kill() injects KillInjected asynchronously, so it
+                    # has not reached us yet; check synchronously here so a
+                    # killed flow's in-flight frame is not forwarded (#8200).
+                    if self._killed():
+                        yield from self._kill()
+                        return
 
                     if not message.dropped:
                         for msg in fragmentizer(message.content):

@@ -180,5 +180,8 @@ def test_kill_in_message_hook(tctx):
         << CloseConnection(tctx.client)
         << udp.UdpErrorHook(f)
         >> reply()
+        # the async KillInjected that Flow.kill() queued arrives late; it must
+        # be a no-op now (no second teardown / error hook).
+        >> KillInjected(f)
     )
     assert f().live is False
