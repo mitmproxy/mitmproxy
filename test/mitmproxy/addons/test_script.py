@@ -32,6 +32,19 @@ def test_load_script(tmp_path, tdata, caplog):
     assert "invalid syntax" in caplog.text
 
 
+def test_load_script_with_dataclass(tdata, caplog):
+    """
+    Regression test for #8279: a script that defines a @dataclass must load.
+    dataclasses looks the defining module up in sys.modules while the class
+    body runs, so this only works if load_script registers the module first.
+    """
+    ns = script.load_script(tdata.path("mitmproxy/data/addonscripts/dataclass.py"))
+    assert ns is not None
+    assert "error in script" not in caplog.text
+    # The dataclass is usable from the loaded module.
+    assert ns.C(2).x == 2
+
+
 def test_load_fullname(tdata):
     """
     Test that loading two scripts at locations a/foo.py and b/foo.py works.

@@ -16,6 +16,10 @@
 - Remove the unused `msgpack` dependency. The msgpack contentview is
   implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
   ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
+- Fix a crash when loading an addon script that defines a `@dataclass`. Script
+  modules are now registered in `sys.modules` before execution, as required by
+  the standard library's import machinery.
+  ([#8293](https://github.com/mitmproxy/mitmproxy/pull/8293), @gaurav0107)
 - mitmweb: Honor the `view_order_reversed` option for live flows. New flows are
   now placed at the top of the table when the option is set, instead of always
   being appended at the bottom.
