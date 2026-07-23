@@ -123,4 +123,41 @@ describe("Flowcolumns Components", () => {
         const tflow = TFlow();
         testFlowColumn(<FlowColumns.comment flow={tflow} rowNumber={0} />);
     });
+
+    it("should render the status column across all status code ranges", () => {
+        const statusCell = (status_code: number) => {
+            const tflow = TFlow();
+            tflow.response.status_code = status_code;
+            const { container } = render(
+                <table>
+                    <tbody>
+                        <tr>
+                            <FlowColumns.status flow={tflow} rowNumber={0} />
+                        </tr>
+                    </tbody>
+                </table>,
+            );
+            return container.querySelector(".col-status")!.textContent;
+        };
+
+        for (const status_code of [103, 200, 304, 404, 500]) {
+            expect(statusCell(status_code)).toContain(String(status_code));
+        }
+
+        // no response -> empty status cell
+        const noResponseFlow = { ...TFlow(), response: undefined };
+        const { container } = render(
+            <table>
+                <tbody>
+                    <tr>
+                        <FlowColumns.status
+                            flow={noResponseFlow}
+                            rowNumber={0}
+                        />
+                    </tr>
+                </tbody>
+            </table>,
+        );
+        expect(container.querySelector(".col-status")!.textContent).toBe("");
+    });
 });
