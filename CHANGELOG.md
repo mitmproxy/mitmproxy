@@ -16,8 +16,12 @@
   `KillInjected` event into the connection's layer stack so the active
   protocol layer can tear down its connections. Killing a flow from inside a
   `tcp_message` / `udp_message` / `websocket_message` hook now also stops the
-  in-flight message from reaching its destination. Resolves the long-standing
-  TODO referencing #4711.
+  in-flight message from reaching its destination. Killing from a
+  `tcp_start` / `udp_start` hook tears the flow down before the upstream
+  connection is opened, and `KillInjected` is now delivered to UDP flows
+  (previously the connection lookup keyed UDP by address instead of client id,
+  so the event was silently dropped). Resolves the long-standing TODO
+  referencing #4711.
   ([#8200](https://github.com/mitmproxy/mitmproxy/pull/8200), @georgeglarson)
 
 ## 12 April 2026: mitmproxy 12.2.2

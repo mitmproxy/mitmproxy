@@ -76,6 +76,12 @@ class TCPLayer(layer.Layer):
     def start(self, _) -> layer.CommandGenerator[None]:
         if self.flow:
             yield TcpStartHook(self.flow)
+            # An addon may have called flow.kill() inside the start hook. Tear
+            # down before opening the upstream so a killed flow never connects
+            # to the server or forwards a message (#8200).
+            if self._killed():
+                yield from self._kill()
+                return
 
         if self.context.server.timestamp_start is None:
             err = yield commands.OpenConnection(self.context.server)

@@ -207,3 +207,28 @@ def test_kill_in_message_hook(tctx):
         >> KillInjected(f)
     )
     assert f().live is False
+
+
+def test_kill_in_start_hook(tctx):
+    """
+    An addon may call flow.kill() from inside the tcp_start hook. The layer must
+    tear down after the hook without opening the upstream, so a killed flow never
+    establishes a server connection or forwards a message (#8200).
+    """
+    f = Placeholder(TCPFlow)
+
+    def kill(killed_flow):
+        killed_flow.error = flow.Error(flow.Error.KILLED_MESSAGE)
+        killed_flow.live = False
+
+    assert (
+        Playbook(tcp.TCPLayer(tctx))
+        << tcp.TcpStartHook(f)
+        >> reply(side_effect=kill)
+        # killed before the upstream is opened: no OpenConnection, and only the
+        # client is closed (the server was never connected).
+        << CloseConnection(tctx.client)
+        << tcp.TcpErrorHook(f)
+        >> reply()
+    )
+    assert f().live is False

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from mitmproxy import flow
 from mitmproxy import udp
 from mitmproxy.connection import Connection
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import events
 from mitmproxy.proxy import layer
@@ -75,6 +76,12 @@ class UDPLayer(layer.Layer):
     def start(self, _) -> layer.CommandGenerator[None]:
         if self.flow:
             yield UdpStartHook(self.flow)
+            # An addon may have called flow.kill() inside the start hook. Tear
+            # down before opening the upstream so a killed flow never connects
+            # to the server or forwards a datagram (#8200).
+            if self._killed():
+                yield from self._kill()
+                return
 
         if self.context.server.timestamp_start is None:
             err = yield commands.OpenConnection(self.context.server)
@@ -98,11 +105,19 @@ class UDPLayer(layer.Layer):
         )
 
     def _kill(self) -> layer.CommandGenerator[None]:
-        """Close both connections and emit the error hook for a killed flow."""
+        """Close the open connections and emit the error hook for a killed flow.
+
+        Only close a connection that is not already closed: a flow killed inside
+        the start hook is torn down before OpenConnection, and closing the
+        never-opened server raises in the proxy server (#8200). Mirrors the TCP
+        layer's _kill().
+        """
         assert self.flow
         self._handle_event = self.done
-        yield commands.CloseConnection(self.context.server)
-        yield commands.CloseConnection(self.context.client)
+        if self.context.server.state is not ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.server)
+        if self.context.client.state is not ConnectionState.CLOSED:
+            yield commands.CloseConnection(self.context.client)
         yield UdpErrorHook(self.flow)
         self.flow.live = False
 
