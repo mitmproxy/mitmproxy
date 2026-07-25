@@ -6,9 +6,9 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import BinaryIO
+from typing import cast
 from typing import Literal
 from typing import Optional
-from typing import cast
 
 import zstandard as zstd
 

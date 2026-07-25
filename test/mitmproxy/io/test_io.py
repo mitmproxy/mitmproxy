@@ -134,7 +134,9 @@ class TestCorruptCompressedFiles:
 
     def test_short_file(self):
         """A file shorter than 4 bytes is not misdetected as zstd and raises FlowReadException."""
-        with pytest.raises(exceptions.FlowReadException, match="^Invalid data format\\.$"):
+        with pytest.raises(
+            exceptions.FlowReadException, match="^Invalid data format\\.$"
+        ):
             list(FlowReader(io.BytesIO(b"\x28\xb5")).stream())
 
     def test_truncated_zstd(self, tmp_path):
@@ -149,7 +151,6 @@ class TestCorruptCompressedFiles:
 
     def test_corruption_after_valid_flow(self, tmp_path):
         """A valid compressed flow followed by corruption raises FlowReadException."""
-        import zstandard as zstd_lib
 
         p = tmp_path / "partial_corrupt.bin"
         _write_flow_to_file(p, compressed=True)
