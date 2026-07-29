@@ -687,6 +687,23 @@ def make_client_tls_layer(
     return playbook, client_layer, tssl_client
 
 
+class CachedParentHandle:
+    """An outer layer that dispatches through a bound ``handle_event`` captured up front.
+
+    ``NextLayer._ask`` caches ``self.layer.handle_event`` into ``NextLayer._handle`` when it
+    decides the layer stack, so reassigning that attribute on the child afterwards does not
+    reach the cached reference. This stands in for that caching, which the playbook -- which
+    re-resolves ``self.layer.handle_event`` for every event -- does not otherwise exercise.
+    """
+
+    def __init__(self, inner: layer.Layer) -> None:
+        self.inner = inner
+        self._handle = inner.handle_event
+
+    def handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        yield from self._handle(event)
+
+
 class TestClientQuic:
     def test_http3_disabled(self, tctx: context.Context):
         """Test that we swallow QUIC packets if QUIC and HTTP/3 are disabled."""
@@ -861,6 +878,94 @@ class TestClientQuic:
                 tctx.server, b"ServerHello"
             )  # and the same for the serverhello.
             << commands.SendData(tctx.client, b"ServerHello")
+        )
+
+    @pytest.mark.parametrize("server_state", ["open", "closed"])
+    def test_passthrough_from_clienthello_cached_parent_handle(
+        self, tctx: context.Context, server_state: Literal["open", "closed"]
+    ):
+        """
+        Passthrough must keep relaying when events reach the parent layer through a reference
+        bound before the tls_clienthello hook ran, which is what happens in a real server run.
+
+        Reassigning ``parent_layer.handle_event`` cannot reach an outer layer's already-cached
+        bound method, so the ignore branch has to work through ``parent_layer._handle_event``,
+        which ``Layer.handle_event`` re-reads for every event.
+        """
+        if server_state == "open":
+            tctx.server.timestamp_start = time.time()
+            tctx.server.state = connection.ConnectionState.OPEN
+
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
+        client_layer.child_layer = TlsEchoLayer(client_layer.context)
+        playbook.layer = CachedParentHandle(playbook.layer)
+
+        def make_passthrough(client_hello: tls.ClientHelloData) -> None:
+            client_hello.ignore_connection = True
+
+        client_hello = tssl_client.read()
+        (
+            playbook
+            >> events.DataReceived(tctx.client, client_hello)
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply(side_effect=make_passthrough)
+        )
+        passed_through = client_hello
+        if server_state == "closed":
+            playbook << commands.OpenConnection(tctx.server)
+            # A second client datagram arrives while OpenConnection is still pending. It must be
+            # queued and relayed once the connection opens, not dispatched into the UDP layer's
+            # start state. Both relays happen in one batch, so the playbook merges the sends.
+            playbook >> events.DataReceived(tctx.client, b"second datagram")
+            playbook >> tutils.reply(None, to=-2)
+            passed_through = client_hello + b"second datagram"
+        assert (
+            playbook
+            << commands.SendData(
+                tctx.server, passed_through
+            )  # passed through unmodified
+            >> events.DataReceived(
+                tctx.server, b"ServerHello"
+            )  # and the same for the serverhello.
+            << commands.SendData(tctx.client, b"ServerHello")
+            >> events.DataReceived(tctx.client, b"more client data")
+            << commands.SendData(tctx.server, b"more client data")
+        )
+
+    def test_passthrough_from_clienthello_stale_reply(self, tctx: context.Context):
+        """
+        A reply to a command that one of the replaced layers issued before the swap must be
+        dropped, not dispatched into the ignored UDP layer.
+
+        A real stack can have such a command in flight: ``RawQuicLayer(force_raw=True)`` builds a
+        datagram ``UDPLayer`` up front, whose ``UdpStartHook`` is still outstanding when the
+        ClientHello arrives. Nothing is left to receive that reply once the swap discards the
+        layers below.
+        """
+        tctx.server.timestamp_start = time.time()
+        tctx.server.state = connection.ConnectionState.OPEN
+
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
+        client_layer.child_layer = TlsEchoLayer(client_layer.context)
+
+        def make_passthrough(client_hello: tls.ClientHelloData) -> None:
+            client_hello.ignore_connection = True
+
+        client_hello = tssl_client.read()
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, client_hello)
+            << tls.TlsClienthelloHook(tutils.Placeholder())
+            >> tutils.reply(side_effect=make_passthrough)
+            << commands.SendData(tctx.server, client_hello)
+            # The server connection is already open, so the UDP layer never issued this command.
+            >> events.OpenConnectionCompleted(
+                commands.OpenConnection(tctx.server), None
+            )
+            << None
+            # Relaying continues afterwards.
+            >> events.DataReceived(tctx.client, b"more client data")
+            << commands.SendData(tctx.server, b"more client data")
         )
 
     @pytest.mark.parametrize(
