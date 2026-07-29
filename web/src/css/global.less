@@ -1,7 +1,6 @@
 // Semantic color tokens.
 // Light values below are byte-equal to the literals they replace, so this change is visually a no-op.
-// The dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
-// (lighten/darken/fadeout) consume are left as literals here because those functions cannot operate on var().
+// The dark theme overrides these under a `[data-theme="dark"]` selector.
 :root {
     // Match native controls (form inputs, scrollbars) to the active theme.
     color-scheme: light;
@@ -60,6 +59,9 @@
     // Request/response first-line banner
     --mitmweb-first-line-bg: #337ab7;
     --mitmweb-first-line-fg: #fff;
+
+    // Flow table header cell the flows are sorted by, one shade off the header row
+    --mitmweb-th-sorted-bg: #fafafa;
 
     // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
     --mitmweb-row-highlight: hsl(48, 100%, 80%);
@@ -142,6 +144,9 @@
     // Request/response first-line banner — the accent blue is too bright to read monospace text on
     --mitmweb-first-line-bg: #1c3a5e;
     --mitmweb-first-line-fg: #dbe9fa;
+
+    // Flow table header cell the flows are sorted by, one shade off the header row
+    --mitmweb-th-sorted-bg: #2d2d2d;
 
     // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
     --mitmweb-row-highlight: hsl(48, 60%, 26%);
