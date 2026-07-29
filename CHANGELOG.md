@@ -16,6 +16,7 @@
 - Remove the unused `msgpack` dependency. The msgpack contentview is
   implemented in Rust and shipped with `mitmproxy_rs` since mitmproxy 12.
   ([#8319](https://github.com/mitmproxy/mitmproxy/pull/8319), @lukehsiao)
+- mitmweb: Fix the flow table header of the sorted column keeping a light background and hiding its sort chevron under the dark theme.
 - mitmweb: Add a dark theme, selectable via the new `web_theme` option (`system`, `dark`, or `light`).
   `system` follows the operating system's color-scheme preference.
   ([#8317](https://github.com/mitmproxy/mitmproxy/pull/8317), @sleeyax)
