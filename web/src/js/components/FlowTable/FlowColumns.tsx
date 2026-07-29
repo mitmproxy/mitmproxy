@@ -2,13 +2,13 @@ import type { ReactElement } from "react";
 import React, { type JSX } from "react";
 import { useAppDispatch } from "../../ducks";
 import classnames from "classnames";
-import type { sortFunctions } from "../../flow/utils";
+import type { ResourceType, sortFunctions } from "../../flow/utils";
 import {
     canReplay,
     endTime,
     getTotalSize,
     startTime,
-    getIcon,
+    getResourceType,
     mainPath,
     statusClass,
     statusCode,
@@ -18,6 +18,7 @@ import {
 import { formatSize, formatTimeDelta, formatTimeStamp } from "../../utils";
 import * as flowActions from "../../ducks/flows";
 import type { Flow } from "../../flow";
+import type { IconName } from "../common/Icon";
 import Icon from "../common/Icon";
 import Badge from "../common/Badge";
 
@@ -51,10 +52,26 @@ export const index: FlowColumn = ({ rowNumber }) => {
 };
 index.headerName = "#";
 
+const RESOURCE_ICONS: Record<ResourceType, IconName> = {
+    plain: "file",
+    html: "code",
+    js: "braces",
+    css: "palette",
+    image: "image",
+    "not-modified": "fileCheck",
+    redirect: "redirect",
+    websocket: "swap",
+    tcp: "cable",
+    udp: "send",
+    dns: "globe",
+    quic: "zap",
+};
+
 export const icon: FlowColumn = ({ flow }) => {
+    const resourceType = getResourceType(flow);
     return (
-        <td className="col-icon">
-            <div className={classnames("resource-icon", getIcon(flow))} />
+        <td className="col-icon" title={resourceType}>
+            <Icon name={RESOURCE_ICONS[resourceType]} />
         </td>
     );
 };

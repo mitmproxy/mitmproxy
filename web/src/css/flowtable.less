@@ -95,6 +95,8 @@
 
     td {
         padding: 0;
+        // Rows must stay as tall as PureFlowTable's hardcoded rowHeight, which sizes the virtual scroll spacer rows.
+        height: 32px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -135,7 +137,13 @@
     }
 
     .col-icon {
-        width: 32px;
+        width: 24px;
+        color: var(--mitmweb-fg-muted);
+
+        .icon {
+            display: block;
+            margin: 0 auto;
+        }
     }
 
     .col-path {
