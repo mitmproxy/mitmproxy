@@ -28,6 +28,7 @@ export class PureFlowTable extends React.Component<
     FlowTableProps,
     FlowTableState
 > {
+    // Rows are sized from this rather than from their content, so that the virtual scroll spacer rows always match the real ones.
     static defaultProps = {
         rowHeight: 32,
     };
@@ -148,6 +149,7 @@ export class PureFlowTable extends React.Component<
             highlightedIds,
             displayColumnNames,
             listIndex,
+            rowHeight,
         } = this.props;
 
         return (
@@ -175,6 +177,7 @@ export class PureFlowTable extends React.Component<
                                     highlighted={highlightedIds.has(flow.id)}
                                     displayColumnNames={displayColumnNames}
                                     rowNumber={listIndex.get(flow.id)!}
+                                    height={rowHeight}
                                 />
                             ))}
                         <tr style={{ height: vScroll.paddingBottom }} />

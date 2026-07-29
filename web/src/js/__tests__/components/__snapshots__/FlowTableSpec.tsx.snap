@@ -101,6 +101,7 @@ exports[`FlowTable Component should render correctly 1`] = `
         />
         <tr
           class="selected highlighted has-request has-response"
+          style="height: 32px;"
         >
           <td
             class="col-tls col-tls-https"
@@ -204,6 +205,7 @@ exports[`FlowTable Component should render correctly 1`] = `
         </tr>
         <tr
           class=""
+          style="height: 32px;"
         >
           <td
             class="col-tls col-tls-https"
@@ -421,6 +423,7 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           />
           <tr
             class="selected highlighted has-request has-response"
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
@@ -524,6 +527,7 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           </tr>
           <tr
             class=""
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
@@ -742,6 +746,7 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           />
           <tr
             class=""
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"
@@ -844,6 +849,7 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           </tr>
           <tr
             class="selected"
+            style="height: 32px;"
           >
             <td
               class="col-tls col-tls-https"

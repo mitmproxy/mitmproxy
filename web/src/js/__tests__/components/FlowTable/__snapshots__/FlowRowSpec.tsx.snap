@@ -6,6 +6,7 @@ exports[`FlowRow 1`] = `
     <tbody>
       <tr
         class="intercepted has-request has-response"
+        style="height: 32px;"
       >
         <td
           class="col-tls col-tls-https"
@@ -164,6 +165,7 @@ exports[`FlowRow 1`] = `
       </tr>
       <tr
         class=""
+        style="height: 32px;"
       >
         <td
           class="col-tls col-tls-https"
