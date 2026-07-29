@@ -211,10 +211,6 @@ export type ResourceType =
     | "dns"
     | "quic";
 
-/**
- * The kind of resource a flow carries.
- * This drives the flow table's type icon and doubles as that column's sort key, so the values are deliberately independent of whichever icon set renders them.
- */
 export const getResourceType = (flow: Flow): ResourceType => {
     if (flow.type !== "http") {
         if (flow.client_conn.tls_version === "QUICv1") {
