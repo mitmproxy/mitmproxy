@@ -150,7 +150,6 @@ exports[`FlowTable Component should render correctly 1`] = `
           </td>
           <td
             class="col-status"
-            style="color: darkgreen;"
           >
             200
           </td>
@@ -396,7 +395,6 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             </td>
             <td
               class="col-status"
-              style="color: darkgreen;"
             >
               200
             </td>
@@ -643,7 +641,6 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             </td>
             <td
               class="col-status"
-              style="color: darkgreen;"
             >
               NOERROR
             </td>

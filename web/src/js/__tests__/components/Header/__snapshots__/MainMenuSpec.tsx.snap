@@ -17,9 +17,7 @@ exports[`MainMenu 1`] = `
           <span
             class="input-group-addon"
           >
-            <span
-              style="color: black;"
-            >
+            <span>
               <svg
                 aria-hidden="true"
                 class="lucide lucide-search icon icon-search"

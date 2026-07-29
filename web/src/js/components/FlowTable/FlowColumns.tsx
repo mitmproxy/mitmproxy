@@ -92,33 +92,33 @@ export const version: FlowColumn = ({ flow }) => (
 version.headerName = "Version";
 
 export const status: FlowColumn = ({ flow }) => {
-    let color = "darkred";
+    let color = "var(--mitmweb-status-other)";
 
     if ((flow.type !== "http" && flow.type != "dns") || !flow.response)
         return <td className="col-status" />;
 
     if (100 <= flow.response.status_code && flow.response.status_code < 200) {
-        color = "green";
+        color = "var(--mitmweb-status-1xx)";
     } else if (
         200 <= flow.response.status_code &&
         flow.response.status_code < 300
     ) {
-        color = "darkgreen";
+        color = "var(--mitmweb-status-2xx)";
     } else if (
         300 <= flow.response.status_code &&
         flow.response.status_code < 400
     ) {
-        color = "lightblue";
+        color = "var(--mitmweb-status-3xx)";
     } else if (
         400 <= flow.response.status_code &&
         flow.response.status_code < 500
     ) {
-        color = "red";
+        color = "var(--mitmweb-status-4xx)";
     } else if (
         500 <= flow.response.status_code &&
         flow.response.status_code < 600
     ) {
-        color = "red";
+        color = "var(--mitmweb-status-5xx)";
     }
 
     return (

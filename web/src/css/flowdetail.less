@@ -14,7 +14,7 @@
         padding: 5px 12px 10px;
 
         > footer {
-            box-shadow: 0 0 3px gray;
+            box-shadow: 0 0 3px var(--mitmweb-shadow);
             padding: 2px;
             margin: 0;
             height: 23px;
@@ -25,7 +25,7 @@
         margin-top: 2px;
         padding-left: 10px;
         padding-right: 7px;
-        color: grey;
+        color: var(--mitmweb-fg-muted);
         font-size: 15px;
         border: none;
         background: transparent;
@@ -34,13 +34,13 @@
     }
 
     .close-button:hover {
-        color: black;
+        color: var(--mitmweb-fg-strong);
     }
 
     .first-line {
         font-family: @font-family-monospace;
-        background-color: var(--mitmweb-accent);
-        color: white;
+        background-color: var(--mitmweb-first-line-bg);
+        color: var(--mitmweb-first-line-fg);
         margin: 0 -8px 2px;
         padding: 4px 8px;
         border-radius: 5px;

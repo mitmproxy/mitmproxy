@@ -83,7 +83,6 @@ exports[`FlowRow 1`] = `
         </td>
         <td
           class="col-status"
-          style="color: darkgreen;"
         >
           200
         </td>
@@ -177,7 +176,6 @@ exports[`FlowRow 1`] = `
         </td>
         <td
           class="col-status"
-          style="color: darkgreen;"
         >
           NOERROR
         </td>

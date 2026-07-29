@@ -482,7 +482,6 @@ exports[`should render columns: status 1`] = `
       <tr>
         <td
           class="col-status"
-          style="color: darkgreen;"
         >
           200
         </td>

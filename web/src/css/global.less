@@ -1,8 +1,11 @@
 // Semantic color tokens.
 // Light values below are byte-equal to the literals they replace, so this change is visually a no-op.
-// A future dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
+// The dark theme overrides these under a `[data-theme="dark"]` selector; colors that LESS functions
 // (lighten/darken/fadeout) consume are left as literals here because those functions cannot operate on var().
 :root {
+    // Match native controls (form inputs, scrollbars) to the active theme.
+    color-scheme: light;
+
     // Surfaces
     --mitmweb-bg: #fff;
     --mitmweb-bg-alt: #f2f2f2;
@@ -54,6 +57,10 @@
     // Highlight (row hover / suggestion selection)
     --mitmweb-highlight: hsla(209, 52%, 84%, 0.5);
 
+    // Request/response first-line banner
+    --mitmweb-first-line-bg: #337ab7;
+    --mitmweb-first-line-fg: #fff;
+
     // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
     --mitmweb-row-highlight: hsl(48, 100%, 80%);
     --mitmweb-row-highlight-alt: hsl(48, 100%, 75%);
@@ -65,6 +72,109 @@
     // Alert
     --mitmweb-alert-warning-bg: #fcf8e3;
     --mitmweb-alert-warning-border: #faebcc;
+
+    // Response status codes, by class
+    --mitmweb-status-1xx: green;
+    --mitmweb-status-2xx: darkgreen;
+    --mitmweb-status-3xx: lightblue;
+    --mitmweb-status-4xx: red;
+    --mitmweb-status-5xx: red;
+    --mitmweb-status-other: darkred;
+
+    // Drop shadow cast by panel edges (footers)
+    --mitmweb-shadow: lightgray;
+
+    // Applied to bitmap icons supplied by the OS, which we cannot recolor
+    --mitmweb-bitmap-icon-filter: none;
+
+    // `thumb track` for scrollbars
+    --mitmweb-scrollbar: auto;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    // Surfaces
+    --mitmweb-bg: #1e1e1e;
+    --mitmweb-bg-alt: #252526;
+    --mitmweb-bg-muted: #2d2d2d;
+    --mitmweb-bg-hover: #333333;
+    --mitmweb-bg-active: #3a3a3a;
+
+    // Text
+    --mitmweb-fg: #d4d4d4;
+    --mitmweb-fg-input: #cccccc;
+    --mitmweb-fg-muted: #9a9a9a;
+    --mitmweb-fg-strong: #ffffff;
+
+    // Borders
+    --mitmweb-border: #3c3c3c;
+    --mitmweb-border-light: #333333;
+    --mitmweb-border-lighter: #333333;
+    --mitmweb-border-strong: #555555;
+
+    // Accent (primary) — brightened for contrast on dark surfaces
+    --mitmweb-accent: #4a9eff;
+    --mitmweb-accent-hover: #6fb3ff;
+    --mitmweb-accent-active: #3a8ae0;
+    --mitmweb-accent-border: #3a8ae0;
+    --mitmweb-accent-border-active: #2f77c4;
+    --mitmweb-focus-ring: #4a9eff;
+
+    // State — solid backgrounds keep their vivid hues
+    --mitmweb-info: #5bc0de;
+    --mitmweb-info-hover: #31b0d5;
+    --mitmweb-info-border: #46b8da;
+    --mitmweb-info-border-hover: #269abc;
+    --mitmweb-success: #5cb85c;
+    --mitmweb-danger: #d9534f;
+    --mitmweb-warning: #f0ad4e;
+
+    // State — text lightened for dark background
+    --mitmweb-text-success: #6cc26c;
+    --mitmweb-text-info: #5bc0de;
+    --mitmweb-text-warning: #d0a95c;
+    --mitmweb-text-danger: #e07b7b;
+
+    // Highlight (row hover / suggestion selection)
+    --mitmweb-highlight: hsla(209, 60%, 42%, 0.6);
+
+    // Request/response first-line banner — the accent blue is too bright to read monospace text on
+    --mitmweb-first-line-bg: #1c3a5e;
+    --mitmweb-first-line-fg: #dbe9fa;
+
+    // Flow table row states (base rows reuse --mitmweb-bg / --mitmweb-bg-alt; -alt is the even-row shade)
+    --mitmweb-row-highlight: hsl(48, 60%, 26%);
+    --mitmweb-row-highlight-alt: hsl(48, 60%, 22%);
+    --mitmweb-row-selected: hsl(209, 45%, 26%);
+    --mitmweb-row-selected-alt: hsl(209, 45%, 22%);
+    --mitmweb-row-selected-highlight: hsl(209, 55%, 34%);
+    --mitmweb-row-selected-highlight-alt: hsl(209, 55%, 30%);
+
+    // Alert
+    --mitmweb-alert-warning-bg: #4d4327;
+    --mitmweb-alert-warning-border: #6b5d2f;
+
+    // Response status codes — the light values are far too dark to read on a dark surface
+    --mitmweb-status-1xx: #7ec97e;
+    --mitmweb-status-2xx: #5cd65c;
+    --mitmweb-status-3xx: #7fc9e8;
+    --mitmweb-status-4xx: #ff7b7b;
+    --mitmweb-status-5xx: #ff7b7b;
+    --mitmweb-status-other: #e07b7b;
+
+    // Drop shadow cast by panel edges (footers)
+    --mitmweb-shadow: #000;
+
+    // The OS hands us light icons.
+    // The generic executable icon is a plain white square, which glares on a dark popover.
+    // Dimming knocks it back to grey while leaving colored app icons recognizable.
+    --mitmweb-bitmap-icon-filter: brightness(0.7);
+
+    // Panes such as the flow table reserve a scrollbar gutter permanently (`overflow-y: scroll`).
+    // Under `color-scheme: dark` the UA paints that gutter light, so an idle scrollbar reads as a stray vertical line against the pane divider.
+    // Sinking the track into the surface keeps it as invisible as it is on light backgrounds.
+    --mitmweb-scrollbar: var(--mitmweb-border-strong) var(--mitmweb-bg);
 }
 
 // www.paulirish.com/2012/box-sizing-border-box-ftw/
@@ -103,6 +213,7 @@ body {
     line-height: 1.42857143;
     color: var(--mitmweb-fg);
     background-color: var(--mitmweb-bg);
+    scrollbar-color: var(--mitmweb-scrollbar);
 }
 
 h1,
