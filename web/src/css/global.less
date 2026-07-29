@@ -54,6 +54,18 @@
     --mitmweb-text-warning: #8a6d3b;
     --mitmweb-text-danger: #a94442;
 
+    // State — soft colors, for the many small pills that are on screen permanently (status badges, footer options)
+    --mitmweb-neutral-soft-bg: var(--mitmweb-fg-muted);
+    --mitmweb-neutral-soft-fg: #fff;
+    --mitmweb-info-soft-bg: var(--mitmweb-info);
+    --mitmweb-info-soft-fg: #fff;
+    --mitmweb-success-soft-bg: var(--mitmweb-success);
+    --mitmweb-success-soft-fg: #fff;
+    --mitmweb-warning-soft-bg: var(--mitmweb-warning);
+    --mitmweb-warning-soft-fg: #fff;
+    --mitmweb-danger-soft-bg: var(--mitmweb-danger);
+    --mitmweb-danger-soft-fg: #fff;
+
     // Highlight (row hover / suggestion selection)
     --mitmweb-highlight: hsla(209, 52%, 84%, 0.5);
 
@@ -135,6 +147,18 @@
     --mitmweb-text-info: #5bc0de;
     --mitmweb-text-warning: #d0a95c;
     --mitmweb-text-danger: #e07b7b;
+
+    // State — soft colors. A solid fill glares when repeated across every row, so it sinks towards the background and the label carries the hue.
+    --mitmweb-neutral-soft-bg: #3a3a3a;
+    --mitmweb-neutral-soft-fg: #c8c8c8;
+    --mitmweb-info-soft-bg: #1e4a5a;
+    --mitmweb-info-soft-fg: #9fd6e8;
+    --mitmweb-success-soft-bg: #2c5533;
+    --mitmweb-success-soft-fg: #9fd3a3;
+    --mitmweb-warning-soft-bg: #574220;
+    --mitmweb-warning-soft-fg: #e6c081;
+    --mitmweb-danger-soft-bg: #5a2b29;
+    --mitmweb-danger-soft-fg: #eda6a3;
 
     // Highlight (row hover / suggestion selection)
     --mitmweb-highlight: hsla(209, 60%, 42%, 0.6);
@@ -467,7 +491,8 @@ textarea {
 }
 
 .label-default {
-    background-color: var(--mitmweb-fg-muted);
+    color: var(--mitmweb-neutral-soft-fg);
+    background-color: var(--mitmweb-neutral-soft-bg);
 }
 
 .label-primary {
@@ -475,11 +500,13 @@ textarea {
 }
 
 .label-success {
-    background-color: var(--mitmweb-success);
+    color: var(--mitmweb-success-soft-fg);
+    background-color: var(--mitmweb-success-soft-bg);
 }
 
 .label-danger {
-    background-color: var(--mitmweb-danger);
+    color: var(--mitmweb-danger-soft-fg);
+    background-color: var(--mitmweb-danger-soft-bg);
 }
 
 .alert {

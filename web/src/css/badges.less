@@ -5,21 +5,25 @@
     font-size: 12px;
     font-weight: 600;
     line-height: 1.4;
-    color: #fff;
-    background-color: var(--mitmweb-fg-muted);
+    color: var(--mitmweb-neutral-soft-fg);
+    background-color: var(--mitmweb-neutral-soft-bg);
 
     &.status-1xx {
-        background-color: var(--mitmweb-info);
+        color: var(--mitmweb-info-soft-fg);
+        background-color: var(--mitmweb-info-soft-bg);
     }
     &.status-2xx {
-        background-color: var(--mitmweb-success);
+        color: var(--mitmweb-success-soft-fg);
+        background-color: var(--mitmweb-success-soft-bg);
     }
     &.status-3xx {
-        background-color: var(--mitmweb-warning);
+        color: var(--mitmweb-warning-soft-fg);
+        background-color: var(--mitmweb-warning-soft-bg);
     }
     &.status-4xx,
     &.status-5xx {
-        background-color: var(--mitmweb-danger);
+        color: var(--mitmweb-danger-soft-fg);
+        background-color: var(--mitmweb-danger-soft-bg);
     }
 }
 
