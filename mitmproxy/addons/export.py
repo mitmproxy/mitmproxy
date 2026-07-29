@@ -55,7 +55,7 @@ def request_content_for_console(request: http.Request) -> str:
     escaped_text = "".join(escape_control_chars.get(x, x) for x in text)
     if any(char in escape_control_chars for char in text):
         # Escaped chars need to be unescaped by the shell to be properly inperpreted by curl and httpie
-        return f'"$(printf {shlex.quote(escaped_text)})"'
+        return f'"$(printf -- {shlex.quote(escaped_text)})"'
 
     return shlex.quote(escaped_text)
 
