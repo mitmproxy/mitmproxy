@@ -1,6 +1,8 @@
 import * as React from "react";
 import { render } from "@testing-library/react";
-import StatusBadge, { statusClass } from "../../../components/common/StatusBadge";
+import StatusBadge, {
+    statusClass,
+} from "../../../components/common/StatusBadge";
 
 test.each([
     [101, "status-1xx"],

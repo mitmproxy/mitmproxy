@@ -119,8 +119,7 @@ version.headerName = "Version";
 
 export const status: FlowColumn = ({ flow }) => {
     const code = statusCode(flow);
-    if (code === undefined || code === "")
-        return <td className="col-status" />;
+    if (code === undefined || code === "") return <td className="col-status" />;
 
     return (
         <td className="col-status">
