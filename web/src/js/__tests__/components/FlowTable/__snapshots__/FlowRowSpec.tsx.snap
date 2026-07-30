@@ -85,7 +85,7 @@ exports[`FlowRow 1`] = `
           class="col-method"
         >
           <span
-            class="method-badge"
+            class="badge method-badge"
           >
             WSS
           </span>
@@ -94,7 +94,7 @@ exports[`FlowRow 1`] = `
           class="col-status"
         >
           <span
-            class="status-badge status-2xx"
+            class="badge status-badge status-2xx"
           >
             200
           </span>
@@ -189,7 +189,7 @@ exports[`FlowRow 1`] = `
           class="col-method"
         >
           <span
-            class="method-badge"
+            class="badge method-badge"
           >
             QUERY
           </span>
@@ -198,7 +198,7 @@ exports[`FlowRow 1`] = `
           class="col-status"
         >
           <span
-            class="status-badge status-other"
+            class="badge status-badge status-other"
           >
             NOERROR
           </span>

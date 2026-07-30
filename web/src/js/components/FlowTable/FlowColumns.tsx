@@ -10,6 +10,7 @@ import {
     startTime,
     getIcon,
     mainPath,
+    statusClass,
     statusCode,
     getMethod,
     getVersion,
@@ -18,8 +19,7 @@ import { formatSize, formatTimeDelta, formatTimeStamp } from "../../utils";
 import * as flowActions from "../../ducks/flows";
 import type { Flow } from "../../flow";
 import Icon from "../common/Icon";
-import StatusBadge from "../common/StatusBadge";
-import MethodBadge from "../common/MethodBadge";
+import Badge from "../common/Badge";
 
 type FlowColumnProps = {
     flow: Flow;
@@ -107,7 +107,7 @@ path.headerName = "Path";
 
 export const method: FlowColumn = ({ flow }) => (
     <td className="col-method">
-        <MethodBadge method={getMethod(flow)} />
+        <Badge className="method-badge">{getMethod(flow)}</Badge>
     </td>
 );
 method.headerName = "Method";
@@ -123,7 +123,9 @@ export const status: FlowColumn = ({ flow }) => {
 
     return (
         <td className="col-status">
-            <StatusBadge code={code} />
+            <Badge className={classnames("status-badge", statusClass(code))}>
+                {code}
+            </Badge>
         </td>
     );
 };
