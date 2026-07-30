@@ -7,6 +7,10 @@
 
 ## Unreleased: mitmproxy next
 
+- Strip the root label from fully-qualified domain names before they reach the
+  TLS and certificate path. Visiting `https://example.com./` previously produced
+  a certificate for `example.com.`, which failed hostname verification against
+  `example.com`, and sent a trailing dot in the SNI HostName contrary to RFC 6066.
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.
