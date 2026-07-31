@@ -501,13 +501,13 @@ class TestCommand:
                 [],
             ],
             [
-                "    spaces_at_the_begining_are_not_stripped",
+                "    spaces_at_the_beginning_are_not_stripped",
                 [
                     command.ParseResult(
                         value="    ", type=mitmproxy.types.Space, valid=True
                     ),
                     command.ParseResult(
-                        value="spaces_at_the_begining_are_not_stripped",
+                        value="spaces_at_the_beginning_are_not_stripped",
                         type=mitmproxy.types.Cmd,
                         valid=False,
                     ),
@@ -515,13 +515,13 @@ class TestCommand:
                 [],
             ],
             [
-                "    spaces_at_the_begining_are_not_stripped neither_at_the_end      ",
+                "    spaces_at_the_beginning_are_not_stripped neither_at_the_end      ",
                 [
                     command.ParseResult(
                         value="    ", type=mitmproxy.types.Space, valid=True
                     ),
                     command.ParseResult(
-                        value="spaces_at_the_begining_are_not_stripped",
+                        value="spaces_at_the_beginning_are_not_stripped",
                         type=mitmproxy.types.Cmd,
                         valid=False,
                     ),
