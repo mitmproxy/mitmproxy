@@ -1052,7 +1052,7 @@ requires-dist = [
     { name = "ldap3", specifier = ">=2.8,<=2.9.1" },
     { name = "mitmproxy-rs", specifier = ">=0.12.6,<0.13" },
     { name = "publicsuffix2", specifier = ">=2.20190812,<=2.20191221" },
-    { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=3.1.1" },
+    { name = "pydivert", marker = "sys_platform == 'win32'", specifier = ">=2.0.3,<=3.1.3" },
     { name = "pyopenssl", specifier = ">=24.3,<=27.0.0" },
     { name = "pyparsing", specifier = "<=3.3.2,>=3.3.2" },
     { name = "pyperclip", specifier = ">=1.9.0,<=1.11.0" },
