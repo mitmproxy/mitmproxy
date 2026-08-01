@@ -23,16 +23,14 @@ from mitmproxy import command_lexer
 def test_partial_quoted_string(test_input, valid):
     if valid:
         assert (
-            command_lexer.PartialQuotedString.parse_string(
-                test_input, parse_all=True
-            )[0]
+            command_lexer.PartialQuotedString.parse_string(test_input, parse_all=True)[
+                0
+            ]
             == test_input
         )
     else:
         with pytest.raises(pyparsing.ParseException):
-            command_lexer.PartialQuotedString.parse_string(
-                test_input, parse_all=True
-            )
+            command_lexer.PartialQuotedString.parse_string(test_input, parse_all=True)
 
 
 @pytest.mark.parametrize(
