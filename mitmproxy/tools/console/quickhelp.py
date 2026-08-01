@@ -17,6 +17,7 @@ from mitmproxy.tools.console.help import HelpView
 from mitmproxy.tools.console.keybindings import KeyBindings
 from mitmproxy.tools.console.keymap import Keymap
 from mitmproxy.tools.console.options import Options
+from mitmproxy.tools.console.versioninfo import VersionInfo
 
 
 @dataclass
@@ -122,6 +123,12 @@ def make(
             "Scroll down": BasicKeyHelp("↓"),
             "Scroll up": BasicKeyHelp("↑"),
             "Clear": "Clear",
+        }
+    elif widget == VersionInfo:
+        top_label = "Version:"
+        top_items |= {
+            "Scroll down": BasicKeyHelp("↓"),
+            "Scroll up": BasicKeyHelp("↑"),
         }
     elif issubclass(widget, FocusEditor):
         top_label = f"Edit:"
