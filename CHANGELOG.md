@@ -12,6 +12,7 @@
   highlighting, and `n`/`N` had nothing to jump to. Bodies are rendered line by line
   again, only the match itself is emphasized, and the search term now survives view
   rebuilds.
+  ([#8355](https://github.com/mitmproxy/mitmproxy/pull/8355), @malkafen)
 - Bracket IPv6 target literals in the `CONNECT` request and `Host` header sent
   to an upstream proxy (`--mode upstream`), producing a valid `[2001:db8::1]:443`
   authority per RFC 3986 instead of the malformed `2001:db8::1:443`.
