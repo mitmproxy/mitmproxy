@@ -2,6 +2,8 @@ import json
 
 from mitmproxy import http
 from mitmproxy.test import tflow
+from mitmproxy.tools.console.flowview import chunks_to_lines
+from mitmproxy.tools.console.searchable import highlight_matches
 
 BODY = json.dumps(
     {
@@ -18,6 +20,37 @@ BODY = json.dumps(
 
 def _searchable(console):
     return console.window.focus_stack().top_widget().body._w.body
+
+
+def test_chunks_to_lines():
+    assert chunks_to_lines([("a", "one\ntwo"), ("b", "\nthree")]) == [
+        [("a", "one")],
+        [("a", "two")],
+        [("b", "three")],
+    ]
+    assert chunks_to_lines([("a", "single line\n")]) == [[("a", "single line")]]
+    assert chunks_to_lines([("a", "gap\n\nhere")]) == [
+        [("a", "gap")],
+        [],
+        [("a", "here")],
+    ]
+
+
+def test_highlight_matches():
+    # Matches are emphasized, everything else keeps its original attribute.
+    assert highlight_matches("ab-ab", [("x", 2), ("y", 3)], "ab") == [
+        ("focusfield", "ab"),
+        ("y", "-"),
+        ("focusfield", "ab"),
+    ]
+    # Lines without any attributes are supported, too.
+    assert highlight_matches("say ab", [], "ab") == [
+        (None, "say "),
+        ("focusfield", "ab"),
+    ]
+    # Without a match the original attributes are left alone.
+    assert highlight_matches("abc", [("x", 3)], "zzz") == [("x", "abc")]
+    assert highlight_matches("abc", [("x", 3)], "") == [("x", "abc")]
 
 
 async def test_search_moves_between_matches(console):

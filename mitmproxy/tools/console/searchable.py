@@ -7,31 +7,23 @@ Markup = list[tuple[str | None, str]]
 
 def highlight_matches(
     text: str, attrs: list[tuple[str | None, int]], search_term: str
-) -> Markup | None:
+) -> Markup:
     """
     Rebuild the markup of a line so that every occurrence of search_term uses the
     "focusfield" attribute while the rest keeps its original syntax highlighting.
-
-    Returns None if the line does not contain the search term.
     """
-    if not search_term:
-        return None
-
     matches = []
-    pos = text.find(search_term)
+    pos = text.find(search_term) if search_term else -1
     while pos != -1:
         matches.append((pos, pos + len(search_term)))
         pos = text.find(search_term, pos + len(search_term))
-    if not matches:
-        return None
 
+    # Attributes are run length encoded, turn them into absolute ranges.
     runs = []
     pos = 0
     for attr, length in attrs:
         runs.append((pos, pos + length, attr))
         pos += length
-    if pos < len(text):
-        runs.append((pos, len(text), None))
 
     boundaries = {0, len(text)}
     for start, end in matches:
@@ -40,32 +32,23 @@ def highlight_matches(
         boundaries.update((start, end))
 
     markup: Markup = []
-    cuts = sorted(b for b in boundaries if 0 <= b <= len(text))
+    cuts = sorted(boundaries)
     for start, end in zip(cuts, cuts[1:]):
-        if start == end:
-            continue
         if any(m_start <= start < m_end for m_start, m_end in matches):
             attr = "focusfield"
         else:
             attr = next(
                 (a for r_start, r_end, a in runs if r_start <= start < r_end), None
             )
-        if markup and markup[-1][0] == attr:
-            markup[-1] = (attr, markup[-1][1] + text[start:end])
-        else:
-            markup.append((attr, text[start:end]))
+        markup.append((attr, text[start:end]))
     return markup
 
 
 class Highlight(urwid.AttrMap):
-    def __init__(self, t, search_term: str | None = None):
+    def __init__(self, t, search_term: str | None):
         text, attrs = t.get_text()
         markup = highlight_matches(text, attrs, search_term or "")
-        if markup is None:
-            # No known match position, fall back to highlighting the entire line.
-            urwid.AttrMap.__init__(self, urwid.Text(text), "focusfield")
-        else:
-            urwid.AttrMap.__init__(self, urwid.Text(markup), None)
+        urwid.AttrMap.__init__(self, urwid.Text(markup), None)
         self.backup = t
 
 
