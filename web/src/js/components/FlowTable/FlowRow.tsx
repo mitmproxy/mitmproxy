@@ -34,12 +34,8 @@ export default React.memo(function FlowRow({
 
     const onClick = useCallback(
         (e: React.MouseEvent<HTMLTableRowElement>) => {
-            // a bit of a hack to disable row selection for quickactions.
-            let node = e.target as HTMLElement;
-            while (node.parentNode) {
-                if (node.classList.contains("col-quickactions")) return;
-                node = node.parentNode as HTMLElement;
-            }
+            // The quickaction buttons act on the flow themselves; the rest of their column selects the row like any other cell.
+            if ((e.target as HTMLElement).closest(".quickaction")) return;
             if (e.metaKey || e.ctrlKey) {
                 dispatch(selectToggle(flow));
             } else if (e.shiftKey) {
