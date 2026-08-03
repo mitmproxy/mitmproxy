@@ -31,6 +31,9 @@ exports[`FlowTable Component should render correctly 1`] = `
         <col
           class="col-quickactions"
         />
+        <col
+          class="col-filler"
+        />
       </colgroup>
       <thead
         style="transform: translateY(0px);"
@@ -138,8 +141,13 @@ exports[`FlowTable Component should render correctly 1`] = `
           >
             <span
               class="th-content"
-            />
+            >
+              Actions
+            </span>
           </th>
+          <th
+            class="col-filler"
+          />
         </tr>
       </thead>
       <tbody>
@@ -249,6 +257,9 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-quickactions"
           />
+          <td
+            class="col-filler"
+          />
         </tr>
         <tr
           class=""
@@ -356,6 +367,9 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-quickactions"
           />
+          <td
+            class="col-filler"
+          />
         </tr>
         <tr
           style="height: 64px;"
@@ -399,6 +413,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           />
           <col
             class="col-quickactions"
+          />
+          <col
+            class="col-filler"
           />
         </colgroup>
         <thead
@@ -507,8 +524,13 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             >
               <span
                 class="th-content"
-              />
+              >
+                Actions
+              </span>
             </th>
+            <th
+              class="col-filler"
+            />
           </tr>
         </thead>
         <tbody>
@@ -618,6 +640,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-quickactions"
             />
+            <td
+              class="col-filler"
+            />
           </tr>
           <tr
             class=""
@@ -725,6 +750,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-quickactions"
             />
+            <td
+              class="col-filler"
+            />
           </tr>
           <tr
             style="height: 64px;"
@@ -769,6 +797,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           />
           <col
             class="col-quickactions"
+          />
+          <col
+            class="col-filler"
           />
         </colgroup>
         <thead
@@ -877,8 +908,13 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             >
               <span
                 class="th-content"
-              />
+              >
+                Actions
+              </span>
             </th>
+            <th
+              class="col-filler"
+            />
           </tr>
         </thead>
         <tbody>
@@ -987,6 +1023,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-quickactions"
             />
+            <td
+              class="col-filler"
+            />
           </tr>
           <tr
             class="selected"
@@ -1078,6 +1117,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             </td>
             <td
               class="col-quickactions"
+            />
+            <td
+              class="col-filler"
             />
           </tr>
           <tr
