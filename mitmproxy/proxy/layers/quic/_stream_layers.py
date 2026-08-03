@@ -517,8 +517,23 @@ class ClientQuicLayer(QuicLayer):
                     address=None
                 )
             replacement_layer = UDPLayer(self.context, ignore=True)
-            parent_layer.handle_event = replacement_layer.handle_event  # type: ignore
-            parent_layer._handle_event = replacement_layer._handle_event  # type: ignore
+
+            # Only `_handle_event` may be replaced here. An outer layer may already hold a bound
+            # reference to `parent_layer.handle_event` -- `NextLayer._ask` caches one as
+            # `NextLayer._handle` when it decides the layer stack, which happens before the
+            # ClientHello is parsed -- so reassigning the attribute would not reach it, and the
+            # parent must keep owning blocking and pause handling. `Layer.handle_event` re-reads
+            # `self._handle_event` for every event, so dispatching dynamically here is what
+            # follows the UDP layer from its `start` state into `relay_messages`.
+            def handle_udp_event(event: events.Event) -> layer.CommandGenerator[None]:
+                if isinstance(event, events.CommandCompleted):
+                    # `parent_layer` pauses on the UDP layer's own blocking commands and resumes
+                    # them itself, so any reply that reaches here answers a command issued by a
+                    # layer this swap has just discarded, and there is nobody left to take it.
+                    return
+                yield from replacement_layer._handle_event(event)
+
+            parent_layer._handle_event = handle_udp_event  # type: ignore
             yield from parent_layer.handle_event(events.Start())
             for dgm in self.handshake_datagram_buf:
                 yield from parent_layer.handle_event(
