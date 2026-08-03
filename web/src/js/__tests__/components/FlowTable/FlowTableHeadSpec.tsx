@@ -84,8 +84,12 @@ test("FlowTableHead resize handle reports a new width and does not sort", async 
 
     expect(document.body.classList).toContain("resizing-columns");
     expect(onResizeEnd).not.toHaveBeenCalled();
+    fireEvent.pointerMove(document, { clientX: 180 });
     fireEvent.pointerUp(document);
     expect(onResizeEnd).toHaveBeenCalledTimes(1);
+    // The width the drag ended on rides along, so nothing has to wait a frame for it.
+    expect(Object.keys(onResizeEnd.mock.calls[0][0])).toEqual(["size"]);
+    expect(onResize).toHaveBeenCalledTimes(2);
     expect(document.body.classList).not.toContain("resizing-columns");
 });
 
