@@ -254,6 +254,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             == 400
         )
 
+    def test_flow_update_reason_only(self):
+        f = self.view.get_by_id("42")
+        f.backup()
+        resp = self.put_json("/flows/42", {"response": {"reason": "Non-Authorisé"}})
+        assert resp.code == 200
+        assert f.response.reason == "Non-Authorisé"
+        f.revert()
+
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")
         assert resp.code == 200
