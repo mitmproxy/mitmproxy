@@ -7,10 +7,20 @@
     user-select: @val;
 }
 
+// A column drag ranges over the whole document, so the cursor and the selection blocker have to live there too rather than on the handle.
+body.resizing-columns {
+    .user-select(none);
+
+    &,
+    * {
+        cursor: col-resize !important;
+    }
+}
+
 .flow-table {
     width: 100%;
     overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-x: auto;
 
     table {
         width: 100%;
@@ -48,6 +58,8 @@
             height: 100%;
             cursor: col-resize;
             z-index: 1;
+            // Keep touch drags from panning the table instead of resizing.
+            touch-action: none;
         }
 
         .col-resize-handle:hover {

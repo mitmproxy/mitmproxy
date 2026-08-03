@@ -56,22 +56,27 @@ export class PureFlowTable extends React.Component<
             columnWidths: loadColumnWidths(),
         };
         this.onViewportUpdate = this.onViewportUpdate.bind(this);
-        this.setColumnWidth = this.setColumnWidth.bind(this);
+        this.setColumnWidths = this.setColumnWidths.bind(this);
+        this.endColumnResize = this.endColumnResize.bind(this);
     }
 
-    setColumnWidth(column: string, width: number) {
-        this.setState((state) => {
-            const columnWidths = { ...state.columnWidths, [column]: width };
-            try {
-                localStorage.setItem(
-                    COLUMN_WIDTHS_KEY,
-                    JSON.stringify(columnWidths),
-                );
-            } catch {
-                /* persistence is best-effort */
-            }
-            return { columnWidths };
-        });
+    setColumnWidths(widths: Record<string, number>) {
+        this.setState((state) => ({
+            columnWidths: { ...state.columnWidths, ...widths },
+        }));
+    }
+
+    endColumnResize() {
+        try {
+            localStorage.setItem(
+                COLUMN_WIDTHS_KEY,
+                JSON.stringify(this.state.columnWidths),
+            );
+        } catch {
+            /* persistence is best-effort */
+        }
+        // Widening past the viewport adds a horizontal scrollbar, which eats into the height the virtual scroll window is derived from.
+        this.onViewportUpdate();
     }
 
     componentDidMount() {
@@ -185,6 +190,16 @@ export class PureFlowTable extends React.Component<
             .filter(isValidColumnName)
             .concat("quickactions");
 
+        // Letting `quickactions` take the space the others leave over keeps the rows spanning the full width without the browser redistributing a width the user dragged.
+        // It can only do that once every other column is pinned; until then `path` is the flexible one.
+        const allPinned = orderedColumns.every(
+            (col) => col === "quickactions" || columnWidths[col],
+        );
+        const colWidths: Record<string, number | string | undefined> = {
+            ...columnWidths,
+            quickactions: allPinned ? "auto" : undefined,
+        };
+
         return (
             <div
                 className="flow-table"
@@ -197,11 +212,7 @@ export class PureFlowTable extends React.Component<
                             <col
                                 key={colName}
                                 className={`col-${colName}`}
-                                style={
-                                    columnWidths[colName]
-                                        ? { width: columnWidths[colName] }
-                                        : undefined
-                                }
+                                style={{ width: colWidths[colName] }}
                             />
                         ))}
                     </colgroup>
@@ -210,8 +221,8 @@ export class PureFlowTable extends React.Component<
                         style={{ transform: `translateY(${viewportTop}px)` }}
                     >
                         <FlowTableHead
-                            columnWidths={columnWidths}
-                            onResize={this.setColumnWidth}
+                            onResize={this.setColumnWidths}
+                            onResizeEnd={this.endColumnResize}
                         />
                     </thead>
                     <tbody>

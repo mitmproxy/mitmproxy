@@ -10,13 +10,13 @@ import { isValidColumnName } from "../../flow/utils";
 const MIN_COLUMN_WIDTH = 20;
 
 type FlowTableHeadProps = {
-    columnWidths: Record<string, number>;
-    onResize: (column: string, width: number) => void;
+    onResize: (widths: Record<string, number>) => void;
+    onResizeEnd: () => void;
 };
 
 export default React.memo(function FlowTableHead({
-    columnWidths,
     onResize,
+    onResizeEnd,
 }: FlowTableHeadProps) {
     const dispatch = useAppDispatch();
     const sortDesc = useAppSelector((state) => state.flows.sort.desc);
@@ -34,22 +34,54 @@ export default React.memo(function FlowTableHead({
         // Don't let the resize gesture trigger a column sort.
         e.preventDefault();
         e.stopPropagation();
-        const th = (e.currentTarget as HTMLElement).closest("th");
-        const startX = e.clientX;
-        const startWidth = columnWidths[colName] ?? th?.offsetWidth ?? 0;
 
-        const onMove = (ev: PointerEvent) => {
-            onResize(
-                colName,
-                Math.max(MIN_COLUMN_WIDTH, startWidth + (ev.clientX - startX)),
-            );
+        const handle = e.currentTarget as HTMLElement;
+
+        // Fixed table layout hands the space the sized columns leave over to every column without a width of its own, so setting one width on its own shifts the rest too.
+        // Pinning them all keeps the handle under the cursor; the trailing `quickactions` is left out and takes the slack instead.
+        const widths = Object.fromEntries(
+            [...handle.closest("tr")!.children]
+                .slice(0, -1)
+                .map((cell, i): [string, number] => [
+                    displayColumns[i],
+                    (cell as HTMLElement).offsetWidth,
+                ]),
+        );
+        onResize(widths);
+
+        handle.setPointerCapture(e.pointerId);
+        document.body.classList.add("resizing-columns");
+
+        const startX = e.clientX;
+        const startWidth = widths[colName];
+        const abort = new AbortController();
+        const { signal } = abort;
+
+        // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
+        let frame = 0;
+        let clientX = startX;
+        const apply = () => {
+            frame = 0;
+            const width = startWidth + clientX - startX;
+            onResize({ [colName]: Math.max(MIN_COLUMN_WIDTH, width) });
         };
         const onUp = () => {
-            document.removeEventListener("pointermove", onMove);
-            document.removeEventListener("pointerup", onUp);
+            cancelAnimationFrame(frame);
+            apply();
+            abort.abort();
+            document.body.classList.remove("resizing-columns");
+            onResizeEnd();
         };
-        document.addEventListener("pointermove", onMove);
-        document.addEventListener("pointerup", onUp);
+        document.addEventListener(
+            "pointermove",
+            (ev: PointerEvent) => {
+                clientX = ev.clientX;
+                if (!frame) frame = requestAnimationFrame(apply);
+            },
+            { signal },
+        );
+        document.addEventListener("pointerup", onUp, { signal });
+        document.addEventListener("pointercancel", onUp, { signal });
     };
 
     return (
