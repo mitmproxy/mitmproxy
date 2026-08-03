@@ -126,6 +126,29 @@ test("FlowTableHead leaves the actions column to the browser", () => {
     fireEvent.click(screen.getByText("Actions"));
     expect(store.getState().flows.sort.column).toBe("path");
 });
+test("FlowTableHead does not sort on a click that lands on a resize handle", () => {
+    const store = TStore();
+    const { container } = render(
+        <Provider store={store}>
+            <table>
+                <thead>
+                    <FlowTableHead
+                        onResize={jest.fn()}
+                        onResizeEnd={jest.fn()}
+                    />
+                </thead>
+            </table>
+        </Provider>,
+    );
+
+    const handle = container.querySelector(
+        ".col-size .col-resize-handle",
+    ) as HTMLElement;
+    fireEvent.click(handle);
+
+    expect(store.getState().flows.sort.column).toBe("path");
+});
+
 test("FlowTableHead does not resize a column the pointer never dragged", () => {
     const offsetWidth = stubColumnWidth(10);
     const store = TStore();
