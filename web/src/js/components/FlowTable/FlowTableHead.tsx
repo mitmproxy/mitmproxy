@@ -11,7 +11,7 @@ const MIN_COLUMN_WIDTH = 20;
 
 type FlowTableHeadProps = {
     onResize: (widths: Record<string, number>) => void;
-    onResizeEnd: () => void;
+    onResizeEnd: (widths: Record<string, number>) => void;
 };
 
 export default React.memo(function FlowTableHead({
@@ -76,17 +76,22 @@ export default React.memo(function FlowTableHead({
         // Pointers sample faster than the display refreshes, so coalesce moves into one update per frame.
         let frame = 0,
             clientX = startX;
+        const currentWidth = () => ({
+            [colName]: Math.max(
+                MIN_COLUMN_WIDTH,
+                startWidth + clientX - startX,
+            ),
+        });
         const apply = () => {
             frame = 0;
-            const width = startWidth + clientX - startX;
-            onResize({ [colName]: Math.max(MIN_COLUMN_WIDTH, width) });
+            onResize(currentWidth());
         };
         const onUp = () => {
             cancelAnimationFrame(frame);
-            apply();
             abort.abort();
             document.body.classList.remove("resizing-columns");
-            onResizeEnd();
+            // The final width goes through the end callback rather than onResize, so persistence and re-measurement see it instead of the frame before.
+            onResizeEnd(currentWidth());
         };
         document.addEventListener(
             "pointermove",

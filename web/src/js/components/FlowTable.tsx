@@ -66,17 +66,25 @@ export class PureFlowTable extends React.Component<
         }));
     }
 
-    endColumnResize() {
-        try {
-            localStorage.setItem(
-                COLUMN_WIDTHS_KEY,
-                JSON.stringify(this.state.columnWidths),
-            );
-        } catch {
-            /* persistence is best-effort */
-        }
-        // Widening past the viewport adds a horizontal scrollbar, which eats into the height the virtual scroll window is derived from.
-        this.onViewportUpdate();
+    endColumnResize(widths: Record<string, number>) {
+        this.setState(
+            (state) => ({
+                columnWidths: { ...state.columnWidths, ...widths },
+            }),
+            // React batches the update, so both the widths to store and the layout to measure are only final once it has committed.
+            () => {
+                try {
+                    localStorage.setItem(
+                        COLUMN_WIDTHS_KEY,
+                        JSON.stringify(this.state.columnWidths),
+                    );
+                } catch {
+                    /* persistence is best-effort */
+                }
+                // Widening past the viewport adds a horizontal scrollbar, which eats into the height the virtual scroll window is derived from.
+                this.onViewportUpdate();
+            },
+        );
     }
 
     componentDidMount() {
