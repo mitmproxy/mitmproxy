@@ -104,6 +104,7 @@ exports[`FlowTable Component should render correctly 1`] = `
         >
           <td
             class="col-tls col-tls-https"
+            title="TLS encrypted"
           />
           <td
             class="col-icon"
@@ -116,7 +117,6 @@ exports[`FlowTable Component should render correctly 1`] = `
             class="col-path"
           >
             <svg
-              aria-hidden="true"
               class="lucide lucide-triangle-alert icon icon-warning float-right"
               fill="none"
               height="16"
@@ -137,6 +137,9 @@ exports[`FlowTable Component should render correctly 1`] = `
               <path
                 d="M12 17h.01"
               />
+              <title>
+                error
+              </title>
             </svg>
             <span
               class="marker float-right"
@@ -146,12 +149,20 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-method"
           >
-            WSS
+            <span
+              class="badge method-badge"
+            >
+              WSS
+            </span>
           </td>
           <td
             class="col-status"
           >
-            200
+            <span
+              class="badge status-badge status-2xx"
+            >
+              200
+            </span>
           </td>
           <td
             class="col-size"
@@ -172,6 +183,7 @@ exports[`FlowTable Component should render correctly 1`] = `
         >
           <td
             class="col-tls col-tls-https"
+            title="TLS encrypted"
           />
           <td
             class="col-icon"
@@ -184,7 +196,6 @@ exports[`FlowTable Component should render correctly 1`] = `
             class="col-path"
           >
             <svg
-              aria-hidden="true"
               class="lucide lucide-triangle-alert icon icon-warning float-right"
               fill="none"
               height="16"
@@ -205,6 +216,9 @@ exports[`FlowTable Component should render correctly 1`] = `
               <path
                 d="M12 17h.01"
               />
+              <title>
+                error
+              </title>
             </svg>
             <span
               class="marker float-right"
@@ -214,7 +228,11 @@ exports[`FlowTable Component should render correctly 1`] = `
           <td
             class="col-method"
           >
-            TCP
+            <span
+              class="badge method-badge"
+            >
+              TCP
+            </span>
           </td>
           <td
             class="col-status"
@@ -349,6 +367,7 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
@@ -361,7 +380,6 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -382,6 +400,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -391,12 +412,20 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-method"
             >
-              WSS
+              <span
+                class="badge method-badge"
+              >
+                WSS
+              </span>
             </td>
             <td
               class="col-status"
             >
-              200
+              <span
+                class="badge status-badge status-2xx"
+              >
+                200
+              </span>
             </td>
             <td
               class="col-size"
@@ -417,6 +446,7 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
@@ -429,7 +459,6 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -450,6 +479,9 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -459,7 +491,11 @@ exports[`FlowTable Component should scroll current selection into view 1`] = `
             <td
               class="col-method"
             >
-              TCP
+              <span
+                class="badge method-badge"
+              >
+                TCP
+              </span>
             </td>
             <td
               class="col-status"
@@ -595,6 +631,7 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
@@ -607,7 +644,6 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -628,6 +664,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -637,12 +676,20 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-method"
             >
-              QUERY
+              <span
+                class="badge method-badge"
+              >
+                QUERY
+              </span>
             </td>
             <td
               class="col-status"
             >
-              NOERROR
+              <span
+                class="badge status-badge status-other"
+              >
+                NOERROR
+              </span>
             </td>
             <td
               class="col-size"
@@ -663,6 +710,7 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
           >
             <td
               class="col-tls col-tls-https"
+              title="TLS encrypted"
             />
             <td
               class="col-icon"
@@ -675,7 +723,6 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
               class="col-path"
             >
               <svg
-                aria-hidden="true"
                 class="lucide lucide-triangle-alert icon icon-warning float-right"
                 fill="none"
                 height="16"
@@ -696,6 +743,9 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
                 <path
                   d="M12 17h.01"
                 />
+                <title>
+                  error
+                </title>
               </svg>
               <span
                 class="marker float-right"
@@ -705,7 +755,11 @@ exports[`FlowTable Component should scroll current selection into view 2`] = `
             <td
               class="col-method"
             >
-              UDP
+              <span
+                class="badge method-badge"
+              >
+                UDP
+              </span>
             </td>
             <td
               class="col-status"

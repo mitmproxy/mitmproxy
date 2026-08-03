@@ -86,6 +86,22 @@ describe("isValidHttpVersion", () => {
     });
 });
 
+describe("statusClass", () => {
+    it.each([
+        [101, "status-1xx"],
+        [200, "status-2xx"],
+        [204, "status-2xx"],
+        [301, "status-3xx"],
+        [404, "status-4xx"],
+        [500, "status-5xx"],
+        [599, "status-5xx"],
+        [700, "status-other"],
+        ["NOERROR", "status-other"],
+    ])("statusClass(%s) === %s", (code, expected) => {
+        expect(utils.statusClass(code)).toBe(expected);
+    });
+});
+
 it("should be possible to get a start time", () => {
     expect(utils.startTime(THTTPFlow())).toEqual(946681200);
     expect(utils.startTime(TTCPFlow())).toEqual(946681200);

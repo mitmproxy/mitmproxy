@@ -53,6 +53,18 @@
     --mitmweb-text-warning: #8a6d3b;
     --mitmweb-text-danger: #a94442;
 
+    // State — soft colors, for the many small pills that are on screen permanently (status badges, footer options)
+    --mitmweb-neutral-soft-bg: var(--mitmweb-fg-muted);
+    --mitmweb-neutral-soft-fg: #fff;
+    --mitmweb-info-soft-bg: var(--mitmweb-info);
+    --mitmweb-info-soft-fg: #fff;
+    --mitmweb-success-soft-bg: var(--mitmweb-success);
+    --mitmweb-success-soft-fg: #fff;
+    --mitmweb-warning-soft-bg: var(--mitmweb-warning);
+    --mitmweb-warning-soft-fg: #fff;
+    --mitmweb-danger-soft-bg: var(--mitmweb-danger);
+    --mitmweb-danger-soft-fg: #fff;
+
     // Highlight (row hover / suggestion selection)
     --mitmweb-highlight: hsla(209, 52%, 84%, 0.5);
 
@@ -74,14 +86,6 @@
     // Alert
     --mitmweb-alert-warning-bg: #fcf8e3;
     --mitmweb-alert-warning-border: #faebcc;
-
-    // Response status codes, by class
-    --mitmweb-status-1xx: green;
-    --mitmweb-status-2xx: darkgreen;
-    --mitmweb-status-3xx: lightblue;
-    --mitmweb-status-4xx: red;
-    --mitmweb-status-5xx: red;
-    --mitmweb-status-other: darkred;
 
     // Drop shadow cast by panel edges (footers)
     --mitmweb-shadow: lightgray;
@@ -138,6 +142,18 @@
     --mitmweb-text-warning: #d0a95c;
     --mitmweb-text-danger: #e07b7b;
 
+    // State — soft colors. A solid fill glares when repeated across every row, so it sinks towards the background and the label carries the hue.
+    --mitmweb-neutral-soft-bg: #3a3a3a;
+    --mitmweb-neutral-soft-fg: #c8c8c8;
+    --mitmweb-info-soft-bg: #1e4a5a;
+    --mitmweb-info-soft-fg: #9fd6e8;
+    --mitmweb-success-soft-bg: #2c5533;
+    --mitmweb-success-soft-fg: #9fd3a3;
+    --mitmweb-warning-soft-bg: #574220;
+    --mitmweb-warning-soft-fg: #e6c081;
+    --mitmweb-danger-soft-bg: #5a2b29;
+    --mitmweb-danger-soft-fg: #eda6a3;
+
     // Highlight (row hover / suggestion selection)
     --mitmweb-highlight: hsla(209, 60%, 42%, 0.6);
 
@@ -159,14 +175,6 @@
     // Alert
     --mitmweb-alert-warning-bg: #4d4327;
     --mitmweb-alert-warning-border: #6b5d2f;
-
-    // Response status codes — the light values are far too dark to read on a dark surface
-    --mitmweb-status-1xx: #7ec97e;
-    --mitmweb-status-2xx: #5cd65c;
-    --mitmweb-status-3xx: #7fc9e8;
-    --mitmweb-status-4xx: #ff7b7b;
-    --mitmweb-status-5xx: #ff7b7b;
-    --mitmweb-status-other: #e07b7b;
 
     // Drop shadow cast by panel edges (footers)
     --mitmweb-shadow: #000;
@@ -472,7 +480,8 @@ textarea {
 }
 
 .label-default {
-    background-color: var(--mitmweb-fg-muted);
+    color: var(--mitmweb-neutral-soft-fg);
+    background-color: var(--mitmweb-neutral-soft-bg);
 }
 
 .label-primary {
@@ -480,11 +489,13 @@ textarea {
 }
 
 .label-success {
-    background-color: var(--mitmweb-success);
+    color: var(--mitmweb-success-soft-fg);
+    background-color: var(--mitmweb-success-soft-bg);
 }
 
 .label-danger {
-    background-color: var(--mitmweb-danger);
+    color: var(--mitmweb-danger-soft-fg);
+    background-color: var(--mitmweb-danger-soft-bg);
 }
 
 .alert {
